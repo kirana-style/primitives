@@ -1,0 +1,111 @@
+name: ci
+
+# What a pull request must keep true: the workspace checks itself (format, lint with types,
+# tests), every adapter's fixture builds, and the conformance run passes: one set of scenarios on
+# every adapter in a real browser, the DOM of each state the same across them. The push to `main`
+# keeps the caches warm: only `main` saves them.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A second push to the same branch makes the first one's answer worthless, so
+# stop paying for it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Runner images are pinned, not `*-latest`: a label that moves changes the build under us.
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    name: lint, format, types and tests
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      # Separate steps so a red build names the stage that failed. The same checks run in the
+      # pre-push hook (`vp run prepush`).
+      - name: Format
+        run: vp fmt --check
+
+      # Oxlint and the TypeScript type check (tsgolint) in the same pass. A warning fails it, like
+      # an error: `vp run check` does the same.
+      - name: Lint and types
+        run: vp lint --deny-warnings
+
+      # The core's reactivity, and the React adapter rendered on a server with no DOM.
+      - name: Tests
+        run: vp run test
+
+  conformance:
+    runs-on: ubuntu-26.04
+    name: build and conformance
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      # Each adapter's fixture. Angular's compiler checks its adapter here (`ngc`), and Svelte's
+      # compiles its files.
+      - name: Build
+        run: vp run build
+
+      # The browser Playwright drives, at the version the lockfile's Playwright asks for.
+      - name: Chromium
+        run: bunx playwright install --with-deps chromium
+
+      # Through the task, so the fixtures built above are restored, not built again.
+      - name: Conformance
+        run: vp run conformance
+
+      # What each adapter drew, state by state, when the comparison fails.
+      - name: Keep the recorded states
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: conformance
+          path: tests/conformance/out
+          retention-days: 7
+
+      - name: Budgets
+        run: vp run budgets
+
+  # The one check branch protection requires from this workflow, so adding or renaming a job never
+  # changes the ruleset. It always runs, and passes when every job passed or was skipped.
+  result:
+    name: ci result
+    if: always()
+    needs: [check, conformance]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Every job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "::error::a job ended in $result"; exit 1 ;;
+            esac
+          done

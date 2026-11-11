@@ -1,0 +1,50 @@
+name: pr-title
+
+# Pull requests are squash-merged, so the title becomes the one commit on main. It must be a
+# Conventional Commit, as in every Kirana repository: release-please reads the history to pick the
+# next version and write the changelog.
+#
+#   feat: …       a new feature          → minor
+#   fix: …        a bug fix              → patch
+#   feat!: …      a breaking change      → major (minor before 1.0)
+#   perf, docs, deps                       → listed in the changelog
+#   refactor, test, build, ci, chore       → not listed
+
+# `title` is a required check, so it must report in the merge queue too; there the pull request's
+# title was checked before it was queued, and the queue cannot change it.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  merge_group:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title:
+    runs-on: ubuntu-26.04
+    steps:
+      - if: github.event_name == 'merge_group'
+        run: echo "Checked on the pull request before it was queued."
+
+      - if: github.event_name == 'pull_request'
+        uses: amannn/action-semantic-pull-request@2252a14e810aa9b85c2d560bd7070c802206ecf6 # v6.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            revert
+            docs
+            deps
+            refactor
+            test
+            build
+            ci
+            chore
+          requireScope: false
+          subjectPattern: ^[a-z].+[^.]$
+          subjectPatternError: |
+            Start the subject in lower case and leave off the full stop, e.g. "fix: return focus to the trigger".

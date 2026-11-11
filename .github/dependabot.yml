@@ -1,0 +1,29 @@
+# Updates arrive as pull requests, grouped so a week's updates are one review, not twenty.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: deps
+    ignore:
+      # Vite+ fixes the versions of what it bundles: the `vite` alias to its core moves with
+      # `vite-plus`, through its own upgrade, never one by one.
+      - dependency-name: "vite-plus"
+      - dependency-name: "vite"
+      # Angular's compiler needs TypeScript 6's JavaScript API; the workspace's own is 7.
+      - dependency-name: "typescript"
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

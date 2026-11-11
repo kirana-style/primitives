@@ -1,0 +1,26 @@
+{
+  "name": "@kirana-ui/svelte",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Kirana UI Primitives for Svelte",
+  "license": "MIT",
+  "author": "The Kirana authors",
+  "type": "module",
+  "sideEffects": false,
+  "svelte": "./src/index.ts",
+  "exports": {
+    ".": {
+      "svelte": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "dependencies": {
+    "@kirana-ui/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^5.29.0"
+  },
+  "devDependencies": {
+    "svelte": "catalog:"
+  }
+}

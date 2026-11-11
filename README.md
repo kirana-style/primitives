@@ -1,0 +1,97 @@
+# Kirana UI Primitives
+
+Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
+every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
+
+> **Status: an architecture spike.** Nothing is published. Four components (Collapsible, Dialog,
+> Popover, Select) on three adapters (React, Svelte, Angular), enough to prove the design and
+> measure it. The API will change.
+
+- **The same on every framework.** One set of scenarios runs on every adapter in a real browser,
+  and the DOM of every state is compared across them: the same attributes, the same variables,
+  the same elements.
+- **No styles, no lock-in.** Every state is a data attribute (`data-open`, `data-highlighted`,
+  `data-starting-style`), every measure a CSS variable (`--anchor-width`,
+  `--collapsible-panel-height`). Style it with plain CSS, Tailwind, Kirana or anything else. The
+  vocabulary follows Base UI's, and is published as data (`packages/core/src/vocabulary.ts`).
+- **Motion is CSS.** A panel or popup enters from its `data-starting-style` and leaves through its
+  `data-ending-style`, so a design animates with transitions that reverse mid-flight. A closed
+  panel leaves the page.
+- **Small.** The core has one dependency (`@floating-ui/dom`).
+
+## Layout
+
+| Path                                  | Holds                                                                                                                                                    |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position), a controller per component, the vocabulary, a plain-DOM binder |
+| `packages/react`, `svelte`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                         |
+| `fixtures/<adapter>`                  | the page every adapter draws, element for element, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                         |
+| `tests/conformance`                   | the scenarios and the cross-adapter comparison                                                                                                           |
+| `bench`, `scripts/budgets.ts`         | mount time, memory and interaction; gzip per component                                                                                                   |
+
+## How a component is built
+
+```ts
+import { createCollapsible } from "@kirana-ui/core/collapsible"
+
+const collapsible = createCollapsible(props) // props: a signal of the caller's props
+collapsible.open // a signal
+collapsible.trigger.props // a signal of what goes on the element: attributes and handlers
+collapsible.panel.attach(el) // DOM work for the element; returns the cleanup
+```
+
+An adapter reads `props` into its framework and calls `attach` when the element exists:
+
+```tsx
+// React
+<Collapsible.Root>
+  <Collapsible.Trigger>Details</Collapsible.Trigger>
+  <Collapsible.Panel className="panel">…</Collapsible.Panel>
+</Collapsible.Root>
+```
+
+```svelte
+<!-- Svelte -->
+<Collapsible.Root>
+  <Collapsible.Trigger>Details</Collapsible.Trigger>
+  <Collapsible.Panel class="panel">…</Collapsible.Panel>
+</Collapsible.Root>
+```
+
+```html
+<!-- Angular -->
+<div kuiCollapsible>
+  <button kuiCollapsibleTrigger>Details</button>
+  <div *kuiCollapsiblePanel class="panel">…</div>
+</div>
+```
+
+```css
+.panel {
+  overflow: hidden;
+  height: var(--collapsible-panel-height);
+  transition: height 150ms ease-out;
+}
+.panel[data-starting-style],
+.panel[data-ending-style] {
+  height: 0;
+}
+```
+
+## Commands
+
+The toolchain is Vite+ (`vp`) with Bun as the package manager.
+
+```bash
+vp install            # first, and after bun.lock changes
+vp run check          # format, lint with types, type check; warnings fail
+vp run test           # the core's reactivity; the React adapter on the server
+vp run build          # each adapter's fixture
+vp run conformance    # the scenarios on every adapter (Chromium), the DOM compared across them
+vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives
+vp run budgets        # gzip per component
+```
+
+## Licence
+
+MIT.

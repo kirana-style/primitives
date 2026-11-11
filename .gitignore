@@ -1,0 +1,13 @@
+node_modules
+.DS_Store
+dist
+*.local
+.env*
+*.tsbuildinfo
+coverage
+*.lcov
+# results of a run (`vp run conformance`, `vp run bench`)
+tests/conformance/out
+bench/out
+# the pull request text, rewritten per branch
+pr-description.md

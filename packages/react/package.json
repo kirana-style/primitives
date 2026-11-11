@@ -1,0 +1,30 @@
+{
+  "name": "@kirana-ui/react",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Kirana UI Primitives for React",
+  "license": "MIT",
+  "author": "The Kirana authors",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./collapsible": "./src/collapsible.tsx",
+    "./dialog": "./src/dialog.tsx",
+    "./popover": "./src/popover.tsx",
+    "./select": "./src/select.tsx"
+  },
+  "dependencies": {
+    "@kirana-ui/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}

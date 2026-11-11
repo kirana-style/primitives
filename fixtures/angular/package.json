@@ -1,0 +1,28 @@
+{
+  "name": "fixture-angular",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev --port 4103",
+    "build": "ngc -p tsconfig.app.json --noEmit && vp build"
+  },
+  "dependencies": {
+    "@angular/common": "catalog:",
+    "@angular/compiler": "catalog:",
+    "@angular/core": "catalog:",
+    "@angular/platform-browser": "catalog:",
+    "@kirana-ui/angular": "workspace:*",
+    "@kirana-ui/core": "workspace:*",
+    "ng-primitives": "catalog:",
+    "rxjs": "catalog:"
+  },
+  "devDependencies": {
+    "@analogjs/vite-plugin-angular": "catalog:",
+    "@angular/build": "catalog:",
+    "@angular/compiler-cli": "catalog:",
+    "typescript": "~6.0.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

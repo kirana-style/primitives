@@ -1,0 +1,21 @@
+{
+  "name": "fixture-svelte",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev --port 4102",
+    "build": "vp build"
+  },
+  "dependencies": {
+    "@ark-ui/svelte": "catalog:",
+    "@kirana-ui/core": "workspace:*",
+    "@kirana-ui/svelte": "workspace:*",
+    "svelte": "catalog:"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  // What Angular builds with (Analog reads it), so it emits. The core's sources import each other
+  // by their `.ts` names, which an emitting program takes only when it may rewrite them.
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "useDefineForClassFields": false,
+    "rewriteRelativeImportExtensions": true,
+    "skipLibCheck": true
+  },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": ["src/main.ts", "src/bench.ts"],
+  "include": [
+    "src/**/*.ts",
+    "../../packages/angular/src/**/*.ts",
+    "../../packages/core/src/**/*.ts"
+  ],
+  "exclude": ["../../packages/core/src/**/*.test.ts"]
+}

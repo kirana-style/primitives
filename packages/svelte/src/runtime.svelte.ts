@@ -38,7 +38,15 @@ export function controller<P extends Record<string, unknown>, C extends { mount(
 }
 
 // HTML's boolean attributes, which Svelte sets as properties: a part's `""` means "present".
-const BOOLEAN = new Set(["hidden", "disabled", "inert", "required", "readonly", "multiple"])
+const BOOLEAN = new Set([
+  "hidden",
+  "disabled",
+  "inert",
+  "required",
+  "readonly",
+  "multiple",
+  "checked",
+])
 
 function toSvelte(props: PartProps): PartProps {
   const out: PartProps = {}

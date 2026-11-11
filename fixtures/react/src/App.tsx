@@ -1,10 +1,19 @@
-import { Collapsible, Dialog, Popover, Select } from "@kirana-ui/react"
+import {
+  Checkbox,
+  Collapsible,
+  Dialog,
+  Popover,
+  RadioGroup,
+  Select,
+  Switch,
+} from "@kirana-ui/react"
 import { useState } from "react"
 
 interface Preventable {
   preventKiranaHandler(): void
 }
 
+const PLANS = ["free", "pro", "team", "max"]
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 
 /**
@@ -16,6 +25,7 @@ export function App() {
   const [fruit, setFruit] = useState<string | null>("Banana")
   const [presses, setPresses] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [alerts, setAlerts] = useState(false)
   return (
     <main>
       <section data-fixture="collapsible">
@@ -86,6 +96,52 @@ export function App() {
             <p>Composed content</p>
           </Collapsible.Panel>
         </Collapsible.Root>
+      </section>
+
+      <section data-fixture="controls">
+        <form data-testid="f1-form">
+          <label data-testid="x1-label">
+            <Checkbox.Root id="x1" name="terms" className="box" data-testid="x1">
+              <Checkbox.Indicator className="mark">✓</Checkbox.Indicator>
+            </Checkbox.Root>
+            Accept
+          </label>
+          <Checkbox.Root id="x2" defaultChecked disabled className="box" data-testid="x2">
+            <Checkbox.Indicator className="mark">✓</Checkbox.Indicator>
+          </Checkbox.Root>
+          <Checkbox.Root id="x3" indeterminate className="box" data-testid="x3">
+            <Checkbox.Indicator className="mark">–</Checkbox.Indicator>
+          </Checkbox.Root>
+          <Switch.Root
+            id="w1"
+            name="alerts"
+            checked={alerts}
+            onCheckedChange={setAlerts}
+            className="switch"
+            data-testid="w1"
+          >
+            <Switch.Thumb className="thumb" />
+          </Switch.Root>
+          <label htmlFor="w1" data-testid="w1-label">
+            Alerts
+          </label>
+          <RadioGroup.Root id="r1" name="plan" defaultValue="pro" data-testid="r1">
+            {PLANS.map((each) => (
+              <label key={each}>
+                <RadioGroup.Item
+                  value={each}
+                  disabled={each === "team"}
+                  className="radio"
+                  data-testid={`r1-${each}`}
+                >
+                  <RadioGroup.Indicator className="dot" />
+                </RadioGroup.Item>
+                {each}
+              </label>
+            ))}
+          </RadioGroup.Root>
+        </form>
+        <output data-testid="w1-output">{alerts ? "on" : "off"}</output>
       </section>
 
       <section data-fixture="dialog">

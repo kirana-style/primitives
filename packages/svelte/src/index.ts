@@ -1,4 +1,7 @@
+export * as Checkbox from "./checkbox/index.ts"
 export * as Collapsible from "./collapsible/index.ts"
 export * as Dialog from "./dialog/index.ts"
 export * as Popover from "./popover/index.ts"
+export * as RadioGroup from "./radio-group/index.ts"
 export * as Select from "./select/index.ts"
+export * as Switch from "./switch/index.ts"

@@ -1,4 +1,7 @@
+export { Checkbox } from "./checkbox.ts"
 export { Collapsible } from "./collapsible.ts"
 export { Dialog } from "./dialog.ts"
 export { Popover } from "./popover.ts"
+export { RadioGroup } from "./radio-group.ts"
 export { Select } from "./select.ts"
+export { Switch } from "./switch.ts"

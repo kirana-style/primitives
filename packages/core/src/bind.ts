@@ -4,6 +4,9 @@ import type { Part, PartProps } from "./part.ts"
 
 const HANDLER = /^on[A-Z]/
 
+// A form control's live state, which an attribute only seeds.
+const PROPERTIES = new Set(["checked", "value"])
+
 /** A handler's DOM event. `onFocus` and `onBlur` are the bubbling ones, as in React. */
 export function eventType(key: string): string {
   const name = key.slice(2).toLowerCase()
@@ -24,7 +27,7 @@ export function bind(element: HTMLElement, part: Part): () => void {
   const stop = effect(() => {
     const next = part.props.get()
     for (const key in current) {
-      if (HANDLER.test(key)) continue
+      if (HANDLER.test(key) || (PROPERTIES.has(key) && key in element)) continue
       if (next[key] === undefined) element.removeAttribute(key)
     }
     for (const key in next) {
@@ -43,6 +46,12 @@ export function bind(element: HTMLElement, part: Part): () => void {
         // merges handlers.
         element.addEventListener(eventType(key), preventable, true)
         element.addEventListener(eventType(key), listener)
+      } else if (PROPERTIES.has(key) && key in element) {
+        // What a person changes after the page loads is the property, not the attribute. A
+        // value that is not given is left alone: a checkbox's own default is `on`.
+        const control = element as unknown as Record<string, unknown>
+        if (key === "checked") control.checked = value !== undefined
+        else if (value !== undefined) control[key] = value
       } else if (value !== undefined && value !== current[key]) {
         element.setAttribute(key, String(value))
       }

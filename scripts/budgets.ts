@@ -5,9 +5,21 @@
  *
  *   bun scripts/budgets.ts
  */
+import { writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { gzipSync } from "node:zlib"
 
-const COMPONENTS = ["collapsible", "dialog", "popover", "select"]
+// Each component, and the entries of Base UI's that make the same thing.
+const COMPONENTS: Record<string, string[]> = {
+  checkbox: ["checkbox"],
+  collapsible: ["collapsible"],
+  dialog: ["dialog"],
+  popover: ["popover"],
+  "radio-group": ["radio-group", "radio"],
+  select: ["select"],
+  switch: ["switch"],
+}
 const EXTERNAL = ["react", "react-dom", "react/jsx-runtime", "react-dom/client"]
 
 async function size(entry: string): Promise<number> {
@@ -29,14 +41,24 @@ const rows: string[] = [
   "| component | core | core + React adapter | Base UI |",
   "| --- | --- | --- | --- |",
 ]
-for (const component of COMPONENTS) {
+const fixture = `${import.meta.dirname}/../fixtures/react`
+for (const [component, theirs] of Object.entries(COMPONENTS)) {
   const core = await size(`packages/core/src/${component}.ts`)
   const react = await size(`packages/react/src/${component}.tsx`)
-  const base = await size(
-    Bun.resolveSync(`@base-ui/react/${component}`, `${import.meta.dirname}/../fixtures/react`)
+  // One entry that imports them all, so what they share is counted once.
+  const entry = join(tmpdir(), `kirana-ui-budget-${component}.ts`)
+  writeFileSync(
+    entry,
+    theirs
+      .map(
+        (each) =>
+          `export * from ${JSON.stringify(Bun.resolveSync(`@base-ui/react/${each}`, fixture))}`
+      )
+      .join("\n")
   )
+  const base = await size(entry)
   rows.push(`| ${component} | ${kb(core)} | ${kb(react)} | ${kb(base)} |`)
 }
 const all = await size("packages/react/src/index.ts")
-rows.push(`| all four | | ${kb(all)} | |`)
+rows.push(`| all of them | | ${kb(all)} | |`)
 console.log(rows.join("\n"))

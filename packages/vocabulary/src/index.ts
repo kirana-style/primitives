@@ -6,6 +6,108 @@ export const vocabulary = {
     "base-ui"
   ],
   "components": {
+    "checkbox": {
+      "parts": {
+        "root": {
+          "description": "The box. It holds a hidden native checkbox, which a form and a label reach.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present when it is neither checked nor unchecked.",
+              "selector": "[data-indeterminate]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "The mark. In the page while the box is checked or indeterminate.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present when it is neither checked nor unchecked.",
+              "selector": "[data-indeterminate]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
     "collapsible": {
       "parts": {
         "root": {
@@ -342,6 +444,120 @@ export const vocabulary = {
         }
       }
     },
+    "radioGroup": {
+      "parts": {
+        "root": {
+          "description": "Groups the items: one of them is chosen at most.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "One choice. It holds a hidden native radio, which a form and a label reach.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "The mark. In the page while its item is the chosen one.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
     "select": {
       "parts": {
         "trigger": {
@@ -512,6 +728,84 @@ export const vocabulary = {
           "description": "A mark an item shows while it is the chosen one.",
           "states": {},
           "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "switch": {
+      "parts": {
+        "root": {
+          "description": "The track. It holds a hidden native checkbox, which a form and a label reach.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "thumb": {
+          "description": "The knob that moves along the track.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
           "variables": {}
         }
       }

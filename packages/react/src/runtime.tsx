@@ -69,7 +69,15 @@ export function useOptions<T extends Record<string, unknown>>(options: T): Reado
 }
 
 // HTML's boolean attributes, which React takes as booleans: a part's `""` means "present".
-const BOOLEAN = new Set(["hidden", "disabled", "inert", "required", "readonly", "multiple"])
+const BOOLEAN = new Set([
+  "hidden",
+  "disabled",
+  "inert",
+  "required",
+  "readonly",
+  "multiple",
+  "checked",
+])
 const RENAMED: Record<string, string> = {
   tabindex: "tabIndex",
   for: "htmlFor",
@@ -80,8 +88,10 @@ function toReact(props: PartProps): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const key in props) {
     const value = props[key]
-    if (value === undefined) continue
-    out[RENAMED[key] ?? key] = BOOLEAN.has(key) ? value === "" || value === true : value
+    // Always a boolean, never left out: an input whose `checked` comes and goes is, to React,
+    // one that changes from controlled to not.
+    if (BOOLEAN.has(key)) out[RENAMED[key] ?? key] = value === "" || value === true
+    else if (value !== undefined) out[RENAMED[key] ?? key] = value
   }
   return out
 }

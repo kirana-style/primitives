@@ -1,5 +1,7 @@
 import { Component, signal } from "@angular/core"
 import {
+  KuiCheckbox,
+  KuiCheckboxIndicator,
   KuiCollapsible,
   KuiCollapsiblePanel,
   KuiCollapsibleTrigger,
@@ -19,6 +21,9 @@ import {
   KuiPopoverPositioner,
   KuiPopoverTitle,
   KuiPopoverTrigger,
+  KuiRadioGroup,
+  KuiRadioGroupIndicator,
+  KuiRadioGroupItem,
   KuiSelect,
   KuiSelectInput,
   KuiSelectItem,
@@ -29,6 +34,8 @@ import {
   KuiSelectPositioner,
   KuiSelectTrigger,
   KuiSelectValue,
+  KuiSwitch,
+  KuiSwitchThumb,
 } from "@kirana-ui/angular"
 
 /**
@@ -41,6 +48,13 @@ import {
 @Component({
   selector: "app-root",
   imports: [
+    KuiCheckbox,
+    KuiCheckboxIndicator,
+    KuiRadioGroup,
+    KuiRadioGroupIndicator,
+    KuiRadioGroupItem,
+    KuiSwitch,
+    KuiSwitchThumb,
     KuiCollapsible,
     KuiCollapsiblePanel,
     KuiCollapsibleTrigger,
@@ -138,6 +152,58 @@ import {
         </div>
       </section>
 
+      <section data-fixture="controls">
+        <form data-testid="f1-form">
+          <label data-testid="x1-label">
+            <span kuiCheckbox [kuiId]="'x1'" [name]="'terms'" class="box" data-testid="x1">
+              <span *kuiCheckboxIndicator class="mark">✓</span>
+            </span>
+            Accept
+          </label>
+          <span
+            kuiCheckbox
+            [kuiId]="'x2'"
+            [defaultChecked]="true"
+            [disabled]="true"
+            class="box"
+            data-testid="x2"
+          >
+            <span *kuiCheckboxIndicator class="mark">✓</span>
+          </span>
+          <span kuiCheckbox [kuiId]="'x3'" [indeterminate]="true" class="box" data-testid="x3">
+            <span *kuiCheckboxIndicator class="mark">–</span>
+          </span>
+          <span
+            kuiSwitch
+            [kuiId]="'w1'"
+            [name]="'alerts'"
+            [(checked)]="alerts"
+            class="switch"
+            data-testid="w1"
+          >
+            <span kuiSwitchThumb class="thumb"></span>
+          </span>
+          <label for="w1" data-testid="w1-label">Alerts</label>
+          <div kuiRadioGroup [kuiId]="'r1'" [name]="'plan'" [defaultValue]="'pro'" data-testid="r1">
+            @for (each of plans; track each) {
+              <label>
+                <span
+                  kuiRadioGroupItem
+                  [value]="each"
+                  [disabled]="each === 'team'"
+                  class="radio"
+                  [attr.data-testid]="'r1-' + each"
+                >
+                  <span *kuiRadioGroupIndicator class="dot"></span>
+                </span>
+                {{ each }}
+              </label>
+            }
+          </div>
+        </form>
+        <output data-testid="w1-output">{{ alerts() ? "on" : "off" }}</output>
+      </section>
+
       <section data-fixture="dialog">
         <ng-container kuiDialog [kuiId]="'d1'">
           <button kuiDialogTrigger data-testid="d1-trigger">Open dialog</button>
@@ -221,6 +287,8 @@ export class App {
   protected readonly fruit = signal<unknown>("Banana")
   protected readonly presses = signal(0)
   protected readonly locked = signal(false)
+  protected readonly alerts = signal<boolean | undefined>(false)
+  protected readonly plans = ["free", "pro", "team", "max"]
 
   protected press(event: Event): void {
     this.presses.update((count) => count + 1)

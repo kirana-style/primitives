@@ -3,8 +3,8 @@
 Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
 every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
 
-> **Status: pre-release.** Nothing is published. Four components (Collapsible, Dialog, Popover,
-> Select) on all five adapters, enough to prove the design and measure it. The API will change.
+> **Status: pre-release.** Nothing is published. Seven components (Checkbox, Collapsible, Dialog,
+> Popover, Radio Group, Select, Switch) on all five adapters. The API will change.
 
 - **The same on every framework.** One set of scenarios runs on every adapter in a real browser,
   and the DOM of every state is compared across them: the same attributes, the same variables,
@@ -16,6 +16,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 - **Motion is CSS.** A panel or popup enters from its `data-starting-style` and leaves through its
   `data-ending-style`, so a design animates with transitions that reverse mid-flight. A closed
   panel leaves the page.
+- **Forms work as forms.** A checkbox, a switch and a radio hold a hidden native input: a form
+  submits it and a `<label>` reaches it, with no extra wiring.
 - **Small.** The core has one dependency (`@floating-ui/dom`).
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a
   server sends is the page at rest, and hydration finds nothing to correct (tested on React, Vue,

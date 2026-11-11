@@ -1,4 +1,5 @@
 import { effect } from "./reactivity.ts"
+import { isPrevented, preventable } from "./part.ts"
 import type { Part, PartProps } from "./part.ts"
 
 const HANDLER = /^on[A-Z]/
@@ -33,9 +34,14 @@ export function bind(element: HTMLElement, part: Part): () => void {
         // One listener for the element's life: it calls whatever handler the part has now.
         const listener: EventListener = (event) => {
           const handler = current[key]
-          if (typeof handler === "function") (handler as EventListener)(event)
+          if (typeof handler === "function" && !isPrevented(event))
+            (handler as EventListener)(event)
         }
         listeners.set(key, listener)
+        // In the capture phase, which reaches the element before any listener a caller put on
+        // it: their handler finds `event.preventKiranaHandler()` there, as in a framework that
+        // merges handlers.
+        element.addEventListener(eventType(key), preventable, true)
         element.addEventListener(eventType(key), listener)
       } else if (value !== undefined && value !== current[key]) {
         element.setAttribute(key, String(value))
@@ -48,6 +54,9 @@ export function bind(element: HTMLElement, part: Part): () => void {
   return () => {
     stop()
     detach()
-    for (const [key, listener] of listeners) element.removeEventListener(eventType(key), listener)
+    for (const [key, listener] of listeners) {
+      element.removeEventListener(eventType(key), preventable, true)
+      element.removeEventListener(eventType(key), listener)
+    }
   }
 }

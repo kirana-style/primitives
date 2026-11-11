@@ -2,6 +2,7 @@ import { autoUpdate, computePosition, flip, offset, shift, size } from "@floatin
 import type { Placement } from "@floating-ui/dom"
 
 import { batch, signal } from "../reactivity.ts"
+import { setGeometry } from "./geometry.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
 
 export type Side = "top" | "right" | "bottom" | "left"
@@ -62,10 +63,9 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
     align,
     placed,
     attach(positioner, anchor) {
-      const style = positioner.style
-      style.position = "absolute"
-      style.left = "0"
-      style.top = "0"
+      setGeometry(positioner, "position", "absolute")
+      setGeometry(positioner, "left", "0px")
+      setGeometry(positioner, "top", "0px")
       // The first placement resolves in a microtask, before anything is drawn: the positioner is
       // never hidden for it, so the popup inside can take focus as soon as it attaches.
 
@@ -84,10 +84,10 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
               padding: wanted.collisionPadding,
               apply({ availableWidth, availableHeight, rects }) {
                 reference = rects.reference
-                style.setProperty("--available-width", `${Math.max(0, availableWidth)}px`)
-                style.setProperty("--available-height", `${Math.max(0, availableHeight)}px`)
-                style.setProperty("--anchor-width", `${rects.reference.width}px`)
-                style.setProperty("--anchor-height", `${rects.reference.height}px`)
+                setGeometry(positioner, "--available-width", `${Math.max(0, availableWidth)}px`)
+                setGeometry(positioner, "--available-height", `${Math.max(0, availableHeight)}px`)
+                setGeometry(positioner, "--anchor-width", `${rects.reference.width}px`)
+                setGeometry(positioner, "--anchor-height", `${rects.reference.height}px`)
               },
             }),
           ],
@@ -97,10 +97,14 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
           const ratio = positioner.ownerDocument.defaultView?.devicePixelRatio ?? 1
           const x = Math.round(result.x * ratio) / ratio
           const y = Math.round(result.y * ratio) / ratio
-          style.transform = `translate(${x}px, ${y}px)`
+          setGeometry(positioner, "transform", `translate(${x}px, ${y}px)`)
           const anchorX = reference.x + reference.width / 2 - result.x
           const anchorY = reference.y + reference.height / 2 - result.y
-          style.setProperty("--transform-origin", ORIGIN[nextSide](`${anchorX}px`, `${anchorY}px`))
+          setGeometry(
+            positioner,
+            "--transform-origin",
+            ORIGIN[nextSide](`${anchorX}px`, `${anchorY}px`)
+          )
           batch(() => {
             side.set(nextSide)
             align.set(nextAlign)

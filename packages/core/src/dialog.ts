@@ -4,6 +4,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { focusScope, isolate } from "./services/focus.ts"
+import { setGeometry } from "./services/geometry.ts"
 import { layersAbove, layersChanged, pushLayer } from "./services/layers.ts"
 import { createPresence } from "./services/presence.ts"
 import { lockScroll } from "./services/scroll-lock.ts"
@@ -146,7 +147,7 @@ export function createDialog(props: ReadonlySignal<DialogProps>): Dialog {
             layersChanged.get()
             const above = layersAbove(element, "dialog")
             nested.set(above)
-            element.style.setProperty("--nested-dialogs", String(above))
+            setGeometry(element, "--nested-dialogs", String(above))
           })
         )
         // Undone in reverse: the page is no longer inert when focus goes back to the trigger.

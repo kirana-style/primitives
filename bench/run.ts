@@ -1,7 +1,7 @@
 /**
  * The bench: each fixture's bench page mounts N closed collapsibles (a root, a trigger, a panel
  * that is not in the page), with this library and with the one its framework is measured against
- * (Base UI on React, Ark UI on Svelte, ng-primitives on Angular), and reports the time to mount,
+ * (Base UI on React, Ark UI on Vue, Svelte and Solid, ng-primitives on Angular), and reports the time to mount,
  * the memory the mounted parts hold, the time to open a hundred of them and the time to unmount.
  *
  *   bun bench/run.ts [adapter…] [--n 1000,10000] [--runs 5]
@@ -18,7 +18,9 @@ const ROOT = join(import.meta.dirname, "..")
 const OUT = join(import.meta.dirname, "out")
 const OTHER: Record<string, string> = {
   react: "Base UI",
+  vue: "Ark UI",
   svelte: "Ark UI",
+  solid: "Ark UI",
   angular: "ng-primitives",
 }
 

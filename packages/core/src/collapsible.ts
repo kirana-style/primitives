@@ -3,6 +3,7 @@ import { defineComponent, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
+import { setGeometry } from "./services/geometry.ts"
 import { createPresence } from "./services/presence.ts"
 
 export interface CollapsibleProps {
@@ -50,13 +51,13 @@ export interface Collapsible {
 const NOTHING = () => {}
 
 function measure(element: HTMLElement) {
-  element.style.setProperty("--collapsible-panel-height", `${element.scrollHeight}px`)
-  element.style.setProperty("--collapsible-panel-width", `${element.scrollWidth}px`)
+  setGeometry(element, "--collapsible-panel-height", `${element.scrollHeight}px`)
+  setGeometry(element, "--collapsible-panel-width", `${element.scrollWidth}px`)
 }
 
 function release(element: HTMLElement) {
-  element.style.setProperty("--collapsible-panel-height", "auto")
-  element.style.setProperty("--collapsible-panel-width", "auto")
+  setGeometry(element, "--collapsible-panel-height", "auto")
+  setGeometry(element, "--collapsible-panel-width", "auto")
 }
 
 export function createCollapsible(props: ReadonlySignal<CollapsibleProps>): Collapsible {

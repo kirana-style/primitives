@@ -6,6 +6,13 @@
   const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
   let controlled = $state(false)
   let fruit = $state<string | null>("Banana")
+  let presses = $state(0)
+  let locked = $state(false)
+
+  function press(event: Event & { preventKiranaHandler?: () => void }) {
+    presses += 1
+    if (locked) event.preventKiranaHandler?.()
+  }
 </script>
 
 <main>
@@ -38,6 +45,27 @@
       <Collapsible.Trigger data-testid="c4-trigger">Disabled, open</Collapsible.Trigger>
       <Collapsible.Panel class="panel" data-testid="c4-panel">
         <p>Open from the start</p>
+      </Collapsible.Panel>
+    </Collapsible.Root>
+  </section>
+
+  <section data-fixture="composition">
+    <label>
+      <input type="checkbox" data-testid="k1-lock" bind:checked={locked} />
+      Lock
+    </label>
+    <Collapsible.Root id="k1">
+      <Collapsible.Trigger class="mine" type="submit" aria-expanded="true" onclick={press}>
+        {#snippet child({ props })}
+          <button {...props} data-testid="k1-trigger">Composed {presses}</button>
+        {/snippet}
+      </Collapsible.Trigger>
+      <Collapsible.Panel
+        class="panel"
+        data-testid="k1-panel"
+        style={`color: ${presses % 2 ? "red" : "blue"}`}
+      >
+        <p>Composed content</p>
       </Collapsible.Panel>
     </Collapsible.Root>
   </section>

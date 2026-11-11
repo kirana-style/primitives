@@ -1,13 +1,13 @@
 import { defineConfig } from "vite-plus"
 
-const FIXTURES = ["react", "svelte", "angular"]
+const FIXTURES = ["react", "vue", "svelte", "solid", "angular"]
 
 /**
  * The workspace's sources, named rather than traced: tracing a task's file access can miss reads
  * of workspace packages and makes starting a native binary fail (the Kirana repository found both).
  */
 const SOURCES = [
-  "**/*.{ts,tsx,js,mjs,json,svelte,css,html,md,yml,yaml}",
+  "**/*.{ts,tsx,js,mjs,json,svelte,vue,css,html,md,yml,yaml}",
   "!**/node_modules/**",
   "!**/dist/**",
   "!tests/conformance/out/**",

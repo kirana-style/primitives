@@ -12,17 +12,23 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
-import { chromium } from "playwright"
+import { chromium, firefox, webkit } from "playwright"
 import type { Page } from "playwright"
 
 import type { PartDefinition } from "../../packages/core/src/part.ts"
 import { vocabulary } from "../../packages/core/src/vocabulary.ts"
 
+const ENGINES = { chromium, firefox, webkit }
 const ROOT = join(import.meta.dirname, "../..")
 const OUT = join(import.meta.dirname, "out")
-const ALL = ["react", "svelte", "angular"]
+const ALL = ["react", "vue", "svelte", "solid", "angular"]
 
 const asked = process.argv.slice(2)
+// `--browser firefox`, or several (`--browser chromium,firefox,webkit`): the whole run once in each.
+const flag = asked.indexOf("--browser")
+const engines = (flag < 0 ? "chromium" : asked.splice(flag, 2)[1]!).split(
+  ","
+) as (keyof typeof ENGINES)[]
 const adapters = (asked.length > 0 ? asked : ALL).filter((each) => {
   const built = existsSync(join(ROOT, "fixtures", each, "dist/index.html"))
   if (!built) console.log(`skipped ${each}: fixtures/${each}/dist is not built`)
@@ -51,7 +57,17 @@ function serialize(): string {
   const lines: string[] = []
   const walk = (node: Node, depth: number) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.replace(/\s+/g, " ").trim()
+      // A run of text nodes is one text: how many nodes hold it is the framework's business.
+      if (node.previousSibling?.nodeType === Node.TEXT_NODE) return
+      let run = ""
+      for (
+        let each: Node | null = node;
+        each?.nodeType === Node.TEXT_NODE;
+        each = each.nextSibling
+      ) {
+        run += each.textContent
+      }
+      const text = run.replace(/\s+/g, " ").trim()
       if (text) lines.push(`${"  ".repeat(depth)}"${text}"`)
       return
     }
@@ -204,6 +220,54 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       "a disabled collapsible does not toggle"
     )
     expect((await attribute("c4-trigger", "disabled")) === "", "a disabled trigger is disabled")
+  },
+
+  // A part drawn as the caller's own element: `render` on React, `child` on Svelte, the
+  // directive on the caller's element on Angular.
+  async composition({ page, snapshot, id, present, attribute }) {
+    await snapshot("at rest")
+    expect(
+      (await attribute("k1-trigger", "type")) === "button",
+      "the part's `type` wins over the caller's"
+    )
+    expect((await attribute("k1-trigger", "aria-expanded")) === "false", "the part's ARIA wins")
+    expect((await attribute("k1-trigger", "class")) === "mine", "the caller's class is kept")
+
+    await id("k1-trigger").click()
+    await snapshot("opened through the caller's element")
+    expect(
+      (await id("k1-trigger").textContent())?.trim() === "Composed 1",
+      "the caller's handler ran"
+    )
+    expect((await attribute("k1-trigger", "aria-expanded")) === "true", "and the part's after it")
+    const style = () =>
+      id("k1-panel").evaluate((element) => ({
+        color: (element as HTMLElement).style.color,
+        height: (element as HTMLElement).style.getPropertyValue("--collapsible-panel-height"),
+      }))
+    expect((await style()).color === "red", "the caller's style is on the panel")
+    expect((await style()).height === "auto", "beside the geometry the core wrote")
+
+    await id("k1-lock").check()
+    await id("k1-trigger").click()
+    await snapshot("the caller prevented the part's handler")
+    expect(
+      (await id("k1-trigger").textContent())?.trim() === "Composed 2",
+      "the caller's handler ran again"
+    )
+    expect(await present("k1-panel"), "preventKiranaHandler() kept the panel open")
+    expect((await attribute("k1-trigger", "aria-expanded")) === "true", "the state did not change")
+    expect((await style()).color === "blue", "the caller's style changed")
+    expect(
+      (await style()).height === "auto",
+      "and the core's geometry survived the caller's new style"
+    )
+
+    await id("k1-lock").uncheck()
+    await id("k1-trigger").click()
+    await snapshot("closed through the caller's element")
+    expect(!(await present("k1-panel")), "unlocked, the part's handler runs again")
+    await settled(page)
   },
 
   async dialog({ page, snapshot, id, present, attribute, focused }) {
@@ -417,100 +481,107 @@ for (const component of Object.values(vocabulary)) {
 }
 
 mkdirSync(OUT, { recursive: true })
-const browser = await chromium.launch({
-  // A page that draws no frames must behave the same: nothing here waits for one.
-  args: ["--disable-gpu", "--disable-software-rasterizer"],
-})
-const servers: ReturnType<typeof serve>[] = []
-const snapshots: Record<string, Map<string, string>> = {}
 let failed = 0
 
-try {
-  for (const adapter of adapters) {
-    const server = serve(adapter)
-    servers.push(server)
-    const recorded = new Map<string, string>()
-    snapshots[adapter] = recorded
-    for (const [name, scenario] of Object.entries(scenarios)) {
-      const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
-      const page = await context.newPage()
-      const errors: string[] = []
-      page.on("pageerror", (error) => errors.push(error.message))
-      page.on("console", (message) => {
-        if (message.type() === "error" || message.type() === "warning") errors.push(message.text())
-      })
-      await page.goto(`http://localhost:${server.port}/`)
-      await page.waitForSelector("main")
-      const id = (testid: string) => page.locator(`[data-testid="${testid}"]`)
-      const run: Run = {
-        page,
-        id,
-        present: async (testid) => (await id(testid).count()) > 0,
-        attribute: (testid, attribute) => id(testid).getAttribute(attribute),
-        focused: () =>
-          page.evaluate(() => document.activeElement?.getAttribute("data-testid") ?? null),
-        async snapshot(step) {
-          await settled(page)
-          recorded.set(`${name} / ${step}`, await page.evaluate(serialize))
-          const undeclared = await page.evaluate(
-            (declared) => [
-              ...new Set(
-                [...document.querySelectorAll("main *, [data-kirana-portal] *")].flatMap(
-                  (element) =>
-                    [...element.attributes]
-                      .map((each) => each.name)
-                      .filter((each) => each.startsWith("data-") && !declared.includes(each))
-                )
-              ),
-            ],
-            [...DECLARED]
-          )
-          expect(undeclared.length === 0, `not in the vocabulary: ${undeclared.join(", ")}`)
-        },
-      }
-      try {
-        await scenario(run)
-        expect(errors.length === 0, `the page reported: ${errors.join(" | ")}`)
-        console.log(`ok    ${adapter}  ${name}`)
-      } catch (error) {
-        failed++
-        const message = error instanceof Error ? error.message.split("\n")[0] : String(error)
-        console.log(`FAIL  ${adapter}  ${name}: ${message}`)
-      }
-      await context.close()
-    }
-    writeFileSync(
-      join(OUT, `${adapter}.txt`),
-      [...recorded].map(([step, dom]) => `### ${step}\n${dom}\n`).join("\n")
-    )
-  }
+for (const engine of engines) {
+  const browser = await ENGINES[engine].launch({
+    // A page that draws no frames must behave the same: nothing here waits for one.
+    args: engine === "chromium" ? ["--disable-gpu", "--disable-software-rasterizer"] : [],
+  })
+  const servers: ReturnType<typeof serve>[] = []
+  const snapshots: Record<string, Map<string, string>> = {}
+  console.log(`\n${engine}`)
 
-  // The same state, the same DOM, whatever rendered it.
-  const [reference, ...others] = adapters as [string, ...string[]]
-  for (const adapter of others) {
-    let different = 0
-    for (const [step, expected] of snapshots[reference]!) {
-      const actual = snapshots[adapter]!.get(step)
-      if (actual === expected) continue
-      different++
-      failed++
-      console.log(`DIFF  ${adapter} against ${reference}  ${step}`)
-      if (actual === undefined) continue
-      const a = expected.split("\n")
-      const b = actual.split("\n")
-      for (let line = 0; line < Math.max(a.length, b.length); line++) {
-        if (a[line] === b[line]) continue
-        console.log(`      ${reference}: ${a[line]?.trim()}\n      ${adapter}: ${b[line]?.trim()}`)
-        break
+  try {
+    for (const adapter of adapters) {
+      const server = serve(adapter)
+      servers.push(server)
+      const recorded = new Map<string, string>()
+      snapshots[adapter] = recorded
+      for (const [name, scenario] of Object.entries(scenarios)) {
+        const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
+        const page = await context.newPage()
+        const errors: string[] = []
+        page.on("pageerror", (error) => errors.push(error.message))
+        page.on("console", (message) => {
+          if (message.type() === "error" || message.type() === "warning")
+            errors.push(message.text())
+        })
+        await page.goto(`http://localhost:${server.port}/`)
+        await page.waitForSelector("main")
+        const id = (testid: string) => page.locator(`[data-testid="${testid}"]`)
+        const run: Run = {
+          page,
+          id,
+          present: async (testid) => (await id(testid).count()) > 0,
+          attribute: (testid, attribute) => id(testid).getAttribute(attribute),
+          focused: () =>
+            page.evaluate(() => document.activeElement?.getAttribute("data-testid") ?? null),
+          async snapshot(step) {
+            await settled(page)
+            recorded.set(`${name} / ${step}`, await page.evaluate(serialize))
+            const undeclared = await page.evaluate(
+              (declared) => [
+                ...new Set(
+                  [...document.querySelectorAll("main *, [data-kirana-portal] *")].flatMap(
+                    (element) =>
+                      [...element.attributes]
+                        .map((each) => each.name)
+                        .filter((each) => each.startsWith("data-") && !declared.includes(each))
+                  )
+                ),
+              ],
+              [...DECLARED]
+            )
+            expect(undeclared.length === 0, `not in the vocabulary: ${undeclared.join(", ")}`)
+          },
+        }
+        try {
+          await scenario(run)
+          expect(errors.length === 0, `the page reported: ${errors.join(" | ")}`)
+          console.log(`ok    ${adapter}  ${name}`)
+        } catch (error) {
+          failed++
+          const message = error instanceof Error ? error.message.split("\n")[0] : String(error)
+          console.log(`FAIL  ${adapter}  ${name}: ${message}`)
+        }
+        await context.close()
+      }
+      writeFileSync(
+        join(OUT, `${engine}-${adapter}.txt`),
+        [...recorded].map(([step, dom]) => `### ${step}\n${dom}\n`).join("\n")
+      )
+    }
+
+    // The same state, the same DOM, whatever rendered it.
+    const [reference, ...others] = adapters as [string, ...string[]]
+    for (const adapter of others) {
+      let different = 0
+      for (const [step, expected] of snapshots[reference]!) {
+        const actual = snapshots[adapter]!.get(step)
+        if (actual === expected) continue
+        different++
+        failed++
+        console.log(`DIFF  ${adapter} against ${reference}  ${step}`)
+        if (actual === undefined) continue
+        const a = expected.split("\n")
+        const b = actual.split("\n")
+        for (let line = 0; line < Math.max(a.length, b.length); line++) {
+          if (a[line] === b[line]) continue
+          console.log(
+            `      ${reference}: ${a[line]?.trim()}\n      ${adapter}: ${b[line]?.trim()}`
+          )
+          break
+        }
+      }
+      if (different === 0) {
+        console.log(`same  ${adapter} = ${reference}  (${snapshots[reference]!.size} states)`)
       }
     }
-    if (different === 0) {
-      console.log(`same  ${adapter} = ${reference}  (${snapshots[reference]!.size} states)`)
-    }
+  } finally {
+    await browser.close()
+    for (const server of servers) await server.stop(true)
   }
-} finally {
-  await browser.close()
-  for (const server of servers) await server.stop(true)
 }
 
 console.log(failed === 0 ? "\nconformance: passed" : `\nconformance: ${failed} failed`)

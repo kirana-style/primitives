@@ -48,6 +48,18 @@ export function details(reason: string, event?: Event): ChangeDetails {
 /** A caller's handler calls this on the event to stop the part's own handler for it. */
 export const PREVENT = "preventKiranaHandler"
 
+const prevented = new WeakSet<object>()
+
+/** Gives an event its `preventKiranaHandler()`, before a caller's handler sees it. */
+export function preventable(event: Event): void {
+  ;(event as Event & { [PREVENT]?: () => void })[PREVENT] ??= () => prevented.add(event)
+}
+
+/** Whether a caller's handler asked the part's own to stay out of this event. */
+export function isPrevented(event: Event): boolean {
+  return prevented.has(event)
+}
+
 /**
  * Merges a caller's props with a part's, the one rule every adapter uses: the part's attributes
  * win (its identity survives composition), classes join, and for an event the caller's handler
@@ -62,13 +74,10 @@ export function mergeProps(caller: PartProps | undefined, part: PartProps): Part
     const theirs = caller[key]
     // By value, not by name: an adapter merges after renaming handlers to its framework's.
     if (key.startsWith("on") && typeof own === "function" && typeof theirs === "function") {
-      merged[key] = (event: Event & { [PREVENT]?: () => void }) => {
-        let prevented = false
-        event[PREVENT] = () => {
-          prevented = true
-        }
+      merged[key] = (event: Event) => {
+        preventable(event)
         ;(theirs as (event: Event) => void)(event)
-        if (!prevented) (own as (event: Event) => void)(event)
+        if (!prevented.has(event)) (own as (event: Event) => void)(event)
       }
     } else if (own !== undefined || !(key in caller)) {
       merged[key] = own

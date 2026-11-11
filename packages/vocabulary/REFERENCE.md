@@ -6,6 +6,36 @@ Every part's states and CSS variables. A state is an attribute on the part's ele
 it with an attribute selector (`.panel[data-open]`). A variable is a custom property on the
 element: read it with `var()`. The names follow Base UI's.
 
+## Checkbox
+
+### Checkbox.Root
+
+The box. It holds a hidden native checkbox, which a form and a label reach.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-indeterminate` | Present when it is neither checked nor unchecked. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+
+### Checkbox.Indicator
+
+The mark. In the page while the box is checked or indeterminate.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-indeterminate` | Present when it is neither checked nor unchecked. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
 ## Collapsible
 
 ### Collapsible.Root
@@ -146,6 +176,44 @@ The text that describes the popover.
 
 A button that closes the popover.
 
+## RadioGroup
+
+### RadioGroup.Root
+
+Groups the items: one of them is chosen at most.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+
+### RadioGroup.Item
+
+One choice. It holds a hidden native radio, which a form and a label reach.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+
+### RadioGroup.Indicator
+
+The mark. In the page while its item is the chosen one.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
 ## Select
 
 ### Select.Trigger
@@ -215,3 +283,29 @@ The item's name: what the trigger shows once it is chosen.
 ### Select.ItemIndicator
 
 A mark an item shows while it is the chosen one.
+
+## Switch
+
+### Switch.Root
+
+The track. It holds a hidden native checkbox, which a form and a label reach.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+
+### Switch.Thumb
+
+The knob that moves along the track.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Collapsible, Dialog, Popover, Select } from "@kirana-ui/vue"
+import { Checkbox, Collapsible, Dialog, Popover, RadioGroup, Select, Switch } from "@kirana-ui/vue"
 import { ref } from "vue"
 
 // The page every adapter draws, element for element: the conformance run walks it and compares
 // the DOM of each state across adapters. Change it in every fixture at once.
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
+const PLANS = ["free", "pro", "team", "max"]
 const controlled = ref(false)
+const alerts = ref(false)
 const fruit = ref<string | null>("Banana")
 const presses = ref(0)
 const locked = ref(false)
@@ -74,6 +76,41 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           <p>Composed content</p>
         </Collapsible.Panel>
       </Collapsible.Root>
+    </section>
+
+    <section data-fixture="controls">
+      <form data-testid="f1-form">
+        <label data-testid="x1-label">
+          <Checkbox.Root id="x1" name="terms" class="box" data-testid="x1">
+            <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+          </Checkbox.Root>
+          Accept
+        </label>
+        <Checkbox.Root id="x2" default-checked disabled class="box" data-testid="x2">
+          <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+        </Checkbox.Root>
+        <Checkbox.Root id="x3" indeterminate class="box" data-testid="x3">
+          <Checkbox.Indicator class="mark">–</Checkbox.Indicator>
+        </Checkbox.Root>
+        <Switch.Root id="w1" v-model:checked="alerts" name="alerts" class="switch" data-testid="w1">
+          <Switch.Thumb class="thumb" />
+        </Switch.Root>
+        <label for="w1" data-testid="w1-label">Alerts</label>
+        <RadioGroup.Root id="r1" name="plan" default-value="pro" data-testid="r1">
+          <label v-for="each in PLANS" :key="each">
+            <RadioGroup.Item
+              :value="each"
+              :disabled="each === 'team'"
+              class="radio"
+              :data-testid="`r1-${each}`"
+            >
+              <RadioGroup.Indicator class="dot" />
+            </RadioGroup.Item>
+            {{ each }}
+          </label>
+        </RadioGroup.Root>
+      </form>
+      <output data-testid="w1-output">{{ alerts ? "on" : "off" }}</output>
     </section>
 
     <section data-fixture="dialog">

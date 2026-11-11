@@ -1,0 +1,48 @@
+<script lang="ts">
+  import type { ChangeDetails } from "@kirana-ui/core"
+  import { createCheckbox } from "@kirana-ui/core/checkbox"
+
+  import Part from "../Part.svelte"
+  import { controller } from "../runtime.svelte.ts"
+  import { provide } from "./context.ts"
+
+  let {
+    checked = $bindable(),
+    defaultChecked,
+    onCheckedChange,
+    indeterminate,
+    disabled,
+    readOnly,
+    required,
+    name,
+    value,
+    id,
+    children,
+    ...rest
+  } = $props()
+  const generated = $props.id()
+
+  function change(next: boolean, by: ChangeDetails) {
+    onCheckedChange?.(next, by)
+    if (!by.canceled) checked = next
+  }
+
+  const made = provide(
+    controller(createCheckbox, () => ({
+      id: id ?? generated,
+      checked,
+      defaultChecked,
+    indeterminate,
+      disabled,
+      readOnly,
+      required,
+      name,
+      value,
+      onCheckedChange: change,
+    }))
+  )
+</script>
+
+<Part part={made.root} tag="span" {...rest}>
+  {@render children?.()}<Part part={made.input} tag="input" />
+</Part>

@@ -93,3 +93,52 @@ button {
 .item[data-disabled] {
   opacity: 0.5;
 }
+
+.box,
+.radio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #888;
+}
+.radio {
+  border-radius: 50%;
+}
+.box[data-checked],
+.box[data-indeterminate] {
+  background: #222;
+  color: white;
+}
+.box[data-disabled],
+.radio[data-disabled] {
+  opacity: 0.5;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #222;
+}
+.switch {
+  display: inline-flex;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: #bbb;
+}
+.switch[data-checked] {
+  background: #222;
+}
+.thumb {
+  width: 14px;
+  height: 14px;
+  margin: 2px;
+  border-radius: 50%;
+  background: white;
+  transition: translate 120ms;
+}
+.thumb[data-checked] {
+  translate: 14px;
+}

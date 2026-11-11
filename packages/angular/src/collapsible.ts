@@ -25,7 +25,10 @@ export class KuiCollapsible implements OnInit {
     disabled: this.disabled(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
-      if (!details.canceled) this.open.set(open)
+      if (!details.canceled) {
+        this.open.set(open)
+        this.props.sync()
+      }
     },
   }))
   private readonly part = hostPart()

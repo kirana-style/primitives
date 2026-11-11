@@ -5,11 +5,49 @@
  * conditions on one property can be told these never meet.
  */
 export const exclusive: string[][] = [
-  ["[data-open]","[data-closed]"],
+  ["[data-checked]","[data-unchecked]"],
   ["[data-starting-style]","[data-ending-style]"],
+  ["[data-open]","[data-closed]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
 ]
+
+export const Checkbox = {
+  /** The box. It holds a hidden native checkbox, which a form and a label reach. */
+  Root: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present when it is neither checked nor unchecked. */
+    indeterminate: "[data-indeterminate]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+  },
+  /** The mark. In the page while the box is checked or indeterminate. */
+  Indicator: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present when it is neither checked nor unchecked. */
+    indeterminate: "[data-indeterminate]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
+} as const
 
 export const Collapsible = {
   /** Groups the trigger and the panel. */
@@ -143,6 +181,48 @@ export const Popover = {
   },
 } as const
 
+export const RadioGroup = {
+  /** Groups the items: one of them is chosen at most. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+  },
+  /** One choice. It holds a hidden native radio, which a form and a label reach. */
+  Item: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+  },
+  /** The mark. In the page while its item is the chosen one. */
+  Indicator: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
+} as const
+
 export const Select = {
   /** The button that shows the value and opens the list. */
   Trigger: {
@@ -216,5 +296,34 @@ export const Select = {
   },
   /** A mark an item shows while it is the chosen one. */
   ItemIndicator: {
+  },
+} as const
+
+export const Switch = {
+  /** The track. It holds a hidden native checkbox, which a form and a label reach. */
+  Root: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+  },
+  /** The knob that moves along the track. */
+  Thumb: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
   },
 } as const

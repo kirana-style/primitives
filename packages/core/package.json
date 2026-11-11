@@ -15,7 +15,10 @@
     "./dialog": "./src/dialog.ts",
     "./popover": "./src/popover.ts",
     "./select": "./src/select.ts",
-    "./vocabulary": "./src/vocabulary.ts"
+    "./vocabulary": "./src/vocabulary.ts",
+    "./checkbox": "./src/checkbox.ts",
+    "./switch": "./src/switch.ts",
+    "./radio-group": "./src/radio-group.ts"
   },
   "dependencies": {
     "@floating-ui/dom": "catalog:"

@@ -1,5 +1,8 @@
+export { Checkbox } from "./checkbox.tsx"
 export { Collapsible } from "./collapsible.tsx"
 export { Dialog } from "./dialog.tsx"
 export { Popover } from "./popover.tsx"
+export { RadioGroup } from "./radio-group.tsx"
 export { Select } from "./select.tsx"
+export { Switch } from "./switch.tsx"
 export type { PartComponentProps, RenderProp } from "./runtime.tsx"

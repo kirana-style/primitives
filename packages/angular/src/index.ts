@@ -1,3 +1,4 @@
+export { KuiCheckbox, KuiCheckboxIndicator } from "./checkbox"
 export { KuiCollapsible, KuiCollapsiblePanel, KuiCollapsibleTrigger } from "./collapsible"
 export {
   KuiDialog,
@@ -31,3 +32,5 @@ export {
   KuiSelectTrigger,
   KuiSelectValue,
 } from "./select"
+export { KuiRadioGroup, KuiRadioGroupIndicator, KuiRadioGroupItem } from "./radio-group"
+export { KuiSwitch, KuiSwitchThumb } from "./switch"

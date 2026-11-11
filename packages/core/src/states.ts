@@ -58,3 +58,17 @@ export const EITHER_FRAME = [
   ["open", "closed"],
   ["startingStyle", "endingStyle"],
 ] as const
+
+export const CHECKED = {
+  checked: state("data-checked", "Present when it is checked."),
+  unchecked: state("data-unchecked", "Present when it is not checked."),
+}
+
+/** What a form control's parts all carry. */
+export const CONTROL = {
+  disabled: DISABLED,
+  readonly: state("data-readonly", "Present when it can be read but not changed."),
+  required: state("data-required", "Present when the form needs it."),
+}
+
+export const EITHER_CHECKED = [["checked", "unchecked"]] as const

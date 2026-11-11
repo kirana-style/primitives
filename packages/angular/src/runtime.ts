@@ -25,14 +25,23 @@ export class KuiIds {
  * A core signal that follows a directive's inputs. Call it where injection works (a field
  * initialiser or the constructor); `read` first runs when the directive's inputs are set.
  */
-export function inputsSignal<T extends Record<string, unknown>>(read: () => T): () => Signal<T> {
+export function inputsSignal<T extends Record<string, unknown>>(
+  read: () => T
+): (() => Signal<T>) & { sync(): void } {
   let source: Signal<T> | undefined
   angularEffect(() => {
     const next = read()
     untracked(() => source?.set(next))
   })
   // Made on first use, in `ngOnInit`: a default is read once, with the inputs in.
-  return () => (source ??= signal(untracked(read), sameProps as (a: T, b: T) => boolean))
+  const get = () => (source ??= signal(untracked(read), sameProps as (a: T, b: T) => boolean))
+  return Object.assign(get, {
+    /**
+     * Reads the inputs now. Angular's own effect runs a turn later, and a part that has just
+     * written a model back (`this.open.set(open)`) must not spend that turn showing the old value.
+     */
+    sync: () => source?.set(untracked(read)),
+  })
 }
 
 /**
@@ -44,6 +53,24 @@ export function hostPart(): (part: Part) => void {
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   const destroy = inject(DestroyRef)
   return (part) => destroy.onDestroy(bind(element, part))
+}
+
+/**
+ * A part the directive draws itself, as the last child of its host: the hidden native input of a
+ * form control, which the caller does not write. Returns a function to call in `ngOnInit`.
+ */
+export function innerPart(tag: string): (part: Part) => void {
+  const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
+  const destroy = inject(DestroyRef)
+  return (part) => {
+    const element = host.ownerDocument.createElement(tag)
+    host.appendChild(element)
+    const unbind = bind(element, part)
+    destroy.onDestroy(() => {
+      unbind()
+      element.remove()
+    })
+  }
 }
 
 /** Runs a controller's own effects for the directive's life. */

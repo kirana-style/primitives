@@ -31,7 +31,10 @@ export class KuiPopover implements OnInit {
     defaultOpen: this.defaultOpen(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
-      if (!details.canceled) this.open.set(open)
+      if (!details.canceled) {
+        this.open.set(open)
+        this.props.sync()
+      }
     },
   }))
   private readonly mount = mounted()

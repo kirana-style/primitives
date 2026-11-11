@@ -108,6 +108,17 @@ function serialize(): string {
       })
       .filter(Boolean)
       .sort()
+    // A form control's live state is its properties: whether a framework also wrote the
+    // attribute is its own business.
+    if (node instanceof HTMLInputElement) {
+      for (const name of ["checked", "value"]) {
+        const index = attributes.findIndex((each) => each === name || each.startsWith(`${name}=`))
+        if (index >= 0) attributes.splice(index, 1)
+      }
+      if (node.checked) attributes.push("checked")
+      if (node.value !== "" && node.value !== "on") attributes.push(`value="${node.value}"`)
+      attributes.sort()
+    }
     const testid = node.getAttribute("data-testid")
     lines.push(
       `${"  ".repeat(depth)}<${node.tagName.toLowerCase()}${testid ? `#${testid}` : ""}${attributes.map((each) => ` ${each}`).join("")}>`
@@ -236,6 +247,97 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       "a disabled collapsible does not toggle"
     )
     expect((await attribute("c4-trigger", "disabled")) === "", "a disabled trigger is disabled")
+  },
+
+  // The form controls: a box with a hidden native input inside it, which a form and a label reach.
+  async controls({ page, snapshot, id, attribute, focused }) {
+    const form = (name: string) =>
+      page.evaluate(
+        (field) =>
+          new FormData(document.querySelector<HTMLFormElement>('[data-testid="f1-form"]')!).getAll(
+            field
+          ),
+        name
+      )
+    await snapshot("at rest")
+    expect((await attribute("x1", "role")) === "checkbox", "role=checkbox")
+    expect((await attribute("x1", "aria-checked")) === "false", "unchecked: aria-checked")
+    expect((await attribute("x1", "data-unchecked")) === "", "unchecked: data-unchecked")
+    expect((await attribute("x1", "tabindex")) === "0", "the box takes focus")
+    expect((await id("x1").locator(".mark").count()) === 0, "no mark while unchecked")
+    expect((await form("terms")).length === 0, "an unchecked box is not submitted")
+
+    await id("x1").click()
+    await snapshot("checkbox checked by a press")
+    expect((await attribute("x1", "aria-checked")) === "true", "checked: aria-checked")
+    expect((await attribute("x1", "data-checked")) === "", "checked: data-checked")
+    expect((await id("x1").locator(".mark").count()) === 1, "the mark is in the page")
+    expect((await form("terms")).join() === "on", "a checked box is submitted as `on`")
+
+    await id("x1-label").click({ position: { x: 40, y: 8 } })
+    await snapshot("checkbox unchecked through its label")
+    expect((await attribute("x1", "aria-checked")) === "false", "a press on the label toggles once")
+
+    await id("x1").focus()
+    await page.keyboard.press("Space")
+    expect((await attribute("x1", "aria-checked")) === "true", "Space checks")
+    await page.keyboard.press("Enter")
+    expect((await attribute("x1", "aria-checked")) === "true", "Enter does nothing")
+    await page.keyboard.press("Space")
+    await snapshot("checkbox toggled by Space")
+    expect((await attribute("x1", "aria-checked")) === "false", "Space unchecks")
+
+    expect((await attribute("x2", "aria-disabled")) === "true", "a disabled box says so")
+    await id("x2").click({ force: true })
+    expect((await attribute("x2", "aria-checked")) === "true", "a disabled box does not toggle")
+    expect(
+      (await attribute("x3", "aria-checked")) === "mixed",
+      "indeterminate is aria-checked=mixed"
+    )
+    expect((await attribute("x3", "data-indeterminate")) === "", "and data-indeterminate")
+    expect((await attribute("x3", "data-checked")) === null, "neither checked")
+    expect((await attribute("x3", "data-unchecked")) === null, "nor unchecked")
+    expect(
+      await id("x3")
+        .locator("input")
+        .evaluate((input) => (input as HTMLInputElement).indeterminate),
+      "the native input is indeterminate too"
+    )
+
+    expect((await attribute("w1", "role")) === "switch", "role=switch")
+    await id("w1").click()
+    await snapshot("switch on")
+    expect((await id("w1-output").textContent()) === "on", "the caller hears the switch")
+    expect((await attribute("w1", "aria-checked")) === "true", "on: aria-checked")
+    expect((await form("alerts")).join() === "on", "an on switch is submitted")
+    await id("w1-label").click()
+    await snapshot("switch off through a label that names it")
+    expect((await id("w1-output").textContent()) === "off", "`<label for>` reaches the switch")
+
+    expect((await attribute("r1", "role")) === "radiogroup", "role=radiogroup")
+    expect((await attribute("r1-pro", "aria-checked")) === "true", "the default value is chosen")
+    expect((await attribute("r1-pro", "tabindex")) === "0", "the chosen item is the tab stop")
+    expect((await attribute("r1-free", "tabindex")) === "-1", "the others are not")
+    expect((await form("plan")).join() === "pro", "the chosen value is submitted")
+    await id("r1-pro").focus()
+    await page.keyboard.press("ArrowDown")
+    expect((await focused()) === "r1-max", "ArrowDown skips a disabled item")
+    expect((await attribute("r1-max", "aria-checked")) === "true", "and chooses as it moves")
+    await page.keyboard.press("ArrowDown")
+    expect((await focused()) === "r1-free", "and wraps to the first")
+    await page.keyboard.press("ArrowLeft")
+    expect((await focused()) === "r1-max", "ArrowLeft goes back")
+    await snapshot("radio moved by arrows")
+    expect((await form("plan")).join() === "max", "one value is submitted")
+    expect((await id("r1").locator(".dot").count()) === 1, "one mark is in the page")
+    await id("r1-team").click({ force: true })
+    expect(
+      (await attribute("r1-team", "aria-checked")) === "false",
+      "a disabled item is not chosen"
+    )
+    await id("r1-pro").click()
+    await snapshot("radio chosen by a press")
+    expect((await form("plan")).join() === "pro", "a press chooses")
   },
 
   // A part drawn as the caller's own element: `render` on React, `child` on Svelte, the

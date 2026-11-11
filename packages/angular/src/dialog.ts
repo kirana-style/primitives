@@ -26,7 +26,10 @@ export class KuiDialog implements OnInit {
     dismissible: this.dismissible(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
-      if (!details.canceled) this.open.set(open)
+      if (!details.canceled) {
+        this.open.set(open)
+        this.props.sync()
+      }
     },
   }))
   private readonly mount = mounted()

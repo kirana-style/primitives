@@ -3,9 +3,8 @@
 Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
 every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
 
-> **Status: an architecture spike.** Nothing is published. Four components (Collapsible, Dialog,
-> Popover, Select) on three adapters (React, Svelte, Angular), enough to prove the design and
-> measure it. The API will change.
+> **Status: pre-release.** Nothing is published. Four components (Collapsible, Dialog, Popover,
+> Select) on all five adapters, enough to prove the design and measure it. The API will change.
 
 - **The same on every framework.** One set of scenarios runs on every adapter in a real browser,
   and the DOM of every state is compared across them: the same attributes, the same variables,
@@ -21,13 +20,13 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 
 ## Layout
 
-| Path                                  | Holds                                                                                                                                                    |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position), a controller per component, the vocabulary, a plain-DOM binder |
-| `packages/react`, `svelte`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                         |
-| `fixtures/<adapter>`                  | the page every adapter draws, element for element, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                         |
-| `tests/conformance`                   | the scenarios and the cross-adapter comparison                                                                                                           |
-| `bench`, `scripts/budgets.ts`         | mount time, memory and interaction; gzip per component                                                                                                   |
+| Path                                                  | Holds                                                                                                                                                    |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position), a controller per component, the vocabulary, a plain-DOM binder |
+| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                         |
+| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                         |
+| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                           |
+| `bench`, `scripts/budgets.ts`                         | mount time, memory and interaction; gzip per component                                                                                                   |
 
 ## How a component is built
 
@@ -50,6 +49,14 @@ An adapter reads `props` into its framework and calls `attach` when the element 
 </Collapsible.Root>
 ```
 
+```vue
+<!-- Vue -->
+<Collapsible.Root>
+  <Collapsible.Trigger>Details</Collapsible.Trigger>
+  <Collapsible.Panel class="panel">…</Collapsible.Panel>
+</Collapsible.Root>
+```
+
 ```svelte
 <!-- Svelte -->
 <Collapsible.Root>
@@ -65,6 +72,11 @@ An adapter reads `props` into its framework and calls `attach` when the element 
   <div *kuiCollapsiblePanel class="panel">…</div>
 </div>
 ```
+
+A part renders as the caller's own element in each framework's idiom, and its attributes still
+win: `render` on React and Solid, `as-child` on Vue, a `child` snippet on Svelte, and on Angular
+the directive simply sits on the caller's element. A caller's handler runs first and can call
+`event.preventKiranaHandler()` to keep the part's own out of that event.
 
 ```css
 .panel {
@@ -88,6 +100,7 @@ vp run check          # format, lint with types, type check; warnings fail
 vp run test           # the core's reactivity; the React adapter on the server
 vp run build          # each adapter's fixture
 vp run conformance    # the scenarios on every adapter (Chromium), the DOM compared across them
+bun tests/conformance/run.ts --browser firefox   # or chromium,firefox,webkit: once in each
 vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives
 vp run budgets        # gzip per component
 ```

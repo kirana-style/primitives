@@ -106,6 +106,38 @@ import {
         </div>
       </section>
 
+      <section data-fixture="composition">
+        <label>
+          <input
+            type="checkbox"
+            data-testid="k1-lock"
+            [checked]="locked()"
+            (change)="locked.set($any($event.target).checked)"
+          />
+          Lock
+        </label>
+        <div kuiCollapsible [kuiId]="'k1'">
+          <button
+            kuiCollapsibleTrigger
+            class="mine"
+            type="submit"
+            aria-expanded="true"
+            data-testid="k1-trigger"
+            (click)="press($event)"
+          >
+            Composed {{ presses() }}
+          </button>
+          <div
+            *kuiCollapsiblePanel
+            class="panel"
+            data-testid="k1-panel"
+            [style.color]="presses() % 2 ? 'red' : 'blue'"
+          >
+            <p>Composed content</p>
+          </div>
+        </div>
+      </section>
+
       <section data-fixture="dialog">
         <ng-container kuiDialog [kuiId]="'d1'">
           <button kuiDialogTrigger data-testid="d1-trigger">Open dialog</button>
@@ -187,4 +219,11 @@ export class App {
   protected readonly fruits = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
   protected readonly controlled = signal<boolean | undefined>(false)
   protected readonly fruit = signal<unknown>("Banana")
+  protected readonly presses = signal(0)
+  protected readonly locked = signal(false)
+
+  protected press(event: Event): void {
+    this.presses.update((count) => count + 1)
+    if (this.locked()) (event as Event & { preventKiranaHandler(): void }).preventKiranaHandler()
+  }
 }

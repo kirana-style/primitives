@@ -68,13 +68,13 @@ jobs:
       - name: Build
         run: vp run build
 
-      # The browser Playwright drives, at the version the lockfile's Playwright asks for.
-      - name: Chromium
-        run: bunx playwright install --with-deps chromium
+      # The browsers Playwright drives, at the versions the lockfile's Playwright asks for.
+      - name: Browsers
+        run: bunx playwright install --with-deps chromium firefox webkit
 
-      # Through the task, so the fixtures built above are restored, not built again.
+      # The whole run once in each engine, on the fixtures built above.
       - name: Conformance
-        run: vp run conformance
+        run: bun tests/conformance/run.ts --browser chromium,firefox,webkit
 
       # What each adapter drew, state by state, when the comparison fails.
       - name: Keep the recorded states

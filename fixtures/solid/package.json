@@ -1,0 +1,21 @@
+{
+  "name": "fixture-solid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev --port 4105",
+    "build": "vp build"
+  },
+  "dependencies": {
+    "@ark-ui/solid": "catalog:",
+    "@kirana-ui/core": "workspace:*",
+    "@kirana-ui/solid": "workspace:*",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

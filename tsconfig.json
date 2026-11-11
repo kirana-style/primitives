@@ -16,6 +16,7 @@
   "include": [
     "packages/core/src",
     "packages/react/src",
+    "packages/vue/src",
     "tests",
     "bench",
     "scripts",

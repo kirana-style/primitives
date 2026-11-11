@@ -1,0 +1,21 @@
+{
+  "name": "fixture-vue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev --port 4104",
+    "build": "vp build"
+  },
+  "dependencies": {
+    "@ark-ui/vue": "catalog:",
+    "@kirana-ui/core": "workspace:*",
+    "@kirana-ui/vue": "workspace:*",
+    "vue": "catalog:"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

@@ -3,6 +3,10 @@ import { Collapsible, Dialog, Popover, Select } from "@kirana-ui/react"
 import { useState } from "react"
 import { createRoot } from "react-dom/client"
 
+interface Preventable {
+  preventKiranaHandler(): void
+}
+
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 
 /**
@@ -12,6 +16,8 @@ const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 function App() {
   const [controlled, setControlled] = useState(false)
   const [fruit, setFruit] = useState<string | null>("Banana")
+  const [presses, setPresses] = useState(0)
+  const [locked, setLocked] = useState(false)
   return (
     <main>
       <section data-fixture="collapsible">
@@ -43,6 +49,43 @@ function App() {
           <Collapsible.Trigger data-testid="c4-trigger">Disabled, open</Collapsible.Trigger>
           <Collapsible.Panel className="panel" data-testid="c4-panel">
             <p>Open from the start</p>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+      </section>
+
+      <section data-fixture="composition">
+        <label>
+          <input
+            type="checkbox"
+            data-testid="k1-lock"
+            checked={locked}
+            onChange={(event) => setLocked(event.target.checked)}
+          />
+          Lock
+        </label>
+        <Collapsible.Root id="k1">
+          <Collapsible.Trigger
+            render={
+              <button
+                className="mine"
+                type="submit"
+                aria-expanded="true"
+                data-testid="k1-trigger"
+                onClick={(event) => {
+                  setPresses((count) => count + 1)
+                  if (locked) (event as unknown as Preventable).preventKiranaHandler()
+                }}
+              />
+            }
+          >
+            Composed {presses}
+          </Collapsible.Trigger>
+          <Collapsible.Panel
+            className="panel"
+            data-testid="k1-panel"
+            style={{ color: presses % 2 ? "red" : "blue" }}
+          >
+            <p>Composed content</p>
           </Collapsible.Panel>
         </Collapsible.Root>
       </section>

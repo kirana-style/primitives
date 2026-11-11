@@ -17,16 +17,20 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   `data-ending-style`, so a design animates with transitions that reverse mid-flight. A closed
   panel leaves the page.
 - **Small.** The core has one dependency (`@floating-ui/dom`).
+- **Renders on a server.** A controller touches no DOM until its element exists, so the page a
+  server sends is the page at rest, and hydration finds nothing to correct (tested on React, Vue,
+  Svelte and Solid; Angular's is not yet).
 
 ## Layout
 
-| Path                                                  | Holds                                                                                                                                                    |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position), a controller per component, the vocabulary, a plain-DOM binder |
-| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                         |
-| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                         |
-| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                           |
-| `bench`, `scripts/budgets.ts`                         | mount time, memory and interaction; gzip per component                                                                                                   |
+| Path                                                  | Holds                                                                                                                                                                             |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position), a controller per component, the vocabulary, a plain-DOM binder                          |
+| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                  |
+| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))     |
+| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS |
+| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                    |
+| `bench`, `scripts/budgets.ts`                         | mount time, memory and interaction; gzip per component                                                                                                                            |
 
 ## How a component is built
 
@@ -98,7 +102,8 @@ The toolchain is Vite+ (`vp`) with Bun as the package manager.
 vp install            # first, and after bun.lock changes
 vp run check          # format, lint with types, type check; warnings fail
 vp run test           # the core's reactivity; the React adapter on the server
-vp run build          # each adapter's fixture
+vp run vocabulary     # packages/vocabulary from the core's part definitions
+vp run build          # each adapter's fixture, with its server-rendered page
 vp run conformance    # the scenarios on every adapter (Chromium), the DOM compared across them
 bun tests/conformance/run.ts --browser firefox   # or chromium,firefox,webkit: once in each
 vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives

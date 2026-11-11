@@ -5,7 +5,9 @@ import { defineConfig } from "vite-plus"
 export default defineConfig({
   base: "./",
   plugins: [vue()],
+  // The adapters are sources in this workspace: a server build compiles them too.
+  ssr: { noExternal: [/^@kirana-ui\//] },
   build: {
-    rollupOptions: { input: { index: "index.html", bench: "bench.html" } },
+    rollupOptions: { input: { index: "index.html", ssr: "ssr.html", bench: "bench.html" } },
   },
 })

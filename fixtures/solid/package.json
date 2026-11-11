@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 4105",
-    "build": "vp build"
+    "build": "vp build && vp build --ssr src/server.tsx --outDir dist-server && bun ../../scripts/prerender.ts solid"
   },
   "dependencies": {
     "@ark-ui/solid": "catalog:",

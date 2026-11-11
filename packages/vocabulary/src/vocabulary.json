@@ -1,0 +1,518 @@
+{
+  "version": 1,
+  "sharesNamesWith": [
+    "base-ui"
+  ],
+  "components": {
+    "collapsible": {
+      "parts": {
+        "root": {
+          "description": "Groups the trigger and the panel.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {}
+        },
+        "trigger": {
+          "description": "The button that opens and closes the panel.",
+          "states": {
+            "panelOpen": {
+              "attribute": "data-panel-open",
+              "description": "Present when the panel is open.",
+              "selector": "[data-panel-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "panel": {
+          "description": "The content. In the page while open, and through its exit's motion.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--collapsible-panel-height": "The panel's content height while it opens or closes, `auto` once it is open.",
+            "--collapsible-panel-width": "The panel's content width while it opens or closes, `auto` once it is open."
+          }
+        }
+      }
+    },
+    "dialog": {
+      "parts": {
+        "trigger": {
+          "description": "The button that opens the dialog.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the dialog is open.",
+              "selector": "[data-popup-open]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "backdrop": {
+          "description": "The layer over the page behind the dialog.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "popup": {
+          "description": "The dialog itself.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "nestedDialogOpen": {
+              "attribute": "data-nested-dialog-open",
+              "description": "Present when another dialog is open above this one.",
+              "selector": "[data-nested-dialog-open]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--nested-dialogs": "How many dialogs are open above this one."
+          }
+        },
+        "title": {
+          "description": "The heading that names the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "description": {
+          "description": "The text that describes the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "close": {
+          "description": "A button that closes the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "popover": {
+      "parts": {
+        "trigger": {
+          "description": "The button that opens the popover, and what it is placed against.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the popover is open.",
+              "selector": "[data-popup-open]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "positioner": {
+          "description": "Places the popup against the trigger. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          }
+        },
+        "popup": {
+          "description": "The popover itself.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "title": {
+          "description": "The heading that names the popover.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "description": {
+          "description": "The text that describes the popover.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "close": {
+          "description": "A button that closes the popover.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "select": {
+      "parts": {
+        "trigger": {
+          "description": "The button that shows the value and opens the list.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while nothing is chosen.",
+              "selector": "[data-placeholder]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "value": {
+          "description": "The chosen value's label, or the placeholder.",
+          "states": {
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while nothing is chosen.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "positioner": {
+          "description": "Places the list against the trigger. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          }
+        },
+        "popup": {
+          "description": "The list of items.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "item": {
+          "description": "One choice in the list.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on the chosen item.",
+              "selector": "[data-selected]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "itemText": {
+          "description": "The item's name: what the trigger shows once it is chosen.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "itemIndicator": {
+          "description": "A mark an item shows while it is the chosen one.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    }
+  }
+}

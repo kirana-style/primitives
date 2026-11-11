@@ -1,5 +1,5 @@
 import { bindable } from "./bindable.ts"
-import { defineComponent, details, flag } from "./part.ts"
+import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -15,26 +15,6 @@ export interface CollapsibleProps {
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   disabled?: boolean | undefined
 }
-
-export const collapsibleVocabulary = defineComponent({
-  root: {
-    states: { open: "data-open", closed: "data-closed", disabled: "data-disabled" },
-    exclusive: [["open", "closed"]],
-  },
-  trigger: {
-    states: { panelOpen: "data-panel-open", disabled: "data-disabled" },
-  },
-  panel: {
-    states: {
-      open: "data-open",
-      closed: "data-closed",
-      startingStyle: "data-starting-style",
-      endingStyle: "data-ending-style",
-    },
-    exclusive: [["open", "closed"]],
-    variables: ["--collapsible-panel-height", "--collapsible-panel-width"],
-  },
-})
 
 export interface Collapsible {
   readonly open: ReadonlySignal<boolean>

@@ -163,6 +163,10 @@
         "svelte": "^5.29.0",
       },
     },
+    "packages/vocabulary": {
+      "name": "@kirana-ui/vocabulary",
+      "version": "0.0.0",
+    },
     "packages/vue": {
       "name": "@kirana-ui/vue",
       "version": "0.0.0",
@@ -396,6 +400,8 @@
     "@kirana-ui/solid": ["@kirana-ui/solid@workspace:packages/solid"],
 
     "@kirana-ui/svelte": ["@kirana-ui/svelte@workspace:packages/svelte"],
+
+    "@kirana-ui/vocabulary": ["@kirana-ui/vocabulary@workspace:packages/vocabulary"],
 
     "@kirana-ui/vue": ["@kirana-ui/vue@workspace:packages/vue"],
 

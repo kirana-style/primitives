@@ -17,6 +17,7 @@
     "packages/core/src",
     "packages/react/src",
     "packages/vue/src",
+    "packages/vocabulary/src",
     "tests",
     "bench",
     "scripts",

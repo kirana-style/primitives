@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 4101",
-    "build": "vp build"
+    "build": "vp build && vp build --ssr src/server.tsx --outDir dist-server && bun ../../scripts/prerender.ts react"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",

@@ -5,12 +5,66 @@
  * conditions on one property can be told these never meet.
  */
 export const exclusive: string[][] = [
-  ["[data-checked]","[data-unchecked]"],
-  ["[data-starting-style]","[data-ending-style]"],
+  ["[data-orientation=\"horizontal\"]","[data-orientation=\"vertical\"]"],
   ["[data-open]","[data-closed]"],
+  ["[data-starting-style]","[data-ending-style]"],
+  ["[data-checked]","[data-unchecked]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
+  ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
+
+export const Accordion = {
+  /** Groups the items. */
+  Root: {
+    /** The way the items are laid out, and the arrows that move between their triggers. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** One section: a header with its trigger, and a panel. */
+  Item: {
+    /** Present when the item is open. */
+    open: "[data-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The heading that holds the trigger. */
+  Header: {
+    /** Present when the item is open. */
+    open: "[data-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The button that opens and closes the item's panel. */
+  Trigger: {
+    /** Present when the item's panel is open. */
+    panelOpen: "[data-panel-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The item's content. In the page while open, and through its exit's motion. */
+  Panel: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** The way the items are laid out, and the arrows that move between their triggers. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+} as const
 
 export const Checkbox = {
   /** The box. It holds a hidden native checkbox, which a form and a label reach. */
@@ -325,5 +379,90 @@ export const Switch = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+  },
+} as const
+
+export const Tabs = {
+  /** Groups the tabs and their panels. */
+  Root: {
+    /** The way the tabs are laid out. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Where the newly active tab is from the one before, for a panel or a mark that slides. */
+    activationDirection: {
+      left: "[data-activation-direction=\"left\"]",
+      right: "[data-activation-direction=\"right\"]",
+      up: "[data-activation-direction=\"up\"]",
+      down: "[data-activation-direction=\"down\"]",
+      none: "[data-activation-direction=\"none\"]",
+    },
+  },
+  /** The row of tabs. The arrows move between them. */
+  List: {
+    /** The way the tabs are laid out. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Where the newly active tab is from the one before, for a panel or a mark that slides. */
+    activationDirection: {
+      left: "[data-activation-direction=\"left\"]",
+      right: "[data-activation-direction=\"right\"]",
+      up: "[data-activation-direction=\"up\"]",
+      down: "[data-activation-direction=\"down\"]",
+      none: "[data-activation-direction=\"none\"]",
+    },
+  },
+  /** A button that shows its panel. */
+  Tab: {
+    /** Present on the tab whose panel is shown. */
+    active: "[data-active]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** The way the tabs are laid out. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** A mark for the active tab: it carries that tab's position and size. */
+  Indicator: {
+    /** The way the tabs are laid out. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Where the newly active tab is from the one before, for a panel or a mark that slides. */
+    activationDirection: {
+      left: "[data-activation-direction=\"left\"]",
+      right: "[data-activation-direction=\"right\"]",
+      up: "[data-activation-direction=\"up\"]",
+      down: "[data-activation-direction=\"down\"]",
+      none: "[data-activation-direction=\"none\"]",
+    },
+  },
+  /** A tab's content. In the page while its tab is active, and through its exit. */
+  Panel: {
+    /** Present while its tab is not the active one. */
+    hidden: "[data-hidden]",
+    /** The way the tabs are laid out. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Where the newly active tab is from the one before, for a panel or a mark that slides. */
+    activationDirection: {
+      left: "[data-activation-direction=\"left\"]",
+      right: "[data-activation-direction=\"right\"]",
+      up: "[data-activation-direction=\"up\"]",
+      down: "[data-activation-direction=\"down\"]",
+      none: "[data-activation-direction=\"none\"]",
+    },
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
   },
 } as const

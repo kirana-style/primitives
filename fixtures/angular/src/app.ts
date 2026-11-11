@@ -1,5 +1,15 @@
 import { Component, signal } from "@angular/core"
 import {
+  KuiAccordion,
+  KuiAccordionHeader,
+  KuiAccordionItem,
+  KuiAccordionPanel,
+  KuiAccordionTrigger,
+  KuiTabs,
+  KuiTabsIndicator,
+  KuiTabsList,
+  KuiTabsPanel,
+  KuiTabsTab,
   KuiCheckbox,
   KuiCheckboxIndicator,
   KuiCollapsible,
@@ -48,6 +58,16 @@ import {
 @Component({
   selector: "app-root",
   imports: [
+    KuiAccordion,
+    KuiAccordionHeader,
+    KuiAccordionItem,
+    KuiAccordionPanel,
+    KuiAccordionTrigger,
+    KuiTabs,
+    KuiTabsIndicator,
+    KuiTabsList,
+    KuiTabsPanel,
+    KuiTabsTab,
     KuiCheckbox,
     KuiCheckboxIndicator,
     KuiRadioGroup,
@@ -204,6 +224,76 @@ import {
         <output data-testid="w1-output">{{ alerts() ? "on" : "off" }}</output>
       </section>
 
+      <section data-fixture="tabs">
+        <div kuiTabs [kuiId]="'t1'" [defaultValue]="'account'" data-testid="t1">
+          <div kuiTabsList class="tabs" data-testid="t1-list">
+            <button kuiTabsTab [value]="'account'" data-testid="t1-account">Account</button>
+            <button kuiTabsTab [value]="'password'" data-testid="t1-password">Password</button>
+            <button kuiTabsTab [value]="'billing'" [disabled]="true" data-testid="t1-billing">
+              Billing
+            </button>
+            <button kuiTabsTab [value]="'team'" data-testid="t1-team">Team</button>
+            <span kuiTabsIndicator class="tab-mark" data-testid="t1-mark"></span>
+          </div>
+          <div *kuiTabsPanel="'account'" data-testid="t1-panel-account">
+            <p>Account settings</p>
+            <div kuiTabs [kuiId]="'t2'" [defaultValue]="'one'" data-testid="t2">
+              <div kuiTabsList class="tabs" data-testid="t2-list">
+                <button kuiTabsTab [value]="'one'" data-testid="t2-one">One</button>
+                <button kuiTabsTab [value]="'two'" data-testid="t2-two">Two</button>
+              </div>
+              <div *kuiTabsPanel="'one'" data-testid="t2-panel-one">First</div>
+              <div *kuiTabsPanel="'two'" data-testid="t2-panel-two">Second</div>
+            </div>
+          </div>
+          <div *kuiTabsPanel="'password'" data-testid="t1-panel-password">
+            <p>Password settings</p>
+          </div>
+          <div *kuiTabsPanel="'billing'" data-testid="t1-panel-billing">
+            <p>Billing settings</p>
+          </div>
+          <div *kuiTabsPanel="'team'" data-testid="t1-panel-team">
+            <p>Team settings</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-fixture="accordion">
+        <div kuiAccordion [kuiId]="'a1'" data-testid="a1">
+          @for (each of sections; track each) {
+            <div
+              kuiAccordionItem
+              [value]="each"
+              [disabled]="each === 'three'"
+              [attr.data-testid]="'a1-' + each"
+            >
+              <h3 kuiAccordionHeader>
+                <button kuiAccordionTrigger [attr.data-testid]="'a1-' + each + '-trigger'">
+                  Section {{ each }}
+                </button>
+              </h3>
+              <div *kuiAccordionPanel class="fold" [attr.data-testid]="'a1-' + each + '-panel'">
+                <p>Content {{ each }}</p>
+              </div>
+            </div>
+          }
+        </div>
+        <div kuiAccordion [kuiId]="'a2'" [multiple]="true" [defaultValue]="['x']" data-testid="a2">
+          @for (each of ["x", "y"]; track each) {
+            <div kuiAccordionItem [value]="each" [attr.data-testid]="'a2-' + each">
+              <h3 kuiAccordionHeader>
+                <button kuiAccordionTrigger [attr.data-testid]="'a2-' + each + '-trigger'">
+                  Part {{ each }}
+                </button>
+              </h3>
+              <div *kuiAccordionPanel class="fold" [attr.data-testid]="'a2-' + each + '-panel'">
+                <p>Content {{ each }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
       <section data-fixture="dialog">
         <ng-container kuiDialog [kuiId]="'d1'">
           <button kuiDialogTrigger data-testid="d1-trigger">Open dialog</button>
@@ -289,6 +379,7 @@ export class App {
   protected readonly locked = signal(false)
   protected readonly alerts = signal<boolean | undefined>(false)
   protected readonly plans = ["free", "pro", "team", "max"]
+  protected readonly sections = ["one", "two", "three", "four"]
 
   protected press(event: Event): void {
     this.presses.update((count) => count + 1)

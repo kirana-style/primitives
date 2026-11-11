@@ -6,6 +6,62 @@ Every part's states and CSS variables. A state is an attribute on the part's ele
 it with an attribute selector (`.panel[data-open]`). A variable is a custom property on the
 element: read it with `var()`. The names follow Base UI's.
 
+## Accordion
+
+### Accordion.Root
+
+Groups the items.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the items are laid out, and the arrows that move between their triggers. |
+| `data-disabled` | Present when it is disabled. |
+
+### Accordion.Item
+
+One section: a header with its trigger, and a panel.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when the item is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Accordion.Header
+
+The heading that holds the trigger.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when the item is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Accordion.Trigger
+
+The button that opens and closes the item's panel.
+
+| Attribute | When |
+| --- | --- |
+| `data-panel-open` | Present when the item's panel is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Accordion.Panel
+
+The item's content. In the page while open, and through its exit's motion.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-disabled` | Present when it is disabled. |
+| `data-orientation` (horizontal, vertical) | The way the items are laid out, and the arrows that move between their triggers. |
+
+| Variable | Holds |
+| --- | --- |
+| `--accordion-panel-height` | The panel's content height while it opens or closes, `auto` once it is open. |
+| `--accordion-panel-width` | The panel's content width while it opens or closes, `auto` once it is open. |
+
 ## Checkbox
 
 ### Checkbox.Root
@@ -309,3 +365,63 @@ The knob that moves along the track.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+
+## Tabs
+
+### Tabs.Root
+
+Groups the tabs and their panels.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
+| `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
+
+### Tabs.List
+
+The row of tabs. The arrows move between them.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
+| `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
+
+### Tabs.Tab
+
+A button that shows its panel.
+
+| Attribute | When |
+| --- | --- |
+| `data-active` | Present on the tab whose panel is shown. |
+| `data-disabled` | Present when it is disabled. |
+| `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
+
+### Tabs.Indicator
+
+A mark for the active tab: it carries that tab's position and size.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
+| `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
+
+| Variable | Holds |
+| --- | --- |
+| `--active-tab-left` | The active tab's distance from the list's left edge. |
+| `--active-tab-right` | The active tab's distance from the list's right edge. |
+| `--active-tab-top` | The active tab's distance from the list's top edge. |
+| `--active-tab-bottom` | The active tab's distance from the list's bottom edge. |
+| `--active-tab-width` | The active tab's width. |
+| `--active-tab-height` | The active tab's height. |
+
+### Tabs.Panel
+
+A tab's content. In the page while its tab is active, and through its exit.
+
+| Attribute | When |
+| --- | --- |
+| `data-hidden` | Present while its tab is not the active one. |
+| `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
+| `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |

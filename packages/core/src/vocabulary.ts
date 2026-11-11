@@ -1,3 +1,4 @@
+import { accordionVocabulary } from "./accordion.vocabulary.ts"
 import { checkboxVocabulary } from "./checkbox.vocabulary.ts"
 import { collapsibleVocabulary } from "./collapsible.vocabulary.ts"
 import { dialogVocabulary } from "./dialog.vocabulary.ts"
@@ -5,6 +6,7 @@ import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
 import { selectVocabulary } from "./select.vocabulary.ts"
 import { switchVocabulary } from "./switch.vocabulary.ts"
+import { tabsVocabulary } from "./tabs.vocabulary.ts"
 
 /**
  * Every component's parts with their states and CSS variables, as data. This is what
@@ -12,6 +14,7 @@ import { switchVocabulary } from "./switch.vocabulary.ts"
  * Tailwind variants, a plain-CSS reference) and the conformance tests hold the parts to it.
  */
 export const vocabulary = {
+  accordion: accordionVocabulary,
   checkbox: checkboxVocabulary,
   collapsible: collapsibleVocabulary,
   dialog: dialogVocabulary,
@@ -19,6 +22,7 @@ export const vocabulary = {
   radioGroup: radioGroupVocabulary,
   select: selectVocabulary,
   switch: switchVocabulary,
+  tabs: tabsVocabulary,
 } as const
 
 export type Vocabulary = typeof vocabulary

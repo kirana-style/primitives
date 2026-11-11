@@ -1,5 +1,5 @@
 import { bindable } from "./bindable.ts"
-import { defineComponent, details, flag } from "./part.ts"
+import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
@@ -15,38 +15,6 @@ export interface PopoverProps {
   defaultOpen?: boolean | undefined
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
 }
-
-const SIDE = { attribute: "data-side", values: ["top", "right", "bottom", "left"] } as const
-const ALIGN = { attribute: "data-align", values: ["start", "center", "end"] } as const
-
-export const popoverVocabulary = defineComponent({
-  trigger: { states: { popupOpen: "data-popup-open" } },
-  positioner: {
-    states: { open: "data-open", closed: "data-closed", side: SIDE, align: ALIGN },
-    exclusive: [["open", "closed"]],
-    variables: [
-      "--anchor-width",
-      "--anchor-height",
-      "--available-width",
-      "--available-height",
-      "--transform-origin",
-    ],
-  },
-  popup: {
-    states: {
-      open: "data-open",
-      closed: "data-closed",
-      startingStyle: "data-starting-style",
-      endingStyle: "data-ending-style",
-      side: SIDE,
-      align: ALIGN,
-    },
-    exclusive: [["open", "closed"]],
-  },
-  title: {},
-  description: {},
-  close: {},
-})
 
 export interface Popover {
   readonly open: ReadonlySignal<boolean>

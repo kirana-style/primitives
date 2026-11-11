@@ -1,7 +1,7 @@
-import { collapsibleVocabulary } from "./collapsible.ts"
-import { dialogVocabulary } from "./dialog.ts"
-import { popoverVocabulary } from "./popover.ts"
-import { selectVocabulary } from "./select.ts"
+import { collapsibleVocabulary } from "./collapsible.vocabulary.ts"
+import { dialogVocabulary } from "./dialog.vocabulary.ts"
+import { popoverVocabulary } from "./popover.vocabulary.ts"
+import { selectVocabulary } from "./select.vocabulary.ts"
 
 /**
  * Every component's parts with their states and CSS variables, as data. This is what

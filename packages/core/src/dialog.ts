@@ -1,5 +1,5 @@
 import { bindable } from "./bindable.ts"
-import { defineComponent, details, flag } from "./part.ts"
+import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -19,26 +19,6 @@ export interface DialogProps {
   /** Whether a press outside closes it. Default `true`. */
   dismissible?: boolean | undefined
 }
-
-const TRANSITION = {
-  open: "data-open",
-  closed: "data-closed",
-  startingStyle: "data-starting-style",
-  endingStyle: "data-ending-style",
-} as const
-
-export const dialogVocabulary = defineComponent({
-  trigger: { states: { popupOpen: "data-popup-open", disabled: "data-disabled" } },
-  backdrop: { states: TRANSITION, exclusive: [["open", "closed"]] },
-  popup: {
-    states: { ...TRANSITION, nestedDialogOpen: "data-nested-dialog-open" },
-    exclusive: [["open", "closed"]],
-    variables: ["--nested-dialogs"],
-  },
-  title: {},
-  description: {},
-  close: { states: { disabled: "data-disabled" } },
-})
 
 export interface Dialog {
   readonly open: ReadonlySignal<boolean>

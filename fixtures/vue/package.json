@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 4104",
-    "build": "vp build"
+    "build": "vp build && vp build --ssr src/server.ts --outDir dist-server && bun ../../scripts/prerender.ts vue"
   },
   "dependencies": {
     "@ark-ui/vue": "catalog:",

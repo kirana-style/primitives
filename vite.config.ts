@@ -10,6 +10,7 @@ const SOURCES = [
   "**/*.{ts,tsx,js,mjs,json,svelte,vue,css,html,md,yml,yaml}",
   "!**/node_modules/**",
   "!**/dist/**",
+  "!**/dist-server/**",
   "!tests/conformance/out/**",
   "!bench/out/**",
   "!.agents/**",
@@ -36,13 +37,19 @@ export default defineConfig({
         command: "vp test run",
         cache: { input: SOURCES, output: [] },
       },
-      // Each adapter's fixture: the page the conformance run walks, and its bench page. Angular's
+      // `@kirana-ui/vocabulary` from the core's part definitions; a test fails when it is stale.
+      vocabulary: { command: "bun scripts/vocabulary.ts", cache: false },
+      // Each adapter's fixture: the page the conformance run walks, the same page rendered on a
+      // server for the run to hydrate (all but Angular's so far), and its bench page. Angular's
       // compiler checks its adapter here, and Svelte's compiles its files.
       build: {
         command: FIXTURES.map((each) => `bun run --cwd fixtures/${each} build`).join(" && "),
         cache: {
           input: SOURCES,
-          output: FIXTURES.map((each) => `fixtures/${each}/dist/**`),
+          output: FIXTURES.flatMap((each) => [
+            `fixtures/${each}/dist/**`,
+            `fixtures/${each}/dist-server/**`,
+          ]),
         },
       },
       // One set of scenarios on every adapter in a real browser, the DOM compared across them.
@@ -73,7 +80,19 @@ export default defineConfig({
     trailingComma: "es5",
     printWidth: 100,
     sortPackageJson: false,
-    ignorePatterns: ["**/dist/**", "**/out/**", "bun.lock", ".agents/**", ".claude/**"],
+    ignorePatterns: [
+      "**/dist/**",
+      "**/dist-server/**",
+      "**/out/**",
+      "bun.lock",
+      ".agents/**",
+      ".claude/**",
+      // Generated (`vp run vocabulary`), and compared byte for byte with what the generator writes.
+      "packages/vocabulary/src/vocabulary.json",
+      "packages/vocabulary/src/index.ts",
+      "packages/vocabulary/src/keys.ts",
+      "packages/vocabulary/REFERENCE.md",
+    ],
   },
   lint: {
     plugins: ["import", "typescript", "unicorn", "react", "oxc"],
@@ -86,7 +105,12 @@ export default defineConfig({
       es2022: true,
       browser: true,
     },
-    ignorePatterns: ["**/dist/**", "**/out/**", "**/vite.config.*.timestamp-*.*"],
+    ignorePatterns: [
+      "**/dist/**",
+      "**/dist-server/**",
+      "**/out/**",
+      "**/vite.config.*.timestamp-*.*",
+    ],
     rules: {
       // Deliberate here: `String(value)` on a caller's value, and a part's method handed on.
       "typescript/unbound-method": "off",

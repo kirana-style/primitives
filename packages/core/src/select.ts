@@ -1,5 +1,5 @@
 import { bindable } from "./bindable.ts"
-import { defineComponent, details, flag } from "./part.ts"
+import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
@@ -32,51 +32,6 @@ export interface SelectItemOptions {
   /** What typeahead matches and the trigger shows; the item's text when left out. */
   label?: string
 }
-
-const SIDE = { attribute: "data-side", values: ["top", "right", "bottom", "left"] } as const
-const ALIGN = { attribute: "data-align", values: ["start", "center", "end"] } as const
-
-export const selectVocabulary = defineComponent({
-  trigger: {
-    states: {
-      popupOpen: "data-popup-open",
-      placeholder: "data-placeholder",
-      disabled: "data-disabled",
-    },
-  },
-  value: { states: { placeholder: "data-placeholder" } },
-  positioner: {
-    states: { open: "data-open", closed: "data-closed", side: SIDE, align: ALIGN },
-    exclusive: [["open", "closed"]],
-    variables: [
-      "--anchor-width",
-      "--anchor-height",
-      "--available-width",
-      "--available-height",
-      "--transform-origin",
-    ],
-  },
-  popup: {
-    states: {
-      open: "data-open",
-      closed: "data-closed",
-      startingStyle: "data-starting-style",
-      endingStyle: "data-ending-style",
-      side: SIDE,
-      align: ALIGN,
-    },
-    exclusive: [["open", "closed"]],
-  },
-  item: {
-    states: {
-      selected: "data-selected",
-      highlighted: "data-highlighted",
-      disabled: "data-disabled",
-    },
-  },
-  itemText: {},
-  itemIndicator: {},
-})
 
 export interface Select<Value = unknown> {
   readonly open: ReadonlySignal<boolean>

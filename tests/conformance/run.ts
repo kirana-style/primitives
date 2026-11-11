@@ -39,6 +39,18 @@ if (adapters.length === 0) {
   process.exit(1)
 }
 
+// Each adapter's page, and the same page rendered on a server and hydrated, where it is built.
+const subjects = adapters.flatMap((adapter) => {
+  const page = { adapter, label: adapter, path: "/", hydrated: false }
+  return existsSync(join(ROOT, "fixtures", adapter, "dist/ssr.html"))
+    ? [page, { adapter, label: `${adapter}+ssr`, path: "/ssr.html", hydrated: true }]
+    : [page]
+})
+
+/** A serialized page without its inline styles: the geometry only a browser can measure. */
+const withoutStyles = (dom: string) =>
+  dom.replace(/ style="[^"]*"/g, "").replace(/\nfocus: .*$/s, "")
+
 function serve(adapter: string) {
   const dist = join(ROOT, "fixtures", adapter, "dist")
   return Bun.serve({
@@ -53,19 +65,21 @@ function serve(adapter: string) {
 
 /** The page as a stylesheet, a test or a tool sees it, without what only a framework writes. */
 function serialize(): string {
-  const SKIP = new Set(["ng-version", "data-testid"])
+  // `data-hk` is Solid's hydration key, on what a server rendered.
+  const SKIP = new Set(["ng-version", "data-testid", "data-hk"])
   const lines: string[] = []
   const walk = (node: Node, depth: number) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      // A run of text nodes is one text: how many nodes hold it is the framework's business.
-      if (node.previousSibling?.nodeType === Node.TEXT_NODE) return
+      // A run of text nodes is one text: how many nodes hold it, and the comments a framework
+      // leaves between them, are its own business.
+      const inRun = (each: Node | null): each is Node =>
+        each?.nodeType === Node.TEXT_NODE || each?.nodeType === Node.COMMENT_NODE
+      let before = node.previousSibling
+      while (before?.nodeType === Node.COMMENT_NODE) before = before.previousSibling
+      if (before?.nodeType === Node.TEXT_NODE) return
       let run = ""
-      for (
-        let each: Node | null = node;
-        each?.nodeType === Node.TEXT_NODE;
-        each = each.nextSibling
-      ) {
-        run += each.textContent
+      for (let each: Node | null = node; inRun(each); each = each.nextSibling) {
+        if (each.nodeType === Node.TEXT_NODE) run += each.textContent
       }
       const text = run.replace(/\s+/g, " ").trim()
       if (text) lines.push(`${"  ".repeat(depth)}"${text}"`)
@@ -80,6 +94,8 @@ function serialize(): string {
         let value = each.value
         // An empty `class` or `style` is a framework's leftover, not a difference.
         if ((each.name === "class" || each.name === "style") && value.trim() === "") return ""
+        // A class is a list of tokens: the space a server leaves around them is not a difference.
+        if (each.name === "class") value = value.trim().replace(/\s+/g, " ")
         if (each.name === "style") {
           value = value
             .split(";")
@@ -231,7 +247,10 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       "the part's `type` wins over the caller's"
     )
     expect((await attribute("k1-trigger", "aria-expanded")) === "false", "the part's ARIA wins")
-    expect((await attribute("k1-trigger", "class")) === "mine", "the caller's class is kept")
+    expect(
+      (await attribute("k1-trigger", "class"))?.trim() === "mine",
+      "the caller's class is kept"
+    )
 
     await id("k1-trigger").click()
     await snapshot("opened through the caller's element")
@@ -471,12 +490,12 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
   },
 }
 
-const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal"])
+const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal", "data-hk"])
+const VARIABLES = new Set<string>()
 for (const component of Object.values(vocabulary)) {
   for (const part of Object.values<PartDefinition>(component)) {
-    for (const state of Object.values(part.states ?? {})) {
-      DECLARED.add(typeof state === "string" ? state : state.attribute)
-    }
+    for (const state of Object.values(part.states ?? {})) DECLARED.add(state.attribute)
+    for (const name of Object.keys(part.variables ?? {})) VARIABLES.add(name)
   }
 }
 
@@ -488,16 +507,29 @@ for (const engine of engines) {
     // A page that draws no frames must behave the same: nothing here waits for one.
     args: engine === "chromium" ? ["--disable-gpu", "--disable-software-rasterizer"] : [],
   })
-  const servers: ReturnType<typeof serve>[] = []
+  const servers: Record<string, ReturnType<typeof serve>> = {}
   const snapshots: Record<string, Map<string, string>> = {}
+  // What each server sent, before any script ran.
+  const sent: Record<string, string> = {}
   console.log(`\n${engine}`)
 
   try {
-    for (const adapter of adapters) {
-      const server = serve(adapter)
-      servers.push(server)
+    for (const subject of subjects) {
+      const { adapter, label, path } = subject
+      const server = (servers[adapter] ??= serve(adapter))
       const recorded = new Map<string, string>()
-      snapshots[adapter] = recorded
+      snapshots[label] = recorded
+      if (subject.hydrated) {
+        // With scripts off: the page as the server rendered it.
+        const context = await browser.newContext({
+          javaScriptEnabled: false,
+          viewport: { width: 1000, height: 800 },
+        })
+        const page = await context.newPage()
+        await page.goto(`http://localhost:${server.port}${path}`)
+        sent[label] = withoutStyles(await page.evaluate(serialize))
+        await context.close()
+      }
       for (const [name, scenario] of Object.entries(scenarios)) {
         const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
         const page = await context.newPage()
@@ -507,7 +539,7 @@ for (const engine of engines) {
           if (message.type() === "error" || message.type() === "warning")
             errors.push(message.text())
         })
-        await page.goto(`http://localhost:${server.port}/`)
+        await page.goto(`http://localhost:${server.port}${path}`)
         await page.waitForSelector("main")
         const id = (testid: string) => page.locator(`[data-testid="${testid}"]`)
         const run: Run = {
@@ -534,27 +566,60 @@ for (const engine of engines) {
               [...DECLARED]
             )
             expect(undeclared.length === 0, `not in the vocabulary: ${undeclared.join(", ")}`)
+            const unnamed = await page.evaluate(
+              (variables) => [
+                ...new Set(
+                  [
+                    ...document.querySelectorAll<HTMLElement>("main *, [data-kirana-portal] *"),
+                  ].flatMap((element) =>
+                    [...element.style].filter(
+                      (each) => each.startsWith("--") && !variables.includes(each)
+                    )
+                  )
+                ),
+              ],
+              [...VARIABLES]
+            )
+            expect(unnamed.length === 0, `variables not in the vocabulary: ${unnamed.join(", ")}`)
           },
         }
         try {
           await scenario(run)
           expect(errors.length === 0, `the page reported: ${errors.join(" | ")}`)
-          console.log(`ok    ${adapter}  ${name}`)
+          console.log(`ok    ${label}  ${name}`)
         } catch (error) {
           failed++
           const message = error instanceof Error ? error.message.split("\n")[0] : String(error)
-          console.log(`FAIL  ${adapter}  ${name}: ${message}`)
+          console.log(`FAIL  ${label}  ${name}: ${message}`)
         }
         await context.close()
       }
       writeFileSync(
-        join(OUT, `${engine}-${adapter}.txt`),
+        join(OUT, `${engine}-${label}.txt`),
         [...recorded].map(([step, dom]) => `### ${step}\n${dom}\n`).join("\n")
       )
     }
 
     // The same state, the same DOM, whatever rendered it.
-    const [reference, ...others] = adapters as [string, ...string[]]
+    const [reference, ...others] = subjects.map((each) => each.label) as [string, ...string[]]
+    // A page rendered on a server is, before its scripts run, the page at rest: nothing but the
+    // geometry the client measures is missing, and hydration finds nothing to correct.
+    const rest = withoutStyles(snapshots[reference]!.get("collapsible / at rest") ?? "")
+    for (const [label, dom] of Object.entries(sent)) {
+      if (dom === rest) {
+        console.log(`same  ${label} as its server sent it = ${reference} at rest`)
+        continue
+      }
+      failed++
+      console.log(`DIFF  ${label} as its server sent it, against ${reference} at rest`)
+      const a = rest.split("\n")
+      const b = dom.split("\n")
+      for (let line = 0; line < Math.max(a.length, b.length); line++) {
+        if (a[line] === b[line]) continue
+        console.log(`      ${reference}: ${a[line]?.trim()}\n      ${label}: ${b[line]?.trim()}`)
+        break
+      }
+    }
     for (const adapter of others) {
       let different = 0
       for (const [step, expected] of snapshots[reference]!) {
@@ -580,7 +645,7 @@ for (const engine of engines) {
     }
   } finally {
     await browser.close()
-    for (const server of servers) await server.stop(true)
+    for (const server of Object.values(servers)) await server.stop(true)
   }
 }
 

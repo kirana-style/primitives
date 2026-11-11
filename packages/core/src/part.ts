@@ -86,14 +86,22 @@ export function mergeProps(caller: PartProps | undefined, part: PartProps): Part
   return merged
 }
 
-/** A part of a component in the vocabulary: its states as selectors, its CSS variables. */
+/** A state of a part in the vocabulary: the attribute that marks it, and what it means. */
+export interface StateDefinition {
+  attribute: string
+  /** The values the attribute takes; absent for a state the attribute marks by being present. */
+  values?: readonly string[]
+  description: string
+}
+
+/** A part of a component in the vocabulary: its states, its CSS variables. */
 export interface PartDefinition {
-  /** State name to the attribute that marks it; a list of values when the attribute carries one. */
-  states?: Record<string, string | { attribute: string; values: readonly string[] }>
+  description: string
+  states?: Record<string, StateDefinition>
   /** Groups of states that never hold together on the element. */
   exclusive?: readonly (readonly string[])[]
-  /** CSS custom properties the part's element carries. */
-  variables?: readonly string[]
+  /** CSS custom properties the part's element carries, each with what it holds. */
+  variables?: Record<string, string>
 }
 
 export type ComponentDefinition = Record<string, PartDefinition>

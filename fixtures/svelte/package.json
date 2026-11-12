@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 4102",
-    "build": "vp build && vp build --ssr src/server.ts --outDir dist-server && bun ../../scripts/prerender.ts svelte"
+    "build": "vp build && vp build --ssr src/server.ts --outDir dist-server && bun ../../scripts/prerender.ts svelte",
+    "types": "svelte-check --tsconfig ./tsconfig.json --fail-on-warnings"
   },
   "dependencies": {
     "@ark-ui/svelte": "catalog:",
@@ -16,6 +17,8 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "svelte-check": "catalog:",
+    "typescript": "~6.0.3"
   }
 }

@@ -5,7 +5,7 @@
   import type { PartAttributes } from "../types.ts"
 
   // The picture: in the page once `src` has loaded.
-  let { src, ...rest }: PartAttributes = $props()
+  let { src, ...rest }: { src?: string } & PartAttributes = $props()
   const controller = useAvatar()
   $effect.pre(() => {
     controller.source.set(src)

@@ -18,7 +18,7 @@ const Root = defineComponent({
   name: "TabsRoot",
   inheritAttrs: false,
   props: {
-    value: optional(ANY),
+    value: { type: ANY, default: undefined as unknown },
     defaultValue: { type: ANY, default: null as unknown },
     orientation: String as PropType<Orientation>,
     id: String,

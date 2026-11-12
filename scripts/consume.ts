@@ -279,6 +279,8 @@ import type { ComponentProps } from "svelte"
 export const direction: "ltr" | "rtl" = useDirection().current
 export const root: typeof Collapsible.Root = Collapsible.Root
 export const props: ComponentProps<typeof Slider.Root> = { defaultValue: 40 }
+// @ts-expect-error a value is a number, or several
+export const wrong: ComponentProps<typeof Slider.Root> = { defaultValue: "forty" }
 `
   )
   writeFileSync(

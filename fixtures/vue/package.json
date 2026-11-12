@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 4104",
-    "build": "vp build && vp build --ssr src/server.ts --outDir dist-server && bun ../../scripts/prerender.ts vue"
+    "build": "vp build && vp build --ssr src/server.ts --outDir dist-server && bun ../../scripts/prerender.ts vue",
+    "types": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@ark-ui/vue": "catalog:",
@@ -16,6 +17,8 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "catalog:",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vue-tsc": "catalog:",
+    "typescript": "~6.0.3"
   }
 }

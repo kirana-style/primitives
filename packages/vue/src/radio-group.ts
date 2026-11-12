@@ -19,7 +19,7 @@ const Root = defineComponent({
   name: "RadioGroupRoot",
   inheritAttrs: false,
   props: {
-    value: optional(null as unknown as PropType<unknown>),
+    value: { type: null as unknown as PropType<unknown>, default: undefined as unknown },
     defaultValue: { type: null as unknown as PropType<unknown>, default: null as unknown },
     disabled: Boolean,
     readOnly: Boolean,

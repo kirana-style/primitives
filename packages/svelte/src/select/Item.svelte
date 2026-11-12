@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { SelectItemOptions } from "@kirana-ui/core/select"
   import { defined } from "@kirana-ui/core"
   import { setContext } from "svelte"
 
@@ -8,7 +9,7 @@
   import type { PartAttributes } from "../types.ts"
 
   // `label` is what typeahead matches and the trigger shows; the item's text when left out.
-  let { value, disabled, label, ...rest }: PartAttributes = $props()
+  let { value, disabled, label, ...rest }: { value: unknown } & SelectItemOptions & PartAttributes = $props()
   const options = toSignal(() => ({ disabled, label }))
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally

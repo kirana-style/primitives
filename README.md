@@ -109,6 +109,7 @@ The toolchain is Vite+ (`vp`) with Bun as the package manager.
 ```bash
 vp install            # first, and after bun.lock changes
 vp run check          # format, lint with types, type check; warnings fail
+vp run types          # Vue's and Svelte's templates: vue-tsc and svelte-check
 vp run test           # the core's reactivity; the React adapter on the server
 vp run vocabulary     # packages/vocabulary from the core's part definitions
 vp run build          # each adapter's fixture, with its server-rendered page

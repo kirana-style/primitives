@@ -1,12 +1,13 @@
 <script lang="ts">
+  import type { PopoverProps } from "@kirana-ui/core/popover"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createPopover } from "@kirana-ui/core/popover"
 
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RootProps } from "../types.ts"
 
-  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: PartAttributes = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: RootProps<PopoverProps> = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {

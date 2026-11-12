@@ -5,7 +5,7 @@
   import type { PartAttributes } from "../types.ts"
 
   // `placeholder` shows while nothing is chosen.
-  let { placeholder = "", children, ...rest }: PartAttributes = $props()
+  let { placeholder = "", children, ...rest }: { placeholder?: string } & PartAttributes = $props()
   const controller = useSelect()
   const label = fromSignal(controller.label)
 </script>

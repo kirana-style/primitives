@@ -178,6 +178,59 @@ The text that describes the dialog.
 
 A button that closes the dialog.
 
+## HoverCard
+
+### HoverCard.Trigger
+
+The link the card previews.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the card is open. |
+
+### HoverCard.Positioner
+
+Places the popup against the trigger. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### HoverCard.Popup
+
+The card itself.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (delay, focus, dismiss) | Present when it opened or closed without its usual wait, for a design that skips the motion then. |
+
+### HoverCard.Arrow
+
+An element that points at the trigger, placed along the popup's edge.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
+
 ## Popover
 
 ### Popover.Trigger
@@ -425,3 +478,56 @@ A tab's content. In the page while its tab is active, and through its exit.
 | `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+## Tooltip
+
+### Tooltip.Trigger
+
+The element the tooltip describes.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the tooltip is open. |
+
+### Tooltip.Positioner
+
+Places the popup against the trigger. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Tooltip.Popup
+
+The tooltip itself.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (delay, focus, dismiss) | Present when it opened or closed without its usual wait, for a design that skips the motion then. |
+
+### Tooltip.Arrow
+
+An element that points at the trigger, placed along the popup's edge.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |

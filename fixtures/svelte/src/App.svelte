@@ -4,11 +4,13 @@
     Checkbox,
     Collapsible,
     Dialog,
+    HoverCard,
     Popover,
     RadioGroup,
     Select,
     Switch,
     Tabs,
+    Tooltip,
   } from "@kirana-ui/svelte"
 
   // The page every adapter draws, element for element: the conformance run walks it and compares
@@ -177,6 +179,40 @@
         </Accordion.Item>
       {/each}
     </Accordion.Root>
+  </section>
+
+  <section data-fixture="hover">
+    <button data-testid="h0">Before</button>
+    <Tooltip.Root id="h1" delay={100}>
+      <Tooltip.Trigger data-testid="h1-trigger">Save</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Positioner sideOffset={8} data-testid="h1-positioner">
+          <Tooltip.Popup class="tip" data-testid="h1-popup">
+            Save the file
+            <Tooltip.Arrow class="arrow" data-testid="h1-arrow" />
+          </Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+    <Tooltip.Root id="h2" delay={100}>
+      <Tooltip.Trigger data-testid="h2-trigger">Open</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Positioner sideOffset={8} data-testid="h2-positioner">
+          <Tooltip.Popup class="tip" data-testid="h2-popup">Open a file</Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+    <HoverCard.Root id="v1" delay={100} closeDelay={100}>
+      <HoverCard.Trigger href="#profile" data-testid="v1-trigger">@kirana</HoverCard.Trigger>
+      <HoverCard.Portal>
+        <HoverCard.Positioner side="bottom" sideOffset={8} data-testid="v1-positioner">
+          <HoverCard.Popup class="tip" data-testid="v1-popup">
+            <p>Styles, compiled.</p>
+            <a href="#follow" data-testid="v1-link">Follow</a>
+          </HoverCard.Popup>
+        </HoverCard.Positioner>
+      </HoverCard.Portal>
+    </HoverCard.Root>
   </section>
 
   <section data-fixture="dialog">

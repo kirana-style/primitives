@@ -462,6 +462,92 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(await present("a2-y-panel"), "beside the second")
   },
 
+  // Popups the pointer opens: a tooltip and a hover card.
+  async hover({ page, snapshot, id, present, attribute, focused }) {
+    const away = () => page.mouse.move(900, 700)
+    const shown = (testid: string) => id(testid).waitFor({ state: "attached", timeout: 3000 })
+    const gone = (testid: string) => id(testid).waitFor({ state: "detached", timeout: 3000 })
+    await away()
+    await snapshot("at rest")
+    expect(!(await present("h1-popup")), "a closed tooltip is not in the page")
+    expect((await attribute("h1-trigger", "aria-describedby")) === null, "and describes nothing")
+
+    await id("h1-trigger").hover()
+    expect(!(await present("h1-popup")), "a tooltip waits before it opens")
+    await shown("h1-popup")
+    await snapshot("tooltip open")
+    expect((await attribute("h1-popup", "role")) === "tooltip", "role=tooltip")
+    expect(
+      (await attribute("h1-trigger", "aria-describedby")) === (await attribute("h1-popup", "id")),
+      "the tooltip describes its trigger while it shows"
+    )
+    expect((await attribute("h1-popup", "data-side")) === "top", "a tooltip sits above by default")
+    expect((await attribute("h1-popup", "data-instant")) === null, "it waited: not instant")
+    const arrow = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-testid="h1-trigger"]')!.getBoundingClientRect()
+      const point = document.querySelector('[data-testid="h1-arrow"]')!.getBoundingClientRect()
+      return Math.abs(point.left + point.width / 2 - (trigger.left + trigger.width / 2))
+    })
+    expect(arrow < 1, `the arrow points at the trigger's centre, off by ${arrow}`)
+
+    // The next one opens at once: a person reading a row of them does not wait at each.
+    await id("h2-trigger").hover()
+    await shown("h2-popup")
+    await gone("h1-popup")
+    await snapshot("the next tooltip, opened at once")
+    expect((await attribute("h2-popup", "data-instant")) === "delay", "it skipped its wait")
+
+    // From the trigger up onto the popup: the strip between the two keeps it open.
+    const box = (await id("h2-popup").boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height + 4, { steps: 4 })
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 })
+    expect(await present("h2-popup"), "the pointer can travel onto the popup")
+    await away()
+    await gone("h2-popup")
+    await snapshot("tooltip closed by the pointer leaving")
+    expect(
+      (await attribute("h2-trigger", "aria-describedby")) === null,
+      "it describes nothing again"
+    )
+
+    await page.waitForTimeout(450)
+    await id("h0").focus()
+    await page.keyboard.press("Tab")
+    expect((await focused()) === "h1-trigger", "Tab reaches the trigger")
+    await shown("h1-popup")
+    await snapshot("tooltip opened by the keyboard")
+    expect((await attribute("h1-popup", "data-instant")) === "focus", "focus opens at once")
+    await page.keyboard.press("Escape")
+    await gone("h1-popup")
+    expect((await focused()) === "h1-trigger", "Escape closes it and focus stays")
+    await page.keyboard.press("Tab")
+    await page.waitForTimeout(450)
+
+    await id("h2-trigger").hover()
+    await shown("h2-popup")
+    await page.mouse.down()
+    await gone("h2-popup")
+    await page.mouse.up()
+    await away()
+    await snapshot("tooltip closed by a press")
+
+    await page.waitForTimeout(450)
+    await id("v1-trigger").hover()
+    await shown("v1-popup")
+    await snapshot("hover card open")
+    expect((await attribute("v1-popup", "role")) === null, "a hover card is not a tooltip")
+    expect((await attribute("v1-trigger", "aria-describedby")) === null, "and describes nothing")
+    expect((await attribute("v1-popup", "data-side")) === "bottom", "placed where it was asked")
+    await id("v1-link").hover()
+    await page.waitForTimeout(250)
+    expect(await present("v1-popup"), "the pointer can use what the card holds")
+    await away()
+    await page.waitForTimeout(40)
+    expect(await present("v1-popup"), "a hover card waits before it closes")
+    await gone("v1-popup")
+    await snapshot("hover card closed")
+  },
+
   // A part drawn as the caller's own element: `render` on React, `child` on Svelte, the
   // directive on the caller's element on Angular.
   async composition({ page, snapshot, id, present, attribute }) {

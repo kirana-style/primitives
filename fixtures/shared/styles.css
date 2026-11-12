@@ -172,3 +172,42 @@ button {
 .fold[data-ending-style] {
   height: 0;
 }
+
+.tip {
+  position: relative;
+  padding: 4px 8px;
+  background: #222;
+  color: white;
+  border-radius: 4px;
+  transform-origin: var(--transform-origin);
+  transition: opacity 100ms;
+}
+.tip[data-starting-style],
+.tip[data-ending-style] {
+  opacity: 0;
+}
+.tip[data-instant] {
+  transition: none;
+}
+.tip a {
+  color: inherit;
+}
+.arrow {
+  width: 8px;
+  height: 8px;
+  background: #222;
+  rotate: 45deg;
+}
+.arrow[data-side="top"] {
+  bottom: -4px;
+}
+.arrow[data-side="bottom"] {
+  top: -4px;
+}
+
+/* A row whose items do not depend on the white space a framework keeps between elements. */
+section[data-fixture="hover"] {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}

@@ -20,7 +20,9 @@
     "./switch": "./src/switch.ts",
     "./radio-group": "./src/radio-group.ts",
     "./tabs": "./src/tabs.ts",
-    "./accordion": "./src/accordion.ts"
+    "./accordion": "./src/accordion.ts",
+    "./tooltip": "./src/tooltip.ts",
+    "./hover-card": "./src/hover-card.ts"
   },
   "dependencies": {
     "@floating-ui/dom": "catalog:"

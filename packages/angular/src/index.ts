@@ -42,3 +42,19 @@ export {
 export { KuiRadioGroup, KuiRadioGroupIndicator, KuiRadioGroupItem } from "./radio-group"
 export { KuiSwitch, KuiSwitchThumb } from "./switch"
 export { KuiTabs, KuiTabsIndicator, KuiTabsList, KuiTabsPanel, KuiTabsTab } from "./tabs"
+export {
+  KuiHoverCard,
+  KuiHoverCardArrow,
+  KuiHoverCardPopup,
+  KuiHoverCardPortal,
+  KuiHoverCardPositioner,
+  KuiHoverCardTrigger,
+} from "./hover-card"
+export {
+  KuiTooltip,
+  KuiTooltipArrow,
+  KuiTooltipPopup,
+  KuiTooltipPortal,
+  KuiTooltipPositioner,
+  KuiTooltipTrigger,
+} from "./tooltip"

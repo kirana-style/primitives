@@ -9,6 +9,14 @@ export default defineConfig({
   // The adapters are sources in this workspace: a server build compiles them too.
   ssr: { noExternal: true },
   build: {
-    rollupOptions: { input: { index: "index.html", ssr: "ssr.html", bench: "bench.html" } },
+    rollupOptions: {
+      input: {
+        index: "index.html",
+        ssr: "ssr.html",
+        open: "open.html",
+        "open-ssr": "open-ssr.html",
+        bench: "bench.html",
+      },
+    },
   },
 })

@@ -4,10 +4,11 @@ import type { BootstrapContext } from "@angular/platform-browser"
 import { provideServerRendering, renderApplication } from "@angular/platform-server"
 
 import { App } from "./app"
+import { Open } from "./open"
 
-const bootstrap = (context: BootstrapContext) =>
+const bootstrap = (page?: string) => (context: BootstrapContext) =>
   bootstrapApplication(
-    App,
+    page === "open" ? Open : App,
     {
       providers: [
         provideZonelessChangeDetection(),
@@ -19,8 +20,8 @@ const bootstrap = (context: BootstrapContext) =>
   )
 
 /** The page as a server renders it: what is inside `<body>`, with what hydration reads. */
-export async function render(): Promise<string> {
-  const page = await renderApplication(bootstrap, {
+export async function render(which?: string): Promise<string> {
+  const page = await renderApplication(bootstrap(which), {
     document: "<html><head></head><body><app-root></app-root></body></html>",
     url: "/",
   })

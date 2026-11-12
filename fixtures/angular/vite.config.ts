@@ -27,6 +27,14 @@ export default defineConfig({
   ssr: { noExternal: [/^@kirana-ui\//, /^@angular\//, "rxjs", "ng-primitives"] },
   build: {
     target: ["es2022"],
-    rollupOptions: { input: { index: "index.html", ssr: "ssr.html", bench: "bench.html" } },
+    rollupOptions: {
+      input: {
+        index: "index.html",
+        ssr: "ssr.html",
+        open: "open.html",
+        "open-ssr": "open-ssr.html",
+        bench: "bench.html",
+      },
+    },
   },
 })

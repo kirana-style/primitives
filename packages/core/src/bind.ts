@@ -1,5 +1,5 @@
 import { effect } from "./reactivity.ts"
-import { isPrevented, preventable } from "./part.ts"
+import { isPrevented, preventable, styleText } from "./part.ts"
 import type { Part, PartProps, PartStyle } from "./part.ts"
 import { clearGeometry, setGeometry } from "./services/geometry.ts"
 
@@ -75,6 +75,26 @@ export function bind(element: HTMLElement, part: Part): () => void {
     for (const [key, listener] of listeners) {
       element.removeEventListener(eventType(key), preventable, true)
       element.removeEventListener(eventType(key), listener)
+    }
+  }
+}
+
+/**
+ * Writes a part on an element once: its attributes and its style, no listeners and none of its
+ * DOM work. For a document on a server, where nothing changes after the page is written and the
+ * browser's own objects (observers, layout) do not exist. The client then binds the same element.
+ */
+export function write(element: HTMLElement, part: Part): void {
+  const props = part.props.peek()
+  for (const key in props) {
+    const value = props[key]
+    if (value === undefined || HANDLER.test(key)) continue
+    if (key === "style") {
+      const own = element.getAttribute("style")
+      const text = styleText(value as PartStyle)
+      if (text) element.setAttribute("style", own ? `${own};${text}` : text)
+    } else {
+      element.setAttribute(key, String(value))
     }
   }
 }

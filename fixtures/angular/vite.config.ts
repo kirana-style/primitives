@@ -22,8 +22,11 @@ export default defineConfig({
   base: "./",
   resolve: { mainFields: ["module"] },
   plugins: [angular({ tsconfig: "tsconfig.app.json" })],
+  // The adapters are sources in this workspace: a server build compiles them too, and Angular
+  // with them, so one copy of it runs.
+  ssr: { noExternal: [/^@kirana-ui\//, /^@angular\//, "rxjs", "ng-primitives"] },
   build: {
     target: ["es2022"],
-    rollupOptions: { input: { index: "index.html", bench: "bench.html" } },
+    rollupOptions: { input: { index: "index.html", ssr: "ssr.html", bench: "bench.html" } },
   },
 })

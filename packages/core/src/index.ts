@@ -20,7 +20,7 @@ export type {
 } from "./part.ts"
 export { bindable } from "./bindable.ts"
 export type { Bindable } from "./bindable.ts"
-export { bind, eventType } from "./bind.ts"
+export { bind, eventType, write } from "./bind.ts"
 export type { Align, PositionOptions, Side } from "./services/position.ts"
 export type { Orientation } from "./services/roving.ts"
 export type { Direction } from "./direction.ts"

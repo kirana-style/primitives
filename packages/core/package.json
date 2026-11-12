@@ -22,7 +22,14 @@
     "./tabs": "./src/tabs.ts",
     "./accordion": "./src/accordion.ts",
     "./tooltip": "./src/tooltip.ts",
-    "./hover-card": "./src/hover-card.ts"
+    "./hover-card": "./src/hover-card.ts",
+    "./alert-dialog": "./src/alert-dialog.ts",
+    "./avatar": "./src/avatar.ts",
+    "./button": "./src/button.ts",
+    "./meter": "./src/meter.ts",
+    "./progress": "./src/progress.ts",
+    "./separator": "./src/separator.ts",
+    "./toggle": "./src/toggle.ts"
   },
   "dependencies": {
     "@floating-ui/dom": "catalog:"

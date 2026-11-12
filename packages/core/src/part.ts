@@ -3,9 +3,10 @@ import type { ReadonlySignal } from "./reactivity.ts"
 /**
  * What a part puts on its element, in one neutral shape every adapter maps to its framework:
  * attributes by their HTML names (`tabindex`, `aria-expanded`, `data-open`), where `undefined`
- * leaves the attribute out and a boolean state is `""` or absent, never `"false"`; and handlers
- * by camel-cased event names (`onClick`, `onKeyDown`). No styles: geometry is written on the
- * element by the service that measures it.
+ * leaves the attribute out and a boolean state is `""` or absent, never `"false"`; handlers by
+ * camel-cased event names (`onClick`, `onKeyDown`); and, for the few parts whose value is a
+ * length (a progress bar's indicator), a `style` of that geometry, which a server can render.
+ * Geometry that is measured is not here: the service that measures it writes it on the element.
  */
 export type PartProps = Record<string, unknown>
 
@@ -79,11 +80,37 @@ export function mergeProps(caller: PartProps | undefined, part: PartProps): Part
         ;(theirs as (event: Event) => void)(event)
         if (!prevented.has(event)) (own as (event: Event) => void)(event)
       }
+    } else if (key === "style" && own !== undefined && theirs !== undefined) {
+      merged[key] = mergeStyle(theirs, own)
     } else if (own !== undefined || !(key in caller)) {
       merged[key] = own
     }
   }
   return merged
+}
+
+/** A part's `style`: property names as CSS writes them (`width`, `--thumb-offset`). */
+export type PartStyle = Record<string, string>
+
+/** A style as the text of a `style` attribute. */
+export function styleText(style: PartStyle): string {
+  return Object.entries(style)
+    .map(([name, value]) => `${name}: ${value}`)
+    .join("; ")
+}
+
+const plain = (value: unknown): value is PartStyle =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+
+/** The caller's style with the part's over it, in whichever form the caller's framework writes. */
+function mergeStyle(theirs: unknown, own: unknown): unknown {
+  if (plain(theirs) && plain(own)) return { ...theirs, ...own }
+  if (typeof theirs === "string") {
+    const text = plain(own) ? styleText(own) : String(own)
+    return `${theirs.trim().replace(/;$/, "")}; ${text}`
+  }
+  // A list is how Vue takes several: it reads them in order.
+  return [theirs, own]
 }
 
 /** A state of a part in the vocabulary: the attribute that marks it, and what it means. */

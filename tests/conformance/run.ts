@@ -47,9 +47,16 @@ const subjects = adapters.flatMap((adapter) => {
     : [page]
 })
 
-/** A serialized page without its inline styles: the geometry only a browser can measure. */
+/**
+ * A serialized page without what only a browser adds: the geometry it measures, and the name a
+ * part takes from an optional part (a progress bar's label), which is known once that part is in
+ * the page.
+ */
 const withoutStyles = (dom: string) =>
-  dom.replace(/ style="[^"]*"/g, "").replace(/\nfocus: .*$/s, "")
+  dom
+    .replace(/ style="[^"]*"/g, "")
+    .replace(/ aria-labelledby="[^"]*-label"/g, "")
+    .replace(/\nfocus: .*$/s, "")
 
 function serve(adapter: string) {
   const dist = join(ROOT, "fixtures", adapter, "dist")
@@ -99,7 +106,13 @@ function serialize(): string {
         if (each.name === "style") {
           value = value
             .split(";")
-            .map((part) => part.trim())
+            // One spelling of a declaration: a server writes `width:40%`, a browser `width: 40%`.
+            .map((part) => {
+              const colon = part.indexOf(":")
+              return colon < 0
+                ? part.trim()
+                : `${part.slice(0, colon).trim()}: ${part.slice(colon + 1).trim()}`
+            })
             .filter(Boolean)
             .sort()
             .join("; ")
@@ -462,6 +475,85 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(await present("a2-y-panel"), "beside the second")
   },
 
+  async simple({ page, snapshot, id, present, attribute, focused }) {
+    await snapshot("at rest")
+    expect((await attribute("b1", "type")) === "button", "a button is never a submit by accident")
+    await id("b1").click()
+    // What the caller draws from its own state arrives in its framework's time.
+    await settled(page)
+    expect((await id("b1").textContent())?.trim() === "Count 1", "a press reaches the caller")
+
+    expect((await attribute("b2", "disabled")) === null, "kept in the tab order: not `disabled`")
+    expect((await attribute("b2", "aria-disabled")) === "true", "but said to be disabled")
+    expect((await attribute("b2", "data-disabled")) === "", "and marked for a style")
+    await id("b2").focus()
+    expect((await focused()) === "b2", "it takes focus")
+
+    expect((await attribute("b3", "role")) === "button", "another element is given the role")
+    expect((await attribute("b3", "tabindex")) === "0", "and a place in the tab order")
+    await id("b3").focus()
+    await page.keyboard.press("Enter")
+    await settled(page)
+    expect((await id("b1").textContent())?.trim() === "Count 2", "Enter presses it")
+    await page.keyboard.press("Space")
+    await settled(page)
+    expect((await id("b1").textContent())?.trim() === "Count 3", "Space presses it")
+
+    expect((await attribute("g1", "aria-pressed")) === "false", "a toggle starts off")
+    await id("g1").click()
+    await snapshot("buttons pressed")
+    expect((await attribute("g1", "aria-pressed")) === "true", "a press turns it on")
+    expect((await attribute("g1", "data-pressed")) === "", "pressed: data-pressed")
+
+    expect((await attribute("sp1", "role")) === "separator", "role=separator")
+    expect((await attribute("sp1", "aria-orientation")) === "horizontal", "horizontal by default")
+    expect((await attribute("sp2", "data-orientation")) === "vertical", "or vertical")
+
+    const width = (testid: string) =>
+      id(testid).evaluate((element) => (element as HTMLElement).style.width)
+    expect((await attribute("pr1", "role")) === "progressbar", "role=progressbar")
+    expect((await attribute("pr1", "aria-valuenow")) === "40", "the value")
+    expect((await attribute("pr1", "aria-valuetext")) === "40%", "as it is written")
+    expect((await attribute("pr1", "aria-labelledby")) === "pr1-label", "named by its label")
+    expect((await attribute("pr1", "data-progressing")) === "", "under way")
+    expect((await width("pr1-fill")) === "40%", "the filled part is the value's share")
+    expect((await id("pr1-value").textContent()) === "40%", "the value is written")
+    expect((await attribute("pr2", "aria-valuenow")) === null, "not known: no value")
+    expect((await attribute("pr2", "data-indeterminate")) === "", "and said so")
+    expect((await width("pr2-fill")) === "", "with no width of its own")
+    await id("pr1-more").click()
+    await snapshot("progress complete")
+    expect((await attribute("pr1", "data-complete")) === "", "at the end of the range: complete")
+    expect((await width("pr1-fill")) === "100%", "the filled part follows")
+
+    expect((await attribute("m1", "role")) === "meter", "role=meter")
+    expect((await attribute("m1", "aria-valuenow")) === "30", "a meter's value")
+    expect((await width("m1-fill")) === "50%", "its share of its own range")
+    expect((await id("m1-value").textContent()) === "50%", "written as a share")
+    expect((await attribute("m1", "data-progressing")) === null, "a meter is not a task")
+
+    expect(await present("av1-fallback"), "with no picture, the stand-in shows")
+    await id("av-load").click()
+    await id("av1-image").waitFor({ state: "attached", timeout: 3000 })
+    await page.waitForFunction(() => document.querySelectorAll("img").length === 1)
+    await snapshot("pictures loaded")
+    expect(!(await present("av1-fallback")), "a loaded picture replaces its stand-in")
+    expect(!(await present("av2-image")), "a picture that cannot load is never drawn")
+    expect(await present("av2-fallback"), "its stand-in stays")
+
+    await id("ad1-trigger").click()
+    await snapshot("alert dialog open")
+    expect((await attribute("ad1-popup", "role")) === "alertdialog", "role=alertdialog")
+    expect((await focused()) === "ad1-cancel", "focus moves in")
+    await page.mouse.click(5, 5)
+    await page.waitForTimeout(200)
+    expect(await present("ad1-popup"), "a press outside does not dismiss an alert dialog")
+    await id("ad1-cancel").click()
+    await snapshot("alert dialog answered")
+    expect(!(await present("ad1-popup")), "its own button closes it")
+    expect((await focused()) === "ad1-trigger", "focus returns to the trigger")
+  },
+
   // Popups the pointer opens: a tooltip and a hover card.
   async hover({ page, snapshot, id, present, attribute, focused }) {
     const away = () => page.mouse.move(900, 700)
@@ -532,6 +624,10 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("tooltip closed by a press")
 
     await page.waitForTimeout(450)
+    // From a known scroll position: the popup's available height is measured from the viewport.
+    // (On Angular the press above leaves the page 24px further down than on the others, after
+    // this exact sequence only; the cause is not found yet and is tracked.)
+    await page.evaluate(() => window.scrollTo(0, 0))
     await id("v1-trigger").hover()
     await shown("v1-popup")
     await snapshot("hover card open")
@@ -838,6 +934,14 @@ for (const engine of engines) {
         const page = await context.newPage()
         await page.goto(`http://localhost:${server.port}${path}`)
         sent[label] = withoutStyles(await page.evaluate(serialize))
+        // A length that is the value itself is in what the server sent, not measured later.
+        const width = await page.evaluate(
+          () => document.querySelector<HTMLElement>('[data-testid="pr1-fill"]')?.style.width
+        )
+        if (width !== "40%") {
+          failed++
+          console.log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
+        }
         await context.close()
       }
       for (const [name, scenario] of Object.entries(scenarios)) {

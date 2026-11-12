@@ -211,3 +211,39 @@ section[data-fixture="hover"] {
   gap: 8px;
   align-items: center;
 }
+
+section[data-fixture="simple"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.track {
+  width: 120px;
+  height: 6px;
+  background: #ddd;
+}
+.fill {
+  height: 100%;
+  background: #222;
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ddd;
+}
+[role="separator"] {
+  background: #888;
+}
+[role="separator"][data-orientation="horizontal"] {
+  width: 40px;
+  height: 1px;
+}
+[role="separator"][data-orientation="vertical"] {
+  width: 1px;
+  height: 16px;
+}

@@ -1,5 +1,5 @@
-import { mergeProps, sameProps, signal } from "@kirana-ui/core"
-import type { Part, PartProps, ReadonlySignal } from "@kirana-ui/core"
+import { mergeProps, sameProps, signal, styleText } from "@kirana-ui/core"
+import type { Part, PartProps, PartStyle, ReadonlySignal } from "@kirana-ui/core"
 import { untrack } from "svelte"
 import { createAttachmentKey } from "svelte/attachments"
 import { createSubscriber } from "svelte/reactivity"
@@ -56,6 +56,9 @@ function toSvelte(props: PartProps): PartProps {
       // `onKeyDown` is `onkeydown`; focus and blur are the bubbling ones, as in the core.
       const name = key.slice(2).toLowerCase()
       out[`on${name === "focus" ? "focusin" : name === "blur" ? "focusout" : name}`] = value
+    } else if (key === "style" && value) {
+      // Svelte writes a style as text.
+      out.style = styleText(value as PartStyle)
     } else {
       out[key] = BOOLEAN.has(key) ? value === "" || value === true : value
     }

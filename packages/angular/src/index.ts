@@ -58,3 +58,15 @@ export {
   KuiTooltipPositioner,
   KuiTooltipTrigger,
 } from "./tooltip"
+export { KuiAvatar, KuiAvatarFallback, KuiAvatarImage } from "./avatar"
+export { KuiButton } from "./button"
+export { KuiMeter, KuiMeterIndicator, KuiMeterLabel, KuiMeterTrack, KuiMeterValue } from "./meter"
+export {
+  KuiProgress,
+  KuiProgressIndicator,
+  KuiProgressLabel,
+  KuiProgressTrack,
+  KuiProgressValue,
+} from "./progress"
+export { KuiSeparator } from "./separator"
+export { KuiToggle } from "./toggle"

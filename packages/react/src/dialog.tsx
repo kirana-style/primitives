@@ -1,3 +1,5 @@
+import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
+import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
 import { createContext, useContext } from "react"
@@ -37,3 +39,13 @@ const Description = (props: PartComponentProps) =>
 const Close = (props: PartComponentProps) => usePart(useDialog("Close").close, "button", props)
 
 export const Dialog = { Root, Trigger, Portal, Backdrop, Popup, Title, Description, Close }
+
+export type AlertRootProps = Omit<AlertDialogProps, "id"> & { id?: string; children?: ReactNode }
+
+function AlertRoot({ children, ...props }: AlertRootProps): ReactElement {
+  const controller = useController(createAlertDialog, props)
+  return <Context.Provider value={controller}>{children}</Context.Provider>
+}
+
+/** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
+export const AlertDialog = { ...Dialog, Root: AlertRoot }

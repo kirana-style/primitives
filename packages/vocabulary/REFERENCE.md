@@ -62,6 +62,79 @@ The item's content. In the page while open, and through its exit's motion.
 | `--accordion-panel-height` | The panel's content height while it opens or closes, `auto` once it is open. |
 | `--accordion-panel-width` | The panel's content width while it opens or closes, `auto` once it is open. |
 
+## AlertDialog
+
+### AlertDialog.Trigger
+
+The button that opens the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the dialog is open. |
+
+### AlertDialog.Backdrop
+
+The layer over the page behind the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+### AlertDialog.Popup
+
+The dialog itself.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested-dialog-open` | Present when another dialog is open above this one. |
+
+| Variable | Holds |
+| --- | --- |
+| `--nested-dialogs` | How many dialogs are open above this one. |
+
+### AlertDialog.Title
+
+The heading that names the dialog.
+
+### AlertDialog.Description
+
+The text that describes the dialog.
+
+### AlertDialog.Close
+
+A button that closes the dialog.
+
+## Avatar
+
+### Avatar.Root
+
+The frame the image and its stand-in share.
+
+### Avatar.Image
+
+The picture. In the page once it has loaded.
+
+### Avatar.Fallback
+
+What shows until the picture has loaded, or when it cannot.
+
+## Button
+
+### Button.Root
+
+The button.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
 ## Checkbox
 
 ### Checkbox.Root
@@ -231,6 +304,28 @@ An element that points at the trigger, placed along the popup's edge.
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
 
+## Meter
+
+### Meter.Root
+
+The meter: it says the value to assistive technology.
+
+### Meter.Track
+
+The whole range.
+
+### Meter.Indicator
+
+The filled part: its width is the value's share of the range.
+
+### Meter.Value
+
+The value, written.
+
+### Meter.Label
+
+The meter's name.
+
 ## Popover
 
 ### Popover.Trigger
@@ -284,6 +379,58 @@ The text that describes the popover.
 ### Popover.Close
 
 A button that closes the popover.
+
+## Progress
+
+### Progress.Root
+
+The progress bar: it says the value to assistive technology.
+
+| Attribute | When |
+| --- | --- |
+| `data-progressing` | Present while the task is under way. |
+| `data-complete` | Present once the value has reached the end of the range. |
+| `data-indeterminate` | Present while how far the task has come is not known. |
+
+### Progress.Track
+
+The whole range.
+
+| Attribute | When |
+| --- | --- |
+| `data-progressing` | Present while the task is under way. |
+| `data-complete` | Present once the value has reached the end of the range. |
+| `data-indeterminate` | Present while how far the task has come is not known. |
+
+### Progress.Indicator
+
+The filled part: its width is the value's share of the range.
+
+| Attribute | When |
+| --- | --- |
+| `data-progressing` | Present while the task is under way. |
+| `data-complete` | Present once the value has reached the end of the range. |
+| `data-indeterminate` | Present while how far the task has come is not known. |
+
+### Progress.Value
+
+The value, written.
+
+| Attribute | When |
+| --- | --- |
+| `data-progressing` | Present while the task is under way. |
+| `data-complete` | Present once the value has reached the end of the range. |
+| `data-indeterminate` | Present while how far the task has come is not known. |
+
+### Progress.Label
+
+The bar's name.
+
+| Attribute | When |
+| --- | --- |
+| `data-progressing` | Present while the task is under way. |
+| `data-complete` | Present once the value has reached the end of the range. |
+| `data-indeterminate` | Present while how far the task has come is not known. |
 
 ## RadioGroup
 
@@ -393,6 +540,16 @@ The item's name: what the trigger shows once it is chosen.
 
 A mark an item shows while it is the chosen one.
 
+## Separator
+
+### Separator.Root
+
+The line.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the line runs. |
+
 ## Switch
 
 ### Switch.Root
@@ -478,6 +635,17 @@ A tab's content. In the page while its tab is active, and through its exit.
 | `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+## Toggle
+
+### Toggle.Root
+
+The button. It stays pressed until it is pressed again.
+
+| Attribute | When |
+| --- | --- |
+| `data-pressed` | Present while it is pressed. |
+| `data-disabled` | Present when it is disabled. |
 
 ## Tooltip
 

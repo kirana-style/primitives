@@ -1,25 +1,38 @@
 <script lang="ts">
   import {
     Accordion,
+    AlertDialog,
+    Avatar,
+    Button,
     Checkbox,
     Collapsible,
     Dialog,
     HoverCard,
+    Meter,
     Popover,
+    Progress,
     RadioGroup,
     Select,
+    Separator,
     Switch,
     Tabs,
+    Toggle,
     Tooltip,
   } from "@kirana-ui/svelte"
 
   // The page every adapter draws, element for element: the conformance run walks it and compares
   // the DOM of each state across adapters. Change it in all three fixtures at once.
   const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
+  // A picture of one pixel, and an address that is not a picture.
+  const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  const BROKEN = "data:image/png;base64,AAAA"
   const SECTIONS = ["one", "two", "three", "four"]
   const PLANS = ["free", "pro", "team", "max"]
   let controlled = $state(false)
   let alerts = $state(false)
+  let count = $state(0)
+  let done = $state(40)
+  let pictures = $state(false)
   let fruit = $state<string | null>("Banana")
   let presses = $state(0)
   let locked = $state(false)
@@ -213,6 +226,59 @@
         </HoverCard.Positioner>
       </HoverCard.Portal>
     </HoverCard.Root>
+  </section>
+
+  <section data-fixture="simple">
+    <Button data-testid="b1" onclick={() => (count += 1)}>Count {count}</Button>
+    <Button disabled focusableWhenDisabled data-testid="b2">Disabled, in the tab order</Button>
+    <Button nativeButton={false} onclick={() => (count += 1)}>
+      {#snippet child({ props })}
+        <span {...props} data-testid="b3">Not a button element</span>
+      {/snippet}
+    </Button>
+    <Toggle aria-label="Bold" data-testid="g1">B</Toggle>
+    <Separator data-testid="sp1" />
+    <Separator orientation="vertical" data-testid="sp2" />
+    <button data-testid="pr1-more" onclick={() => (done = 100)}>Finish</button>
+    <Progress.Root id="pr1" value={done} data-testid="pr1">
+      <Progress.Label>Upload</Progress.Label>
+      <Progress.Track class="track">
+        <Progress.Indicator class="fill" data-testid="pr1-fill" />
+      </Progress.Track>
+      <Progress.Value data-testid="pr1-value" />
+    </Progress.Root>
+    <Progress.Root id="pr2" value={null} data-testid="pr2">
+      <Progress.Track class="track">
+        <Progress.Indicator class="fill" data-testid="pr2-fill" />
+      </Progress.Track>
+    </Progress.Root>
+    <Meter.Root id="m1" value={30} max={60} data-testid="m1">
+      <Meter.Label>Disk</Meter.Label>
+      <Meter.Track class="track">
+        <Meter.Indicator class="fill" data-testid="m1-fill" />
+      </Meter.Track>
+      <Meter.Value data-testid="m1-value" />
+    </Meter.Root>
+    <button data-testid="av-load" onclick={() => (pictures = true)}>Load pictures</button>
+    <Avatar.Root class="avatar" data-testid="av1">
+      <Avatar.Image src={pictures ? PIXEL : undefined} alt="Kirana" data-testid="av1-image" />
+      <Avatar.Fallback data-testid="av1-fallback">K</Avatar.Fallback>
+    </Avatar.Root>
+    <Avatar.Root class="avatar" data-testid="av2">
+      <Avatar.Image src={pictures ? BROKEN : undefined} alt="Nobody" data-testid="av2-image" />
+      <Avatar.Fallback data-testid="av2-fallback">N</Avatar.Fallback>
+    </Avatar.Root>
+    <AlertDialog.Root id="ad1">
+      <AlertDialog.Trigger data-testid="ad1-trigger">Delete</AlertDialog.Trigger>
+      <AlertDialog.Portal>
+        <AlertDialog.Backdrop class="backdrop" data-testid="ad1-backdrop" />
+        <AlertDialog.Popup class="dialog" data-testid="ad1-popup">
+          <AlertDialog.Title>Delete the file?</AlertDialog.Title>
+          <AlertDialog.Description>This cannot be undone.</AlertDialog.Description>
+          <AlertDialog.Close data-testid="ad1-cancel">Cancel</AlertDialog.Close>
+        </AlertDialog.Popup>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   </section>
 
   <section data-fixture="dialog">

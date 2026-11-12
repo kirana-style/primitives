@@ -29,7 +29,7 @@ export function useSignal<T>(source: ReadonlySignal<T>): T {
  * core after the render commits (a layout effect), never during it: another part that reads the
  * controller is another component, and React forbids updating it mid-render.
  */
-export function useController<P extends { id: string }, C extends { mount(): () => void }>(
+export function useController<P extends object, C extends { mount(): () => void }>(
   create: (props: ReadonlySignal<P>) => C,
   props: Omit<P, "id"> & { id?: string | undefined }
 ): C {
@@ -84,6 +84,18 @@ const RENAMED: Record<string, string> = {
   readonly: "readOnly",
 }
 
+/** A style as React takes it: `inset-inline-start` is `insetInlineStart`, `--x` stays as it is. */
+function reactStyle(style: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const name in style) {
+    const key = name.startsWith("--")
+      ? name
+      : name.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase())
+    out[key] = style[name]!
+  }
+  return out
+}
+
 function toReact(props: PartProps): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const key in props) {
@@ -91,6 +103,7 @@ function toReact(props: PartProps): Record<string, unknown> {
     // Always a boolean, never left out: an input whose `checked` comes and goes is, to React,
     // one that changes from controlled to not.
     if (BOOLEAN.has(key)) out[RENAMED[key] ?? key] = value === "" || value === true
+    else if (key === "style" && value) out.style = reactStyle(value as Record<string, string>)
     else if (value !== undefined) out[RENAMED[key] ?? key] = value
   }
   return out

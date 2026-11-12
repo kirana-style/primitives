@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { within } from "@kirana-ui/core"
   import { createSlider } from "@kirana-ui/core/slider"
   import type { SliderChangeDetails } from "@kirana-ui/core/slider"
 
   import Part from "../Part.svelte"
+  import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
 
@@ -33,7 +35,7 @@
   }
 
   const made = provide(
-    controller(createSlider, () => ({
+    controller(within(createSlider, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,

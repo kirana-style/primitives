@@ -4,6 +4,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createSwitch } from "@kirana-ui/core/switch"
 import type { Switch } from "@kirana-ui/core/switch"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, innerPart, inputsSignal, mounted } from "./runtime"
 
 /** On the box's element. It draws the hidden native input inside it, which a form and a label reach. */
@@ -21,6 +22,7 @@ export class KuiSwitch implements OnInit {
   readonly checkedChanged = output<{ checked: boolean; details: ChangeDetails }>()
 
   controller!: Switch
+  private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -44,7 +46,7 @@ export class KuiSwitch implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createSwitch(this.props())
+    this.controller = createSwitch(this.props(), { field: this.field?.controller })
     this.part(this.controller.root)
     this.inner(this.controller.input)
     this.mount(this.controller)

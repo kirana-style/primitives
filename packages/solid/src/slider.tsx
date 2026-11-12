@@ -1,8 +1,10 @@
+import { within } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
 import type { Slider as Controller, SliderChangeDetails, SliderProps } from "@kirana-ui/core/slider"
 import { createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -36,7 +38,8 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const made = controller(createSlider, () => ({
+  const field = useContext(FieldContext)
+  const made = controller(within(createSlider, { field }), () => ({
     ...local,
     id: local.id ?? generated,
     onValueChange: (value: number | number[], details: SliderChangeDetails) =>

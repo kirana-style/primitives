@@ -1,8 +1,10 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSwitch } from "@kirana-ui/core/switch"
 import type { Switch as Controller } from "@kirana-ui/core/switch"
 import { defineComponent, h, useId } from "vue"
 
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, optional, partComponent } from "./runtime.ts"
 
 const scope = context<Controller>("Switch")
@@ -27,8 +29,9 @@ const Root = defineComponent({
   emits: ["update:checked", "checkedChange"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const field = useFieldAround()
     scope.provide(
-      controller(createSwitch, () => ({
+      controller(within(createSwitch, { field }), () => ({
         id: props.id ?? generated,
         checked: props.checked,
         defaultChecked: props.defaultChecked,

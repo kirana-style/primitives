@@ -1,4 +1,4 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller } from "@kirana-ui/core/select"
@@ -7,6 +7,7 @@ import type { JSX } from "solid-js"
 
 import { positioned } from "./popover.tsx"
 import type { PositionerProps } from "./popover.tsx"
+import { FieldContext } from "./field-context.ts"
 import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -27,6 +28,7 @@ export type RootProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   disabled?: boolean
+  required?: boolean
   name?: string
   items?: readonly { value: unknown; label: string }[]
   id?: string
@@ -35,23 +37,26 @@ export type RootProps = {
 
 function Root(props: RootProps): JSX.Element {
   const generated = createUniqueId()
-  const made = controller(createSelect, () => ({
+  const field = useContext(FieldContext)
+  const made = controller(within(createSelect, { field }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
     open: props.open,
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
+    required: props.required,
     name: props.name,
     items: props.items,
     onValueChange: (value: unknown, details: ChangeDetails) =>
       props.onValueChange?.(value, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
+  const named = fromSignal(made.named)
   return (
     <Context.Provider value={made}>
       {props.children}
-      <Show when={props.name !== undefined}>
+      <Show when={named()}>
         <Part part={made.input} tag="input" />
       </Show>
     </Context.Provider>

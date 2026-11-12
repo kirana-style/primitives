@@ -1,8 +1,10 @@
+import { within } from "@kirana-ui/core"
 import { createSwitch } from "@kirana-ui/core/switch"
 import type { Switch as Controller, SwitchProps } from "@kirana-ui/core/switch"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { useController, usePart } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -29,7 +31,9 @@ function Root({
   children,
   ...rest
 }: RootProps): ReactElement {
-  const controller = useController(createSwitch, {
+  const field = useContext(FieldContext) ?? undefined
+  const create = within(createSwitch, { field })
+  const controller = useController(create, {
     checked,
     defaultChecked,
     onCheckedChange,

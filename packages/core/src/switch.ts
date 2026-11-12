@@ -1,5 +1,6 @@
 import { createChecked } from "./checked.ts"
 import type { CheckedProps } from "./checked.ts"
+import type { Field } from "./field.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -15,8 +16,11 @@ export interface Switch {
   readonly thumb: Part
 }
 
-export function createSwitch(props: ReadonlySignal<SwitchProps>): Switch {
-  const made = createChecked(props, "switch")
+export function createSwitch(
+  props: ReadonlySignal<SwitchProps>,
+  around: { field?: Field | undefined } = {}
+): Switch {
+  const made = createChecked(props, "switch", undefined, around.field)
   return {
     checked: made.checked,
     setChecked: made.setChecked,

@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
 import type { Slider as Controller, SliderProps, SliderValue } from "@kirana-ui/core/slider"
 import { defineComponent, h, useId } from "vue"
 import type { PropType } from "vue"
 
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 
 const scope = context<Controller>("Slider")
@@ -33,8 +35,9 @@ const Root = defineComponent({
   emits: ["update:value", "valueChange", "valueCommitted"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const field = useFieldAround()
     scope.provide(
-      controller(createSlider, () => ({
+      controller(within(createSlider, { field }), () => ({
         ...props,
         id: props.id ?? generated,
         onValueChange(value: number | number[], details: ChangeDetails) {

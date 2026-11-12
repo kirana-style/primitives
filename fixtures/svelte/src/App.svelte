@@ -41,6 +41,7 @@
   let done = $state(40)
   let pictures = $state(false)
   let sent = $state("")
+  let sent2 = $state("")
   let rejected = $state<Record<string, string> | undefined>(undefined)
   let span = $state<number[]>([20, 80])
   let fruit = $state<string | null>("Banana")
@@ -417,5 +418,60 @@
     </Form>
     <button data-testid="f1-reject" onclick={() => (rejected = { user: "Reserved" })}>Reject</button>
     <span data-testid="f1-sent">{sent}</span>
+  </section>
+  <section data-fixture="field-controls">
+    <Form onFormSubmit={(values: unknown) => (sent2 = JSON.stringify(values))} data-testid="f2">
+      <Field.Root id="fc1" name="terms" data-testid="fc1">
+        <Checkbox.Root required class="box" data-testid="fc1-box">
+          <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+        </Checkbox.Root>
+        <Field.Label data-testid="fc1-label">Accept</Field.Label>
+        <Field.Error data-testid="fc1-error" />
+      </Field.Root>
+      <Field.Root id="fc2" name="plan" data-testid="fc2">
+        <Field.Label data-testid="fc2-label">Plan</Field.Label>
+        <RadioGroup.Root required data-testid="fc2-group">
+          <RadioGroup.Item value="free" class="radio" data-testid="fc2-free" />
+          <RadioGroup.Item value="pro" class="radio" data-testid="fc2-pro" />
+        </RadioGroup.Root>
+        <Field.Error data-testid="fc2-error" />
+      </Field.Root>
+      <Field.Root id="fc3" name="level" disabled data-testid="fc3">
+        <Field.Label>Level</Field.Label>
+        <Slider.Root defaultValue={10} data-testid="fc3-slider">
+          <Slider.Control class="slider">
+            <Slider.Track class="slider-track">
+              <Slider.Thumb class="thumb" data-testid="fc3-thumb" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
+      </Field.Root>
+      <Field.Root id="fc4" name="alerts" data-testid="fc4">
+        <Field.Label data-testid="fc4-label">Alerts</Field.Label>
+        <Switch.Root class="switch" data-testid="fc4-switch">
+          <Switch.Thumb class="thumb" />
+        </Switch.Root>
+      </Field.Root>
+      <Field.Root id="fc5" name="fruit" data-testid="fc5">
+        <Field.Label data-testid="fc5-label">Fruit</Field.Label>
+        <Select.Root id="fc5s" required>
+          <Select.Trigger data-testid="fc5-trigger">
+            <Select.Value placeholder="Pick a fruit" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner sideOffset={4}>
+              <Select.Popup class="popup" data-testid="fc5-popup">
+                <Select.Item value="Apple" class="item" data-testid="fc5-Apple">
+                  <Select.ItemText>Apple</Select.ItemText>
+                </Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+        <Field.Error data-testid="fc5-error" />
+      </Field.Root>
+      <button type="submit" data-testid="f2-submit">Send</button>
+    </Form>
+    <span data-testid="f2-sent">{sent2}</span>
   </section>
 </main>

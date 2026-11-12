@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { PositionOptions } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
 import { createContext, useContext, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { Portal as BodyPortal, useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -23,11 +24,16 @@ export type RootProps<Value> = Omit<SelectProps<Value>, "id"> & {
 }
 
 function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
-  const controller = useController(createSelect<Value>, props) as unknown as Controller
+  const field = useContext(FieldContext) ?? undefined
+  const controller = useController(
+    within(createSelect<Value>, { field }),
+    props
+  ) as unknown as Controller
+  const named = useSignal(controller.named)
   return (
     <Context.Provider value={controller}>
       {children}
-      {props.name === undefined ? null : <HiddenInput />}
+      {named ? <HiddenInput /> : null}
     </Context.Provider>
   )
 }

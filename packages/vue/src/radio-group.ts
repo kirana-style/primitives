@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup as Controller } from "@kirana-ui/core/radio-group"
 import { defineComponent, h, inject, onBeforeUnmount, onMounted, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
 
 const scope = context<Controller>("RadioGroup")
@@ -28,8 +29,9 @@ const Root = defineComponent({
   emits: ["update:value", "valueChange"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const field = useFieldAround()
     scope.provide(
-      controller(createRadioGroup, () => ({
+      controller(within(createRadioGroup, { field }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,

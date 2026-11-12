@@ -1,4 +1,4 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup as Controller } from "@kirana-ui/core/radio-group"
@@ -14,6 +14,7 @@ import {
 } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -49,7 +50,8 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const made = controller(createRadioGroup, () => ({
+  const field = useContext(FieldContext)
+  const made = controller(within(createRadioGroup, { field }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,

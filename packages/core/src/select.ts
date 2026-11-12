@@ -1,4 +1,5 @@
 import { bindable } from "./bindable.ts"
+import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, keyed, signal } from "./reactivity.ts"
@@ -18,6 +19,8 @@ export interface SelectProps<Value = unknown> {
   defaultOpen?: boolean | undefined
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   disabled?: boolean | undefined
+  /** In a field, "none" is then wrong. */
+  required?: boolean | undefined
   /** With a name, the value is submitted with the form around it. */
   name?: string | undefined
   /**
@@ -39,6 +42,8 @@ export interface Select<Value = unknown> {
   readonly value: ReadonlySignal<Value | null>
   /** The chosen value's label, `undefined` while nothing is chosen. */
   readonly label: ReadonlySignal<string | undefined>
+  /** Whether the select has a name, its own or its field's: whether its hidden input is drawn. */
+  readonly named: ReadonlySignal<boolean>
   setOpen(open: boolean, details: ChangeDetails): void
   setValue(value: Value | null, details: ChangeDetails): void
   readonly positioning: Signal<Partial<PositionOptions>>
@@ -71,8 +76,11 @@ interface Row<Value> {
 }
 
 export function createSelect<Value = unknown>(
-  props: ReadonlySignal<SelectProps<Value>>
+  props: ReadonlySignal<SelectProps<Value>>,
+  around: { field?: Field | undefined } = {}
 ): Select<Value> {
+  const { field } = around
+  let member: FieldMembership | undefined
   const id = props.peek().id
   const popupId = `${id}-popup`
   const open = bindable({
@@ -86,7 +94,8 @@ export function createSelect<Value = unknown>(
     defaultValue: props.peek().defaultValue ?? null,
     onChange: (next, by) => props.peek().onValueChange?.(next, by),
   })
-  const disabled = computed(() => Boolean(props.get().disabled))
+  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
+  const name = computed(() => props.get().name ?? field?.name.get())
   const presence = createPresence(open)
   const positioning = signal<Partial<PositionOptions>>({})
   const position = createPosition(
@@ -190,6 +199,7 @@ export function createSelect<Value = unknown>(
 
   function setValue(next: Value | null, by: ChangeDetails) {
     value.set(next, by)
+    if (!by.canceled) member?.changed(next === null ? "" : String(next))
   }
 
   function choose(element: HTMLElement, event: Event) {
@@ -218,6 +228,7 @@ export function createSelect<Value = unknown>(
     mounted: presence.mounted,
     value,
     label,
+    named: computed(() => name.get() !== undefined),
     setOpen,
     setValue,
     positioning,
@@ -231,9 +242,17 @@ export function createSelect<Value = unknown>(
         "aria-expanded": String(open.get()),
         "aria-controls": presence.mounted.get() ? popupId : undefined,
         disabled: flag(disabled.get()),
+        "aria-required": props.get().required ? "true" : undefined,
+        ...field?.aria(),
+        ...field?.state(),
         "data-popup-open": flag(open.get()),
         "data-placeholder": flag(value.get() === null),
         "data-disabled": flag(disabled.get()),
+        onFocus: () => member?.focused(true),
+        onBlur(event: FocusEvent) {
+          // Into its own list, focus has not left the select.
+          if (!popup?.contains(event.relatedTarget as Node | null)) member?.focused(false)
+        },
         onClick: (event: Event) => setOpen(!open.peek(), details("trigger-press", event)),
         onKeyDown(event: KeyboardEvent) {
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -248,7 +267,17 @@ export function createSelect<Value = unknown>(
       })),
       attach(element) {
         trigger = element
+        const chosen = value.peek()
+        member = field?.join({
+          element,
+          focus: () => element.focus(),
+          kind: "select",
+          required: () => Boolean(props.peek().required),
+          value: chosen === null ? "" : String(chosen),
+        })
         return () => {
+          member?.leave()
+          member = undefined
           if (trigger === element) trigger = undefined
         }
       },
@@ -361,7 +390,7 @@ export function createSelect<Value = unknown>(
         const current = value.get()
         return {
           type: "hidden",
-          name: props.get().name,
+          name: name.get(),
           value: current === null ? "" : String(current),
           disabled: flag(disabled.get()),
         }

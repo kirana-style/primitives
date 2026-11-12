@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createRadioGroup } from "@kirana-ui/core/radio-group"
 
   import Part from "../Part.svelte"
+  import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
 
@@ -25,7 +27,7 @@
   }
 
   const made = provide(
-    controller(createRadioGroup, () => ({
+    controller(within(createRadioGroup, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,

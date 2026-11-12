@@ -1,4 +1,4 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller } from "@kirana-ui/core/select"
@@ -6,6 +6,7 @@ import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
 import { positionerComponent } from "./popover.ts"
+import { useFieldAround } from "./field-context.ts"
 import {
   context,
   controller,
@@ -30,6 +31,7 @@ const Root = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     disabled: Boolean,
+    required: Boolean,
     name: String,
     items: Array as PropType<readonly { value: unknown; label: string }[]>,
     id: String,
@@ -37,14 +39,16 @@ const Root = defineComponent({
   emits: ["update:value", "valueChange", "update:open", "openChange"],
   setup(props, { slots, emit }) {
     const generated = useId()
-    scope.provide(
-      controller(createSelect, () => ({
+    const field = useFieldAround()
+    const made = scope.provide(
+      controller(within(createSelect, { field }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,
         open: props.open,
         defaultOpen: props.defaultOpen,
         disabled: props.disabled,
+        required: props.required,
         name: props.name,
         items: props.items,
         onValueChange(value: unknown, details: ChangeDetails) {
@@ -57,7 +61,8 @@ const Root = defineComponent({
         },
       }))
     )
-    return () => [slots.default?.(), props.name === undefined ? null : h(HiddenInput)]
+    const named = fromSignal(made.named)
+    return () => [slots.default?.(), named.value ? h(HiddenInput) : null]
   },
 })
 

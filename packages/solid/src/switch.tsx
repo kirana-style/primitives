@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSwitch } from "@kirana-ui/core/switch"
 import type { Switch as Controller } from "@kirana-ui/core/switch"
 import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { FieldContext } from "./field-context.ts"
 import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -41,7 +43,8 @@ function Root(props: RootProps): JSX.Element {
     "children",
   ])
   const generated = createUniqueId()
-  const made = controller(createSwitch, () => ({
+  const field = useContext(FieldContext)
+  const made = controller(within(createSwitch, { field }), () => ({
     id: local.id ?? generated,
     checked: local.checked,
     defaultChecked: local.defaultChecked,

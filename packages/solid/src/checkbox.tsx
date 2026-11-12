@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox as Controller } from "@kirana-ui/core/checkbox"
 import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -43,7 +45,8 @@ function Root(props: RootProps): JSX.Element {
     "children",
   ])
   const generated = createUniqueId()
-  const made = controller(createCheckbox, () => ({
+  const field = useContext(FieldContext)
+  const made = controller(within(createCheckbox, { field }), () => ({
     id: local.id ?? generated,
     checked: local.checked,
     defaultChecked: local.defaultChecked,

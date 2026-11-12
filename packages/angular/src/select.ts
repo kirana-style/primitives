@@ -16,6 +16,7 @@ import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select } from "@kirana-ui/core/select"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiSelect]", exportAs: "kuiSelect" })
@@ -25,6 +26,7 @@ export class KuiSelect implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
+  readonly required = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
   readonly items = input<readonly { value: unknown; label: string }[]>()
   readonly kuiId = input<string>()
@@ -32,6 +34,7 @@ export class KuiSelect implements OnInit {
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Select
+  private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -40,6 +43,7 @@ export class KuiSelect implements OnInit {
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     disabled: this.disabled(),
+    required: this.required(),
     name: this.name(),
     items: this.items(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
@@ -60,7 +64,7 @@ export class KuiSelect implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createSelect(this.props())
+    this.controller = createSelect(this.props(), { field: this.field?.controller })
     this.mount(this.controller)
   }
 }

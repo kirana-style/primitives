@@ -6,18 +6,17 @@ import type {
   FieldValidity,
   ValidityKey,
 } from "@kirana-ui/core/field"
-import { createContext, useContext, useEffect, useMemo } from "react"
+import { useContext, useEffect, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { FieldsetContext } from "./fieldset.tsx"
 import { FormContext } from "./form.tsx"
 import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
-const Context = createContext<Controller | null>(null)
-
 function useField(part: string): Controller {
-  const controller = useContext(Context)
+  const controller = useContext(FieldContext)
   if (!controller) throw new Error(`<Field.${part}> must be inside <Field.Root>`)
   return controller
 }
@@ -50,9 +49,9 @@ function Root({
     id,
   })
   return (
-    <Context.Provider value={controller}>
+    <FieldContext.Provider value={controller}>
       <RootElement {...rest} />
-    </Context.Provider>
+    </FieldContext.Provider>
   )
 }
 

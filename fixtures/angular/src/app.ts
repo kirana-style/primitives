@@ -639,6 +639,62 @@ import {
         <button data-testid="f1-reject" (click)="rejected.set({ user: 'Reserved' })">Reject</button>
         <span data-testid="f1-sent">{{ sent() }}</span>
       </section>
+      <section data-fixture="field-controls">
+        <form kuiForm (formSubmit)="sent2.set(json($event.values))" data-testid="f2">
+          <div kuiField [kuiId]="'fc1'" [name]="'terms'" data-testid="fc1">
+            <span kuiCheckbox [required]="true" class="box" data-testid="fc1-box">
+              <span *kuiCheckboxIndicator class="mark">✓</span>
+            </span>
+            <label kuiFieldLabel data-testid="fc1-label">Accept</label>
+            <div *kuiFieldError data-testid="fc1-error"></div>
+          </div>
+          <div kuiField [kuiId]="'fc2'" [name]="'plan'" data-testid="fc2">
+            <label kuiFieldLabel data-testid="fc2-label">Plan</label>
+            <div kuiRadioGroup [required]="true" data-testid="fc2-group">
+              <span kuiRadioGroupItem [value]="'free'" class="radio" data-testid="fc2-free"></span>
+              <span kuiRadioGroupItem [value]="'pro'" class="radio" data-testid="fc2-pro"></span>
+            </div>
+            <div *kuiFieldError data-testid="fc2-error"></div>
+          </div>
+          <div kuiField [kuiId]="'fc3'" [name]="'level'" [disabled]="true" data-testid="fc3">
+            <label kuiFieldLabel>Level</label>
+            <div kuiSlider [defaultValue]="10" data-testid="fc3-slider">
+              <div kuiSliderControl class="slider">
+                <div kuiSliderTrack class="slider-track">
+                  <div kuiSliderThumb class="thumb" data-testid="fc3-thumb"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div kuiField [kuiId]="'fc4'" [name]="'alerts'" data-testid="fc4">
+            <label kuiFieldLabel data-testid="fc4-label">Alerts</label>
+            <span kuiSwitch class="switch" data-testid="fc4-switch">
+              <span kuiSwitchThumb class="thumb"></span>
+            </span>
+          </div>
+          <div kuiField [kuiId]="'fc5'" [name]="'fruit'" data-testid="fc5">
+            <label kuiFieldLabel data-testid="fc5-label">Fruit</label>
+            <ng-container kuiSelect [kuiId]="'fc5s'" [required]="true">
+              <button kuiSelectTrigger data-testid="fc5-trigger">
+                <span kuiSelectValue [placeholder]="'Pick a fruit'"></span>
+              </button>
+              <ng-template kuiSelectPortal>
+                <div kuiSelectPositioner [sideOffset]="4">
+                  <div kuiSelectPopup class="popup" data-testid="fc5-popup">
+                    <div kuiSelectItem [value]="'Apple'" class="item" data-testid="fc5-Apple">
+                      <span kuiSelectItemText>Apple</span>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+              <input kuiSelectInput />
+            </ng-container>
+            <div *kuiFieldError data-testid="fc5-error"></div>
+          </div>
+          <button type="submit" data-testid="f2-submit">Send</button>
+        </form>
+        <span data-testid="f2-sent">{{ sent2() }}</span>
+      </section>
     </main>
   `,
 })
@@ -652,6 +708,7 @@ export class App {
   protected readonly done = signal<number | null>(40)
   protected readonly pictures = signal(false)
   protected readonly sent = signal("")
+  protected readonly sent2 = signal("")
   protected readonly rejected = signal<Record<string, string> | undefined>(undefined)
   protected readonly json = (values: unknown) => JSON.stringify(values)
   protected readonly word = (valid: boolean | null) =>

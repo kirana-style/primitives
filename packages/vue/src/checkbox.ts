@@ -1,8 +1,10 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox as Controller } from "@kirana-ui/core/checkbox"
 import { defineComponent, h, useId } from "vue"
 
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 
 const scope = context<Controller>("Checkbox")
@@ -28,8 +30,9 @@ const Root = defineComponent({
   emits: ["update:checked", "checkedChange"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const field = useFieldAround()
     scope.provide(
-      controller(createCheckbox, () => ({
+      controller(within(createCheckbox, { field }), () => ({
         id: props.id ?? generated,
         checked: props.checked,
         defaultChecked: props.defaultChecked,

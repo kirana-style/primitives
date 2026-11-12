@@ -26,6 +26,7 @@ export interface FormProps {
 /** What a field gives the form it is in. */
 export interface FormField {
   readonly element: HTMLElement
+  focus(): void
   /** Checks the value now, and says whether it is valid. */
   validate(): boolean | Promise<boolean>
 }
@@ -71,8 +72,9 @@ export function createForm(props: ReadonlySignal<FormProps>): Form {
   function firstInvalid(results: boolean[], list: FormField[]) {
     list
       .filter((_each, index) => !results[index])
-      .map((each) => each.element)
-      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))[0]
+      .sort((a, b) =>
+        a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+      )[0]
       ?.focus()
   }
 

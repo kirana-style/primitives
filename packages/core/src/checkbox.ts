@@ -1,5 +1,6 @@
 import { createChecked } from "./checked.ts"
 import type { CheckedProps } from "./checked.ts"
+import type { Field } from "./field.ts"
 import { flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect } from "./reactivity.ts"
@@ -22,9 +23,12 @@ export interface Checkbox {
   readonly indicator: Part
 }
 
-export function createCheckbox(props: ReadonlySignal<CheckboxProps>): Checkbox {
+export function createCheckbox(
+  props: ReadonlySignal<CheckboxProps>,
+  around: { field?: Field | undefined } = {}
+): Checkbox {
   const mixed = () => Boolean(props.get().indeterminate)
-  const made = createChecked(props, "checkbox", mixed)
+  const made = createChecked(props, "checkbox", mixed, around.field)
   const shown = computed(() => made.checked.get() || mixed())
   const presence = createPresence(shown)
 

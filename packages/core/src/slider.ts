@@ -1,4 +1,5 @@
 import { bindable } from "./bindable.ts"
+import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartStyle } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
@@ -87,7 +88,12 @@ function decimals(step: number): number {
  * A value chosen along a track by dragging a thumb, pressing the track or with the keyboard. One
  * thumb, or several for a range: each is a `role="slider"` of its own, and none passes another.
  */
-export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
+export function createSlider(
+  props: ReadonlySignal<SliderProps>,
+  around: { field?: Field | undefined } = {}
+): Slider {
+  const { field } = around
+  let member: FieldMembership | undefined
   const value = bindable<SliderValue>({
     value: () => props.get().value,
     defaultValue: props.peek().defaultValue ?? props.peek().min ?? 0,
@@ -107,7 +113,7 @@ export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
     const list = typeof given === "number" ? [given] : given
     return list.map((each) => Math.min(max, Math.max(min, each)))
   }, sameList)
-  const disabled = computed(() => Boolean(props.get().disabled))
+  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const orientation = computed(() => props.get().orientation ?? "horizontal")
   const dragging = signal<number | null>(null)
   // Read where the control is, once it is in the page: what a thumb is centred by depends on it.
@@ -128,6 +134,7 @@ export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
   const text = computed(() => values.get().map(write).join(" – "))
 
   const state = () => ({
+    ...field?.state(),
     "data-orientation": orientation.get(),
     "data-disabled": flag(disabled.get()),
     "data-dragging": flag(dragging.get() !== null),
@@ -168,6 +175,7 @@ export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
     if (by.canceled) return false
     latest = moved
     value.set(shaped(moved), by)
+    member?.changed(moved.join(","))
     return true
   }
 
@@ -283,8 +291,30 @@ export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
     setValue,
     mount: () => () => stopDrag?.(),
     root: {
-      props: computed(() => ({ role: "group", ...state() })),
-      attach: () => NOTHING,
+      props: computed(() => ({
+        role: "group",
+        ...state(),
+        onFocus: () => member?.focused(true),
+        onBlur(event: FocusEvent) {
+          // From one thumb to another, focus has not left the slider.
+          const to = event.relatedTarget as Node | null
+          if (!(event.currentTarget as HTMLElement).contains(to)) member?.focused(false)
+        },
+      })),
+      attach(element) {
+        member = field?.join({
+          element,
+          focus: () => thumbs.get(0)?.focus(),
+          kind: "range",
+          // A slider always has a value.
+          required: () => false,
+          value: values.peek().join(","),
+        })
+        return () => {
+          member?.leave()
+          member = undefined
+        }
+      },
     },
     value: {
       // Each thumb says its own value to assistive technology.
@@ -360,6 +390,7 @@ export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
             "aria-valuetext": getAriaValueText?.(written!, current, index) ?? written,
             "aria-orientation": orientation.get(),
             "aria-disabled": disabled.get() ? "true" : undefined,
+            ...field?.aria(),
             "data-index": String(index),
             ...state(),
             style,
@@ -382,7 +413,7 @@ export function createSlider(props: ReadonlySignal<SliderProps>): Slider {
       part = {
         props: computed(() => ({
           type: "hidden",
-          name: props.get().name,
+          name: props.get().name ?? field?.name.get(),
           value: String(values.get()[index] ?? range.get().min),
           disabled: flag(disabled.get()),
         })),

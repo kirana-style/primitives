@@ -4,6 +4,7 @@ import {
   TemplateRef,
   ViewContainerRef,
   booleanAttribute,
+  forwardRef,
   inject,
   input,
   numberAttribute,
@@ -14,11 +15,16 @@ import { createField } from "@kirana-ui/core/field"
 import type { Field, FieldProps, FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 import type { ValidationMode } from "@kirana-ui/core/form"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiFieldset } from "./fieldset"
 import { KuiForm } from "./form"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiField]", exportAs: "kuiField" })
+@Directive({
+  selector: "[kuiField]",
+  exportAs: "kuiField",
+  providers: [{ provide: KUI_FIELD, useExisting: forwardRef(() => KuiField) }],
+})
 export class KuiField implements OnInit {
   readonly name = input<string>()
   readonly disabled = input(false, { transform: booleanAttribute })

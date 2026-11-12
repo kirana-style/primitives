@@ -57,6 +57,8 @@ const withoutStyles = (dom: string) =>
     .replace(/ style="[^"]*"/g, "")
     .replace(/ aria-labelledby="[^"]*-(label|legend)"/g, "")
     .replace(/ aria-describedby="[^"]*-description"/g, "")
+    // Whether a field has a value is its control's to say, once the control is in the page.
+    .replace(/ data-filled/g, "")
     .replace(/\nfocus: .*$/s, "")
 
 function serve(adapter: string) {
@@ -712,6 +714,85 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.keyboard.type("1")
     await id("fd2-error").waitFor({ state: "detached", timeout: 3000 })
     expect((await attribute("fd2", "data-invalid")) === null, "until its value changes")
+  },
+
+  // The controls that are not native ones, each inside a field of a form.
+  async "field-controls"({ page, snapshot, id, present, attribute, focused }) {
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    const input = (testid: string, name: string) =>
+      id(testid).evaluate(
+        (element, wanted) => element.querySelector("input")?.getAttribute(wanted) ?? null,
+        name
+      )
+    await snapshot("at rest")
+    expect((await input("fc1-box", "name")) === "terms", "a box takes its field's name")
+    expect((await input("fc1-box", "id")) === "fc1-control", "and the id its label is for")
+    expect((await input("fc1-box", "required")) === null, "its hidden input is never required")
+    expect((await attribute("fc1-box", "aria-labelledby")) === "fc1-label", "named by the label")
+    expect((await attribute("fc2-group", "aria-labelledby")) === "fc2-label", "a group too")
+    expect((await input("fc2-free", "name")) === "plan", "its radios take the field's name")
+    expect(
+      (await attribute("fc3-thumb", "aria-disabled")) === "true",
+      "a field disables its control"
+    )
+    expect((await attribute("fc3-slider", "data-disabled")) === "", "and marks it")
+    expect((await attribute("fc5-trigger", "aria-labelledby")) === "fc5-label", "a select too")
+
+    await id("f2-submit").click()
+    await id("fc5-error").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("invalid on submit")
+    expect(
+      ((await text("fc1-error")) ?? "") !== "",
+      "a required box says so, in the browser's words"
+    )
+    expect((await attribute("fc1-box", "aria-invalid")) === "true", "and is marked invalid")
+    expect((await attribute("fc1-box", "data-invalid")) === "", "for a style too")
+    expect(
+      (await attribute("fc1-box", "aria-describedby")) === "fc1-error",
+      "the message is said with the box"
+    )
+    expect(((await text("fc2-error")) ?? "") !== "", "a required group too")
+    expect(((await text("fc5-error")) ?? "") !== "", "and a required select")
+    expect((await focused()) === "fc1-box", "focus goes to the first invalid control")
+    expect((await text("f2-sent")) === "", "and nothing is sent")
+
+    await id("fc1-label").click()
+    await id("fc1-error").waitFor({ state: "detached", timeout: 3000 })
+    expect((await attribute("fc1-box", "aria-checked")) === "true", "a press on the label ticks it")
+    expect((await attribute("fc1", "data-valid")) === "", "which puts the field right")
+    expect((await attribute("fc1", "data-dirty")) === "", "and dirty")
+
+    await id("fc2-label").click()
+    expect((await focused()) === "fc2-free", "a press on a group's label goes to the group")
+    expect((await attribute("fc2", "data-focused")) === "", "which is then focused")
+    await page.keyboard.press("ArrowDown")
+    await id("fc2-error").waitFor({ state: "detached", timeout: 3000 })
+    expect((await attribute("fc2-pro", "aria-checked")) === "true", "an arrow chooses")
+    expect((await attribute("fc2", "data-focused")) === "", "focus is still in the group")
+
+    await id("fc4-label").click()
+    expect(
+      (await attribute("fc4-switch", "aria-checked")) === "true",
+      "a label turns its switch on"
+    )
+    expect((await attribute("fc4", "data-filled")) === "", "which then has a value")
+
+    await id("fc5-label").click()
+    expect((await focused()) === "fc5-trigger", "a press on a select's label goes to its trigger")
+    expect((await attribute("fc2", "data-touched")) === "", "the group was left: touched")
+    expect(!(await present("fc5-popup")), "and does not open it")
+    await page.keyboard.press("ArrowDown")
+    await id("fc5-Apple").click()
+    await id("fc5-error").waitFor({ state: "detached", timeout: 3000 })
+    await snapshot("put right")
+    expect((await attribute("fc5", "data-valid")) === "", "a chosen value puts the select right")
+
+    await id("f2-submit").click()
+    await settled(page)
+    expect(
+      (await text("f2-sent")) === '{"terms":"on","plan":"pro","alerts":"on","fruit":"Apple"}',
+      "all valid: every control's value is sent, a disabled one's left out"
+    )
   },
 
   // Popups the pointer opens: a tooltip and a hover card.

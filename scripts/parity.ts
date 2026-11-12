@@ -4,7 +4,7 @@
  *
  *   bun scripts/parity.ts
  */
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join } from "node:path"
 
@@ -202,5 +202,32 @@ for (const [adapter, given] of Object.entries(shapes)) {
   failed += problems.length
   for (const problem of problems) console.log(`DIFF  ${adapter} ${problem}`)
 }
+// One version for the family (each adapter is only right for the core it was built with), which
+// the release bumps in every manifest: a package the release's configuration does not list would
+// stay behind.
+const manifest = (path: string) => JSON.parse(read(path)) as { version: string }
+const release = (JSON.parse(read(".release-please-manifest.json")) as Record<string, string>)["."]
+const bumped = (
+  JSON.parse(read("release-please-config.json")) as {
+    packages: { ".": { "extra-files": { path: string }[] } }
+  }
+).packages["."]["extra-files"].map((each) => each.path)
+const packages = readdirSync(join(ROOT, "packages")).map((each) => `packages/${each}/package.json`)
+for (const path of packages) {
+  if (!bumped.includes(path)) {
+    failed++
+    console.log(`DIFF  release-please-config.json does not bump ${path}`)
+  }
+  if (manifest(path).version !== release) {
+    failed++
+    console.log(`DIFF  ${path} is ${manifest(path).version}, the release is ${release}`)
+  }
+}
+for (const path of bumped.filter((each) => !packages.includes(each))) {
+  failed++
+  console.log(`DIFF  release-please-config.json bumps ${path}, which is not a package`)
+}
+console.log(`same  ${packages.length} packages at ${release}, each bumped by a release`)
+
 console.log(failed === 0 ? "\nparity: passed" : `\nparity: ${failed} differences`)
 process.exit(failed === 0 ? 0 : 1)

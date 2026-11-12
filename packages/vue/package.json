@@ -8,7 +8,30 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./accordion": "./src/accordion.ts",
+    "./alert-dialog": "./src/alert-dialog.ts",
+    "./avatar": "./src/avatar.ts",
+    "./button": "./src/button.ts",
+    "./checkbox": "./src/checkbox.ts",
+    "./collapsible": "./src/collapsible.ts",
+    "./dialog": "./src/dialog.ts",
+    "./direction": "./src/direction.ts",
+    "./field": "./src/field.ts",
+    "./fieldset": "./src/fieldset.ts",
+    "./form": "./src/form.ts",
+    "./hover-card": "./src/hover-card.ts",
+    "./meter": "./src/meter.ts",
+    "./popover": "./src/popover.ts",
+    "./progress": "./src/progress.ts",
+    "./radio-group": "./src/radio-group.ts",
+    "./select": "./src/select.ts",
+    "./separator": "./src/separator.ts",
+    "./slider": "./src/slider.ts",
+    "./switch": "./src/switch.ts",
+    "./tabs": "./src/tabs.ts",
+    "./toggle": "./src/toggle.ts",
+    "./tooltip": "./src/tooltip.ts"
   },
   "dependencies": {
     "@kirana-ui/core": "workspace:*"

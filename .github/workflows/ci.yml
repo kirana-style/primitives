@@ -51,6 +51,15 @@ jobs:
       - name: Tests
         run: vp run test
 
+      # Every adapter exports the same components, parts and entries.
+      - name: Export parity
+        run: vp run parity
+
+      # The packages as they would be published, installed into an empty project: every export
+      # loads, renders on a server and type-checks.
+      - name: Packages
+        run: vp run pack
+
   conformance:
     runs-on: ubuntu-26.04
     name: build and conformance

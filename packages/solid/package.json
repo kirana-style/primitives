@@ -8,7 +8,30 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./accordion": "./src/accordion.tsx",
+    "./alert-dialog": "./src/alert-dialog.ts",
+    "./avatar": "./src/avatar.tsx",
+    "./button": "./src/button.tsx",
+    "./checkbox": "./src/checkbox.tsx",
+    "./collapsible": "./src/collapsible.tsx",
+    "./dialog": "./src/dialog.tsx",
+    "./direction": "./src/direction.tsx",
+    "./field": "./src/field.tsx",
+    "./fieldset": "./src/fieldset.tsx",
+    "./form": "./src/form.tsx",
+    "./hover-card": "./src/hover-card.tsx",
+    "./meter": "./src/meter.tsx",
+    "./popover": "./src/popover.tsx",
+    "./progress": "./src/progress.tsx",
+    "./radio-group": "./src/radio-group.tsx",
+    "./select": "./src/select.tsx",
+    "./separator": "./src/separator.tsx",
+    "./slider": "./src/slider.tsx",
+    "./switch": "./src/switch.tsx",
+    "./tabs": "./src/tabs.tsx",
+    "./toggle": "./src/toggle.tsx",
+    "./tooltip": "./src/tooltip.tsx"
   },
   "dependencies": {
     "@kirana-ui/core": "workspace:*"

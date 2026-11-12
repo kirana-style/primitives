@@ -38,7 +38,7 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 | `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))     |
 | `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS |
 | `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                    |
-| `bench`, `scripts/budgets.ts`                         | mount time, memory and interaction; gzip per component                                                                                                                            |
+| `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                            |
 
 ## How a component is built
 
@@ -115,7 +115,9 @@ vp run build          # each adapter's fixture, with its server-rendered page
 vp run conformance    # the scenarios on every adapter (Chromium), the DOM compared across them
 bun tests/conformance/run.ts --browser firefox   # or chromium,firefox,webkit: once in each
 vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives
-vp run budgets        # gzip per component
+vp run budgets        # gzip per component, against the limits in budgets.json
+vp run parity         # every adapter exports the same components, parts and entries
+vp run pack           # the packages as published (dist-packages/), then used from an empty project
 ```
 
 ## Licence

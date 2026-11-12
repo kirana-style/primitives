@@ -569,6 +569,83 @@ export const Separator = {
   },
 } as const
 
+export const Slider = {
+  /** Groups the slider's parts. */
+  Root: {
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while a pointer holds a thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** The value, written. */
+  Value: {
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while a pointer holds a thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** What a pointer presses and drags on. It holds the track and the thumbs. */
+  Control: {
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while a pointer holds a thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** The whole range. */
+  Track: {
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while a pointer holds a thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it. */
+  Indicator: {
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while a pointer holds a thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. */
+  Thumb: {
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while a pointer holds a thumb. */
+    dragging: "[data-dragging]",
+    /** Which thumb it is, from 0. */
+    index: "[data-index]",
+  },
+} as const
+
 export const Switch = {
   /** The track. It holds a hidden native checkbox, which a form and a label reach. */
   Root: {

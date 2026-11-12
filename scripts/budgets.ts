@@ -25,6 +25,7 @@ const COMPONENTS: Record<string, string[]> = {
   "radio-group": ["radio-group", "radio"],
   select: ["select"],
   separator: ["separator"],
+  slider: ["slider"],
   switch: ["switch"],
   tabs: ["tabs"],
   toggle: ["toggle"],

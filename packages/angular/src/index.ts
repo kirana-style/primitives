@@ -70,3 +70,11 @@ export {
 } from "./progress"
 export { KuiSeparator } from "./separator"
 export { KuiToggle } from "./toggle"
+export {
+  KuiSlider,
+  KuiSliderControl,
+  KuiSliderIndicator,
+  KuiSliderThumb,
+  KuiSliderTrack,
+  KuiSliderValue,
+} from "./slider"

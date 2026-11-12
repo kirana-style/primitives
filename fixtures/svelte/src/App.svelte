@@ -14,6 +14,7 @@
     RadioGroup,
     Select,
     Separator,
+    Slider,
     Switch,
     Tabs,
     Toggle,
@@ -33,6 +34,7 @@
   let count = $state(0)
   let done = $state(40)
   let pictures = $state(false)
+  let span = $state<number[]>([20, 80])
   let fruit = $state<string | null>("Banana")
   let presses = $state(0)
   let locked = $state(false)
@@ -347,5 +349,35 @@
       </Select.Root>
     </form>
     <output data-testid="s1-output">{fruit ?? "none"}</output>
+  </section>
+  <section data-fixture="slider">
+    <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">
+      <Slider.Value data-testid="sl1-value" />
+      <Slider.Control class="slider" data-testid="sl1-control">
+        <Slider.Track class="slider-track">
+          <Slider.Indicator class="fill" data-testid="sl1-fill" />
+          <Slider.Thumb class="thumb" aria-label="Volume" data-testid="sl1-thumb" />
+        </Slider.Track>
+      </Slider.Control>
+    </Slider.Root>
+    <Slider.Root id="sl2" bind:value={span} step={5} data-testid="sl2">
+      <Slider.Value data-testid="sl2-value" />
+      <Slider.Control class="slider" data-testid="sl2-control">
+        <Slider.Track class="slider-track">
+          <Slider.Indicator class="fill" data-testid="sl2-fill" />
+          <Slider.Thumb index={0} class="thumb" aria-label="From" data-testid="sl2-from" />
+          <Slider.Thumb index={1} class="thumb" aria-label="To" data-testid="sl2-to" />
+        </Slider.Track>
+      </Slider.Control>
+    </Slider.Root>
+    <span data-testid="sl2-output">{span.join(",")}</span>
+    <Slider.Root id="sl3" defaultValue={30} orientation="vertical" disabled data-testid="sl3">
+      <Slider.Control class="slider" data-testid="sl3-control">
+        <Slider.Track class="slider-track">
+          <Slider.Indicator class="fill" data-testid="sl3-fill" />
+          <Slider.Thumb class="thumb" aria-label="Level" data-testid="sl3-thumb" />
+        </Slider.Track>
+      </Slider.Control>
+    </Slider.Root>
   </section>
 </main>

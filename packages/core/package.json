@@ -29,6 +29,7 @@
     "./meter": "./src/meter.ts",
     "./progress": "./src/progress.ts",
     "./separator": "./src/separator.ts",
+    "./slider": "./src/slider.ts",
     "./toggle": "./src/toggle.ts"
   },
   "dependencies": {

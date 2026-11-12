@@ -13,6 +13,7 @@ import {
   RadioGroup,
   Select,
   Separator,
+  Slider,
   Switch,
   Tabs,
   Toggle,
@@ -40,6 +41,7 @@ export function App() {
   const [count, setCount] = createSignal(0)
   const [done, setDone] = createSignal<number | null>(40)
   const [pictures, setPictures] = createSignal(false)
+  const [span, setSpan] = createSignal<number[]>([20, 80])
   return (
     <main>
       <section data-fixture="collapsible">
@@ -424,6 +426,42 @@ export function App() {
           </Select.Root>
         </form>
         <output data-testid="s1-output">{fruit() ?? "none"}</output>
+      </section>
+      <section data-fixture="slider">
+        <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">
+          <Slider.Value data-testid="sl1-value" />
+          <Slider.Control class="slider" data-testid="sl1-control">
+            <Slider.Track class="slider-track">
+              <Slider.Indicator class="fill" data-testid="sl1-fill" />
+              <Slider.Thumb class="thumb" aria-label="Volume" data-testid="sl1-thumb" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
+        <Slider.Root
+          id="sl2"
+          value={span()}
+          onValueChange={(value) => setSpan(value as number[])}
+          step={5}
+          data-testid="sl2"
+        >
+          <Slider.Value data-testid="sl2-value" />
+          <Slider.Control class="slider" data-testid="sl2-control">
+            <Slider.Track class="slider-track">
+              <Slider.Indicator class="fill" data-testid="sl2-fill" />
+              <Slider.Thumb index={0} class="thumb" aria-label="From" data-testid="sl2-from" />
+              <Slider.Thumb index={1} class="thumb" aria-label="To" data-testid="sl2-to" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
+        <span data-testid="sl2-output">{span().join(",")}</span>
+        <Slider.Root id="sl3" defaultValue={30} orientation="vertical" disabled data-testid="sl3">
+          <Slider.Control class="slider" data-testid="sl3-control">
+            <Slider.Track class="slider-track">
+              <Slider.Indicator class="fill" data-testid="sl3-fill" />
+              <Slider.Thumb class="thumb" aria-label="Level" data-testid="sl3-thumb" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
       </section>
     </main>
   )

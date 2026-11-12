@@ -1,0 +1,6 @@
+export { default as Root } from "./Root.svelte"
+export { default as Value } from "./Value.svelte"
+export { default as Control } from "./Control.svelte"
+export { default as Track } from "./Track.svelte"
+export { default as Indicator } from "./Indicator.svelte"
+export { default as Thumb } from "./Thumb.svelte"

@@ -31,14 +31,15 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 
 ## Layout
 
-| Path                                                  | Holds                                                                                                                                                                             |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position), a controller per component, the vocabulary, a plain-DOM binder                          |
-| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                  |
-| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))     |
-| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS |
-| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                    |
-| `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                            |
+| Path                                                  | Holds                                                                                                                                                                                    |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position, hover, roving focus, typeahead), a controller per component, the vocabulary, a plain-DOM binder |
+| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                         |
+| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))            |
+| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS        |
+| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                           |
+| `tests/core`                                          | the core's services on their own, with no framework, in a browser                                                                                                                        |
+| `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                                   |
 
 ## How a component is built
 
@@ -111,6 +112,7 @@ vp install            # first, and after bun.lock changes
 vp run check          # format, lint with types, type check; warnings fail
 vp run types          # Vue's and Svelte's templates: vue-tsc and svelte-check
 vp run test           # the core's reactivity; the React adapter on the server
+vp run browser        # the core's services with no framework, in Chromium and Firefox (BROWSERS=… for others)
 vp run vocabulary     # packages/vocabulary from the core's part definitions
 vp run build          # each adapter's fixture, with its server-rendered page
 vp run conformance    # the scenarios on every adapter (Chromium), the DOM compared across them

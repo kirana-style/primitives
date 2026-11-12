@@ -24,6 +24,19 @@ export interface Roving {
   ): HTMLElement | undefined
 }
 
+export type Step = 1 | -1 | "first" | "last"
+
+/**
+ * Where a step lands in a list of `length` rows, from the row at `index` (`-1` for none). Past
+ * an end it wraps when `loop` is set and stays on the end otherwise.
+ */
+export function stepTo(length: number, index: number, step: Step, loop: boolean): number {
+  if (step === "first") return 0
+  if (step === "last") return length - 1
+  if (loop) return (index + step + length) % length
+  return Math.min(length - 1, Math.max(0, index + step))
+}
+
 /**
  * Arrow-key navigation over a set of elements: a tab list, a radio group, an accordion's
  * triggers. The set is the elements that registered, not a selector, so the same component
@@ -60,7 +73,7 @@ export function createRoving(): Roving {
       const vertical = orientation !== "horizontal"
       const horizontal = orientation !== "vertical"
       const rtl = directionOf(target, direction) === "rtl"
-      let step: 1 | -1 | "first" | "last" | undefined
+      let step: Step | undefined
       if (event.key === "Home") step = "first"
       else if (event.key === "End") step = "last"
       else if (vertical && event.key === "ArrowDown") step = 1
@@ -71,14 +84,8 @@ export function createRoving(): Roving {
 
       const list = enabled()
       if (list.length === 0) return undefined
-      const index = list.indexOf(target)
-      let next: number
-      if (step === "first") next = 0
-      else if (step === "last") next = list.length - 1
-      else if (loop) next = (index + step + list.length) % list.length
-      else next = Math.min(list.length - 1, Math.max(0, index + step))
       event.preventDefault()
-      const element = list[next]!
+      const element = list[stepTo(list.length, list.indexOf(target), step, loop)]!
       element.focus()
       return element
     },

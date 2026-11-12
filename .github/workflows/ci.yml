@@ -51,7 +51,8 @@ jobs:
       - name: Template types
         run: vp run types
 
-      # The core's reactivity, and the React adapter rendered on a server with no DOM.
+      # The core's reactivity, and the React adapter rendered on a server with no DOM. (The
+      # core's services run in a browser, with the conformance job.)
       - name: Tests
         run: vp run test
 
@@ -88,6 +89,13 @@ jobs:
       # The browsers Playwright drives, at the versions the lockfile's Playwright asks for.
       - name: Browsers
         run: bunx playwright install --with-deps chromium firefox webkit
+
+      # The core's services on their own, with no framework: focus, layers, presence, hover,
+      # positioning, in each engine.
+      - name: Core services
+        env:
+          BROWSERS: chromium,firefox,webkit
+        run: vp run browser
 
       # The whole run once in each engine, on the fixtures built above.
       - name: Conformance

@@ -69,10 +69,16 @@ export default defineConfig({
       // The packages as they would be published (dist-packages/), then used from an empty
       // project: installed, every export loaded, rendered on a server, type-checked.
       pack: { command: "bun scripts/pack.ts && bun scripts/consume.ts", cache: false },
+      // The templates' types, which `vp check` does not read: the Vue fixture's with `vue-tsc`,
+      // and the Svelte fixture's with the Svelte adapter's own components with `svelte-check`.
+      types: {
+        command: "bun run --cwd fixtures/vue types && bun run --cwd fixtures/svelte types",
+        cache: { input: SOURCES, output: [] },
+      },
       // What the pre-push hook and CI run.
       prepush: {
         command:
-          "vp run check && vp run test && vp run parity && vp run budgets && vp run pack && vp run conformance",
+          "vp run check && vp run types && vp run test && vp run parity && vp run budgets && vp run pack && vp run conformance",
         cache: false,
       },
     },

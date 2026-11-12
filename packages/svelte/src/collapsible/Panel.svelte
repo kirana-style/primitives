@@ -5,7 +5,7 @@
   import type { PartAttributes } from "../types.ts"
 
   // `keepMounted` keeps the closed panel in the page, `hidden`.
-  let { keepMounted = false, ...rest }: PartAttributes = $props()
+  let { keepMounted = false, ...rest }: { keepMounted?: boolean } & PartAttributes = $props()
   const controller = useCollapsible()
   const mounted = fromSignal(controller.mounted)
 </script>

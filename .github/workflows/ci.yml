@@ -47,6 +47,10 @@ jobs:
       - name: Lint and types
         run: vp lint --deny-warnings
 
+      # Vue's and Svelte's templates, which the pass above does not read.
+      - name: Template types
+        run: vp run types
+
       # The core's reactivity, and the React adapter rendered on a server with no DOM.
       - name: Tests
         run: vp run test

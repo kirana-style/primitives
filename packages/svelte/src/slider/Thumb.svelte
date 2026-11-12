@@ -4,7 +4,7 @@
   import type { PartAttributes } from "../types.ts"
 
   // `index` is which value of a range the thumb is, from 0.
-  let { index = 0, children, ...rest }: PartAttributes = $props()
+  let { index = 0, children, ...rest }: { index?: number } & PartAttributes = $props()
   const controller = useSlider()
   // A thumb is its index for as long as it is in the page.
   // svelte-ignore state_referenced_locally

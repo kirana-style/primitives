@@ -4,7 +4,7 @@
   import type { PartAttributes } from "../types.ts"
 
   // An `<input>`; `as="textarea"` or `as="select"` for another.
-  let { as = "input", ...rest }: PartAttributes = $props()
+  let { as = "input", ...rest }: { as?: "input" | "textarea" | "select" } & PartAttributes = $props()
   const controller = useField()
 </script>
 

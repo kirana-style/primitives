@@ -1,12 +1,13 @@
 <script lang="ts">
+  import type { ToggleProps } from "@kirana-ui/core/toggle"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createToggle } from "@kirana-ui/core/toggle"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RootProps } from "../types.ts"
 
-  let { pressed = $bindable(), defaultPressed, onPressedChange, disabled, ...rest }: PartAttributes = $props()
+  let { pressed = $bindable(), defaultPressed, onPressedChange, disabled, ...rest }: RootProps<ToggleProps> = $props()
 
   function change(next: boolean, by: ChangeDetails) {
     onPressedChange?.(next, by)

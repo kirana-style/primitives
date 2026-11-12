@@ -1,14 +1,14 @@
 <script lang="ts">
   import { within } from "@kirana-ui/core"
   import { createSlider } from "@kirana-ui/core/slider"
-  import type { SliderChangeDetails } from "@kirana-ui/core/slider"
+  import type { SliderChangeDetails, SliderProps } from "@kirana-ui/core/slider"
 
   import Part from "../Part.svelte"
   import { useDirectionAround } from "../direction/context.ts"
   import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RootProps } from "../types.ts"
 
   let {
     value = $bindable(),
@@ -28,7 +28,7 @@
     getAriaValueText,
     id,
     ...rest
-  }: PartAttributes = $props()
+  }: RootProps<SliderProps> = $props()
   const generated = $props.id()
 
   function change(next: number | number[], by: SliderChangeDetails) {

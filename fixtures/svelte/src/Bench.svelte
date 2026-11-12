@@ -3,6 +3,8 @@
   import { Collapsible } from "@kirana-ui/svelte"
 
   let { lib, count }: { lib: string; count: number } = $props()
+  // The page is drawn once for the count it is opened with.
+  // svelte-ignore state_referenced_locally
   const rows = Array.from({ length: count }, (_, index) => index)
 </script>
 

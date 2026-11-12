@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { RadioItemOptions } from "@kirana-ui/core/radio-group"
   import { defined } from "@kirana-ui/core"
   import { setContext } from "svelte"
 
@@ -7,7 +8,7 @@
   import { ITEM, useRadioGroup } from "./context.ts"
   import type { PartAttributes } from "../types.ts"
 
-  let { value, disabled, children, ...rest }: PartAttributes = $props()
+  let { value, disabled, children, ...rest }: { value: unknown } & RadioItemOptions & PartAttributes = $props()
   const options = toSignal(() => ({ disabled }))
   const read = () => defined(options.get())
   // An item is its value for as long as it is in the page.

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { SelectProps } from "@kirana-ui/core/select"
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createSelect } from "@kirana-ui/core/select"
@@ -7,7 +8,7 @@
   import { useFieldAround } from "../field/context.ts"
   import { controller, fromSignal } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RootProps } from "../types.ts"
 
   let {
     value = $bindable(),
@@ -22,7 +23,7 @@
     items,
     id,
     children,
-  }: PartAttributes = $props()
+  }: RootProps<SelectProps> = $props()
   const generated = $props.id()
 
   function changeValue(next: unknown, by: ChangeDetails) {

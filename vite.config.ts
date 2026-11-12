@@ -69,6 +69,9 @@ export default defineConfig({
       // The packages as they would be published (dist-packages/), then used from an empty
       // project: installed, every export loaded, rendered on a server, type-checked.
       pack: { command: "bun scripts/pack.ts && bun scripts/consume.ts", cache: false },
+      // The release path, tried against a registry of its own: `scripts/publish.ts` with a
+      // refused package, lost and half-stored uploads, a release continued, then installed.
+      rehearse: { command: "bun scripts/rehearse.ts", cache: false },
       // The templates' types, which `vp check` does not read: the Vue fixture's with `vue-tsc`,
       // and the Svelte fixture's with the Svelte adapter's own components with `svelte-check`.
       types: {
@@ -78,7 +81,7 @@ export default defineConfig({
       // What the pre-push hook and CI run.
       prepush: {
         command:
-          "vp run check && vp run types && vp run test && vp run parity && vp run budgets && vp run pack && vp run conformance",
+          "vp run check && vp run types && vp run test && vp run parity && vp run budgets && vp run pack && vp run rehearse && vp run conformance",
         cache: false,
       },
     },
@@ -102,6 +105,9 @@ export default defineConfig({
       "bun.lock",
       ".agents/**",
       ".claude/**",
+      // Written by release-please, in its own hand.
+      "CHANGELOG.md",
+      ".release-please-manifest.json",
       // Generated (`vp run vocabulary`), and compared byte for byte with what the generator writes.
       "packages/vocabulary/src/vocabulary.json",
       "packages/vocabulary/src/index.ts",

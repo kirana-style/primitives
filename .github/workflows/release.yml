@@ -1,0 +1,249 @@
+name: release
+
+# One version for every `@kirana-ui/*` package. On every push to `main`, release-please keeps a
+# Release PR open: the next version, read from the Conventional Commit titles since the last tag,
+# bumped in every package's manifest, with CHANGELOG.md. Merging that pull request tags vX.Y.Z and
+# creates the GitHub release; this workflow then packs the seven packages, waits for an approval,
+# publishes them to npm and installs the release from the registry.
+#
+#   release-please ─┬─ lockfile       (no release: keeps the Release PR's bun.lock in step)
+#                   └─ pack ── publish ── verify       (a release)
+#
+# What is published is what was checked. The release commit is the Release PR's merge, which the
+# merge queue ran all of CI on (lint, types, tests, every adapter in three browsers); `pack` runs
+# the one check that is about the packages themselves, on that commit: the tarballs installed
+# into an empty project. `publish` uploads those same tarballs, and nothing else builds.
+#
+# npm is reached by trusted publishing (OIDC): no token is stored anywhere. `publish` runs in the
+# `release` environment, which requires an approval. How long it takes and why is in
+# `scripts/publish.ts`: one wait of npm's cache age (five minutes) between the core and the
+# adapters, and nothing else waits.
+
+on:
+  push:
+    branches: [main]
+  # By hand (Actions → release → Run workflow), to publish an existing release again: after a
+  # failure that cannot be re-run, or to continue one that stopped. What npm holds is skipped.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The release tag to publish again, e.g. v0.1.0. Empty: the normal release-please run."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# The commit below (the lockfile) is CI's own: the git hooks `vp config` installs must not run.
+env:
+  VP_GIT_HOOKS: "0"
+
+# Releases queue rather than cancel: a half-published release must finish.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    if: inputs.tag == ''
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag_name }}
+      pr-branch: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+
+    steps:
+      # A token other than GITHUB_TOKEN, so the Release PR's commits start CI like any other's.
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # The Release PR bumps every manifest's version, and bun.lock records each workspace package's:
+  # CI installs frozen, so the lockfile must follow. Rebuilt on the Release PR's branch after
+  # every push to `main`, whether or not release-please rewrote the pull request this time.
+  lockfile:
+    needs: release-please
+    if: needs.release-please.outputs.created != 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Find the open Release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          BRANCH: ${{ needs.release-please.outputs.pr-branch }}
+        run: |
+          if [ -z "$BRANCH" ]; then
+            BRANCH=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --label "autorelease: pending" \
+              --json headRefName --jq '.[0].headRefName // ""')
+          fi
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pr.outputs.branch != ''
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      # Node.js and Bun only: the install below must be free to rewrite bun.lock.
+      - uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
+        if: steps.pr.outputs.branch != ''
+        with:
+          node-version-file: .node-version
+          run-install: false
+
+      # Release Please rewrites the pull request only when its notes change, so its branch can
+      # predate a package added to release-please-config.json since: every package takes the
+      # manifest's version first. Written here, not in a script: it runs on the Release PR's
+      # files, which may predate any script added for it.
+      - name: Give every package the release's version
+        if: steps.pr.outputs.branch != ''
+        run: |
+          bun -e '
+            const fs = require("node:fs")
+            const version = JSON.parse(fs.readFileSync(".release-please-manifest.json", "utf8"))["."]
+            for (const name of fs.readdirSync("packages")) {
+              const file = `packages/${name}/package.json`
+              const text = fs.readFileSync(file, "utf8")
+              const next = text.replace(/"version": "[^"]*"/, `"version": "${version}"`)
+              if (next !== text) console.log(`${file}: ${version}`)
+              fs.writeFileSync(file, next)
+            }
+          '
+
+      - name: Refresh the lockfile
+        if: steps.pr.outputs.branch != ''
+        run: bun install
+
+      # Release-please links a squash-merged pull request's `(#N)` as `/issues/N`.
+      - name: Link pull requests, not issues, in the changelog
+        if: steps.pr.outputs.branch != ''
+        run: |
+          sed -E -i "s#(https://github\.com/$GITHUB_REPOSITORY)/issues/([0-9]+)#\1/pull/\2#g" CHANGELOG.md
+
+      - name: Commit it to the Release PR
+        if: steps.pr.outputs.branch != ''
+        run: |
+          git add -A
+          git diff --cached --quiet && exit 0
+          git config user.name "Kirana"
+          git config user.email "dev@kirana.style"
+          git commit -m "chore: refresh the lockfile for the release"
+          git push
+
+  # The seven packages as npm will get them, and the check that is about them: installed into an
+  # empty project, every export loaded, a component rendered on a server with each adapter, the
+  # declarations type-checked. The tarballs are kept: `publish` uploads these, not a second build.
+  pack:
+    needs: release-please
+    if: >-
+      !failure() && !cancelled() &&
+      (needs.release-please.outputs.created == 'true' || inputs.tag != '')
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || needs.release-please.outputs.tag }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      # The version is the files': a tag given by hand must name the commit that carries it.
+      - name: Read the version
+        id: version
+        env:
+          TAG: ${{ inputs.tag || needs.release-please.outputs.tag }}
+        run: |
+          VERSION=$(bun -e 'console.log(require("./packages/core/package.json").version)')
+          if [ "v$VERSION" != "$TAG" ]; then
+            echo "::error::the tag is $TAG and the packages are $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Pack, and use the packages from an empty project
+        run: vp run pack
+
+      - name: What would be published
+        run: bun scripts/publish.ts dist-packages --dry-run
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages
+          path: dist-packages/*.tgz
+          if-no-files-found: error
+          retention-days: 90
+
+  # Nothing reaches npm without a person saying so: the `release` environment requires an
+  # approval. The job then needs no dependency and no build: Node.js for npm, Bun for the script.
+  publish:
+    needs: pack
+    if: "!failure() && !cancelled() && needs.pack.result == 'success'"
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: read
+      # The workflow's identity, which npm exchanges for a token per package.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No registry is configured and no token written: with none, npm asks for the workflow's
+      # identity. (A placeholder token in `.npmrc` is what npm falls back to, and reports as an
+      # E404 on the upload, when a package has no trusted publisher.) The Node.js this installs
+      # carries an npm new enough for it; the script refuses an older one.
+      - uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
+        with:
+          node-version-file: .node-version
+          run-install: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: dist-packages
+
+      # First asks npm whether this workflow may publish each package, and stops before any
+      # upload if one is refused. Then the core and the vocabulary, the cache's age, the adapters.
+      - name: Publish
+        run: bun scripts/publish.ts dist-packages
+
+  # The release as a project gets it: installed from the registry into an empty folder, loaded,
+  # rendered and type-checked. It follows the publish, which does not wait for it: an edge may
+  # serve its older list of versions for the cache's age, and this job waits that out, no longer.
+  verify:
+    needs: [pack, publish]
+    if: "!failure() && !cancelled() && needs.publish.result == 'success'"
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
+        with:
+          node-version-file: .node-version
+          run-install: false
+
+      - name: Install the release from npm and use it
+        env:
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: bun scripts/consume.ts --version "$VERSION"

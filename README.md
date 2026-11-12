@@ -118,6 +118,7 @@ bun tests/conformance/run.ts --browser firefox   # or chromium,firefox,webkit: o
 vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives
 vp run budgets        # gzip per component, against the limits in budgets.json
 vp run parity         # every adapter exports the same components, parts and entries
+vp run rehearse       # the release path against a registry of its own; nothing reaches npm
 vp run pack           # the packages as published (dist-packages/), then used from an empty project
 ```
 

@@ -1,7 +1,8 @@
 /**
  * Packs the packages the way they would be published, without publishing them.
  *
- *   bun scripts/pack.ts            # into dist-packages/
+ *   bun scripts/pack.ts                     # into dist-packages/
+ *   bun scripts/pack.ts --version <version> # as another version, for a rehearsal
  *
  * The workspace keeps reading TypeScript source. Each package is compiled in a staging copy, file
  * for file (no bundle: an entry per component stays a file per component, and an import of
@@ -47,7 +48,17 @@ interface Manifest {
   [key: string]: unknown
 }
 
-const read = (file: string) => JSON.parse(readFileSync(file, "utf8")) as Manifest
+// `--version 0.1.0-rehearsal.1`: every package as that version, whatever the manifests say. For
+// a rehearsal against a registry of one's own; a release's version is in the manifests.
+const override = process.argv.includes("--version")
+  ? process.argv[process.argv.indexOf("--version") + 1]
+  : undefined
+const read = (file: string) => {
+  const manifest = JSON.parse(readFileSync(file, "utf8")) as Manifest
+  return override && manifest.name?.startsWith("@kirana-ui/")
+    ? { ...manifest, version: override }
+    : manifest
+}
 const workspace = read(path.join(root, "package.json")) as unknown as {
   workspaces: { catalog: Record<string, string> }
 }

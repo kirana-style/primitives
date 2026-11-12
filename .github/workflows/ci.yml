@@ -64,6 +64,10 @@ jobs:
       - name: Packages
         run: vp run pack
 
+      # The release path against a registry of its own: nothing here reaches npm.
+      - name: Release rehearsal
+        run: vp run rehearse
+
   conformance:
     runs-on: ubuntu-26.04
     name: build and conformance

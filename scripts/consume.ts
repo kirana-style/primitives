@@ -5,7 +5,13 @@
  * declarations. Svelte's components are compiled from the package first, as a project's own
  * Svelte would; Angular's are finished by Angular's compiler at run time.
  *
- *   bun scripts/pack.ts && bun scripts/consume.ts
+ *   bun scripts/pack.ts && bun scripts/consume.ts   # the tarballs in dist-packages/
+ *   bun scripts/consume.ts --version 0.1.0          # that release, from the registry
+ *   … --version <version> --registry <url>          # from another registry (a rehearsal)
+ *
+ * From the registry it first waits until the edge it reaches lists the version for every package:
+ * a release ends when the registry has accepted it, and an edge may serve its older list for
+ * as long as the registry's own `max-age` says. The wait is bounded by that age.
  */
 import { spawnSync } from "node:child_process"
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
@@ -14,18 +20,63 @@ import path from "node:path"
 
 const root = path.resolve(import.meta.dirname, "..")
 const packed = path.join(root, "dist-packages")
-const tarballs = readdirSync(packed).filter((file) => file.endsWith(".tgz"))
-if (tarballs.length === 0) throw new Error("nothing is packed: run `bun scripts/pack.ts` first")
+const option = (name: string) => {
+  const index = process.argv.indexOf(`--${name}`)
+  return index < 0 ? undefined : process.argv[index + 1]
+}
+const released = option("version")
+const registry = (option("registry") ?? "https://registry.npmjs.org").replace(/\/$/, "")
+const tarballs = released ? [] : readdirSync(packed).filter((file) => file.endsWith(".tgz"))
+if (!released && tarballs.length === 0)
+  throw new Error("nothing is packed: run `bun scripts/pack.ts` first")
 
 const catalog = (
   JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as {
     workspaces: { catalog: Record<string, string> }
   }
 ).workspaces.catalog
-const names = tarballs.map((file) => {
-  const stage = file.replace(/^kirana-ui-/, "").replace(/-\d.*$/, "")
-  return { name: `@kirana-ui/${stage}`, file: path.join(packed, file), stage }
-})
+// What the project depends on: each tarball, or each package at the released version.
+const names = released
+  ? readdirSync(path.join(root, "packages")).map((stage) => ({
+      name: `@kirana-ui/${stage}`,
+      spec: released,
+    }))
+  : tarballs.map((file) => ({
+      name: `@kirana-ui/${file.replace(/^kirana-ui-/, "").replace(/-\d.*$/, "")}`,
+      spec: `file:${path.join(packed, file)}`,
+    }))
+
+/** Waits until this edge lists the released version of every package, for the cache's age at most. */
+async function served(version: string) {
+  const started = Date.now()
+  for (;;) {
+    let maxAge = 0
+    const missing: string[] = []
+    await Promise.all(
+      names.map(async ({ name }) => {
+        const response = await fetch(`${registry}/${name.replace("/", "%2f")}`, {
+          headers: { Accept: "application/vnd.npm.install-v1+json" },
+          signal: AbortSignal.timeout(15_000),
+        }).catch(() => undefined)
+        const age = /max-age=(\d+)/.exec(response?.headers.get("cache-control") ?? "")
+        if (age) maxAge = Math.max(maxAge, Number(age[1]))
+        const json = response?.ok
+          ? ((await response.json()) as { versions?: Record<string, unknown> })
+          : undefined
+        if (!json?.versions?.[version]) missing.push(name)
+      })
+    )
+    if (missing.length === 0) return
+    if (Date.now() - started > (maxAge + 120) * 1000) {
+      throw new Error(
+        `${missing.join(", ")} did not list ${version} within the cache's age (${maxAge} s) and two minutes`
+      )
+    }
+    console.log(`waiting  not listed here yet: ${missing.sort().join(", ")}`)
+    await new Promise((resolve) => setTimeout(resolve, 15_000))
+  }
+}
+if (released) await served(released)
 
 const project = mkdtempSync(path.join(tmpdir(), "kirana-ui-consume-"))
 function run(command: string, args: string[]) {
@@ -45,7 +96,7 @@ try {
         private: true,
         type: "module",
         dependencies: {
-          ...Object.fromEntries(names.map((each) => [each.name, `file:${each.file}`])),
+          ...Object.fromEntries(names.map((each) => [each.name, each.spec])),
           react: catalog.react,
           "react-dom": catalog["react-dom"],
           vue: catalog.vue,
@@ -64,12 +115,20 @@ try {
           typescript: catalog.typescript,
         },
         // A tarball's dependency on another package of the family is the tarball beside it.
-        overrides: Object.fromEntries(names.map((each) => [each.name, `file:${each.file}`])),
+        ...(released
+          ? {}
+          : { overrides: Object.fromEntries(names.map((each) => [each.name, each.spec])) }),
       },
       null,
       2
     )
   )
+  if (registry !== "https://registry.npmjs.org") {
+    writeFileSync(
+      path.join(project, "bunfig.toml"),
+      `[install.scopes]\n"@kirana-ui" = "${registry}"\n`
+    )
+  }
   run("bun", ["install"])
 
   // Every export loads, in Node, by the name a project imports.

@@ -1,6 +1,7 @@
 import { arrow, autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom"
 import type { Placement } from "@floating-ui/dom"
 
+import { carryDirection } from "../direction.ts"
 import { batch, signal } from "../reactivity.ts"
 import { setGeometry } from "./geometry.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
@@ -85,6 +86,8 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
       setGeometry(positioner, "position", "absolute")
       setGeometry(positioner, "left", "0px")
       setGeometry(positioner, "top", "0px")
+      // Before it is placed: `start` and `end` are read in the popup's own direction.
+      const forget = carryDirection(positioner, anchor)
       // The first placement resolves in a microtask, before anything is drawn: the positioner is
       // never hidden for it, so the popup inside can take focus as soon as it attaches.
 
@@ -148,6 +151,7 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
       return () => {
         stop()
         follow()
+        forget()
         replace = undefined
         placed.set(false)
       }

@@ -2,9 +2,10 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { useAvatar } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // The picture: in the page once `src` has loaded.
-  let { src, ...rest } = $props()
+  let { src, ...rest }: PartAttributes = $props()
   const controller = useAvatar()
   $effect.pre(() => {
     controller.source.set(src)

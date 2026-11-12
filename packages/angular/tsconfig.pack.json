@@ -1,0 +1,26 @@
+// What Angular's packager compiles the adapter with (`scripts/pack.ts`). The core is read from
+// its packed declarations, not its sources: a library is built against what a project installs.
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "declaration": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@kirana-ui/core": ["../../dist-packages/stage/core/src/index.d.ts"],
+      "@kirana-ui/core/*": ["../../dist-packages/stage/core/src/*.d.ts"]
+    }
+  },
+  "angularCompilerOptions": {
+    "compilationMode": "partial",
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": ["src/index.ts"]
+}

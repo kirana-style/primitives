@@ -3,8 +3,9 @@
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let { orientation, ...rest } = $props()
+  let { orientation, ...rest }: PartAttributes = $props()
   const made = controller(createSeparator, () => ({ orientation }))
 </script>
 

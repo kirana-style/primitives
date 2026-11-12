@@ -11,13 +11,17 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@kirana-ui/core": "workspace:*"
+    "@kirana-ui/core": "workspace:*",
+    "tslib": "catalog:"
   },
   "peerDependencies": {
     "@angular/core": ">=20.0.0"
   },
   "devDependencies": {
     "@angular/core": "catalog:",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "ng-packagr": "catalog:",
+    "@angular/compiler-cli": "catalog:",
+    "@angular/compiler": "catalog:"
   }
 }

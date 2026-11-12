@@ -3,8 +3,9 @@
 
   import Part from "../Part.svelte"
   import { useTooltip } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let { side, align, sideOffset, alignOffset, collisionPadding, ...rest } = $props()
+  let { side, align, sideOffset, alignOffset, collisionPadding, ...rest }: PartAttributes = $props()
   const controller = useTooltip()
   // Before the element attaches: the first placement reads these.
   $effect.pre(() => {

@@ -4,8 +4,9 @@
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let { pressed = $bindable(), defaultPressed, onPressedChange, disabled, ...rest } = $props()
+  let { pressed = $bindable(), defaultPressed, onPressedChange, disabled, ...rest }: PartAttributes = $props()
 
   function change(next: boolean, by: ChangeDetails) {
     onPressedChange?.(next, by)

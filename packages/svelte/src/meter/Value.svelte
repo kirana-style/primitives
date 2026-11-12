@@ -2,9 +2,10 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { useMeter } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // The written value, or what `children`, a snippet given the text, makes of it.
-  let { children, ...rest } = $props()
+  let { children, ...rest }: PartAttributes = $props()
   const controller = useMeter()
   const text = fromSignal(controller.text)
 </script>

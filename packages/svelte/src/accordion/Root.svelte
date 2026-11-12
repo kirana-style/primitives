@@ -7,6 +7,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   let {
     value = $bindable(),
@@ -18,7 +19,7 @@
     loop,
     id,
     ...rest
-  } = $props()
+  }: PartAttributes = $props()
   const generated = $props.id()
 
   function change(next: unknown[], by: ChangeDetails) {

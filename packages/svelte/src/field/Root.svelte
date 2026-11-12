@@ -8,6 +8,7 @@
   import { useForm } from "../form/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   let {
     name,
@@ -18,7 +19,7 @@
     validationDebounceTime,
     id,
     ...rest
-  } = $props()
+  }: PartAttributes = $props()
   const generated = $props.id()
   const around = { form: useForm(), fieldset: useFieldset() }
   const made = provide(

@@ -4,8 +4,9 @@
 
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let { open = $bindable(), defaultOpen, onOpenChange, id, children } = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: PartAttributes = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {

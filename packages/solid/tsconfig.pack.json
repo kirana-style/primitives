@@ -1,0 +1,14 @@
+// The declarations of the packed package (`scripts/pack.ts`), which names the output folder.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "src",
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
+}

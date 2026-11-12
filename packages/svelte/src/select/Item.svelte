@@ -5,9 +5,10 @@
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { ITEM, useSelect } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // `label` is what typeahead matches and the trigger shows; the item's text when left out.
-  let { value, disabled, label, ...rest } = $props()
+  let { value, disabled, label, ...rest }: PartAttributes = $props()
   const options = toSignal(() => ({ disabled, label }))
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally

@@ -148,8 +148,8 @@ const shapes: Record<string, Shape> = {
 
 let failed = 0
 
-// The same entry per component in every package: `@kirana-ui/<adapter>/accordion`. Angular's
-// follow when it is packed, which decides how its entries are laid out.
+// The same entry per component in every package: `@kirana-ui/<adapter>/accordion`. Angular's is
+// the exception: Angular's packager writes one flat module, which a project's build takes apart.
 const entries = (adapter: string) =>
   Object.keys((JSON.parse(read(`packages/${adapter}/package.json`)) as { exports: object }).exports)
     .filter((each) => each !== ".")

@@ -15,6 +15,7 @@ import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs } from "@kirana-ui/core/tabs"
 
+import { KUI_DIRECTION } from "./direction-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiTabs]", exportAs: "kuiTabs" })
@@ -27,6 +28,7 @@ export class KuiTabs implements OnInit {
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
 
   controller!: Tabs
+  private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -45,7 +47,7 @@ export class KuiTabs implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createTabs(this.props())
+    this.controller = createTabs(this.props(), { direction: this.around?.direction })
     this.part(this.controller.root)
     this.mount(this.controller)
   }

@@ -1,3 +1,7 @@
+import { directionOf } from "../direction.ts"
+import type { Direction } from "../direction.ts"
+import type { ReadonlySignal } from "../reactivity.ts"
+
 export type Orientation = "horizontal" | "vertical"
 
 export interface Roving {
@@ -11,7 +15,12 @@ export interface Roving {
    */
   move(
     event: KeyboardEvent,
-    options: { orientation: Orientation | "both"; loop?: boolean }
+    options: {
+      orientation: Orientation | "both"
+      loop?: boolean
+      /** What a direction provider states; the element's own direction without one. */
+      direction?: ReadonlySignal<Direction> | undefined
+    }
   ): HTMLElement | undefined
 }
 
@@ -19,7 +28,7 @@ export interface Roving {
  * Arrow-key navigation over a set of elements: a tab list, a radio group, an accordion's
  * triggers. The set is the elements that registered, not a selector, so the same component
  * nested inside itself keeps its own; their order is the page's, read when a key needs it.
- * Left and right follow the reading direction where the element is.
+ * Left and right follow the reading direction: the provider's, or where the element is.
  */
 export function createRoving(): Roving {
   const set = new Set<HTMLElement>()
@@ -41,7 +50,7 @@ export function createRoving(): Roving {
       return () => void set.delete(element)
     },
     enabled,
-    move(event, { orientation, loop = true }) {
+    move(event, { orientation, loop = true, direction }) {
       const current = event.currentTarget as HTMLElement
       const target = set.has(event.target as HTMLElement)
         ? (event.target as HTMLElement)
@@ -50,7 +59,7 @@ export function createRoving(): Roving {
       if (!target || (current !== target && !current.contains(target))) return undefined
       const vertical = orientation !== "horizontal"
       const horizontal = orientation !== "vertical"
-      const rtl = target.ownerDocument.defaultView?.getComputedStyle(target).direction === "rtl"
+      const rtl = directionOf(target, direction) === "rtl"
       let step: 1 | -1 | "first" | "last" | undefined
       if (event.key === "Home") step = "first"
       else if (event.key === "End") step = "last"

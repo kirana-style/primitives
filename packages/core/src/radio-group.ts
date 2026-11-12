@@ -1,3 +1,4 @@
+import type { DirectionAround } from "./direction.ts"
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
@@ -47,7 +48,7 @@ const NONE = Symbol("none")
 
 export function createRadioGroup<Value = unknown>(
   props: ReadonlySignal<RadioGroupProps<Value>>,
-  around: { field?: Field | undefined } = {}
+  around: { field?: Field | undefined } & DirectionAround = {}
 ): RadioGroup<Value> {
   const { field } = around
   let member: FieldMembership | undefined
@@ -101,7 +102,7 @@ export function createRadioGroup<Value = unknown>(
         ...field?.aria(),
         ...state(),
         onKeyDown(event: KeyboardEvent) {
-          const next = roving.move(event, { orientation: "both" })
+          const next = roving.move(event, { orientation: "both", direction: around.direction })
           // Arrows choose as they move, as native radios do.
           if (next) press(values.get(next)!, false, event)
         },

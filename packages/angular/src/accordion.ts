@@ -13,6 +13,7 @@ import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type { Accordion, AccordionItem } from "@kirana-ui/core/accordion"
 
+import { KUI_DIRECTION } from "./direction-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiAccordion]", exportAs: "kuiAccordion" })
@@ -28,6 +29,7 @@ export class KuiAccordion implements OnInit {
   readonly valueChanged = output<{ value: unknown[]; details: ChangeDetails }>()
 
   controller!: Accordion
+  private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -49,7 +51,7 @@ export class KuiAccordion implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createAccordion(this.props())
+    this.controller = createAccordion(this.props(), { direction: this.around?.direction })
     this.part(this.controller.root)
     this.mount(this.controller)
   }

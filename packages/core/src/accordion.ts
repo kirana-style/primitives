@@ -1,3 +1,4 @@
+import type { DirectionAround } from "./direction.ts"
 import { bindable } from "./bindable.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
@@ -55,7 +56,8 @@ const same = (a: readonly unknown[], b: readonly unknown[]) =>
   a.length === b.length && a.every((each, index) => Object.is(each, b[index]))
 
 export function createAccordion<Value = unknown>(
-  props: ReadonlySignal<AccordionProps<Value>>
+  props: ReadonlySignal<AccordionProps<Value>>,
+  around: DirectionAround = {}
 ): Accordion<Value> {
   const id = props.peek().id
   const value = bindable<readonly Value[]>({
@@ -87,7 +89,11 @@ export function createAccordion<Value = unknown>(
         "data-orientation": orientation.get(),
         "data-disabled": flag(disabled.get()),
         onKeyDown(event: KeyboardEvent) {
-          roving.move(event, { orientation: orientation.peek(), loop: props.peek().loop ?? true })
+          roving.move(event, {
+            orientation: orientation.peek(),
+            loop: props.peek().loop ?? true,
+            direction: around.direction,
+          })
         },
       })),
       attach: () => NOTHING,

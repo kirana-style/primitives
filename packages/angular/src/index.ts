@@ -88,3 +88,4 @@ export {
 } from "./field"
 export { KuiFieldset, KuiFieldsetLegend } from "./fieldset"
 export { KuiForm } from "./form"
+export { KuiDirection, injectDirection } from "./direction"

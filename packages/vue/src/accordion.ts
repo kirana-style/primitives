@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type { AccordionItem, Accordion as Controller } from "@kirana-ui/core/accordion"
 import { defineComponent, h, inject, onBeforeUnmount, onMounted, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
+import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
 
 const scope = context<Controller>("Accordion")
@@ -35,8 +36,9 @@ const Root = defineComponent({
   emits: ["update:value", "valueChange"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const direction = useDirectionAround()
     scope.provide(
-      controller(createAccordion, () => ({
+      controller(within(createAccordion, { direction }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,

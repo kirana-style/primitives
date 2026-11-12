@@ -4,6 +4,7 @@
   import type { SliderChangeDetails } from "@kirana-ui/core/slider"
 
   import Part from "../Part.svelte"
+  import { useDirectionAround } from "../direction/context.ts"
   import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
@@ -35,7 +36,7 @@
   }
 
   const made = provide(
-    controller(within(createSlider, { field: useFieldAround() }), () => ({
+    controller(within(createSlider, { field: useFieldAround(), direction: useDirectionAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,

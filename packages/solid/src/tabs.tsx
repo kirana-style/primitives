@@ -1,4 +1,4 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs as Controller } from "@kirana-ui/core/tabs"
@@ -15,6 +15,7 @@ import {
 } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { DirectionContext } from "./direction-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -43,7 +44,8 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const made = controller(createTabs, () => ({
+  const direction = useContext(DirectionContext)
+  const made = controller(within(createTabs, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,

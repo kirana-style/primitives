@@ -5,6 +5,7 @@ import type { RadioGroup as Controller, RadioGroupProps } from "@kirana-ui/core/
 import { createContext, useContext, useEffect, useMemo } from "react"
 import type { ReactElement } from "react"
 
+import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -34,7 +35,8 @@ function Root<Value>({
   ...rest
 }: RootProps<Value>): ReactElement {
   const field = useContext(FieldContext) ?? undefined
-  const create = within(createRadioGroup<Value>, { field })
+  const direction = useContext(DirectionContext) ?? undefined
+  const create = within(createRadioGroup<Value>, { field, direction })
   const controller = useController(create, {
     value: value as Value | null | undefined,
     defaultValue: defaultValue as Value | null | undefined,

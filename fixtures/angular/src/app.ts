@@ -67,6 +67,7 @@ import {
   KuiFieldset,
   KuiFieldsetLegend,
   KuiForm,
+  KuiDirection,
   KuiSeparator,
   KuiSlider,
   KuiSliderControl,
@@ -167,6 +168,7 @@ import {
     KuiFieldset,
     KuiFieldsetLegend,
     KuiForm,
+    KuiDirection,
     KuiSeparator,
     KuiSlider,
     KuiSliderControl,
@@ -695,6 +697,33 @@ import {
         </form>
         <span data-testid="f2-sent">{{ sent2() }}</span>
       </section>
+      <section data-fixture="direction">
+        <button
+          type="button"
+          data-testid="dir-turn"
+          (click)="reading.set(reading() === 'rtl' ? 'ltr' : 'rtl')"
+        >
+          Turn
+        </button>
+        <div [kuiDirection]="reading()" [attr.dir]="reading()" data-testid="dir-box">
+          <div kuiTabs [kuiId]="'dt1'" [defaultValue]="'one'" data-testid="dt1">
+            <div kuiTabsList class="tabs" data-testid="dt1-list">
+              <button kuiTabsTab [value]="'one'" data-testid="dt1-one">One</button>
+              <button kuiTabsTab [value]="'two'" data-testid="dt1-two">Two</button>
+            </div>
+            <div *kuiTabsPanel="'one'">First</div>
+            <div *kuiTabsPanel="'two'">Second</div>
+          </div>
+          <div kuiSlider [kuiId]="'ds1'" [defaultValue]="40" data-testid="ds1">
+            <div kuiSliderControl class="slider" data-testid="ds1-control">
+              <div kuiSliderTrack class="slider-track">
+                <div kuiSliderIndicator class="fill"></div>
+                <div kuiSliderThumb class="thumb" aria-label="Volume" data-testid="ds1-thumb"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   `,
 })
@@ -709,6 +738,7 @@ export class App {
   protected readonly pictures = signal(false)
   protected readonly sent = signal("")
   protected readonly sent2 = signal("")
+  protected readonly reading = signal<"ltr" | "rtl">("rtl")
   protected readonly rejected = signal<Record<string, string> | undefined>(undefined)
   protected readonly json = (values: unknown) => JSON.stringify(values)
   protected readonly word = (valid: boolean | null) =>

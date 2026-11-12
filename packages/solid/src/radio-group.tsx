@@ -14,6 +14,7 @@ import {
 } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -51,17 +52,20 @@ function Root(props: RootProps): JSX.Element {
   ])
   const generated = createUniqueId()
   const field = useContext(FieldContext)
-  const made = controller(within(createRadioGroup, { field }), () => ({
-    id: local.id ?? generated,
-    value: local.value,
-    defaultValue: local.defaultValue,
-    disabled: local.disabled,
-    readOnly: local.readOnly,
-    required: local.required,
-    name: local.name,
-    onValueChange: (value: unknown, details: ChangeDetails) =>
-      local.onValueChange?.(value, details),
-  }))
+  const made = controller(
+    within(createRadioGroup, { field, direction: useContext(DirectionContext) }),
+    () => ({
+      id: local.id ?? generated,
+      value: local.value,
+      defaultValue: local.defaultValue,
+      disabled: local.disabled,
+      readOnly: local.readOnly,
+      required: local.required,
+      name: local.name,
+      onValueChange: (value: unknown, details: ChangeDetails) =>
+        local.onValueChange?.(value, details),
+    })
+  )
   return (
     <Context.Provider value={made}>
       <Part part={made.root} tag="div" {...rest} />

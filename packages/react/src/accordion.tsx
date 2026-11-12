@@ -1,4 +1,4 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { Part } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type {
@@ -9,6 +9,7 @@ import type {
 import { createContext, useContext, useEffect, useMemo } from "react"
 import type { ReactElement } from "react"
 
+import { DirectionContext } from "./direction-context.ts"
 import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -42,7 +43,9 @@ function Root<Value>({
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
-  const controller = useController(createAccordion<Value>, {
+  const direction = useContext(DirectionContext) ?? undefined
+  const create = within(createAccordion<Value>, { direction })
+  const controller = useController(create, {
     value: value as readonly Value[] | undefined,
     defaultValue: defaultValue as readonly Value[] | undefined,
     onValueChange,

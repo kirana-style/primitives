@@ -557,6 +557,37 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await focused()) === "ad1-trigger", "focus returns to the trigger")
   },
 
+  async direction({ page, snapshot, id, attribute, focused }) {
+    const centred = () =>
+      id("ds1-thumb").evaluate((element) =>
+        (element as HTMLElement).style.getPropertyValue("translate")
+      )
+    await snapshot("right to left")
+    expect((await attribute("dir-box", "dir")) === "rtl", "the page says right to left")
+    expect((await centred()) === "50% -50%", "the thumb is centred the other way")
+    await id("dt1-one").focus()
+    await page.keyboard.press("ArrowLeft")
+    expect((await focused()) === "dt1-two", "ArrowLeft: the next tab")
+    await page.keyboard.press("ArrowRight")
+    expect((await focused()) === "dt1-one", "ArrowRight: the tab before")
+    await id("ds1-thumb").focus()
+    await page.keyboard.press("ArrowLeft")
+    expect((await attribute("ds1-thumb", "aria-valuenow")) === "41", "ArrowLeft: a step up")
+    await page.keyboard.press("ArrowRight")
+    expect((await attribute("ds1-thumb", "aria-valuenow")) === "40", "ArrowRight: a step down")
+
+    await id("dir-turn").click()
+    await snapshot("turned left to right")
+    expect((await attribute("dir-box", "dir")) === "ltr", "the page turned")
+    expect((await centred()) === "-50% -50%", "the thumb follows the provider")
+    await id("dt1-one").focus()
+    await page.keyboard.press("ArrowRight")
+    expect((await focused()) === "dt1-two", "ArrowRight: the next tab")
+    await id("ds1-thumb").focus()
+    await page.keyboard.press("ArrowRight")
+    expect((await attribute("ds1-thumb", "aria-valuenow")) === "41", "ArrowRight: a step up")
+  },
+
   async slider({ page, snapshot, id, attribute, focused }) {
     const inline = (testid: string, name: string) =>
       id(testid).evaluate(
@@ -1191,6 +1222,16 @@ for (const engine of engines) {
         if (place !== "40%") {
           failed++
           console.log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
+        }
+        // What a provider states is known on a server, which has no layout to read it from.
+        const centred = await page.evaluate(() =>
+          document
+            .querySelector<HTMLElement>('[data-testid="ds1-thumb"]')
+            ?.style.getPropertyValue("translate")
+        )
+        if (centred !== "50% -50%") {
+          failed++
+          console.log(`FAIL  ${label}  the server centred a right-to-left thumb, got "${centred}"`)
         }
         await context.close()
       }

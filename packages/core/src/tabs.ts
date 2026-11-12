@@ -1,3 +1,4 @@
+import type { DirectionAround } from "./direction.ts"
 import { bindable } from "./bindable.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
@@ -59,7 +60,10 @@ const NONE = Symbol("none")
 const slug = (value: unknown) =>
   String(value).replace(/[^\w-]/g, (character) => `_${character.charCodeAt(0)}`)
 
-export function createTabs<Value = unknown>(props: ReadonlySignal<TabsProps<Value>>): Tabs<Value> {
+export function createTabs<Value = unknown>(
+  props: ReadonlySignal<TabsProps<Value>>,
+  around: DirectionAround = {}
+): Tabs<Value> {
   const id = props.peek().id
   const value = bindable<Value | null>({
     value: () => props.get().value,
@@ -123,6 +127,7 @@ export function createTabs<Value = unknown>(props: ReadonlySignal<TabsProps<Valu
           const next = roving.move(event, {
             orientation: orientation.peek(),
             loop: options.loop ?? true,
+            direction: around.direction,
           })
           if (next && options.activateOnFocus) {
             setValue(values.get(next)!, details("focus", event))

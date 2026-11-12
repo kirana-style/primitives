@@ -5,6 +5,7 @@ import type { Slider as Controller, SliderProps, SliderValue } from "@kirana-ui/
 import { defineComponent, h, useId } from "vue"
 import type { PropType } from "vue"
 
+import { useDirectionAround } from "./direction-context.ts"
 import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 
@@ -37,7 +38,7 @@ const Root = defineComponent({
     const generated = useId()
     const field = useFieldAround()
     scope.provide(
-      controller(within(createSlider, { field }), () => ({
+      controller(within(createSlider, { field, direction: useDirectionAround() }), () => ({
         ...props,
         id: props.id ?? generated,
         onValueChange(value: number | number[], details: ChangeDetails) {

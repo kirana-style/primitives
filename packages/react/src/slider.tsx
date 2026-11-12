@@ -5,6 +5,7 @@ import type { Slider as Controller, SliderProps } from "@kirana-ui/core/slider"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -39,7 +40,8 @@ function Root({
   ...rest
 }: RootProps): ReactElement {
   const field = useContext(FieldContext) ?? undefined
-  const create = within(createSlider, { field })
+  const direction = useContext(DirectionContext) ?? undefined
+  const create = within(createSlider, { field, direction })
   const controller = useController(create, {
     value,
     defaultValue,

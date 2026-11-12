@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs as Controller } from "@kirana-ui/core/tabs"
 import { defineComponent, h, onBeforeUnmount, onMounted, useId, watchEffect } from "vue"
 import type { PropType } from "vue"
 
+import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
 
 const scope = context<Controller>("Tabs")
@@ -25,8 +26,9 @@ const Root = defineComponent({
   emits: ["update:value", "valueChange"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const direction = useDirectionAround()
     scope.provide(
-      controller(createTabs, () => ({
+      controller(within(createTabs, { direction }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,

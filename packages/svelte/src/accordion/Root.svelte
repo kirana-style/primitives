@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createAccordion } from "@kirana-ui/core/accordion"
 
   import Part from "../Part.svelte"
+  import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
 
@@ -25,7 +27,7 @@
   }
 
   const made = provide(
-    controller(createAccordion, () => ({
+    controller(within(createAccordion, { direction: useDirectionAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,

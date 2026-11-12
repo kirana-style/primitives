@@ -3,9 +3,10 @@
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // A `<button>`, or with `child` and `nativeButton={false}` another element that acts as one.
-  let { disabled, focusableWhenDisabled, nativeButton, ...rest } = $props()
+  let { disabled, focusableWhenDisabled, nativeButton, ...rest }: PartAttributes = $props()
   const made = controller(createButton, () => ({ disabled, focusableWhenDisabled, nativeButton }))
 </script>
 

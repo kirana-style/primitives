@@ -7,6 +7,7 @@
   import { useFieldAround } from "../field/context.ts"
   import { controller, fromSignal } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   let {
     value = $bindable(),
@@ -21,7 +22,7 @@
     items,
     id,
     children,
-  } = $props()
+  }: PartAttributes = $props()
   const generated = $props.id()
 
   function changeValue(next: unknown, by: ChangeDetails) {

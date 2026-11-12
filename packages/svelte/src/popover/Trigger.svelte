@@ -1,8 +1,9 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { usePopover } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let props = $props()
+  let props: PartAttributes = $props()
   const controller = usePopover()
 </script>
 

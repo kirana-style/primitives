@@ -4,9 +4,10 @@
 
   import { provide } from "../dialog/context.ts"
   import { controller } from "../runtime.svelte.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // A dialog that asks for an answer: a press outside it does not close it.
-  let { open = $bindable(), defaultOpen, onOpenChange, id, children } = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: PartAttributes = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {

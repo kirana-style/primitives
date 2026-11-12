@@ -4,8 +4,9 @@
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { useTabs } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let { value, disabled, ...rest } = $props()
+  let { value, disabled, ...rest }: PartAttributes = $props()
   const options = toSignal(() => ({ disabled }))
   // A tab is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally

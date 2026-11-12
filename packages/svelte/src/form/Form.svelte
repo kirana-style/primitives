@@ -6,9 +6,10 @@
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // A `<form>` whose fields say what is wrong; `onFormSubmit` takes the values once all are valid.
-  let { errors, onClearErrors, onFormSubmit, validationMode, ...rest } = $props()
+  let { errors, onClearErrors, onFormSubmit, validationMode, ...rest }: PartAttributes = $props()
 
   const made = provide(
     controller(createForm, () => ({

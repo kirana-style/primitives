@@ -4,9 +4,10 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { useTabs } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
   // `keepMounted` keeps the panel in the page, `hidden`, while its tab is not the active one.
-  let { value, keepMounted = false, ...rest } = $props()
+  let { value, keepMounted = false, ...rest }: PartAttributes = $props()
   // svelte-ignore state_referenced_locally
   const panel = useTabs().panel(value)
   $effect(() => untrack(() => panel.mount()))

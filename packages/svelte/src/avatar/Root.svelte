@@ -4,8 +4,9 @@
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
 
-  let props = $props()
+  let props: PartAttributes = $props()
   const made = provide(controller(createAvatar, () => ({})))
 </script>
 

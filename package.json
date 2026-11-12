@@ -12,6 +12,7 @@
   "devDependencies": {
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
@@ -53,6 +54,7 @@
       "@types/react-dom": "^19.3.0",
       "@vitejs/plugin-react": "^6.2.1",
       "@vitejs/plugin-vue": "^6.0.10",
+      "@vitest/browser-playwright": "5.1.0",
       "ng-packagr": "^22.2.5",
       "ng-primitives": "0.131.4",
       "playwright": "1.65.0",

@@ -1,4 +1,13 @@
 import { defineConfig } from "vite-plus"
+import { playwright } from "vite-plus/test/browser-playwright"
+
+// The engines `vp run browser` runs in. CI adds WebKit (`BROWSERS=chromium,firefox,webkit`),
+// which needs system libraries a development machine may not have.
+const BROWSERS = (process.env.BROWSERS ?? "chromium,firefox").split(",") as (
+  | "chromium"
+  | "firefox"
+  | "webkit"
+)[]
 
 const FIXTURES = ["react", "vue", "svelte", "solid", "angular"]
 
@@ -21,7 +30,42 @@ const SOURCES = [
 
 export default defineConfig({
   test: {
-    include: ["packages/*/src/**/*.test.{ts,tsx}"],
+    projects: [
+      {
+        test: {
+          name: "unit",
+          include: ["packages/*/src/**/*.test.{ts,tsx}"],
+        },
+      },
+      // The core's services with no framework, where they run: focus, layout, pointer and
+      // keyboard events, animations. Once in each engine.
+      {
+        // Known before the first test asks for it: a dependency found late reloads the page.
+        optimizeDeps: { include: ["vite-plus/test/browser", "@floating-ui/dom"] },
+        test: {
+          name: "browser",
+          include: ["tests/core/**/*.test.ts"],
+          browser: {
+            enabled: true,
+            headless: true,
+            screenshotFailures: false,
+            provider: playwright(),
+            // Headless Chromium can stop drawing frames, and an animation then never ends:
+            // without the GPU it keeps its clock.
+            instances: BROWSERS.map((browser) =>
+              browser === "chromium"
+                ? {
+                    browser,
+                    provider: playwright({
+                      launchOptions: { args: ["--disable-gpu", "--disable-software-rasterizer"] },
+                    }),
+                  }
+                : { browser }
+            ),
+          },
+        },
+      },
+    ],
   },
   // The workspace's tasks: `vp run <name>`. A cached task replays its output and restores its
   // files on a hit; `vp run --dry-run <name>` says whether it would hit, `vp run -v <name>` why it
@@ -35,7 +79,12 @@ export default defineConfig({
       },
       // The core's reactivity and the React adapter on the server, with no DOM.
       test: {
-        command: "vp test run",
+        command: "vp test run --project unit",
+        cache: { input: SOURCES, output: [] },
+      },
+      // The core's services on their own, with no framework, in Chromium and Firefox.
+      browser: {
+        command: "vp test run --project browser",
         cache: { input: SOURCES, output: [] },
       },
       // `@kirana-ui/vocabulary` from the core's part definitions; a test fails when it is stale.
@@ -81,7 +130,7 @@ export default defineConfig({
       // What the pre-push hook and CI run.
       prepush: {
         command:
-          "vp run check && vp run types && vp run test && vp run parity && vp run budgets && vp run pack && vp run rehearse && vp run conformance",
+          "vp run check && vp run types && vp run test && vp run browser && vp run parity && vp run budgets && vp run pack && vp run rehearse && vp run conformance",
         cache: false,
       },
     },

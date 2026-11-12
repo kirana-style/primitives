@@ -8,6 +8,8 @@ import { pushLayer } from "./services/layers.ts"
 import { POSITION_DEFAULTS, createPosition, sameOptions } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { createPresence } from "./services/presence.ts"
+import { stepTo } from "./services/roving.ts"
+import { createTypeahead, printable } from "./services/typeahead.ts"
 
 export interface SelectProps<Value = unknown> {
   id: string
@@ -68,7 +70,6 @@ const NOTHING = () => {}
 const NO_PROPS = computed(() => ({}))
 const INDICATOR_PROPS = computed(() => ({ "aria-hidden": "true" }))
 const NONE = Symbol("none")
-const TYPEAHEAD_RESET = 500
 
 interface Row<Value> {
   value: Value
@@ -156,40 +157,12 @@ export function createSelect<Value = unknown>(
     if (list.length === 0) return
     const current = highlighted.peek()
     const index = current === NONE ? -1 : list.indexOf(elements.get(current)!)
-    const next =
-      step === "first"
-        ? 0
-        : step === "last"
-          ? list.length - 1
-          : index < 0
-            ? step === 1
-              ? 0
-              : list.length - 1
-            : Math.min(list.length - 1, Math.max(0, index + step))
-    highlight(list[next], true)
+    // With no row highlighted, up starts from the end.
+    const to = index < 0 && step === -1 ? "last" : step
+    highlight(list[stepTo(list.length, index, to, false)], true)
   }
 
-  let typed = ""
-  let typedAt = 0
-  /** The first enabled item after the current one whose label starts with what was typed. */
-  function typeahead(
-    key: string,
-    candidates: { value: Value; label: string; element?: HTMLElement }[]
-  ) {
-    const now = Date.now()
-    if (now - typedAt > TYPEAHEAD_RESET) typed = ""
-    typedAt = now
-    typed += key.toLowerCase()
-    // The same letter again walks through the items that start with it.
-    const repeated = typed.replaceAll(typed[0]!, "") === ""
-    const query = repeated ? typed[0]! : typed
-    const current = open.peek() ? highlighted.peek() : value.peek()
-    const from = candidates.findIndex((each) => Object.is(each.value, current))
-    const ordered = [...candidates.slice(from + 1), ...candidates.slice(0, from + 1)]
-    const start =
-      repeated || typed.length === 1 ? ordered : [candidates[from]!, ...ordered].filter(Boolean)
-    return start.find((each) => each.label.toLowerCase().startsWith(query))
-  }
+  const typeahead = createTypeahead()
 
   function setOpen(next: boolean, by: ChangeDetails) {
     if (disabled.peek()) return
@@ -219,9 +192,6 @@ export function createSelect<Value = unknown>(
     labelsChanged.get()
     return labels.get(current) || String(current)
   })
-
-  const printable = (event: KeyboardEvent) =>
-    event.key.length === 1 && event.key !== " " && !event.ctrlKey && !event.metaKey && !event.altKey
 
   return {
     open,
@@ -260,7 +230,13 @@ export function createSelect<Value = unknown>(
             setOpen(true, details("trigger-press", event))
           } else if (printable(event) && !open.peek()) {
             // Closed, a letter chooses: only the labels the caller gave are known then.
-            const match = typeahead(event.key, [...(props.peek().items ?? [])])
+            const items = props.peek().items ?? []
+            const chosen = value.peek()
+            const match = typeahead.match(
+              event.key,
+              items,
+              items.findIndex((each) => Object.is(each.value, chosen))
+            )
             if (match) setValue(match.value, details("typeahead", event))
           }
         },
@@ -340,14 +316,14 @@ export function createSelect<Value = unknown>(
                 return setOpen(false, details("focus-out", event))
             }
             if (printable(event)) {
-              const match = typeahead(
+              const list = enabled()
+              const current = highlighted.peek()
+              const match = typeahead.match(
                 event.key,
-                enabled().map((element) => {
-                  const row = rows.get(element)!
-                  return { value: row.value, label: labelOf(element, row), element }
-                })
+                list.map((element) => ({ label: labelOf(element, rows.get(element)!), element })),
+                current === NONE ? -1 : list.indexOf(elements.get(current)!)
               )
-              if (match?.element) highlight(match.element, true)
+              if (match) highlight(match.element, true)
             }
           },
         }

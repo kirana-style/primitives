@@ -554,6 +554,88 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await focused()) === "ad1-trigger", "focus returns to the trigger")
   },
 
+  async slider({ page, snapshot, id, attribute, focused }) {
+    const inline = (testid: string, name: string) =>
+      id(testid).evaluate(
+        (element, property) => (element as HTMLElement).style.getPropertyValue(property),
+        name
+      )
+    const submitted = (testid: string) =>
+      id(testid).evaluate((element) => element.querySelector("input")?.value)
+    const at = async (testid: string, share: number) => {
+      const box = (await id(testid).boundingBox())!
+      return [box.x + box.width * share, box.y + box.height / 2] as const
+    }
+    await snapshot("at rest")
+    expect((await attribute("sl1", "role")) === "group", "the root groups the parts")
+    expect((await attribute("sl1-thumb", "role")) === "slider", "the thumb is the slider")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "40", "its value")
+    expect((await attribute("sl1-thumb", "aria-valuemin")) === "0", "its range starts at 0")
+    expect((await attribute("sl1-thumb", "aria-valuemax")) === "100", "and ends at 100")
+    expect((await attribute("sl1-thumb", "aria-orientation")) === "horizontal", "horizontal")
+    expect((await attribute("sl1-thumb", "tabindex")) === "0", "in the tab order")
+    expect((await inline("sl1-thumb", "inset-inline-start")) === "40%", "placed by its value")
+    expect((await inline("sl1-fill", "width")) === "40%", "the filled part reaches it")
+    expect((await id("sl1-value").textContent())?.trim() === "40", "the value is written")
+    expect((await submitted("sl1-thumb")) === "40", "a form reads it")
+
+    await id("sl1-thumb").focus()
+    await page.keyboard.press("ArrowRight")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "41", "ArrowRight: a step up")
+    await page.keyboard.press("Shift+ArrowRight")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "51", "with Shift: a large step")
+    await page.keyboard.press("PageDown")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "41", "Page Down: a large step down")
+    await page.keyboard.press("ArrowDown")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "40", "ArrowDown: a step down")
+    await page.keyboard.press("Home")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "0", "Home: the start")
+    await page.keyboard.press("ArrowLeft")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "0", "and no further")
+    await page.keyboard.press("End")
+    await snapshot("moved by the keyboard")
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "100", "End: the end")
+    expect((await submitted("sl1-thumb")) === "100", "the form's value follows")
+
+    await page.mouse.move(...(await at("sl1-control", 0.25)))
+    await page.mouse.down()
+    await snapshot("held by a pointer")
+    expect(
+      (await attribute("sl1-thumb", "aria-valuenow")) === "25",
+      "a press on the track moves it"
+    )
+    expect((await attribute("sl1", "data-dragging")) === "", "held: data-dragging")
+    expect((await focused()) === "sl1-thumb", "the thumb has focus")
+    await page.mouse.move(...(await at("sl1-control", 0.6)))
+    expect((await attribute("sl1-thumb", "aria-valuenow")) === "60", "and it follows the pointer")
+    await page.mouse.up()
+    await snapshot("let go")
+    expect((await attribute("sl1", "data-dragging")) === null, "let go: no data-dragging")
+
+    expect((await id("sl2-value").textContent())?.trim() === "20 – 80", "a range is written whole")
+    expect((await inline("sl2-fill", "inset-inline-start")) === "20%", "filled from the first")
+    expect((await inline("sl2-fill", "width")) === "60%", "to the last")
+    expect((await attribute("sl2-to", "data-index")) === "1", "each thumb says which it is")
+    await page.mouse.move(...(await at("sl2-control", 0.72)))
+    await page.mouse.down()
+    await page.mouse.up()
+    await settled(page)
+    expect((await id("sl2-output").textContent())?.trim() === "20,70", "the nearest thumb, by step")
+    expect((await focused()) === "sl2-to", "and it has focus")
+    await id("sl2-from").focus()
+    await page.keyboard.press("End")
+    await snapshot("a range moved")
+    expect((await id("sl2-output").textContent())?.trim() === "70,70", "a thumb stops at the next")
+
+    expect((await attribute("sl3-thumb", "aria-orientation")) === "vertical", "vertical")
+    expect((await attribute("sl3-thumb", "aria-disabled")) === "true", "disabled is said")
+    expect((await attribute("sl3-thumb", "tabindex")) === "-1", "and out of the tab order")
+    expect((await inline("sl3-thumb", "bottom")) === "30%", "placed from the bottom")
+    expect((await inline("sl3-fill", "height")) === "30%", "filled from the bottom")
+    await id("sl3-control").click({ position: { x: 10, y: 10 }, force: true })
+    expect((await attribute("sl3-thumb", "aria-valuenow")) === "30", "a disabled slider stays")
+  },
+
   // Popups the pointer opens: a tooltip and a hover card.
   async hover({ page, snapshot, id, present, attribute, focused }) {
     const away = () => page.mouse.move(900, 700)
@@ -942,6 +1024,15 @@ for (const engine of engines) {
           failed++
           console.log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
         }
+        const place = await page.evaluate(() =>
+          document
+            .querySelector<HTMLElement>('[data-testid="sl1-thumb"]')
+            ?.style.getPropertyValue("inset-inline-start")
+        )
+        if (place !== "40%") {
+          failed++
+          console.log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
+        }
         await context.close()
       }
       for (const [name, scenario] of Object.entries(scenarios)) {
@@ -950,6 +1041,9 @@ for (const engine of engines) {
         const errors: string[] = []
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
+          // Firefox's note on a popup that follows its anchor as the page scrolls: that is what
+          // a positioned popup does, and nothing went wrong.
+          if (message.text().includes("scroll-linked positioning effect")) return
           if (message.type() === "error" || message.type() === "warning")
             errors.push(message.text())
         })

@@ -247,3 +247,36 @@ section[data-fixture="simple"] {
   width: 1px;
   height: 16px;
 }
+section[data-fixture="slider"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.slider {
+  display: flex;
+  align-items: center;
+  width: 200px;
+  height: 20px;
+}
+.slider[data-orientation="vertical"] {
+  justify-content: center;
+  width: 20px;
+  height: 100px;
+}
+.slider-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: #ddd;
+}
+.slider-track[data-orientation="vertical"] {
+  width: 6px;
+  height: 100%;
+}
+.thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #222;
+}

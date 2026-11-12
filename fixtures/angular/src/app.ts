@@ -59,6 +59,12 @@ import {
   KuiSelectTrigger,
   KuiSelectValue,
   KuiSeparator,
+  KuiSlider,
+  KuiSliderControl,
+  KuiSliderIndicator,
+  KuiSliderThumb,
+  KuiSliderTrack,
+  KuiSliderValue,
   KuiSwitch,
   KuiSwitchThumb,
   KuiTabs,
@@ -144,6 +150,12 @@ import {
     KuiSelectTrigger,
     KuiSelectValue,
     KuiSeparator,
+    KuiSlider,
+    KuiSliderControl,
+    KuiSliderIndicator,
+    KuiSliderThumb,
+    KuiSliderTrack,
+    KuiSliderValue,
     KuiSwitch,
     KuiSwitchThumb,
     KuiTabs,
@@ -524,6 +536,55 @@ import {
         </form>
         <output data-testid="s1-output">{{ fruit() ?? "none" }}</output>
       </section>
+      <section data-fixture="slider">
+        <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
+          <output kuiSliderValue data-testid="sl1-value"></output>
+          <div kuiSliderControl class="slider" data-testid="sl1-control">
+            <div kuiSliderTrack class="slider-track">
+              <div kuiSliderIndicator class="fill" data-testid="sl1-fill"></div>
+              <div kuiSliderThumb class="thumb" aria-label="Volume" data-testid="sl1-thumb"></div>
+            </div>
+          </div>
+        </div>
+        <div kuiSlider [kuiId]="'sl2'" [(value)]="span" [step]="5" data-testid="sl2">
+          <output kuiSliderValue data-testid="sl2-value"></output>
+          <div kuiSliderControl class="slider" data-testid="sl2-control">
+            <div kuiSliderTrack class="slider-track">
+              <div kuiSliderIndicator class="fill" data-testid="sl2-fill"></div>
+              <div
+                kuiSliderThumb
+                [index]="0"
+                class="thumb"
+                aria-label="From"
+                data-testid="sl2-from"
+              ></div>
+              <div
+                kuiSliderThumb
+                [index]="1"
+                class="thumb"
+                aria-label="To"
+                data-testid="sl2-to"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <span data-testid="sl2-output">{{ list(span()).join(",") }}</span>
+        <div
+          kuiSlider
+          [kuiId]="'sl3'"
+          [defaultValue]="30"
+          [orientation]="'vertical'"
+          [disabled]="true"
+          data-testid="sl3"
+        >
+          <div kuiSliderControl class="slider" data-testid="sl3-control">
+            <div kuiSliderTrack class="slider-track">
+              <div kuiSliderIndicator class="fill" data-testid="sl3-fill"></div>
+              <div kuiSliderThumb class="thumb" aria-label="Level" data-testid="sl3-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   `,
 })
@@ -536,6 +597,9 @@ export class App {
   protected readonly count = signal(0)
   protected readonly done = signal<number | null>(40)
   protected readonly pictures = signal(false)
+  protected readonly span = signal<number | readonly number[] | undefined>([20, 80])
+  protected readonly list = (value: number | readonly number[] | undefined) =>
+    typeof value === "number" ? [value] : (value ?? [])
   // A picture of one pixel, and an address that is not a picture.
   protected readonly pixel =
     "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"

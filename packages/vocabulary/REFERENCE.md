@@ -550,6 +550,69 @@ The line.
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the line runs. |
 
+## Slider
+
+### Slider.Root
+
+Groups the slider's parts.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while a pointer holds a thumb. |
+
+### Slider.Value
+
+The value, written.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while a pointer holds a thumb. |
+
+### Slider.Control
+
+What a pointer presses and drags on. It holds the track and the thumbs.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while a pointer holds a thumb. |
+
+### Slider.Track
+
+The whole range.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while a pointer holds a thumb. |
+
+### Slider.Indicator
+
+The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while a pointer holds a thumb. |
+
+### Slider.Thumb
+
+What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while a pointer holds a thumb. |
+| `data-index` | Which thumb it is, from 0. |
+
 ## Switch
 
 ### Switch.Root

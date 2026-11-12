@@ -1365,6 +1365,165 @@ export const vocabulary = {
         }
       }
     },
+    "slider": {
+      "parts": {
+        "root": {
+          "description": "Groups the slider's parts.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "value": {
+          "description": "The value, written.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "control": {
+          "description": "What a pointer presses and drags on. It holds the track and the thumbs.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "track": {
+          "description": "The whole range.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "thumb": {
+          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb.",
+              "selector": "[data-dragging]"
+            },
+            "index": {
+              "attribute": "data-index",
+              "description": "Which thumb it is, from 0.",
+              "selector": "[data-index]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "switch": {
       "parts": {
         "root": {

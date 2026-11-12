@@ -12,6 +12,7 @@ import { hoverCardVocabulary } from "./hover-card.vocabulary.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
 import { selectVocabulary } from "./select.vocabulary.ts"
+import { sliderVocabulary } from "./slider.vocabulary.ts"
 import { switchVocabulary } from "./switch.vocabulary.ts"
 import { tabsVocabulary } from "./tabs.vocabulary.ts"
 import { tooltipVocabulary } from "./tooltip.vocabulary.ts"
@@ -37,6 +38,7 @@ export const vocabulary = {
   radioGroup: radioGroupVocabulary,
   select: selectVocabulary,
   separator: separatorVocabulary,
+  slider: sliderVocabulary,
   switch: switchVocabulary,
   tabs: tabsVocabulary,
   toggle: toggleVocabulary,

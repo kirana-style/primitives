@@ -5,8 +5,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 
 > **Status: pre-release.** Nothing is published. Twenty-two components on all five adapters:
 > Accordion, Alert Dialog, Avatar, Button, Checkbox, Collapsible, Dialog, Field, Fieldset, Form, Hover Card, Meter,
-> Popover, Progress, Radio Group, Select, Separator, Slider, Switch, Tabs, Toggle, Tooltip. The API will
-> change.
+> Popover, Progress, Radio Group, Select, Separator, Slider, Switch, Tabs, Toggle, Tooltip; and the
+> Direction provider. The API will change.
 
 - **The same on every framework.** One set of scenarios runs on every adapter in a real browser,
   and the DOM of every state is compared across them: the same attributes, the same variables,
@@ -20,6 +20,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   panel leaves the page.
 - **Forms work as forms.** A checkbox, a switch and a radio hold a hidden native input: a form
   submits it and a `<label>` reaches it, with no extra wiring.
+- **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
+  out in. A Direction provider states it where no page can be asked, on a server.
 - **Small.** The core has one dependency (`@floating-ui/dom`).
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a
   server sends is the page at rest, and hydration finds nothing to correct (tested on React, Vue,

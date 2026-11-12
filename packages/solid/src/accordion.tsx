@@ -1,4 +1,4 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type { AccordionItem, Accordion as Controller } from "@kirana-ui/core/accordion"
@@ -14,6 +14,7 @@ import {
 } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { DirectionContext } from "./direction-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -55,7 +56,8 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const made = controller(createAccordion, () => ({
+  const direction = useContext(DirectionContext)
+  const made = controller(within(createAccordion, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,

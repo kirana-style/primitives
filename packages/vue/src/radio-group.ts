@@ -5,6 +5,7 @@ import type { RadioGroup as Controller } from "@kirana-ui/core/radio-group"
 import { defineComponent, h, inject, onBeforeUnmount, onMounted, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
+import { useDirectionAround } from "./direction-context.ts"
 import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
 
@@ -31,7 +32,7 @@ const Root = defineComponent({
     const generated = useId()
     const field = useFieldAround()
     scope.provide(
-      controller(within(createRadioGroup, { field }), () => ({
+      controller(within(createRadioGroup, { field, direction: useDirectionAround() }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,

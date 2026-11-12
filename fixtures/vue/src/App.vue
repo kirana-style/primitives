@@ -7,6 +7,7 @@ import {
   Checkbox,
   Collapsible,
   Dialog,
+  DirectionProvider,
   Field,
   Fieldset,
   Form,
@@ -43,6 +44,7 @@ const done = ref(40)
 const pictures = ref(false)
 const sent = ref("")
 const sent2 = ref("")
+const reading = ref<"ltr" | "rtl">("rtl")
 const rejected = ref<Record<string, string> | undefined>(undefined)
 const span = ref<number[]>([20, 80])
 const fruit = ref<string | null>("Banana")
@@ -490,6 +492,35 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         <button type="submit" data-testid="f2-submit">Send</button>
       </Form>
       <span data-testid="f2-sent">{{ sent2 }}</span>
+    </section>
+    <section data-fixture="direction">
+      <button
+        type="button"
+        data-testid="dir-turn"
+        @click="reading = reading === 'rtl' ? 'ltr' : 'rtl'"
+      >
+        Turn
+      </button>
+      <div :dir="reading" data-testid="dir-box">
+        <DirectionProvider :direction="reading">
+          <Tabs.Root id="dt1" default-value="one" data-testid="dt1">
+            <Tabs.List class="tabs" data-testid="dt1-list">
+              <Tabs.Tab value="one" data-testid="dt1-one">One</Tabs.Tab>
+              <Tabs.Tab value="two" data-testid="dt1-two">Two</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="one">First</Tabs.Panel>
+            <Tabs.Panel value="two">Second</Tabs.Panel>
+          </Tabs.Root>
+          <Slider.Root id="ds1" :default-value="40" data-testid="ds1">
+            <Slider.Control class="slider" data-testid="ds1-control">
+              <Slider.Track class="slider-track">
+                <Slider.Indicator class="fill" />
+                <Slider.Thumb class="thumb" aria-label="Volume" data-testid="ds1-thumb" />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
+        </DirectionProvider>
+      </div>
     </section>
   </main>
 </template>

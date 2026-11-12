@@ -4,6 +4,7 @@ import type { Slider as Controller, SliderChangeDetails, SliderProps } from "@ki
 import { createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -39,14 +40,17 @@ function Root(props: RootProps): JSX.Element {
   ])
   const generated = createUniqueId()
   const field = useContext(FieldContext)
-  const made = controller(within(createSlider, { field }), () => ({
-    ...local,
-    id: local.id ?? generated,
-    onValueChange: (value: number | number[], details: SliderChangeDetails) =>
-      local.onValueChange?.(value, details),
-    onValueCommitted: (value: number | number[], details: SliderChangeDetails) =>
-      local.onValueCommitted?.(value, details),
-  }))
+  const made = controller(
+    within(createSlider, { field, direction: useContext(DirectionContext) }),
+    () => ({
+      ...local,
+      id: local.id ?? generated,
+      onValueChange: (value: number | number[], details: SliderChangeDetails) =>
+        local.onValueChange?.(value, details),
+      onValueCommitted: (value: number | number[], details: SliderChangeDetails) =>
+        local.onValueCommitted?.(value, details),
+    })
+  )
   return (
     <Context.Provider value={made}>
       <Part part={made.root} tag="div" {...rest} />

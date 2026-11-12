@@ -13,6 +13,7 @@
     "./dom": "./src/bind.ts",
     "./collapsible": "./src/collapsible.ts",
     "./dialog": "./src/dialog.ts",
+    "./direction": "./src/direction.ts",
     "./popover": "./src/popover.ts",
     "./select": "./src/select.ts",
     "./vocabulary": "./src/vocabulary.ts",

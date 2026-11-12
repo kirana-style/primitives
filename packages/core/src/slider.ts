@@ -1,3 +1,5 @@
+import { directionOf } from "./direction.ts"
+import type { DirectionAround } from "./direction.ts"
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
@@ -90,7 +92,7 @@ function decimals(step: number): number {
  */
 export function createSlider(
   props: ReadonlySignal<SliderProps>,
-  around: { field?: Field | undefined } = {}
+  around: { field?: Field | undefined } & DirectionAround = {}
 ): Slider {
   const { field } = around
   let member: FieldMembership | undefined
@@ -116,8 +118,10 @@ export function createSlider(
   const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const orientation = computed(() => props.get().orientation ?? "horizontal")
   const dragging = signal<number | null>(null)
-  // Read where the control is, once it is in the page: what a thumb is centred by depends on it.
-  const rtl = signal(false)
+  // What a thumb is centred by depends on the reading direction: the provider's, which a server
+  // knows too, or read where the control is once it is in the page.
+  const measured = signal(false)
+  const rtl = computed(() => (around.direction ? around.direction.get() === "rtl" : measured.get()))
 
   const thumbs = new Map<number, HTMLElement>()
   let stopDrag: (() => void) | undefined
@@ -329,7 +333,7 @@ export function createSlider(
         onPointerDown: press,
       })),
       attach(element) {
-        rtl.set(element.ownerDocument.defaultView?.getComputedStyle(element).direction === "rtl")
+        measured.set(directionOf(element) === "rtl")
         return () => stopDrag?.()
       },
     },

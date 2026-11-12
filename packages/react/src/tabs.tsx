@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { Part } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs as Controller, TabsListOptions, TabsProps } from "@kirana-ui/core/tabs"
 import { createContext, useContext, useEffect, useMemo } from "react"
 import type { ReactElement } from "react"
 
+import { DirectionContext } from "./direction-context.ts"
 import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -26,7 +27,9 @@ function Root<Value>({
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
-  const controller = useController(createTabs<Value>, {
+  const direction = useContext(DirectionContext) ?? undefined
+  const create = within(createTabs<Value>, { direction })
+  const controller = useController(create, {
     value: value as Value | null | undefined,
     defaultValue: defaultValue as Value | null | undefined,
     onValueChange,

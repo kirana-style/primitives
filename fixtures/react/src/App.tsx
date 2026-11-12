@@ -6,6 +6,7 @@ import {
   Checkbox,
   Collapsible,
   Dialog,
+  DirectionProvider,
   Field,
   Fieldset,
   Form,
@@ -53,6 +54,7 @@ export function App() {
   const [pictures, setPictures] = useState(false)
   const [sent, setSent] = useState("")
   const [sent2, setSent2] = useState("")
+  const [reading, setReading] = useState<"ltr" | "rtl">("rtl")
   const [rejected, setRejected] = useState<Record<string, string> | undefined>(undefined)
   const [span, setSpan] = useState<number[]>([20, 80])
   return (
@@ -561,6 +563,39 @@ export function App() {
           </button>
         </Form>
         <span data-testid="f2-sent">{sent2}</span>
+      </section>
+      <section data-fixture="direction">
+        <button
+          type="button"
+          data-testid="dir-turn"
+          onClick={() => setReading((now) => (now === "rtl" ? "ltr" : "rtl"))}
+        >
+          Turn
+        </button>
+        <div dir={reading} data-testid="dir-box">
+          <DirectionProvider direction={reading}>
+            <Tabs.Root id="dt1" defaultValue="one" data-testid="dt1">
+              <Tabs.List className="tabs" data-testid="dt1-list">
+                <Tabs.Tab value="one" data-testid="dt1-one">
+                  One
+                </Tabs.Tab>
+                <Tabs.Tab value="two" data-testid="dt1-two">
+                  Two
+                </Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="one">First</Tabs.Panel>
+              <Tabs.Panel value="two">Second</Tabs.Panel>
+            </Tabs.Root>
+            <Slider.Root id="ds1" defaultValue={40} data-testid="ds1">
+              <Slider.Control className="slider" data-testid="ds1-control">
+                <Slider.Track className="slider-track">
+                  <Slider.Indicator className="fill" />
+                  <Slider.Thumb className="thumb" aria-label="Volume" data-testid="ds1-thumb" />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          </DirectionProvider>
+        </div>
       </section>
     </main>
   )

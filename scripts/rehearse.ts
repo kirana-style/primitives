@@ -30,6 +30,9 @@ const packed = path.join(root, "dist-packages")
 const tarballs = readdirSync(packed).filter((file) => file.endsWith(".tgz"))
 if (tarballs.length === 0) throw new Error("nothing is packed: run `bun scripts/pack.ts` first")
 
+// The version the tarballs carry: 0.0.0 between releases, the next version on a Release PR.
+const packedVersion = /-(\d+\.\d+\.\d+.*)\.tgz$/.exec(tarballs[0]!)![1]!
+
 const MAX_AGE = 4
 interface Held {
   manifest: Record<string, unknown>
@@ -225,7 +228,7 @@ try {
   const consumed = await command("bun", [
     path.join(root, "scripts/consume.ts"),
     "--version",
-    "0.0.0",
+    packedVersion,
     "--registry",
     target.url,
   ])

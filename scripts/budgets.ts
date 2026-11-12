@@ -16,11 +16,13 @@ const COMPONENTS: Record<string, string[]> = {
   checkbox: ["checkbox"],
   collapsible: ["collapsible"],
   dialog: ["dialog"],
+  "hover-card": ["preview-card"],
   popover: ["popover"],
   "radio-group": ["radio-group", "radio"],
   select: ["select"],
   switch: ["switch"],
   tabs: ["tabs"],
+  tooltip: ["tooltip"],
 }
 const EXTERNAL = ["react", "react-dom", "react/jsx-runtime", "react-dom/client"]
 

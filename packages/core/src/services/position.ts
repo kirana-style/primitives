@@ -1,4 +1,4 @@
-import { autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom"
+import { arrow, autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom"
 import type { Placement } from "@floating-ui/dom"
 
 import { batch, signal } from "../reactivity.ts"
@@ -32,8 +32,15 @@ export interface Position {
   readonly align: ReadonlySignal<Align>
   /** Whether the first placement has been written. */
   readonly placed: ReadonlySignal<boolean>
+  /** Whether the arrow could not sit at the anchor's centre: the popup was pushed along its edge. */
+  readonly uncentered: ReadonlySignal<boolean>
   /** Places `positioner` against `anchor` and keeps it placed. Returns the stop. */
   attach(positioner: HTMLElement, anchor: Element): () => void
+  /**
+   * An element that points at the anchor. It is placed along the popup's edge (`left` or `top`);
+   * which edge it sits on is the design's, from `data-side`. Returns the removal.
+   */
+  arrow(element: HTMLElement): () => void
 }
 
 function placement(side: Side, align: Align): Placement {
@@ -57,11 +64,23 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
   const side = signal<Side>(options.peek().side)
   const align = signal<Align>(options.peek().align)
   const placed = signal(false)
+  const uncentered = signal(false)
+  let pointer: HTMLElement | undefined
+  let replace: (() => void) | undefined
 
   return {
     side,
     align,
     placed,
+    uncentered,
+    arrow(element) {
+      pointer = element
+      setGeometry(element, "position", "absolute")
+      replace?.()
+      return () => {
+        if (pointer === element) pointer = undefined
+      }
+    },
     attach(positioner, anchor) {
       setGeometry(positioner, "position", "absolute")
       setGeometry(positioner, "left", "0px")
@@ -90,6 +109,7 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
                 setGeometry(positioner, "--anchor-height", `${rects.reference.height}px`)
               },
             }),
+            ...(pointer ? [arrow({ element: pointer, padding: 4 })] : []),
           ],
         }).then((result) => {
           const [nextSide, nextAlign = "center"] = result.placement.split("-") as [Side, Align?]
@@ -105,20 +125,30 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
             "--transform-origin",
             ORIGIN[nextSide](`${anchorX}px`, `${anchorY}px`)
           )
+          const point = result.middlewareData.arrow
+          if (pointer && point) {
+            // Along the edge only: across it, the arrow sits where the design puts it.
+            if (point.x !== undefined) setGeometry(pointer, "left", `${point.x}px`)
+            if (point.y !== undefined) setGeometry(pointer, "top", `${point.y}px`)
+          }
           batch(() => {
             side.set(nextSide)
             align.set(nextAlign)
+            uncentered.set(Boolean(point && point.centerOffset !== 0))
             placed.set(true)
           })
         })
       }
 
       const stop = autoUpdate(anchor, positioner, update)
+      // An arrow that attaches after its positioner is placed with it from then on.
+      replace = update
       // Placed again when the caller asks for another side or gap.
       const follow = options.subscribe(update)
       return () => {
         stop()
         follow()
+        replace = undefined
         placed.set(false)
       }
     },

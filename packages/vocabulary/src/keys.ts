@@ -11,6 +11,7 @@ export const exclusive: string[][] = [
   ["[data-checked]","[data-unchecked]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
+  ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
 
@@ -171,6 +172,82 @@ export const Dialog = {
   },
   /** A button that closes the dialog. */
   Close: {
+  },
+} as const
+
+export const HoverCard = {
+  /** The link the card previews. */
+  Trigger: {
+    /** Present when the card is open. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** Places the popup against the trigger. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The card itself. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when it opened or closed without its usual wait, for a design that skips the motion then. */
+    instant: {
+      delay: "[data-instant=\"delay\"]",
+      focus: "[data-instant=\"focus\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
+    },
+  },
+  /** An element that points at the trigger, placed along the popup's edge. */
+  Arrow: {
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. */
+    uncentered: "[data-uncentered]",
   },
 } as const
 
@@ -464,5 +541,81 @@ export const Tabs = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const Tooltip = {
+  /** The element the tooltip describes. */
+  Trigger: {
+    /** Present when the tooltip is open. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** Places the popup against the trigger. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The tooltip itself. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when it opened or closed without its usual wait, for a design that skips the motion then. */
+    instant: {
+      delay: "[data-instant=\"delay\"]",
+      focus: "[data-instant=\"focus\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
+    },
+  },
+  /** An element that points at the trigger, placed along the popup's edge. */
+  Arrow: {
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. */
+    uncentered: "[data-uncentered]",
   },
 } as const

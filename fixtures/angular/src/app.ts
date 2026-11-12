@@ -1,5 +1,16 @@
 import { Component, signal } from "@angular/core"
 import {
+  KuiHoverCard,
+  KuiHoverCardPopup,
+  KuiHoverCardPortal,
+  KuiHoverCardPositioner,
+  KuiHoverCardTrigger,
+  KuiTooltip,
+  KuiTooltipArrow,
+  KuiTooltipPopup,
+  KuiTooltipPortal,
+  KuiTooltipPositioner,
+  KuiTooltipTrigger,
   KuiAccordion,
   KuiAccordionHeader,
   KuiAccordionItem,
@@ -58,6 +69,17 @@ import {
 @Component({
   selector: "app-root",
   imports: [
+    KuiHoverCard,
+    KuiHoverCardPopup,
+    KuiHoverCardPortal,
+    KuiHoverCardPositioner,
+    KuiHoverCardTrigger,
+    KuiTooltip,
+    KuiTooltipArrow,
+    KuiTooltipPopup,
+    KuiTooltipPortal,
+    KuiTooltipPositioner,
+    KuiTooltipTrigger,
     KuiAccordion,
     KuiAccordionHeader,
     KuiAccordionItem,
@@ -292,6 +314,45 @@ import {
             </div>
           }
         </div>
+      </section>
+
+      <section data-fixture="hover">
+        <button data-testid="h0">Before</button>
+        <ng-container kuiTooltip [kuiId]="'h1'" [delay]="100">
+          <button kuiTooltipTrigger data-testid="h1-trigger">Save</button>
+          <ng-template kuiTooltipPortal>
+            <div kuiTooltipPositioner [sideOffset]="8" data-testid="h1-positioner">
+              <div kuiTooltipPopup class="tip" data-testid="h1-popup">
+                Save the file
+                <div kuiTooltipArrow class="arrow" data-testid="h1-arrow"></div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <ng-container kuiTooltip [kuiId]="'h2'" [delay]="100">
+          <button kuiTooltipTrigger data-testid="h2-trigger">Open</button>
+          <ng-template kuiTooltipPortal>
+            <div kuiTooltipPositioner [sideOffset]="8" data-testid="h2-positioner">
+              <div kuiTooltipPopup class="tip" data-testid="h2-popup">Open a file</div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <ng-container kuiHoverCard [kuiId]="'v1'" [delay]="100" [closeDelay]="100">
+          <a kuiHoverCardTrigger href="#profile" data-testid="v1-trigger">&#64;kirana</a>
+          <ng-template kuiHoverCardPortal>
+            <div
+              kuiHoverCardPositioner
+              [side]="'bottom'"
+              [sideOffset]="8"
+              data-testid="v1-positioner"
+            >
+              <div kuiHoverCardPopup class="tip" data-testid="v1-popup">
+                <p>Styles, compiled.</p>
+                <a href="#follow" data-testid="v1-link">Follow</a>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
       </section>
 
       <section data-fixture="dialog">

@@ -144,10 +144,12 @@ export function presentWhile(options: { portal?: boolean } = {}) {
       const wanted = typeof show === "function" ? show() : show.get()
       if (wanted === (view !== undefined)) return
       if (!wanted) return remove()
+      // A portal is the browser's: a server draws none, as on the other adapters.
+      if (options.portal && server) return
       untracked(() => {
         view = container.createEmbeddedView(template)
         const nodes = view.rootNodes as Node[]
-        if (options.portal && !server) {
+        if (options.portal) {
           const document = (nodes[0] as Node).ownerDocument!
           outlet = document.createElement("div")
           outlet.setAttribute("data-kirana-portal", "")

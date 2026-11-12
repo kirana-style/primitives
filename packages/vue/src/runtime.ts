@@ -148,8 +148,14 @@ export function portalComponent(name: string, mounted: () => ReadonlySignal<bool
     name,
     setup(_props, { slots }) {
       const shown = fromSignal(mounted())
+      // Only in a browser, once the page is in it: a server draws no portal, so hydration must
+      // find none either. One that opens later is drawn at once.
+      const ready = shallowRef(false)
+      onMounted(() => {
+        ready.value = true
+      })
       return () =>
-        shown.value
+        shown.value && ready.value
           ? h(Teleport, { to: "body" }, h("div", { "data-kirana-portal": "" }, slots.default?.()))
           : null
     },

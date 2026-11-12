@@ -26,6 +26,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 - **Small.** The core has one dependency (`@floating-ui/dom`).
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a
   server sends is the page at rest, and hydration finds nothing to correct (tested on all five).
+  Ids nobody gave are the same on the server and in the browser, and a popup that is open from
+  the start appears once the page is in the browser.
 
 ## Layout
 

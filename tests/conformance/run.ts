@@ -40,11 +40,23 @@ if (adapters.length === 0) {
 }
 
 // Each adapter's page, and the same page rendered on a server and hydrated, where it is built.
+// Then the second page (`src/Open.*`), the same two ways: no id is given on it, and a popover is
+// open when it is first drawn.
 const subjects = adapters.flatMap((adapter) => {
-  const page = { adapter, label: adapter, path: "/", hydrated: false }
-  return existsSync(join(ROOT, "fixtures", adapter, "dist/ssr.html"))
-    ? [page, { adapter, label: `${adapter}+ssr`, path: "/ssr.html", hydrated: true }]
-    : [page]
+  const built = (file: string) => existsSync(join(ROOT, "fixtures", adapter, "dist", file))
+  const all = [
+    { adapter, label: adapter, path: "/", hydrated: false, second: false },
+    { adapter, label: `${adapter}+ssr`, path: "/ssr.html", hydrated: true, second: false },
+    { adapter, label: `${adapter} second`, path: "/open.html", hydrated: false, second: true },
+    {
+      adapter,
+      label: `${adapter}+ssr second`,
+      path: "/open-ssr.html",
+      hydrated: true,
+      second: true,
+    },
+  ]
+  return all.filter((each) => each.path === "/" || built(each.path.slice(1)))
 })
 
 /**
@@ -86,6 +98,23 @@ function serialize(): string {
     "jsaction",
   ])
   const lines: string[] = []
+  // A page whose ids are generated: each framework writes its own (`_r_1_`, `v-0`, `kui-3`), so
+  // an id is named by where it first stands in the page, and one that is not in the page (a
+  // popup a server did not draw) by that.
+  const generated = document.querySelector("main")!.hasAttribute("data-generated-ids")
+  const names = new Map<string, string>()
+  if (generated) {
+    for (const each of document.querySelectorAll("main [id], body > [data-kirana-portal] [id]"))
+      if (!names.has(each.id)) names.set(each.id, `id-${names.size + 1}`)
+  }
+  const REFERENCES = new Set([
+    "id",
+    "for",
+    "aria-controls",
+    "aria-labelledby",
+    "aria-describedby",
+    "aria-details",
+  ])
   const walk = (node: Node, depth: number) => {
     if (node.nodeType === Node.TEXT_NODE) {
       // A run of text nodes is one text: how many nodes hold it, and the comments a framework
@@ -110,6 +139,13 @@ function serialize(): string {
       .filter((each) => !SKIP.has(each.name) && !/^(_ng|kui)/.test(each.name))
       .map((each) => {
         let value = each.value
+        if (generated && REFERENCES.has(each.name)) {
+          value = value
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((token) => names.get(token) ?? "id-absent")
+            .join(" ")
+        }
         // An empty `class` or `style` is a framework's leftover, not a difference.
         if ((each.name === "class" || each.name === "style") && value.trim() === "") return ""
         // A class is a list of tokens: the space a server leaves around them is not a difference.
@@ -1218,6 +1254,70 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
   },
 }
 
+/** The second page's scenarios: generated ids, and a popover open when the page is first drawn. */
+const second: Record<string, (run: Run) => Promise<void>> = {
+  async ids({ page, snapshot, id, attribute }) {
+    await id("o-p-popup").waitFor()
+    await snapshot("at rest")
+    const named = (testid: string) => attribute(testid, "id")
+    expect(await named("o-c-panel"), "an open panel has an id nobody gave it")
+    expect(
+      (await attribute("o-c-trigger", "aria-controls")) === (await named("o-c-panel")),
+      "and its trigger names it"
+    )
+    expect(
+      (await attribute("o-t-one", "aria-controls")) === (await named("o-t-panel-one")),
+      "a tab names its panel"
+    )
+    expect(
+      (await attribute("o-t-panel-one", "aria-labelledby")) === (await named("o-t-one")),
+      "and the panel its tab"
+    )
+    expect(
+      (await attribute("o-f-label", "for")) === (await named("o-f-control")),
+      "a label names its control"
+    )
+    expect(
+      (await attribute("o-f-control", "aria-describedby")) === (await named("o-f-description")),
+      "and the control its description"
+    )
+    const ids = await page.evaluate(() =>
+      [...document.querySelectorAll("[id]")].map((each) => each.id)
+    )
+    expect(new Set(ids).size === ids.length, `every id is its own: ${ids.join(" ")}`)
+    await id("o-t-two").click()
+    await snapshot("another tab")
+    expect(
+      (await attribute("o-t-two", "aria-controls")) === (await named("o-t-panel-two")),
+      "a panel drawn later is named the same way"
+    )
+  },
+
+  async "open-popup"({ page, snapshot, id, present, attribute }) {
+    await id("o-p-popup").waitFor()
+    await snapshot("open when first drawn")
+    expect((await attribute("o-p-trigger", "aria-expanded")) === "true", "the trigger says open")
+    expect(
+      (await attribute("o-p-trigger", "aria-controls")) === (await attribute("o-p-popup", "id")),
+      "and names the popup"
+    )
+    expect((await attribute("o-p-popup", "data-side")) === "bottom", "it is placed")
+    const gap = await page.evaluate(() => {
+      const box = (testid: string) =>
+        document.querySelector(`[data-testid="${testid}"]`)!.getBoundingClientRect()
+      return Math.round(box("o-p-positioner").top - box("o-p-trigger").bottom)
+    })
+    expect(gap === 8, `below its trigger by its offset, got ${gap}`)
+    await page.keyboard.press("Escape")
+    await id("o-p-popup").waitFor({ state: "detached" })
+    await snapshot("closed")
+    expect((await attribute("o-p-trigger", "aria-expanded")) === "false", "Escape closes it")
+    await id("o-p-trigger").click()
+    await id("o-p-popup").waitFor()
+    expect(await present("o-p-close"), "and a press opens it again")
+  },
+}
+
 const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal", "data-hk"])
 const VARIABLES = new Set<string>()
 for (const component of Object.values(vocabulary)) {
@@ -1256,11 +1356,29 @@ for (const engine of engines) {
         const page = await context.newPage()
         await page.goto(`http://localhost:${server.port}${path}`)
         sent[label] = withoutStyles(await page.evaluate(serialize))
+        if (subject.second) {
+          // An id the server wrote is the id the client makes: nothing is renamed by hydration.
+          const ids = () =>
+            [...document.querySelectorAll("main [data-testid]")].map(
+              (each) => `${each.getAttribute("data-testid")}=${each.id}`
+            )
+          const before = await page.evaluate(ids)
+          const live = await browser.newContext({ viewport: { width: 1000, height: 800 } })
+          const hydrated = await live.newPage()
+          await hydrated.goto(`http://localhost:${server.port}${path}`)
+          await hydrated.locator('[data-testid="o-p-popup"]').waitFor()
+          const after = await hydrated.evaluate(ids)
+          await live.close()
+          if (before.join() !== after.join() || !before.some((each) => !each.endsWith("="))) {
+            failed++
+            console.log(`FAIL  ${label}  ids changed in hydration: ${before} -> ${after}`)
+          }
+        }
         // A length that is the value itself is in what the server sent, not measured later.
         const width = await page.evaluate(
           () => document.querySelector<HTMLElement>('[data-testid="pr1-fill"]')?.style.width
         )
-        if (width !== "40%") {
+        if (!subject.second && width !== "40%") {
           failed++
           console.log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
         }
@@ -1269,7 +1387,7 @@ for (const engine of engines) {
             .querySelector<HTMLElement>('[data-testid="sl1-thumb"]')
             ?.style.getPropertyValue("inset-inline-start")
         )
-        if (place !== "40%") {
+        if (!subject.second && place !== "40%") {
           failed++
           console.log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
         }
@@ -1279,13 +1397,13 @@ for (const engine of engines) {
             .querySelector<HTMLElement>('[data-testid="ds1-thumb"]')
             ?.style.getPropertyValue("translate")
         )
-        if (centred !== "50% -50%") {
+        if (!subject.second && centred !== "50% -50%") {
           failed++
           console.log(`FAIL  ${label}  the server centred a right-to-left thumb, got "${centred}"`)
         }
         await context.close()
       }
-      for (const [name, scenario] of Object.entries(scenarios)) {
+      for (const [name, scenario] of Object.entries(subject.second ? second : scenarios)) {
         const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
         const page = await context.newPage()
         const errors: string[] = []
@@ -1358,47 +1476,62 @@ for (const engine of engines) {
       )
     }
 
-    // The same state, the same DOM, whatever rendered it.
-    const [reference, ...others] = subjects.map((each) => each.label) as [string, ...string[]]
-    // A page rendered on a server is, before its scripts run, the page at rest: nothing but the
-    // geometry the client measures is missing, and hydration finds nothing to correct.
-    const rest = withoutStyles(snapshots[reference]!.get("collapsible / at rest") ?? "")
-    for (const [label, dom] of Object.entries(sent)) {
-      if (dom === rest) {
-        console.log(`same  ${label} as its server sent it = ${reference} at rest`)
-        continue
-      }
-      failed++
-      console.log(`DIFF  ${label} as its server sent it, against ${reference} at rest`)
-      const a = rest.split("\n")
-      const b = dom.split("\n")
-      for (let line = 0; line < Math.max(a.length, b.length); line++) {
-        if (a[line] === b[line]) continue
-        console.log(`      ${reference}: ${a[line]?.trim()}\n      ${label}: ${b[line]?.trim()}`)
+    const firstDifference = (a: string, b: string, one: string, other: string) => {
+      const left = a.split("\n")
+      const right = b.split("\n")
+      for (let line = 0; line < Math.max(left.length, right.length); line++) {
+        if (left[line] === right[line]) continue
+        console.log(`      ${one}: ${left[line]?.trim()}\n      ${other}: ${right[line]?.trim()}`)
         break
       }
     }
-    for (const adapter of others) {
-      let different = 0
-      for (const [step, expected] of snapshots[reference]!) {
-        const actual = snapshots[adapter]!.get(step)
-        if (actual === expected) continue
-        different++
-        failed++
-        console.log(`DIFF  ${adapter} against ${reference}  ${step}`)
-        if (actual === undefined) continue
-        const a = expected.split("\n")
-        const b = actual.split("\n")
-        for (let line = 0; line < Math.max(a.length, b.length); line++) {
-          if (a[line] === b[line]) continue
-          console.log(
-            `      ${reference}: ${a[line]?.trim()}\n      ${adapter}: ${b[line]?.trim()}`
-          )
-          break
+    // The same state, the same DOM, whatever rendered it: the first page's subjects against each
+    // other, then the second page's.
+    for (const group of [false, true]) {
+      const labels = subjects.filter((each) => each.second === group).map((each) => each.label)
+      const [reference, ...others] = labels
+      if (!reference) continue
+      const served = Object.entries(sent).filter(([label]) => labels.includes(label))
+      if (!group) {
+        // A page rendered on a server is, before its scripts run, the page at rest: nothing but
+        // the geometry the client measures is missing, and hydration finds nothing to correct.
+        const rest = withoutStyles(snapshots[reference]!.get("collapsible / at rest") ?? "")
+        for (const [label, dom] of served) {
+          if (dom === rest) {
+            console.log(`same  ${label} as its server sent it = ${reference} at rest`)
+            continue
+          }
+          failed++
+          console.log(`DIFF  ${label} as its server sent it, against ${reference} at rest`)
+          firstDifference(rest, dom, reference, label)
+        }
+      } else {
+        // The second page has a popup open, which no server draws (it is moved to the end of
+        // the page by the browser): what the servers sent is compared with each other.
+        const [first, ...rest] = served
+        for (const [label, dom] of rest) {
+          if (dom === first![1]) {
+            console.log(`same  ${label} as its server sent it = ${first![0]} as its server sent it`)
+            continue
+          }
+          failed++
+          console.log(`DIFF  ${label} as its server sent it, against ${first![0]}'s`)
+          firstDifference(first![1], dom, first![0], label)
         }
       }
-      if (different === 0) {
-        console.log(`same  ${adapter} = ${reference}  (${snapshots[reference]!.size} states)`)
+      for (const adapter of others) {
+        let different = 0
+        for (const [step, expected] of snapshots[reference]!) {
+          const actual = snapshots[adapter]!.get(step)
+          if (actual === expected) continue
+          different++
+          failed++
+          console.log(`DIFF  ${adapter} against ${reference}  ${step}`)
+          if (actual !== undefined) firstDifference(expected, actual, reference, adapter)
+        }
+        if (different === 0) {
+          console.log(`same  ${adapter} = ${reference}  (${snapshots[reference]!.size} states)`)
+        }
       }
     }
   } finally {

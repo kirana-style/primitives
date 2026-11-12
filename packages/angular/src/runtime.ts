@@ -2,6 +2,7 @@ import {
   DestroyRef,
   ElementRef,
   Injectable,
+  PLATFORM_ID,
   TemplateRef,
   ViewContainerRef,
   effect as angularEffect,
@@ -9,7 +10,7 @@ import {
   untracked,
 } from "@angular/core"
 import type { EmbeddedViewRef } from "@angular/core"
-import { bind, effect, sameProps, signal } from "@kirana-ui/core"
+import { bind, effect, sameProps, signal, write } from "@kirana-ui/core"
 import type { Part, ReadonlySignal, Signal } from "@kirana-ui/core"
 
 /** Ids for parts whose caller gave none: one counter per application, so a server and its client agree. */
@@ -52,7 +53,26 @@ export function inputsSignal<T extends Record<string, unknown>>(
 export function hostPart(): (part: Part) => void {
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   const destroy = inject(DestroyRef)
-  return (part) => destroy.onDestroy(bind(element, part))
+  const put = binder()
+  return (part) => destroy.onDestroy(put(element, part))
+}
+
+const NOTHING = () => {}
+
+/** Whether this is a server's document: no layout, no observers, and nothing changes once written. */
+// The platform's id is the word itself; `@angular/common` only wraps the comparison.
+export const onServer = (): boolean => (inject(PLATFORM_ID) as unknown) === "server"
+
+/**
+ * How a part goes on an element here: bound in a browser, written once on a server. Call it where
+ * injection works.
+ */
+export function binder(): (element: HTMLElement, part: Part) => () => void {
+  if (!onServer()) return bind
+  return (element, part) => {
+    write(element, part)
+    return NOTHING
+  }
 }
 
 /**
@@ -62,10 +82,15 @@ export function hostPart(): (part: Part) => void {
 export function innerPart(tag: string): (part: Part) => void {
   const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   const destroy = inject(DestroyRef)
+  const put = binder()
   return (part) => {
-    const element = host.ownerDocument.createElement(tag)
-    host.appendChild(element)
-    const unbind = bind(element, part)
+    // The one a server drew is taken over: it is the host's last child, with nothing shown.
+    const sent = host.lastElementChild as HTMLInputElement | null
+    const taken =
+      sent?.localName === tag && (sent.hidden || sent.type === "hidden") ? sent : undefined
+    const element = taken ?? host.ownerDocument.createElement(tag)
+    if (!taken) host.appendChild(element)
+    const unbind = put(element, part)
     destroy.onDestroy(() => {
       unbind()
       element.remove()
@@ -76,6 +101,8 @@ export function innerPart(tag: string): (part: Part) => void {
 /** Runs a controller's own effects for the directive's life. */
 export function mounted(): (controller: { mount(): () => void }) => void {
   const destroy = inject(DestroyRef)
+  // A controller's own effects are a browser's work.
+  if (onServer()) return NOTHING
   return (controller) => destroy.onDestroy(controller.mount())
 }
 
@@ -89,6 +116,8 @@ export function presentWhile(options: { portal?: boolean } = {}) {
   const template = inject(TemplateRef)
   const container = inject(ViewContainerRef)
   const destroy = inject(DestroyRef)
+  const server = onServer()
+  const put = binder()
   return (
     show: ReadonlySignal<boolean> | (() => boolean),
     part?: Part,
@@ -118,7 +147,7 @@ export function presentWhile(options: { portal?: boolean } = {}) {
       untracked(() => {
         view = container.createEmbeddedView(template)
         const nodes = view.rootNodes as Node[]
-        if (options.portal) {
+        if (options.portal && !server) {
           const document = (nodes[0] as Node).ownerDocument!
           outlet = document.createElement("div")
           outlet.setAttribute("data-kirana-portal", "")
@@ -128,8 +157,8 @@ export function presentWhile(options: { portal?: boolean } = {}) {
         // The content first, then the part: a panel is measured with its content in it.
         view.detectChanges()
         const element = nodes.find((each): each is HTMLElement => each.nodeType === 1)
-        if (part && element) unbind = bind(element, part)
-        if (drawn && element) gone = drawn(element)
+        if (part && element) unbind = put(element, part)
+        if (drawn && element && !server) gone = drawn(element)
       })
     })
     destroy.onDestroy(() => {

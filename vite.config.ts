@@ -40,7 +40,7 @@ export default defineConfig({
       // `@kirana-ui/vocabulary` from the core's part definitions; a test fails when it is stale.
       vocabulary: { command: "bun scripts/vocabulary.ts", cache: false },
       // Each adapter's fixture: the page the conformance run walks, the same page rendered on a
-      // server for the run to hydrate (all but Angular's so far), and its bench page. Angular's
+      // server for the run to hydrate, and its bench page. Angular's
       // compiler checks its adapter here, and Svelte's compiles its files.
       build: {
         command: FIXTURES.map((each) => `bun run --cwd fixtures/${each} build`).join(" && "),

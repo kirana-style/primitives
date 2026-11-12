@@ -25,8 +25,7 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   Direction provider states it where no page can be asked, on a server.
 - **Small.** The core has one dependency (`@floating-ui/dom`).
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a
-  server sends is the page at rest, and hydration finds nothing to correct (tested on React, Vue,
-  Svelte and Solid; Angular's is not yet).
+  server sends is the page at rest, and hydration finds nothing to correct (tested on all five).
 
 ## Layout
 

@@ -75,8 +75,16 @@ function serve(adapter: string) {
 
 /** The page as a stylesheet, a test or a tool sees it, without what only a framework writes. */
 function serialize(): string {
-  // `data-hk` is Solid's hydration key, on what a server rendered.
-  const SKIP = new Set(["ng-version", "data-testid", "data-hk"])
+  // `data-hk` is Solid's hydration key, on what a server rendered; `ngh`, `ng-server-context` and
+  // `jsaction` are Angular's (the last marks a listener whose events it replays after hydration).
+  const SKIP = new Set([
+    "ng-version",
+    "data-testid",
+    "data-hk",
+    "ngh",
+    "ng-server-context",
+    "jsaction",
+  ])
   const lines: string[] = []
   const walk = (node: Node, depth: number) => {
     if (node.nodeType === Node.TEXT_NODE) {

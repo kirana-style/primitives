@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev --port 4103",
-    "build": "ngc -p tsconfig.app.json --noEmit && vp build"
+    "build": "ngc -p tsconfig.app.json --noEmit && vp build && vp build --ssr src/server.ts --outDir dist-server && bun ../../scripts/prerender.ts angular"
   },
   "dependencies": {
     "@angular/common": "catalog:",
     "@angular/compiler": "catalog:",
     "@angular/core": "catalog:",
     "@angular/platform-browser": "catalog:",
+    "@angular/platform-server": "catalog:",
     "@kirana-ui/angular": "workspace:*",
     "@kirana-ui/core": "workspace:*",
     "ng-primitives": "catalog:",

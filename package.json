@@ -39,6 +39,7 @@
       "@angular/compiler-cli": "^22.2.4",
       "@angular/core": "^22.2.4",
       "@angular/platform-browser": "^22.2.4",
+      "@angular/platform-server": "^22.2.4",
       "@ark-ui/solid": "5.40.0",
       "@ark-ui/svelte": "5.25.1",
       "@ark-ui/vue": "^5.40.0",

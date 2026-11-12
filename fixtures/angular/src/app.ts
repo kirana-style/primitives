@@ -722,6 +722,21 @@ import {
               </div>
             </div>
           </div>
+          <ng-container kuiPopover [kuiId]="'dp1'">
+            <button kuiPopoverTrigger data-testid="dp1-trigger">Open popover</button>
+            <ng-template kuiPopoverPortal>
+              <div
+                kuiPopoverPositioner
+                [sideOffset]="8"
+                [align]="'start'"
+                data-testid="dp1-positioner"
+              >
+                <div kuiPopoverPopup class="popup" data-testid="dp1-popup">
+                  <h2 kuiPopoverTitle>Notifications</h2>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
         </div>
       </section>
     </main>

@@ -557,7 +557,19 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await focused()) === "ad1-trigger", "focus returns to the trigger")
   },
 
-  async direction({ page, snapshot, id, attribute, focused }) {
+  async direction({ page, snapshot, id, present, attribute, focused }) {
+    // How far the popup's edge is from its trigger's, on the side the text starts from.
+    const edges = () =>
+      page.evaluate(() => {
+        const box = (testid: string) =>
+          document.querySelector(`[data-testid="${testid}"]`)!.getBoundingClientRect()
+        const trigger = box("dp1-trigger")
+        const popup = box("dp1-positioner")
+        return {
+          left: Math.round(popup.left - trigger.left),
+          right: Math.round(popup.right - trigger.right),
+        }
+      })
     const centred = () =>
       id("ds1-thumb").evaluate((element) =>
         (element as HTMLElement).style.getPropertyValue("translate")
@@ -576,6 +588,22 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.keyboard.press("ArrowRight")
     expect((await attribute("ds1-thumb", "aria-valuenow")) === "40", "ArrowRight: a step down")
 
+    await id("dp1-trigger").click()
+    await page.waitForFunction(() =>
+      document
+        .querySelector<HTMLElement>('[data-testid="dp1-positioner"]')
+        ?.style.transform.startsWith("translate")
+    )
+    await snapshot("a popup right to left")
+    expect(
+      (await attribute("dp1-positioner", "dir")) === "rtl",
+      "a popup moved to the end of the page keeps its direction"
+    )
+    expect((await edges()).right === 0, "and starts at its trigger's right edge")
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector('[data-testid="dp1-popup"]'))
+    expect(!(await present("dp1-popup")), "it closes")
+
     await id("dir-turn").click()
     await snapshot("turned left to right")
     expect((await attribute("dir-box", "dir")) === "ltr", "the page turned")
@@ -586,6 +614,17 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await id("ds1-thumb").focus()
     await page.keyboard.press("ArrowRight")
     expect((await attribute("ds1-thumb", "aria-valuenow")) === "41", "ArrowRight: a step up")
+    await id("dp1-trigger").click()
+    await page.waitForFunction(() =>
+      document
+        .querySelector<HTMLElement>('[data-testid="dp1-positioner"]')
+        ?.style.transform.startsWith("translate")
+    )
+    expect(
+      (await attribute("dp1-positioner", "dir")) === null,
+      "nothing is written where the page's direction already reaches"
+    )
+    expect((await edges()).left === 0, "and it starts at its trigger's left edge")
   },
 
   async slider({ page, snapshot, id, attribute, focused }) {
@@ -889,16 +928,19 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
 
     await id("h2-trigger").hover()
     await shown("h2-popup")
+    const scrolled = await page.evaluate(() => window.scrollY)
     await page.mouse.down()
     await gone("h2-popup")
     await page.mouse.up()
+    expect(
+      (await page.evaluate(() => window.scrollY)) === scrolled,
+      "the page stays where it is when a press closes a tooltip"
+    )
     await away()
     await snapshot("tooltip closed by a press")
 
     await page.waitForTimeout(450)
     // From a known scroll position: the popup's available height is measured from the viewport.
-    // (On Angular the press above leaves the page 24px further down than on the others, after
-    // this exact sequence only; the cause is not found yet and is tracked.)
     await page.evaluate(() => window.scrollTo(0, 0))
     await id("v1-trigger").hover()
     await shown("v1-popup")

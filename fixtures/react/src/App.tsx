@@ -594,6 +594,16 @@ export function App() {
                 </Slider.Track>
               </Slider.Control>
             </Slider.Root>
+            <Popover.Root id="dp1">
+              <Popover.Trigger data-testid="dp1-trigger">Open popover</Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner sideOffset={8} align="start" data-testid="dp1-positioner">
+                  <Popover.Popup className="popup" data-testid="dp1-popup">
+                    <Popover.Title>Notifications</Popover.Title>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
           </DirectionProvider>
         </div>
       </section>

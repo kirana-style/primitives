@@ -10,6 +10,11 @@ body {
     14px/1.5 system-ui,
     sans-serif;
 }
+/* Angular's root is a custom element, inline until told otherwise. A block inside an inline one
+   makes Chrome's scroll anchoring move the page when a portal's container leaves beside it. */
+app-root {
+  display: block;
+}
 section {
   margin-block-end: 32px;
   min-height: 60px;

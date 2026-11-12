@@ -18,7 +18,9 @@
     "./vocabulary": "./src/vocabulary.ts",
     "./checkbox": "./src/checkbox.ts",
     "./switch": "./src/switch.ts",
-    "./radio-group": "./src/radio-group.ts"
+    "./radio-group": "./src/radio-group.ts",
+    "./tabs": "./src/tabs.ts",
+    "./accordion": "./src/accordion.ts"
   },
   "dependencies": {
     "@floating-ui/dom": "catalog:"

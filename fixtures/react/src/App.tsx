@@ -1,4 +1,5 @@
 import {
+  Accordion,
   Checkbox,
   Collapsible,
   Dialog,
@@ -6,6 +7,7 @@ import {
   RadioGroup,
   Select,
   Switch,
+  Tabs,
 } from "@kirana-ui/react"
 import { useState } from "react"
 
@@ -13,6 +15,7 @@ interface Preventable {
   preventKiranaHandler(): void
 }
 
+const SECTIONS = ["one", "two", "three", "four"]
 const PLANS = ["free", "pro", "team", "max"]
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 
@@ -142,6 +145,90 @@ export function App() {
           </RadioGroup.Root>
         </form>
         <output data-testid="w1-output">{alerts ? "on" : "off"}</output>
+      </section>
+
+      <section data-fixture="tabs">
+        <Tabs.Root id="t1" defaultValue="account" data-testid="t1">
+          <Tabs.List className="tabs" data-testid="t1-list">
+            <Tabs.Tab value="account" data-testid="t1-account">
+              Account
+            </Tabs.Tab>
+            <Tabs.Tab value="password" data-testid="t1-password">
+              Password
+            </Tabs.Tab>
+            <Tabs.Tab value="billing" disabled data-testid="t1-billing">
+              Billing
+            </Tabs.Tab>
+            <Tabs.Tab value="team" data-testid="t1-team">
+              Team
+            </Tabs.Tab>
+            <Tabs.Indicator className="tab-mark" data-testid="t1-mark" />
+          </Tabs.List>
+          <Tabs.Panel value="account" data-testid="t1-panel-account">
+            <p>Account settings</p>
+            <Tabs.Root id="t2" defaultValue="one" data-testid="t2">
+              <Tabs.List className="tabs" data-testid="t2-list">
+                <Tabs.Tab value="one" data-testid="t2-one">
+                  One
+                </Tabs.Tab>
+                <Tabs.Tab value="two" data-testid="t2-two">
+                  Two
+                </Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="one" data-testid="t2-panel-one">
+                First
+              </Tabs.Panel>
+              <Tabs.Panel value="two" data-testid="t2-panel-two">
+                Second
+              </Tabs.Panel>
+            </Tabs.Root>
+          </Tabs.Panel>
+          <Tabs.Panel value="password" data-testid="t1-panel-password">
+            <p>Password settings</p>
+          </Tabs.Panel>
+          <Tabs.Panel value="billing" data-testid="t1-panel-billing">
+            <p>Billing settings</p>
+          </Tabs.Panel>
+          <Tabs.Panel value="team" data-testid="t1-panel-team">
+            <p>Team settings</p>
+          </Tabs.Panel>
+        </Tabs.Root>
+      </section>
+
+      <section data-fixture="accordion">
+        <Accordion.Root id="a1" data-testid="a1">
+          {SECTIONS.map((each) => (
+            <Accordion.Item
+              key={each}
+              value={each}
+              disabled={each === "three"}
+              data-testid={`a1-${each}`}
+            >
+              <Accordion.Header>
+                <Accordion.Trigger data-testid={`a1-${each}-trigger`}>
+                  Section {each}
+                </Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel className="fold" data-testid={`a1-${each}-panel`}>
+                <p>Content {each}</p>
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+        <Accordion.Root id="a2" multiple defaultValue={["x"]} data-testid="a2">
+          {["x", "y"].map((each) => (
+            <Accordion.Item key={each} value={each} data-testid={`a2-${each}`}>
+              <Accordion.Header>
+                <Accordion.Trigger data-testid={`a2-${each}-trigger`}>
+                  Part {each}
+                </Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Panel className="fold" data-testid={`a2-${each}-panel`}>
+                <p>Content {each}</p>
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
       </section>
 
       <section data-fixture="dialog">

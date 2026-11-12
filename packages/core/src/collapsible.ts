@@ -3,8 +3,7 @@ import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
-import { setGeometry } from "./services/geometry.ts"
-import { createPresence } from "./services/presence.ts"
+import { createPanelPresence } from "./services/panel.ts"
 
 export interface CollapsibleProps {
   /** Unique in the page; the adapter passes its framework's id. */
@@ -30,16 +29,6 @@ export interface Collapsible {
 
 const NOTHING = () => {}
 
-function measure(element: HTMLElement) {
-  setGeometry(element, "--collapsible-panel-height", `${element.scrollHeight}px`)
-  setGeometry(element, "--collapsible-panel-width", `${element.scrollWidth}px`)
-}
-
-function release(element: HTMLElement) {
-  setGeometry(element, "--collapsible-panel-height", "auto")
-  setGeometry(element, "--collapsible-panel-width", "auto")
-}
-
 export function createCollapsible(props: ReadonlySignal<CollapsibleProps>): Collapsible {
   const id = props.peek().id
   const panelId = `${id}-panel`
@@ -49,16 +38,7 @@ export function createCollapsible(props: ReadonlySignal<CollapsibleProps>): Coll
     onChange: (value, by) => props.peek().onOpenChange?.(value, by),
   })
   const disabled = computed(() => Boolean(props.get().disabled))
-  const presence = createPresence(open, {
-    onEnter: measure,
-    // Once open, the panel follows its content.
-    onEntered: release,
-    onExit(element) {
-      // From `auto` to a length a transition can leave from.
-      measure(element)
-      void element.offsetHeight
-    },
-  })
+  const presence = createPanelPresence(open, "--collapsible-panel")
 
   function setOpen(next: boolean, by: ChangeDetails) {
     if (disabled.peek()) return
@@ -103,10 +83,7 @@ export function createCollapsible(props: ReadonlySignal<CollapsibleProps>): Coll
           "data-ending-style": flag(status === "ending"),
         }
       }),
-      attach(element) {
-        if (open.peek() && presence.status.peek() === undefined) release(element)
-        return presence.attach(element)
-      },
+      attach: (element) => presence.attach(element),
     },
   }
 }

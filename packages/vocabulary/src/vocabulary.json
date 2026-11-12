@@ -4,6 +4,133 @@
     "base-ui"
   ],
   "components": {
+    "accordion": {
+      "parts": {
+        "root": {
+          "description": "Groups the items.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the items are laid out, and the arrows that move between their triggers.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "One section: a header with its trigger, and a panel.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when the item is open.",
+              "selector": "[data-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "header": {
+          "description": "The heading that holds the trigger.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when the item is open.",
+              "selector": "[data-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "trigger": {
+          "description": "The button that opens and closes the item's panel.",
+          "states": {
+            "panelOpen": {
+              "attribute": "data-panel-open",
+              "description": "Present when the item's panel is open.",
+              "selector": "[data-panel-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "panel": {
+          "description": "The item's content. In the page while open, and through its exit's motion.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the items are laid out, and the arrows that move between their triggers.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--accordion-panel-height": "The panel's content height while it opens or closes, `auto` once it is open.",
+            "--accordion-panel-width": "The panel's content width while it opens or closes, `auto` once it is open."
+          }
+        }
+      }
+    },
     "checkbox": {
       "parts": {
         "root": {
@@ -802,6 +929,166 @@
             [
               "checked",
               "unchecked"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
+    "tabs": {
+      "parts": {
+        "root": {
+          "description": "Groups the tabs and their panels.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the tabs are laid out.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "activationDirection": {
+              "attribute": "data-activation-direction",
+              "description": "Where the newly active tab is from the one before, for a panel or a mark that slides.",
+              "values": {
+                "left": "[data-activation-direction=\"left\"]",
+                "right": "[data-activation-direction=\"right\"]",
+                "up": "[data-activation-direction=\"up\"]",
+                "down": "[data-activation-direction=\"down\"]",
+                "none": "[data-activation-direction=\"none\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "list": {
+          "description": "The row of tabs. The arrows move between them.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the tabs are laid out.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "activationDirection": {
+              "attribute": "data-activation-direction",
+              "description": "Where the newly active tab is from the one before, for a panel or a mark that slides.",
+              "values": {
+                "left": "[data-activation-direction=\"left\"]",
+                "right": "[data-activation-direction=\"right\"]",
+                "up": "[data-activation-direction=\"up\"]",
+                "down": "[data-activation-direction=\"down\"]",
+                "none": "[data-activation-direction=\"none\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "tab": {
+          "description": "A button that shows its panel.",
+          "states": {
+            "active": {
+              "attribute": "data-active",
+              "description": "Present on the tab whose panel is shown.",
+              "selector": "[data-active]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the tabs are laid out.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "A mark for the active tab: it carries that tab's position and size.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the tabs are laid out.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "activationDirection": {
+              "attribute": "data-activation-direction",
+              "description": "Where the newly active tab is from the one before, for a panel or a mark that slides.",
+              "values": {
+                "left": "[data-activation-direction=\"left\"]",
+                "right": "[data-activation-direction=\"right\"]",
+                "up": "[data-activation-direction=\"up\"]",
+                "down": "[data-activation-direction=\"down\"]",
+                "none": "[data-activation-direction=\"none\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--active-tab-left": "The active tab's distance from the list's left edge.",
+            "--active-tab-right": "The active tab's distance from the list's right edge.",
+            "--active-tab-top": "The active tab's distance from the list's top edge.",
+            "--active-tab-bottom": "The active tab's distance from the list's bottom edge.",
+            "--active-tab-width": "The active tab's width.",
+            "--active-tab-height": "The active tab's height."
+          }
+        },
+        "panel": {
+          "description": "A tab's content. In the page while its tab is active, and through its exit.",
+          "states": {
+            "hidden": {
+              "attribute": "data-hidden",
+              "description": "Present while its tab is not the active one.",
+              "selector": "[data-hidden]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the tabs are laid out.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "activationDirection": {
+              "attribute": "data-activation-direction",
+              "description": "Where the newly active tab is from the one before, for a panel or a mark that slides.",
+              "values": {
+                "left": "[data-activation-direction=\"left\"]",
+                "right": "[data-activation-direction=\"right\"]",
+                "up": "[data-activation-direction=\"up\"]",
+                "down": "[data-activation-direction=\"down\"]",
+                "none": "[data-activation-direction=\"none\"]"
+              }
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "startingStyle",
+              "endingStyle"
             ]
           ],
           "variables": {}

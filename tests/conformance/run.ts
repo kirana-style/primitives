@@ -340,6 +340,128 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await form("plan")).join() === "pro", "a press chooses")
   },
 
+  async tabs({ page, snapshot, id, present, attribute, focused }) {
+    await snapshot("at rest")
+    expect((await attribute("t1-list", "role")) === "tablist", "role=tablist")
+    expect((await attribute("t1-account", "role")) === "tab", "role=tab")
+    expect((await attribute("t1-account", "aria-selected")) === "true", "the default tab is active")
+    expect((await attribute("t1-account", "data-active")) === "", "active: data-active")
+    expect((await attribute("t1-account", "tabindex")) === "0", "the active tab is the tab stop")
+    expect((await attribute("t1-password", "tabindex")) === "-1", "the others are not")
+    expect(
+      (await attribute("t1-account", "aria-controls")) ===
+        (await attribute("t1-panel-account", "id")),
+      "the active tab names its panel"
+    )
+    expect(
+      (await attribute("t1-panel-account", "aria-labelledby")) ===
+        (await attribute("t1-account", "id")),
+      "the panel is labelled by its tab"
+    )
+    expect(!(await present("t1-panel-password")), "an inactive panel is not in the page")
+    const mark = () =>
+      page.evaluate(() => {
+        const element = document.querySelector<HTMLElement>('[data-testid="t1-mark"]')!
+        const active = document.querySelector(
+          '[data-testid="t1"] > [role="tablist"] > [data-active]'
+        )!
+        return {
+          width: element.style.getPropertyValue("--active-tab-width"),
+          tab: `${active.getBoundingClientRect().width}px`,
+        }
+      })
+    expect((await mark()).width === (await mark()).tab, "the mark carries the active tab's width")
+
+    await id("t1-password").click()
+    await snapshot("another tab chosen by a press")
+    expect((await attribute("t1-password", "aria-selected")) === "true", "a press activates")
+    expect(await present("t1-panel-password"), "its panel is in the page")
+    expect(!(await present("t1-panel-account")), "the other panel left it")
+    expect(
+      (await attribute("t1", "data-activation-direction")) === "right",
+      "it came from the right"
+    )
+    expect((await mark()).width === (await mark()).tab, "the mark follows the active tab")
+
+    await page.keyboard.press("ArrowRight")
+    expect((await focused()) === "t1-team", "ArrowRight skips a disabled tab")
+    expect(
+      (await attribute("t1-password", "aria-selected")) === "true",
+      "focus alone does not activate"
+    )
+    expect((await attribute("t1-team", "tabindex")) === "0", "the focused tab is the tab stop")
+    await page.keyboard.press("ArrowRight")
+    expect((await focused()) === "t1-account", "and wraps to the first")
+    await page.keyboard.press("End")
+    expect((await focused()) === "t1-team", "End goes to the last")
+    await page.keyboard.press("Home")
+    expect((await focused()) === "t1-account", "Home goes to the first")
+    await page.keyboard.press("ArrowDown")
+    expect((await focused()) === "t1-account", "a horizontal list ignores up and down")
+    await page.keyboard.press("Enter")
+    await snapshot("a tab chosen by the keyboard")
+    expect((await attribute("t1-account", "aria-selected")) === "true", "Enter activates")
+    expect((await attribute("t1", "data-activation-direction")) === "left", "it came from the left")
+
+    // The same component inside itself: each list moves among its own tabs.
+    await id("t2-two").click()
+    await snapshot("a nested tab chosen")
+    expect((await attribute("t2-two", "aria-selected")) === "true", "the inner tabs change")
+    expect((await attribute("t1-account", "aria-selected")) === "true", "the outer tabs do not")
+    await page.keyboard.press("ArrowRight")
+    expect((await focused()) === "t2-one", "the arrows stay within the inner list")
+  },
+
+  async accordion({ page, snapshot, id, present, attribute, focused }) {
+    await snapshot("at rest")
+    expect(!(await present("a1-one-panel")), "a closed panel is not in the page")
+    expect(
+      (await attribute("a1-one-trigger", "aria-expanded")) === "false",
+      "closed: aria-expanded"
+    )
+    expect(await present("a2-x-panel"), "a default value opens its item")
+
+    await id("a1-one-trigger").click()
+    await snapshot("one open")
+    expect((await attribute("a1-one", "data-open")) === "", "the item is open")
+    expect((await attribute("a1-one-panel", "role")) === "region", "the panel is a region")
+    expect(
+      (await attribute("a1-one-panel", "aria-labelledby")) ===
+        (await attribute("a1-one-trigger", "id")),
+      "labelled by its trigger"
+    )
+    expect(
+      (await id("a1-one-panel").evaluate((element) =>
+        (element as HTMLElement).style.getPropertyValue("--accordion-panel-height")
+      )) === "auto",
+      "an open panel follows its content"
+    )
+
+    await id("a1-two-trigger").click()
+    await snapshot("another open, the first closed")
+    expect(await present("a1-two-panel"), "the second opens")
+    expect(!(await present("a1-one-panel")), "opening one closes the other")
+
+    await page.keyboard.press("ArrowDown")
+    expect((await focused()) === "a1-four-trigger", "ArrowDown skips a disabled item")
+    await page.keyboard.press("ArrowDown")
+    expect((await focused()) === "a1-one-trigger", "and wraps to the first")
+    await page.keyboard.press("End")
+    expect((await focused()) === "a1-four-trigger", "End goes to the last")
+    await page.keyboard.press("ArrowUp")
+    expect((await focused()) === "a1-two-trigger", "ArrowUp goes back")
+    await page.keyboard.press("Enter")
+    await snapshot("closed by the keyboard")
+    expect(!(await present("a1-two-panel")), "an open item closes again")
+    await id("a1-three-trigger").click({ force: true })
+    expect(!(await present("a1-three-panel")), "a disabled item does not open")
+
+    await id("a2-y-trigger").click()
+    await snapshot("several open")
+    expect(await present("a2-x-panel"), "with `multiple`, the first stays open")
+    expect(await present("a2-y-panel"), "beside the second")
+  },
+
   // A part drawn as the caller's own element: `render` on React, `child` on Svelte, the
   // directive on the caller's element on Angular.
   async composition({ page, snapshot, id, present, attribute }) {

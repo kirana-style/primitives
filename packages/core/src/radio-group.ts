@@ -4,6 +4,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { createPresence } from "./services/presence.ts"
+import { createRoving } from "./services/roving.ts"
 
 export interface RadioGroupProps<Value = unknown> {
   id: string
@@ -42,8 +43,6 @@ export interface RadioGroup<Value = unknown> {
 
 const NOTHING = () => {}
 const NONE = Symbol("none")
-const NEXT = new Set(["ArrowDown", "ArrowRight"])
-const PREVIOUS = new Set(["ArrowUp", "ArrowLeft"])
 
 export function createRadioGroup<Value = unknown>(
   props: ReadonlySignal<RadioGroupProps<Value>>
@@ -60,7 +59,7 @@ export function createRadioGroup<Value = unknown>(
   const disabled = computed(() => Boolean(props.get().disabled))
   const readOnly = computed(() => Boolean(props.get().readOnly))
 
-  let root: HTMLElement | undefined
+  const roving = createRoving()
   const values = new WeakMap<Element, Value>()
   const inputs = new Map<Value, HTMLInputElement>()
 
@@ -75,14 +74,6 @@ export function createRadioGroup<Value = unknown>(
     // Through the native input when it is in the page, so its `change` is the one path.
     if (input) input.click()
     else setValue(item, details("press", event))
-  }
-
-  /** The items that can be chosen, in document order, read when a key needs them. */
-  function enabled(): HTMLElement[] {
-    if (!root) return []
-    return [...root.querySelectorAll<HTMLElement>('[role="radio"]')].filter(
-      (each) => values.has(each) && each.getAttribute("aria-disabled") !== "true"
-    )
   }
 
   const state = () => ({
@@ -103,30 +94,12 @@ export function createRadioGroup<Value = unknown>(
         "aria-required": props.get().required ? "true" : undefined,
         ...state(),
         onKeyDown(event: KeyboardEvent) {
-          const forward = NEXT.has(event.key)
-          if (!forward && !PREVIOUS.has(event.key)) return
-          const list = enabled()
-          const index = list.indexOf(event.target as HTMLElement)
-          if (index < 0) return
-          event.preventDefault()
-          // Left and right follow the reading direction of the group, wherever it is set.
-          const horizontal = event.key === "ArrowRight" || event.key === "ArrowLeft"
-          const rtl =
-            horizontal &&
-            root?.ownerDocument.defaultView?.getComputedStyle(root).direction === "rtl"
-          const step = forward !== rtl ? 1 : -1
-          const next = list[(index + step + list.length) % list.length]!
-          next.focus()
+          const next = roving.move(event, { orientation: "both" })
           // Arrows choose as they move, as native radios do.
-          press(values.get(next)!, false, event)
+          if (next) press(values.get(next)!, false, event)
         },
       })),
-      attach(element) {
-        root = element
-        return () => {
-          if (root === element) root = undefined
-        }
-      },
+      attach: () => NOTHING,
     },
     item(item, options = () => ({})) {
       const checked = isChecked.is(item)
@@ -162,7 +135,7 @@ export function createRadioGroup<Value = unknown>(
         }),
         attach(element) {
           values.set(element, item)
-          return NOTHING
+          return roving.register(element)
         },
       }
     },

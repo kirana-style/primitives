@@ -11,6 +11,7 @@ const SOURCES = [
   "!**/node_modules/**",
   "!**/dist/**",
   "!**/dist-server/**",
+  "!dist-packages/**",
   "!tests/conformance/out/**",
   "!bench/out/**",
   "!.agents/**",
@@ -60,11 +61,18 @@ export default defineConfig({
       },
       // Mount time, memory and interaction against each framework's reference library.
       bench: { command: "bun bench/run.ts", dependsOn: ["build"], cache: false },
-      // Gzip per component, the framework left out.
-      budgets: { command: "bun scripts/budgets.ts", cache: false },
+      // Gzip per component, the framework left out, against the limits in budgets.json.
+      // (`bun scripts/budgets.ts` prints the table with Base UI's beside it.)
+      budgets: { command: "bun scripts/budgets.ts --check", cache: false },
+      // Every adapter exports the same components and parts, and the same entry per component.
+      parity: { command: "bun scripts/parity.ts", cache: false },
+      // The packages as they would be published (dist-packages/), then used from an empty
+      // project: installed, every export loaded, rendered on a server, type-checked.
+      pack: { command: "bun scripts/pack.ts && bun scripts/consume.ts", cache: false },
       // What the pre-push hook and CI run.
       prepush: {
-        command: "vp run check && vp run test && vp run conformance",
+        command:
+          "vp run check && vp run test && vp run parity && vp run budgets && vp run pack && vp run conformance",
         cache: false,
       },
     },
@@ -83,6 +91,7 @@ export default defineConfig({
     ignorePatterns: [
       "**/dist/**",
       "**/dist-server/**",
+      "dist-packages/**",
       "**/out/**",
       "bun.lock",
       ".agents/**",
@@ -108,6 +117,7 @@ export default defineConfig({
     ignorePatterns: [
       "**/dist/**",
       "**/dist-server/**",
+      "dist-packages/**",
       "**/out/**",
       "**/vite.config.*.timestamp-*.*",
     ],

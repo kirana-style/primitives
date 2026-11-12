@@ -20,7 +20,7 @@ const Root = defineComponent({
   inheritAttrs: false,
   props: {
     value: optional(null as unknown as PropType<unknown>),
-    defaultValue: { type: null as unknown as PropType<unknown>, default: null },
+    defaultValue: { type: null as unknown as PropType<unknown>, default: null as unknown },
     disabled: Boolean,
     readOnly: Boolean,
     required: Boolean,

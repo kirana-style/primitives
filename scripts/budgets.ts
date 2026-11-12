@@ -3,9 +3,11 @@
  * framework left out. The core's entries are the whole behaviour; the React entries add the
  * adapter; Base UI's are beside them for scale (its own dependencies bundled the same way).
  *
- *   bun scripts/budgets.ts
+ *   bun scripts/budgets.ts            # the table, with Base UI
+ *   bun scripts/budgets.ts --check    # against budgets.json, which fails when an entry is over
+ *   bun scripts/budgets.ts --write    # new limits from what is measured
  */
-import { writeFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { gzipSync } from "node:zlib"
@@ -51,6 +53,53 @@ async function size(entry: string): Promise<number> {
 }
 
 const kb = (bytes: number) => `${(bytes / 1024).toFixed(2)} KB`
+const LIMITS = join(import.meta.dirname, "../budgets.json")
+const mode = process.argv[2]
+
+// `--check`: each entry against its limit in budgets.json, in bytes, gzip. `--write`: the limits
+// set to what is measured now plus a twentieth, to the next 50 bytes, which is how a component
+// that grew on purpose gets its new limit. Neither measures Base UI.
+if (mode === "--check" || mode === "--write") {
+  const measured: Record<string, number> = {}
+  for (const component of Object.keys(COMPONENTS)) {
+    measured[`core/${component}`] = await size(`packages/core/src/${component}.ts`)
+    measured[`react/${component}`] = await size(`packages/react/src/${component}.tsx`)
+  }
+  measured["react"] = await size("packages/react/src/index.ts")
+  if (mode === "--write") {
+    const limits = Object.fromEntries(
+      Object.entries(measured).map(([entry, bytes]) => [entry, Math.ceil((bytes * 1.05) / 50) * 50])
+    )
+    writeFileSync(LIMITS, `${JSON.stringify(limits, null, 2)}\n`)
+    console.log(`budgets.json holds ${Object.keys(limits).length} limits`)
+    process.exit(0)
+  }
+  const limits = JSON.parse(readFileSync(LIMITS, "utf8")) as Record<string, number>
+  let over = 0
+  for (const [entry, bytes] of Object.entries(measured)) {
+    const limit = limits[entry]
+    if (limit === undefined) {
+      over++
+      console.log(`FAIL  ${entry} has no limit in budgets.json (${kb(bytes)})`)
+    } else if (bytes > limit) {
+      over++
+      console.log(`FAIL  ${entry} is ${kb(bytes)}, over its ${kb(limit)}`)
+    }
+  }
+  for (const entry of Object.keys(limits)) {
+    if (!(entry in measured)) {
+      over++
+      console.log(`FAIL  budgets.json has ${entry}, which is not measured`)
+    }
+  }
+  console.log(
+    over === 0
+      ? `budgets: ${Object.keys(measured).length} entries within their limits, all of React's ${kb(measured["react"]!)}`
+      : `budgets: ${over} failed`
+  )
+  process.exit(over === 0 ? 0 : 1)
+}
+
 const rows: string[] = [
   "| component | core | core + React adapter | Base UI |",
   "| --- | --- | --- | --- |",

@@ -12,3 +12,4 @@ tests/conformance/out
 bench/out
 # the pull request text, rewritten per branch
 pr-description.md
+dist-packages

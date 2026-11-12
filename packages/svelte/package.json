@@ -12,6 +12,98 @@
     ".": {
       "svelte": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./accordion": {
+      "svelte": "./src/accordion.ts",
+      "default": "./src/accordion.ts"
+    },
+    "./alert-dialog": {
+      "svelte": "./src/alert-dialog.ts",
+      "default": "./src/alert-dialog.ts"
+    },
+    "./avatar": {
+      "svelte": "./src/avatar.ts",
+      "default": "./src/avatar.ts"
+    },
+    "./button": {
+      "svelte": "./src/button.ts",
+      "default": "./src/button.ts"
+    },
+    "./checkbox": {
+      "svelte": "./src/checkbox.ts",
+      "default": "./src/checkbox.ts"
+    },
+    "./collapsible": {
+      "svelte": "./src/collapsible.ts",
+      "default": "./src/collapsible.ts"
+    },
+    "./dialog": {
+      "svelte": "./src/dialog.ts",
+      "default": "./src/dialog.ts"
+    },
+    "./direction": {
+      "svelte": "./src/direction.ts",
+      "default": "./src/direction.ts"
+    },
+    "./field": {
+      "svelte": "./src/field.ts",
+      "default": "./src/field.ts"
+    },
+    "./fieldset": {
+      "svelte": "./src/fieldset.ts",
+      "default": "./src/fieldset.ts"
+    },
+    "./form": {
+      "svelte": "./src/form.ts",
+      "default": "./src/form.ts"
+    },
+    "./hover-card": {
+      "svelte": "./src/hover-card.ts",
+      "default": "./src/hover-card.ts"
+    },
+    "./meter": {
+      "svelte": "./src/meter.ts",
+      "default": "./src/meter.ts"
+    },
+    "./popover": {
+      "svelte": "./src/popover.ts",
+      "default": "./src/popover.ts"
+    },
+    "./progress": {
+      "svelte": "./src/progress.ts",
+      "default": "./src/progress.ts"
+    },
+    "./radio-group": {
+      "svelte": "./src/radio-group.ts",
+      "default": "./src/radio-group.ts"
+    },
+    "./select": {
+      "svelte": "./src/select.ts",
+      "default": "./src/select.ts"
+    },
+    "./separator": {
+      "svelte": "./src/separator.ts",
+      "default": "./src/separator.ts"
+    },
+    "./slider": {
+      "svelte": "./src/slider.ts",
+      "default": "./src/slider.ts"
+    },
+    "./switch": {
+      "svelte": "./src/switch.ts",
+      "default": "./src/switch.ts"
+    },
+    "./tabs": {
+      "svelte": "./src/tabs.ts",
+      "default": "./src/tabs.ts"
+    },
+    "./toggle": {
+      "svelte": "./src/toggle.ts",
+      "default": "./src/toggle.ts"
+    },
+    "./tooltip": {
+      "svelte": "./src/tooltip.ts",
+      "default": "./src/tooltip.ts"
     }
   },
   "dependencies": {

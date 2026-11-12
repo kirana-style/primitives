@@ -19,7 +19,7 @@ const Root = defineComponent({
   inheritAttrs: false,
   props: {
     value: optional(ANY),
-    defaultValue: { type: ANY, default: null },
+    defaultValue: { type: ANY, default: null as unknown },
     orientation: String as PropType<Orientation>,
     id: String,
   },

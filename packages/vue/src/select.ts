@@ -27,7 +27,7 @@ const Root = defineComponent({
   name: "SelectRoot",
   props: {
     value: optional(null as unknown as PropType<unknown>),
-    defaultValue: { type: null as unknown as PropType<unknown>, default: null },
+    defaultValue: { type: null as unknown as PropType<unknown>, default: null as unknown },
     open: optional(Boolean),
     defaultOpen: Boolean,
     disabled: Boolean,

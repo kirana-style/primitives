@@ -1,6 +1,6 @@
 {
   "name": "@kirana-ui/vocabulary",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Kirana UI Primitives' parts, states and CSS variables, as data",
   "license": "MIT",

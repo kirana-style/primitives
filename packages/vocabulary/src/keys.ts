@@ -9,6 +9,7 @@ export const exclusive: string[][] = [
   ["[data-open]","[data-closed]"],
   ["[data-starting-style]","[data-ending-style]"],
   ["[data-checked]","[data-unchecked]"],
+  ["[data-valid]","[data-invalid]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
@@ -234,6 +235,117 @@ export const Dialog = {
   },
   /** A button that closes the dialog. */
   Close: {
+  },
+} as const
+
+export const Field = {
+  /** A control with its label, its description and its errors. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the control has a value. */
+    filled: "[data-filled]",
+    /** Present while the control has focus. */
+    focused: "[data-focused]",
+    /** Present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** The control's name: a press on it reaches the control. */
+  Label: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the control has a value. */
+    filled: "[data-filled]",
+    /** Present while the control has focus. */
+    focused: "[data-focused]",
+    /** Present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** The control: an input, a textarea or a select. */
+  Control: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the control has a value. */
+    filled: "[data-filled]",
+    /** Present while the control has focus. */
+    focused: "[data-focused]",
+    /** Present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** More about the control, said after its name. */
+  Description: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the control has a value. */
+    filled: "[data-filled]",
+    /** Present while the control has focus. */
+    focused: "[data-focused]",
+    /** Present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** What is wrong with the value. In the page while it applies. */
+  Error: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the control has a value. */
+    filled: "[data-filled]",
+    /** Present while the control has focus. */
+    focused: "[data-focused]",
+    /** Present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Present while the value is wrong. */
+    invalid: "[data-invalid]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const Fieldset = {
+  /** The group of fields. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The group's name. */
+  Legend: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
+export const Form = {
+  /** The form. A submit checks every field in it and stops, with focus on the first that is invalid. */
+  Root: {
   },
 } as const
 

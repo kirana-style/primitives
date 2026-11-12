@@ -48,6 +48,7 @@ const BOOLEAN = new Set([
   "readonly",
   "multiple",
   "checked",
+  "novalidate",
 ])
 
 function toSolid(props: PartProps): PartProps {

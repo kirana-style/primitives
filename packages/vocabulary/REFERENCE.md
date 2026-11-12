@@ -251,6 +251,104 @@ The text that describes the dialog.
 
 A button that closes the dialog.
 
+## Field
+
+### Field.Root
+
+A control with its label, its description and its errors.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the control. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the control has a value. |
+| `data-focused` | Present while the control has focus. |
+| `data-valid` | Present once the value has been checked and found right. |
+| `data-invalid` | Present while the value is wrong. |
+
+### Field.Label
+
+The control's name: a press on it reaches the control.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the control. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the control has a value. |
+| `data-focused` | Present while the control has focus. |
+| `data-valid` | Present once the value has been checked and found right. |
+| `data-invalid` | Present while the value is wrong. |
+
+### Field.Control
+
+The control: an input, a textarea or a select.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the control. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the control has a value. |
+| `data-focused` | Present while the control has focus. |
+| `data-valid` | Present once the value has been checked and found right. |
+| `data-invalid` | Present while the value is wrong. |
+
+### Field.Description
+
+More about the control, said after its name.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the control. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the control has a value. |
+| `data-focused` | Present while the control has focus. |
+| `data-valid` | Present once the value has been checked and found right. |
+| `data-invalid` | Present while the value is wrong. |
+
+### Field.Error
+
+What is wrong with the value. In the page while it applies.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the control. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the control has a value. |
+| `data-focused` | Present while the control has focus. |
+| `data-valid` | Present once the value has been checked and found right. |
+| `data-invalid` | Present while the value is wrong. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+## Fieldset
+
+### Fieldset.Root
+
+The group of fields.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Fieldset.Legend
+
+The group's name.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+## Form
+
+### Form.Root
+
+The form. A submit checks every field in it and stops, with focus on the first that is invalid.
+
 ## HoverCard
 
 ### HoverCard.Trigger

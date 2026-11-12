@@ -1,0 +1,310 @@
+import type { Fieldset } from "./fieldset.ts"
+import type { Form, ValidationMode } from "./form.ts"
+import { flag } from "./part.ts"
+import type { Part } from "./part.ts"
+import { batch, computed, signal } from "./reactivity.ts"
+import type { ReadonlySignal } from "./reactivity.ts"
+import { createPresence } from "./services/presence.ts"
+
+/** What the browser found wrong with the value, by the names of its `ValidityState`. */
+export type ValidityKey = Exclude<keyof ValidityState, "valid">
+
+const KEYS: ValidityKey[] = [
+  "badInput",
+  "customError",
+  "patternMismatch",
+  "rangeOverflow",
+  "rangeUnderflow",
+  "stepMismatch",
+  "tooLong",
+  "tooShort",
+  "typeMismatch",
+  "valueMissing",
+]
+
+export interface FieldValidity {
+  /** `null` until the value has been checked. */
+  readonly valid: boolean | null
+  /** What is wrong, one message each. */
+  readonly errors: readonly string[]
+  /** What the browser found, by name; `customError` is the field's own `validate`. */
+  readonly state: Readonly<Record<ValidityKey, boolean>>
+  /** The value that was checked. */
+  readonly value: string
+}
+
+export type FieldControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
+export interface FieldProps {
+  id: string
+  /** The control's name in the form. */
+  name?: string | undefined
+  disabled?: boolean | undefined
+  /** Invalid whatever the value: an error known from elsewhere. */
+  invalid?: boolean | undefined
+  /**
+   * The field's own check, after the browser's: a message or several when the value is wrong,
+   * `null` when it is right. It may answer later, with a promise.
+   */
+  validate?:
+    | ((
+        value: string
+      ) => string | readonly string[] | null | Promise<string | readonly string[] | null>)
+    | undefined
+  /** When the value is checked; the form's by default, else `"onSubmit"`. */
+  validationMode?: ValidationMode | undefined
+  /** With `"onChange"`, how long the value must rest before it is checked, in milliseconds. */
+  validationDebounceTime?: number | undefined
+}
+
+/** A message of the field's, in the page while it applies and through its exit. */
+export interface FieldError {
+  readonly mounted: ReadonlySignal<boolean>
+  /** The messages, one a line. */
+  readonly text: ReadonlySignal<string>
+  readonly part: Part
+  mount(): () => void
+}
+
+export interface Field {
+  readonly validity: ReadonlySignal<FieldValidity>
+  /** Whether the field is invalid: by its value, by `invalid`, or by its form's errors. */
+  readonly invalid: ReadonlySignal<boolean>
+  /** What is wrong: the form's errors for the field, else its own. */
+  readonly errors: ReadonlySignal<readonly string[]>
+  readonly touched: ReadonlySignal<boolean>
+  readonly dirty: ReadonlySignal<boolean>
+  readonly filled: ReadonlySignal<boolean>
+  readonly focused: ReadonlySignal<boolean>
+  /** Checks the value now, and says whether it is valid. */
+  validate(): boolean | Promise<boolean>
+  mount(): () => void
+  readonly root: Part
+  readonly label: Part
+  /** The control: an `<input>`, a `<textarea>` or a `<select>`. */
+  readonly control: Part
+  readonly description: Part
+  /**
+   * A message. With no `match` it shows whatever is wrong; with one of the browser's names
+   * (`"valueMissing"`) only that; with `true`, always.
+   */
+  error(match?: () => ValidityKey | boolean | undefined): FieldError
+}
+
+const NOTHING = () => {}
+const CLEAN = Object.fromEntries(KEYS.map((key) => [key, false])) as Record<ValidityKey, boolean>
+const UNCHECKED: FieldValidity = { valid: null, errors: [], state: CLEAN, value: "" }
+
+/** A control's value as text: a box that is not ticked has none. */
+function read(control: FieldControl): string {
+  if (
+    control instanceof HTMLInputElement &&
+    (control.type === "checkbox" || control.type === "radio")
+  )
+    return control.checked ? control.value : ""
+  return control.value
+}
+
+/**
+ * A control with its label, its description and what is wrong with its value. The field names
+ * the control for its label, says the description and the errors to assistive technology, and
+ * marks every part with the field's state: touched, dirty, filled, focused, valid or invalid.
+ */
+export function createField(
+  props: ReadonlySignal<FieldProps>,
+  around: { form?: Form | undefined; fieldset?: Fieldset | undefined } = {}
+): Field {
+  const id = props.peek().id
+  const { form, fieldset } = around
+  const validity = signal<FieldValidity>(UNCHECKED)
+  const touched = signal(false)
+  const dirty = signal(false)
+  const filled = signal(false)
+  const focused = signal(false)
+  const described = signal(false)
+  // How many messages are in the page: the control points at them while there is one.
+  const shown = signal(0)
+
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || Boolean(fieldset?.disabled.get())
+  )
+  const mode = computed(
+    () => props.get().validationMode ?? form?.validationMode.get() ?? "onSubmit"
+  )
+  const outside = form?.errorsFor(() => props.get().name)
+  const invalid = computed(
+    () =>
+      Boolean(props.get().invalid) ||
+      (outside ? outside.get().length > 0 : false) ||
+      validity.get().valid === false
+  )
+  const errors = computed(() => {
+    const given = outside?.get() ?? []
+    return given.length > 0 ? given : validity.get().errors
+  })
+
+  let control: FieldControl | undefined
+  let initial = ""
+  let timer: ReturnType<typeof setTimeout> | undefined
+  // Bumped by every check: an answer that comes late knows it is stale.
+  let run = 0
+
+  const state = () => ({
+    "data-disabled": flag(disabled.get()),
+    "data-touched": flag(touched.get()),
+    "data-dirty": flag(dirty.get()),
+    "data-filled": flag(filled.get()),
+    "data-focused": flag(focused.get()),
+    "data-valid": flag(!invalid.get() && validity.get().valid === true),
+    "data-invalid": flag(invalid.get()),
+  })
+
+  function settle(element: FieldControl, value: string, own: readonly string[]): boolean {
+    const native = element.validity
+    const found = { ...CLEAN }
+    for (const key of KEYS) found[key] = native[key]
+    const messages = native.valid ? own : [element.validationMessage]
+    if (own.length > 0) found.customError = true
+    // What `:invalid` and the form's own check read.
+    element.setCustomValidity(native.valid ? own.join("\n") : "")
+    const valid = messages.length === 0
+    validity.set({ valid, errors: messages, state: found, value })
+    return valid
+  }
+
+  function validate(): boolean | Promise<boolean> {
+    const element = control
+    if (!element || disabled.peek()) return true
+    clearTimeout(timer)
+    const token = ++run
+    const value = read(element)
+    // The field's own message from last time is not the browser's finding.
+    element.setCustomValidity("")
+    if (!element.validity.valid) return settle(element, value, [])
+    const answer = props.peek().validate?.(value) ?? null
+    const list = (given: string | readonly string[] | null) =>
+      given === null ? [] : typeof given === "string" ? [given] : given
+    if (answer instanceof Promise) {
+      return answer.then((given) =>
+        token === run ? settle(element, value, list(given)) : validity.peek().valid !== false
+      )
+    }
+    return settle(element, value, list(answer))
+  }
+
+  function changed(element: FieldControl) {
+    const value = read(element)
+    batch(() => {
+      dirty.set(value !== initial)
+      filled.set(value !== "")
+    })
+    const name = props.peek().name
+    if (name) form?.clear(name)
+    if (validity.peek().valid === false) {
+      // Found wrong once, it is checked as it changes: the message leaves when it is put right.
+      void validate()
+    } else if (mode.peek() === "onChange") {
+      const wait = props.peek().validationDebounceTime ?? 0
+      clearTimeout(timer)
+      if (wait > 0) timer = setTimeout(() => void validate(), wait)
+      else void validate()
+    }
+  }
+
+  return {
+    validity,
+    invalid,
+    errors,
+    touched,
+    dirty,
+    filled,
+    focused,
+    validate,
+    mount: () => () => clearTimeout(timer),
+    root: { props: computed(state), attach: () => NOTHING },
+    label: {
+      props: computed(() => ({ id: `${id}-label`, for: `${id}-control`, ...state() })),
+      attach: () => NOTHING,
+    },
+    control: {
+      props: computed(() => {
+        const says = [
+          described.get() ? `${id}-description` : undefined,
+          shown.get() > 0 ? `${id}-error` : undefined,
+        ].filter(Boolean)
+        return {
+          id: `${id}-control`,
+          name: props.get().name,
+          disabled: flag(disabled.get()),
+          "aria-describedby": says.length > 0 ? says.join(" ") : undefined,
+          "aria-invalid": invalid.get() ? "true" : undefined,
+          ...state(),
+          onFocus: () => focused.set(true),
+          onBlur() {
+            batch(() => {
+              focused.set(false)
+              touched.set(true)
+            })
+            if (mode.peek() === "onBlur") void validate()
+          },
+          onInput: (event: Event) => changed(event.currentTarget as FieldControl),
+          // A plain form's own check found the value wrong: the field says so too.
+          onInvalid() {
+            touched.set(true)
+            void validate()
+          },
+        }
+      }),
+      attach(element) {
+        control = element as FieldControl
+        initial = read(control)
+        filled.set(initial !== "")
+        const leave = form?.register({ element, validate })
+        return () => {
+          leave?.()
+          if (control === element) control = undefined
+        }
+      },
+    },
+    description: {
+      props: computed(() => ({ id: `${id}-description`, ...state() })),
+      attach() {
+        described.set(true)
+        return () => described.set(false)
+      },
+    },
+    error(match = () => undefined) {
+      const applies = computed(() => {
+        const wanted = match()
+        if (wanted === true) return true
+        if (!invalid.get()) return false
+        return typeof wanted === "string" ? validity.get().state[wanted] : true
+      })
+      const presence = createPresence(applies)
+      return {
+        mounted: presence.mounted,
+        text: computed(() => errors.get().join("\n")),
+        mount: () => presence.start(),
+        part: {
+          props: computed(() => {
+            const status = presence.status.get()
+            return {
+              id: `${id}-error`,
+              ...state(),
+              "data-starting-style": flag(status === "starting"),
+              "data-ending-style": flag(status === "ending"),
+            }
+          }),
+          attach(element) {
+            shown.set(shown.peek() + 1)
+            const detach = presence.attach(element)
+            return () => {
+              detach()
+              shown.set(shown.peek() - 1)
+            }
+          },
+        },
+      }
+    },
+  }
+}

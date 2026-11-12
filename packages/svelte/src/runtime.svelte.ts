@@ -46,6 +46,7 @@ const BOOLEAN = new Set([
   "readonly",
   "multiple",
   "checked",
+  "novalidate",
 ])
 
 function toSvelte(props: PartProps): PartProps {

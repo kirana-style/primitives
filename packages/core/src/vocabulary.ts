@@ -8,6 +8,9 @@ import { accordionVocabulary } from "./accordion.vocabulary.ts"
 import { checkboxVocabulary } from "./checkbox.vocabulary.ts"
 import { collapsibleVocabulary } from "./collapsible.vocabulary.ts"
 import { dialogVocabulary } from "./dialog.vocabulary.ts"
+import { fieldVocabulary } from "./field.vocabulary.ts"
+import { fieldsetVocabulary } from "./fieldset.vocabulary.ts"
+import { formVocabulary } from "./form.vocabulary.ts"
 import { hoverCardVocabulary } from "./hover-card.vocabulary.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
@@ -31,6 +34,9 @@ export const vocabulary = {
   checkbox: checkboxVocabulary,
   collapsible: collapsibleVocabulary,
   dialog: dialogVocabulary,
+  field: fieldVocabulary,
+  fieldset: fieldsetVocabulary,
+  form: formVocabulary,
   hoverCard: hoverCardVocabulary,
   meter: meterVocabulary,
   popover: popoverVocabulary,

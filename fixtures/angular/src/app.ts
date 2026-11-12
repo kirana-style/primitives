@@ -58,6 +58,15 @@ import {
   KuiSelectPositioner,
   KuiSelectTrigger,
   KuiSelectValue,
+  KuiField,
+  KuiFieldControl,
+  KuiFieldDescription,
+  KuiFieldError,
+  KuiFieldLabel,
+  KuiFieldValidity,
+  KuiFieldset,
+  KuiFieldsetLegend,
+  KuiForm,
   KuiSeparator,
   KuiSlider,
   KuiSliderControl,
@@ -149,6 +158,15 @@ import {
     KuiSelectPositioner,
     KuiSelectTrigger,
     KuiSelectValue,
+    KuiField,
+    KuiFieldControl,
+    KuiFieldDescription,
+    KuiFieldError,
+    KuiFieldLabel,
+    KuiFieldValidity,
+    KuiFieldset,
+    KuiFieldsetLegend,
+    KuiForm,
     KuiSeparator,
     KuiSlider,
     KuiSliderControl,
@@ -585,6 +603,42 @@ import {
           </div>
         </div>
       </section>
+      <section data-fixture="field">
+        <form
+          kuiForm
+          [errors]="rejected()"
+          (formSubmit)="sent.set(json($event.values))"
+          data-testid="f1"
+        >
+          <fieldset kuiFieldset [kuiId]="'fs1'" data-testid="fs1">
+            <div kuiFieldsetLegend data-testid="fs1-legend">Account</div>
+            <div kuiField [kuiId]="'fd1'" [name]="'email'" data-testid="fd1">
+              <label kuiFieldLabel data-testid="fd1-label">Email</label>
+              <input kuiFieldControl type="email" required data-testid="fd1-control" />
+              <p kuiFieldDescription data-testid="fd1-description">Your work address</p>
+              <div *kuiFieldError data-testid="fd1-error"></div>
+              <ng-container *kuiFieldValidity="let validity">
+                <span data-testid="fd1-validity">{{ word(validity.valid) }}</span>
+              </ng-container>
+            </div>
+            <div
+              kuiField
+              [kuiId]="'fd2'"
+              [name]="'user'"
+              [validationMode]="'onBlur'"
+              [validate]="taken"
+              data-testid="fd2"
+            >
+              <label kuiFieldLabel>User</label>
+              <input kuiFieldControl data-testid="fd2-control" />
+              <div *kuiFieldError data-testid="fd2-error"></div>
+            </div>
+          </fieldset>
+          <button type="submit" data-testid="f1-submit">Send</button>
+        </form>
+        <button data-testid="f1-reject" (click)="rejected.set({ user: 'Reserved' })">Reject</button>
+        <span data-testid="f1-sent">{{ sent() }}</span>
+      </section>
     </main>
   `,
 })
@@ -597,6 +651,12 @@ export class App {
   protected readonly count = signal(0)
   protected readonly done = signal<number | null>(40)
   protected readonly pictures = signal(false)
+  protected readonly sent = signal("")
+  protected readonly rejected = signal<Record<string, string> | undefined>(undefined)
+  protected readonly json = (values: unknown) => JSON.stringify(values)
+  protected readonly word = (valid: boolean | null) =>
+    valid === null ? "unchecked" : valid ? "valid" : "invalid"
+  protected readonly taken = (value: string) => (value === "admin" ? "Taken" : null)
   protected readonly span = signal<number | readonly number[] | undefined>([20, 80])
   protected readonly list = (value: number | readonly number[] | undefined) =>
     typeof value === "number" ? [value] : (value ?? [])

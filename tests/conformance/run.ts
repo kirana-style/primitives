@@ -49,13 +49,14 @@ const subjects = adapters.flatMap((adapter) => {
 
 /**
  * A serialized page without what only a browser adds: the geometry it measures, and the name a
- * part takes from an optional part (a progress bar's label), which is known once that part is in
- * the page.
+ * part takes from an optional part (a progress bar's label, a fieldset's legend, a field's
+ * description), which is known once that part is in the page.
  */
 const withoutStyles = (dom: string) =>
   dom
     .replace(/ style="[^"]*"/g, "")
-    .replace(/ aria-labelledby="[^"]*-label"/g, "")
+    .replace(/ aria-labelledby="[^"]*-(label|legend)"/g, "")
+    .replace(/ aria-describedby="[^"]*-description"/g, "")
     .replace(/\nfocus: .*$/s, "")
 
 function serve(adapter: string) {
@@ -634,6 +635,83 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await inline("sl3-fill", "height")) === "30%", "filled from the bottom")
     await id("sl3-control").click({ position: { x: 10, y: 10 }, force: true })
     expect((await attribute("sl3-thumb", "aria-valuenow")) === "30", "a disabled slider stays")
+  },
+
+  async field({ page, snapshot, id, present, attribute, focused }) {
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    await snapshot("at rest")
+    expect((await attribute("fd1-label", "for")) === "fd1-control", "the label names the control")
+    expect((await attribute("fd1-control", "id")) === "fd1-control", "by its id")
+    expect((await attribute("fd1-control", "name")) === "email", "the field names it in the form")
+    expect(
+      (await attribute("fd1-control", "aria-describedby")) === "fd1-description",
+      "the description is said with it"
+    )
+    expect((await attribute("fs1", "aria-labelledby")) === "fs1-legend", "a legend names its group")
+    expect((await attribute("f1", "novalidate")) === "", "the browser's own bubbles are off")
+    expect((await text("fd1-validity")) === "unchecked", "nothing is checked yet")
+
+    await id("fd1-label").click()
+    expect((await focused()) === "fd1-control", "a press on the label reaches the control")
+    expect((await attribute("fd1", "data-focused")) === "", "focused: on every part")
+    await page.keyboard.type("a")
+    expect((await attribute("fd1", "data-dirty")) === "", "changed: dirty")
+    expect((await attribute("fd1-label", "data-filled")) === "", "and filled")
+    expect((await attribute("fd1", "data-invalid")) === null, "not checked as it is typed")
+    await page.keyboard.press("Tab")
+    await snapshot("touched")
+    expect((await attribute("fd1", "data-touched")) === "", "left: touched")
+    expect((await attribute("fd1", "data-focused")) === null, "and no longer focused")
+
+    await id("f1-submit").click()
+    await id("fd1-error").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("invalid on submit")
+    expect((await attribute("fd1", "data-invalid")) === "", "a submit checks the field")
+    expect((await attribute("fd1-control", "aria-invalid")) === "true", "and says it is wrong")
+    expect(((await text("fd1-error")) ?? "") !== "", "with the browser's message")
+    expect(
+      (await attribute("fd1-control", "aria-describedby")) === "fd1-description fd1-error",
+      "which is said with the control"
+    )
+    expect((await text("fd1-validity")) === "invalid", "the validity is the caller's to draw")
+    expect((await focused()) === "fd1-control", "focus goes to the first invalid control")
+    expect((await text("f1-sent")) === "", "and nothing is sent")
+
+    await page.keyboard.type("@b.co")
+    await id("fd1-error").waitFor({ state: "detached", timeout: 3000 })
+    await snapshot("put right")
+    expect(
+      (await attribute("fd1", "data-valid")) === "",
+      "found wrong, it is checked as it changes"
+    )
+    expect(!(await present("fd1-error")), "and the message leaves")
+
+    await id("fd2-control").focus()
+    await page.keyboard.type("admin")
+    expect(!(await present("fd2-error")), "checked on blur: not while typing")
+    await page.keyboard.press("Tab")
+    await id("fd2-error").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("the field's own check")
+    expect((await text("fd2-error")) === "Taken", "the field's own message")
+    await id("fd2-control").fill("someone")
+    await id("fd2-error").waitFor({ state: "detached", timeout: 3000 })
+
+    await id("f1-submit").click()
+    await settled(page)
+    expect(
+      (await text("f1-sent")) === '{"email":"a@b.co","user":"someone"}',
+      "all valid: the values are the caller's"
+    )
+
+    await id("f1-reject").click()
+    await id("fd2-error").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("rejected from outside")
+    expect((await text("fd2-error")) === "Reserved", "an error from outside shows on its field")
+    expect((await attribute("fd2", "data-invalid")) === "", "which is invalid")
+    await id("fd2-control").focus()
+    await page.keyboard.type("1")
+    await id("fd2-error").waitFor({ state: "detached", timeout: 3000 })
+    expect((await attribute("fd2", "data-invalid")) === null, "until its value changes")
   },
 
   // Popups the pointer opens: a tooltip and a hover card.

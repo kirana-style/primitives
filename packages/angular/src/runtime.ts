@@ -89,12 +89,20 @@ export function presentWhile(options: { portal?: boolean } = {}) {
   const template = inject(TemplateRef)
   const container = inject(ViewContainerRef)
   const destroy = inject(DestroyRef)
-  return (show: ReadonlySignal<boolean> | (() => boolean), part?: Part) => {
+  return (
+    show: ReadonlySignal<boolean> | (() => boolean),
+    part?: Part,
+    /** Called with the template's element each time it is drawn; what it returns runs when it goes. */
+    drawn?: (element: HTMLElement) => () => void
+  ) => {
     let view: EmbeddedViewRef<unknown> | undefined
     let outlet: HTMLElement | undefined
     let unbind: (() => void) | undefined
+    let gone: (() => void) | undefined
 
     const remove = () => {
+      gone?.()
+      gone = undefined
       unbind?.()
       unbind = undefined
       view?.destroy()
@@ -121,6 +129,7 @@ export function presentWhile(options: { portal?: boolean } = {}) {
         view.detectChanges()
         const element = nodes.find((each): each is HTMLElement => each.nodeType === 1)
         if (part && element) unbind = bind(element, part)
+        if (drawn && element) gone = drawn(element)
       })
     })
     destroy.onDestroy(() => {

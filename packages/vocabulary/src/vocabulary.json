@@ -584,6 +584,297 @@
         }
       }
     },
+    "field": {
+      "parts": {
+        "root": {
+          "description": "A control with its label, its description and its errors.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "label": {
+          "description": "The control's name: a press on it reaches the control.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "control": {
+          "description": "The control: an input, a textarea or a select.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "description": {
+          "description": "More about the control, said after its name.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "error": {
+          "description": "What is wrong with the value. In the page while it applies.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present while the value is wrong.",
+              "selector": "[data-invalid]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
+    "fieldset": {
+      "parts": {
+        "root": {
+          "description": "The group of fields.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "legend": {
+          "description": "The group's name.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "form": {
+      "parts": {
+        "root": {
+          "description": "The form. A submit checks every field in it and stops, with focus on the first that is invalid.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "hoverCard": {
       "parts": {
         "trigger": {

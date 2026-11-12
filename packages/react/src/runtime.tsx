@@ -77,11 +77,13 @@ const BOOLEAN = new Set([
   "readonly",
   "multiple",
   "checked",
+  "novalidate",
 ])
 const RENAMED: Record<string, string> = {
   tabindex: "tabIndex",
   for: "htmlFor",
   readonly: "readOnly",
+  novalidate: "noValidate",
 }
 
 /** A style as React takes it: `inset-inline-start` is `insetInlineStart`, `--x` stays as it is. */

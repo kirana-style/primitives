@@ -7,6 +7,9 @@
     Checkbox,
     Collapsible,
     Dialog,
+    Field,
+    Fieldset,
+    Form,
     HoverCard,
     Meter,
     Popover,
@@ -27,6 +30,9 @@
   // A picture of one pixel, and an address that is not a picture.
   const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   const BROKEN = "data:image/png;base64,AAAA"
+  // What the fixture writes for a field's validity, and its own check of a value.
+  const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? "valid" : "invalid")
+  const taken = (value: string) => (value === "admin" ? "Taken" : null)
   const SECTIONS = ["one", "two", "three", "four"]
   const PLANS = ["free", "pro", "team", "max"]
   let controlled = $state(false)
@@ -34,6 +40,8 @@
   let count = $state(0)
   let done = $state(40)
   let pictures = $state(false)
+  let sent = $state("")
+  let rejected = $state<Record<string, string> | undefined>(undefined)
   let span = $state<number[]>([20, 80])
   let fruit = $state<string | null>("Banana")
   let presses = $state(0)
@@ -379,5 +387,35 @@
         </Slider.Track>
       </Slider.Control>
     </Slider.Root>
+  </section>
+  <section data-fixture="field">
+    <Form
+      errors={rejected}
+      onFormSubmit={(values: unknown) => (sent = JSON.stringify(values))}
+      data-testid="f1"
+    >
+      <Fieldset.Root id="fs1" data-testid="fs1">
+        <Fieldset.Legend data-testid="fs1-legend">Account</Fieldset.Legend>
+        <Field.Root id="fd1" name="email" data-testid="fd1">
+          <Field.Label data-testid="fd1-label">Email</Field.Label>
+          <Field.Control type="email" required data-testid="fd1-control" />
+          <Field.Description data-testid="fd1-description">Your work address</Field.Description>
+          <Field.Error data-testid="fd1-error" />
+          <Field.Validity>
+            {#snippet children(validity)}
+              <span data-testid="fd1-validity">{word(validity.valid)}</span>
+            {/snippet}
+          </Field.Validity>
+        </Field.Root>
+        <Field.Root id="fd2" name="user" validationMode="onBlur" validate={taken} data-testid="fd2">
+          <Field.Label>User</Field.Label>
+          <Field.Control data-testid="fd2-control" />
+          <Field.Error data-testid="fd2-error" />
+        </Field.Root>
+      </Fieldset.Root>
+      <button type="submit" data-testid="f1-submit">Send</button>
+    </Form>
+    <button data-testid="f1-reject" onclick={() => (rejected = { user: "Reserved" })}>Reject</button>
+    <span data-testid="f1-sent">{sent}</span>
   </section>
 </main>

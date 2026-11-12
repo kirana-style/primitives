@@ -7,6 +7,9 @@ import {
   Checkbox,
   Collapsible,
   Dialog,
+  Field,
+  Fieldset,
+  Form,
   HoverCard,
   Meter,
   Popover,
@@ -28,6 +31,9 @@ const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 // A picture of one pixel, and an address that is not a picture.
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 const BROKEN = "data:image/png;base64,AAAA"
+// What the fixture writes for a field's validity, and its own check of a value.
+const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? "valid" : "invalid")
+const taken = (value: string) => (value === "admin" ? "Taken" : null)
 const SECTIONS = ["one", "two", "three", "four"]
 const PLANS = ["free", "pro", "team", "max"]
 const controlled = ref(false)
@@ -35,6 +41,8 @@ const alerts = ref(false)
 const count = ref(0)
 const done = ref(40)
 const pictures = ref(false)
+const sent = ref("")
+const rejected = ref<Record<string, string> | undefined>(undefined)
 const span = ref<number[]>([20, 80])
 const fruit = ref<string | null>("Banana")
 const presses = ref(0)
@@ -392,6 +400,40 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Slider.Track>
         </Slider.Control>
       </Slider.Root>
+    </section>
+    <section data-fixture="field">
+      <Form
+        :errors="rejected"
+        data-testid="f1"
+        @form-submit="(values: unknown) => (sent = JSON.stringify(values))"
+      >
+        <Fieldset.Root id="fs1" data-testid="fs1">
+          <Fieldset.Legend data-testid="fs1-legend">Account</Fieldset.Legend>
+          <Field.Root id="fd1" name="email" data-testid="fd1">
+            <Field.Label data-testid="fd1-label">Email</Field.Label>
+            <Field.Control type="email" required data-testid="fd1-control" />
+            <Field.Description data-testid="fd1-description">Your work address</Field.Description>
+            <Field.Error data-testid="fd1-error" />
+            <Field.Validity v-slot="{ validity }">
+              <span data-testid="fd1-validity">{{ word(validity.valid) }}</span>
+            </Field.Validity>
+          </Field.Root>
+          <Field.Root
+            id="fd2"
+            name="user"
+            validation-mode="onBlur"
+            :validate="taken"
+            data-testid="fd2"
+          >
+            <Field.Label>User</Field.Label>
+            <Field.Control data-testid="fd2-control" />
+            <Field.Error data-testid="fd2-error" />
+          </Field.Root>
+        </Fieldset.Root>
+        <button type="submit" data-testid="f1-submit">Send</button>
+      </Form>
+      <button data-testid="f1-reject" @click="rejected = { user: 'Reserved' }">Reject</button>
+      <span data-testid="f1-sent">{{ sent }}</span>
     </section>
   </main>
 </template>

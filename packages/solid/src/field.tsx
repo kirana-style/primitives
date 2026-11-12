@@ -6,26 +6,17 @@ import type {
   FieldValidity,
   ValidityKey,
 } from "@kirana-ui/core/field"
-import {
-  Show,
-  createContext,
-  createUniqueId,
-  onCleanup,
-  onMount,
-  splitProps,
-  useContext,
-} from "solid-js"
+import { Show, createUniqueId, onCleanup, onMount, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { FieldContext } from "./field-context.ts"
 import { FieldsetContext } from "./fieldset.tsx"
 import { FormContext } from "./form.tsx"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
-const Context = createContext<Controller>()
-
 function useField(): Controller {
-  const made = useContext(Context)
+  const made = useContext(FieldContext)
   if (!made) throw new Error("A Field part must be inside <Field.Root>")
   return made
 }
@@ -53,9 +44,9 @@ function Root(props: RootProps): JSX.Element {
     })
   )
   return (
-    <Context.Provider value={made}>
+    <FieldContext.Provider value={made}>
       <Part part={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </FieldContext.Provider>
   )
 }
 

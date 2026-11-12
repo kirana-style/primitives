@@ -1,14 +1,15 @@
 import type { ReadonlySignal } from "@kirana-ui/core"
 import { createField } from "@kirana-ui/core/field"
-import type { Field as Controller, FieldProps, ValidityKey } from "@kirana-ui/core/field"
+import type { FieldProps, ValidityKey } from "@kirana-ui/core/field"
 import { defineComponent, h, onBeforeUnmount, onMounted, useId } from "vue"
 import type { PropType } from "vue"
 
+import { provideField, useField } from "./field-context.ts"
 import { useFieldset } from "./fieldset.ts"
 import { useForm } from "./form.ts"
-import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
+import { controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
 
-const scope = context<Controller>("Field")
+const scope = { provide: provideField, use: useField }
 
 const RootElement = partComponent("FieldRootElement", "div", () => scope.use().root)
 

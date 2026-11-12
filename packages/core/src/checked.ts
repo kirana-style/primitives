@@ -1,4 +1,5 @@
 import { bindable } from "./bindable.ts"
+import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
@@ -40,18 +41,23 @@ export function createChecked(
   props: ReadonlySignal<CheckedProps>,
   role: "checkbox" | "switch",
   /** A checkbox that is neither: shown as "mixed" until it is pressed. */
-  mixed: () => boolean = () => false
+  mixed: () => boolean = () => false,
+  /** The field the control is in, if it is in one: its name, its label, its state. */
+  field?: Field
 ): Checked {
   const checked = bindable({
     value: () => props.get().checked,
     defaultValue: props.peek().defaultChecked ?? false,
     onChange: (value, by) => props.peek().onCheckedChange?.(value, by),
   })
-  const disabled = computed(() => Boolean(props.get().disabled))
+  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const readOnly = computed(() => Boolean(props.get().readOnly))
   let input: HTMLInputElement | undefined
+  let member: FieldMembership | undefined
+  const submitted = (on: boolean) => (on ? (props.peek().value ?? "on") : "")
 
   const state = () => ({
+    ...field?.state(),
     "data-checked": flag(checked.get() && !mixed()),
     "data-unchecked": flag(!checked.get() && !mixed()),
     "data-disabled": flag(disabled.get()),
@@ -62,6 +68,7 @@ export function createChecked(
   function setChecked(next: boolean, by: ChangeDetails) {
     if (disabled.peek() || readOnly.peek()) return
     checked.set(next, by)
+    if (!by.canceled) member?.changed(submitted(next))
   }
 
   function press(event: Event) {
@@ -83,7 +90,10 @@ export function createChecked(
         "aria-disabled": disabled.get() ? "true" : undefined,
         "aria-readonly": readOnly.get() ? "true" : undefined,
         "aria-required": props.get().required ? "true" : undefined,
+        ...field?.aria(),
         ...state(),
+        onFocus: () => member?.focused(true),
+        onBlur: () => member?.focused(false),
         onClick(event: Event) {
           // The input's own click, come up from inside: the press is already on its way.
           if (event.target === input) return
@@ -101,13 +111,27 @@ export function createChecked(
           }
         },
       })),
-      attach: () => () => {},
+      attach(element) {
+        member = field?.join({
+          element,
+          focus: () => element.focus(),
+          kind: "checkbox",
+          // The field checks it: on the hidden input, a plain form could not show its message.
+          required: () => Boolean(props.peek().required),
+          value: submitted(checked.peek()),
+        })
+        return () => {
+          member?.leave()
+          member = undefined
+        }
+      },
     },
     input: {
       props: computed(() => ({
         type: "checkbox",
-        id: props.get().id,
-        name: props.get().name,
+        // In a field, the id its label is `for`.
+        id: field?.controlId ?? props.get().id,
+        name: props.get().name ?? field?.name.get(),
         value: props.get().value,
         checked: flag(checked.get()),
         disabled: flag(disabled.get()),

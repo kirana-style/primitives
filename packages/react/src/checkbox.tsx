@@ -1,8 +1,10 @@
+import { within } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox as Controller, CheckboxProps } from "@kirana-ui/core/checkbox"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -30,7 +32,9 @@ function Root({
   children,
   ...rest
 }: RootProps): ReactElement {
-  const controller = useController(createCheckbox, {
+  const field = useContext(FieldContext) ?? undefined
+  const create = within(createCheckbox, { field })
+  const controller = useController(create, {
     checked,
     defaultChecked,
     onCheckedChange,

@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { Part } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
 import type { Slider as Controller, SliderProps } from "@kirana-ui/core/slider"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -36,7 +38,9 @@ function Root({
   id,
   ...rest
 }: RootProps): ReactElement {
-  const controller = useController(createSlider, {
+  const field = useContext(FieldContext) ?? undefined
+  const create = within(createSlider, { field })
+  const controller = useController(create, {
     value,
     defaultValue,
     onValueChange,

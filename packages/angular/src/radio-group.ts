@@ -13,6 +13,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup } from "@kirana-ui/core/radio-group"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiRadioGroup]", exportAs: "kuiRadioGroup" })
@@ -28,6 +29,7 @@ export class KuiRadioGroup implements OnInit {
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
 
   controller!: RadioGroup
+  private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -49,7 +51,7 @@ export class KuiRadioGroup implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createRadioGroup(this.props())
+    this.controller = createRadioGroup(this.props(), { field: this.field?.controller })
     this.part(this.controller.root)
     this.mount(this.controller)
   }

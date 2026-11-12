@@ -57,6 +57,25 @@ export interface FieldProps {
   validationDebounceTime?: number | undefined
 }
 
+/** A control that is not a native one, as it joins a field: a checkbox, a select, a slider. */
+export interface FieldSubject {
+  /** Where the control is in the page: a form goes to its invalid fields in the page's order. */
+  readonly element: HTMLElement
+  focus(): void
+  /** The native control it stands for: the browser words "this is required" for each its own way. */
+  readonly kind: "checkbox" | "radio" | "select" | "range"
+  required(): boolean
+  /** Its value as text when it joins; empty is "none". */
+  readonly value: string
+}
+
+/** What a control that joined a field tells it. */
+export interface FieldMembership {
+  changed(value: string): void
+  focused(on: boolean): void
+  leave(): void
+}
+
 /** A message of the field's, in the page while it applies and through its exit. */
 export interface FieldError {
   readonly mounted: ReadonlySignal<boolean>
@@ -78,6 +97,17 @@ export interface Field {
   readonly focused: ReadonlySignal<boolean>
   /** Checks the value now, and says whether it is valid. */
   validate(): boolean | Promise<boolean>
+  /** The id a native control takes, which the label is `for`. */
+  readonly controlId: string
+  readonly name: ReadonlySignal<string | undefined>
+  /** Disabled by the field or by the fieldset around it. */
+  readonly disabled: ReadonlySignal<boolean>
+  /** The field's state as attributes, for a part of a control inside it. */
+  state(): Record<string, "" | undefined>
+  /** What a control's own element says of the field: its label, its description, its errors. */
+  aria(): Record<string, string | undefined>
+  /** A control that is not a native one joins the field. */
+  join(subject: FieldSubject): FieldMembership
   mount(): () => void
   readonly root: Part
   readonly label: Part
@@ -94,6 +124,32 @@ export interface Field {
 const NOTHING = () => {}
 const CLEAN = Object.fromEntries(KEYS.map((key) => [key, false])) as Record<ValidityKey, boolean>
 const UNCHECKED: FieldValidity = { valid: null, errors: [], state: CLEAN, value: "" }
+
+/** What a field checks: a native control, or one that joined. */
+interface Checked {
+  readonly element: HTMLElement
+  focus(): void
+  value(): string
+  /** The browser's findings and its message for them. */
+  native(): { state: Record<ValidityKey, boolean>; message: string | undefined }
+  /** Tells the control the field's own message, where it can hold one. */
+  mark(message: string): void
+}
+
+/** How the browser says "this is required" for a kind of control, in the page's language. */
+function wording(kind: FieldSubject["kind"], page: Document): string {
+  if (kind === "select") {
+    const probe = page.createElement("select")
+    probe.required = true
+    return probe.validationMessage
+  }
+  const probe = page.createElement("input")
+  probe.type = kind === "range" ? "text" : kind
+  // A radio with no name is in no group, and a browser finds nothing missing in it.
+  probe.name = "probe"
+  probe.required = true
+  return probe.validationMessage
+}
 
 /** A control's value as text: a box that is not ticked has none. */
 function read(control: FieldControl): string {
@@ -122,6 +178,7 @@ export function createField(
   const filled = signal(false)
   const focused = signal(false)
   const described = signal(false)
+  const labelled = signal(false)
   // How many messages are in the page: the control points at them while there is one.
   const shown = signal(0)
 
@@ -143,7 +200,9 @@ export function createField(
     return given.length > 0 ? given : validity.get().errors
   })
 
-  let control: FieldControl | undefined
+  let subject: Checked | undefined
+  // A control that is not native has no element the label is `for`: a press on the label goes to it.
+  let joined: FieldSubject | undefined
   let initial = ""
   let timer: ReturnType<typeof setTimeout> | undefined
   // Bumped by every check: an answer that comes late knows it is stale.
@@ -159,41 +218,53 @@ export function createField(
     "data-invalid": flag(invalid.get()),
   })
 
-  function settle(element: FieldControl, value: string, own: readonly string[]): boolean {
-    const native = element.validity
-    const found = { ...CLEAN }
-    for (const key of KEYS) found[key] = native[key]
-    const messages = native.valid ? own : [element.validationMessage]
-    if (own.length > 0) found.customError = true
-    // What `:invalid` and the form's own check read.
-    element.setCustomValidity(native.valid ? own.join("\n") : "")
+  const says = () => {
+    const ids = [
+      described.get() ? `${id}-description` : undefined,
+      shown.get() > 0 ? `${id}-error` : undefined,
+    ].filter(Boolean)
+    return {
+      "aria-describedby": ids.length > 0 ? ids.join(" ") : undefined,
+      "aria-invalid": invalid.get() ? "true" : undefined,
+    }
+  }
+
+  function settle(
+    checked: Checked,
+    value: string,
+    found: { state: Record<ValidityKey, boolean>; message: string | undefined },
+    own: readonly string[]
+  ): boolean {
+    const wrong = found.message !== undefined
+    const messages = wrong ? [found.message!] : own
+    const flags = { ...found.state, customError: own.length > 0 }
+    // What `:invalid` and a plain form's own check read.
+    checked.mark(wrong ? "" : own.join("\n"))
     const valid = messages.length === 0
-    validity.set({ valid, errors: messages, state: found, value })
+    validity.set({ valid, errors: messages, state: flags, value })
     return valid
   }
 
   function validate(): boolean | Promise<boolean> {
-    const element = control
-    if (!element || disabled.peek()) return true
+    const checked = subject
+    if (!checked || disabled.peek()) return true
     clearTimeout(timer)
     const token = ++run
-    const value = read(element)
-    // The field's own message from last time is not the browser's finding.
-    element.setCustomValidity("")
-    if (!element.validity.valid) return settle(element, value, [])
+    const value = checked.value()
+    const found = checked.native()
+    if (found.message !== undefined) return settle(checked, value, found, [])
     const answer = props.peek().validate?.(value) ?? null
     const list = (given: string | readonly string[] | null) =>
       given === null ? [] : typeof given === "string" ? [given] : given
     if (answer instanceof Promise) {
       return answer.then((given) =>
-        token === run ? settle(element, value, list(given)) : validity.peek().valid !== false
+        token === run ? settle(checked, value, found, list(given)) : validity.peek().valid !== false
       )
     }
-    return settle(element, value, list(answer))
+    return settle(checked, value, found, list(answer))
   }
 
-  function changed(element: FieldControl) {
-    const value = read(element)
+  function changed(value: string) {
     batch(() => {
       dirty.set(value !== initial)
       filled.set(value !== "")
@@ -211,6 +282,30 @@ export function createField(
     }
   }
 
+  function left() {
+    batch(() => {
+      focused.set(false)
+      touched.set(true)
+    })
+    if (mode.peek() === "onBlur") void validate()
+  }
+
+  /** Takes a control as the field's, and gives it to the form. Returns the release. */
+  function take(checked: Checked): () => void {
+    subject = checked
+    initial = checked.value()
+    filled.set(initial !== "")
+    const leave = form?.register({
+      element: checked.element,
+      focus: () => checked.focus(),
+      validate,
+    })
+    return () => {
+      leave?.()
+      if (subject === checked) subject = undefined
+    }
+  }
+
   return {
     validity,
     invalid,
@@ -220,50 +315,97 @@ export function createField(
     filled,
     focused,
     validate,
+    controlId: `${id}-control`,
+    name: computed(() => props.get().name),
+    disabled,
+    state,
+    aria: () => ({
+      "aria-labelledby": labelled.get() ? `${id}-label` : undefined,
+      ...says(),
+    }),
+    join(control) {
+      joined = control
+      let current = control.value
+      const release = take({
+        element: control.element,
+        focus: () => control.focus(),
+        value: () => current,
+        native() {
+          const missing = control.required() && current === ""
+          return {
+            state: { ...CLEAN, valueMissing: missing },
+            message: missing ? wording(control.kind, control.element.ownerDocument) : undefined,
+          }
+        },
+        // Its hidden input holds no message: a plain form could not show one on it.
+        mark: NOTHING,
+      })
+      return {
+        changed(value) {
+          current = value
+          changed(value)
+        },
+        focused(on) {
+          if (on) focused.set(true)
+          else left()
+        },
+        leave() {
+          release()
+          if (joined === control) joined = undefined
+        },
+      }
+    },
     mount: () => () => clearTimeout(timer),
     root: { props: computed(state), attach: () => NOTHING },
     label: {
-      props: computed(() => ({ id: `${id}-label`, for: `${id}-control`, ...state() })),
-      attach: () => NOTHING,
+      props: computed(() => ({
+        id: `${id}-label`,
+        for: `${id}-control`,
+        ...state(),
+        onClick() {
+          // A box has its hidden native input, which the label presses by itself.
+          if (joined && joined.kind !== "checkbox") joined.focus()
+        },
+      })),
+      attach() {
+        labelled.set(true)
+        return () => labelled.set(false)
+      },
     },
     control: {
-      props: computed(() => {
-        const says = [
-          described.get() ? `${id}-description` : undefined,
-          shown.get() > 0 ? `${id}-error` : undefined,
-        ].filter(Boolean)
-        return {
-          id: `${id}-control`,
-          name: props.get().name,
-          disabled: flag(disabled.get()),
-          "aria-describedby": says.length > 0 ? says.join(" ") : undefined,
-          "aria-invalid": invalid.get() ? "true" : undefined,
-          ...state(),
-          onFocus: () => focused.set(true),
-          onBlur() {
-            batch(() => {
-              focused.set(false)
-              touched.set(true)
-            })
-            if (mode.peek() === "onBlur") void validate()
-          },
-          onInput: (event: Event) => changed(event.currentTarget as FieldControl),
-          // A plain form's own check found the value wrong: the field says so too.
-          onInvalid() {
-            touched.set(true)
-            void validate()
-          },
-        }
-      }),
+      props: computed(() => ({
+        id: `${id}-control`,
+        name: props.get().name,
+        disabled: flag(disabled.get()),
+        ...says(),
+        ...state(),
+        onFocus: () => focused.set(true),
+        onBlur: left,
+        onInput: (event: Event) => changed(read(event.currentTarget as FieldControl)),
+        // A plain form's own check found the value wrong: the field says so too.
+        onInvalid() {
+          touched.set(true)
+          void validate()
+        },
+      })),
       attach(element) {
-        control = element as FieldControl
-        initial = read(control)
-        filled.set(initial !== "")
-        const leave = form?.register({ element, validate })
-        return () => {
-          leave?.()
-          if (control === element) control = undefined
-        }
+        const control = element as FieldControl
+        return take({
+          element,
+          focus: () => control.focus(),
+          value: () => read(control),
+          native() {
+            // The field's own message from last time is not the browser's finding.
+            control.setCustomValidity("")
+            const found = { ...CLEAN }
+            for (const key of KEYS) found[key] = control.validity[key]
+            return {
+              state: found,
+              message: control.validity.valid ? undefined : control.validationMessage,
+            }
+          },
+          mark: (message) => control.setCustomValidity(message),
+        })
       },
     },
     description: {

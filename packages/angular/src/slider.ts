@@ -14,6 +14,7 @@ import { effect } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
 import type { Slider, SliderChangeDetails, SliderProps, SliderValue } from "@kirana-ui/core/slider"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, innerPart, inputsSignal, mounted } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
@@ -40,6 +41,7 @@ export class KuiSlider implements OnInit {
   readonly valueCommitted = output<{ value: number | number[]; details: SliderChangeDetails }>()
 
   controller!: Slider
+  private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -70,7 +72,7 @@ export class KuiSlider implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createSlider(this.props())
+    this.controller = createSlider(this.props(), { field: this.field?.controller })
     this.part(this.controller.root)
     this.mount(this.controller)
   }

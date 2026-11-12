@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createSelect } from "@kirana-ui/core/select"
 
   import Part from "../Part.svelte"
-  import { controller } from "../runtime.svelte.ts"
+  import { useFieldAround } from "../field/context.ts"
+  import { controller, fromSignal } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
 
   let {
@@ -14,6 +16,7 @@
     defaultOpen,
     onOpenChange,
     disabled,
+    required,
     name,
     items,
     id,
@@ -32,22 +35,24 @@
   }
 
   const made = provide(
-    controller(createSelect, () => ({
+    controller(within(createSelect, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,
       open,
       defaultOpen,
       disabled,
+      required,
       name,
       items,
       onValueChange: changeValue,
       onOpenChange: changeOpen,
     }))
   )
+  const named = fromSignal(made.named)
 </script>
 
 {@render children?.()}
-{#if name !== undefined}
+{#if named.current}
   <Part part={made.input} tag="input" />
 {/if}

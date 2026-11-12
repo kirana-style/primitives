@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCheckbox } from "@kirana-ui/core/checkbox"
 
   import Part from "../Part.svelte"
+  import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
 
@@ -28,7 +30,7 @@
   }
 
   const made = provide(
-    controller(createCheckbox, () => ({
+    controller(within(createCheckbox, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       checked,
       defaultChecked,

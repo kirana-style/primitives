@@ -1,4 +1,5 @@
 import { bindable } from "./bindable.ts"
+import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, keyed, signal } from "./reactivity.ts"
@@ -45,8 +46,11 @@ const NOTHING = () => {}
 const NONE = Symbol("none")
 
 export function createRadioGroup<Value = unknown>(
-  props: ReadonlySignal<RadioGroupProps<Value>>
+  props: ReadonlySignal<RadioGroupProps<Value>>,
+  around: { field?: Field | undefined } = {}
 ): RadioGroup<Value> {
+  const { field } = around
+  let member: FieldMembership | undefined
   const value = bindable<Value | null>({
     value: () => props.get().value,
     defaultValue: props.peek().defaultValue ?? null,
@@ -56,7 +60,7 @@ export function createRadioGroup<Value = unknown>(
   // The item focus was last on. Until there is one, and while nothing is chosen, every item can
   // take focus, so Tab enters at the first and Shift+Tab at the last, as native radios do.
   const focused = signal<Value | typeof NONE>(NONE)
-  const disabled = computed(() => Boolean(props.get().disabled))
+  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const readOnly = computed(() => Boolean(props.get().readOnly))
 
   const roving = createRoving()
@@ -66,6 +70,7 @@ export function createRadioGroup<Value = unknown>(
   function setValue(next: Value, by: ChangeDetails) {
     if (disabled.peek() || readOnly.peek()) return
     value.set(next, by)
+    if (!by.canceled) member?.changed(String(next))
   }
 
   function press(item: Value, off: boolean, event: Event) {
@@ -77,6 +82,7 @@ export function createRadioGroup<Value = unknown>(
   }
 
   const state = () => ({
+    ...field?.state(),
     "data-disabled": flag(disabled.get()),
     "data-readonly": flag(readOnly.get()),
     "data-required": flag(props.get().required),
@@ -92,14 +98,37 @@ export function createRadioGroup<Value = unknown>(
         "aria-disabled": disabled.get() ? "true" : undefined,
         "aria-readonly": readOnly.get() ? "true" : undefined,
         "aria-required": props.get().required ? "true" : undefined,
+        ...field?.aria(),
         ...state(),
         onKeyDown(event: KeyboardEvent) {
           const next = roving.move(event, { orientation: "both" })
           // Arrows choose as they move, as native radios do.
           if (next) press(values.get(next)!, false, event)
         },
+        onFocus: () => member?.focused(true),
+        onBlur(event: FocusEvent) {
+          // From one item to another, focus has not left the group.
+          const to = event.relatedTarget as Node | null
+          if (!(event.currentTarget as HTMLElement).contains(to)) member?.focused(false)
+        },
       })),
-      attach: () => NOTHING,
+      attach(element) {
+        const chosen = value.peek()
+        member = field?.join({
+          element,
+          focus() {
+            const items = roving.enabled()
+            ;(items.find((each) => each.tabIndex === 0) ?? items[0])?.focus()
+          },
+          kind: "radio",
+          required: () => Boolean(props.peek().required),
+          value: chosen === null ? "" : String(chosen),
+        })
+        return () => {
+          member?.leave()
+          member = undefined
+        }
+      },
     },
     item(item, options = () => ({})) {
       const checked = isChecked.is(item)
@@ -144,7 +173,7 @@ export function createRadioGroup<Value = unknown>(
       return {
         props: computed(() => ({
           type: "radio",
-          name: props.get().name,
+          name: props.get().name ?? field?.name.get(),
           value: String(item),
           checked: flag(checked.get()),
           disabled: flag(Boolean(options().disabled) || disabled.get()),

@@ -1,6 +1,15 @@
 export { batch, computed, effect, keyed, signal, untracked } from "./reactivity.ts"
 export type { ReadonlySignal, Signal } from "./reactivity.ts"
-export { PREVENT, defined, details, flag, mergeProps, sameProps, styleText } from "./part.ts"
+export {
+  PREVENT,
+  defined,
+  details,
+  flag,
+  mergeProps,
+  sameProps,
+  styleText,
+  within,
+} from "./part.ts"
 export type {
   ChangeDetails,
   ComponentDefinition,

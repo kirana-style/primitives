@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { Part } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup as Controller, RadioGroupProps } from "@kirana-ui/core/radio-group"
 import { createContext, useContext, useEffect, useMemo } from "react"
 import type { ReactElement } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -32,7 +33,9 @@ function Root<Value>({
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
-  const controller = useController(createRadioGroup<Value>, {
+  const field = useContext(FieldContext) ?? undefined
+  const create = within(createRadioGroup<Value>, { field })
+  const controller = useController(create, {
     value: value as Value | null | undefined,
     defaultValue: defaultValue as Value | null | undefined,
     onValueChange,

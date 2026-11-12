@@ -4,6 +4,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox } from "@kirana-ui/core/checkbox"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** On the box's element. It draws the hidden native input inside it, which a form and a label reach. */
@@ -22,6 +23,7 @@ export class KuiCheckbox implements OnInit {
   readonly checkedChanged = output<{ checked: boolean; details: ChangeDetails }>()
 
   controller!: Checkbox
+  private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -46,7 +48,7 @@ export class KuiCheckbox implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createCheckbox(this.props())
+    this.controller = createCheckbox(this.props(), { field: this.field?.controller })
     this.part(this.controller.root)
     this.inner(this.controller.input)
     this.mount(this.controller)

@@ -156,3 +156,11 @@ export function defined<T extends object>(options: T): Partial<T> {
   for (const key in options) if (options[key] !== undefined) out[key] = options[key]
   return out
 }
+
+/** A controller's maker with what is around the component (the field it is in) already given. */
+export function within<P, A, C>(
+  create: (props: ReadonlySignal<P>, around: A) => C,
+  around: A
+): (props: ReadonlySignal<P>) => C {
+  return (props) => create(props, around)
+}

@@ -1,4 +1,12 @@
-import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
+import {
+  Directive,
+  HostAttributeToken,
+  booleanAttribute,
+  inject,
+  input,
+  model,
+  output,
+} from "@angular/core"
 import type { OnInit } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createDialog } from "@kirana-ui/core/dialog"
@@ -7,7 +15,11 @@ import type { Dialog } from "@kirana-ui/core/dialog"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** On any element, or on `<ng-container>` to draw none. */
-@Directive({ selector: "[kuiDialog]", exportAs: "kuiDialog" })
+/**
+ * `kuiAlertDialog` in place of `kuiDialog` is a dialog that asks for an answer: a press outside
+ * it does not close it. Its parts are a dialog's (`kuiDialogPopup` …).
+ */
+@Directive({ selector: "[kuiDialog],[kuiAlertDialog]", exportAs: "kuiDialog" })
 export class KuiDialog implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
@@ -17,6 +29,8 @@ export class KuiDialog implements OnInit {
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Dialog
+  private readonly alert =
+    inject(new HostAttributeToken("kuiAlertDialog"), { optional: true }) !== null
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -35,7 +49,7 @@ export class KuiDialog implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createDialog(this.props())
+    this.controller = createDialog(this.props(), { alert: this.alert })
     this.mount(this.controller)
   }
 }

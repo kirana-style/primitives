@@ -1,6 +1,7 @@
 import { effect } from "./reactivity.ts"
 import { isPrevented, preventable } from "./part.ts"
-import type { Part, PartProps } from "./part.ts"
+import type { Part, PartProps, PartStyle } from "./part.ts"
+import { clearGeometry, setGeometry } from "./services/geometry.ts"
 
 const HANDLER = /^on[A-Z]/
 
@@ -22,17 +23,25 @@ export function eventType(key: string): string {
  */
 export function bind(element: HTMLElement, part: Part): () => void {
   let current: PartProps = {}
+  let styled: PartStyle = {}
   const listeners = new Map<string, EventListener>()
 
   const stop = effect(() => {
     const next = part.props.get()
     for (const key in current) {
-      if (HANDLER.test(key) || (PROPERTIES.has(key) && key in element)) continue
+      if (HANDLER.test(key) || key === "style") continue
+      if (PROPERTIES.has(key) && key in element) continue
       if (next[key] === undefined) element.removeAttribute(key)
     }
     for (const key in next) {
       const value = next[key]
-      if (HANDLER.test(key)) {
+      if (key === "style") {
+        // Property by property, kept there: the element's other styles are the caller's.
+        const style = (value ?? {}) as PartStyle
+        for (const name in styled) if (!(name in style)) clearGeometry(element, name)
+        for (const name in style) setGeometry(element, name, style[name]!)
+        styled = style
+      } else if (HANDLER.test(key)) {
         if (listeners.has(key) || typeof value !== "function") continue
         // One listener for the element's life: it calls whatever handler the part has now.
         const listener: EventListener = (event) => {

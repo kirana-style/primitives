@@ -1,26 +1,14 @@
 import { Component, signal } from "@angular/core"
 import {
-  KuiHoverCard,
-  KuiHoverCardPopup,
-  KuiHoverCardPortal,
-  KuiHoverCardPositioner,
-  KuiHoverCardTrigger,
-  KuiTooltip,
-  KuiTooltipArrow,
-  KuiTooltipPopup,
-  KuiTooltipPortal,
-  KuiTooltipPositioner,
-  KuiTooltipTrigger,
   KuiAccordion,
   KuiAccordionHeader,
   KuiAccordionItem,
   KuiAccordionPanel,
   KuiAccordionTrigger,
-  KuiTabs,
-  KuiTabsIndicator,
-  KuiTabsList,
-  KuiTabsPanel,
-  KuiTabsTab,
+  KuiAvatar,
+  KuiAvatarFallback,
+  KuiAvatarImage,
+  KuiButton,
   KuiCheckbox,
   KuiCheckboxIndicator,
   KuiCollapsible,
@@ -34,6 +22,16 @@ import {
   KuiDialogPortal,
   KuiDialogTitle,
   KuiDialogTrigger,
+  KuiHoverCard,
+  KuiHoverCardPopup,
+  KuiHoverCardPortal,
+  KuiHoverCardPositioner,
+  KuiHoverCardTrigger,
+  KuiMeter,
+  KuiMeterIndicator,
+  KuiMeterLabel,
+  KuiMeterTrack,
+  KuiMeterValue,
   KuiPopover,
   KuiPopoverClose,
   KuiPopoverDescription,
@@ -42,6 +40,11 @@ import {
   KuiPopoverPositioner,
   KuiPopoverTitle,
   KuiPopoverTrigger,
+  KuiProgress,
+  KuiProgressIndicator,
+  KuiProgressLabel,
+  KuiProgressTrack,
+  KuiProgressValue,
   KuiRadioGroup,
   KuiRadioGroupIndicator,
   KuiRadioGroupItem,
@@ -55,8 +58,21 @@ import {
   KuiSelectPositioner,
   KuiSelectTrigger,
   KuiSelectValue,
+  KuiSeparator,
   KuiSwitch,
   KuiSwitchThumb,
+  KuiTabs,
+  KuiTabsIndicator,
+  KuiTabsList,
+  KuiTabsPanel,
+  KuiTabsTab,
+  KuiToggle,
+  KuiTooltip,
+  KuiTooltipArrow,
+  KuiTooltipPopup,
+  KuiTooltipPortal,
+  KuiTooltipPositioner,
+  KuiTooltipTrigger,
 } from "@kirana-ui/angular"
 
 /**
@@ -69,34 +85,17 @@ import {
 @Component({
   selector: "app-root",
   imports: [
-    KuiHoverCard,
-    KuiHoverCardPopup,
-    KuiHoverCardPortal,
-    KuiHoverCardPositioner,
-    KuiHoverCardTrigger,
-    KuiTooltip,
-    KuiTooltipArrow,
-    KuiTooltipPopup,
-    KuiTooltipPortal,
-    KuiTooltipPositioner,
-    KuiTooltipTrigger,
     KuiAccordion,
     KuiAccordionHeader,
     KuiAccordionItem,
     KuiAccordionPanel,
     KuiAccordionTrigger,
-    KuiTabs,
-    KuiTabsIndicator,
-    KuiTabsList,
-    KuiTabsPanel,
-    KuiTabsTab,
+    KuiAvatar,
+    KuiAvatarFallback,
+    KuiAvatarImage,
+    KuiButton,
     KuiCheckbox,
     KuiCheckboxIndicator,
-    KuiRadioGroup,
-    KuiRadioGroupIndicator,
-    KuiRadioGroupItem,
-    KuiSwitch,
-    KuiSwitchThumb,
     KuiCollapsible,
     KuiCollapsiblePanel,
     KuiCollapsibleTrigger,
@@ -108,6 +107,16 @@ import {
     KuiDialogPortal,
     KuiDialogTitle,
     KuiDialogTrigger,
+    KuiHoverCard,
+    KuiHoverCardPopup,
+    KuiHoverCardPortal,
+    KuiHoverCardPositioner,
+    KuiHoverCardTrigger,
+    KuiMeter,
+    KuiMeterIndicator,
+    KuiMeterLabel,
+    KuiMeterTrack,
+    KuiMeterValue,
     KuiPopover,
     KuiPopoverClose,
     KuiPopoverDescription,
@@ -116,6 +125,14 @@ import {
     KuiPopoverPositioner,
     KuiPopoverTitle,
     KuiPopoverTrigger,
+    KuiProgress,
+    KuiProgressIndicator,
+    KuiProgressLabel,
+    KuiProgressTrack,
+    KuiProgressValue,
+    KuiRadioGroup,
+    KuiRadioGroupIndicator,
+    KuiRadioGroupItem,
     KuiSelect,
     KuiSelectInput,
     KuiSelectItem,
@@ -126,6 +143,21 @@ import {
     KuiSelectPositioner,
     KuiSelectTrigger,
     KuiSelectValue,
+    KuiSeparator,
+    KuiSwitch,
+    KuiSwitchThumb,
+    KuiTabs,
+    KuiTabsIndicator,
+    KuiTabsList,
+    KuiTabsPanel,
+    KuiTabsTab,
+    KuiToggle,
+    KuiTooltip,
+    KuiTooltipArrow,
+    KuiTooltipPopup,
+    KuiTooltipPortal,
+    KuiTooltipPositioner,
+    KuiTooltipTrigger,
   ],
   template: `
     <main>
@@ -355,6 +387,69 @@ import {
         </ng-container>
       </section>
 
+      <section data-fixture="simple">
+        <button kuiButton data-testid="b1" (click)="count.set(count() + 1)">
+          Count {{ count() }}
+        </button>
+        <button kuiButton [disabled]="true" [focusableWhenDisabled]="true" data-testid="b2">
+          Disabled, in the tab order
+        </button>
+        <span kuiButton [nativeButton]="false" data-testid="b3" (click)="count.set(count() + 1)">
+          Not a button element
+        </span>
+        <button kuiToggle aria-label="Bold" data-testid="g1">B</button>
+        <div kuiSeparator data-testid="sp1"></div>
+        <div kuiSeparator [orientation]="'vertical'" data-testid="sp2"></div>
+        <button data-testid="pr1-more" (click)="done.set(100)">Finish</button>
+        <div kuiProgress [kuiId]="'pr1'" [value]="done()" data-testid="pr1">
+          <span kuiProgressLabel>Upload</span>
+          <div kuiProgressTrack class="track">
+            <div kuiProgressIndicator class="fill" data-testid="pr1-fill"></div>
+          </div>
+          <span kuiProgressValue data-testid="pr1-value"></span>
+        </div>
+        <div kuiProgress [kuiId]="'pr2'" [value]="null" data-testid="pr2">
+          <div kuiProgressTrack class="track">
+            <div kuiProgressIndicator class="fill" data-testid="pr2-fill"></div>
+          </div>
+        </div>
+        <div kuiMeter [kuiId]="'m1'" [value]="30" [max]="60" data-testid="m1">
+          <span kuiMeterLabel>Disk</span>
+          <div kuiMeterTrack class="track">
+            <div kuiMeterIndicator class="fill" data-testid="m1-fill"></div>
+          </div>
+          <span kuiMeterValue data-testid="m1-value"></span>
+        </div>
+        <button data-testid="av-load" (click)="pictures.set(true)">Load pictures</button>
+        <span kuiAvatar class="avatar" data-testid="av1">
+          <img
+            *kuiAvatarImage="pictures() ? pixel : undefined"
+            alt="Kirana"
+            data-testid="av1-image"
+          />
+          <span *kuiAvatarFallback data-testid="av1-fallback">K</span>
+        </span>
+        <span kuiAvatar class="avatar" data-testid="av2">
+          <img
+            *kuiAvatarImage="pictures() ? broken : undefined"
+            alt="Nobody"
+            data-testid="av2-image"
+          />
+          <span *kuiAvatarFallback data-testid="av2-fallback">N</span>
+        </span>
+        <ng-container kuiAlertDialog [kuiId]="'ad1'">
+          <button kuiDialogTrigger data-testid="ad1-trigger">Delete</button>
+          <ng-template kuiDialogPortal>
+            <div kuiDialogBackdrop class="backdrop" data-testid="ad1-backdrop"></div>
+            <div kuiDialogPopup class="dialog" data-testid="ad1-popup">
+              <h2 kuiDialogTitle>Delete the file?</h2>
+              <p kuiDialogDescription>This cannot be undone.</p>
+              <button kuiDialogClose data-testid="ad1-cancel">Cancel</button>
+            </div>
+          </ng-template>
+        </ng-container>
+      </section>
+
       <section data-fixture="dialog">
         <ng-container kuiDialog [kuiId]="'d1'">
           <button kuiDialogTrigger data-testid="d1-trigger">Open dialog</button>
@@ -438,6 +533,13 @@ export class App {
   protected readonly fruit = signal<unknown>("Banana")
   protected readonly presses = signal(0)
   protected readonly locked = signal(false)
+  protected readonly count = signal(0)
+  protected readonly done = signal<number | null>(40)
+  protected readonly pictures = signal(false)
+  // A picture of one pixel, and an address that is not a picture.
+  protected readonly pixel =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+  protected readonly broken = "data:image/png;base64,AAAA"
   protected readonly alerts = signal<boolean | undefined>(false)
   protected readonly plans = ["free", "pro", "team", "max"]
   protected readonly sections = ["one", "two", "three", "four"]

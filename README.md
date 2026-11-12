@@ -3,9 +3,10 @@
 Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
 every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
 
-> **Status: pre-release.** Nothing is published. Eleven components (Accordion, Checkbox,
-> Collapsible, Dialog, Hover Card, Popover, Radio Group, Select, Switch, Tabs, Tooltip) on all
-> five adapters. The API will change.
+> **Status: pre-release.** Nothing is published. Eighteen components on all five adapters:
+> Accordion, Alert Dialog, Avatar, Button, Checkbox, Collapsible, Dialog, Hover Card, Meter,
+> Popover, Progress, Radio Group, Select, Separator, Switch, Tabs, Toggle, Tooltip. The API will
+> change.
 
 - **The same on every framework.** One set of scenarios runs on every adapter in a real browser,
   and the DOM of every state is compared across them: the same attributes, the same variables,

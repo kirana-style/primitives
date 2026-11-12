@@ -1,3 +1,9 @@
+import { avatarVocabulary } from "./avatar.vocabulary.ts"
+import { buttonVocabulary } from "./button.vocabulary.ts"
+import { meterVocabulary } from "./meter.vocabulary.ts"
+import { progressVocabulary } from "./progress.vocabulary.ts"
+import { separatorVocabulary } from "./separator.vocabulary.ts"
+import { toggleVocabulary } from "./toggle.vocabulary.ts"
 import { accordionVocabulary } from "./accordion.vocabulary.ts"
 import { checkboxVocabulary } from "./checkbox.vocabulary.ts"
 import { collapsibleVocabulary } from "./collapsible.vocabulary.ts"
@@ -17,15 +23,23 @@ import { tooltipVocabulary } from "./tooltip.vocabulary.ts"
  */
 export const vocabulary = {
   accordion: accordionVocabulary,
+  // An alert dialog's parts are a dialog's.
+  alertDialog: dialogVocabulary,
+  avatar: avatarVocabulary,
+  button: buttonVocabulary,
   checkbox: checkboxVocabulary,
   collapsible: collapsibleVocabulary,
   dialog: dialogVocabulary,
   hoverCard: hoverCardVocabulary,
+  meter: meterVocabulary,
   popover: popoverVocabulary,
+  progress: progressVocabulary,
   radioGroup: radioGroupVocabulary,
   select: selectVocabulary,
+  separator: separatorVocabulary,
   switch: switchVocabulary,
   tabs: tabsVocabulary,
+  toggle: toggleVocabulary,
   tooltip: tooltipVocabulary,
 } as const
 

@@ -13,15 +13,21 @@ import { gzipSync } from "node:zlib"
 // Each component, and the entries of Base UI's that make the same thing.
 const COMPONENTS: Record<string, string[]> = {
   accordion: ["accordion"],
+  avatar: ["avatar"],
+  button: ["button"],
   checkbox: ["checkbox"],
   collapsible: ["collapsible"],
   dialog: ["dialog"],
   "hover-card": ["preview-card"],
+  meter: ["meter"],
   popover: ["popover"],
+  progress: ["progress"],
   "radio-group": ["radio-group", "radio"],
   select: ["select"],
+  separator: ["separator"],
   switch: ["switch"],
   tabs: ["tabs"],
+  toggle: ["toggle"],
   tooltip: ["tooltip"],
 }
 const EXTERNAL = ["react", "react-dom", "react/jsx-runtime", "react-dom/client"]

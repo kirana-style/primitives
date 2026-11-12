@@ -133,6 +133,157 @@ export const vocabulary = {
         }
       }
     },
+    "alertDialog": {
+      "parts": {
+        "trigger": {
+          "description": "The button that opens the dialog.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the dialog is open.",
+              "selector": "[data-popup-open]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "backdrop": {
+          "description": "The layer over the page behind the dialog.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "popup": {
+          "description": "The dialog itself.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "nestedDialogOpen": {
+              "attribute": "data-nested-dialog-open",
+              "description": "Present when another dialog is open above this one.",
+              "selector": "[data-nested-dialog-open]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--nested-dialogs": "How many dialogs are open above this one."
+          }
+        },
+        "title": {
+          "description": "The heading that names the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "description": {
+          "description": "The text that describes the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "close": {
+          "description": "A button that closes the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "avatar": {
+      "parts": {
+        "root": {
+          "description": "The frame the image and its stand-in share.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "image": {
+          "description": "The picture. In the page once it has loaded.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "fallback": {
+          "description": "What shows until the picture has loaded, or when it cannot.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "button": {
+      "parts": {
+        "root": {
+          "description": "The button.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "checkbox": {
       "parts": {
         "root": {
@@ -593,6 +744,40 @@ export const vocabulary = {
         }
       }
     },
+    "meter": {
+      "parts": {
+        "root": {
+          "description": "The meter: it says the value to assistive technology.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "track": {
+          "description": "The whole range.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "The filled part: its width is the value's share of the range.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "value": {
+          "description": "The value, written.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "label": {
+          "description": "The meter's name.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "popover": {
       "parts": {
         "trigger": {
@@ -725,6 +910,150 @@ export const vocabulary = {
           "description": "A button that closes the popover.",
           "states": {},
           "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "progress": {
+      "parts": {
+        "root": {
+          "description": "The progress bar: it says the value to assistive technology.",
+          "states": {
+            "progressing": {
+              "attribute": "data-progressing",
+              "description": "Present while the task is under way.",
+              "selector": "[data-progressing]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present once the value has reached the end of the range.",
+              "selector": "[data-complete]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present while how far the task has come is not known.",
+              "selector": "[data-indeterminate]"
+            }
+          },
+          "exclusive": [
+            [
+              "progressing",
+              "complete",
+              "indeterminate"
+            ]
+          ],
+          "variables": {}
+        },
+        "track": {
+          "description": "The whole range.",
+          "states": {
+            "progressing": {
+              "attribute": "data-progressing",
+              "description": "Present while the task is under way.",
+              "selector": "[data-progressing]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present once the value has reached the end of the range.",
+              "selector": "[data-complete]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present while how far the task has come is not known.",
+              "selector": "[data-indeterminate]"
+            }
+          },
+          "exclusive": [
+            [
+              "progressing",
+              "complete",
+              "indeterminate"
+            ]
+          ],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "The filled part: its width is the value's share of the range.",
+          "states": {
+            "progressing": {
+              "attribute": "data-progressing",
+              "description": "Present while the task is under way.",
+              "selector": "[data-progressing]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present once the value has reached the end of the range.",
+              "selector": "[data-complete]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present while how far the task has come is not known.",
+              "selector": "[data-indeterminate]"
+            }
+          },
+          "exclusive": [
+            [
+              "progressing",
+              "complete",
+              "indeterminate"
+            ]
+          ],
+          "variables": {}
+        },
+        "value": {
+          "description": "The value, written.",
+          "states": {
+            "progressing": {
+              "attribute": "data-progressing",
+              "description": "Present while the task is under way.",
+              "selector": "[data-progressing]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present once the value has reached the end of the range.",
+              "selector": "[data-complete]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present while how far the task has come is not known.",
+              "selector": "[data-indeterminate]"
+            }
+          },
+          "exclusive": [
+            [
+              "progressing",
+              "complete",
+              "indeterminate"
+            ]
+          ],
+          "variables": {}
+        },
+        "label": {
+          "description": "The bar's name.",
+          "states": {
+            "progressing": {
+              "attribute": "data-progressing",
+              "description": "Present while the task is under way.",
+              "selector": "[data-progressing]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present once the value has reached the end of the range.",
+              "selector": "[data-complete]"
+            },
+            "indeterminate": {
+              "attribute": "data-indeterminate",
+              "description": "Present while how far the task has come is not known.",
+              "selector": "[data-indeterminate]"
+            }
+          },
+          "exclusive": [
+            [
+              "progressing",
+              "complete",
+              "indeterminate"
+            ]
+          ],
           "variables": {}
         }
       }
@@ -1017,6 +1346,25 @@ export const vocabulary = {
         }
       }
     },
+    "separator": {
+      "parts": {
+        "root": {
+          "description": "The line.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the line runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "switch": {
       "parts": {
         "root": {
@@ -1251,6 +1599,27 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
+          "variables": {}
+        }
+      }
+    },
+    "toggle": {
+      "parts": {
+        "root": {
+          "description": "The button. It stays pressed until it is pressed again.",
+          "states": {
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while it is pressed.",
+              "selector": "[data-pressed]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
           "variables": {}
         }
       }

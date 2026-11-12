@@ -35,7 +35,11 @@ export interface Dialog {
 
 const NOTHING = () => {}
 
-export function createDialog(props: ReadonlySignal<DialogProps>): Dialog {
+export function createDialog(
+  props: ReadonlySignal<DialogProps>,
+  /** An alert dialog asks for an answer: a press outside does not dismiss it. */
+  kind: { alert: boolean } = { alert: false }
+): Dialog {
   const id = props.peek().id
   const popupId = `${id}-popup`
   const open = bindable({
@@ -98,7 +102,7 @@ export function createDialog(props: ReadonlySignal<DialogProps>): Dialog {
     popup: {
       props: computed(() => ({
         id: popupId,
-        role: "dialog",
+        role: kind.alert ? "alertdialog" : "dialog",
         tabindex: "-1",
         "aria-modal": props.get().modal === false ? undefined : "true",
         "aria-labelledby": titled.get() ? `${id}-title` : undefined,
@@ -111,12 +115,13 @@ export function createDialog(props: ReadonlySignal<DialogProps>): Dialog {
         stops.push(
           pushLayer({
             element,
+            // An alert dialog stacks with the others.
             kind: "dialog",
             branches: () => [trigger],
             modal: modal(),
             onEscape: (event) => setOpen(false, details("escape-key", event)),
             onOutsidePress(event) {
-              if (props.peek().dismissible === false) return
+              if (kind.alert || props.peek().dismissible === false) return
               setOpen(false, details("outside-press", event))
             },
           })

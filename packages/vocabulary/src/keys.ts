@@ -12,6 +12,7 @@ export const exclusive: string[][] = [
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
+  ["[data-progressing]","[data-complete]","[data-indeterminate]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
 
@@ -64,6 +65,67 @@ export const Accordion = {
       horizontal: "[data-orientation=\"horizontal\"]",
       vertical: "[data-orientation=\"vertical\"]",
     },
+  },
+} as const
+
+export const AlertDialog = {
+  /** The button that opens the dialog. */
+  Trigger: {
+    /** Present when the dialog is open. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** The layer over the page behind the dialog. */
+  Backdrop: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
+  /** The dialog itself. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present when another dialog is open above this one. */
+    nestedDialogOpen: "[data-nested-dialog-open]",
+  },
+  /** The heading that names the dialog. */
+  Title: {
+  },
+  /** The text that describes the dialog. */
+  Description: {
+  },
+  /** A button that closes the dialog. */
+  Close: {
+  },
+} as const
+
+export const Avatar = {
+  /** The frame the image and its stand-in share. */
+  Root: {
+  },
+  /** The picture. In the page once it has loaded. */
+  Image: {
+  },
+  /** What shows until the picture has loaded, or when it cannot. */
+  Fallback: {
+  },
+} as const
+
+export const Button = {
+  /** The button. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -251,6 +313,24 @@ export const HoverCard = {
   },
 } as const
 
+export const Meter = {
+  /** The meter: it says the value to assistive technology. */
+  Root: {
+  },
+  /** The whole range. */
+  Track: {
+  },
+  /** The filled part: its width is the value's share of the range. */
+  Indicator: {
+  },
+  /** The value, written. */
+  Value: {
+  },
+  /** The meter's name. */
+  Label: {
+  },
+} as const
+
 export const Popover = {
   /** The button that opens the popover, and what it is placed against. */
   Trigger: {
@@ -309,6 +389,54 @@ export const Popover = {
   },
   /** A button that closes the popover. */
   Close: {
+  },
+} as const
+
+export const Progress = {
+  /** The progress bar: it says the value to assistive technology. */
+  Root: {
+    /** Present while the task is under way. */
+    progressing: "[data-progressing]",
+    /** Present once the value has reached the end of the range. */
+    complete: "[data-complete]",
+    /** Present while how far the task has come is not known. */
+    indeterminate: "[data-indeterminate]",
+  },
+  /** The whole range. */
+  Track: {
+    /** Present while the task is under way. */
+    progressing: "[data-progressing]",
+    /** Present once the value has reached the end of the range. */
+    complete: "[data-complete]",
+    /** Present while how far the task has come is not known. */
+    indeterminate: "[data-indeterminate]",
+  },
+  /** The filled part: its width is the value's share of the range. */
+  Indicator: {
+    /** Present while the task is under way. */
+    progressing: "[data-progressing]",
+    /** Present once the value has reached the end of the range. */
+    complete: "[data-complete]",
+    /** Present while how far the task has come is not known. */
+    indeterminate: "[data-indeterminate]",
+  },
+  /** The value, written. */
+  Value: {
+    /** Present while the task is under way. */
+    progressing: "[data-progressing]",
+    /** Present once the value has reached the end of the range. */
+    complete: "[data-complete]",
+    /** Present while how far the task has come is not known. */
+    indeterminate: "[data-indeterminate]",
+  },
+  /** The bar's name. */
+  Label: {
+    /** Present while the task is under way. */
+    progressing: "[data-progressing]",
+    /** Present once the value has reached the end of the range. */
+    complete: "[data-complete]",
+    /** Present while how far the task has come is not known. */
+    indeterminate: "[data-indeterminate]",
   },
 } as const
 
@@ -430,6 +558,17 @@ export const Select = {
   },
 } as const
 
+export const Separator = {
+  /** The line. */
+  Root: {
+    /** The way the line runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+} as const
+
 export const Switch = {
   /** The track. It holds a hidden native checkbox, which a form and a label reach. */
   Root: {
@@ -541,6 +680,16 @@ export const Tabs = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const Toggle = {
+  /** The button. It stays pressed until it is pressed again. */
+  Root: {
+    /** Present while it is pressed. */
+    pressed: "[data-pressed]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 

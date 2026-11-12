@@ -33,3 +33,9 @@ export function setGeometry(element: HTMLElement, name: string, value: string): 
   values.set(name, value)
   if (element.style.getPropertyValue(name) !== value) element.style.setProperty(name, value)
 }
+
+/** Takes a style property the core set off `element`, and stops keeping it there. */
+export function clearGeometry(element: HTMLElement, name: string): void {
+  written.get(element)?.delete(name)
+  element.style.removeProperty(name)
+}

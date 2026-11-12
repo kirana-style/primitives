@@ -1,4 +1,5 @@
 import type { ChangeDetails } from "@kirana-ui/core"
+import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
 import { createContext, createUniqueId, useContext } from "solid-js"
@@ -46,6 +47,17 @@ const part =
   (name: "trigger" | "backdrop" | "popup" | "title" | "description" | "close", tag: string) =>
   (props: PartComponentProps) => <Part part={useDialog()[name]} tag={tag} {...props} />
 
+function AlertRoot(props: Omit<RootProps, "modal" | "dismissible">): JSX.Element {
+  const generated = createUniqueId()
+  const made = controller(createAlertDialog, () => ({
+    id: props.id ?? generated,
+    open: props.open,
+    defaultOpen: props.defaultOpen,
+    onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
+  }))
+  return <Context.Provider value={made}>{props.children}</Context.Provider>
+}
+
 export const Dialog = {
   Root,
   Portal,
@@ -56,3 +68,6 @@ export const Dialog = {
   Description: part("description", "p"),
   Close: part("close", "button"),
 }
+
+/** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
+export const AlertDialog = { ...Dialog, Root: AlertRoot }

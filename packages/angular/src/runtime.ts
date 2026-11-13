@@ -112,7 +112,13 @@ export function mounted(): (controller: { mount(): () => void }) => void {
  * template's element. With `portal`, the template is drawn in a container at the end of the page.
  * Returns a function to call in `ngOnInit`.
  */
-export function presentWhile(options: { portal?: boolean } = {}) {
+export function presentWhile(
+  options: {
+    portal?: boolean
+    /** Drawn as children of this element instead, which is elsewhere in the page. */
+    into?: () => HTMLElement | undefined
+  } = {}
+) {
   const template = inject(TemplateRef)
   const container = inject(ViewContainerRef)
   const destroy = inject(DestroyRef)
@@ -145,11 +151,14 @@ export function presentWhile(options: { portal?: boolean } = {}) {
       if (wanted === (view !== undefined)) return
       if (!wanted) return remove()
       // A portal is the browser's: a server draws none, as on the other adapters.
-      if (options.portal && server) return
+      if ((options.portal || options.into) && server) return
       untracked(() => {
         view = container.createEmbeddedView(template)
         const nodes = view.rootNodes as Node[]
-        if (options.portal) {
+        const target = options.into?.()
+        if (target) {
+          target.append(...nodes)
+        } else if (options.portal) {
           const document = (nodes[0] as Node).ownerDocument!
           outlet = document.createElement("div")
           outlet.setAttribute("data-kirana-portal", "")

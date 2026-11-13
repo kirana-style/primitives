@@ -27,6 +27,7 @@
     "./listbox": "./src/listbox.tsx",
     "./menu": "./src/menu.tsx",
     "./menubar": "./src/menubar.tsx",
+    "./navigation-menu": "./src/navigation-menu.tsx",
     "./popover": "./src/popover.tsx",
     "./progress": "./src/progress.tsx",
     "./radio-group": "./src/radio-group.tsx",

@@ -128,6 +128,27 @@ note. Three places hold them:
 - **Pointer capture is best effort.** `setPointerCapture` throws for a pointer the browser
   no longer has; a drag goes on without it.
 
+## Navigation menu
+
+- **One popup for every item.** Each item's content is drawn in a viewport they share, as a
+  child of it with nothing around it (React's portal, Vue's teleport, a mount in Svelte, the
+  nodes themselves in Solid, whose own portal adds an element, and in Angular). The popup is
+  placed against the open item's trigger and given the open content's size
+  (`--popup-width`, `--popup-height`).
+- **Content drawn elsewhere is still next in Tab's order.** Tab on an open trigger goes to
+  the content's first stop; Shift+Tab on that stop goes back; Tab on the last stop gives
+  focus to the trigger and lets the key go on from there, so it lands on what follows the
+  trigger in the page.
+- **Another trigger of the list is not outside.** A press on it shows its content in the same
+  popup; closing first and opening again would depend on when a caller who holds the value
+  answers.
+- **A size written while a resize observer reports it is written a task later.** The popup is
+  nearer the root than the content whose size it takes.
+- **The press that follows a pointer's opening is not a wish to close.** A pointer resting on
+  a trigger opens it; the click that comes a moment after is the same intent.
+- **Content is not in what a server sends**: it is drawn while shown. A site that needs its
+  links read without scripts also writes them in the page.
+
 ## Forms
 
 - **`reset` is told before it happens.** The event is fired, then the browser puts the native

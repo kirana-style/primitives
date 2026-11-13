@@ -1909,6 +1909,80 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await present("sa1-corner")), "content that shrinks takes them away")
   },
 
+  async "navigation-menu"({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const popupWidth = () =>
+      id("nm1-popup").evaluate((element) => element.style.getPropertyValue("--popup-width"))
+    await id("nm1").evaluate((element) => element.scrollIntoView({ block: "start" }))
+    expect(
+      (await attribute("nm1-products", "aria-expanded")) === "false",
+      "a trigger says it is closed"
+    )
+    expect(
+      (await attribute("nm1-pricing", "aria-current")) === "page",
+      "the reader's page is marked"
+    )
+
+    await id("nm1-products").focus()
+    await key("Enter")
+    await snapshot("an item open")
+    expect(await present("nm1-products-content"), "Enter shows the item's content")
+    expect((await attribute("nm1-products", "aria-expanded")) === "true", "its trigger says so")
+    expect((await focused()) === "nm1-products", "and keeps focus")
+    expect((await popupWidth()) === "200px", "the popup is given the content's size")
+    const inside = await id("nm1-products-content").evaluate(
+      (element) => element.parentElement?.getAttribute("data-testid") === "nm1-viewport"
+    )
+    expect(inside, "the content is drawn in the shared viewport, with nothing around it")
+
+    await key("Tab")
+    expect((await focused()) === "nm1-apps", "Tab goes into the content")
+    await key("Tab")
+    expect((await focused()) === "nm1-tools", "through it")
+    await key("Tab")
+    expect((await focused()) === "nm1-docs", "and on to what follows the trigger")
+    expect(!(await present("nm1-popup")), "the content has gone")
+
+    await key("ArrowDown")
+    await snapshot("another item, from the keyboard")
+    expect((await focused()) === "nm1-guide", "the arrow into a content opens it and goes in")
+    expect((await popupWidth()) === "120px", "the popup takes this content's size")
+    await key("Escape")
+    expect((await focused()) === "nm1-docs", "Escape closes it and gives focus to its trigger")
+    await key("ArrowRight")
+    expect((await focused()) === "nm1-pricing", "the arrows go along the list, links too")
+    await key("ArrowLeft")
+    await key("ArrowLeft")
+    expect((await focused()) === "nm1-products", "and back")
+
+    await id("nm1-products").click()
+    await settled(page)
+    expect(await present("nm1-products-content"), "a press shows an item")
+    await id("nm1-docs").click()
+    await page.waitForSelector('[data-testid="nm1-products-content"]', { state: "detached" })
+    await snapshot("moved to the next item")
+    expect(await present("nm1-docs-content"), "a press on another trigger shows that one")
+    expect(
+      (await attribute("nm1-docs-content", "data-activation-direction")) === "right",
+      "which says where it came from"
+    )
+    expect((await popupWidth()) === "120px", "in the same popup, resized")
+    await id("nm1-guide").click()
+    await settled(page)
+    expect(!(await present("nm1-popup")), "a followed link closes the menu")
+    expect(page.url().endsWith("#guide"), "and is followed")
+
+    await id("nm1-products").hover()
+    await page.waitForSelector('[data-testid="nm1-products-content"]')
+    await snapshot("opened by the pointer")
+    await page.mouse.move(2, 2)
+    await page.waitForSelector('[data-testid="nm1-popup"]', { state: "detached" })
+    expect(!(await present("nm1-products-content")), "the pointer leaving closes it")
+  },
+
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

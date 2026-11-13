@@ -2,7 +2,9 @@ import { mergeProps, sameProps, signal } from "@kirana-ui/core"
 import type { Part as CorePart, PartProps, ReadonlySignal } from "@kirana-ui/core"
 import {
   Show,
+  children,
   createComputed,
+  createRenderEffect,
   createMemo,
   createSignal,
   getOwner,
@@ -108,6 +110,24 @@ export function Part(props: PartComponentProps & { part: CorePart; tag: string }
       {(render) => render()(merged)}
     </Show>
   )
+}
+
+/**
+ * Its children as children of `target`, an element drawn elsewhere: with no element of its own
+ * around them (Solid's `Portal` adds one), so the page is the same as on the other adapters.
+ */
+export function Into(props: { target: HTMLElement; children?: JSX.Element }): JSX.Element {
+  const resolved = children(() => props.children)
+  // Before any mount work of the children: their elements are in the page by then.
+  createRenderEffect(() => {
+    const target = props.target
+    const nodes = resolved.toArray().filter((each): each is Node => each instanceof Node)
+    for (const node of nodes) target.appendChild(node)
+    onCleanup(() => {
+      for (const node of nodes) if (node.parentNode === target) target.removeChild(node)
+    })
+  })
+  return null
 }
 
 /** Its children in a container at the end of the page, while `mounted`. */

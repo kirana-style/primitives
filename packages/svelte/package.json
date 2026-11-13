@@ -85,6 +85,10 @@
       "svelte": "./src/meter.ts",
       "default": "./src/meter.ts"
     },
+    "./navigation-menu": {
+      "svelte": "./src/navigation-menu.ts",
+      "default": "./src/navigation-menu.ts"
+    },
     "./popover": {
       "svelte": "./src/popover.ts",
       "default": "./src/popover.ts"

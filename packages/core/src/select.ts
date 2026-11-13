@@ -9,6 +9,7 @@ import { popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
+import { byPlace } from "./services/list-places.ts"
 import { createList } from "./services/list.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
 import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
@@ -128,7 +129,7 @@ export function createSelect<Value = unknown>(
   // The rows are read from the page: nothing re-renders for one to be known.
   const list = createList({
     selector: '[role="option"]',
-    collection: () => props.peek().virtualized,
+    places: byPlace(() => props.peek().virtualized),
   })
   const rows = new Map<Value, ListRow>()
   // The labels learned from the markup, so the trigger still names a value once the list is gone.

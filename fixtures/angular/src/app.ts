@@ -28,6 +28,9 @@ import {
   KuiHoverCardPositioner,
   KuiHoverCardTrigger,
   KuiCombobox,
+  KuiComboboxChip,
+  KuiComboboxChipRemove,
+  KuiComboboxChips,
   KuiComboboxClear,
   KuiComboboxEmpty,
   KuiComboboxHiddenInput,
@@ -188,6 +191,9 @@ import {
     KuiHoverCardPositioner,
     KuiHoverCardTrigger,
     KuiCombobox,
+    KuiComboboxChip,
+    KuiComboboxChipRemove,
+    KuiComboboxChips,
     KuiComboboxClear,
     KuiComboboxEmpty,
     KuiComboboxHiddenInput,
@@ -1137,6 +1143,54 @@ import {
             <input kuiComboboxHiddenInput />
           </ng-container>
         </div>
+        <form data-testid="cbm-form">
+          <ng-container
+            kuiCombobox
+            [kuiId]="'cbm'"
+            [name]="'tags'"
+            [multiple]="true"
+            [(values)]="tags"
+          >
+            <div kuiComboboxChips class="bar" data-testid="cbm-chips">
+              @for (each of tags(); track each) {
+                <span
+                  kuiComboboxChip
+                  [value]="each"
+                  class="chip"
+                  [attr.data-testid]="'cbm-chip-' + each"
+                >
+                  <span>{{ each }}</span>
+                  <button
+                    kuiComboboxChipRemove
+                    [attr.aria-label]="'Remove ' + each"
+                    [attr.data-testid]="'cbm-remove-' + each"
+                  >
+                    ×
+                  </button>
+                </span>
+              }
+              <input kuiComboboxInput aria-label="Tags" data-testid="cbm-input" />
+            </div>
+            <ng-template kuiComboboxPortal>
+              <div kuiComboboxPositioner data-testid="cbm-positioner">
+                <div kuiComboboxPopup class="popup" aria-label="Tags" data-testid="cbm-popup">
+                  @for (each of commands; track each) {
+                    <div
+                      kuiComboboxItem
+                      [value]="each"
+                      [kuiId]="'cbm-' + each"
+                      class="item"
+                      [attr.data-testid]="'cbm-' + each"
+                    >
+                      {{ each }}
+                    </div>
+                  }
+                </div>
+              </div>
+            </ng-template>
+            <input kuiComboboxHiddenInput />
+          </ng-container>
+        </form>
       </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
@@ -1361,6 +1415,7 @@ export class App {
   protected readonly commands = ["New", "Open", "Print"]
   protected readonly first = signal(0)
   protected readonly ran = signal<unknown>("none")
+  protected readonly tags = signal<readonly unknown[] | undefined>(["New"])
   // A list of ten thousand rows of which a window is drawn: the fixture's own few lines of
   // virtualizing, so no library's are part of what is compared.
   protected readonly firstRow = (top: number) => Math.max(0, Math.floor(top / 24) - 1)

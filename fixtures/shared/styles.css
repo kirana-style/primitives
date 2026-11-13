@@ -186,6 +186,11 @@ button {
   box-sizing: border-box;
   padding: 0 8px;
 }
+.chip {
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid #999;
+}
 .palette {
   width: 200px;
   border: 1px solid #999;

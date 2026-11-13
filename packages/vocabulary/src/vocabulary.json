@@ -647,6 +647,42 @@
           "states": {},
           "exclusive": [],
           "variables": {}
+        },
+        "clear": {
+          "description": "A button that empties the input and the value.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "chips": {
+          "description": "With several values: what holds the chips and the input.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "chip": {
+          "description": "One chosen value.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "chipRemove": {
+          "description": "A chip's button that takes its value away.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
         }
       }
     },

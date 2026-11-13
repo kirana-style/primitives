@@ -4,6 +4,7 @@ import { getContext, setContext } from "svelte"
 const KEY = Symbol("Combobox")
 
 export const ITEM = Symbol("ComboboxItem")
+export const CHIP = Symbol("ComboboxChip")
 
 export const provide = (controller: Combobox): Combobox => setContext(KEY, controller)
 

@@ -273,6 +273,30 @@ A mark an item shows while it is the chosen one.
 
 What is shown when no item is.
 
+### Combobox.Clear
+
+A button that empties the input and the value.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Combobox.Chips
+
+With several values: what holds the chips and the input.
+
+### Combobox.Chip
+
+One chosen value.
+
+### Combobox.ChipRemove
+
+A chip's button that takes its value away.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
 ## ContextMenu
 
 ### ContextMenu.Trigger

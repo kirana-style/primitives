@@ -3,6 +3,7 @@ import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
+import { byPlace } from "./services/list-places.ts"
 import { createList } from "./services/list.ts"
 import { createFormControl } from "./services/form-control.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
@@ -80,7 +81,7 @@ export function createListbox<Value = unknown>(
   const list = createList({
     selector: '[role="option"]',
     loop: () => props.peek().loop ?? false,
-    collection: () => props.peek().virtualized,
+    places: byPlace(() => props.peek().virtualized),
   })
   const rows = new Map<Value, ListRow>()
   // Whether focus is in the list: it is then no stop of its own, so Shift+Tab leaves it.

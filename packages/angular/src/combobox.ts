@@ -34,6 +34,11 @@ export class KuiCombobox implements OnInit {
   readonly filter = input<((label: string, query: string) => boolean) | null>()
   /** In a field, "none" is then wrong. */
   readonly required = input(false, { transform: booleanAttribute })
+  /** Several values, each shown as a chip: they are `values`, not `value`. */
+  readonly multiple = input(false, { transform: booleanAttribute })
+  readonly values = model<readonly unknown[] | undefined>(undefined)
+  readonly defaultValues = input<readonly unknown[]>()
+  readonly valuesChanged = output<{ values: unknown[]; details: ChangeDetails }>()
   /** The list is always in the page, with no popup: a command palette. */
   readonly inline = input(false, { transform: booleanAttribute })
   /** Every row, when only some are in the page: each item is then given its `index`. */
@@ -60,6 +65,16 @@ export class KuiCombobox implements OnInit {
     items: this.items(),
     filter: this.filter(),
     required: this.required(),
+    multiple: this.multiple(),
+    values: this.values(),
+    defaultValues: this.defaultValues(),
+    onValuesChange: (values: unknown[], details: ChangeDetails) => {
+      this.valuesChanged.emit({ values, details })
+      if (!details.canceled) {
+        this.values.set(values)
+        this.props.sync()
+      }
+    },
     inline: this.inline(),
     virtualized: this.virtualized(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
@@ -133,7 +148,7 @@ export class KuiComboboxPositioner implements OnInit {
   }
 }
 
-function part(name: "input" | "trigger" | "popup" | "hidden") {
+function part(name: "input" | "trigger" | "popup" | "hidden" | "chips") {
   const root = inject(KuiCombobox)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -212,6 +227,38 @@ export class KuiComboboxItemIndicator implements OnInit {
     const { controller } = this.item.root
     const value = this.item.value()
     this.present(controller.selected(value), controller.itemIndicator(value))
+  }
+}
+
+/** With `multiple`: what holds the chips and the input. */
+@Directive({ selector: "[kuiComboboxChips]" })
+export class KuiComboboxChips implements OnInit {
+  private readonly init = part("chips")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
+@Directive({ selector: "[kuiComboboxChip]" })
+export class KuiComboboxChip implements OnInit {
+  readonly value = input.required<unknown>()
+  readonly root = inject(KuiCombobox)
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.root.controller.chip(this.value()))
+  }
+}
+
+@Directive({ selector: "[kuiComboboxChipRemove]" })
+export class KuiComboboxChipRemove implements OnInit {
+  private readonly chip = inject(KuiComboboxChip)
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.chip.root.controller.chipRemove(this.chip.value()))
   }
 }
 

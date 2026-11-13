@@ -2076,6 +2076,33 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await id("fcb-input").inputValue()) === "", "the clear button empties it")
     expect((await focused()) === "fcb-input", "and leaves focus in the input")
     expect(!(await present("fcb-clear")), "then goes")
+
+    const sent = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="cbm-form"]')!)
+          .getAll("tags")
+          .join()
+      )
+    expect(await present("cbm-chip-New"), "several values are chips beside the input")
+    expect((await sent()) === "New", "each is sent with the form")
+    await id("cbm-input").focus()
+    await page.keyboard.type("pr")
+    await settled(page)
+    await key("Enter")
+    await snapshot("a second value chosen")
+    expect(await present("cbm-chip-Print"), "an item chosen is added")
+    expect(await present("cbm-popup"), "and the list stays open")
+    expect((await id("cbm-input").inputValue()) === "", "what was typed has been used")
+    expect((await attribute("cbm-Print", "aria-selected")) === "true", "the item says it is chosen")
+    expect((await sent()) === "New,Print", "both are sent")
+    await key("Backspace")
+    expect(!(await present("cbm-chip-Print")), "Backspace in the empty input takes the last away")
+    await id("cbm-remove-New").click()
+    await settled(page)
+    await snapshot("no value left")
+    expect(!(await present("cbm-chip-New")), "a chip's button takes its value away")
+    expect((await focused()) === "cbm-input", "and leaves focus in the input")
+    expect((await sent()) === "", "with none chosen, nothing is sent")
   },
 
   async menubar({ page, snapshot, id, present, attribute, focused }) {

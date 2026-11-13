@@ -81,6 +81,7 @@ const action = ref("none")
 const picked = ref("none")
 const first = ref(0)
 const ran = ref<unknown>("none")
+const tags = ref<string[]>(["New"])
 const scrolled = (event: Event) => {
   first.value = firstRow((event.currentTarget as HTMLElement).scrollTop)
 }
@@ -804,6 +805,44 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Combobox.Portal>
         </Combobox.Root>
       </Field.Root>
+      <form data-testid="cbm-form">
+        <Combobox.Root id="cbm" v-model:values="tags" name="tags" multiple>
+          <Combobox.Chips class="bar" data-testid="cbm-chips">
+            <Combobox.Chip
+              v-for="each in tags"
+              :key="each"
+              :value="each"
+              class="chip"
+              :data-testid="`cbm-chip-${each}`"
+            >
+              <span>{{ each }}</span>
+              <Combobox.ChipRemove
+                :aria-label="`Remove ${each}`"
+                :data-testid="`cbm-remove-${each}`"
+              >
+                ×
+              </Combobox.ChipRemove>
+            </Combobox.Chip>
+            <Combobox.Input aria-label="Tags" data-testid="cbm-input" />
+          </Combobox.Chips>
+          <Combobox.Portal>
+            <Combobox.Positioner data-testid="cbm-positioner">
+              <Combobox.Popup class="popup" aria-label="Tags" data-testid="cbm-popup">
+                <Combobox.Item
+                  v-for="each in COMMANDS"
+                  :key="each"
+                  :value="each"
+                  :id="`cbm-${each}`"
+                  class="item"
+                  :data-testid="`cbm-${each}`"
+                >
+                  {{ each }}
+                </Combobox.Item>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

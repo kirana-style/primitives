@@ -35,6 +35,9 @@ const Root = defineComponent({
     defaultOpen: Boolean,
     disabled: Boolean,
     required: Boolean,
+    multiple: Boolean,
+    values: optional(Array as PropType<readonly unknown[]>),
+    defaultValues: Array as PropType<readonly unknown[]>,
     inline: Boolean,
     virtualized: Object as PropType<ComboboxProps["virtualized"]>,
     name: String,
@@ -53,6 +56,8 @@ const Root = defineComponent({
     "inputValueChange",
     "update:open",
     "openChange",
+    "update:values",
+    "valuesChange",
   ],
   setup(props, { slots, emit }) {
     const generated = useId()
@@ -68,6 +73,13 @@ const Root = defineComponent({
         defaultOpen: props.defaultOpen,
         disabled: props.disabled,
         required: props.required,
+        multiple: props.multiple,
+        values: props.values,
+        defaultValues: props.defaultValues,
+        onValuesChange(values: unknown[], details: ChangeDetails) {
+          emit("valuesChange", values, details)
+          if (!details.canceled) emit("update:values", values)
+        },
         inline: props.inline,
         virtualized: props.virtualized,
         name: props.name,
@@ -149,6 +161,23 @@ const Clear = defineComponent({
   },
 })
 
+const CHIP: InjectionKey<unknown> = Symbol("ComboboxChip")
+
+/** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
+const Chip = defineComponent({
+  name: "ComboboxChip",
+  inheritAttrs: false,
+  props: { value: { type: ANY, required: true } },
+  setup(props, { attrs, slots }) {
+    // A chip is its value for as long as it is in the page.
+    const value = props.value
+    provide(CHIP, value)
+    const part = scope.use().chip(value)
+    const Element = partComponent("ComboboxChipElement", "span", () => part)
+    return () => h(Element, attrs, slots)
+  },
+})
+
 /** Drawn while no item is shown for what was typed. */
 const Empty = defineComponent({
   name: "ComboboxEmpty",
@@ -166,6 +195,12 @@ export const Combobox = {
   Input: partComponent("ComboboxInput", "input", () => scope.use().input),
   Trigger: partComponent("ComboboxTrigger", "button", () => scope.use().trigger),
   Clear,
+  /** With `multiple`: what holds the chips and the input. */
+  Chips: partComponent("ComboboxChips", "div", () => scope.use().chips),
+  Chip,
+  ChipRemove: partComponent("ComboboxChipRemove", "button", () =>
+    scope.use().chipRemove(inject(CHIP))
+  ),
   Portal: portalComponent("ComboboxPortal", () => scope.use().mounted),
   Positioner: positionerComponent(
     "ComboboxPositioner",

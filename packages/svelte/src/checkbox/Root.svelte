@@ -19,6 +19,7 @@
     readOnly,
     required,
     name,
+    form,
     value,
     id,
     children,
@@ -41,6 +42,7 @@
       readOnly,
       required,
       name,
+      form,
       value,
       onCheckedChange: change,
     }))

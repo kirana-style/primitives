@@ -398,6 +398,39 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await id("r1-pro").click()
     await snapshot("radio chosen by a press")
     expect((await form("plan")).join() === "pro", "a press chooses")
+
+    // A form's reset reaches each control as it reaches a native one: back to where it began,
+    // whether the control holds its value (the box, the group) or its caller does (the switch).
+    await id("x1").click()
+    await id("w1").click()
+    await id("r1-free").click()
+    expect((await form("terms")).join() === "on", "before the reset: the box is checked")
+    expect((await form("plan")).join() === "free", "before the reset: another plan")
+    await id("f1-reset").click()
+    await snapshot("after the form's reset")
+    expect((await attribute("x1", "aria-checked")) === "false", "reset: the box is unchecked")
+    expect((await form("terms")).length === 0, "reset: and not submitted")
+    expect((await id("w1-output").textContent()) === "off", "reset: the switch's caller hears it")
+    expect((await attribute("w1", "aria-checked")) === "false", "reset: the switch is off")
+    expect((await form("alerts")).length === 0, "reset: and not submitted")
+    expect((await attribute("r1-pro", "aria-checked")) === "true", "reset: the first plan again")
+    expect((await attribute("r1-free", "aria-checked")) === "false", "reset: and only that one")
+    expect((await form("plan")).join() === "pro", "reset: the form submits it")
+    expect((await attribute("r1-pro", "tabindex")) === "0", "reset: it is the tab stop again")
+    // The native inputs and the controls still agree: a press after a reset is heard.
+    await id("x1").click()
+    expect((await attribute("x1", "aria-checked")) === "true", "a press after a reset checks")
+    expect((await form("terms")).join() === "on", "and is submitted")
+    await id("w1").click()
+    await id("r1-max").click()
+    await snapshot("pressed after the reset")
+    expect((await id("w1-output").textContent()) === "on", "the switch too")
+    expect((await form("plan")).join() === "max", "and the group")
+    await id("f1-reset").click()
+    await snapshot("after a second reset")
+    expect((await form("terms")).length === 0, "a second reset: the box")
+    expect((await form("alerts")).length === 0, "a second reset: the switch")
+    expect((await form("plan")).join() === "pro", "a second reset: the group")
   },
 
   async tabs({ page, snapshot, id, present, attribute, focused }) {
@@ -1320,9 +1353,15 @@ const second: Record<string, (run: Run) => Promise<void>> = {
 
 const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal", "data-hk"])
 const VARIABLES = new Set<string>()
+const VALUES: Record<string, string[]> = {}
 for (const component of Object.values(vocabulary)) {
   for (const part of Object.values<PartDefinition>(component)) {
-    for (const state of Object.values(part.states ?? {})) DECLARED.add(state.attribute)
+    for (const state of Object.values(part.states ?? {})) {
+      DECLARED.add(state.attribute)
+      // A state marked by being there is written empty; one with values takes only those.
+      const allowed = (VALUES[state.attribute] ??= [])
+      for (const each of state.values ?? [""]) if (!allowed.includes(each)) allowed.push(each)
+    }
     for (const name of Object.keys(part.variables ?? {})) VARIABLES.add(name)
   }
 }
@@ -1457,6 +1496,51 @@ for (const engine of engines) {
               [...VARIABLES]
             )
             expect(unnamed.length === 0, `variables not in the vocabulary: ${unnamed.join(", ")}`)
+            // Faults met in other libraries, held out of every state of every component.
+            const faults = await page.evaluate((values) => {
+              const found: string[] = []
+              const scope = [...document.querySelectorAll("main *, [data-kirana-portal] *")]
+              const called = (element: Element) =>
+                element.getAttribute("data-testid") ?? element.tagName.toLowerCase()
+              const ids = new Map<string, number>()
+              for (const element of scope) {
+                if (element.id) ids.set(element.id, (ids.get(element.id) ?? 0) + 1)
+                for (const each of element.attributes) {
+                  // `data-x="false"` matches `[data-x]`: a state that is off is absent.
+                  const allowed = values[each.name]
+                  // A thumb's `data-index` is a number: the one state that is neither.
+                  if (allowed && each.name !== "data-index" && !allowed.includes(each.value))
+                    found.push(`${called(element)} has ${each.name}="${each.value}"`)
+                }
+                // A reference names an element that is in the page.
+                for (const attribute of [
+                  "aria-controls",
+                  "aria-labelledby",
+                  "aria-describedby",
+                  "for",
+                ]) {
+                  for (const named of (element.getAttribute(attribute) ?? "")
+                    .split(" ")
+                    .filter(Boolean)) {
+                    if (!document.getElementById(named))
+                      found.push(
+                        `${called(element)} ${attribute} names "${named}", which is not in the page`
+                      )
+                  }
+                }
+              }
+              for (const [repeated, count] of ids)
+                if (count > 1) found.push(`${count} elements have the id "${repeated}"`)
+              // Modality is `inert` on what is behind, never the page made unpressable.
+              for (const root of [document.documentElement, document.body]) {
+                if (root.style.pointerEvents !== "")
+                  found.push(
+                    `${root.tagName.toLowerCase()} has pointer-events: ${root.style.pointerEvents}`
+                  )
+              }
+              return [...new Set(found)]
+            }, VALUES)
+            expect(faults.length === 0, faults.join("; "))
           },
         }
         try {

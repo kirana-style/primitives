@@ -36,6 +36,7 @@ export type RootProps = PartComponentProps & {
   readOnly?: boolean
   required?: boolean
   name?: string
+  form?: string
   id?: string
 }
 
@@ -48,6 +49,7 @@ function Root(props: RootProps): JSX.Element {
     "readOnly",
     "required",
     "name",
+    "form",
     "id",
   ])
   const generated = createUniqueId()
@@ -62,6 +64,7 @@ function Root(props: RootProps): JSX.Element {
       readOnly: local.readOnly,
       required: local.required,
       name: local.name,
+      form: local.form,
       onValueChange: (value: unknown, details: ChangeDetails) =>
         local.onValueChange?.(value, details),
     })

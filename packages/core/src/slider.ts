@@ -6,6 +6,7 @@ import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartStyle } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
+import { createFormControl } from "./services/form-control.ts"
 import type { Orientation } from "./services/roving.ts"
 
 /** One number for a slider with one thumb, a list for a range: what comes back is what was given. */
@@ -39,6 +40,8 @@ export interface SliderProps {
   disabled?: boolean | undefined
   /** With a name, each thumb's value is submitted with the form around the slider. */
   name?: string | undefined
+  /** The id of the form the control belongs to, when it is not inside it. */
+  form?: string | undefined
   /** How a value is written. */
   format?: Intl.NumberFormatOptions | undefined
   /** The language a value is written in; the page's by default. */
@@ -115,7 +118,25 @@ export function createSlider(
     const list = typeof given === "number" ? [given] : given
     return list.map((each) => Math.min(max, Math.max(min, each)))
   }, sameList)
-  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
+  // What a form's reset goes back to: the value the slider began with.
+  const initial = value.peek()
+  const inForm = createFormControl((event) => {
+    const why = by("form-reset", 0, event)
+    if (!sameList(value.peek(), initial)) {
+      props.peek().onValueChange?.(typeof initial === "number" ? initial : [...initial], why)
+      if (!why.canceled) {
+        latest = undefined
+        value.set(initial, why)
+      }
+    }
+    // What was asked for, not what is read back: a caller who holds the value gives it back
+    // in their framework's time.
+    const next = why.canceled ? value.peek() : initial
+    member?.reset((typeof next === "number" ? [next] : next).join(","))
+  })
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
+  )
   const orientation = computed(() => props.get().orientation ?? "horizontal")
   const dragging = signal<number | null>(null)
   // What a thumb is centred by depends on the reading direction: the provider's, which a server
@@ -297,6 +318,8 @@ export function createSlider(
     root: {
       props: computed(() => ({
         role: "group",
+        // In a field, the id its label is `for`.
+        id: field?.controlId,
         ...state(),
         onFocus: () => member?.focused(true),
         onBlur(event: FocusEvent) {
@@ -418,10 +441,11 @@ export function createSlider(
         props: computed(() => ({
           type: "hidden",
           name: props.get().name ?? field?.name.get(),
+          form: props.get().form,
           value: String(values.get()[index] ?? range.get().min),
           disabled: flag(disabled.get()),
         })),
-        attach: () => NOTHING,
+        attach: (element) => inForm.attach(element),
       }
       inputs.set(index, part)
       return part

@@ -2,8 +2,9 @@ import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { computed } from "./reactivity.ts"
+import { computed, effect } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
+import { createFormControl } from "./services/form-control.ts"
 
 export interface CheckedProps {
   /** Unique in the page, and the hidden input's id: a `<label for>` names it. */
@@ -18,6 +19,8 @@ export interface CheckedProps {
   required?: boolean | undefined
   /** With a name, the control is submitted with the form around it when it is checked. */
   name?: string | undefined
+  /** The id of the form the control belongs to, when it is not inside it. */
+  form?: string | undefined
   /** What is submitted. Default `"on"`, as a native checkbox's. */
   value?: string | undefined
 }
@@ -50,11 +53,32 @@ export function createChecked(
     defaultValue: props.peek().defaultChecked ?? false,
     onChange: (value, by) => props.peek().onCheckedChange?.(value, by),
   })
-  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const readOnly = computed(() => Boolean(props.get().readOnly))
   let input: HTMLInputElement | undefined
   let member: FieldMembership | undefined
   const submitted = (on: boolean) => (on ? (props.peek().value ?? "on") : "")
+  // What a form's reset goes back to: the value the control began with.
+  const initial = checked.peek()
+  const inForm = createFormControl(
+    (event) => {
+      // As a native checkbox: disabled or read-only, it is reset all the same.
+      const by = details("form-reset", event)
+      checked.set(initial, by)
+      // What was asked for, not what is read back: a caller who holds the value gives it back
+      // in their framework's time.
+      const next = by.canceled ? checked.peek() : initial
+      // The browser resets the input next, to what its attribute says.
+      if (input) input.defaultChecked = next
+      member?.reset(submitted(next))
+    },
+    // A caller who holds the value and did not take the reset keeps the input with it.
+    () => {
+      if (input) input.checked = checked.peek()
+    }
+  )
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
+  )
 
   const state = () => ({
     ...field?.state(),
@@ -132,6 +156,7 @@ export function createChecked(
         // In a field, the id its label is `for`.
         id: field?.controlId ?? props.get().id,
         name: props.get().name ?? field?.name.get(),
+        form: props.get().form,
         value: props.get().value,
         checked: flag(checked.get()),
         disabled: flag(disabled.get()),
@@ -151,7 +176,15 @@ export function createChecked(
       })),
       attach(element) {
         input = element as HTMLInputElement
+        const leave = inForm.attach(element)
+        // The input's live state is the control's to keep, whatever draws the element: a
+        // framework writes it in its own time, or not at all once the page is drawn.
+        const follow = effect(() => {
+          ;(element as HTMLInputElement).checked = checked.get()
+        })
         return () => {
+          follow()
+          leave()
           if (input === element) input = undefined
         }
       },

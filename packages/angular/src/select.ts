@@ -28,6 +28,8 @@ export class KuiSelect implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly required = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
+  /** The id of the form the control belongs to, when it is not inside it. */
+  readonly form = input<string>()
   readonly items = input<readonly { value: unknown; label: string }[]>()
   readonly kuiId = input<string>()
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
@@ -45,6 +47,7 @@ export class KuiSelect implements OnInit {
     disabled: this.disabled(),
     required: this.required(),
     name: this.name(),
+    form: this.form(),
     items: this.items(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })

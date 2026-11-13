@@ -306,6 +306,7 @@ import {
               </label>
             }
           </div>
+          <button type="reset" data-testid="f1-reset">Reset</button>
         </form>
         <output data-testid="w1-output">{{ alerts() ? "on" : "off" }}</output>
       </section>

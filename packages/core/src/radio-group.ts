@@ -3,8 +3,9 @@ import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { computed, keyed, signal } from "./reactivity.ts"
+import { computed, effect, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
+import { createFormControl } from "./services/form-control.ts"
 import { createPresence } from "./services/presence.ts"
 import { createRoving } from "./services/roving.ts"
 
@@ -13,12 +14,15 @@ export interface RadioGroupProps<Value = unknown> {
   /** The chosen value; `null` is "none". */
   value?: Value | null | undefined
   defaultValue?: Value | null | undefined
-  onValueChange?: ((value: Value, details: ChangeDetails) => void) | undefined
+  /** `null` only when a form's reset takes the group back to "none". */
+  onValueChange?: ((value: Value | null, details: ChangeDetails) => void) | undefined
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
   required?: boolean | undefined
   /** With a name, the chosen value is submitted with the form around the group. */
   name?: string | undefined
+  /** The id of the form the control belongs to, when it is not inside it. */
+  form?: string | undefined
 }
 
 export interface RadioItemOptions {
@@ -55,18 +59,38 @@ export function createRadioGroup<Value = unknown>(
   const value = bindable<Value | null>({
     value: () => props.get().value,
     defaultValue: props.peek().defaultValue ?? null,
-    onChange: (next, by) => props.peek().onValueChange?.(next as Value, by),
+    onChange: (next, by) => props.peek().onValueChange?.(next, by),
   })
   const isChecked = keyed(value as ReadonlySignal<Value | null>)
   // The item focus was last on. Until there is one, and while nothing is chosen, every item can
   // take focus, so Tab enters at the first and Shift+Tab at the last, as native radios do.
   const focused = signal<Value | typeof NONE>(NONE)
-  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const readOnly = computed(() => Boolean(props.get().readOnly))
 
   const roving = createRoving()
   const values = new WeakMap<Element, Value>()
   const inputs = new Map<Value, HTMLInputElement>()
+  // What a form's reset goes back to: the value the group began with.
+  const initial = value.peek()
+  const inForm = createFormControl(
+    (event) => {
+      const by = details("form-reset", event)
+      value.set(initial, by)
+      // What was asked for, not what is read back: a caller who holds the value gives it back
+      // in their framework's time.
+      const next = by.canceled ? value.peek() : initial
+      // The browser resets the inputs next, to what their attributes say.
+      for (const [each, input] of inputs) input.defaultChecked = Object.is(next, each)
+      member?.reset(next === null ? "" : String(next))
+    },
+    // A caller who holds the value and did not take the reset keeps the inputs with it.
+    () => {
+      for (const [each, input] of inputs) input.checked = Object.is(value.peek(), each)
+    }
+  )
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
+  )
 
   function setValue(next: Value, by: ChangeDetails) {
     if (disabled.peek() || readOnly.peek()) return
@@ -96,6 +120,8 @@ export function createRadioGroup<Value = unknown>(
     root: {
       props: computed(() => ({
         role: "radiogroup",
+        // In a field, the id its label is `for`.
+        id: field?.controlId,
         "aria-disabled": disabled.get() ? "true" : undefined,
         "aria-readonly": readOnly.get() ? "true" : undefined,
         "aria-required": props.get().required ? "true" : undefined,
@@ -175,6 +201,7 @@ export function createRadioGroup<Value = unknown>(
         props: computed(() => ({
           type: "radio",
           name: props.get().name ?? field?.name.get(),
+          form: props.get().form,
           value: String(item),
           checked: flag(checked.get()),
           disabled: flag(Boolean(options().disabled) || disabled.get()),
@@ -190,7 +217,14 @@ export function createRadioGroup<Value = unknown>(
         })),
         attach(element) {
           inputs.set(item, element as HTMLInputElement)
+          const leave = inForm.attach(element)
+          // The input's live state is the group's to keep, whatever draws the element.
+          const follow = effect(() => {
+            ;(element as HTMLInputElement).checked = checked.get()
+          })
           return () => {
+            follow()
+            leave()
             if (inputs.get(item) === element) inputs.delete(item)
           }
         },

@@ -19,6 +19,7 @@
     readOnly,
     required,
     name,
+    form,
     id,
     ...rest
   }: RootProps<RadioGroupProps> = $props()
@@ -38,6 +39,7 @@
       readOnly,
       required,
       name,
+      form,
       onValueChange: change,
     }))
   )

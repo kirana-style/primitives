@@ -30,6 +30,7 @@ export type RootProps = {
   disabled?: boolean
   required?: boolean
   name?: string
+  form?: string
   items?: readonly { value: unknown; label: string }[]
   id?: string
   children?: JSX.Element
@@ -47,6 +48,7 @@ function Root(props: RootProps): JSX.Element {
     disabled: props.disabled,
     required: props.required,
     name: props.name,
+    form: props.form,
     items: props.items,
     onValueChange: (value: unknown, details: ChangeDetails) =>
       props.onValueChange?.(value, details),

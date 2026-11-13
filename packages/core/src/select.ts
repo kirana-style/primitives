@@ -4,6 +4,7 @@ import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
+import { createFormControl } from "./services/form-control.ts"
 import { pushLayer } from "./services/layers.ts"
 import { POSITION_DEFAULTS, createPosition, sameOptions } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
@@ -25,6 +26,8 @@ export interface SelectProps<Value = unknown> {
   required?: boolean | undefined
   /** With a name, the value is submitted with the form around it. */
   name?: string | undefined
+  /** The id of the form the control belongs to, when it is not inside it. */
+  form?: string | undefined
   /**
    * The labels of the values, for the trigger to show before the list has ever been opened. Not
    * needed for the list itself: its items are read from the markup.
@@ -95,7 +98,19 @@ export function createSelect<Value = unknown>(
     defaultValue: props.peek().defaultValue ?? null,
     onChange: (next, by) => props.peek().onValueChange?.(next, by),
   })
-  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
+  // What a form's reset goes back to: the value the select began with.
+  const initial = value.peek()
+  const inForm = createFormControl((event) => {
+    const by = details("form-reset", event)
+    value.set(initial, by)
+    // What was asked for, not what is read back: a caller who holds the value gives it back
+    // in their framework's time.
+    const next = by.canceled ? value.peek() : initial
+    member?.reset(next === null ? "" : String(next))
+  })
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
+  )
   const name = computed(() => props.get().name ?? field?.name.get())
   const presence = createPresence(open)
   const positioning = signal<Partial<PositionOptions>>({})
@@ -207,10 +222,14 @@ export function createSelect<Value = unknown>(
     trigger: {
       props: computed(() => ({
         type: "button",
+        // In a field, the id its label is `for`.
+        id: field?.controlId,
         role: "combobox",
         "aria-haspopup": "listbox",
         "aria-expanded": String(open.get()),
         "aria-controls": presence.mounted.get() ? popupId : undefined,
+        // The trigger is the select's element in a form: its reset is heard through it.
+        form: props.get().form,
         disabled: flag(disabled.get()),
         "aria-required": props.get().required ? "true" : undefined,
         ...field?.aria(),
@@ -251,7 +270,9 @@ export function createSelect<Value = unknown>(
           required: () => Boolean(props.peek().required),
           value: chosen === null ? "" : String(chosen),
         })
+        const leave = inForm.attach(element)
         return () => {
+          leave()
           member?.leave()
           member = undefined
           if (trigger === element) trigger = undefined
@@ -367,6 +388,7 @@ export function createSelect<Value = unknown>(
         return {
           type: "hidden",
           name: name.get(),
+          form: props.get().form,
           value: current === null ? "" : String(current),
           disabled: flag(disabled.get()),
         }

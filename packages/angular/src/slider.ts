@@ -32,6 +32,8 @@ export class KuiSlider implements OnInit {
   readonly orientation = input<"horizontal" | "vertical">()
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
+  /** The id of the form the control belongs to, when it is not inside it. */
+  readonly form = input<string>()
   readonly format = input<Intl.NumberFormatOptions>()
   readonly locale = input<string>()
   readonly getAriaValueText = input<SliderProps["getAriaValueText"]>()
@@ -57,6 +59,7 @@ export class KuiSlider implements OnInit {
     orientation: this.orientation(),
     disabled: this.disabled(),
     name: this.name(),
+    form: this.form(),
     format: this.format(),
     locale: this.locale(),
     getAriaValueText: this.getAriaValueText(),

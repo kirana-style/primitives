@@ -1,7 +1,7 @@
 import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller } from "@kirana-ui/core/select"
+import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -32,6 +32,7 @@ export type RootProps = {
   name?: string
   form?: string
   items?: readonly { value: unknown; label: string }[]
+  virtualized?: SelectProps["virtualized"]
   id?: string
   children?: JSX.Element
 }
@@ -50,6 +51,7 @@ function Root(props: RootProps): JSX.Element {
     name: props.name,
     form: props.form,
     items: props.items,
+    virtualized: props.virtualized,
     onValueChange: (value: unknown, details: ChangeDetails) =>
       props.onValueChange?.(value, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
@@ -88,12 +90,21 @@ function Value(props: PartComponentProps & { placeholder?: string }): JSX.Elemen
 
 /** `label` is what typeahead matches and the trigger shows; the item's text when left out. */
 function Item(
-  props: PartComponentProps & { value: unknown; disabled?: boolean; label?: string }
+  props: PartComponentProps & {
+    value: unknown
+    disabled?: boolean
+    label?: string
+    index?: number
+  }
 ): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "label"])
+  const [local, rest] = splitProps(props, ["value", "disabled", "label", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
-  const options = toSignal(() => ({ disabled: local.disabled, label: local.label }))
+  const options = toSignal(() => ({
+    disabled: local.disabled,
+    label: local.label,
+    index: local.index,
+  }))
   const part = useSelect().item(value, () => defined(options.get()))
   return (
     <ItemContext.Provider value={value}>

@@ -65,6 +65,24 @@ note. Three places hold them:
   `closeOnClick`.
 - **Focus is on the row**, not `aria-activedescendant`: a phone's screen reader does not
   follow the second.
+- **A list of which only some rows are in the page is moved through by place.** With
+  `virtualized` (how many rows, their names, how to bring one into the page) the keys count
+  places, not elements: End asks the virtualizer for the last row, the list itself holds
+  focus while it is drawn, and the row takes focus as it arrives. Each row says its place
+  (`aria-setsize`, `aria-posinset`): assistive technology cannot count what is not there.
+- **A list that holds focus for a row must know its own focus from someone arriving.** A test
+  tool focuses an element twice; the second focus on the list looked like its own, and focus
+  stayed on the list. It asks whether it is waiting for a row, not where focus came from.
+- **A space is a letter of a name that is being typed.** "New file" is typed with one; Space
+  presses the highlighted row only when no word is being typed.
+- **A server draws a list before its items.** It cannot say a list is empty: `data-empty`
+  and the empty message wait until the list is in a page.
+- **A named listbox's hidden inputs are the core's to draw**, inside the list, once it has
+  mounted: a server sends none, and a virtualizer that clears the list's children should
+  clear a container inside it, not the list.
+- **A form's reset puts a text input back to its default after the listener runs.** A
+  combobox writes the text it goes back to as the input's `defaultValue`, which the browser
+  then reads.
 - **A filtered item is `hidden`, and a row's own `display` shows it again.** `.item { display:
   flex }` beats the `hidden` attribute. A design that gives rows a display also writes
   `[hidden] { display: none !important }` (most resets do).

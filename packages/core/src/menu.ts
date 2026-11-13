@@ -614,8 +614,11 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           // A key a row already answered (a submenu's trigger opening it) is not the menu's too.
           if (!own(event) || event.defaultPrevented) return
           switch (event.key) {
-            case "Enter":
             case " ":
+              // Part of a name that is being typed, not a press.
+              if (list.typing()) break
+            // falls through
+            case "Enter":
               event.preventDefault()
               // The row's own press: what a caller's handler on it hears too.
               return list.highlighted.peek()?.element()?.click()

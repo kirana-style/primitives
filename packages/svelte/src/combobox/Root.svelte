@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { ComboboxProps } from "@kirana-ui/core/combobox"
+  import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCombobox } from "@kirana-ui/core/combobox"
+
+  import { useFieldAround } from "../field/context.ts"
 
   import Part from "../Part.svelte"
   import { controller, fromSignal } from "../runtime.svelte.ts"
@@ -23,6 +26,9 @@
     form,
     items,
     filter,
+    required,
+    inline,
+    virtualized,
     id,
     children,
   }: RootProps<ComboboxProps> = $props()
@@ -44,7 +50,7 @@
   }
 
   const made = provide(
-    controller(createCombobox, () => ({
+    controller(within(createCombobox, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,
@@ -57,6 +63,9 @@
       form,
       items,
       filter,
+      required,
+      inline,
+      virtualized,
       onValueChange: changeValue,
       onInputValueChange: changeInput,
       onOpenChange: changeOpen,

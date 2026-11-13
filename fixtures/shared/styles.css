@@ -167,6 +167,30 @@ button {
   width: 120px;
 }
 
+.virtual {
+  position: relative;
+  width: 200px;
+  height: 240px;
+  overflow: auto;
+  border: 1px solid #999;
+}
+.virtual-space {
+  position: relative;
+  height: 240000px;
+}
+.virtual-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 8px;
+}
+.palette {
+  width: 200px;
+  border: 1px solid #999;
+}
+
 .column {
   display: flex;
   flex-direction: column;

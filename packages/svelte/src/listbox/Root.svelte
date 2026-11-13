@@ -15,6 +15,9 @@
     multiple,
     disabled,
     loop,
+    name,
+    form,
+    virtualized,
     id,
     ...rest
   }: RootProps<ListboxProps> = $props()
@@ -33,6 +36,9 @@
       multiple,
       disabled,
       loop,
+      name,
+      form,
+      virtualized,
       onValueChange: change,
     }))
   )

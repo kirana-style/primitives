@@ -1,10 +1,11 @@
 import { bindable } from "./bindable.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { computed, signal } from "./reactivity.ts"
+import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { createList } from "./services/list.ts"
-import type { ListRow } from "./services/list.ts"
+import { createFormControl } from "./services/form-control.ts"
+import type { ListCollection, ListRow } from "./services/list.ts"
 
 export interface ListboxProps<Value = unknown> {
   id: string
@@ -17,12 +18,24 @@ export interface ListboxProps<Value = unknown> {
   disabled?: boolean | undefined
   /** Whether the arrows go round from the last item to the first. Default: they do not. */
   loop?: boolean | undefined
+  /** With a name, the chosen values are submitted with the form around the list. */
+  name?: string | undefined
+  /** The id of the form the list belongs to, when it is not inside it. */
+  form?: string | undefined
+  /**
+   * Every row, when only some are in the page (a virtualizer draws the ones in view): how many
+   * there are, their names, and how to bring one into the page. Each item is then given its
+   * `index`.
+   */
+  virtualized?: ListCollection | undefined
 }
 
 export interface ListboxItemOptions {
   disabled?: boolean | undefined
   /** What typing matches; the item's text when left out. */
   label?: string | undefined
+  /** Its place among all the rows, in a virtualized list. */
+  index?: number | undefined
 }
 
 export interface ListboxGroup {
@@ -60,8 +73,15 @@ export function createListbox<Value = unknown>(
     onChange: (next, by) => props.peek().onValueChange?.([...next], by),
     equals: (a, b) => a.length === b.length && a.every((each, at) => Object.is(each, b[at])),
   })
-  const disabled = computed(() => Boolean(props.get().disabled))
-  const list = createList({ selector: '[role="option"]', loop: () => props.peek().loop ?? false })
+  // What a form's reset goes back to: the values the list began with.
+  const initial = value.peek()
+  const inForm = createFormControl((event) => value.set(initial, details("form-reset", event)))
+  const disabled = computed(() => Boolean(props.get().disabled) || inForm.disabled.get())
+  const list = createList({
+    selector: '[role="option"]',
+    loop: () => props.peek().loop ?? false,
+    collection: () => props.peek().virtualized,
+  })
   const rows = new Map<Value, ListRow>()
   // Whether focus is in the list: it is then no stop of its own, so Shift+Tab leaves it.
   const within = signal(false)
@@ -104,6 +124,14 @@ export function createListbox<Value = unknown>(
           within.set(true)
           // Tab came to the list itself: on to the first chosen item, or the first.
           if (event.target !== event.currentTarget) return
+          const every = list.collection()
+          if (every) {
+            // Not while it holds focus itself, for a row that is being brought into the page.
+            if (list.holding()) return
+            const held = value.peek()[0]
+            const at = held === undefined ? -1 : (every.indexOf?.(held) ?? -1)
+            return at >= 0 ? list.goto(at) : list.move("first")
+          }
           const all = list.rows()
           const first = value
             .peek()
@@ -118,7 +146,7 @@ export function createListbox<Value = unknown>(
         },
         onKeyDown(event: KeyboardEvent) {
           if (disabled.peek()) return
-          if (event.key === "Enter" || event.key === " ") {
+          if (event.key === "Enter" || (event.key === " " && !list.typing())) {
             event.preventDefault()
             // The row's own press: what a caller's handler on it hears too.
             return list.highlighted.peek()?.element()?.click()
@@ -126,7 +154,52 @@ export function createListbox<Value = unknown>(
           list.key(event)
         },
       })),
-      attach: (element) => list.attach(element),
+      attach(element) {
+        const stops = [list.attach(element)]
+        // What a form knows a named list by: hidden inputs, the list's own to draw (a server
+        // draws none: they are in the page once it has mounted). One with no name, so the form
+        // is known and its reset heard with nothing chosen; one with the name for each value.
+        const document = element.ownerDocument
+        let anchor: HTMLInputElement | undefined
+        let leave: (() => void) | undefined
+        const named: HTMLInputElement[] = []
+        const clear = () => {
+          leave?.()
+          anchor?.remove()
+          anchor = leave = undefined
+          for (const each of named.splice(0)) each.remove()
+        }
+        stops.push(
+          effect(() => {
+            const { name, form } = props.get()
+            if (name === undefined) return clear()
+            const values = value.get()
+            const off = disabled.get()
+            const reach = (input: HTMLInputElement) => {
+              input.type = "hidden"
+              if (form === undefined) input.removeAttribute("form")
+              else input.setAttribute("form", form)
+            }
+            if (!anchor) {
+              anchor = element.appendChild(document.createElement("input"))
+              reach(anchor)
+              leave = inForm.attach(anchor)
+            } else reach(anchor)
+            while (named.length > values.length) named.pop()!.remove()
+            values.forEach((each, at) => {
+              const input = (named[at] ??= element.appendChild(document.createElement("input")))
+              reach(input)
+              input.name = name
+              input.value = String(each)
+              input.disabled = off
+            })
+          }),
+          clear
+        )
+        return () => {
+          for (const stop of stops.reverse()) stop()
+        }
+      },
     },
     item(item, options = () => ({})) {
       const on = selected(item)
@@ -142,6 +215,7 @@ export function createListbox<Value = unknown>(
             tabindex: "-1",
             "aria-selected": String(on.get()),
             "aria-disabled": off ? "true" : undefined,
+            ...list.place(options().index),
             "data-selected": flag(on.get()),
             "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),

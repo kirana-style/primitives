@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller } from "@kirana-ui/core/combobox"
+import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { FieldContext } from "./field-context.ts"
 import { positioned } from "./popover.tsx"
 import type { PositionerProps } from "./popover.tsx"
 import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
@@ -29,6 +31,9 @@ export type RootProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   disabled?: boolean
+  required?: boolean
+  inline?: boolean
+  virtualized?: ComboboxProps["virtualized"]
   name?: string
   form?: string
   items?: readonly { value: unknown; label: string }[]
@@ -39,7 +44,8 @@ export type RootProps = {
 
 function Root(props: RootProps): JSX.Element {
   const generated = createUniqueId()
-  const made = controller(createCombobox, () => ({
+  const field = useContext(FieldContext)
+  const made = controller(within(createCombobox, { field }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
@@ -48,6 +54,9 @@ function Root(props: RootProps): JSX.Element {
     open: props.open,
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
+    required: props.required,
+    inline: props.inline,
+    virtualized: props.virtualized,
     name: props.name,
     form: props.form,
     items: props.items,
@@ -80,15 +89,22 @@ function Positioner(props: PositionerProps): JSX.Element {
 
 /** `label` is what is filtered and what the input shows; the item's text when left out. */
 function Item(
-  props: PartComponentProps & { value: unknown; disabled?: boolean; label?: string; id?: string }
+  props: PartComponentProps & {
+    value: unknown
+    disabled?: boolean
+    label?: string
+    id?: string
+    index?: number
+  }
 ): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "label", "id"])
+  const [local, rest] = splitProps(props, ["value", "disabled", "label", "id", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
   const generated = createUniqueId()
   const options = toSignal(() => ({
     disabled: local.disabled,
     label: local.label,
+    index: local.index,
     id: local.id ?? generated,
   }))
   const part = useCombobox().item(value, () => options.get())
@@ -107,6 +123,18 @@ function ItemIndicator(props: PartComponentProps & { keepMounted?: boolean }): J
   return (
     <Show when={selected() || local.keepMounted}>
       <Part part={made.itemIndicator(value)} tag="span" {...rest} />
+    </Show>
+  )
+}
+
+/** A button that empties the input and the value. Drawn while there is something to clear. */
+function Clear(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+  const [local, rest] = splitProps(props, ["keepMounted"])
+  const made = useCombobox()
+  const clearable = fromSignal(made.clearable)
+  return (
+    <Show when={clearable() || local.keepMounted}>
+      <Part part={made.clear} tag="button" {...rest} />
     </Show>
   )
 }
@@ -130,6 +158,7 @@ export const Combobox = {
   Root,
   Input: part("input", "input"),
   Trigger: part("trigger", "button"),
+  Clear,
   Portal,
   Positioner,
   Popup: part("popup", "div"),

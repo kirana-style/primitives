@@ -1,7 +1,7 @@
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
-import type { Listbox as Controller, ListboxGroup } from "@kirana-ui/core/listbox"
+import type { Listbox as Controller, ListboxGroup, ListboxProps } from "@kirana-ui/core/listbox"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -25,6 +25,9 @@ export type RootProps = PartComponentProps & {
   multiple?: boolean
   disabled?: boolean
   loop?: boolean
+  name?: string
+  form?: string
+  virtualized?: ListboxProps["virtualized"]
   id?: string
 }
 
@@ -36,6 +39,9 @@ function Root(props: RootProps): JSX.Element {
     "multiple",
     "disabled",
     "loop",
+    "name",
+    "form",
+    "virtualized",
     "id",
   ])
   const generated = createUniqueId()
@@ -46,6 +52,9 @@ function Root(props: RootProps): JSX.Element {
     multiple: local.multiple,
     disabled: local.disabled,
     loop: local.loop,
+    name: local.name,
+    form: local.form,
+    virtualized: local.virtualized,
     onValueChange: (value: unknown[], details: ChangeDetails) =>
       local.onValueChange?.(value, details),
   }))
@@ -57,12 +66,21 @@ function Root(props: RootProps): JSX.Element {
 }
 
 function Item(
-  props: PartComponentProps & { value: unknown; disabled?: boolean; label?: string }
+  props: PartComponentProps & {
+    value: unknown
+    disabled?: boolean
+    label?: string
+    index?: number
+  }
 ): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "label"])
+  const [local, rest] = splitProps(props, ["value", "disabled", "label", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
-  const options = toSignal(() => ({ disabled: local.disabled, label: local.label }))
+  const options = toSignal(() => ({
+    disabled: local.disabled,
+    label: local.label,
+    index: local.index,
+  }))
   const part = useListbox().item(value, () => defined(options.get()))
   return (
     <ItemContext.Provider value={value}>

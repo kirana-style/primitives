@@ -14,6 +14,8 @@ export interface Typeahead {
   ): Candidate | undefined
   /** Forgets what was typed. */
   reset(): void
+  /** Whether a word is being typed: the next key, a space too, goes on with it. */
+  typing(): boolean
 }
 
 /**
@@ -70,5 +72,6 @@ export function createTypeahead(): Typeahead {
       typed = ""
       typedAt = 0
     },
+    typing: () => typed !== "" && Date.now() - typedAt <= TYPEAHEAD_RESET,
   }
 }

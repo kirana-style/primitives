@@ -10,10 +10,11 @@ import {
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
+import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox } from "@kirana-ui/core/combobox"
 
+import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiCombobox]", exportAs: "kuiCombobox" })
@@ -31,12 +32,19 @@ export class KuiCombobox implements OnInit {
   readonly items = input<readonly { value: unknown; label: string }[]>()
   /** Whether an item is shown for what was typed; `null` shows every item. */
   readonly filter = input<((label: string, query: string) => boolean) | null>()
+  /** In a field, "none" is then wrong. */
+  readonly required = input(false, { transform: booleanAttribute })
+  /** The list is always in the page, with no popup: a command palette. */
+  readonly inline = input(false, { transform: booleanAttribute })
+  /** Every row, when only some are in the page: each item is then given its `index`. */
+  readonly virtualized = input<ListCollection>()
   readonly kuiId = input<string>()
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Combobox
+  private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -51,6 +59,9 @@ export class KuiCombobox implements OnInit {
     form: this.form(),
     items: this.items(),
     filter: this.filter(),
+    required: this.required(),
+    inline: this.inline(),
+    virtualized: this.virtualized(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
@@ -76,7 +87,7 @@ export class KuiCombobox implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createCombobox(this.props())
+    this.controller = createCombobox(this.props(), { field: this.field?.controller })
     this.mount(this.controller)
   }
 }
@@ -173,12 +184,15 @@ export class KuiComboboxItem implements OnInit {
   /** What is filtered and what the input shows; the item's text when left out. */
   readonly label = input<string>()
   readonly kuiId = input<string>()
+  /** Its place among all the rows, in a virtualized list. */
+  readonly index = input<number>()
   readonly root = inject(KuiCombobox)
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly options = inputsSignal(() => ({
     disabled: this.disabled(),
     label: this.label(),
+    index: this.index(),
     id: this.kuiId() ?? this.generated,
   }))
 
@@ -198,6 +212,17 @@ export class KuiComboboxItemIndicator implements OnInit {
     const { controller } = this.item.root
     const value = this.item.value()
     this.present(controller.selected(value), controller.itemIndicator(value))
+  }
+}
+
+/** `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear. */
+@Directive({ selector: "[kuiComboboxClear]" })
+export class KuiComboboxClear implements OnInit {
+  private readonly root = inject(KuiCombobox)
+  private readonly present = presentWhile()
+
+  ngOnInit(): void {
+    this.present(this.root.controller.clearable, this.root.controller.clear)
   }
 }
 

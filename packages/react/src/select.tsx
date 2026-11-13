@@ -84,11 +84,13 @@ export interface ItemProps extends PartComponentProps {
   disabled?: boolean
   /** What typeahead matches and the trigger shows; the item's text when left out. */
   label?: string
+  /** Its place among all the rows, in a virtualized list. */
+  index?: number
 }
 
-function Item({ value, disabled, label, ...props }: ItemProps): ReactElement {
+function Item({ value, disabled, label, index, ...props }: ItemProps): ReactElement {
   const controller = useSelect("Item")
-  const options = useOptions({ disabled, label })
+  const options = useOptions({ disabled, label, index })
   const part = useMemo(
     () => controller.item(value, () => defined(options.get())),
     [controller, value, options]

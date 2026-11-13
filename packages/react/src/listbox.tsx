@@ -34,6 +34,9 @@ function Root<Value>({
   multiple,
   disabled,
   loop,
+  name,
+  form,
+  virtualized,
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
@@ -44,6 +47,9 @@ function Root<Value>({
     multiple,
     disabled,
     loop,
+    name,
+    form,
+    virtualized,
     id,
   }) as unknown as Controller
   return (
@@ -53,9 +59,9 @@ function Root<Value>({
 
 export type ItemProps = PartComponentProps & ListboxItemOptions & { value: unknown }
 
-function Item({ value, disabled, label, ...props }: ItemProps): ReactElement {
+function Item({ value, disabled, label, index, ...props }: ItemProps): ReactElement {
   const controller = useListbox("Item")
-  const options = useOptions({ disabled, label })
+  const options = useOptions({ disabled, label, index })
   const part = useMemo(
     () => controller.item(value, () => defined(options.get())),
     [controller, value, options]

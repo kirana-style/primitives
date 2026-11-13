@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller } from "@kirana-ui/core/combobox"
+import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
 import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
+import { useFieldAround } from "./field-context.ts"
 import { positionerComponent } from "./popover.ts"
 import {
   context,
@@ -32,6 +34,9 @@ const Root = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     disabled: Boolean,
+    required: Boolean,
+    inline: Boolean,
+    virtualized: Object as PropType<ComboboxProps["virtualized"]>,
     name: String,
     form: String,
     items: Array as PropType<readonly { value: unknown; label: string }[]>,
@@ -51,8 +56,9 @@ const Root = defineComponent({
   ],
   setup(props, { slots, emit }) {
     const generated = useId()
+    const field = useFieldAround()
     const made = scope.provide(
-      controller(createCombobox, () => ({
+      controller(within(createCombobox, { field }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,
@@ -61,6 +67,9 @@ const Root = defineComponent({
         open: props.open,
         defaultOpen: props.defaultOpen,
         disabled: props.disabled,
+        required: props.required,
+        inline: props.inline,
+        virtualized: props.virtualized,
         name: props.name,
         form: props.form,
         items: props.items,
@@ -93,6 +102,7 @@ const Item = defineComponent({
     disabled: optional(Boolean),
     label: String,
     id: String,
+    index: Number,
   },
   setup(props, { attrs, slots }) {
     // An item is its value for as long as it is in the page.
@@ -101,6 +111,7 @@ const Item = defineComponent({
     const options = toSignal(() => ({
       disabled: props.disabled,
       label: props.label,
+      index: props.index,
       id: props.id ?? generated,
     }))
     const part = scope.use().item(value, () => options.get())
@@ -125,6 +136,19 @@ const ItemIndicator = defineComponent({
   },
 })
 
+/** A button that empties the input and the value. Drawn while there is something to clear. */
+const Clear = defineComponent({
+  name: "ComboboxClear",
+  inheritAttrs: false,
+  props: { keepMounted: Boolean },
+  setup(props, { attrs, slots }) {
+    const made = scope.use()
+    const clearable = fromSignal(made.clearable)
+    const Element = partComponent("ComboboxClearElement", "button", () => made.clear)
+    return () => (clearable.value || props.keepMounted ? h(Element, attrs, slots) : null)
+  },
+})
+
 /** Drawn while no item is shown for what was typed. */
 const Empty = defineComponent({
   name: "ComboboxEmpty",
@@ -141,6 +165,7 @@ export const Combobox = {
   Root,
   Input: partComponent("ComboboxInput", "input", () => scope.use().input),
   Trigger: partComponent("ComboboxTrigger", "button", () => scope.use().trigger),
+  Clear,
   Portal: portalComponent("ComboboxPortal", () => scope.use().mounted),
   Positioner: positionerComponent(
     "ComboboxPositioner",

@@ -8,8 +8,8 @@
   import { ITEM, useListbox } from "./context.ts"
   import type { PartAttributes } from "../types.ts"
 
-  let { value, disabled, label, ...rest }: { value: unknown } & ListboxItemOptions & PartAttributes = $props()
-  const options = toSignal(() => ({ disabled, label }))
+  let { value, disabled, label, index, ...rest }: { value: unknown } & ListboxItemOptions & PartAttributes = $props()
+  const options = toSignal(() => ({ disabled, label, index }))
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally
   const item = value

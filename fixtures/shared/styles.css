@@ -85,6 +85,9 @@ button {
 }
 
 .item {
+  /* A row: white space between its parts, which each framework keeps or drops, draws nothing. */
+  display: flex;
+  gap: 4px;
   padding: 4px 8px;
   cursor: default;
   outline: none;

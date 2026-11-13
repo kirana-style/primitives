@@ -22,6 +22,7 @@
     "./form": "./src/form.tsx",
     "./hover-card": "./src/hover-card.tsx",
     "./meter": "./src/meter.tsx",
+    "./menu": "./src/menu.tsx",
     "./popover": "./src/popover.tsx",
     "./progress": "./src/progress.tsx",
     "./radio-group": "./src/radio-group.tsx",

@@ -53,6 +53,21 @@ note. Three places hold them:
 - **Ids nobody gave come from the framework**, so the server's and the browser's agree. The
   second fixture page gives no id anywhere and is compared before and after hydration.
 
+## Lists and menus
+
+- **A label needs no group.** A menu's label outside a group is plain text that names
+  nothing; inside one, the group is named by it. Nothing throws either way.
+- **Rows are read from the page, in its order, when a key needs them.** Nothing registers
+  in an order a framework chooses, and a list inside a row keeps its own rows.
+- **A press on a row is a click.** Enter and Space click the highlighted row, so a caller's
+  `onClick` hears the keyboard as it hears the pointer, and a row drawn as a link follows it.
+- **A checkbox or radio item leaves the menu open**; whether choosing closes is the item's
+  `closeOnClick`.
+- **Focus is on the row**, not `aria-activedescendant`: a phone's screen reader does not
+  follow the second.
+- **White space between a row's parts is drawn by some frameworks and not others.** A row is
+  a flex box, or its parts are elements with nothing between them.
+
 ## Forms
 
 - **`reset` is told before it happens.** The event is fired, then the browser puts the native
@@ -88,6 +103,10 @@ note. Three places hold them:
   render is exactly that when another part is drawn from it: the avatar wrote its image's
   address while rendering, which started the load and changed the status its fallback reads.
   A prop reaches the core after the render commits. Only the development build says so.
+- **React hands an event in a portal to the components around the portal**, not the elements:
+  a key pressed in a submenu reached the handler of the menu it was drawn inside, which then
+  moved its own highlight. A handler on a popup checks the event came from its own element.
+  The other four follow the page, where a portal is elsewhere.
 - **Vue** may hand over an element before it is in the page. Anything that reads where the
   element is (`getRootNode()`, `closest("fieldset")`, a measure) waits until it is connected.
   Its `Teleport` writes markers on a server that hydration then empties: no portal is drawn on
@@ -98,7 +117,8 @@ note. Three places hold them:
 - **Angular** renders in a task of its own without zones: a test waits before reading the page
   after a press. Its root element is inline unless styled (`display: block`), which lets
   Chrome's scroll anchoring move the page when a portal is removed. On a server a part is
-  written once, with no listeners.
+  written once, with no listeners. An input's options are written where the input is: its
+  compiler does not follow a constant (`NG1010`), and only the fixture's build says so.
 - **Solid and Svelte** attach children around their parent in an order of their own: a list
   reads its rows in the page's order at use time, never the order they registered in.
 
@@ -122,6 +142,22 @@ note. Three places hold them:
   layer, not imported by it: a tooltip does not carry a focus trap, a dialog does not carry
   the positioning code. A shared service that imports everything makes every component pay
   for the heaviest one; the size budgets caught it.
+- **A list scrolls itself, never the page.** `scrollIntoView` scrolls every ancestor, and a
+  list that has just opened is not placed yet: highlighting its first row took the page to
+  the top, where the list stood before its place was known. Five adapters did the same, so
+  comparing them said nothing; no scenario read the page's scroll. A row is now brought into
+  view inside the list's own scrolling box only. Held by `tests/core/list.test.ts`,
+  `tests/core/menu.test.ts` ("does not move the page") and the select's and the menu's
+  scenarios, which read `scrollY` around an opening.
+- **A popup and one opened from it close in either order.** A caller who holds both `open`
+  values gives them back in their framework's order: Svelte closed the menu before its
+  submenu, focus was in the submenu, so the menu gave nothing back and the submenu's trigger
+  was already inert. Focus in a popup opened from this one (its trigger is inside this one)
+  counts as inside it. Held by `tests/core/menu.test.ts` ("whichever of the two closes
+  first") and the menu's scenario on five adapters.
+- **Where the pointer left is not in the `pointerleave`.** Its coordinates are where the
+  pointer is by then, already on the next row. The way from a submenu's trigger to its popup
+  starts from the pointer's last move on the trigger.
 - **Layers close in any order.** What a layer makes inert is counted, and given back when the
   last layer that needs it lets go; a layer that was already in the page when another opened
   is lifted out of that one's isolation while it is open. Held by `tests/core/ledger.test.ts`.

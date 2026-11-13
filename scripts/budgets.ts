@@ -24,6 +24,7 @@ const COMPONENTS: Record<string, string[]> = {
   fieldset: ["fieldset"],
   form: ["form"],
   "hover-card": ["preview-card"],
+  menu: ["menu"],
   meter: ["meter"],
   popover: ["popover"],
   progress: ["progress"],

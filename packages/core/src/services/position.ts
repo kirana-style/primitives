@@ -175,11 +175,17 @@ export interface PopupPlacement {
   readonly positioning: Signal<Partial<PositionOptions>>
 }
 
-/** A place against a trigger, with a kind's own defaults under what its positioner asks for. */
-export function createPlacement(defaults: Partial<PositionOptions> = {}): PopupPlacement {
+/**
+ * A place against a trigger, with a kind's own defaults under what its positioner asks for. The
+ * defaults may be read from signals: a submenu's side follows the reading direction.
+ */
+export function createPlacement(
+  defaults: Partial<PositionOptions> | (() => Partial<PositionOptions>) = {}
+): PopupPlacement {
   const positioning = signal<Partial<PositionOptions>>({})
+  const own = typeof defaults === "function" ? defaults : () => defaults
   const position = createPosition(
-    computed(() => ({ ...POSITION_DEFAULTS, ...defaults, ...positioning.get() }), sameOptions)
+    computed(() => ({ ...POSITION_DEFAULTS, ...own(), ...positioning.get() }), sameOptions)
   )
   return { position, positioning }
 }

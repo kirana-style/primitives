@@ -1259,8 +1259,15 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await submitted()) === "Banana", "the value is submitted with the form")
     expect((await attribute("s1-trigger", "role")) === "combobox", "the trigger is a combobox")
 
+    // The press itself may bring the trigger into view: that is not the list's doing.
+    await id("s1-trigger").scrollIntoViewIfNeeded()
+    const scrolled = await page.evaluate(() => window.scrollY)
     await id("s1-trigger").click()
     await snapshot("open")
+    expect(
+      (await page.evaluate(() => window.scrollY)) === scrolled,
+      "opening the list does not scroll the page"
+    )
     expect((await attribute("s1-popup", "role")) === "listbox", "the popup is a listbox")
     expect((await attribute("s1-Banana", "aria-selected")) === "true", "the value is selected")
     expect(
@@ -1319,6 +1326,151 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("closed by Escape")
     expect((await output()) === "Cherry", "Escape keeps the value")
     expect((await focused()) === "s1-trigger", "focus returns to the trigger")
+  },
+
+  async menu({ page, snapshot, id, present, attribute, focused }) {
+    const output = async () => ((await id("mn1-output").textContent()) ?? "").trim()
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    // With room under it: where its popups go is then the same whatever the page's scroll.
+    await id("mn1-trigger").evaluate((element) => element.scrollIntoView({ block: "start" }))
+    expect((await attribute("mn1-trigger", "aria-haspopup")) === "menu", "the trigger has a menu")
+    expect((await attribute("mn1-trigger", "aria-expanded")) === "false", "which is closed")
+
+    const scroll = () => page.evaluate(() => window.scrollY)
+    const before = await scroll()
+    await id("mn1-trigger").focus()
+    await key("Enter")
+    await snapshot("open from the keyboard")
+    expect((await scroll()) === before, "opening the menu does not scroll the page")
+    expect((await attribute("mn1-popup", "role")) === "menu", "the popup is a menu")
+    expect(
+      (await attribute("mn1-popup", "aria-labelledby")) === "mn1-trigger",
+      "named by its trigger"
+    )
+    expect((await focused()) === "mn1-new", "from the keyboard, the first item has focus")
+    expect((await attribute("mn1-new", "data-highlighted")) === "", "and the highlight")
+    expect(
+      (await attribute("mn1-lone", "role")) === "presentation",
+      "a label in no group is plain text"
+    )
+    expect(
+      (await attribute("mn1-group", "aria-labelledby")) === "mn1-g-label",
+      "a group is named by its label"
+    )
+
+    await key("ArrowDown")
+    expect((await focused()) === "mn1-print", "ArrowDown passes a disabled item")
+    await key("ArrowDown")
+    expect((await focused()) === "mn1-wrap", "a separator is not a stop")
+    expect((await attribute("mn1-wrap", "role")) === "menuitemcheckbox", "a checkbox item")
+    expect((await attribute("mn1-wrap", "aria-checked")) === "true", "checked by its default")
+    await key("Enter")
+    await snapshot("a checkbox item unchecked")
+    expect((await attribute("mn1-wrap", "aria-checked")) === "false", "Enter toggles it")
+    expect(await present("mn1-popup"), "and the menu stays open")
+    await key(" ")
+    expect((await attribute("mn1-wrap", "aria-checked")) === "true", "Space toggles it back")
+
+    await key("ArrowDown")
+    expect((await focused()) === "mn1-list", "into the radio group")
+    expect((await attribute("mn1-list", "aria-checked")) === "true", "the value is checked")
+    await key("ArrowDown")
+    await key("Enter")
+    await snapshot("a radio item chosen")
+    expect((await attribute("mn1-grid", "aria-checked")) === "true", "Enter chooses a radio item")
+    expect((await attribute("mn1-list", "aria-checked")) === "false", "one at a time")
+    expect((await output()) === "none grid", "the caller hears the value")
+    expect(await present("mn1-popup"), "and the menu stays open")
+
+    await key("ArrowDown")
+    expect((await focused()) === "mn1-share", "a submenu's trigger is an item")
+    expect((await attribute("mn1-share", "aria-haspopup")) === "menu", "that has a menu")
+    await key("ArrowDown")
+    expect((await focused()) === "mn1-new", "past the last item, the first")
+    await key("ArrowUp")
+    expect((await focused()) === "mn1-share", "and back")
+    await key("ArrowLeft")
+    expect(!(await present("mn1s-popup")), "the arrow against the text opens nothing")
+
+    await key("ArrowRight")
+    await snapshot("a submenu open")
+    expect((await scroll()) === before, "nor does moving through it or opening a submenu")
+    expect((await focused()) === "mn1s-mail", "ArrowRight opens the submenu on its first item")
+    expect((await attribute("mn1-share", "aria-expanded")) === "true", "its trigger says so")
+    expect((await attribute("mn1-share", "data-highlighted")) === "", "and keeps the highlight")
+    const beside = await page.evaluate(() => {
+      const trigger = document.querySelector('[data-testid="mn1-share"]')!.getBoundingClientRect()
+      const popup = document.querySelector('[data-testid="mn1s-popup"]')!.getBoundingClientRect()
+      return popup.left >= trigger.right - 1
+    })
+    expect(beside, "the submenu is beside its trigger")
+    await page.keyboard.type("p")
+    expect((await focused()) === "mn1s-mail", "a letter typed in a submenu is not its menu's")
+    await key("ArrowLeft")
+    expect((await focused()) === "mn1-share", "ArrowLeft goes back to the trigger")
+    expect(!(await present("mn1s-popup")), "and closes the submenu")
+    expect(await present("mn1-popup"), "not the menu")
+
+    await key("Enter")
+    expect((await focused()) === "mn1s-mail", "Enter opens it too")
+    await key("Escape")
+    expect((await focused()) === "mn1-share", "Escape closes one menu")
+    expect(await present("mn1-popup"), "at a time")
+    await key("ArrowRight")
+    await key("ArrowDown")
+    await key("Enter")
+    await snapshot("chosen in a submenu")
+    expect(!(await present("mn1s-popup")), "an item chosen in a submenu closes it")
+    expect(!(await present("mn1-popup")), "and every menu it was opened from")
+    expect((await output()) === "link grid", "the item's own press is heard")
+    expect((await focused()) === "mn1-trigger", "focus returns to the trigger")
+
+    await id("mn1-trigger").click()
+    await snapshot("open from a pointer")
+    expect((await focused()) === "mn1-popup", "from a pointer, the menu itself has focus")
+    await id("mn1-print").hover()
+    expect((await focused()) === "mn1-print", "the pointer moves the highlight and focus")
+    await id("mn1-open").hover()
+    await settled(page)
+    expect((await attribute("mn1-print", "data-highlighted")) === null, "and takes it away")
+    expect((await attribute("mn1-open", "data-highlighted")) === null, "a disabled item has none")
+    await id("mn1-share").hover()
+    await page.waitForTimeout(250)
+    await settled(page)
+    expect(await present("mn1s-popup"), "a pointer resting on a submenu's trigger opens it")
+    expect((await focused()) === "mn1-share", "focus stays on the trigger")
+    await id("mn1s-mail").hover()
+    await snapshot("a submenu open from a pointer")
+    expect((await focused()) === "mn1s-mail", "until the pointer goes in")
+    expect((await attribute("mn1-share", "data-popup-open")) === "", "the trigger shows it is open")
+    await id("mn1-print").hover()
+    await settled(page)
+    expect(!(await present("mn1s-popup")), "the pointer on another item closes the submenu")
+    await id("mn1-new").click()
+    await settled(page)
+    expect(!(await present("mn1-popup")), "a pressed item closes the menu")
+    expect((await output()) === "new grid", "and is heard")
+
+    await id("mn1-trigger").click()
+    await settled(page)
+    await page.keyboard.type("p")
+    expect((await focused()) === "mn1-print", "typing finds an item by its name")
+    await page.waitForTimeout(600)
+    await page.keyboard.type("n")
+    // "⌘N" beside New is not part of its name; "N" finds it by "New".
+    expect((await focused()) === "mn1-new", "not by the shortcut drawn beside it")
+    await key("Tab")
+    expect(!(await present("mn1-popup")), "Tab closes the menu")
+    expect((await focused()) === "mn1-trigger", "and its trigger has focus")
+
+    await id("mn1-trigger").click()
+    await settled(page)
+    await id("mn1-output").click()
+    await snapshot("closed by a press outside")
+    expect(!(await present("mn1-popup")), "a press outside closes the menu")
   },
 }
 

@@ -1,6 +1,6 @@
 import { focusScope, isolate } from "./focus.ts"
 import type { FocusScopeOptions } from "./focus.ts"
-import { layerBelow } from "./layers.ts"
+import { layerBelow, layersFrom } from "./layers.ts"
 import type { PopupFocus } from "./popup.ts"
 import { lockScroll } from "./scroll-lock.ts"
 
@@ -17,6 +17,9 @@ export function popupFocus(initial?: FocusScopeOptions["initial"]): PopupFocus {
       initial,
       restore: context.trigger,
       fallback: () => layerBelow(element),
+      // Focus in a popup opened from this one is this one's to give back: the two may close
+      // in either order.
+      within: () => layersFrom(element),
     })
     if (!context.modal) return release
     const free = isolate(element, () => [context.backdrop()])

@@ -71,6 +71,23 @@ export function layerBelow(element: HTMLElement): HTMLElement | undefined {
   return index > 0 ? stack[index - 1]!.element : undefined
 }
 
+/**
+ * The popups opened from inside `element`, and from inside those: what is its own though it is
+ * drawn elsewhere in the page. A popup is opened from where its trigger is.
+ */
+export function layersFrom(element: HTMLElement): HTMLElement[] {
+  const own = [element]
+  // In the stack's order: a popup is under what was opened from it.
+  for (const layer of stack) {
+    if (own.includes(layer.element)) continue
+    const from = layer.branches?.() ?? []
+    if (from.some((branch) => branch && own.some((each) => each.contains(branch)))) {
+      own.push(layer.element)
+    }
+  }
+  return own.slice(1)
+}
+
 /** How many layers of this kind are open above `element`'s own. */
 export function layersAbove(element: HTMLElement, kind: string): number {
   const index = stack.findIndex((each) => each.element === element)

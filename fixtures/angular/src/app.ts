@@ -27,6 +27,22 @@ import {
   KuiHoverCardPortal,
   KuiHoverCardPositioner,
   KuiHoverCardTrigger,
+  KuiMenu,
+  KuiMenuCheckboxItem,
+  KuiMenuCheckboxItemIndicator,
+  KuiMenuGroup,
+  KuiMenuGroupLabel,
+  KuiMenuItem,
+  KuiMenuPopup,
+  KuiMenuPortal,
+  KuiMenuPositioner,
+  KuiMenuRadioGroup,
+  KuiMenuRadioItem,
+  KuiMenuRadioItemIndicator,
+  KuiMenuSeparator,
+  KuiMenuSubmenuRoot,
+  KuiMenuSubmenuTrigger,
+  KuiMenuTrigger,
   KuiMeter,
   KuiMeterIndicator,
   KuiMeterLabel,
@@ -128,6 +144,22 @@ import {
     KuiHoverCardPortal,
     KuiHoverCardPositioner,
     KuiHoverCardTrigger,
+    KuiMenu,
+    KuiMenuCheckboxItem,
+    KuiMenuCheckboxItemIndicator,
+    KuiMenuGroup,
+    KuiMenuGroupLabel,
+    KuiMenuItem,
+    KuiMenuPopup,
+    KuiMenuPortal,
+    KuiMenuPositioner,
+    KuiMenuRadioGroup,
+    KuiMenuRadioItem,
+    KuiMenuRadioItemIndicator,
+    KuiMenuSeparator,
+    KuiMenuSubmenuRoot,
+    KuiMenuSubmenuTrigger,
+    KuiMenuTrigger,
     KuiMeter,
     KuiMeterIndicator,
     KuiMeterLabel,
@@ -557,6 +589,74 @@ import {
         </form>
         <output data-testid="s1-output">{{ fruit() ?? "none" }}</output>
       </section>
+      <section data-fixture="menu">
+        <ng-container kuiMenu [kuiId]="'mn1'">
+          <button kuiMenuTrigger data-testid="mn1-trigger">File</button>
+          <ng-template kuiMenuPortal>
+            <div kuiMenuPositioner [sideOffset]="4" data-testid="mn1-positioner">
+              <div kuiMenuPopup class="popup" data-testid="mn1-popup">
+                <div kuiMenuGroupLabel data-testid="mn1-lone">Document</div>
+                <div kuiMenuItem class="item" data-testid="mn1-new" (click)="action.set('new')">
+                  <span>New</span><kbd aria-hidden="true">⌘N</kbd>
+                </div>
+                <div kuiMenuItem class="item" [disabled]="true" data-testid="mn1-open">Open</div>
+                <div kuiMenuItem class="item" data-testid="mn1-print" (click)="action.set('print')">
+                  Print
+                </div>
+                <div kuiMenuSeparator data-testid="mn1-separator"></div>
+                <div
+                  kuiMenuCheckboxItem
+                  class="item"
+                  [defaultChecked]="true"
+                  data-testid="mn1-wrap"
+                >
+                  <span *kuiMenuCheckboxItemIndicator>✓</span>
+                  <span>Word wrap</span>
+                </div>
+                <div kuiMenuGroup [kuiId]="'mn1-g'" data-testid="mn1-group">
+                  <div kuiMenuGroupLabel data-testid="mn1-label">View</div>
+                  <div kuiMenuRadioGroup [(value)]="view" data-testid="mn1-views">
+                    <div kuiMenuRadioItem [value]="'list'" class="item" data-testid="mn1-list">
+                      <span *kuiMenuRadioItemIndicator>•</span>
+                      <span>List</span>
+                    </div>
+                    <div kuiMenuRadioItem [value]="'grid'" class="item" data-testid="mn1-grid">
+                      <span *kuiMenuRadioItemIndicator>•</span>
+                      <span>Grid</span>
+                    </div>
+                  </div>
+                </div>
+                <ng-container kuiMenuSubmenuRoot [kuiId]="'mn1s'">
+                  <div kuiMenuSubmenuTrigger class="item" data-testid="mn1-share">Share</div>
+                  <ng-template kuiMenuPortal>
+                    <div kuiMenuPositioner data-testid="mn1s-positioner">
+                      <div kuiMenuPopup class="popup" data-testid="mn1s-popup">
+                        <div
+                          kuiMenuItem
+                          class="item"
+                          data-testid="mn1s-mail"
+                          (click)="action.set('mail')"
+                        >
+                          Mail
+                        </div>
+                        <div
+                          kuiMenuItem
+                          class="item"
+                          data-testid="mn1s-link"
+                          (click)="action.set('link')"
+                        >
+                          Link
+                        </div>
+                      </div>
+                    </div>
+                  </ng-template>
+                </ng-container>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <output data-testid="mn1-output">{{ action() }} {{ view() }}</output>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -747,6 +847,8 @@ export class App {
   protected readonly fruits = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
   protected readonly controlled = signal<boolean | undefined>(false)
   protected readonly fruit = signal<unknown>("Banana")
+  protected readonly action = signal("none")
+  protected readonly view = signal<unknown>("list")
   protected readonly presses = signal(0)
   protected readonly locked = signal(false)
   protected readonly count = signal(0)

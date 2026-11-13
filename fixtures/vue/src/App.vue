@@ -12,6 +12,7 @@ import {
   Fieldset,
   Form,
   HoverCard,
+  Menu,
   Meter,
   Popover,
   Progress,
@@ -48,6 +49,8 @@ const reading = ref<"ltr" | "rtl">("rtl")
 const rejected = ref<Record<string, string> | undefined>(undefined)
 const span = ref<number[]>([20, 80])
 const fruit = ref<string | null>("Banana")
+const action = ref("none")
+const view = ref<unknown>("list")
 const presses = ref(0)
 const locked = ref(false)
 
@@ -374,6 +377,61 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         </Select.Root>
       </form>
       <output data-testid="s1-output">{{ fruit ?? "none" }}</output>
+    </section>
+    <section data-fixture="menu">
+      <Menu.Root id="mn1">
+        <Menu.Trigger data-testid="mn1-trigger">File</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner :side-offset="4" data-testid="mn1-positioner">
+            <Menu.Popup class="popup" data-testid="mn1-popup">
+              <Menu.GroupLabel data-testid="mn1-lone">Document</Menu.GroupLabel>
+              <Menu.Item class="item" data-testid="mn1-new" @click="action = 'new'">
+                <span>New</span><kbd aria-hidden="true">⌘N</kbd>
+              </Menu.Item>
+              <Menu.Item class="item" disabled data-testid="mn1-open"> Open </Menu.Item>
+              <Menu.Item class="item" data-testid="mn1-print" @click="action = 'print'">
+                Print
+              </Menu.Item>
+              <Menu.Separator data-testid="mn1-separator" />
+              <Menu.CheckboxItem class="item" default-checked data-testid="mn1-wrap">
+                <Menu.CheckboxItemIndicator>✓</Menu.CheckboxItemIndicator>
+                <span>Word wrap</span>
+              </Menu.CheckboxItem>
+              <Menu.Group id="mn1-g" data-testid="mn1-group">
+                <Menu.GroupLabel data-testid="mn1-label">View</Menu.GroupLabel>
+                <Menu.RadioGroup v-model:value="view" data-testid="mn1-views">
+                  <Menu.RadioItem value="list" class="item" data-testid="mn1-list">
+                    <Menu.RadioItemIndicator>•</Menu.RadioItemIndicator>
+                    <span>List</span>
+                  </Menu.RadioItem>
+                  <Menu.RadioItem value="grid" class="item" data-testid="mn1-grid">
+                    <Menu.RadioItemIndicator>•</Menu.RadioItemIndicator>
+                    <span>Grid</span>
+                  </Menu.RadioItem>
+                </Menu.RadioGroup>
+              </Menu.Group>
+              <Menu.SubmenuRoot id="mn1s">
+                <Menu.SubmenuTrigger class="item" data-testid="mn1-share">
+                  Share
+                </Menu.SubmenuTrigger>
+                <Menu.Portal>
+                  <Menu.Positioner data-testid="mn1s-positioner">
+                    <Menu.Popup class="popup" data-testid="mn1s-popup">
+                      <Menu.Item class="item" data-testid="mn1s-mail" @click="action = 'mail'">
+                        Mail
+                      </Menu.Item>
+                      <Menu.Item class="item" data-testid="mn1s-link" @click="action = 'link'">
+                        Link
+                      </Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.SubmenuRoot>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+      <output data-testid="mn1-output"> {{ action }} {{ view }} </output>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

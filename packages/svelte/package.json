@@ -61,6 +61,10 @@
       "svelte": "./src/hover-card.ts",
       "default": "./src/hover-card.ts"
     },
+    "./menu": {
+      "svelte": "./src/menu.ts",
+      "default": "./src/menu.ts"
+    },
     "./meter": {
       "svelte": "./src/meter.ts",
       "default": "./src/meter.ts"

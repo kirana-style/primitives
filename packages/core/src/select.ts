@@ -2,14 +2,15 @@ import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { batch, computed, keyed, signal } from "./reactivity.ts"
+import { batch, computed, effect, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createFormControl } from "./services/form-control.ts"
 import { popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
-import { stepTo } from "./services/roving.ts"
+import { createList } from "./services/list.ts"
+import type { ListRow } from "./services/list.ts"
 import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
 export interface SelectProps<Value = unknown> {
@@ -72,12 +73,6 @@ export interface Select<Value = unknown> {
 const NOTHING = () => {}
 const NO_PROPS = computed(() => ({}))
 const INDICATOR_PROPS = computed(() => ({ "aria-hidden": "true" }))
-const NONE = Symbol("none")
-
-interface Row<Value> {
-  value: Value
-  options: () => SelectItemOptions
-}
 
 export function createSelect<Value = unknown>(
   props: ReadonlySignal<SelectProps<Value>>,
@@ -122,13 +117,10 @@ export function createSelect<Value = unknown>(
     placement,
   })
 
-  const highlighted = signal<Value | typeof NONE>(NONE)
-  const isHighlighted = keyed(highlighted)
   const isSelected = keyed(value as ReadonlySignal<Value | null>)
-
-  // The items in the page, by element. Filled as each attaches: nothing re-renders for it.
-  const rows = new WeakMap<Element, Row<Value>>()
-  const elements = new Map<Value, HTMLElement>()
+  // The rows are read from the page: nothing re-renders for one to be known.
+  const list = createList({ selector: '[role="option"]' })
+  const rows = new Map<Value, ListRow>()
   // The labels learned from the markup, so the trigger still names a value once the list is gone.
   const labels = new Map<Value, string>()
   const labelsChanged = signal(0)
@@ -139,12 +131,6 @@ export function createSelect<Value = unknown>(
   let trigger: HTMLElement | undefined
   let popup: HTMLElement | undefined
 
-  function labelOf(element: Element, row: Row<Value>): string {
-    // Read when it is needed, from the page as it is now.
-    const text = texts.get(row.value) ?? element
-    return row.options().label ?? textOf(text)
-  }
-
   function learn(item: Value, text: string) {
     if (labels.get(item) === text) return
     labels.set(item, text)
@@ -152,40 +138,11 @@ export function createSelect<Value = unknown>(
     if (Object.is(value.peek(), item)) labelsChanged.set(labelsChanged.peek() + 1)
   }
 
-  /** The items in document order, read from the list when a key needs them. */
-  function enabled(): HTMLElement[] {
-    if (!popup) return []
-    return [...popup.querySelectorAll<HTMLElement>('[role="option"]')].filter((each) => {
-      const row = rows.get(each)
-      return row !== undefined && !row.options().disabled
-    })
-  }
-
-  function highlight(element: HTMLElement | undefined, focus: boolean) {
-    const row = element && rows.get(element)
-    if (!element || !row) return
-    highlighted.set(row.value)
-    if (focus) {
-      element.focus({ preventScroll: true })
-      element.scrollIntoView({ block: "nearest" })
-    }
-  }
-
-  function move(step: 1 | -1 | "first" | "last") {
-    const list = enabled()
-    if (list.length === 0) return
-    const current = highlighted.peek()
-    const index = current === NONE ? -1 : list.indexOf(elements.get(current)!)
-    // With no row highlighted, up starts from the end.
-    const to = index < 0 && step === -1 ? "last" : step
-    highlight(list[stepTo(list.length, index, to, false)], true)
-  }
-
+  // For choosing by a letter while the list is closed: the open list has its own.
   const typeahead = createTypeahead()
 
   function setOpen(next: boolean, by: ChangeDetails) {
     if (disabled.peek()) return
-    if (next) highlighted.set(value.peek() ?? NONE)
     open.set(next, by)
   }
 
@@ -194,11 +151,9 @@ export function createSelect<Value = unknown>(
     if (!by.canceled) member?.changed(next === null ? "" : String(next))
   }
 
-  function choose(element: HTMLElement, event: Event) {
-    const row = rows.get(element)
-    if (!row || row.options().disabled) return
+  function choose(item: Value, event: Event) {
     batch(() => {
-      setValue(row.value, details("item-press", event))
+      setValue(item, details("item-press", event))
       setOpen(false, details("item-press", event))
     })
   }
@@ -299,60 +254,41 @@ export function createSelect<Value = unknown>(
           ...layer.placed(),
           onKeyDown(event: KeyboardEvent) {
             switch (event.key) {
-              case "ArrowDown":
-                event.preventDefault()
-                return move(1)
-              case "ArrowUp":
-                event.preventDefault()
-                return move(-1)
-              case "Home":
-                event.preventDefault()
-                return move("first")
-              case "End":
-                event.preventDefault()
-                return move("last")
               case "Enter":
-              case " ": {
+              case " ":
                 event.preventDefault()
-                const current = highlighted.peek()
-                const element = current === NONE ? undefined : elements.get(current)
-                if (element) choose(element, event)
-                return
-              }
+                // The row's own press: what a caller's handler on it hears too.
+                return list.highlighted.peek()?.element()?.click()
               case "Tab":
                 // The list is one stop: Tab leaves it, and the trigger takes focus back.
                 event.preventDefault()
                 return setOpen(false, details("focus-out", event))
             }
-            if (printable(event)) {
-              const list = enabled()
-              const current = highlighted.peek()
-              const match = typeahead.match(
-                event.key,
-                list.map((element) => ({ label: labelOf(element, rows.get(element)!), element })),
-                current === NONE ? -1 : list.indexOf(elements.get(current)!)
-              )
-              if (match) highlight(match.element, true)
-            }
+            list.key(event)
           },
         }
       }),
       attach(element) {
         popup = element
-        const detach = layer.attach(element)
-        // The items attach around the list, in an order each framework chooses: once all have,
-        // the chosen one takes focus, or the list itself. Unless it closed in the meantime.
-        queueMicrotask(() => {
-          if (popup !== element || !open.peek()) return
-          const current = highlighted.peek()
-          const target = current === NONE ? undefined : elements.get(current)
-          if (target) highlight(target, true)
-          else element.focus({ preventScroll: true })
-        })
+        const stops = [
+          list.attach(element),
+          layer.attach(element),
+          // Each time it opens: the items attach around the list, in an order each framework
+          // chooses. Once all have, the chosen one takes focus, or the list itself. Unless it
+          // closed in the meantime.
+          effect(() => {
+            if (!open.get()) return
+            queueMicrotask(() => {
+              if (popup !== element || !open.peek()) return
+              const chosen = value.peek()
+              const row = chosen === null ? undefined : rows.get(chosen)
+              list.highlight(row?.element() && !row.disabled() ? row : undefined, true)
+            })
+          }),
+        ]
         return () => {
-          detach()
+          for (const stop of stops.reverse()) stop()
           if (popup === element) popup = undefined
-          highlighted.set(NONE)
         }
       },
     },
@@ -389,7 +325,8 @@ export function createSelect<Value = unknown>(
     },
     item(item, options = () => ({})) {
       const selected = isSelected.is(item)
-      const active = isHighlighted.is(item)
+      // Its name is its text part's when it has one, read when it is needed.
+      const row = list.row(options, (element) => textOf(texts.get(item) ?? element))
       return {
         props: computed(() => {
           const off = Boolean(options().disabled)
@@ -399,19 +336,20 @@ export function createSelect<Value = unknown>(
             "aria-selected": String(selected.get()),
             "aria-disabled": off ? "true" : undefined,
             "data-selected": flag(selected.get()),
-            "data-highlighted": flag(active.get()),
+            "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),
-            onPointerMove(event: PointerEvent) {
-              if (off || active.peek()) return
-              highlight(event.currentTarget as HTMLElement, true)
+            onPointerMove() {
+              if (off || row.active.peek()) return
+              list.highlight(row, true)
             },
-            onClick: (event: Event) => choose(event.currentTarget as HTMLElement, event),
+            onClick(event: Event) {
+              if (!options().disabled) choose(item, event)
+            },
           }
         }),
         attach(element) {
-          const row = { value: item, options }
-          rows.set(element, row)
-          elements.set(item, element)
+          const detach = row.attach(element)
+          rows.set(item, row)
           // A label given names it; else its text part does (which may attach before or after
           // the item, as each framework orders them); else its whole text.
           const given = options().label
@@ -420,11 +358,12 @@ export function createSelect<Value = unknown>(
             learn(item, given)
           } else {
             queueMicrotask(() => {
-              if (!texts.has(item) && element.isConnected) learn(item, labelOf(element, row))
+              if (!texts.has(item) && element.isConnected) learn(item, row.label())
             })
           }
           return () => {
-            if (elements.get(item) === element) elements.delete(item)
+            detach()
+            if (rows.get(item) === row) rows.delete(item)
           }
         },
       }

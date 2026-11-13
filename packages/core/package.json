@@ -24,6 +24,7 @@
     "./fieldset": "./src/fieldset.ts",
     "./form": "./src/form.ts",
     "./hover-card": "./src/hover-card.ts",
+    "./menu": "./src/menu.ts",
     "./meter": "./src/meter.ts",
     "./popover": "./src/popover.ts",
     "./progress": "./src/progress.ts",

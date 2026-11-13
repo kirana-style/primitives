@@ -25,6 +25,29 @@ function page(anchorStyle: string, given: Partial<PositionOptions> = {}, dir?: "
 const box = (element: Element) => element.getBoundingClientRect()
 
 describe("positioning", () => {
+  it("follows its anchor only while it is told to: a popup on its way out stays put", async () => {
+    const root = mount(`
+      <button id="anchor" style="position: fixed; left: 100px; top: 100px; width: 80px; height: 20px; padding: 0; border: 0">A</button>
+      <div id="positioner"><div style="width: 120px; height: 40px"></div></div>`)
+    const position = createPosition(signal<PositionOptions>({ ...POSITION_DEFAULTS }))
+    const positioner = find(root, "positioner")
+    const anchor = find(root, "anchor")
+    const following = signal(true)
+    onTestFinished(position.attach(positioner, anchor, following))
+    await expect.poll(() => position.placed.peek()).toBe(true)
+    anchor.style.top = "200px"
+    await expect.poll(() => box(positioner).top).toBe(220)
+    following.set(false)
+    anchor.style.top = "300px"
+    anchor.style.width = "40px"
+    await new Promise((done) => setTimeout(done, 100))
+    expect(box(positioner).top).toBe(220)
+    expect(positioner.style.getPropertyValue("--anchor-width")).toBe("80px")
+    // Open again, it is placed where its anchor is by now.
+    following.set(true)
+    await expect.poll(() => box(positioner).top).toBe(320)
+  })
+
   it("places the popup under its anchor, centred, and says where", async () => {
     const { position, positioner, placed } = page("left: 100px; top: 100px")
     await placed()

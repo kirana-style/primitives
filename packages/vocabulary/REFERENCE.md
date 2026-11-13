@@ -402,6 +402,138 @@ An element that points at the trigger, placed along the popup's edge.
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
 
+## Menu
+
+### Menu.Trigger
+
+The button that opens the menu, and what it is placed against.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the menu is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Menu.Positioner
+
+Places the menu against its trigger. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Menu.Popup
+
+The menu itself: the list of items.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+### Menu.Arrow
+
+An element that points at the trigger.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
+
+### Menu.Item
+
+An action. Choosing it closes the menu.
+
+| Attribute | When |
+| --- | --- |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Menu.Group
+
+Items that belong together, named by their label.
+
+### Menu.GroupLabel
+
+The name of a group. Outside a group it is plain text, and names nothing.
+
+### Menu.Separator
+
+A line between items.
+
+### Menu.CheckboxItem
+
+An item that is checked or not. Choosing it leaves the menu open.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Menu.CheckboxItemIndicator
+
+A mark a checkbox item shows while it is checked.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+
+### Menu.RadioGroup
+
+Radio items of which one is chosen.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Menu.RadioItem
+
+One choice of a radio group. Choosing it leaves the menu open.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Menu.RadioItemIndicator
+
+A mark a radio item shows while it is the chosen one.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+
+### Menu.SubmenuTrigger
+
+An item that opens a menu beside it.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when its menu is open. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
 ## Meter
 
 ### Meter.Root

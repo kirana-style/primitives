@@ -12,6 +12,7 @@ import { fieldVocabulary } from "./field.vocabulary.ts"
 import { fieldsetVocabulary } from "./fieldset.vocabulary.ts"
 import { formVocabulary } from "./form.vocabulary.ts"
 import { hoverCardVocabulary } from "./hover-card.vocabulary.ts"
+import { menuVocabulary } from "./menu.vocabulary.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
 import { selectVocabulary } from "./select.vocabulary.ts"
@@ -38,6 +39,7 @@ export const vocabulary = {
   fieldset: fieldsetVocabulary,
   form: formVocabulary,
   hoverCard: hoverCardVocabulary,
+  menu: menuVocabulary,
   meter: meterVocabulary,
   popover: popoverVocabulary,
   progress: progressVocabulary,

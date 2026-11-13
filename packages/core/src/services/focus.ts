@@ -26,6 +26,8 @@ export interface FocusScopeOptions {
   restore?: () => HTMLElement | null | undefined
   /** Where focus goes when neither is in the page any more. */
   fallback?: () => HTMLElement | null | undefined
+  /** Elements that count as inside though they are elsewhere in the page: what was opened from it. */
+  within?: () => readonly Element[]
 }
 
 /** Whether an element can take focus now: in the page, drawn, and not inert. */
@@ -77,7 +79,9 @@ export function focusScope(container: HTMLElement, options: FocusScopeOptions = 
     if (options.trap) container.removeEventListener("keydown", onKeyDown)
     // Only when focus is still inside, or lost to the page: a person who moved it keeps it.
     const active = document.activeElement
-    if (active === document.body || active === null || container.contains(active)) {
+    const inside =
+      container.contains(active) || options.within?.().some((each) => each.contains(active))
+    if (active === document.body || active === null || inside) {
       // A chain, read now: the first that is still there to take it.
       const back = [options.restore?.(), previous, options.fallback?.()].find(reachable)
       back?.focus({ preventScroll: true })

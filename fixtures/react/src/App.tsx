@@ -11,6 +11,7 @@ import {
   Fieldset,
   Form,
   HoverCard,
+  Menu,
   Meter,
   Popover,
   Progress,
@@ -46,6 +47,8 @@ const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 export function App() {
   const [controlled, setControlled] = useState(false)
   const [fruit, setFruit] = useState<string | null>("Banana")
+  const [action, setAction] = useState("none")
+  const [view, setView] = useState("list")
   const [presses, setPresses] = useState(0)
   const [locked, setLocked] = useState(false)
   const [alerts, setAlerts] = useState(false)
@@ -435,6 +438,82 @@ export function App() {
           </Select.Root>
         </form>
         <output data-testid="s1-output">{fruit ?? "none"}</output>
+      </section>
+      <section data-fixture="menu">
+        <Menu.Root id="mn1">
+          <Menu.Trigger data-testid="mn1-trigger">File</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner sideOffset={4} data-testid="mn1-positioner">
+              <Menu.Popup className="popup" data-testid="mn1-popup">
+                <Menu.GroupLabel data-testid="mn1-lone">Document</Menu.GroupLabel>
+                <Menu.Item className="item" data-testid="mn1-new" onClick={() => setAction("new")}>
+                  <span>New</span>
+                  <kbd aria-hidden="true">⌘N</kbd>
+                </Menu.Item>
+                <Menu.Item className="item" disabled data-testid="mn1-open">
+                  Open
+                </Menu.Item>
+                <Menu.Item
+                  className="item"
+                  data-testid="mn1-print"
+                  onClick={() => setAction("print")}
+                >
+                  Print
+                </Menu.Item>
+                <Menu.Separator data-testid="mn1-separator" />
+                <Menu.CheckboxItem className="item" defaultChecked data-testid="mn1-wrap">
+                  <Menu.CheckboxItemIndicator>✓</Menu.CheckboxItemIndicator>
+                  <span>Word wrap</span>
+                </Menu.CheckboxItem>
+                <Menu.Group id="mn1-g" data-testid="mn1-group">
+                  <Menu.GroupLabel data-testid="mn1-label">View</Menu.GroupLabel>
+                  <Menu.RadioGroup
+                    value={view}
+                    onValueChange={(next) => setView(next as string)}
+                    data-testid="mn1-views"
+                  >
+                    <Menu.RadioItem value="list" className="item" data-testid="mn1-list">
+                      <Menu.RadioItemIndicator>•</Menu.RadioItemIndicator>
+                      <span>List</span>
+                    </Menu.RadioItem>
+                    <Menu.RadioItem value="grid" className="item" data-testid="mn1-grid">
+                      <Menu.RadioItemIndicator>•</Menu.RadioItemIndicator>
+                      <span>Grid</span>
+                    </Menu.RadioItem>
+                  </Menu.RadioGroup>
+                </Menu.Group>
+                <Menu.SubmenuRoot id="mn1s">
+                  <Menu.SubmenuTrigger className="item" data-testid="mn1-share">
+                    Share
+                  </Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner data-testid="mn1s-positioner">
+                      <Menu.Popup className="popup" data-testid="mn1s-popup">
+                        <Menu.Item
+                          className="item"
+                          data-testid="mn1s-mail"
+                          onClick={() => setAction("mail")}
+                        >
+                          Mail
+                        </Menu.Item>
+                        <Menu.Item
+                          className="item"
+                          data-testid="mn1s-link"
+                          onClick={() => setAction("link")}
+                        >
+                          Link
+                        </Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+        <output data-testid="mn1-output">
+          {action} {view}
+        </output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

@@ -1,10 +1,11 @@
-import { defined } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { PositionOptions } from "@kirana-ui/core"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { Portal as BodyPortal, useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -23,8 +24,9 @@ export type RootProps<Value> = Omit<ComboboxProps<Value>, "id"> & {
 }
 
 function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
+  const field = useContext(FieldContext) ?? undefined
   const controller = useController<ComboboxProps<Value>, Controller<Value>>(
-    createCombobox,
+    within(createCombobox<Value>, { field }),
     props
   ) as unknown as Controller
   const named = useSignal(controller.named)
@@ -68,12 +70,14 @@ export interface ItemProps extends PartComponentProps {
   /** What is filtered and what the input shows; the item's text when left out. */
   label?: string
   id?: string
+  /** Its place among all the rows, in a virtualized list. */
+  index?: number
 }
 
-function Item({ value, disabled, label, id, ...props }: ItemProps): ReactElement {
+function Item({ value, disabled, label, id, index, ...props }: ItemProps): ReactElement {
   const controller = useCombobox("Item")
   const generated = useId()
-  const options = useOptions({ disabled, label, id: id ?? generated })
+  const options = useOptions({ disabled, label, index, id: id ?? generated })
   const part = useMemo(
     () => controller.item(value, () => options.get()),
     [controller, value, options]
@@ -91,6 +95,15 @@ function ItemIndicator({ keepMounted, render: _render, ref: _ref, ...rest }: Ite
   return <span aria-hidden="true" {...(rest as object)} />
 }
 
+const ClearElement = (props: PartComponentProps) =>
+  usePart(useCombobox("Clear").clear, "button", props)
+
+/** A button that empties the input and the value. Drawn while there is something to clear. */
+function Clear({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | null {
+  const clearable = useSignal(useCombobox("Clear").clearable)
+  return clearable || keepMounted ? <ClearElement {...props} /> : null
+}
+
 const EmptyElement = (props: PartComponentProps) =>
   usePart(useCombobox("Empty").emptyPart, "div", props)
 
@@ -104,6 +117,7 @@ export const Combobox = {
   Root,
   Input,
   Trigger,
+  Clear,
   Portal,
   Positioner,
   Popup,

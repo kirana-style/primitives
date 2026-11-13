@@ -19,6 +19,7 @@ export {
 } from "./dialog"
 export {
   KuiCombobox,
+  KuiComboboxClear,
   KuiComboboxEmpty,
   KuiComboboxHiddenInput,
   KuiComboboxInput,

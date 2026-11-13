@@ -46,6 +46,27 @@ const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? 
 const taken = (value: string) => (value === "admin" ? "Taken" : null)
 const SECTIONS = ["one", "two", "three", "four"]
 const PLANS = ["free", "pro", "team", "max"]
+// A list of ten thousand rows of which a window is drawn: the fixture's own few lines of
+// virtualizing, so no library's are part of what is compared.
+const VROW = 24
+const VCOUNT = 10_000
+const firstRow = (top: number) => Math.max(0, Math.floor(top / VROW) - 1)
+const rowsFrom = (first: number) =>
+  Array.from({ length: 13 }, (_, at) => first + at).filter((each) => each < VCOUNT)
+const ROWS = {
+  count: VCOUNT,
+  label: (index: number) => `Row ${index}`,
+  indexOf: (value: unknown) => value as number,
+  scrollToIndex(index: number) {
+    const list = document.getElementById("vl1")!
+    const top = index * VROW
+    if (top < list.scrollTop) list.scrollTop = top
+    else if (top + VROW > list.scrollTop + list.clientHeight)
+      list.scrollTop = top + VROW - list.clientHeight
+  },
+}
+const COMMANDS = ["New", "Open", "Print"]
+
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 
 /**
@@ -57,6 +78,8 @@ export function App() {
   const [fruit, setFruit] = useState<string | null>("Banana")
   const [action, setAction] = useState("none")
   const [picked, setPicked] = useState("none")
+  const [first, setFirst] = useState(0)
+  const [ran, setRan] = useState("none")
   const [align, setAlign] = useState<string[]>(["left"])
   const [tall, setTall] = useState(false)
   const [chosen, setChosen] = useState<string[]>(["Banana"])
@@ -879,6 +902,72 @@ export function App() {
             </NavigationMenu.Positioner>
           </NavigationMenu.Portal>
         </NavigationMenu.Root>
+      </section>
+      <section data-fixture="virtual">
+        <Listbox.Root
+          id="vl1"
+          aria-label="Rows"
+          virtualized={ROWS}
+          className="virtual"
+          data-testid="vl1"
+          onScroll={(event: { currentTarget: HTMLElement }) =>
+            setFirst(firstRow(event.currentTarget.scrollTop))
+          }
+        >
+          <div className="virtual-space">
+            {rowsFrom(first).map((each) => (
+              <Listbox.Item
+                key={each}
+                value={each}
+                index={each}
+                className="item virtual-row"
+                style={{ top: `${each * VROW}px` }}
+                data-testid={`vl1-${each}`}
+              >
+                {`Row ${each}`}
+              </Listbox.Item>
+            ))}
+          </div>
+        </Listbox.Root>
+        <Combobox.Root id="cp1" inline onValueChange={(next) => setRan(next as string)}>
+          <Combobox.Input aria-label="Command" data-testid="cp1-input" />
+          <Combobox.Popup className="palette" aria-label="Commands" data-testid="cp1-list">
+            {COMMANDS.map((each) => (
+              <Combobox.Item
+                key={each}
+                value={each}
+                id={`cp1-${each}`}
+                className="item"
+                data-testid={`cp1-${each}`}
+              >
+                {each}
+              </Combobox.Item>
+            ))}
+            <Combobox.Empty data-testid="cp1-empty">Nothing found</Combobox.Empty>
+          </Combobox.Popup>
+        </Combobox.Root>
+        <output data-testid="cp1-output">{ran}</output>
+        <Field.Root id="fcb" name="city" data-testid="fcb">
+          <Field.Label data-testid="fcb-label">City</Field.Label>
+          <Combobox.Root id="fcbc" required>
+            <Combobox.Input data-testid="fcb-input" />
+            <Combobox.Clear aria-label="Clear" data-testid="fcb-clear">
+              ×
+            </Combobox.Clear>
+            <Combobox.Portal>
+              <Combobox.Positioner data-testid="fcb-positioner">
+                <Combobox.Popup className="popup" aria-label="Cities" data-testid="fcb-popup">
+                  <Combobox.Item value="Oslo" id="fcb-Oslo" className="item" data-testid="fcb-Oslo">
+                    Oslo
+                  </Combobox.Item>
+                  <Combobox.Item value="Rome" id="fcb-Rome" className="item" data-testid="fcb-Rome">
+                    Rome
+                  </Combobox.Item>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </Field.Root>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

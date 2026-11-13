@@ -222,6 +222,34 @@ describe("a combobox", () => {
     expect(held.made.value.peek()).toBe(null)
   })
 
+  it("its clear button empties the value and the text, and focus is in the input", async () => {
+    const { root, made, input, heard } = combobox({ defaultValue: "Banana" })
+    const clear = document.createElement("button")
+    clear.id = "clear"
+    root.append(clear)
+    onTestFinished(bind(clear, made.clear))
+    expect(made.clearable.peek()).toBe(true)
+    await userEvent.click(clear)
+    expect(made.value.peek()).toBe(null)
+    expect(input.value).toBe("")
+    expect(focused()).toBe("input")
+    expect(heard).toEqual([null])
+    expect(made.clearable.peek()).toBe(false)
+  })
+
+  it("goes back to its first value when its form is reset", async () => {
+    const { root, made, input } = combobox({ defaultValue: "Banana", name: "fruit" })
+    input.focus()
+    await userEvent.clear(input)
+    await userEvent.keyboard("ch")
+    await settled()
+    await press("Enter")
+    expect(made.value.peek()).toBe("Cherry")
+    find<HTMLFormElement>(root, "form").reset()
+    expect(made.value.peek()).toBe("Banana")
+    expect(input.value).toBe("Banana")
+  })
+
   it("filters as its caller says, or not at all", async () => {
     const starts = combobox({ filter: (label, query) => label.startsWith(query) })
     starts.input.focus()
@@ -251,5 +279,58 @@ describe("a combobox", () => {
     expect(made.value.peek()).toBe("Banana")
     expect(held.peek()).toBe("Cherry")
     expect(input.value).toBe("Cherry")
+  })
+})
+
+describe("a combobox whose list is always in the page", () => {
+  function palette() {
+    const root = mount(`<input id="input" /><div id="list"></div>`)
+    const heard: (string | null)[] = []
+    const made = createCombobox(
+      signal<ComboboxProps<string>>({
+        id: "p",
+        inline: true,
+        onValueChange: (value) => void heard.push(value),
+      })
+    )
+    const host = find(root, "list")
+    for (const each of ["New file", "Open", "Print"]) {
+      const element = document.createElement("div")
+      element.textContent = each
+      host.append(element)
+      onTestFinished(
+        bind(
+          element,
+          made.item(each, () => ({ id: `p-${each.replace(" ", "-")}` }))
+        )
+      )
+    }
+    onTestFinished(bind(find(root, "input"), made.input))
+    onTestFinished(bind(host, made.popup))
+    const input = find<HTMLInputElement>(root, "input")
+    const shown = () =>
+      [...host.querySelectorAll<HTMLElement>('[role="option"]')]
+        .filter((each) => !each.hidden)
+        .map((each) => each.textContent)
+    return { root, made, input, heard, shown }
+  }
+
+  it("is filtered as its input is typed in, and Enter tells the caller what was chosen", async () => {
+    const { made, input, heard, shown } = palette()
+    expect(made.mounted.peek()).toBe(true)
+    expect(input.getAttribute("aria-expanded")).toBe("true")
+    expect(input.getAttribute("aria-controls")).toBe("p-popup")
+    input.focus()
+    await userEvent.keyboard("p")
+    await settled()
+    expect(shown()).toEqual(["Open", "Print"])
+    expect(input.getAttribute("aria-activedescendant")).toBe("p-Open")
+    await press("ArrowDown")
+    await press("Enter")
+    expect(heard).toEqual(["Print"])
+    // The input keeps what was typed: the caller decides what choosing does.
+    expect(input.value).toBe("p")
+    await press("Escape")
+    expect(shown()).toEqual(["Open", "Print"])
   })
 })

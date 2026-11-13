@@ -12,7 +12,7 @@ import {
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined, effect as coreEffect } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
+import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select } from "@kirana-ui/core/select"
 
@@ -31,6 +31,8 @@ export class KuiSelect implements OnInit {
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
   readonly items = input<readonly { value: unknown; label: string }[]>()
+  /** Every row, when only some are in the page: each item is then given its `index`. */
+  readonly virtualized = input<ListCollection>()
   readonly kuiId = input<string>()
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
@@ -49,6 +51,7 @@ export class KuiSelect implements OnInit {
     name: this.name(),
     form: this.form(),
     items: this.items(),
+    virtualized: this.virtualized(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
@@ -185,11 +188,14 @@ export class KuiSelectItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What typeahead matches and the trigger shows; the item's text when left out. */
   readonly label = input<string>()
+  /** Its place among all the rows, in a virtualized list. */
+  readonly index = input<number>()
   readonly root = inject(KuiSelect)
   private readonly put = hostPart()
   private readonly options = inputsSignal(() => ({
     disabled: this.disabled(),
     label: this.label(),
+    index: this.index(),
   }))
 
   ngOnInit(): void {

@@ -1,7 +1,7 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, ListCollection } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
 import type { Listbox, ListboxGroup } from "@kirana-ui/core/listbox"
 
@@ -14,6 +14,12 @@ export class KuiListbox implements OnInit {
   readonly multiple = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
+  /** With a name, the chosen values are submitted with the form around the list. */
+  readonly name = input<string>()
+  /** The id of the form the list belongs to, when it is not inside it. */
+  readonly form = input<string>()
+  /** Every row, when only some are in the page: each item is then given its `index`. */
+  readonly virtualized = input<ListCollection>()
   readonly kuiId = input<string>()
   readonly valueChanged = output<{ value: unknown[]; details: ChangeDetails }>()
 
@@ -27,6 +33,9 @@ export class KuiListbox implements OnInit {
     multiple: this.multiple(),
     disabled: this.disabled(),
     loop: this.loop(),
+    name: this.name(),
+    form: this.form(),
+    virtualized: this.virtualized(),
     onValueChange: (value: unknown[], details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
@@ -48,11 +57,14 @@ export class KuiListboxItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What typing matches; the item's text when left out. */
   readonly label = input<string>()
+  /** Its place among all the rows, in a virtualized list. */
+  readonly index = input<number>()
   readonly root = inject(KuiListbox)
   private readonly put = hostPart()
   private readonly options = inputsSignal(() => ({
     disabled: this.disabled(),
     label: this.label(),
+    index: this.index(),
   }))
 
   ngOnInit(): void {

@@ -1,7 +1,7 @@
 import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller } from "@kirana-ui/core/select"
+import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
 import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
@@ -35,6 +35,7 @@ const Root = defineComponent({
     name: String,
     form: String,
     items: Array as PropType<readonly { value: unknown; label: string }[]>,
+    virtualized: Object as PropType<SelectProps["virtualized"]>,
     id: String,
   },
   emits: ["update:value", "valueChange", "update:open", "openChange"],
@@ -53,6 +54,7 @@ const Root = defineComponent({
         name: props.name,
         form: props.form,
         items: props.items,
+        virtualized: props.virtualized,
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
@@ -89,11 +91,16 @@ const Item = defineComponent({
     value: { type: null as unknown as PropType<unknown>, required: true },
     disabled: optional(Boolean),
     label: String,
+    index: Number,
   },
   setup(props, { attrs, slots }) {
     // An item is its value for as long as it is in the page.
     const value = props.value
-    const options = toSignal(() => ({ disabled: props.disabled, label: props.label }))
+    const options = toSignal(() => ({
+      disabled: props.disabled,
+      label: props.label,
+      index: props.index,
+    }))
     const part = scope.use().item(value, () => defined(options.get()))
     provide(ITEM, value)
     const Element = partComponent("SelectItemElement", "div", () => part)

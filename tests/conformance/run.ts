@@ -1983,6 +1983,101 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await present("nm1-products-content")), "the pointer leaving closes it")
   },
 
+  async virtual({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const drawn = () =>
+      page.evaluate(() => document.querySelectorAll('[data-testid="vl1"] [role="option"]').length)
+    const until = (testid: string) =>
+      page.waitForFunction(
+        (wanted) => document.activeElement?.getAttribute("data-testid") === wanted,
+        testid
+      )
+    await id("vl1").scrollIntoViewIfNeeded()
+    const scrolled = await page.evaluate(() => window.scrollY)
+    expect((await drawn()) <= 13, "a window of the ten thousand rows is in the page")
+    expect(
+      (await attribute("vl1-3", "aria-setsize")) === "10000",
+      "each row says how many there are"
+    )
+    expect((await attribute("vl1-3", "aria-posinset")) === "4", "and its place among them")
+
+    await id("vl1").focus()
+    await settled(page)
+    expect((await focused()) === "vl1-0", "focus goes to the first row")
+    await key("End")
+    await until("vl1-9999")
+    await snapshot("the last of ten thousand rows")
+    expect((await drawn()) <= 13, "End brings the last row in, and still only a window is drawn")
+    expect(!(await present("vl1-0")), "the first rows have gone")
+    await key("ArrowUp")
+    expect((await focused()) === "vl1-9998", "the arrows go on from there")
+    await page.keyboard.type("row 4321")
+    await until("vl1-4321")
+    expect(
+      (await attribute("vl1-4321", "data-highlighted")) === "",
+      "typing a name finds a row far away"
+    )
+    await page.waitForTimeout(600)
+    await key(" ")
+    await snapshot("a row far away chosen")
+    expect((await attribute("vl1-4321", "aria-selected")) === "true", "Space chooses it")
+    expect((await page.evaluate(() => window.scrollY)) === scrolled, "the page has not moved")
+
+    await id("cp1-input").focus()
+    expect(
+      (await attribute("cp1-input", "aria-expanded")) === "true",
+      "a palette's list is always there"
+    )
+    await page.keyboard.type("p")
+    await settled(page)
+    const shown = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[data-testid="cp1-list"] [role="option"]')]
+          .filter((each) => each.getClientRects().length > 0)
+          .map((each) => each.id.replace("cp1-", ""))
+          .join()
+      )
+    expect((await shown()) === "Open,Print", "typing filters it")
+    expect(
+      (await attribute("cp1-input", "aria-activedescendant")) === "cp1-Open",
+      "the first shown is highlighted"
+    )
+    await key("ArrowDown")
+    await key("Enter")
+    await snapshot("a command chosen")
+    expect(
+      (await id("cp1-output").textContent()) === "Print",
+      "Enter tells the caller what was chosen"
+    )
+    expect((await id("cp1-input").inputValue()) === "p", "and the input keeps what was typed")
+    await page.keyboard.type("zz")
+    await settled(page)
+    expect(await present("cp1-empty"), "nothing found is said")
+
+    expect(
+      (await attribute("fcb-label", "for")) === (await attribute("fcb-input", "id")),
+      "a field's label is for its combobox's input"
+    )
+    expect((await attribute("fcb-input", "aria-required")) === "true", "which says it is required")
+    expect(!(await present("fcb-clear")), "with nothing to clear there is no clear button")
+    await id("fcb-label").click()
+    expect((await focused()) === "fcb-input", "a press on the label goes to the input")
+    await page.keyboard.type("os")
+    await settled(page)
+    await key("Enter")
+    await snapshot("a combobox in a field, chosen")
+    expect((await id("fcb-input").inputValue()) === "Oslo", "an item chosen is the input's text")
+    expect(await present("fcb-clear"), "and can be cleared")
+    await id("fcb-clear").click()
+    await settled(page)
+    expect((await id("fcb-input").inputValue()) === "", "the clear button empties it")
+    expect((await focused()) === "fcb-input", "and leaves focus in the input")
+    expect(!(await present("fcb-clear")), "then goes")
+  },
+
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

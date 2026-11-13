@@ -28,6 +28,7 @@ import {
   KuiHoverCardPositioner,
   KuiHoverCardTrigger,
   KuiCombobox,
+  KuiComboboxClear,
   KuiComboboxEmpty,
   KuiComboboxHiddenInput,
   KuiComboboxInput,
@@ -187,6 +188,7 @@ import {
     KuiHoverCardPositioner,
     KuiHoverCardTrigger,
     KuiCombobox,
+    KuiComboboxClear,
     KuiComboboxEmpty,
     KuiComboboxHiddenInput,
     KuiComboboxInput,
@@ -1055,6 +1057,87 @@ import {
           </ng-template>
         </nav>
       </section>
+      <section data-fixture="virtual">
+        <div
+          kuiListbox
+          [kuiId]="'vl1'"
+          aria-label="Rows"
+          [virtualized]="rows"
+          class="virtual"
+          data-testid="vl1"
+          (scroll)="first.set(firstRow($any($event.currentTarget).scrollTop))"
+        >
+          <div class="virtual-space">
+            @for (each of rowsFrom(first()); track each) {
+              <div
+                kuiListboxItem
+                [value]="each"
+                [index]="each"
+                class="item virtual-row"
+                [style.top.px]="each * 24"
+                [attr.data-testid]="'vl1-' + each"
+              >
+                {{ "Row " + each }}
+              </div>
+            }
+          </div>
+        </div>
+        <ng-container
+          kuiCombobox
+          [kuiId]="'cp1'"
+          [inline]="true"
+          (valueChanged)="ran.set($event.value)"
+        >
+          <input kuiComboboxInput aria-label="Command" data-testid="cp1-input" />
+          <div kuiComboboxPopup class="palette" aria-label="Commands" data-testid="cp1-list">
+            @for (each of commands; track each) {
+              <div
+                kuiComboboxItem
+                [value]="each"
+                [kuiId]="'cp1-' + each"
+                class="item"
+                [attr.data-testid]="'cp1-' + each"
+              >
+                {{ each }}
+              </div>
+            }
+            <div *kuiComboboxEmpty data-testid="cp1-empty">Nothing found</div>
+          </div>
+        </ng-container>
+        <output data-testid="cp1-output">{{ ran() }}</output>
+        <div kuiField [kuiId]="'fcb'" [name]="'city'" data-testid="fcb">
+          <label kuiFieldLabel data-testid="fcb-label">City</label>
+          <ng-container kuiCombobox [kuiId]="'fcbc'" [required]="true">
+            <input kuiComboboxInput data-testid="fcb-input" />
+            <button *kuiComboboxClear aria-label="Clear" data-testid="fcb-clear">×</button>
+            <ng-template kuiComboboxPortal>
+              <div kuiComboboxPositioner data-testid="fcb-positioner">
+                <div kuiComboboxPopup class="popup" aria-label="Cities" data-testid="fcb-popup">
+                  <div
+                    kuiComboboxItem
+                    [value]="'Oslo'"
+                    [kuiId]="'fcb-Oslo'"
+                    class="item"
+                    data-testid="fcb-Oslo"
+                  >
+                    Oslo
+                  </div>
+                  <div
+                    kuiComboboxItem
+                    [value]="'Rome'"
+                    [kuiId]="'fcb-Rome'"
+                    class="item"
+                    data-testid="fcb-Rome"
+                  >
+                    Rome
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+            <input kuiComboboxHiddenInput />
+          </ng-container>
+        </div>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -1275,6 +1358,26 @@ export class App {
   protected readonly broken = "data:image/png;base64,AAAA"
   protected readonly alerts = signal<boolean | undefined>(false)
   protected readonly plans = ["free", "pro", "team", "max"]
+  protected readonly commands = ["New", "Open", "Print"]
+  protected readonly first = signal(0)
+  protected readonly ran = signal<unknown>("none")
+  // A list of ten thousand rows of which a window is drawn: the fixture's own few lines of
+  // virtualizing, so no library's are part of what is compared.
+  protected readonly firstRow = (top: number) => Math.max(0, Math.floor(top / 24) - 1)
+  protected readonly rowsFrom = (first: number) =>
+    Array.from({ length: 13 }, (_, at) => first + at).filter((each) => each < 10_000)
+  protected readonly rows = {
+    count: 10_000,
+    label: (index: number) => `Row ${index}`,
+    indexOf: (value: unknown) => value as number,
+    scrollToIndex(index: number) {
+      const list = document.getElementById("vl1")!
+      const top = index * 24
+      if (top < list.scrollTop) list.scrollTop = top
+      else if (top + 24 > list.scrollTop + list.clientHeight)
+        list.scrollTop = top + 24 - list.clientHeight
+    },
+  }
   protected readonly sections = ["one", "two", "three", "four"]
 
   protected press(event: Event): void {

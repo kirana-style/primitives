@@ -1,7 +1,7 @@
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
-import type { Listbox as Controller, ListboxGroup } from "@kirana-ui/core/listbox"
+import type { Listbox as Controller, ListboxGroup, ListboxProps } from "@kirana-ui/core/listbox"
 import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
@@ -24,6 +24,9 @@ const Root = defineComponent({
     multiple: Boolean,
     disabled: Boolean,
     loop: optional(Boolean),
+    name: String,
+    form: String,
+    virtualized: Object as PropType<ListboxProps["virtualized"]>,
     id: String,
   },
   emits: ["update:value", "valueChange"],
@@ -37,6 +40,9 @@ const Root = defineComponent({
         multiple: props.multiple,
         disabled: props.disabled,
         loop: props.loop,
+        name: props.name,
+        form: props.form,
+        virtualized: props.virtualized,
         onValueChange(value: unknown[], details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
@@ -50,11 +56,20 @@ const Root = defineComponent({
 const Item = defineComponent({
   name: "ListboxItem",
   inheritAttrs: false,
-  props: { value: { type: ANY, required: true }, disabled: optional(Boolean), label: String },
+  props: {
+    value: { type: ANY, required: true },
+    disabled: optional(Boolean),
+    label: String,
+    index: Number,
+  },
   setup(props, { attrs, slots }) {
     // An item is its value for as long as it is in the page.
     const value = props.value
-    const options = toSignal(() => ({ disabled: props.disabled, label: props.label }))
+    const options = toSignal(() => ({
+      disabled: props.disabled,
+      label: props.label,
+      index: props.index,
+    }))
     const part = scope.use().item(value, () => defined(options.get()))
     provide(ITEM, value)
     const Element = partComponent("ListboxItemElement", "div", () => part)

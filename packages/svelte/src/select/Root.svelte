@@ -22,6 +22,7 @@
     name,
     form,
     items,
+    virtualized,
     id,
     children,
   }: RootProps<SelectProps> = $props()
@@ -49,6 +50,7 @@
       name,
       form,
       items,
+      virtualized,
       onValueChange: changeValue,
       onOpenChange: changeOpen,
     }))

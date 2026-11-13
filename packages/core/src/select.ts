@@ -10,7 +10,7 @@ import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { createList } from "./services/list.ts"
-import type { ListRow } from "./services/list.ts"
+import type { ListCollection, ListRow } from "./services/list.ts"
 import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
 export interface SelectProps<Value = unknown> {
@@ -34,12 +34,19 @@ export interface SelectProps<Value = unknown> {
    * needed for the list itself: its items are read from the markup.
    */
   items?: readonly { value: Value; label: string }[] | undefined
+  /**
+   * Every row, when only some are in the page (a virtualizer draws the ones in view). Each item
+   * is then given its `index`.
+   */
+  virtualized?: ListCollection | undefined
 }
 
 export interface SelectItemOptions {
   disabled?: boolean
   /** What typeahead matches and the trigger shows; the item's text when left out. */
   label?: string
+  /** Its place among all the rows, in a virtualized list. */
+  index?: number
 }
 
 export interface Select<Value = unknown> {
@@ -119,7 +126,10 @@ export function createSelect<Value = unknown>(
 
   const isSelected = keyed(value as ReadonlySignal<Value | null>)
   // The rows are read from the page: nothing re-renders for one to be known.
-  const list = createList({ selector: '[role="option"]' })
+  const list = createList({
+    selector: '[role="option"]',
+    collection: () => props.peek().virtualized,
+  })
   const rows = new Map<Value, ListRow>()
   // The labels learned from the markup, so the trigger still names a value once the list is gone.
   const labels = new Map<Value, string>()
@@ -254,8 +264,11 @@ export function createSelect<Value = unknown>(
           ...layer.placed(),
           onKeyDown(event: KeyboardEvent) {
             switch (event.key) {
-              case "Enter":
               case " ":
+                // Part of a name that is being typed, not a press.
+                if (list.typing()) break
+              // falls through
+              case "Enter":
                 event.preventDefault()
                 // The row's own press: what a caller's handler on it hears too.
                 return list.highlighted.peek()?.element()?.click()
@@ -281,6 +294,10 @@ export function createSelect<Value = unknown>(
             queueMicrotask(() => {
               if (popup !== element || !open.peek()) return
               const chosen = value.peek()
+              const every = list.collection()
+              const at = every && chosen !== null ? (every.indexOf?.(chosen) ?? -1) : -1
+              // The chosen row may not be in the page: it is asked for by its place.
+              if (at >= 0) return list.goto(at)
               const row = chosen === null ? undefined : rows.get(chosen)
               list.highlight(row?.element() && !row.disabled() ? row : undefined, true)
             })
@@ -335,6 +352,7 @@ export function createSelect<Value = unknown>(
             tabindex: "-1",
             "aria-selected": String(selected.get()),
             "aria-disabled": off ? "true" : undefined,
+            ...list.place(options().index),
             "data-selected": flag(selected.get()),
             "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),

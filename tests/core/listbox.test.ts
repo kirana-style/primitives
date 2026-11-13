@@ -101,6 +101,38 @@ describe("a listbox", () => {
     expect(heard.length).toBe(3)
   })
 
+  it("in a form, submits what is chosen and goes back to its first value on reset", async () => {
+    const root = mount(
+      `<form id="form">${PAGE}<button id="reset" type="reset">Reset</button></form>`
+    )
+    const made = createListbox(
+      signal<ListboxProps<string>>({
+        id: "list",
+        name: "fruit",
+        multiple: true,
+        defaultValue: ["banana"],
+      })
+    )
+    for (const id of ["apple", "banana", "cherry"]) {
+      onTestFinished(bind(find(root, id), made.item(id)))
+    }
+    onTestFinished(bind(find(root, "list"), made.root))
+    const sent = () => new FormData(find<HTMLFormElement>(root, "form")).getAll("fruit")
+    expect(sent()).toEqual(["banana"])
+    find(root, "cherry").click()
+    expect(sent()).toEqual(["banana", "cherry"])
+    find(root, "banana").click()
+    expect(sent()).toEqual(["cherry"])
+    find(root, "reset").click()
+    expect(made.value.peek()).toEqual(["banana"])
+    expect(sent()).toEqual(["banana"])
+    // With nothing chosen nothing is sent, and the list still hears its form.
+    find(root, "banana").click()
+    expect(sent()).toEqual([])
+    find(root, "reset").click()
+    expect(sent()).toEqual(["banana"])
+  })
+
   it("does nothing while it is disabled", async () => {
     const { root, made } = listbox({ disabled: true })
     expect(find(root, "list").getAttribute("tabindex")).toBe("-1")

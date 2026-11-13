@@ -28,6 +28,20 @@ const SOURCES = [
   "bun.lock",
 ]
 
+/**
+ * The sources under some folders only, for a task that reads nothing else: a change outside
+ * them (the docs, another task's tests, a workflow) leaves the task's cached result standing.
+ * What every task depends on is always in: the lockfile and the root's own configuration.
+ */
+const sourcesIn = (...folders: string[]) => [
+  ...folders.map((each) => `${each}/**/*.{ts,tsx,js,mjs,json,svelte,vue,css,html}`),
+  ...SOURCES.filter((each) => each.startsWith("!")),
+  "bun.lock",
+  "package.json",
+  "tsconfig.json",
+  "vite.config.ts",
+]
+
 export default defineConfig({
   test: {
     projects: [
@@ -87,7 +101,7 @@ export default defineConfig({
         command: "vp test run --project browser",
         // A task is given only the environment it names: without this, `BROWSERS` never
         // reached the configuration, and every run was Chromium and Firefox whatever was asked.
-        cache: { input: SOURCES, output: [], env: ["BROWSERS"] },
+        cache: { input: sourcesIn("packages/core", "tests/core"), output: [], env: ["BROWSERS"] },
       },
       // `@kirana-ui/vocabulary` from the core's part definitions; a test fails when it is stale.
       vocabulary: { command: "bun scripts/vocabulary.ts", cache: false },
@@ -97,7 +111,8 @@ export default defineConfig({
       build: {
         command: FIXTURES.map((each) => `bun run --cwd fixtures/${each} build`).join(" && "),
         cache: {
-          input: SOURCES,
+          // The fixtures, the packages they draw, and the scripts that render them.
+          input: sourcesIn("fixtures", "packages", "scripts"),
           output: FIXTURES.flatMap((each) => [
             `fixtures/${each}/dist/**`,
             `fixtures/${each}/dist-server/**`,
@@ -127,7 +142,7 @@ export default defineConfig({
       // and the Svelte fixture's with the Svelte adapter's own components with `svelte-check`.
       types: {
         command: "bun run --cwd fixtures/vue types && bun run --cwd fixtures/svelte types",
-        cache: { input: SOURCES, output: [] },
+        cache: { input: sourcesIn("fixtures", "packages"), output: [] },
       },
       // Everything but conformance, side by side: none of these reads what another writes,
       // but for the rehearsal, which waits for the packing.

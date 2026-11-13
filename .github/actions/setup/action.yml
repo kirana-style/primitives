@@ -4,6 +4,14 @@ description: Vite+ with Node.js, Bun and the workspace installed, and the task c
 # Every job needs the same things, and each one used to spell them out. Kept here so the workflow
 # reads as a graph of jobs rather than as the same install block copied per job.
 
+inputs:
+  scope:
+    description: >-
+      What tells this job's task cache from another's with the same job id: a matrix job's own
+      value (the browser).
+    required: false
+    default: ""
+
 runs:
   using: composite
 
@@ -23,8 +31,17 @@ runs:
         run-install: |
           - args: ["--frozen-lockfile"]
 
+    # EXPERIMENTAL, in Vite+'s own words: restoring the task cache between runs is documented as
+    # an experiment, with "measure before you add" and no eviction of single entries. It is kept
+    # because a miss costs nothing but the restore: if a run ever replays a result it should not
+    # have, delete the caches named `vite-task-` in the repository's settings and remove these
+    # two steps.
+    #
     # The `vp run` task cache (vite.config.ts → run.tasks): a task whose inputs did not change
-    # replays its output and restores its files. Each run on `main` saves a new entry, and every
+    # replays its output and restores its files. A task's inputs are the folders it reads
+    # (`sourcesIn` in vite.config.ts), so a change to the docs or to another task's tests leaves
+    # a build or a browser run standing. Matrix jobs share a job id: `scope` keeps each one's
+    # entry its own (a browser's test results are not another browser's). Each run on `main` saves a new entry, and every
     # run restores the newest one for its job and platform; other branches only restore, so their
     # entries never evict main's. Vite Task fingerprints the inputs itself, so none belong in the
     # key.
@@ -33,13 +50,13 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: node_modules/.vite/task-cache
-        key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
-        restore-keys: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-
+        key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}${{ inputs.scope }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}${{ inputs.scope }}-
 
     - name: Restore vp tasks
       if: github.ref != 'refs/heads/main'
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: node_modules/.vite/task-cache
-        key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
-        restore-keys: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-
+        key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}${{ inputs.scope }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.job }}${{ inputs.scope }}-

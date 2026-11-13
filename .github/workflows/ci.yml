@@ -87,6 +87,8 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/setup
+        with:
+          scope: -${{ matrix.browser }}
 
       # Each adapter's fixture. Angular's compiler checks its adapter here (`ngc`), and Svelte's
       # compiles its files.

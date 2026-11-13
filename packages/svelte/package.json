@@ -97,6 +97,10 @@
       "svelte": "./src/radio-group.ts",
       "default": "./src/radio-group.ts"
     },
+    "./scroll-area": {
+      "svelte": "./src/scroll-area.ts",
+      "default": "./src/scroll-area.ts"
+    },
     "./select": {
       "svelte": "./src/select.ts",
       "default": "./src/select.ts"
@@ -120,6 +124,14 @@
     "./toggle": {
       "svelte": "./src/toggle.ts",
       "default": "./src/toggle.ts"
+    },
+    "./toggle-group": {
+      "svelte": "./src/toggle-group.ts",
+      "default": "./src/toggle-group.ts"
+    },
+    "./toolbar": {
+      "svelte": "./src/toolbar.ts",
+      "default": "./src/toolbar.ts"
     },
     "./tooltip": {
       "svelte": "./src/tooltip.ts",

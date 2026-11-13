@@ -2,6 +2,9 @@ import { avatarVocabulary } from "./avatar.vocabulary.ts"
 import { buttonVocabulary } from "./button.vocabulary.ts"
 import { meterVocabulary } from "./meter.vocabulary.ts"
 import { progressVocabulary } from "./progress.vocabulary.ts"
+import { scrollAreaVocabulary } from "./scroll-area.vocabulary.ts"
+import { toggleGroupVocabulary } from "./toggle-group.vocabulary.ts"
+import { toolbarVocabulary } from "./toolbar.vocabulary.ts"
 import { separatorVocabulary } from "./separator.vocabulary.ts"
 import { toggleVocabulary } from "./toggle.vocabulary.ts"
 import { accordionVocabulary } from "./accordion.vocabulary.ts"
@@ -60,12 +63,15 @@ export const vocabulary = {
   popover: popoverVocabulary,
   progress: progressVocabulary,
   radioGroup: radioGroupVocabulary,
+  scrollArea: scrollAreaVocabulary,
   select: selectVocabulary,
   separator: separatorVocabulary,
   slider: sliderVocabulary,
   switch: switchVocabulary,
   tabs: tabsVocabulary,
   toggle: toggleVocabulary,
+  toggleGroup: toggleGroupVocabulary,
+  toolbar: toolbarVocabulary,
   tooltip: tooltipVocabulary,
 } as const
 

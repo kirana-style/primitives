@@ -116,7 +116,20 @@ import {
   KuiTabsList,
   KuiTabsPanel,
   KuiTabsTab,
+  KuiScrollArea,
+  KuiScrollAreaContent,
+  KuiScrollAreaCorner,
+  KuiScrollAreaScrollbar,
+  KuiScrollAreaThumb,
+  KuiScrollAreaViewport,
   KuiToggle,
+  KuiToggleGroup,
+  KuiToolbar,
+  KuiToolbarButton,
+  KuiToolbarGroup,
+  KuiToolbarInput,
+  KuiToolbarLink,
+  KuiToolbarSeparator,
   KuiTooltip,
   KuiTooltipArrow,
   KuiTooltipPopup,
@@ -251,7 +264,20 @@ import {
     KuiTabsList,
     KuiTabsPanel,
     KuiTabsTab,
+    KuiScrollArea,
+    KuiScrollAreaContent,
+    KuiScrollAreaCorner,
+    KuiScrollAreaScrollbar,
+    KuiScrollAreaThumb,
+    KuiScrollAreaViewport,
     KuiToggle,
+    KuiToggleGroup,
+    KuiToolbar,
+    KuiToolbarButton,
+    KuiToolbarGroup,
+    KuiToolbarInput,
+    KuiToolbarLink,
+    KuiToolbarSeparator,
     KuiTooltip,
     KuiTooltipArrow,
     KuiTooltipPopup,
@@ -916,6 +942,56 @@ import {
         </div>
         <output data-testid="mm1-output">{{ outside() }}</output>
       </section>
+      <section data-fixture="toolbar">
+        <div kuiToggleGroup aria-label="Alignment" [(value)]="align" class="bar" data-testid="tg1">
+          <button kuiToggle [value]="'left'" data-testid="tg1-left">Left</button>
+          <button kuiToggle [value]="'centre'" data-testid="tg1-centre">Centre</button>
+          <button kuiToggle [value]="'justify'" [disabled]="true" data-testid="tg1-justify">
+            Justify
+          </button>
+          <button kuiToggle [value]="'right'" data-testid="tg1-right">Right</button>
+        </div>
+        <output data-testid="tg1-output">{{ align()?.join(",") }}</output>
+        <div kuiToolbar aria-label="Editing" class="bar" data-testid="tb1">
+          <button kuiToolbarButton data-testid="tb1-save">Save</button>
+          <button kuiToolbarButton [disabled]="true" data-testid="tb1-gone">Gone</button>
+          <a kuiToolbarLink href="#tb1-help" data-testid="tb1-link">Help</a>
+          <div kuiToolbarSeparator data-testid="tb1-line"></div>
+          <input kuiToolbarInput aria-label="Zoom" value="100" data-testid="tb1-zoom" />
+          <div kuiToolbarGroup data-testid="tb1-group">
+            <div
+              kuiToggleGroup
+              [multiple]="true"
+              aria-label="Marks"
+              class="bar"
+              data-testid="tb1-marks"
+            >
+              <button kuiToggle [value]="'bold'" data-testid="tb1-bold">Bold</button>
+              <button kuiToggle [value]="'italic'" data-testid="tb1-italic">Italic</button>
+            </div>
+          </div>
+          <button kuiToggle data-testid="tb1-pin">Pin</button>
+        </div>
+      </section>
+      <section data-fixture="scroll-area">
+        <div kuiScrollArea class="scroll" data-testid="sa1">
+          <div kuiScrollAreaViewport class="scroll-view" data-testid="sa1-view">
+            <div kuiScrollAreaContent data-testid="sa1-content">
+              <div [class]="tall() ? 'scroll-tall' : 'scroll-short'" data-testid="sa1-box">
+                Content
+              </div>
+            </div>
+          </div>
+          <div *kuiScrollAreaScrollbar class="scroll-bar" data-testid="sa1-y">
+            <div kuiScrollAreaThumb class="scroll-thumb" data-testid="sa1-y-thumb"></div>
+          </div>
+          <div *kuiScrollAreaScrollbar="'horizontal'" class="scroll-bar" data-testid="sa1-x">
+            <div kuiScrollAreaThumb class="scroll-thumb" data-testid="sa1-x-thumb"></div>
+          </div>
+          <div *kuiScrollAreaCorner class="scroll-corner" data-testid="sa1-corner"></div>
+        </div>
+        <button type="button" data-testid="sa1-grow" (click)="tall.set(!tall())">Grow</button>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -1108,6 +1184,8 @@ export class App {
   protected readonly fruit = signal<unknown>("Banana")
   protected readonly action = signal("none")
   protected readonly picked = signal("none")
+  protected readonly align = signal<readonly unknown[] | undefined>(["left"])
+  protected readonly tall = signal(false)
   protected readonly chosen = signal<readonly unknown[] | undefined>(["Banana"])
   protected readonly pick = signal<unknown>(null)
   protected readonly outside = signal(0)

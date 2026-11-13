@@ -1798,6 +1798,117 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await focused()) === "vb1-two", "ArrowLeft closes it")
   },
 
+  async toolbar({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const output = () => id("tg1-output").textContent()
+    expect((await attribute("tg1", "role")) === "group", "a toggle group is a group")
+    expect((await attribute("tg1-left", "aria-pressed")) === "true", "its value is pressed")
+
+    await id("tg1-left").focus()
+    await key("ArrowRight")
+    expect((await focused()) === "tg1-centre", "ArrowRight goes to the next toggle")
+    await key("ArrowRight")
+    expect((await focused()) === "tg1-right", "past a disabled one")
+    await key("ArrowRight")
+    expect((await focused()) === "tg1-left", "and round")
+    await snapshot("focus in the group")
+    expect((await attribute("tg1-left", "tabindex")) === "0", "the group is one stop")
+    expect((await attribute("tg1-right", "tabindex")) === "-1", "at the toggle focus is on")
+    await key("ArrowRight")
+    await key(" ")
+    await snapshot("another pressed")
+    expect((await output()) === "centre", "a press takes the place of the other")
+    expect((await attribute("tg1-left", "aria-pressed")) === "false", "one at a time")
+    await key(" ")
+    await settled(page)
+    expect((await output()) === "", "pressed again, none is")
+
+    expect((await attribute("tb1", "role")) === "toolbar", "a toolbar")
+    expect((await attribute("tb1-line", "aria-orientation")) === "vertical", "its line stands")
+    await id("tb1-save").focus()
+    await key("ArrowRight")
+    expect((await focused()) === "tb1-link", "the arrows pass a disabled button")
+    await key("ArrowRight")
+    expect((await focused()) === "tb1-zoom", "and reach an input")
+    await key("Home")
+    await key("ArrowRight")
+    expect((await focused()) === "tb1-zoom", "whose arrows are its own inside its text")
+    await key("End")
+    await key("ArrowRight")
+    expect((await focused()) === "tb1-bold", "until the caret is at the end")
+    await key(" ")
+    await key("ArrowRight")
+    await key(" ")
+    await snapshot("toggles in a toolbar")
+    expect((await attribute("tb1-bold", "aria-pressed")) === "true", "a group in it holds several")
+    expect((await attribute("tb1-italic", "aria-pressed")) === "true", "each pressed")
+    await key("ArrowRight")
+    expect((await focused()) === "tb1-pin", "out of the group, on along the toolbar")
+    await key("Enter")
+    expect((await attribute("tb1-pin", "aria-pressed")) === "true", "a toggle of its own")
+    await key("ArrowRight")
+    expect((await focused()) === "tb1-save", "and round")
+    expect((await attribute("tb1-pin", "tabindex")) === "-1", "one stop for the whole toolbar")
+  },
+
+  async "scroll-area"({ page, snapshot, id, present, attribute }) {
+    const box = (testid: string) =>
+      id(testid).evaluate((element) => {
+        const { top, left, width, height } = element.getBoundingClientRect()
+        return { top, left, width, height }
+      })
+    await id("sa1").scrollIntoViewIfNeeded()
+    await snapshot("nothing to scroll")
+    expect(!(await present("sa1-y")), "with nothing to scroll there is no scrollbar")
+    expect((await attribute("sa1-view", "tabindex")) === null, "and the viewport is no stop")
+
+    await id("sa1-grow").click()
+    await page.waitForSelector('[data-testid="sa1-y-thumb"]')
+    await settled(page)
+    await snapshot("content that grew")
+    expect(await present("sa1-x"), "content that grows late brings its scrollbars")
+    expect(await present("sa1-corner"), "and the corner where they meet")
+    expect((await attribute("sa1-view", "tabindex")) === "0", "the viewport is a stop for the keys")
+    expect((await attribute("sa1", "data-has-overflow-y")) === "", "the area says there is more")
+    const thumb = await box("sa1-y-thumb")
+    // 120 of 480 pixels are seen: a quarter of a track of 108 (the corner taken off).
+    expect(
+      Math.abs(thumb.height - 27) <= 1.5,
+      `the thumb is the share that is seen (${thumb.height})`
+    )
+
+    await id("sa1-view").evaluate((element) => void (element.scrollTop = 360))
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="sa1"]')?.hasAttribute("data-scrolling") === true
+    )
+    const moved = await box("sa1-y-thumb")
+    expect(Math.abs(moved.top - thumb.top - 81) <= 1.5, "and moves with the scroll, to its end")
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="sa1"]')?.hasAttribute("data-scrolling") === false
+    )
+    await snapshot("scrolled")
+
+    // A drag of the horizontal thumb, by a real pointer.
+    const across = await box("sa1-x-thumb")
+    await page.mouse.move(across.left + across.width / 2, across.top + 4)
+    await page.mouse.down()
+    await page.mouse.move(across.left + across.width / 2 + 40, across.top + 4, { steps: 4 })
+    await page.mouse.up()
+    const left = await id("sa1-view").evaluate((element) => element.scrollLeft)
+    expect(left > 100, `dragging a thumb scrolls the viewport (${left})`)
+    await page.waitForFunction(
+      () => document.querySelector('[data-testid="sa1"]')?.hasAttribute("data-scrolling") === false
+    )
+
+    await id("sa1-grow").click()
+    await page.waitForSelector('[data-testid="sa1-y"]', { state: "detached" })
+    await snapshot("nothing to scroll again")
+    expect(!(await present("sa1-corner")), "content that shrinks takes them away")
+  },
+
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

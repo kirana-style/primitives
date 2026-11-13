@@ -33,12 +33,15 @@
     "./popover": "./src/popover.ts",
     "./progress": "./src/progress.ts",
     "./radio-group": "./src/radio-group.ts",
+    "./scroll-area": "./src/scroll-area.ts",
     "./select": "./src/select.ts",
     "./separator": "./src/separator.ts",
     "./slider": "./src/slider.ts",
     "./switch": "./src/switch.ts",
     "./tabs": "./src/tabs.ts",
     "./toggle": "./src/toggle.ts",
+    "./toggle-group": "./src/toggle-group.ts",
+    "./toolbar": "./src/toolbar.ts",
     "./tooltip": "./src/tooltip.ts"
   },
   "dependencies": {

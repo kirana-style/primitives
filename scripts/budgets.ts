@@ -33,12 +33,15 @@ const COMPONENTS: Record<string, string[]> = {
   popover: ["popover"],
   progress: ["progress"],
   "radio-group": ["radio-group", "radio"],
+  "scroll-area": ["scroll-area"],
   select: ["select"],
   separator: ["separator"],
   slider: ["slider"],
   switch: ["switch"],
   tabs: ["tabs"],
   toggle: ["toggle"],
+  "toggle-group": ["toggle-group"],
+  toolbar: ["toolbar"],
   tooltip: ["tooltip"],
 }
 const EXTERNAL = ["react", "react-dom", "react/jsx-runtime", "react-dom/client"]

@@ -112,6 +112,23 @@ export {
 export { KuiSeparator } from "./separator"
 export { KuiToggle } from "./toggle"
 export {
+  KuiToggleGroup,
+  KuiToolbar,
+  KuiToolbarButton,
+  KuiToolbarGroup,
+  KuiToolbarInput,
+  KuiToolbarLink,
+  KuiToolbarSeparator,
+} from "./toolbar"
+export {
+  KuiScrollArea,
+  KuiScrollAreaContent,
+  KuiScrollAreaCorner,
+  KuiScrollAreaScrollbar,
+  KuiScrollAreaThumb,
+  KuiScrollAreaViewport,
+} from "./scroll-area"
+export {
   KuiSlider,
   KuiSliderControl,
   KuiSliderIndicator,

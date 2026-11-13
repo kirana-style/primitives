@@ -5,10 +5,10 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createFormControl } from "./services/form-control.ts"
-import { pushLayer } from "./services/layers.ts"
-import { POSITION_DEFAULTS, createPosition, sameOptions } from "./services/position.ts"
+import { popupFocus } from "./services/popup-focus.ts"
+import { createPopup } from "./services/popup.ts"
+import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
-import { createPresence } from "./services/presence.ts"
 import { stepTo } from "./services/roving.ts"
 import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
@@ -112,11 +112,15 @@ export function createSelect<Value = unknown>(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
   )
   const name = computed(() => props.get().name ?? field?.name.get())
-  const presence = createPresence(open)
-  const positioning = signal<Partial<PositionOptions>>({})
-  const position = createPosition(
-    computed(() => ({ ...POSITION_DEFAULTS, align: "start", ...positioning.get() }), sameOptions)
-  )
+  const placement = createPlacement({ align: "start" })
+  const layer = createPopup({
+    open,
+    setOpen,
+    kind: "select",
+    // The list moves focus itself, once its rows are in the page; the popup gives it back.
+    focus: popupFocus("none"),
+    placement,
+  })
 
   const highlighted = signal<Value | typeof NONE>(NONE)
   const isHighlighted = keyed(highlighted)
@@ -210,14 +214,14 @@ export function createSelect<Value = unknown>(
 
   return {
     open,
-    mounted: presence.mounted,
+    mounted: layer.mounted,
     value,
     label,
     named: computed(() => name.get() !== undefined),
     setOpen,
     setValue,
-    positioning,
-    mount: () => presence.start(),
+    positioning: placement.positioning,
+    mount: () => layer.start(),
     selected: (item) => isSelected.is(item),
     trigger: {
       props: computed(() => ({
@@ -226,8 +230,7 @@ export function createSelect<Value = unknown>(
         id: field?.controlId,
         role: "combobox",
         "aria-haspopup": "listbox",
-        "aria-expanded": String(open.get()),
-        "aria-controls": presence.mounted.get() ? popupId : undefined,
+        ...layer.expanded(popupId),
         // The trigger is the select's element in a form: its reset is heard through it.
         form: props.get().form,
         disabled: flag(disabled.get()),
@@ -262,6 +265,7 @@ export function createSelect<Value = unknown>(
       })),
       attach(element) {
         trigger = element
+        const untrigger = layer.attachTrigger(element)
         const chosen = value.peek()
         member = field?.join({
           element,
@@ -273,6 +277,7 @@ export function createSelect<Value = unknown>(
         const leave = inForm.attach(element)
         return () => {
           leave()
+          untrigger()
           member?.leave()
           member = undefined
           if (trigger === element) trigger = undefined
@@ -283,32 +288,15 @@ export function createSelect<Value = unknown>(
       props: computed(() => ({ "data-placeholder": flag(value.get() === null) })),
       attach: () => NOTHING,
     },
-    positioner: {
-      props: computed(() => ({
-        role: "presentation",
-        "data-open": flag(open.get()),
-        "data-closed": flag(!open.get()),
-        "data-side": position.side.get(),
-        "data-align": position.align.get(),
-      })),
-      attach(element) {
-        if (!trigger) return NOTHING
-        return position.attach(element, trigger)
-      },
-    },
+    positioner: layer.positioner,
     popup: {
       props: computed(() => {
-        const status = presence.status.get()
         return {
           id: popupId,
           role: "listbox",
           tabindex: "-1",
-          "data-open": flag(open.get()),
-          "data-closed": flag(!open.get()),
-          "data-starting-style": flag(status === "starting"),
-          "data-ending-style": flag(status === "ending"),
-          "data-side": position.side.get(),
-          "data-align": position.align.get(),
+          ...layer.state(),
+          ...layer.placed(),
           onKeyDown(event: KeyboardEvent) {
             switch (event.key) {
               case "ArrowDown":
@@ -351,34 +339,20 @@ export function createSelect<Value = unknown>(
       }),
       attach(element) {
         popup = element
-        const stops = [
-          presence.attach(element),
-          pushLayer({
-            element,
-            kind: "select",
-            branches: () => [trigger],
-            onEscape: (event) => setOpen(false, details("escape-key", event)),
-            onOutsidePress: (event) => setOpen(false, details("outside-press", event)),
-          }),
-        ]
+        const detach = layer.attach(element)
         // The items attach around the list, in an order each framework chooses: once all have,
-        // the chosen one takes focus, or the list itself.
+        // the chosen one takes focus, or the list itself. Unless it closed in the meantime.
         queueMicrotask(() => {
-          if (popup !== element) return
+          if (popup !== element || !open.peek()) return
           const current = highlighted.peek()
           const target = current === NONE ? undefined : elements.get(current)
           if (target) highlight(target, true)
           else element.focus({ preventScroll: true })
         })
         return () => {
-          for (const stop of stops.reverse()) stop()
+          detach()
           if (popup === element) popup = undefined
           highlighted.set(NONE)
-          // Focus goes back to the trigger unless the person moved it elsewhere meanwhile.
-          const active = element.ownerDocument.activeElement
-          if (active === element.ownerDocument.body || element.contains(active)) {
-            trigger?.focus({ preventScroll: true })
-          }
         }
       },
     },

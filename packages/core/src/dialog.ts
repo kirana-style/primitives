@@ -3,11 +3,10 @@ import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
-import { focusScope, isolate } from "./services/focus.ts"
 import { setGeometry } from "./services/geometry.ts"
-import { layersAbove, layersChanged, pushLayer } from "./services/layers.ts"
-import { createPresence } from "./services/presence.ts"
-import { lockScroll } from "./services/scroll-lock.ts"
+import { layersAbove, layersChanged } from "./services/layers.ts"
+import { lockPage, popupFocus } from "./services/popup-focus.ts"
+import { createPopup } from "./services/popup.ts"
 
 export interface DialogProps {
   id: string
@@ -47,57 +46,41 @@ export function createDialog(
     defaultValue: props.peek().defaultOpen ?? false,
     onChange: (value, by) => props.peek().onOpenChange?.(value, by),
   })
-  const presence = createPresence(open)
-  const modal = () => props.peek().modal ?? true
-
   // Which of the optional parts are in the page: the popup names them only then.
   const titled = signal(false)
   const described = signal(false)
   const nested = signal(0)
-  let trigger: HTMLElement | undefined
-  let backdrop: HTMLElement | undefined
 
   const setOpen = (next: boolean, by: ChangeDetails) => open.set(next, by)
-
-  const transition = () => {
-    const status = presence.status.get()
-    return {
-      "data-open": flag(open.get()),
-      "data-closed": flag(!open.get()),
-      "data-starting-style": flag(status === "starting"),
-      "data-ending-style": flag(status === "ending"),
-    }
-  }
+  const popup = createPopup({
+    open,
+    setOpen,
+    // An alert dialog stacks with the others.
+    kind: "dialog",
+    modal: () => props.peek().modal ?? true,
+    // An alert dialog asks for an answer.
+    outsidePress: () => !kind.alert && props.peek().dismissible !== false,
+    focus: popupFocus(),
+    hold: lockPage,
+  })
 
   return {
     open,
-    mounted: presence.mounted,
+    mounted: popup.mounted,
     setOpen,
-    mount: () => presence.start(),
+    mount: () => popup.start(),
     trigger: {
       props: computed(() => ({
         type: "button",
         "aria-haspopup": "dialog",
-        "aria-expanded": String(open.get()),
-        "aria-controls": presence.mounted.get() ? popupId : undefined,
-        "data-popup-open": flag(open.get()),
+        ...popup.expanded(popupId),
         onClick: (event: Event) => setOpen(!open.peek(), details("trigger-press", event)),
       })),
-      attach(element) {
-        trigger = element
-        return () => {
-          if (trigger === element) trigger = undefined
-        }
-      },
+      attach: (element) => popup.attachTrigger(element),
     },
     backdrop: {
-      props: computed(() => ({ role: "presentation", ...transition() })),
-      attach(element) {
-        backdrop = element
-        return () => {
-          if (backdrop === element) backdrop = undefined
-        }
-      },
+      props: computed(() => ({ role: "presentation", ...popup.state() })),
+      attach: (element) => popup.attachBackdrop(element),
     },
     popup: {
       props: computed(() => ({
@@ -107,40 +90,20 @@ export function createDialog(
         "aria-modal": props.get().modal === false ? undefined : "true",
         "aria-labelledby": titled.get() ? `${id}-title` : undefined,
         "aria-describedby": described.get() ? `${id}-description` : undefined,
-        ...transition(),
+        ...popup.state(),
         "data-nested-dialog-open": flag(nested.get() > 0),
       })),
       attach(element) {
-        const stops: (() => void)[] = [presence.attach(element)]
-        stops.push(
-          pushLayer({
-            element,
-            // An alert dialog stacks with the others.
-            kind: "dialog",
-            branches: () => [trigger],
-            modal: modal(),
-            onEscape: (event) => setOpen(false, details("escape-key", event)),
-            onOutsidePress(event) {
-              if (kind.alert || props.peek().dismissible === false) return
-              setOpen(false, details("outside-press", event))
-            },
-          })
-        )
-        // How many dialogs are open above this one, for a design that stacks them.
-        stops.push(
+        const stops = [
+          popup.attach(element),
+          // How many dialogs are open above this one, for a design that stacks them.
           effect(() => {
             layersChanged.get()
             const above = layersAbove(element, "dialog")
             nested.set(above)
             setGeometry(element, "--nested-dialogs", String(above))
-          })
-        )
-        // Undone in reverse: the page is no longer inert when focus goes back to the trigger.
-        stops.push(focusScope(element, { trap: modal(), restore: () => trigger }))
-        if (modal()) {
-          stops.push(lockScroll(element.ownerDocument))
-          stops.push(isolate(element, () => [backdrop]))
-        }
+          }),
+        ]
         return () => {
           for (const stop of stops.reverse()) stop()
         }

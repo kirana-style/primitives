@@ -108,6 +108,20 @@ note. Three places hold them:
   `--disable-gpu --disable-software-rasterizer`.
 - **A page that draws no frames must behave the same.** Nothing waits for an animation frame
   that can be decided at render or by reading a style.
+- **A popup is live only while it is open.** As it starts to close it leaves the stack, gives
+  focus back and lets the page go, and is inert through its exit. Before, a popup stayed in
+  the stack and kept focus until its exit animation ended: Escape meant for the popup under
+  it was swallowed, and Enter could press a button in a popup already on its way out. Held by
+  `tests/core/popup.test.ts`.
+- **A popup kept in the page while closed does nothing**: it is not in the stack and takes no
+  focus until it opens.
+- **Focus goes back along a chain, read as the popup closes**: the trigger; if it is gone or
+  hidden, what had focus before; if that is gone too, the popup this one was opened from. A
+  row that opens a dialog and is removed by what the dialog does is the usual case.
+- **A popup carries only what it uses.** Focus, modality and placement are given to the popup
+  layer, not imported by it: a tooltip does not carry a focus trap, a dialog does not carry
+  the positioning code. A shared service that imports everything makes every component pay
+  for the heaviest one; the size budgets caught it.
 - **Layers close in any order.** What a layer makes inert is counted, and given back when the
   last layer that needs it lets go; a layer that was already in the page when another opened
   is lifted out of that one's isolation while it is open. Held by `tests/core/ledger.test.ts`.

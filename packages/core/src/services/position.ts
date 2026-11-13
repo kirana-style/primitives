@@ -2,9 +2,9 @@ import { arrow, autoUpdate, computePosition, flip, offset, shift, size } from "@
 import type { Placement } from "@floating-ui/dom"
 
 import { carryDirection } from "../direction.ts"
-import { batch, signal } from "../reactivity.ts"
+import { batch, computed, signal } from "../reactivity.ts"
 import { setGeometry } from "./geometry.ts"
-import type { ReadonlySignal } from "../reactivity.ts"
+import type { ReadonlySignal, Signal } from "../reactivity.ts"
 
 export type Side = "top" | "right" | "bottom" | "left"
 export type Align = "start" | "center" | "end"
@@ -167,4 +167,19 @@ export function sameOptions(a: PositionOptions, b: PositionOptions): boolean {
     a.alignOffset === b.alignOffset &&
     a.collisionPadding === b.collisionPadding
   )
+}
+
+/** A popup's place: the service, and where its positioner part's adapter writes its own props. */
+export interface PopupPlacement {
+  readonly position: Position
+  readonly positioning: Signal<Partial<PositionOptions>>
+}
+
+/** A place against a trigger, with a kind's own defaults under what its positioner asks for. */
+export function createPlacement(defaults: Partial<PositionOptions> = {}): PopupPlacement {
+  const positioning = signal<Partial<PositionOptions>>({})
+  const position = createPosition(
+    computed(() => ({ ...POSITION_DEFAULTS, ...defaults, ...positioning.get() }), sameOptions)
+  )
+  return { position, positioning }
 }

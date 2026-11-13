@@ -17,11 +17,22 @@ export function tabbables(container: HTMLElement): HTMLElement[] {
 export interface FocusScopeOptions {
   /** Keeps Tab inside the container. */
   trap?: boolean
-  /** What takes focus on entry: the first tabbable (default), the container, or an element. */
-  initial?: "first" | "container" | (() => HTMLElement | null | undefined)
-  /** What takes focus back on exit: what had it before (default), or an element. */
+  /**
+   * What takes focus on entry: the first tabbable (default), the container, an element, or
+   * `"none"` when the caller moves it itself.
+   */
+  initial?: "first" | "container" | "none" | (() => HTMLElement | null | undefined) | undefined
+  /** What takes focus back on exit, before what had it when the scope began. */
   restore?: () => HTMLElement | null | undefined
+  /** Where focus goes when neither is in the page any more. */
+  fallback?: () => HTMLElement | null | undefined
 }
+
+/** Whether an element can take focus now: in the page, drawn, and not inert. */
+const reachable = (element: HTMLElement | null | undefined): element is HTMLElement =>
+  Boolean(element?.isConnected) &&
+  !element!.closest("[inert]") &&
+  element!.getClientRects().length > 0
 
 /** Moves focus into `container`, optionally keeps it there, and gives it back. */
 export function focusScope(container: HTMLElement, options: FocusScopeOptions = {}): () => void {
@@ -32,9 +43,11 @@ export function focusScope(container: HTMLElement, options: FocusScopeOptions = 
   const target =
     typeof initial === "function"
       ? initial()
-      : initial === "container"
-        ? container
-        : (tabbables(container)[0] ?? container)
+      : initial === "none"
+        ? undefined
+        : initial === "container"
+          ? container
+          : (tabbables(container)[0] ?? container)
   if (target === container && !container.hasAttribute("tabindex")) {
     container.setAttribute("tabindex", "-1")
   }
@@ -62,10 +75,11 @@ export function focusScope(container: HTMLElement, options: FocusScopeOptions = 
 
   return () => {
     if (options.trap) container.removeEventListener("keydown", onKeyDown)
-    const back = options.restore?.() ?? previous
     // Only when focus is still inside, or lost to the page: a person who moved it keeps it.
     const active = document.activeElement
     if (active === document.body || active === null || container.contains(active)) {
+      // A chain, read now: the first that is still there to take it.
+      const back = [options.restore?.(), previous, options.fallback?.()].find(reachable)
       back?.focus({ preventScroll: true })
     }
   }

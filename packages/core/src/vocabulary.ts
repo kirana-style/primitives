@@ -13,6 +13,8 @@ import { fieldsetVocabulary } from "./fieldset.vocabulary.ts"
 import { formVocabulary } from "./form.vocabulary.ts"
 import { hoverCardVocabulary } from "./hover-card.vocabulary.ts"
 import { menuVocabulary } from "./menu.vocabulary.ts"
+import { menubarVocabulary } from "./menubar.vocabulary.ts"
+import { state } from "./states.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
 import { selectVocabulary } from "./select.vocabulary.ts"
@@ -34,12 +36,22 @@ export const vocabulary = {
   button: buttonVocabulary,
   checkbox: checkboxVocabulary,
   collapsible: collapsibleVocabulary,
+  // A context menu's parts are a menu's, but for its trigger: an area, not a button.
+  contextMenu: {
+    ...menuVocabulary,
+    trigger: {
+      description:
+        "The area a secondary press, or a long press on a touch screen, opens the menu in.",
+      states: { popupOpen: state("data-popup-open", "Present when the menu is open.") },
+    },
+  },
   dialog: dialogVocabulary,
   field: fieldVocabulary,
   fieldset: fieldsetVocabulary,
   form: formVocabulary,
   hoverCard: hoverCardVocabulary,
   menu: menuVocabulary,
+  menubar: menubarVocabulary,
   meter: meterVocabulary,
   popover: popoverVocabulary,
   progress: progressVocabulary,

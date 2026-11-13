@@ -2,11 +2,12 @@ import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
-import { SUBMENU_DELAY, createMenu } from "../../packages/core/src/menu.ts"
-import type { Menu, MenuItemOptions, MenuProps } from "../../packages/core/src/menu.ts"
+import { LONG_PRESS, SUBMENU_DELAY, createMenu } from "../../packages/core/src/menu.ts"
+import type { Menu, MenuAround, MenuItemOptions, MenuProps } from "../../packages/core/src/menu.ts"
 import { details } from "../../packages/core/src/part.ts"
 import type { Part } from "../../packages/core/src/part.ts"
 import { effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
+import { createMenubar } from "../../packages/core/src/menubar.ts"
 import { SAFE_AREA_REST, createSafeArea } from "../../packages/core/src/services/safe-area.ts"
 import { find, focused, mount, style } from "./page.ts"
 
@@ -29,7 +30,7 @@ function menu(
   id: string,
   content: (made: Menu) => Content,
   given: Partial<MenuProps> = {},
-  parent?: Menu
+  around: MenuAround = {}
 ): Drawn {
   const reasons: string[] = []
   const props = signal<MenuProps>({
@@ -37,8 +38,8 @@ function menu(
     onOpenChange: (_open, by) => void reasons.push(by.reason),
     ...given,
   })
-  const made = createMenu(props, { parent })
-  const stops: (() => void)[] = [bind(trigger, made.trigger)]
+  const made = createMenu(props, around)
+  const stops: (() => void)[] = [bind(trigger, around.context ? made.area : made.trigger)]
   let positioner: HTMLElement | undefined
   let undo: (() => void)[] = []
   const draw = () => {
@@ -387,11 +388,11 @@ describe("a submenu", () => {
             "d",
             (deep) => (addDeep) => void addDeep("link", deep.item(), "Link"),
             {},
-            share
+            { parent: share }
           )
         },
         {},
-        made
+        { parent: made }
       )
       add("print", made.item(), "Print")
       add("quit", made.item(), "Quit")
@@ -577,6 +578,265 @@ describe("a submenu", () => {
     expect(drawn.share!.made.open.peek()).toBe(false)
     expect(top.made.open.peek()).toBe(false)
     expect(drawn.share!.reasons.at(-1)).toBe("outside-press")
+  })
+})
+
+describe("a context menu", () => {
+  const AREA = `<button id="before">Before</button><div id="area" style="width: 300px; height: 200px">Area</div>`
+
+  function context(root: HTMLElement, given: Partial<MenuProps> = {}) {
+    return menu(
+      root,
+      find(root, "area"),
+      "c",
+      (made) => (add) => {
+        add("copy", made.item(), "Copy")
+        add("paste", made.item(), "Paste")
+      },
+      given,
+      { context: true }
+    )
+  }
+
+  const secondary = (element: HTMLElement, x: number, y: number) =>
+    element.dispatchEvent(
+      new MouseEvent("contextmenu", { clientX: x, clientY: y, bubbles: true, cancelable: true })
+    )
+
+  it("opens at the pointer in place of the browser's own, and is named by nothing absent", async () => {
+    const root = mount(AREA)
+    const { made, popup, reasons } = context(root)
+    const area = find(root, "area")
+    find(root, "before").focus()
+    const box = area.getBoundingClientRect()
+    const shown = secondary(area, box.left + 40, box.top + 30)
+    // Prevented: the browser's menu does not open.
+    expect(shown).toBe(false)
+    await settled()
+    expect(made.open.peek()).toBe(true)
+    expect(focused()).toBe("c-popup")
+    expect(popup()!.hasAttribute("aria-labelledby")).toBe(false)
+    expect(area.hasAttribute("data-popup-open")).toBe(true)
+    expect(area.hasAttribute("aria-haspopup")).toBe(false)
+    await expect
+      .poll(() => Math.round(popup()!.getBoundingClientRect().left))
+      .toBe(Math.round(box.left + 40))
+    expect(Math.round(popup()!.getBoundingClientRect().top)).toBe(Math.round(box.top + 30))
+    await press("ArrowDown")
+    expect(focused()).toBe("copy")
+    await press("Escape")
+    // No trigger to go back to: what had focus before has it again.
+    expect(focused()).toBe("before")
+    expect(reasons).toEqual(["trigger-press", "escape-key"])
+  })
+
+  it("moves to a second press while it is open", async () => {
+    const root = mount(AREA)
+    const { made, popup, reasons } = context(root)
+    const area = find(root, "area")
+    const box = area.getBoundingClientRect()
+    secondary(area, box.left + 10, box.top + 10)
+    await settled()
+    await expect
+      .poll(() => Math.round(popup()!.getBoundingClientRect().left))
+      .toBe(Math.round(box.left + 10))
+    // A real press this time: its pointer-down is outside the popup, and does not close it.
+    await userEvent.click(area, { button: "right", position: { x: 120, y: 90 } })
+    expect(made.open.peek()).toBe(true)
+    expect(reasons).toEqual(["trigger-press"])
+    // The press took focus to the page: the menu has it again, and the keys still work.
+    expect(focused()).toBe("c-popup")
+    await expect
+      .poll(() => Math.round(popup()!.getBoundingClientRect().left))
+      .toBe(Math.round(box.left + 120))
+    expect(Math.round(popup()!.getBoundingClientRect().top)).toBe(Math.round(box.top + 90))
+  })
+
+  it("leaves the browser's own menu alone while it is disabled", () => {
+    const root = mount(AREA)
+    const { made } = context(root, { disabled: true })
+    expect(secondary(find(root, "area"), 10, 10)).toBe(true)
+    expect(made.open.peek()).toBe(false)
+  })
+
+  it("opens for a finger that rests, not for one that moves or lifts", async () => {
+    const root = mount(AREA)
+    const { made } = context(root)
+    const area = find(root, "area")
+    const touch = (type: string, x: number, y: number) =>
+      area.dispatchEvent(
+        new PointerEvent(type, { pointerType: "touch", clientX: x, clientY: y, bubbles: true })
+      )
+    touch("pointerdown", 50, 50)
+    touch("pointermove", 50, 90)
+    await wait(LONG_PRESS + 80)
+    expect(made.open.peek()).toBe(false)
+    touch("pointerdown", 50, 50)
+    touch("pointerup", 50, 50)
+    await wait(LONG_PRESS + 80)
+    expect(made.open.peek()).toBe(false)
+    // A mouse held down is not a long press.
+    area.dispatchEvent(new PointerEvent("pointerdown", { pointerType: "mouse", bubbles: true }))
+    await wait(LONG_PRESS + 80)
+    expect(made.open.peek()).toBe(false)
+    touch("pointerdown", 50, 50)
+    touch("pointermove", 53, 52)
+    await wait(LONG_PRESS + 80)
+    expect(made.open.peek()).toBe(true)
+  })
+})
+
+describe("a menubar", () => {
+  const BAR = `
+    <button id="before">Before</button>
+    <div id="bar">
+      <button id="one">File</button>
+      <button id="two">Edit</button>
+      <button id="off">Off</button>
+      <button id="three">View</button>
+    </div>
+    <button id="after">After</button>`
+
+  function bar(root: HTMLElement, dir?: "rtl") {
+    if (dir) root.setAttribute("dir", dir)
+    const made = createMenubar(signal({ id: "bar" }))
+    onTestFinished(bind(find(root, "bar"), made.root))
+    const menus: Record<string, Drawn> = {}
+    const sub: { more?: Drawn } = {}
+    for (const id of ["one", "two", "off", "three"]) {
+      menus[id] = menu(
+        root,
+        find(root, id),
+        id,
+        (own) => (add) => {
+          add(`${id}-a`, own.item(), "Alpha")
+          if (id === "two") {
+            const more = add("more", { props: signal({}), attach: () => () => {} }, "More")
+            sub.more = menu(
+              root,
+              more,
+              "more",
+              (inner) => (addTo) => void addTo("deep", inner.item(), "Deep"),
+              {},
+              { parent: own }
+            )
+          }
+          add(`${id}-b`, own.item(), "Beta")
+        },
+        { disabled: id === "off" },
+        { menubar: made }
+      )
+    }
+    return { made, menus, sub }
+  }
+
+  it("is one stop for Tab, and the arrows go along its triggers", async () => {
+    const root = mount(BAR)
+    bar(root)
+    const one = find(root, "one-trigger")
+    expect(find(root, "bar").getAttribute("role")).toBe("menubar")
+    expect(one.getAttribute("role")).toBe("menuitem")
+    expect(one.getAttribute("aria-haspopup")).toBe("menu")
+    // Before focus has been in it, any trigger can take it.
+    expect(one.getAttribute("tabindex")).toBe("0")
+    expect(find(root, "three-trigger").getAttribute("tabindex")).toBe("0")
+    one.focus()
+    expect(find(root, "three-trigger").getAttribute("tabindex")).toBe("-1")
+    await press("ArrowRight")
+    expect(focused()).toBe("two-trigger")
+    await press("ArrowRight")
+    // Past the disabled one.
+    expect(focused()).toBe("three-trigger")
+    await press("ArrowRight")
+    expect(focused()).toBe("one-trigger")
+    await press("End")
+    expect(focused()).toBe("three-trigger")
+    expect(find(root, "three-trigger").getAttribute("tabindex")).toBe("0")
+    expect(one.getAttribute("tabindex")).toBe("-1")
+    await press("Tab")
+    expect(focused()).toBe("after")
+  })
+
+  it("opens a menu with ArrowDown, and an arrow across opens the next in its place", async () => {
+    const root = mount(BAR)
+    const { menus } = bar(root)
+    find(root, "one-trigger").focus()
+    await press("ArrowDown")
+    await settled()
+    expect(focused()).toBe("one-a")
+    await press("ArrowRight")
+    await settled()
+    expect(menus.one!.made.open.peek()).toBe(false)
+    expect(menus.two!.made.open.peek()).toBe(true)
+    expect(focused()).toBe("two-a")
+    expect(menus.one!.reasons).toEqual(["trigger-press", "list-navigation"])
+    await press("ArrowLeft")
+    await settled()
+    expect(focused()).toBe("one-a")
+    await press("ArrowLeft")
+    await settled()
+    // Round to the last, past the disabled one.
+    expect(focused()).toBe("three-a")
+    await press("Escape")
+    expect(focused()).toBe("three-trigger")
+    expect(Object.values(menus).some((each) => each.made.open.peek())).toBe(false)
+  })
+
+  it("a submenu's arrows are its own first: in, back, and only then across", async () => {
+    const root = mount(BAR)
+    const { menus, sub } = bar(root)
+    find(root, "two-trigger").focus()
+    await press("ArrowDown")
+    await settled()
+    await press("ArrowDown")
+    expect(focused()).toBe("more-trigger")
+    await press("ArrowRight")
+    await settled()
+    // Into the submenu, not across to the next menu.
+    expect(focused()).toBe("deep")
+    expect(menus.two!.made.open.peek()).toBe(true)
+    await press("ArrowLeft")
+    expect(focused()).toBe("more-trigger")
+    expect(menus.two!.made.open.peek()).toBe(true)
+    await press("ArrowRight")
+    await settled()
+    await press("ArrowRight")
+    await settled()
+    // From an item that opens nothing, across: every menu of this one closes.
+    expect(sub.more!.made.open.peek()).toBe(false)
+    expect(menus.two!.made.open.peek()).toBe(false)
+    expect(focused()).toBe("three-a")
+  })
+
+  it("while one is open, the pointer on another trigger opens that one instead", async () => {
+    const root = mount(BAR)
+    const { menus } = bar(root)
+    await userEvent.hover(find(root, "two-trigger"))
+    // Nothing is open: the pointer opens nothing.
+    expect(menus.two!.made.open.peek()).toBe(false)
+    await userEvent.click(find(root, "one-trigger"))
+    await settled()
+    await userEvent.hover(find(root, "two-trigger"))
+    await settled()
+    expect(menus.one!.made.open.peek()).toBe(false)
+    expect(menus.one!.reasons.at(-1)).toBe("sibling-open")
+    expect(menus.two!.made.open.peek()).toBe(true)
+    expect(focused()).toBe("two-popup")
+    await userEvent.hover(find(root, "off-trigger"))
+    expect(menus.two!.made.open.peek()).toBe(true)
+  })
+
+  it("follows the reading direction", async () => {
+    const root = mount(BAR)
+    bar(root, "rtl")
+    find(root, "one-trigger").focus()
+    await press("ArrowLeft")
+    expect(focused()).toBe("two-trigger")
+    await press("ArrowDown")
+    await settled()
+    await press("ArrowLeft")
+    await settled()
+    expect(focused()).toBe("three-a")
   })
 })
 

@@ -473,6 +473,332 @@ export const vocabulary = {
         }
       }
     },
+    "contextMenu": {
+      "parts": {
+        "trigger": {
+          "description": "The area a secondary press, or a long press on a touch screen, opens the menu in.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the menu is open.",
+              "selector": "[data-popup-open]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "positioner": {
+          "description": "Places the menu against its trigger. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          }
+        },
+        "popup": {
+          "description": "The menu itself: the list of items.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "arrow": {
+          "description": "An element that points at the trigger.",
+          "states": {
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "uncentered": {
+              "attribute": "data-uncentered",
+              "description": "Present when the arrow cannot sit at the trigger's centre.",
+              "selector": "[data-uncentered]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "An action. Choosing it closes the menu.",
+          "states": {
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "group": {
+          "description": "Items that belong together, named by their label.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "groupLabel": {
+          "description": "The name of a group. Outside a group it is plain text, and names nothing.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A line between items.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "checkboxItem": {
+          "description": "An item that is checked or not. Choosing it leaves the menu open.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "checkboxItemIndicator": {
+          "description": "A mark a checkbox item shows while it is checked.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "radioGroup": {
+          "description": "Radio items of which one is chosen.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "radioItem": {
+          "description": "One choice of a radio group. Choosing it leaves the menu open.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "radioItemIndicator": {
+          "description": "A mark a radio item shows while it is the chosen one.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present when it is checked.",
+              "selector": "[data-checked]"
+            },
+            "unchecked": {
+              "attribute": "data-unchecked",
+              "description": "Present when it is not checked.",
+              "selector": "[data-unchecked]"
+            }
+          },
+          "exclusive": [
+            [
+              "checked",
+              "unchecked"
+            ]
+          ],
+          "variables": {}
+        },
+        "submenuTrigger": {
+          "description": "An item that opens a menu beside it.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when its menu is open.",
+              "selector": "[data-popup-open]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "dialog": {
       "parts": {
         "trigger": {
@@ -1355,6 +1681,22 @@ export const vocabulary = {
               "description": "Present on the item the pointer or the keyboard is on.",
               "selector": "[data-highlighted]"
             },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "menubar": {
+      "parts": {
+        "root": {
+          "description": "The row of menus. A menu inside it is one of its items.",
+          "states": {
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",

@@ -84,6 +84,16 @@ button {
   outline: none;
 }
 
+.area {
+  width: 300px;
+  height: 120px;
+  border: 1px dashed #999;
+}
+.bar {
+  display: flex;
+  gap: 4px;
+}
+
 .item {
   /* A row: white space between its parts, which each framework keeps or drops, draws nothing. */
   display: flex;

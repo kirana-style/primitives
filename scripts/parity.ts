@@ -130,6 +130,8 @@ const IDIOM: Record<
     rename: { Direction: "DirectionProvider", injectDirection: "useDirection" },
     without: {
       AlertDialog: "the dialog's directives with another selector on the root: `kuiAlertDialog`",
+      ContextMenu:
+        "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
     },
     extra: {
       "Select.Input":
@@ -176,7 +178,8 @@ for (const [adapter, given] of Object.entries(shapes)) {
   const problems: string[] = []
   for (const [name, parts] of Object.entries(react)) {
     const theirs = shape[name]
-    if (!theirs) {
+    // A component it makes from another's parts is not held to React's list of them.
+    if (!theirs || idiom.without?.[name]) {
       if (!idiom.without?.[name]) problems.push(`has no ${name}`)
       continue
     }

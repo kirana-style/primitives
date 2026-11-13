@@ -11,7 +11,9 @@ import {
   Fieldset,
   Form,
   HoverCard,
+  ContextMenu,
   Menu,
+  Menubar,
   Meter,
   Popover,
   Progress,
@@ -44,6 +46,7 @@ export function App() {
   const [controlled, setControlled] = createSignal(false)
   const [fruit, setFruit] = createSignal<string | null>("Banana")
   const [action, setAction] = createSignal("none")
+  const [picked, setPicked] = createSignal("none")
   const [view, setView] = createSignal("list")
   const [presses, setPresses] = createSignal(0)
   const [locked, setLocked] = createSignal(false)
@@ -515,6 +518,127 @@ export function App() {
         <output data-testid="mn1-output">
           {action()} {view()}
         </output>
+      </section>
+      <section data-fixture="context-menu">
+        <ContextMenu.Root id="cm1">
+          <ContextMenu.Trigger class="area" data-testid="cm1-area">
+            Press here
+          </ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner data-testid="cm1-positioner">
+              <ContextMenu.Popup class="popup" aria-label="Actions" data-testid="cm1-popup">
+                <ContextMenu.Item
+                  class="item"
+                  data-testid="cm1-copy"
+                  onClick={() => setPicked("cm1-copy")}
+                >
+                  Copy
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  class="item"
+                  data-testid="cm1-paste"
+                  onClick={() => setPicked("cm1-paste")}
+                >
+                  Paste
+                </ContextMenu.Item>
+              </ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>
+      </section>
+      <section data-fixture="menubar">
+        <Menubar id="mb1" class="bar" data-testid="mb1">
+          <Menu.Root id="mb1f">
+            <Menu.Trigger data-testid="mb1-file">File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="mb1f-positioner">
+                <Menu.Popup class="popup" data-testid="mb1f-popup">
+                  <Menu.Item
+                    class="item"
+                    data-testid="mb1f-new"
+                    onClick={() => setPicked("mb1f-new")}
+                  >
+                    New
+                  </Menu.Item>
+                  <Menu.Item
+                    class="item"
+                    data-testid="mb1f-save"
+                    onClick={() => setPicked("mb1f-save")}
+                  >
+                    Save
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root id="mb1e">
+            <Menu.Trigger data-testid="mb1-edit">Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="mb1e-positioner">
+                <Menu.Popup class="popup" data-testid="mb1e-popup">
+                  <Menu.Item
+                    class="item"
+                    data-testid="mb1e-undo"
+                    onClick={() => setPicked("mb1e-undo")}
+                  >
+                    Undo
+                  </Menu.Item>
+                  <Menu.SubmenuRoot id="mb1em">
+                    <Menu.SubmenuTrigger class="item" data-testid="mb1e-find">
+                      Find
+                    </Menu.SubmenuTrigger>
+                    <Menu.Portal>
+                      <Menu.Positioner data-testid="mb1em-positioner">
+                        <Menu.Popup class="popup" data-testid="mb1em-popup">
+                          <Menu.Item
+                            class="item"
+                            data-testid="mb1em-next"
+                            onClick={() => setPicked("mb1em-next")}
+                          >
+                            Next
+                          </Menu.Item>
+                        </Menu.Popup>
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  </Menu.SubmenuRoot>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root id="mb1v" disabled>
+            <Menu.Trigger data-testid="mb1-view">View</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="mb1v-positioner">
+                <Menu.Popup class="popup" data-testid="mb1v-popup">
+                  <Menu.Item
+                    class="item"
+                    data-testid="mb1v-zoom"
+                    onClick={() => setPicked("mb1v-zoom")}
+                  >
+                    Zoom
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root id="mb1h">
+            <Menu.Trigger data-testid="mb1-help">Help</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="mb1h-positioner">
+                <Menu.Popup class="popup" data-testid="mb1h-popup">
+                  <Menu.Item
+                    class="item"
+                    data-testid="mb1h-about"
+                    onClick={() => setPicked("mb1h-about")}
+                  >
+                    About
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>
+        <output data-testid="mb1-output">{picked()}</output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

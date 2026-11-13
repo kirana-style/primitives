@@ -4,7 +4,7 @@ import type { ChangeDetails, Part } from "../part.ts"
 import { computed, effect, untracked } from "../reactivity.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
 import { pushLayer } from "./layers.ts"
-import type { PopupPlacement } from "./position.ts"
+import type { Anchor, PopupPlacement } from "./position.ts"
 import { createPresence } from "./presence.ts"
 import type { TransitionStatus } from "./presence.ts"
 
@@ -16,8 +16,8 @@ export interface PopupOptions {
   kind: string
   /** Blocks what is behind it: the page inert, its scroll locked, Tab kept inside. Read as it opens. */
   modal?: () => boolean
-  /** Whether a press outside closes it. Default: it does. Read at each press. */
-  outsidePress?: () => boolean
+  /** Whether a press outside closes it. Default: it does. Asked at each press. */
+  outsidePress?: (event: PointerEvent) => boolean
   /**
    * What focus does while the popup is open (`popupFocus` from `popup-focus.ts`): it moves in,
    * goes back as the popup closes, and a modal popup keeps it and blocks the page. Left out,
@@ -32,6 +32,8 @@ export interface PopupOptions {
    * placed, a dialog, does not carry the positioning code.
    */
   placement?: PopupPlacement
+  /** What it is placed against, when that is not its trigger: a point, for a context menu. */
+  anchor?: () => Anchor | undefined
 }
 
 /** What a popup's focus is told: whether the popup is modal, and its other elements. */
@@ -104,7 +106,7 @@ export function createPopup(options: PopupOptions): Popup {
         modal,
         onEscape: (event) => dismiss("escape-key", event),
         onOutsidePress(event) {
-          if (options.outsidePress?.() === false) return
+          if (options.outsidePress?.(event) === false) return
           dismiss("outside-press", event)
         },
       }),
@@ -207,8 +209,9 @@ export function createPopup(options: PopupOptions): Popup {
         ...placed(),
       })),
       attach(element) {
-        if (!position || !trigger) return NOTHING
-        return position.attach(element, trigger, open)
+        const anchor = options.anchor ? options.anchor() : trigger
+        if (!position || !anchor) return NOTHING
+        return position.attach(element, anchor, open)
       },
     },
     arrow: {

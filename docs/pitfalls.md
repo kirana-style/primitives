@@ -65,6 +65,24 @@ note. Three places hold them:
   `closeOnClick`.
 - **Focus is on the row**, not `aria-activedescendant`: a phone's screen reader does not
   follow the second.
+- **A context menu that is asked to move is not closed first.** A second secondary press in
+  its area begins outside the popup; closing for it and opening again depends on when a
+  caller who holds `open` answers, and the menu ended closed on some frameworks. The press
+  is not an outside press: the menu stays open, moves, and takes focus back (the press took
+  it to the page). A plain press in the area still closes it.
+- **A context menu is named by its caller.** It has no trigger to be `aria-labelledby`, and
+  a reference to an id that is not in the page is a fault: give the popup an `aria-label`.
+- **A touch screen may not send `contextmenu`** for a finger that rests. The area times the
+  rest itself, and lets go when the finger moves (a scroll) or lifts.
+- **A press counts from inside the border.** A test that presses at a point of an element
+  and reads a rectangle back adds the border, and allows a pixel: popups are put on whole
+  pixels, the page may not be.
+- **In a menubar an arrow belongs to the innermost thing that answers it**: a submenu's
+  trigger opens with it, a submenu closes with the other, and only an item that does neither
+  sends it across to the next menu. A key a row answered is `defaultPrevented` by the time
+  the menu hears it.
+- **A bar is one stop for Tab, and a server cannot know which trigger is first.** Until
+  focus has been in the bar every trigger can take it; after, only the one it was last on.
 - **White space between a row's parts is drawn by some frameworks and not others.** A row is
   a flex box, or its parts are elements with nothing between them.
 

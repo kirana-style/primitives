@@ -1,5 +1,5 @@
 import { arrow, autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom"
-import type { Placement } from "@floating-ui/dom"
+import type { Placement, VirtualElement } from "@floating-ui/dom"
 
 import { carryDirection } from "../direction.ts"
 import { batch, computed, effect, signal } from "../reactivity.ts"
@@ -27,6 +27,20 @@ export const POSITION_DEFAULTS: PositionOptions = {
   collisionPadding: 5,
 }
 
+/** What a popup is placed against: an element, or a place in the viewport that is none. */
+export type Anchor = Element | VirtualElement
+
+/** A point of the viewport as an anchor; `from` is the element it was pressed in. */
+export function pointAnchor(read: () => { x: number; y: number }, from?: Element): Anchor {
+  return {
+    getBoundingClientRect() {
+      const { x, y } = read()
+      return new DOMRect(x, y, 0, 0)
+    },
+    ...(from ? { contextElement: from } : {}),
+  }
+}
+
 export interface Position {
   /** The side the popup ended on, which a flip can change. */
   readonly side: ReadonlySignal<Side>
@@ -39,7 +53,9 @@ export interface Position {
    * Places `positioner` against `anchor` and keeps it placed, while `following` holds (always,
    * when left out): a popup on its way out stays where it was. Returns the stop.
    */
-  attach(positioner: HTMLElement, anchor: Element, following?: ReadonlySignal<boolean>): () => void
+  attach(positioner: HTMLElement, anchor: Anchor, following?: ReadonlySignal<boolean>): () => void
+  /** Places it again now: its anchor is a point that moved. */
+  refresh(): void
   /**
    * An element that points at the anchor. It is placed along the popup's edge (`left` or `top`);
    * which edge it sits on is the design's, from `data-side`. Returns the removal.
@@ -85,12 +101,14 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
         if (pointer === element) pointer = undefined
       }
     },
+    refresh: () => replace?.(),
     attach(positioner, anchor, following) {
       setGeometry(positioner, "position", "absolute")
       setGeometry(positioner, "left", "0px")
       setGeometry(positioner, "top", "0px")
       // Before it is placed: `start` and `end` are read in the popup's own direction.
-      const forget = carryDirection(positioner, anchor)
+      const from = anchor instanceof Element ? anchor : anchor.contextElement
+      const forget = from ? carryDirection(positioner, from) : () => {}
       // The first placement resolves in a microtask, before anything is drawn: the positioner is
       // never hidden for it, so the popup inside can take focus as soon as it attaches.
 

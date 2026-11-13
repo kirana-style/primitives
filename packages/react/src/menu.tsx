@@ -15,6 +15,7 @@ import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
+import { MenubarContext } from "./menubar-context.ts"
 import { Portal as BodyPortal, useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -41,16 +42,29 @@ export type RootProps = Omit<MenuProps, "id"> & { id?: string; children?: ReactN
 function provided(controller: Controller, children: ReactNode): ReactElement {
   return (
     <Context.Provider value={controller}>
-      {/* A group around a submenu is not a group of the submenu's own items. */}
-      <GroupContext.Provider value={null}>{children}</GroupContext.Provider>
+      {/* A group around a submenu is not a group of the submenu's own items; nor is a menu
+          written inside a bar's menu one of the bar's. */}
+      <MenubarContext.Provider value={null}>
+        <GroupContext.Provider value={null}>{children}</GroupContext.Provider>
+      </MenubarContext.Provider>
     </Context.Provider>
   )
 }
 
 function Root({ children, ...props }: RootProps): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
-  return provided(useController(within(createMenu, { direction }), props), children)
+  const menubar = useContext(MenubarContext) ?? undefined
+  return provided(useController(within(createMenu, { direction, menubar }), props), children)
 }
+
+/** A menu for an area of the page, opened at the pointer. Its trigger is the area. */
+function ContextRoot({ children, ...props }: RootProps): ReactElement {
+  const direction = useContext(DirectionContext) ?? undefined
+  return provided(useController(within(createMenu, { direction, context: true }), props), children)
+}
+
+/** The area a secondary press, or a long press on a touch screen, opens the menu in. */
+const ContextTrigger = (props: PartComponentProps) => usePart(useMenu("Trigger").area, "div", props)
 
 /** A menu that one of this menu's items opens. Its trigger is `<Menu.SubmenuTrigger>`. */
 function SubmenuRoot({ children, ...props }: RootProps): ReactElement {
@@ -218,3 +232,5 @@ export const Menu = {
   SubmenuRoot,
   SubmenuTrigger,
 }
+
+export const ContextMenu = { ...Menu, Root: ContextRoot, Trigger: ContextTrigger }

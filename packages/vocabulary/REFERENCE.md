@@ -202,6 +202,137 @@ The content. In the page while open, and through its exit's motion.
 | `--collapsible-panel-height` | The panel's content height while it opens or closes, `auto` once it is open. |
 | `--collapsible-panel-width` | The panel's content width while it opens or closes, `auto` once it is open. |
 
+## ContextMenu
+
+### ContextMenu.Trigger
+
+The area a secondary press, or a long press on a touch screen, opens the menu in.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the menu is open. |
+
+### ContextMenu.Positioner
+
+Places the menu against its trigger. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### ContextMenu.Popup
+
+The menu itself: the list of items.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+### ContextMenu.Arrow
+
+An element that points at the trigger.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
+
+### ContextMenu.Item
+
+An action. Choosing it closes the menu.
+
+| Attribute | When |
+| --- | --- |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### ContextMenu.Group
+
+Items that belong together, named by their label.
+
+### ContextMenu.GroupLabel
+
+The name of a group. Outside a group it is plain text, and names nothing.
+
+### ContextMenu.Separator
+
+A line between items.
+
+### ContextMenu.CheckboxItem
+
+An item that is checked or not. Choosing it leaves the menu open.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### ContextMenu.CheckboxItemIndicator
+
+A mark a checkbox item shows while it is checked.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+
+### ContextMenu.RadioGroup
+
+Radio items of which one is chosen.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### ContextMenu.RadioItem
+
+One choice of a radio group. Choosing it leaves the menu open.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### ContextMenu.RadioItemIndicator
+
+A mark a radio item shows while it is the chosen one.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present when it is checked. |
+| `data-unchecked` | Present when it is not checked. |
+
+### ContextMenu.SubmenuTrigger
+
+An item that opens a menu beside it.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when its menu is open. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
 ## Dialog
 
 ### Dialog.Trigger
@@ -532,6 +663,16 @@ An item that opens a menu beside it.
 | --- | --- |
 | `data-popup-open` | Present when its menu is open. |
 | `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+## Menubar
+
+### Menubar.Root
+
+The row of menus. A menu inside it is one of its items.
+
+| Attribute | When |
+| --- | --- |
 | `data-disabled` | Present when it is disabled. |
 
 ## Meter

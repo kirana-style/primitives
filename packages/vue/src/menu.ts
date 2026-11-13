@@ -11,6 +11,7 @@ import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
+import { MENUBAR } from "./menubar-context.ts"
 import { positionerComponent } from "./popover.ts"
 import {
   context,
@@ -36,7 +37,7 @@ function inside<T>(key: InjectionKey<T>, parent: string): T {
 }
 
 /** `v-model:open`; `@open-change` carries the details. */
-function root(name: string, sub: boolean) {
+function root(name: string, kind: "menu" | "submenu" | "context") {
   return defineComponent({
     name,
     props: {
@@ -49,10 +50,12 @@ function root(name: string, sub: boolean) {
     emits: ["update:open", "openChange"],
     setup(props, { slots, emit }) {
       const generated = useId()
-      const parent = sub ? scope.use() : undefined
+      const parent = kind === "submenu" ? scope.use() : undefined
       const direction = useDirectionAround()
+      const menubar = kind === "menu" ? (inject(MENUBAR, null) ?? undefined) : undefined
+      const around = { parent, direction, menubar, context: kind === "context" }
       scope.provide(
-        controller(within(createMenu, { parent, direction }), () => ({
+        controller(within(createMenu, around), () => ({
           id: props.id ?? generated,
           open: props.open,
           defaultOpen: props.defaultOpen,
@@ -64,8 +67,10 @@ function root(name: string, sub: boolean) {
           },
         }))
       )
-      // A group around a submenu is not a group of the submenu's own items.
+      // A group around a submenu is not a group of the submenu's own items; nor is a menu
+      // written inside a bar's menu one of the bar's.
       provide(GROUP, null)
+      provide(MENUBAR, null)
       return () => slots.default?.()
     },
   })
@@ -206,7 +211,7 @@ const RadioItemIndicator = defineComponent({
 })
 
 export const Menu = {
-  Root: root("MenuRoot", false),
+  Root: root("MenuRoot", "menu"),
   Trigger: partComponent("MenuTrigger", "button", () => scope.use().trigger),
   Portal: portalComponent("MenuPortal", () => scope.use().mounted),
   Positioner: positionerComponent(
@@ -226,6 +231,14 @@ export const Menu = {
   RadioItem,
   RadioItemIndicator,
   /** A menu that one of this menu's items opens. Its trigger is `Menu.SubmenuTrigger`. */
-  SubmenuRoot: root("MenuSubmenuRoot", true),
+  SubmenuRoot: root("MenuSubmenuRoot", "submenu"),
   SubmenuTrigger: partComponent("MenuSubmenuTrigger", "div", () => scope.use().trigger),
+}
+
+export const ContextMenu = {
+  ...Menu,
+  /** A menu for an area of the page, opened at the pointer. Its trigger is the area. */
+  Root: root("ContextMenuRoot", "context"),
+  /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
+  Trigger: partComponent("ContextMenuTrigger", "div", () => scope.use().area),
 }

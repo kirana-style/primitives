@@ -6,7 +6,7 @@
 
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
-  import { provide } from "./context.ts"
+  import { provide, useMenubar } from "./context.ts"
   import type { RootProps } from "../types.ts"
 
   let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, id, children }: RootProps<MenuProps> = $props()
@@ -18,7 +18,7 @@
   }
 
   provide(
-    controller(within(createMenu, { direction: useDirectionAround() }), () => ({
+    controller(within(createMenu, { direction: useDirectionAround(), menubar: useMenubar() }), () => ({
       id: id ?? generated,
       open,
       defaultOpen,

@@ -1,6 +1,7 @@
 import { bindable } from "./bindable.ts"
 import { directionOf } from "./direction.ts"
 import type { DirectionAround } from "./direction.ts"
+import type { Menubar, MenubarMember } from "./menubar.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartProps } from "./part.ts"
 import { computed, effect, keyed, signal, untracked } from "./reactivity.ts"
@@ -9,7 +10,7 @@ import { createList } from "./services/list.ts"
 import type { List, ListRow } from "./services/list.ts"
 import { popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
-import { createPlacement } from "./services/position.ts"
+import { createPlacement, pointAnchor } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { createSafeArea } from "./services/safe-area.ts"
 
@@ -82,6 +83,8 @@ export interface MenuLink {
   closeAll(details: ChangeDetails): void
   /** Set by an open submenu: whether a pointer move over this menu's rows is on its way to it. */
   onTheWay: ((event: PointerEvent) => boolean) | undefined
+  /** An arrow across the menus: in a bar, to the menu before or after. */
+  sideways(by: 1 | -1, event: Event): void
 }
 
 export interface Menu {
@@ -92,6 +95,11 @@ export interface Menu {
   mount(): () => void
   /** The button that opens the menu; in a submenu, the item of the menu around it that does. */
   readonly trigger: Part
+  /**
+   * A context menu's trigger: the area a secondary press, or a long press on a touch screen,
+   * opens the menu in, at the pointer.
+   */
+  readonly area: Part
   readonly positioner: Part
   readonly popup: Part
   readonly arrow: Part
@@ -116,6 +124,10 @@ const NOTHING = () => {}
 const ROWS = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]'
 /** How long the pointer rests on a submenu's trigger before it opens, in milliseconds. */
 export const SUBMENU_DELAY = 100
+/** How long a finger rests on a context menu's area before the menu opens, in milliseconds. */
+export const LONG_PRESS = 500
+/** How far a finger may move and still be resting, in pixels. */
+const LONG_PRESS_SLOP = 10
 
 const LABEL: Part = { props: computed(() => ({ role: "presentation" })), attach: () => NOTHING }
 const SEPARATOR: Part = {
@@ -131,15 +143,23 @@ const checkedState = (on: boolean) => ({
 /** A click the keyboard made (Enter, Space, the menu's own press of the highlighted row). */
 const byKeyboard = (event: Event) => (event as MouseEvent).detail === 0
 
+export interface MenuAround extends DirectionAround {
+  /** The menu it is a submenu of. */
+  parent?: Menu | undefined
+  /** The bar it is one of the menus of. */
+  menubar?: Menubar | undefined
+  /** A context menu: opened in an area, at the pointer. */
+  context?: boolean | undefined
+}
+
 /**
  * A menu: a button that opens a list of actions. Given the menu it is inside (`around.parent`),
- * it is a submenu, and its trigger is an item of that menu.
+ * it is a submenu, and its trigger is an item of that menu. In a bar (`around.menubar`) its
+ * trigger is one of the bar's; as a context menu (`around.context`) it has an area for one.
  */
-export function createMenu(
-  props: ReadonlySignal<MenuProps>,
-  around: { parent?: Menu | undefined } & DirectionAround = {}
-): Menu {
+export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround = {}): Menu {
   const parent = around.parent?.link
+  const bar = parent ? undefined : around.menubar?.link
   const id = props.peek().id
   const popupId = `${id}-popup`
   const triggerId = `${id}-trigger`
@@ -148,7 +168,12 @@ export function createMenu(
     defaultValue: props.peek().defaultOpen ?? false,
     onChange: (next, by) => props.peek().onOpenChange?.(next, by),
   })
-  const disabled = computed(() => Boolean(props.get().disabled))
+  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(bar?.disabled.get()))
+  // Where a context menu was asked for, in the viewport, and the area it was asked in.
+  let point = { x: 0, y: 0 }
+  let area: HTMLElement | undefined
+  // A bar's trigger, as state: whether Tab stops on it follows which one focus was last on.
+  const barTrigger = signal<HTMLElement | undefined>(undefined)
   // A submenu opens beside its trigger, on the side the text runs to.
   const beside = signal<"left" | "right">("right")
   const placement = createPlacement(
@@ -161,6 +186,15 @@ export function createMenu(
     // The menu moves focus itself, to the row it was opened for; the popup gives it back.
     focus: popupFocus("none"),
     placement,
+    ...(around.context
+      ? {
+          anchor: () => pointAnchor(() => point, area),
+          // A secondary press in the area moves the open menu there: it is not closed first,
+          // which a caller who holds `open` would answer after the menu had been asked to move.
+          outsidePress: (event: PointerEvent) =>
+            !(area?.contains(event.target as Node) && (event.button === 2 || event.ctrlKey)),
+        }
+      : {}),
   })
   const list = createList({ selector: ROWS, loop: () => props.peek().loop ?? true })
   const way = createSafeArea()
@@ -208,6 +242,15 @@ export function createMenu(
       setOpen(false, by)
       if (!by.canceled) parent?.closeAll(by)
     },
+    sideways(by, event) {
+      if (parent) parent.sideways(by, event)
+      else bar?.step(member, by, event)
+    },
+  }
+  const member: MenubarMember = {
+    open,
+    openFor,
+    close: (by) => link.closeAll(by),
   }
 
   /** Whether a pointer move over one of this menu's rows is a pointer going to its submenu. */
@@ -266,17 +309,47 @@ export function createMenu(
     ...layer.expanded(popupId),
     disabled: flag(disabled.get()),
     "data-disabled": flag(disabled.get()),
+    // In a bar it is one of the bar's items, and the bar is one stop for Tab.
+    ...(bar ? { role: "menuitem", tabindex: bar.tabindex(barTrigger.get()) } : {}),
     onClick(event: Event) {
       if (open.peek()) setOpen(false, details("trigger-press", event))
       // From the keyboard, the first item takes focus; from a pointer, the menu itself.
       else openFor(byKeyboard(event) ? "first" : "popup", details("trigger-press", event))
     },
     onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return void bar?.key(event)
       event.preventDefault()
       openFor(event.key === "ArrowDown" ? "first" : "last", details("trigger-press", event))
     },
+    ...(bar
+      ? {
+          onFocus: (event: FocusEvent) => bar.focused(event.currentTarget as HTMLElement),
+          onPointerMove(event: PointerEvent) {
+            // While another of the bar's menus is open, the pointer opens this one in its place.
+            if (event.pointerType === "touch" || open.peek() || !bar.anyOpen()) return
+            openFor("popup", details("trigger-hover", event))
+          },
+        }
+      : {}),
   })
+
+  function openAt(x: number, y: number, by: ChangeDetails) {
+    if (disabled.peek()) return
+    point = { x, y }
+    // Open already, it moves to where it is asked for now, and has focus again: the press
+    // that asked took it to the page.
+    if (open.peek()) {
+      placement.position.refresh()
+      enter("popup")
+    } else openFor("popup", by)
+  }
+
+  let resting: ReturnType<typeof setTimeout> | undefined
+  let rest = { x: 0, y: 0 }
+  const lift = () => {
+    clearTimeout(resting)
+    resting = undefined
+  }
 
   const forward = (element: Element) =>
     directionOf(element, around.direction) === "rtl" ? "ArrowLeft" : "ArrowRight"
@@ -374,8 +447,54 @@ export function createMenu(
     setOpen,
     positioning: placement.positioning,
     link,
+    area: {
+      props: computed(() => ({
+        "data-popup-open": flag(open.get()),
+        onContextMenu(event: MouseEvent) {
+          if (disabled.peek()) return
+          // The menu in place of the browser's own.
+          event.preventDefault()
+          lift()
+          openAt(event.clientX, event.clientY, details("trigger-press", event))
+        },
+        // A touch screen has no secondary press, and not every one sends `contextmenu` for a
+        // finger that rests: the rest is timed here.
+        onPointerDown(event: PointerEvent) {
+          if (event.pointerType !== "touch" || disabled.peek()) return
+          lift()
+          rest = { x: event.clientX, y: event.clientY }
+          resting = setTimeout(() => {
+            resting = undefined
+            openAt(rest.x, rest.y, details("trigger-press", event))
+          }, LONG_PRESS)
+        },
+        onPointerMove(event: PointerEvent) {
+          if (!resting) return
+          // A finger that moves is scrolling.
+          if (Math.hypot(event.clientX - rest.x, event.clientY - rest.y) > LONG_PRESS_SLOP) lift()
+        },
+        onPointerUp: lift,
+        onPointerCancel: lift,
+      })),
+      attach(element) {
+        area = element
+        return () => {
+          lift()
+          if (area === element) area = undefined
+        }
+      },
+    },
     mount() {
       const stops = [layer.start()]
+      if (bar) {
+        stops.push(
+          // One menu of a bar is open at a time.
+          effect(() => {
+            const on = open.get()
+            untracked(() => (on ? bar.opened(member) : bar.closed(member)))
+          })
+        )
+      }
       if (parent && triggerRow) {
         stops.push(
           // A submenu is open only while its menu is, and while its trigger has the highlight.
@@ -414,6 +533,10 @@ export function createMenu(
       attach(element) {
         trigger = element
         const stops = [layer.attachTrigger(element)]
+        if (bar) {
+          barTrigger.set(element)
+          stops.push(bar.join(element, member), () => barTrigger.set(undefined))
+        }
         if (triggerRow) {
           stops.push(triggerRow.attach(element))
           beside.set(directionOf(element, around.direction) === "rtl" ? "left" : "right")
@@ -431,13 +554,15 @@ export function createMenu(
         id: popupId,
         role: "menu",
         tabindex: "-1",
-        "aria-labelledby": triggerId,
+        // A context menu has no trigger to be named by: its caller names it.
+        "aria-labelledby": around.context ? undefined : triggerId,
         ...layer.state(),
         ...layer.placed(),
         onPointerEnter: () => way.clear(),
         onKeyDown(event: KeyboardEvent) {
           // React hands a key pressed in a submenu to the menu it was drawn inside as well.
-          if (!own(event)) return
+          // A key a row already answered (a submenu's trigger opening it) is not the menu's too.
+          if (!own(event) || event.defaultPrevented) return
           switch (event.key) {
             case "Enter":
             case " ":
@@ -453,9 +578,13 @@ export function createMenu(
               // Back out of a submenu, to its trigger.
               if (parent && event.key !== forward(event.currentTarget as Element)) {
                 event.preventDefault()
-                setOpen(false, details("list-navigation", event))
+                return setOpen(false, details("list-navigation", event))
               }
-              return
+              // In a bar, across to the menu before or after.
+              return link.sideways(
+                event.key === forward(event.currentTarget as Element) ? 1 : -1,
+                event
+              )
           }
           list.key(event)
         },

@@ -18,6 +18,7 @@
     Menu,
     Menubar,
     Meter,
+    NavigationMenu,
     Popover,
     Progress,
     RadioGroup,
@@ -724,6 +725,49 @@
     <button type="button" data-testid="sa1-grow" onclick={() => (tall = !tall)}>
       Grow
     </button>
+  </section>
+  <section data-fixture="navigation-menu">
+    <NavigationMenu.Root id="nm1" aria-label="Site" data-testid="nm1">
+      <NavigationMenu.List class="nav-list" data-testid="nm1-list">
+        <NavigationMenu.Item value="products">
+          <NavigationMenu.Trigger class="nav-trigger" data-testid="nm1-products">
+            <span>Products</span>
+            <NavigationMenu.Icon>▾</NavigationMenu.Icon>
+          </NavigationMenu.Trigger>
+          <NavigationMenu.Content class="nav-content" data-testid="nm1-products-content">
+          <NavigationMenu.Link href="#apps" data-testid="nm1-apps">
+            apps
+          </NavigationMenu.Link>
+          <NavigationMenu.Link href="#tools" data-testid="nm1-tools">
+            tools
+          </NavigationMenu.Link>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+        <NavigationMenu.Item value="docs">
+          <NavigationMenu.Trigger class="nav-trigger" data-testid="nm1-docs">
+            <span>Docs</span>
+            <NavigationMenu.Icon>▾</NavigationMenu.Icon>
+          </NavigationMenu.Trigger>
+          <NavigationMenu.Content class="nav-content nav-narrow" data-testid="nm1-docs-content">
+          <NavigationMenu.Link href="#guide" data-testid="nm1-guide">
+            guide
+          </NavigationMenu.Link>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+        <NavigationMenu.Item>
+          <NavigationMenu.Link href="#pricing" active data-testid="nm1-pricing">
+            Pricing
+          </NavigationMenu.Link>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner sideOffset={4} data-testid="nm1-positioner">
+          <NavigationMenu.Popup class="popup" data-testid="nm1-popup">
+            <NavigationMenu.Viewport data-testid="nm1-viewport" />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

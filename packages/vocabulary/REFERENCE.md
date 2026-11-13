@@ -823,6 +823,128 @@ The value, written.
 
 The meter's name.
 
+## NavigationMenu
+
+### NavigationMenu.Root
+
+The navigation.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the list is a row or a column. |
+
+### NavigationMenu.List
+
+The row of items.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the list is a row or a column. |
+
+### NavigationMenu.Item
+
+One item of the list: a link, or a trigger with its content.
+
+### NavigationMenu.Trigger
+
+The button that shows an item's content.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present while the item's content is shown. |
+
+### NavigationMenu.Icon
+
+A mark on a trigger that shows whether its content is open.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present while the item's content is shown. |
+
+### NavigationMenu.Content
+
+What an item shows. It is drawn in the viewport every item shares.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-activation-direction` (left, right) | Which way it came from: the item before it, or after. |
+
+### NavigationMenu.Link
+
+A link, in the list or in an item's content.
+
+| Attribute | When |
+| --- | --- |
+| `data-active` | Present on the link of the page the reader is on. |
+
+### NavigationMenu.Positioner
+
+Places the popup against the open item's trigger. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The open content's width. |
+| `--positioner-height` | The open content's height. |
+
+### NavigationMenu.Popup
+
+The panel every item's content is shown in.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--popup-width` | The open content's width. |
+| `--popup-height` | The open content's height. |
+
+### NavigationMenu.Viewport
+
+Where the contents are drawn, inside the popup.
+
+### NavigationMenu.Arrow
+
+An element that points at the open item's trigger.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
+
+### NavigationMenu.Backdrop
+
+An element behind the popup, for a design that dims the page.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
 ## Popover
 
 ### Popover.Trigger

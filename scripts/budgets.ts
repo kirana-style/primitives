@@ -30,6 +30,7 @@ const COMPONENTS: Record<string, string[]> = {
   menu: ["menu"],
   menubar: ["menubar"],
   meter: ["meter"],
+  "navigation-menu": ["navigation-menu"],
   popover: ["popover"],
   progress: ["progress"],
   "radio-group": ["radio-group", "radio"],

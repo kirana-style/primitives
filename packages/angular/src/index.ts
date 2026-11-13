@@ -59,6 +59,21 @@ export {
   KuiMenubar,
 } from "./menu"
 export {
+  KuiNavigationMenu,
+  KuiNavigationMenuArrow,
+  KuiNavigationMenuBackdrop,
+  KuiNavigationMenuContent,
+  KuiNavigationMenuIcon,
+  KuiNavigationMenuItem,
+  KuiNavigationMenuLink,
+  KuiNavigationMenuList,
+  KuiNavigationMenuPopup,
+  KuiNavigationMenuPortal,
+  KuiNavigationMenuPositioner,
+  KuiNavigationMenuTrigger,
+  KuiNavigationMenuViewport,
+} from "./navigation-menu"
+export {
   KuiPopover,
   KuiPopoverClose,
   KuiPopoverDescription,

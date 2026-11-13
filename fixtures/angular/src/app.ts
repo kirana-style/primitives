@@ -62,6 +62,17 @@ import {
   KuiMenuSubmenuTrigger,
   KuiMenuTrigger,
   KuiMeter,
+  KuiNavigationMenu,
+  KuiNavigationMenuContent,
+  KuiNavigationMenuIcon,
+  KuiNavigationMenuItem,
+  KuiNavigationMenuLink,
+  KuiNavigationMenuList,
+  KuiNavigationMenuPopup,
+  KuiNavigationMenuPortal,
+  KuiNavigationMenuPositioner,
+  KuiNavigationMenuTrigger,
+  KuiNavigationMenuViewport,
   KuiMeterIndicator,
   KuiMeterLabel,
   KuiMeterTrack,
@@ -210,6 +221,17 @@ import {
     KuiMenuSubmenuTrigger,
     KuiMenuTrigger,
     KuiMeter,
+    KuiNavigationMenu,
+    KuiNavigationMenuContent,
+    KuiNavigationMenuIcon,
+    KuiNavigationMenuItem,
+    KuiNavigationMenuLink,
+    KuiNavigationMenuList,
+    KuiNavigationMenuPopup,
+    KuiNavigationMenuPortal,
+    KuiNavigationMenuPositioner,
+    KuiNavigationMenuTrigger,
+    KuiNavigationMenuViewport,
     KuiMeterIndicator,
     KuiMeterLabel,
     KuiMeterTrack,
@@ -991,6 +1013,47 @@ import {
           <div *kuiScrollAreaCorner class="scroll-corner" data-testid="sa1-corner"></div>
         </div>
         <button type="button" data-testid="sa1-grow" (click)="tall.set(!tall())">Grow</button>
+      </section>
+      <section data-fixture="navigation-menu">
+        <nav kuiNavigationMenu [kuiId]="'nm1'" aria-label="Site" data-testid="nm1">
+          <ul kuiNavigationMenuList class="nav-list" data-testid="nm1-list">
+            <li kuiNavigationMenuItem [value]="'products'">
+              <button kuiNavigationMenuTrigger class="nav-trigger" data-testid="nm1-products">
+                <span>Products</span>
+                <span kuiNavigationMenuIcon>▾</span>
+              </button>
+              <div *kuiNavigationMenuContent class="nav-content" data-testid="nm1-products-content">
+                <a kuiNavigationMenuLink href="#apps" data-testid="nm1-apps">apps</a>
+                <a kuiNavigationMenuLink href="#tools" data-testid="nm1-tools">tools</a>
+              </div>
+            </li>
+            <li kuiNavigationMenuItem [value]="'docs'">
+              <button kuiNavigationMenuTrigger class="nav-trigger" data-testid="nm1-docs">
+                <span>Docs</span>
+                <span kuiNavigationMenuIcon>▾</span>
+              </button>
+              <div
+                *kuiNavigationMenuContent
+                class="nav-content nav-narrow"
+                data-testid="nm1-docs-content"
+              >
+                <a kuiNavigationMenuLink href="#guide" data-testid="nm1-guide">guide</a>
+              </div>
+            </li>
+            <li kuiNavigationMenuItem>
+              <a kuiNavigationMenuLink href="#pricing" [active]="true" data-testid="nm1-pricing">
+                Pricing
+              </a>
+            </li>
+          </ul>
+          <ng-template kuiNavigationMenuPortal>
+            <div kuiNavigationMenuPositioner [sideOffset]="4" data-testid="nm1-positioner">
+              <div kuiNavigationMenuPopup class="popup" data-testid="nm1-popup">
+                <div kuiNavigationMenuViewport data-testid="nm1-viewport"></div>
+              </div>
+            </div>
+          </ng-template>
+        </nav>
       </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">

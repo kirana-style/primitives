@@ -13,6 +13,7 @@ export const exclusive: string[][] = [
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
   ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
+  ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
@@ -847,6 +848,135 @@ export const Meter = {
   },
   /** The meter's name. */
   Label: {
+  },
+} as const
+
+export const NavigationMenu = {
+  /** The navigation. */
+  Root: {
+    /** Whether the list is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** The row of items. */
+  List: {
+    /** Whether the list is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** One item of the list: a link, or a trigger with its content. */
+  Item: {
+  },
+  /** The button that shows an item's content. */
+  Trigger: {
+    /** Present while the item's content is shown. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** A mark on a trigger that shows whether its content is open. */
+  Icon: {
+    /** Present while the item's content is shown. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** What an item shows. It is drawn in the viewport every item shares. */
+  Content: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Which way it came from: the item before it, or after. */
+    activationDirection: {
+      left: "[data-activation-direction=\"left\"]",
+      right: "[data-activation-direction=\"right\"]",
+    },
+  },
+  /** A link, in the list or in an item's content. */
+  Link: {
+    /** Present on the link of the page the reader is on. */
+    active: "[data-active]",
+  },
+  /** Places the popup against the open item's trigger. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The panel every item's content is shown in. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** Where the contents are drawn, inside the popup. */
+  Viewport: {
+  },
+  /** An element that points at the open item's trigger. */
+  Arrow: {
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when the arrow cannot sit at the trigger's centre. */
+    uncentered: "[data-uncentered]",
+  },
+  /** An element behind the popup, for a design that dims the page. */
+  Backdrop: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
   },
 } as const
 

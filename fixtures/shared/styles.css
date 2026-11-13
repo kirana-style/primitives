@@ -147,6 +147,26 @@ button {
   background: #ccc;
 }
 
+.nav-list {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nav-trigger {
+  display: inline-flex;
+  gap: 4px;
+}
+.nav-content {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+}
+.nav-narrow {
+  width: 120px;
+}
+
 .column {
   display: flex;
   flex-direction: column;

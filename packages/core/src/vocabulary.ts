@@ -20,6 +20,7 @@ import { hoverCardVocabulary } from "./hover-card.vocabulary.ts"
 import { menuVocabulary } from "./menu.vocabulary.ts"
 import { menubarVocabulary } from "./menubar.vocabulary.ts"
 import { state } from "./states.ts"
+import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
 import { selectVocabulary } from "./select.vocabulary.ts"
@@ -60,6 +61,7 @@ export const vocabulary = {
   menu: menuVocabulary,
   menubar: menubarVocabulary,
   meter: meterVocabulary,
+  navigationMenu: navigationMenuVocabulary,
   popover: popoverVocabulary,
   progress: progressVocabulary,
   radioGroup: radioGroupVocabulary,

@@ -83,6 +83,13 @@ note. Three places hold them:
 - **A form's reset puts a text input back to its default after the listener runs.** A
   combobox writes the text it goes back to as the input's `defaultValue`, which the browser
   then reads.
+- **A combobox of several values has its own props** (`multiple`, `values`, `onValuesChange`):
+  one prop that is a value or a list of them, by a flag, is a type every adapter has to
+  narrow. An item chosen is added and the list stays open; chosen again, taken away; what was
+  typed is used up. Backspace in the empty input takes the last value away. A chip's remove
+  button is not a stop: the input is, and keeps focus.
+- **Moving by place is given to a list, not built into it.** A menu is never virtualized and
+  does not carry the code (`byPlace` from `list-places.ts`, passed as `places`).
 - **A filtered item is `hidden`, and a row's own `display` shows it again.** `.item { display:
   flex }` beats the `hidden` attribute. A design that gives rows a display also writes
   `[hidden] { display: none !important }` (most resets do).

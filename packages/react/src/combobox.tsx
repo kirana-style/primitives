@@ -104,6 +104,25 @@ function Clear({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | nu
   return clearable || keepMounted ? <ClearElement {...props} /> : null
 }
 
+/** With `multiple`: what holds the chips and the input. */
+const Chips = (props: PartComponentProps) => usePart(useCombobox("Chips").chips, "div", props)
+
+const ChipContext = createContext<unknown>(undefined)
+
+/** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
+function Chip({ value, ...props }: PartComponentProps & { value: unknown }): ReactElement {
+  const controller = useCombobox("Chip")
+  const part = useMemo(() => controller.chip(value), [controller, value])
+  return <ChipContext.Provider value={value}>{usePart(part, "span", props)}</ChipContext.Provider>
+}
+
+function ChipRemove(props: PartComponentProps): ReactElement {
+  const controller = useCombobox("ChipRemove")
+  const value = useContext(ChipContext)
+  const part = useMemo(() => controller.chipRemove(value), [controller, value])
+  return usePart(part, "button", props)
+}
+
 const EmptyElement = (props: PartComponentProps) =>
   usePart(useCombobox("Empty").emptyPart, "div", props)
 
@@ -118,6 +137,9 @@ export const Combobox = {
   Input,
   Trigger,
   Clear,
+  Chips,
+  Chip,
+  ChipRemove,
   Portal,
   Positioner,
   Popup,

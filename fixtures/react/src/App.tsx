@@ -80,6 +80,7 @@ export function App() {
   const [picked, setPicked] = useState("none")
   const [first, setFirst] = useState(0)
   const [ran, setRan] = useState("none")
+  const [tags, setTags] = useState<string[]>(["New"])
   const [align, setAlign] = useState<string[]>(["left"])
   const [tall, setTall] = useState(false)
   const [chosen, setChosen] = useState<string[]>(["Banana"])
@@ -968,6 +969,52 @@ export function App() {
             </Combobox.Portal>
           </Combobox.Root>
         </Field.Root>
+        <form data-testid="cbm-form">
+          <Combobox.Root
+            id="cbm"
+            name="tags"
+            multiple
+            values={tags}
+            onValuesChange={(next) => setTags(next as string[])}
+          >
+            <Combobox.Chips className="bar" data-testid="cbm-chips">
+              {tags.map((each) => (
+                <Combobox.Chip
+                  key={each}
+                  value={each}
+                  className="chip"
+                  data-testid={`cbm-chip-${each}`}
+                >
+                  <span>{each}</span>
+                  <Combobox.ChipRemove
+                    aria-label={`Remove ${each}`}
+                    data-testid={`cbm-remove-${each}`}
+                  >
+                    ×
+                  </Combobox.ChipRemove>
+                </Combobox.Chip>
+              ))}
+              <Combobox.Input aria-label="Tags" data-testid="cbm-input" />
+            </Combobox.Chips>
+            <Combobox.Portal>
+              <Combobox.Positioner data-testid="cbm-positioner">
+                <Combobox.Popup className="popup" aria-label="Tags" data-testid="cbm-popup">
+                  {COMMANDS.map((each) => (
+                    <Combobox.Item
+                      key={each}
+                      value={each}
+                      id={`cbm-${each}`}
+                      className="item"
+                      data-testid={`cbm-${each}`}
+                    >
+                      {each}
+                    </Combobox.Item>
+                  ))}
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

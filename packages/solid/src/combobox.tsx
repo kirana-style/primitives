@@ -32,6 +32,10 @@ export type RootProps = {
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   disabled?: boolean
   required?: boolean
+  multiple?: boolean
+  values?: readonly unknown[]
+  defaultValues?: readonly unknown[]
+  onValuesChange?: (values: unknown[], details: ChangeDetails) => void
   inline?: boolean
   virtualized?: ComboboxProps["virtualized"]
   name?: string
@@ -55,6 +59,11 @@ function Root(props: RootProps): JSX.Element {
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
     required: props.required,
+    multiple: props.multiple,
+    values: props.values,
+    defaultValues: props.defaultValues,
+    onValuesChange: (values: unknown[], details: ChangeDetails) =>
+      props.onValuesChange?.(values, details),
     inline: props.inline,
     virtualized: props.virtualized,
     name: props.name,
@@ -139,6 +148,24 @@ function Clear(props: PartComponentProps & { keepMounted?: boolean }): JSX.Eleme
   )
 }
 
+const ChipContext = createContext<unknown>()
+
+/** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
+function Chip(props: PartComponentProps & { value: unknown }): JSX.Element {
+  const [local, rest] = splitProps(props, ["value"])
+  // A chip is its value for as long as it is in the page.
+  const value = untrack(() => local.value)
+  return (
+    <ChipContext.Provider value={value}>
+      <Part part={useCombobox().chip(value)} tag="span" {...rest} />
+    </ChipContext.Provider>
+  )
+}
+
+const ChipRemove = (props: PartComponentProps) => (
+  <Part part={useCombobox().chipRemove(useContext(ChipContext))} tag="button" {...props} />
+)
+
 /** Drawn while no item is shown for what was typed. */
 function Empty(props: PartComponentProps): JSX.Element {
   const made = useCombobox()
@@ -150,15 +177,20 @@ function Empty(props: PartComponentProps): JSX.Element {
   )
 }
 
-const part = (name: "input" | "trigger" | "popup", tag: string) => (props: PartComponentProps) => (
-  <Part part={useCombobox()[name]} tag={tag} {...props} />
-)
+const part =
+  (name: "input" | "trigger" | "popup" | "chips", tag: string) => (props: PartComponentProps) => (
+    <Part part={useCombobox()[name]} tag={tag} {...props} />
+  )
 
 export const Combobox = {
   Root,
   Input: part("input", "input"),
   Trigger: part("trigger", "button"),
   Clear,
+  /** With `multiple`: what holds the chips and the input. */
+  Chips: part("chips", "div"),
+  Chip,
+  ChipRemove,
   Portal,
   Positioner,
   Popup: part("popup", "div"),

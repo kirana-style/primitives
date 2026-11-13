@@ -80,6 +80,7 @@
   let picked = $state("none")
   let first = $state(0)
   let ran = $state<unknown>("none")
+  let tags = $state<readonly unknown[] | undefined>(["New"])
   let align = $state<readonly unknown[] | undefined>(["left"])
   let tall = $state(false)
   let chosen = $state<readonly unknown[] | undefined>(["Banana"])
@@ -846,6 +847,49 @@
         </Combobox.Portal>
       </Combobox.Root>
     </Field.Root>
+    <form data-testid="cbm-form">
+      <Combobox.Root
+        id="cbm"
+        name="tags"
+        multiple
+        bind:values={tags}
+      >
+        <Combobox.Chips class="bar" data-testid="cbm-chips">
+          {#each tags as string[] as each (each)}
+            <Combobox.Chip
+              value={each}
+              class="chip"
+              data-testid={`cbm-chip-${each}`}
+            >
+              <span>{each}</span>
+              <Combobox.ChipRemove
+                aria-label={`Remove ${each}`}
+                data-testid={`cbm-remove-${each}`}
+              >
+                ×
+              </Combobox.ChipRemove>
+            </Combobox.Chip>
+          {/each}
+          <Combobox.Input aria-label="Tags" data-testid="cbm-input" />
+        </Combobox.Chips>
+        <Combobox.Portal>
+          <Combobox.Positioner data-testid="cbm-positioner">
+            <Combobox.Popup class="popup" aria-label="Tags" data-testid="cbm-popup">
+              {#each COMMANDS as each (each)}
+                <Combobox.Item
+                  value={each}
+                  id={`cbm-${each}`}
+                  class="item"
+                  data-testid={`cbm-${each}`}
+                >
+                  {each}
+                </Combobox.Item>
+              {/each}
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    </form>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

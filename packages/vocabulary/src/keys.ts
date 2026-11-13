@@ -274,6 +274,22 @@ export const Combobox = {
   /** What is shown when no item is. */
   Empty: {
   },
+  /** A button that empties the input and the value. */
+  Clear: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** With several values: what holds the chips and the input. */
+  Chips: {
+  },
+  /** One chosen value. */
+  Chip: {
+  },
+  /** A chip's button that takes its value away. */
+  ChipRemove: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
 } as const
 
 export const ContextMenu = {

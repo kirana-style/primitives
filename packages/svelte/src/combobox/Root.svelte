@@ -27,6 +27,10 @@
     items,
     filter,
     required,
+    multiple,
+    values = $bindable(),
+    defaultValues,
+    onValuesChange,
     inline,
     virtualized,
     id,
@@ -42,6 +46,11 @@
   function changeInput(next: string, by: ChangeDetails) {
     onInputValueChange?.(next, by)
     if (!by.canceled) inputValue = next
+  }
+
+  function changeValues(next: unknown[], by: ChangeDetails) {
+    onValuesChange?.(next, by)
+    if (!by.canceled) values = next
   }
 
   function changeOpen(next: boolean, by: ChangeDetails) {
@@ -64,6 +73,10 @@
       items,
       filter,
       required,
+      multiple,
+      values,
+      defaultValues,
+      onValuesChange: changeValues,
       inline,
       virtualized,
       onValueChange: changeValue,

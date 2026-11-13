@@ -2,6 +2,7 @@ import { batch, signal } from "../reactivity.ts"
 import type { ReadonlySignal, Signal } from "../reactivity.ts"
 import { stepTo } from "./roving.ts"
 import type { Step } from "./roving.ts"
+import type { ListPlaces } from "./list-places.ts"
 import { createTypeahead, printable, textOf } from "./typeahead.ts"
 
 export interface ListRowOptions {
@@ -113,17 +114,17 @@ export function createList(config: {
    * that has focus names the highlighted row with `aria-activedescendant`.
    */
   virtual?: boolean
-  /** Every row, when only some are in the page. Read at each key. */
-  collection?: () => ListCollection | undefined
+  /**
+   * Moving by place, for a list of which only some rows are in the page (`byPlace` from
+   * `list-places.ts`). Given, not built in: a list that is never virtualized does not carry it.
+   */
+  places?: ListPlaces
 }): List {
   const entries = new WeakMap<Element, Entry>()
   const highlighted = signal<ListRow | undefined>(undefined)
   const typeahead = createTypeahead()
   let list: HTMLElement | undefined
-  const collection = () => config.collection?.()
-  // With a collection: the place the highlight is on or going to, and the rows in the page.
-  let wanted = -1
-  const drawn = new Map<number, Entry>()
+  const places = config.places
 
   function rows(): Entry[] {
     if (!list) return []
@@ -139,9 +140,7 @@ export function createList(config: {
   function highlight(row: ListRow | undefined, focus = false) {
     const before = highlighted.peek() as Entry | undefined
     const after = row as Entry | undefined
-    if (after && collection()) {
-      for (const [index, entry] of drawn) if (entry === after) wanted = index
-    }
+    if (after) places?.highlighted(after)
     if (before !== after) {
       batch(() => {
         before?.active.set(false)
@@ -180,54 +179,8 @@ export function createList(config: {
     }
   }
 
-  /** The place a step lands on among all the rows, past the disabled; -1 when there is none. */
-  function placeAfter(all: ListCollection, step: Step): number {
-    const { count } = all
-    const off = (index: number) => Boolean(all.disabled?.(index))
-    const loop = config.loop?.() ?? false
-    const forward = step === 1 || step === "first"
-    let index =
-      step === "first"
-        ? 0
-        : step === "last"
-          ? count - 1
-          : wanted < 0
-            ? forward
-              ? 0
-              : count - 1
-            : wanted + step
-    for (let tried = 0; tried < count; tried++) {
-      if (index < 0 || index >= count) {
-        if (!loop || step === "first" || step === "last") return -1
-        index = (index + count) % count
-      }
-      if (!off(index)) return index
-      index += forward ? 1 : -1
-    }
-    return -1
-  }
-
-  function goto(index: number) {
-    const all = collection()
-    if (!all || index < 0 || index >= all.count) return
-    wanted = index
-    const entry = drawn.get(index)
-    if (entry) return highlight(entry, true)
-    // Not in the page: the list itself holds focus while the row is brought in, so the next
-    // key is still heard; the row takes the highlight and focus as it is drawn.
-    highlight(undefined)
-    if (!config.virtual) list?.focus({ preventScroll: true })
-    all.scrollToIndex(index)
-  }
-
   function move(step: Step) {
-    const every = collection()
-    if (every) {
-      const to = placeAfter(every, step)
-      // Past an end that does not go round: stays where it is.
-      if (to >= 0) goto(to)
-      return
-    }
+    if (places?.move(step)) return
     const all = rows()
     if (all.length === 0) return
     const index = all.indexOf(highlighted.peek() as Entry)
@@ -236,20 +189,24 @@ export function createList(config: {
     highlight(all[stepTo(all.length, index, to, config.loop?.() ?? false)], true)
   }
 
+  places?.host({
+    highlight,
+    highlighted: () => highlighted.peek(),
+    element: () => list,
+    virtual: Boolean(config.virtual),
+    loop: () => config.loop?.() ?? false,
+  })
+
   return {
     highlighted,
     rows,
     highlight,
     move,
-    goto,
-    collection,
-    holding: () => collection() !== undefined && wanted >= 0 && !drawn.has(wanted),
+    goto: (index) => places?.goto(index),
+    collection: () => places?.collection(),
+    holding: () => places?.holding() ?? false,
     typing: () => typeahead.typing(),
-    place(index) {
-      const all = collection()
-      if (!all || index === undefined) return {}
-      return { "aria-setsize": String(all.count), "aria-posinset": String(index + 1) }
-    },
+    place: (index) => places?.place(index) ?? {},
     rowOf: (element) => (element ? entries.get(element) : undefined),
     attach(element) {
       list = element
@@ -258,7 +215,7 @@ export function createList(config: {
         list = undefined
         highlight(undefined)
         typeahead.reset()
-        wanted = -1
+        places?.reset()
       }
     },
     row(options = () => ({}), name = textOf) {
@@ -272,24 +229,16 @@ export function createList(config: {
         attach(element) {
           own = element
           entries.set(element, entry)
-          const index = collection() ? options().index : undefined
-          if (index !== undefined) {
-            drawn.set(index, entry)
-            // The row the keys asked for, now in the page.
-            if (index === wanted && highlighted.peek() !== entry) highlight(entry, true)
-          }
+          const index = places?.collection() ? options().index : undefined
+          places?.attached(entry, index)
           return () => {
             if (own !== element) return
             own = undefined
             entries.delete(element)
-            if (index !== undefined && drawn.get(index) === entry) drawn.delete(index)
-            if (highlighted.peek() !== entry) return
-            // A row that leaves takes its highlight with it. Scrolled out of a collection, it
-            // had focus: the list takes it, so the keys go on from the same place.
-            highlight(undefined)
-            if (index !== undefined && !config.virtual && list?.isConnected) {
-              list.focus({ preventScroll: true })
-            }
+            const had = highlighted.peek() === entry
+            // A row that leaves takes its highlight with it.
+            if (had) highlight(undefined)
+            places?.detached(entry, index, had)
           }
         },
       }
@@ -310,20 +259,7 @@ export function createList(config: {
       const spaced = event.key === " " && typeahead.typing()
       if (!printable(event) && !spaced) return false
       if (spaced) event.preventDefault()
-      const every = collection()
-      if (every) {
-        if (!every.label) return true
-        const places: { label: string; index: number }[] = []
-        let current = -1
-        for (let index = 0; index < every.count; index++) {
-          if (every.disabled?.(index)) continue
-          if (index === wanted) current = places.length
-          places.push({ label: every.label(index), index })
-        }
-        const found = typeahead.match(event.key, places, current)
-        if (found) goto(found.index)
-        return true
-      }
+      if (places?.type(event.key, typeahead)) return true
       const all = rows()
       const match = typeahead.match(
         event.key,

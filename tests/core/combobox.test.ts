@@ -334,3 +334,92 @@ describe("a combobox whose list is always in the page", () => {
     expect(shown()).toEqual(["Open", "Print"])
   })
 })
+
+describe("a combobox of several values", () => {
+  function several(given: Partial<ComboboxProps<string>> = {}) {
+    const heard: string[][] = []
+    const made = combobox({
+      multiple: true,
+      name: "fruit",
+      onValuesChange: (next) => void heard.push(next),
+      ...given,
+    })
+    const hidden = document.createElement("input")
+    find(made.root, "form").append(hidden)
+    onTestFinished(bind(hidden, made.made.hidden))
+    const sent = () => new FormData(find<HTMLFormElement>(made.root, "form")).getAll("fruit")
+    return { ...made, heard, sent }
+  }
+
+  it("adds what is chosen, keeps the list open, and empties what was typed", async () => {
+    const { input, made, heard, sent, root } = several()
+    input.focus()
+    await userEvent.keyboard("ch")
+    await settled()
+    await press("Enter")
+    expect(made.values.peek()).toEqual(["Cherry"])
+    expect(made.open.peek()).toBe(true)
+    expect(input.value).toBe("")
+    await userEvent.keyboard("ap")
+    await settled()
+    await press("Enter")
+    expect(made.values.peek()).toEqual(["Cherry", "Apple"])
+    expect(heard).toEqual([["Cherry"], ["Cherry", "Apple"]])
+    // Each chosen item says so; each value is sent.
+    expect(root.querySelector("#c-Apple")!.getAttribute("aria-selected")).toBe("true")
+    expect(root.querySelector("#c-Cherry")!.getAttribute("aria-selected")).toBe("true")
+    expect(sent()).toEqual(["Cherry", "Apple"])
+    // Chosen again, it is taken away.
+    root.querySelector<HTMLElement>("#c-Cherry")!.click()
+    expect(made.values.peek()).toEqual(["Apple"])
+    expect(sent()).toEqual(["Apple"])
+  })
+
+  it("Backspace in an empty input takes the last value away, and not while there is text", async () => {
+    const { input, made } = several({ defaultValues: ["Apple", "Banana"] })
+    input.focus()
+    await userEvent.keyboard("x")
+    await press("Backspace")
+    expect(made.values.peek()).toEqual(["Apple", "Banana"])
+    await press("Backspace")
+    expect(made.values.peek()).toEqual(["Apple"])
+    await press("Backspace")
+    await press("Backspace")
+    expect(made.values.peek()).toEqual([])
+  })
+
+  it("a chip's button takes its value away and leaves focus in the input", async () => {
+    const { root, made, sent } = several({ defaultValues: ["Apple", "Banana", "Cherry"] })
+    const remove = document.createElement("button")
+    remove.id = "remove"
+    root.append(remove)
+    onTestFinished(bind(remove, made.chipRemove("Banana")))
+    await userEvent.click(remove)
+    expect(made.values.peek()).toEqual(["Apple", "Cherry"])
+    expect(focused()).toBe("input")
+    expect(sent()).toEqual(["Apple", "Cherry"])
+    expect(remove.getAttribute("tabindex")).toBe("-1")
+  })
+
+  it("sends nothing with nothing chosen, clears all at once, and goes back on reset", async () => {
+    const { root, input, made, sent } = several({ defaultValues: ["Apple"] })
+    const clear = document.createElement("button")
+    root.append(clear)
+    onTestFinished(bind(clear, made.clear))
+    clear.click()
+    expect(made.values.peek()).toEqual([])
+    expect(sent()).toEqual([])
+    expect(made.clearable.peek()).toBe(false)
+    input.focus()
+    await userEvent.keyboard("ban")
+    await settled()
+    await press("Enter")
+    expect(sent()).toEqual(["Banana"])
+    find<HTMLFormElement>(root, "form").reset()
+    expect(made.values.peek()).toEqual(["Apple"])
+    // Left without choosing, the text is not a value: it goes.
+    await userEvent.keyboard("zz")
+    await press("Escape")
+    expect(input.value).toBe("")
+  })
+})

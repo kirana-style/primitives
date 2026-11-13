@@ -51,4 +51,14 @@ export const comboboxVocabulary = defineComponent({
   },
   itemIndicator: { description: "A mark an item shows while it is the chosen one." },
   empty: { description: "What is shown when no item is." },
+  clear: {
+    description: "A button that empties the input and the value.",
+    states: { disabled: DISABLED },
+  },
+  chips: { description: "With several values: what holds the chips and the input." },
+  chip: { description: "One chosen value." },
+  chipRemove: {
+    description: "A chip's button that takes its value away.",
+    states: { disabled: DISABLED },
+  },
 })

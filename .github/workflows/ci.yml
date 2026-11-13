@@ -69,10 +69,17 @@ jobs:
       - name: Release rehearsal
         run: vp run rehearse
 
+  # Once for each engine, side by side: the three used to follow each other in one job, which
+  # was most of the wait for a pull request.
   conformance:
     runs-on: ubuntu-26.04
-    name: build and conformance
+    name: build and conformance (${{ matrix.browser }})
     timeout-minutes: 20
+    strategy:
+      # One engine's failure does not hide what the others would have said.
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -88,25 +95,26 @@ jobs:
 
       # The browsers Playwright drives, at the versions the lockfile's Playwright asks for.
       - name: Browsers
-        run: bunx playwright install --with-deps chromium firefox webkit
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
 
       # The core's services on their own, with no framework: focus, layers, presence, hover,
-      # positioning, in each engine.
+      # positioning, in this job's engine.
       - name: Core services
         env:
-          BROWSERS: chromium,firefox,webkit
+          BROWSERS: ${{ matrix.browser }}
         run: vp run browser
 
-      # The whole run once in each engine, on the fixtures built above.
+      # The whole run in this job's engine, on the fixtures built above. Chromium plays several
+      # pages at once; Firefox and WebKit one at a time (the run's own defaults).
       - name: Conformance
-        run: bun tests/conformance/run.ts --browser chromium,firefox,webkit
+        run: bun tests/conformance/run.ts --browser ${{ matrix.browser }}
 
       # What each adapter drew, state by state, when the comparison fails.
       - name: Keep the recorded states
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: conformance
+          name: conformance-${{ matrix.browser }}
           path: tests/conformance/out
           retention-days: 7
 

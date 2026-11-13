@@ -7,10 +7,12 @@
  *
  *   bun tests/conformance/run.ts [adapter…]      default: every fixture that is built
  *   bun tests/conformance/run.ts react --only menu --slow 6
+ *   bun tests/conformance/run.ts --jobs 1        one subject at a time (default: up to 6 at once)
  *
  * It serves each fixture's `dist/` itself and stops its servers and its browser before it exits.
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { availableParallelism } from "node:os"
 import { join } from "node:path"
 
 import { chromium, firefox, webkit } from "playwright"
@@ -37,6 +39,55 @@ function option(name: string): string | undefined {
 }
 // `--only menu`: one scenario. `--slow 6`: Chromium's processor six times slower, as a shared
 // runner's is: what depends on how fast a framework draws shows there.
+// `--jobs 1`: one subject at a time (the default plays several at once, each in its own
+// browser context; a fault that only shows under load is looked at alone).
+const jobsAsked = option("--jobs") ?? process.env.CONFORMANCE_JOBS
+/**
+ * How many subjects at once. Chromium carries six, measured: 352 s one at a time, 120 s with six
+ * and its timed scenarios alone, every run passing. Firefox gained nothing from three and failed one run in two, on scenarios
+ * that time a press or a frame: it and WebKit play one at a time unless asked.
+ */
+const jobsFor = (engine: string) =>
+  Math.max(1, Number(jobsAsked ?? Math.min(engine === "chromium" ? 6 : 1, availableParallelism())))
+// Scenarios that measure a wait or look for one frame (a tooltip's delay, a dialog's first
+// style): played with nothing else on the machine, or what is measured is the machine and not
+// the component. Firefox failed both with six pages at once.
+const TIMED = new Set(["hover", "dialog"])
+let playing = 0
+let held = false
+let asking = 0
+const waiting: (() => void)[] = []
+const turn = () => new Promise<void>((resolve) => void waiting.push(resolve))
+const wake = () => {
+  for (const each of waiting.splice(0)) each()
+}
+
+/** With the others. Waits while a timed scenario has, or is asking for, the machine. */
+async function together(run: () => Promise<void>): Promise<void> {
+  while (held || asking > 0) await turn()
+  playing++
+  try {
+    await run()
+  } finally {
+    playing--
+    wake()
+  }
+}
+
+/** With nothing else being played. */
+async function alone(run: () => Promise<void>): Promise<void> {
+  asking++
+  while (held || playing > 0) await turn()
+  asking--
+  held = true
+  try {
+    await run()
+  } finally {
+    held = false
+    wake()
+  }
+}
+
 const only = option("--only")
 const slow = Number(option("--slow") ?? 1)
 const adapters = (asked.length > 0 ? asked : ALL).filter((each) => {
@@ -1954,7 +2005,9 @@ for (const engine of engines) {
   console.log(`\n${engine}`)
 
   try {
-    for (const subject of subjects) {
+    // One subject: an adapter's page, one way it is served. What it says is kept until its turn
+    // to be printed, so the report reads in the same order however many are played at once.
+    const play = async (subject: (typeof subjects)[number], log: (line: string) => void) => {
       const { adapter, label, path } = subject
       const server = (servers[adapter] ??= serve(adapter))
       const recorded = new Map<string, string>()
@@ -1985,7 +2038,7 @@ for (const engine of engines) {
           await live.close()
           if (before.join() !== after.join() || !before.some((each) => !each.endsWith("="))) {
             failed++
-            console.log(`FAIL  ${label}  ids changed in hydration: ${before} -> ${after}`)
+            log(`FAIL  ${label}  ids changed in hydration: ${before} -> ${after}`)
           }
         }
         // A length that is the value itself is in what the server sent, not measured later.
@@ -1994,7 +2047,7 @@ for (const engine of engines) {
         )
         if (!subject.second && width !== "40%") {
           failed++
-          console.log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
+          log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
         }
         const place = await page.evaluate(() =>
           document
@@ -2003,7 +2056,7 @@ for (const engine of engines) {
         )
         if (!subject.second && place !== "40%") {
           failed++
-          console.log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
+          log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
         }
         // What a provider states is known on a server, which has no layout to read it from.
         const centred = await page.evaluate(() =>
@@ -2013,7 +2066,7 @@ for (const engine of engines) {
         )
         if (!subject.second && centred !== "50% -50%") {
           failed++
-          console.log(`FAIL  ${label}  the server centred a right-to-left thumb, got "${centred}"`)
+          log(`FAIL  ${label}  the server centred a right-to-left thumb, got "${centred}"`)
         }
         await context.close()
       }
@@ -2131,15 +2184,15 @@ for (const engine of engines) {
           },
         }
         try {
-          await scenario(run)
+          await (TIMED.has(name) ? alone : together)(() => scenario(run))
           expect(errors.length === 0, `the page reported: ${errors.join(" | ")}`)
-          console.log(`ok    ${label}  ${name}`)
+          log(`ok    ${label}  ${name}`)
         } catch (error) {
           failed++
           // The whole of it when one scenario was asked for: what was pressed, and why not.
           const whole = error instanceof Error ? error.message : String(error)
           const message = only ? whole : whole.split("\n")[0]
-          console.log(`FAIL  ${label}  ${name}: ${message}`)
+          log(`FAIL  ${label}  ${name}: ${message}`)
         }
         await context.close()
       }
@@ -2148,6 +2201,26 @@ for (const engine of engines) {
         [...recorded].map(([step, dom]) => `### ${step}\n${dom}\n`).join("\n")
       )
     }
+
+    // Their place in what is compared is theirs before any is played.
+    for (const subject of subjects) snapshots[subject.label] = new Map()
+    const said = subjects.map(() => [] as string[])
+    const done = subjects.map(() => false)
+    let printed = 0
+    let next = 0
+    const worker = async () => {
+      while (next < subjects.length) {
+        const at = next++
+        await play(subjects[at]!, (line) => void said[at]!.push(line))
+        done[at] = true
+        while (printed < subjects.length && done[printed]) {
+          for (const line of said[printed]!) console.log(line)
+          printed++
+        }
+      }
+    }
+    const jobs = Math.min(jobsFor(engine), subjects.length)
+    await Promise.all(Array.from({ length: jobs }, worker))
 
     const firstDifference = (a: string, b: string, one: string, other: string) => {
       const left = a.split("\n")

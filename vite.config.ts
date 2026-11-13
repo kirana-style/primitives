@@ -120,17 +120,25 @@ export default defineConfig({
       pack: { command: "bun scripts/pack.ts && bun scripts/consume.ts", cache: false },
       // The release path, tried against a registry of its own: `scripts/publish.ts` with a
       // refused package, lost and half-stored uploads, a release continued, then installed.
-      rehearse: { command: "bun scripts/rehearse.ts", cache: false },
+      rehearse: { command: "bun scripts/rehearse.ts", dependsOn: ["pack"], cache: false },
       // The templates' types, which `vp check` does not read: the Vue fixture's with `vue-tsc`,
       // and the Svelte fixture's with the Svelte adapter's own components with `svelte-check`.
       types: {
         command: "bun run --cwd fixtures/vue types && bun run --cwd fixtures/svelte types",
         cache: { input: SOURCES, output: [] },
       },
-      // What the pre-push hook and CI run.
+      // Everything but conformance, side by side: none of these reads what another writes,
+      // but for the rehearsal, which waits for the packing.
+      gates: {
+        command: "echo gates: passed",
+        dependsOn: ["check", "types", "test", "browser", "parity", "budgets", "rehearse"],
+        cache: false,
+      },
+      // The whole gate: what is run before a change is handed over, and what CI runs. The
+      // conformance run comes after the rest and has the machine to itself: it plays several
+      // pages at once, and its scenarios time pointers and keys.
       prepush: {
-        command:
-          "vp run check && vp run types && vp run test && vp run browser && vp run parity && vp run budgets && vp run pack && vp run rehearse && vp run conformance",
+        command: "vp run gates && vp run conformance",
         cache: false,
       },
     },

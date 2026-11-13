@@ -1,5 +1,6 @@
 import {
   Directive,
+  HostAttributeToken,
   InjectionToken,
   booleanAttribute,
   effect,
@@ -15,12 +16,17 @@ import { defined } from "@kirana-ui/core"
 import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
 import { createMenu } from "@kirana-ui/core/menu"
 import type { Menu, MenuCheckboxItem, MenuGroup, MenuRadioGroup } from "@kirana-ui/core/menu"
+import { createMenubar } from "@kirana-ui/core/menubar"
+import type { Menubar } from "@kirana-ui/core/menubar"
 
 import { KUI_DIRECTION } from "./direction-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** The menu a part is in: the root's, or a submenu's. */
 const KUI_MENU = new InjectionToken<{ controller: Menu }>("KuiMenu")
+
+/** The bar a menu is one of the menus of, if it is in one. */
+const KUI_MENUBAR = new InjectionToken<{ controller: Menubar } | null>("KuiMenubar")
 
 /** What a menu and a submenu share: their inputs, read into the core. */
 @Directive()
@@ -34,6 +40,8 @@ abstract class MenuRoot implements OnInit {
 
   controller!: Menu
   protected abstract readonly parent: { controller: Menu } | null
+  protected readonly bar: { controller: Menubar } | null = null
+  protected readonly context: boolean = false
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
@@ -56,18 +64,60 @@ abstract class MenuRoot implements OnInit {
     this.controller = createMenu(this.props(), {
       parent: this.parent?.controller,
       direction: this.around?.direction,
+      menubar: this.bar?.controller,
+      context: this.context,
     })
     this.mount(this.controller)
   }
 }
 
+/**
+ * `kuiContextMenu` in place of `kuiMenu` is a menu for an area of the page, opened at the
+ * pointer: its trigger is `kuiContextMenuTrigger`, its other parts the menu's.
+ */
 @Directive({
-  selector: "[kuiMenu]",
+  selector: "[kuiMenu],[kuiContextMenu]",
   exportAs: "kuiMenu",
-  providers: [{ provide: KUI_MENU, useExisting: forwardRef(() => KuiMenu) }],
+  providers: [
+    { provide: KUI_MENU, useExisting: forwardRef(() => KuiMenu) },
+    // A menu written inside a bar's menu is not one of the bar's.
+    { provide: KUI_MENUBAR, useValue: null },
+  ],
 })
 export class KuiMenu extends MenuRoot {
   protected readonly parent = null
+  protected override readonly context =
+    inject(new HostAttributeToken("kuiContextMenu"), { optional: true }) !== null
+  protected override readonly bar = this.context
+    ? null
+    : inject(KUI_MENUBAR, { optional: true, skipSelf: true })
+}
+
+/** A row of menus that work as one. Each `kuiMenu` inside it is one of its items. */
+@Directive({
+  selector: "[kuiMenubar]",
+  exportAs: "kuiMenubar",
+  providers: [{ provide: KUI_MENUBAR, useExisting: forwardRef(() => KuiMenubar) }],
+})
+export class KuiMenubar implements OnInit {
+  readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
+  readonly disabled = input(false, { transform: booleanAttribute })
+  readonly kuiId = input<string>()
+
+  controller!: Menubar
+  private readonly around = inject(KUI_DIRECTION, { optional: true })
+  private readonly generated = inject(KuiIds).make()
+  private readonly put = hostPart()
+  private readonly props = inputsSignal(() => ({
+    id: this.kuiId() ?? this.generated,
+    loop: this.loop(),
+    disabled: this.disabled(),
+  }))
+
+  ngOnInit(): void {
+    this.controller = createMenubar(this.props(), { direction: this.around?.direction })
+    this.put(this.controller.root)
+  }
 }
 
 /** A menu that one of this menu's items opens. Its trigger is `kuiMenuSubmenuTrigger`. */
@@ -122,7 +172,7 @@ export class KuiMenuPositioner implements OnInit {
   }
 }
 
-function part(name: "trigger" | "popup" | "arrow" | "separator") {
+function part(name: "trigger" | "popup" | "arrow" | "separator" | "area") {
   const root = inject(KUI_MENU)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -131,6 +181,16 @@ function part(name: "trigger" | "popup" | "arrow" | "separator") {
 @Directive({ selector: "[kuiMenuTrigger]" })
 export class KuiMenuTrigger implements OnInit {
   private readonly init = part("trigger")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/** The area a secondary press, or a long press on a touch screen, opens a `kuiContextMenu` in. */
+@Directive({ selector: "[kuiContextMenuTrigger]" })
+export class KuiContextMenuTrigger implements OnInit {
+  private readonly init = part("area")
 
   ngOnInit(): void {
     this.init()

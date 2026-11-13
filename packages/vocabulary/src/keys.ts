@@ -9,9 +9,9 @@ export const exclusive: string[][] = [
   ["[data-open]","[data-closed]"],
   ["[data-starting-style]","[data-ending-style]"],
   ["[data-checked]","[data-unchecked]"],
-  ["[data-valid]","[data-invalid]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
+  ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
@@ -194,6 +194,142 @@ export const Collapsible = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const ContextMenu = {
+  /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
+  Trigger: {
+    /** Present when the menu is open. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** Places the menu against its trigger. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The menu itself: the list of items. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** An element that points at the trigger. */
+  Arrow: {
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when the arrow cannot sit at the trigger's centre. */
+    uncentered: "[data-uncentered]",
+  },
+  /** An action. Choosing it closes the menu. */
+  Item: {
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Items that belong together, named by their label. */
+  Group: {
+  },
+  /** The name of a group. Outside a group it is plain text, and names nothing. */
+  GroupLabel: {
+  },
+  /** A line between items. */
+  Separator: {
+  },
+  /** An item that is checked or not. Choosing it leaves the menu open. */
+  CheckboxItem: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A mark a checkbox item shows while it is checked. */
+  CheckboxItemIndicator: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+  },
+  /** Radio items of which one is chosen. */
+  RadioGroup: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** One choice of a radio group. Choosing it leaves the menu open. */
+  RadioItem: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A mark a radio item shows while it is the chosen one. */
+  RadioItemIndicator: {
+    /** Present when it is checked. */
+    checked: "[data-checked]",
+    /** Present when it is not checked. */
+    unchecked: "[data-unchecked]",
+  },
+  /** An item that opens a menu beside it. */
+  SubmenuTrigger: {
+    /** Present when its menu is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -558,6 +694,14 @@ export const Menu = {
     popupOpen: "[data-popup-open]",
     /** Present on the item the pointer or the keyboard is on. */
     highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
+export const Menubar = {
+  /** The row of menus. A menu inside it is one of its items. */
+  Root: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },

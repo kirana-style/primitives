@@ -27,7 +27,9 @@ import {
   KuiHoverCardPortal,
   KuiHoverCardPositioner,
   KuiHoverCardTrigger,
+  KuiContextMenuTrigger,
   KuiMenu,
+  KuiMenubar,
   KuiMenuCheckboxItem,
   KuiMenuCheckboxItemIndicator,
   KuiMenuGroup,
@@ -144,7 +146,9 @@ import {
     KuiHoverCardPortal,
     KuiHoverCardPositioner,
     KuiHoverCardTrigger,
+    KuiContextMenuTrigger,
     KuiMenu,
+    KuiMenubar,
     KuiMenuCheckboxItem,
     KuiMenuCheckboxItemIndicator,
     KuiMenuGroup,
@@ -657,6 +661,131 @@ import {
         </ng-container>
         <output data-testid="mn1-output">{{ action() }} {{ view() }}</output>
       </section>
+      <section data-fixture="context-menu">
+        <ng-container kuiContextMenu [kuiId]="'cm1'">
+          <div kuiContextMenuTrigger class="area" data-testid="cm1-area">Press here</div>
+          <ng-template kuiMenuPortal>
+            <div kuiMenuPositioner data-testid="cm1-positioner">
+              <div kuiMenuPopup class="popup" aria-label="Actions" data-testid="cm1-popup">
+                <div
+                  kuiMenuItem
+                  class="item"
+                  data-testid="cm1-copy"
+                  (click)="picked.set('cm1-copy')"
+                >
+                  Copy
+                </div>
+                <div
+                  kuiMenuItem
+                  class="item"
+                  data-testid="cm1-paste"
+                  (click)="picked.set('cm1-paste')"
+                >
+                  Paste
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+      </section>
+      <section data-fixture="menubar">
+        <div kuiMenubar [kuiId]="'mb1'" class="bar" data-testid="mb1">
+          <ng-container kuiMenu [kuiId]="'mb1f'">
+            <button kuiMenuTrigger data-testid="mb1-file">File</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="mb1f-positioner">
+                <div kuiMenuPopup class="popup" data-testid="mb1f-popup">
+                  <div
+                    kuiMenuItem
+                    class="item"
+                    data-testid="mb1f-new"
+                    (click)="picked.set('mb1f-new')"
+                  >
+                    New
+                  </div>
+                  <div
+                    kuiMenuItem
+                    class="item"
+                    data-testid="mb1f-save"
+                    (click)="picked.set('mb1f-save')"
+                  >
+                    Save
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <ng-container kuiMenu [kuiId]="'mb1e'">
+            <button kuiMenuTrigger data-testid="mb1-edit">Edit</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="mb1e-positioner">
+                <div kuiMenuPopup class="popup" data-testid="mb1e-popup">
+                  <div
+                    kuiMenuItem
+                    class="item"
+                    data-testid="mb1e-undo"
+                    (click)="picked.set('mb1e-undo')"
+                  >
+                    Undo
+                  </div>
+                  <ng-container kuiMenuSubmenuRoot [kuiId]="'mb1em'">
+                    <div kuiMenuSubmenuTrigger class="item" data-testid="mb1e-find">Find</div>
+                    <ng-template kuiMenuPortal>
+                      <div kuiMenuPositioner data-testid="mb1em-positioner">
+                        <div kuiMenuPopup class="popup" data-testid="mb1em-popup">
+                          <div
+                            kuiMenuItem
+                            class="item"
+                            data-testid="mb1em-next"
+                            (click)="picked.set('mb1em-next')"
+                          >
+                            Next
+                          </div>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </ng-container>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <ng-container kuiMenu [kuiId]="'mb1v'" [disabled]="true">
+            <button kuiMenuTrigger data-testid="mb1-view">View</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="mb1v-positioner">
+                <div kuiMenuPopup class="popup" data-testid="mb1v-popup">
+                  <div
+                    kuiMenuItem
+                    class="item"
+                    data-testid="mb1v-zoom"
+                    (click)="picked.set('mb1v-zoom')"
+                  >
+                    Zoom
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <ng-container kuiMenu [kuiId]="'mb1h'">
+            <button kuiMenuTrigger data-testid="mb1-help">Help</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="mb1h-positioner">
+                <div kuiMenuPopup class="popup" data-testid="mb1h-popup">
+                  <div
+                    kuiMenuItem
+                    class="item"
+                    data-testid="mb1h-about"
+                    (click)="picked.set('mb1h-about')"
+                  >
+                    About
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+        <output data-testid="mb1-output">{{ picked() }}</output>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -848,6 +977,7 @@ export class App {
   protected readonly controlled = signal<boolean | undefined>(false)
   protected readonly fruit = signal<unknown>("Banana")
   protected readonly action = signal("none")
+  protected readonly picked = signal("none")
   protected readonly view = signal<unknown>("list")
   protected readonly presses = signal(0)
   protected readonly locked = signal(false)

@@ -12,7 +12,9 @@ import {
   Fieldset,
   Form,
   HoverCard,
+  ContextMenu,
   Menu,
+  Menubar,
   Meter,
   Popover,
   Progress,
@@ -50,6 +52,7 @@ const rejected = ref<Record<string, string> | undefined>(undefined)
 const span = ref<number[]>([20, 80])
 const fruit = ref<string | null>("Banana")
 const action = ref("none")
+const picked = ref("none")
 const view = ref<unknown>("list")
 const presses = ref(0)
 const locked = ref(false)
@@ -432,6 +435,97 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         </Menu.Portal>
       </Menu.Root>
       <output data-testid="mn1-output"> {{ action }} {{ view }} </output>
+    </section>
+    <section data-fixture="context-menu">
+      <ContextMenu.Root id="cm1">
+        <ContextMenu.Trigger class="area" data-testid="cm1-area"> Press here </ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner data-testid="cm1-positioner">
+            <ContextMenu.Popup class="popup" aria-label="Actions" data-testid="cm1-popup">
+              <ContextMenu.Item class="item" data-testid="cm1-copy" @click="picked = 'cm1-copy'">
+                Copy
+              </ContextMenu.Item>
+              <ContextMenu.Item class="item" data-testid="cm1-paste" @click="picked = 'cm1-paste'">
+                Paste
+              </ContextMenu.Item>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    </section>
+    <section data-fixture="menubar">
+      <Menubar id="mb1" class="bar" data-testid="mb1">
+        <Menu.Root id="mb1f">
+          <Menu.Trigger data-testid="mb1-file">File</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="mb1f-positioner">
+              <Menu.Popup class="popup" data-testid="mb1f-popup">
+                <Menu.Item class="item" data-testid="mb1f-new" @click="picked = 'mb1f-new'">
+                  New
+                </Menu.Item>
+                <Menu.Item class="item" data-testid="mb1f-save" @click="picked = 'mb1f-save'">
+                  Save
+                </Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+        <Menu.Root id="mb1e">
+          <Menu.Trigger data-testid="mb1-edit">Edit</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="mb1e-positioner">
+              <Menu.Popup class="popup" data-testid="mb1e-popup">
+                <Menu.Item class="item" data-testid="mb1e-undo" @click="picked = 'mb1e-undo'">
+                  Undo
+                </Menu.Item>
+                <Menu.SubmenuRoot id="mb1em">
+                  <Menu.SubmenuTrigger class="item" data-testid="mb1e-find">
+                    Find
+                  </Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner data-testid="mb1em-positioner">
+                      <Menu.Popup class="popup" data-testid="mb1em-popup">
+                        <Menu.Item
+                          class="item"
+                          data-testid="mb1em-next"
+                          @click="picked = 'mb1em-next'"
+                        >
+                          Next
+                        </Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+        <Menu.Root id="mb1v" disabled>
+          <Menu.Trigger data-testid="mb1-view">View</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="mb1v-positioner">
+              <Menu.Popup class="popup" data-testid="mb1v-popup">
+                <Menu.Item class="item" data-testid="mb1v-zoom" @click="picked = 'mb1v-zoom'">
+                  Zoom
+                </Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+        <Menu.Root id="mb1h">
+          <Menu.Trigger data-testid="mb1-help">Help</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner data-testid="mb1h-positioner">
+              <Menu.Popup class="popup" data-testid="mb1h-popup">
+                <Menu.Item class="item" data-testid="mb1h-about" @click="picked = 'mb1h-about'">
+                  About
+                </Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menubar>
+      <output data-testid="mb1-output">{{ picked }}</output>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

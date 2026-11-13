@@ -1,4 +1,5 @@
 import type { Menu, MenuCheckboxItem, MenuGroup, MenuRadioGroup } from "@kirana-ui/core/menu"
+import type { Menubar } from "@kirana-ui/core/menubar"
 import { getContext, setContext } from "svelte"
 
 const KEY = Symbol("Menu")
@@ -8,9 +9,18 @@ const RADIO_GROUP = Symbol("MenuRadioGroup")
 
 export const RADIO_ITEM = Symbol("MenuRadioItem")
 
+const MENUBAR = Symbol("Menubar")
+
+export const provideMenubar = (bar: Menubar): Menubar => setContext(MENUBAR, bar)
+/** The bar a menu is one of the menus of, if it is in one. */
+export const useMenubar = (): Menubar | undefined =>
+  getContext<Menubar | null | undefined>(MENUBAR) ?? undefined
+
 export function provide(controller: Menu): Menu {
-  // A group around a submenu is not a group of the submenu's own items.
+  // A group around a submenu is not a group of the submenu's own items; nor is a menu written
+  // inside a bar's menu one of the bar's.
   setContext(GROUP, null)
+  setContext(MENUBAR, null)
   return setContext(KEY, controller)
 }
 

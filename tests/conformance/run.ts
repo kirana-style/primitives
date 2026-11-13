@@ -1482,6 +1482,124 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("closed by a press outside")
     expect(!(await present("mn1-popup")), "a press outside closes the menu")
   },
+
+  async "context-menu"({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    /** Where the popup is, from the area's corner. */
+    const at = () =>
+      page.evaluate(() => {
+        const area = document.querySelector<HTMLElement>('[data-testid="cm1-area"]')!
+        const box = area.getBoundingClientRect()
+        const popup = document.querySelector('[data-testid="cm1-popup"]')!.getBoundingClientRect()
+        // From inside the area's border, where a press is counted from.
+        return [popup.left - box.left - area.clientLeft, popup.top - box.top - area.clientTop]
+      })
+    // Within a pixel: the popup is put on whole pixels, the area may not be on one.
+    const near = async (x: number, y: number) => {
+      const [left, top] = await at()
+      return Math.abs(left! - x) <= 1 && Math.abs(top! - y) <= 1
+    }
+    await id("cm1-area").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    const scrolled = await page.evaluate(() => window.scrollY)
+    expect((await attribute("cm1-area", "aria-haspopup")) === null, "the area is not a button")
+
+    await id("cm1-area").click({ button: "right", position: { x: 40, y: 30 } })
+    await snapshot("open at the pointer")
+    expect(await present("cm1-popup"), "a secondary press opens the menu")
+    expect(await near(40, 30), "where the pointer is")
+    expect((await attribute("cm1-popup", "role")) === "menu", "it is a menu")
+    expect((await attribute("cm1-popup", "aria-labelledby")) === null, "named by no trigger")
+    expect((await attribute("cm1-area", "data-popup-open")) === "", "the area shows it is open")
+    expect((await focused()) === "cm1-popup", "the menu has focus")
+    expect((await page.evaluate(() => window.scrollY)) === scrolled, "and the page has not moved")
+    await key("ArrowDown")
+    expect((await focused()) === "cm1-copy", "the arrows move through it")
+
+    await id("cm1-area").click({ button: "right", position: { x: 150, y: 60 } })
+    await snapshot("moved to a second press")
+    expect(await present("cm1-popup"), "a second press leaves it open")
+    expect(await near(150, 60), "and moves it there")
+
+    await key("End")
+    await key("Enter")
+    await snapshot("chosen")
+    expect(!(await present("cm1-popup")), "a chosen item closes it")
+    expect((await id("mb1-output").textContent()) === "cm1-paste", "and is heard")
+
+    await id("cm1-area").click({ button: "right", position: { x: 20, y: 20 } })
+    await settled(page)
+    await id("cm1-area").click({ position: { x: 250, y: 100 } })
+    await snapshot("closed by a press in the area")
+    expect(!(await present("cm1-popup")), "a plain press in the area closes it")
+  },
+
+  async menubar({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    await id("mb1").evaluate((element) => element.scrollIntoView({ block: "start" }))
+    expect((await attribute("mb1", "role")) === "menubar", "the bar is a menubar")
+    expect((await attribute("mb1-file", "role")) === "menuitem", "a menu's trigger is its item")
+    expect((await attribute("mb1-file", "aria-haspopup")) === "menu", "that has a menu")
+    expect((await attribute("mb1-help", "tabindex")) === "0", "before focus, any can take it")
+
+    await id("mb1-file").focus()
+    await key("ArrowRight")
+    expect((await focused()) === "mb1-edit", "ArrowRight goes to the next trigger")
+    await key("ArrowRight")
+    expect((await focused()) === "mb1-help", "past a disabled one")
+    await key("ArrowRight")
+    expect((await focused()) === "mb1-file", "and round")
+    await snapshot("focus in the bar")
+    expect((await attribute("mb1-file", "tabindex")) === "0", "the bar is one stop")
+    expect((await attribute("mb1-help", "tabindex")) === "-1", "at the trigger focus was on")
+
+    await key("ArrowDown")
+    await snapshot("a menu open")
+    expect((await focused()) === "mb1f-new", "ArrowDown opens the menu on its first item")
+    await key("ArrowRight")
+    await snapshot("the next menu in its place")
+    expect(!(await present("mb1f-popup")), "ArrowRight closes it")
+    expect((await focused()) === "mb1e-undo", "and opens the next, on its first item")
+
+    await key("ArrowDown")
+    await key("ArrowRight")
+    expect((await focused()) === "mb1em-next", "on a submenu's trigger, the arrow opens it")
+    expect(await present("mb1e-popup"), "and its menu stays")
+    await key("ArrowLeft")
+    expect((await focused()) === "mb1e-find", "the arrow back closes the submenu only")
+    await key("ArrowRight")
+    await key("ArrowRight")
+    await snapshot("across from a submenu")
+    expect((await focused()) === "mb1h-about", "from an item that opens nothing, across")
+    expect(!(await present("mb1em-popup")), "the submenu has closed")
+    expect(!(await present("mb1e-popup")), "and its menu")
+    await key("ArrowLeft")
+    expect((await focused()) === "mb1e-undo", "ArrowLeft goes back, past the disabled menu")
+    await key("Escape")
+    expect((await focused()) === "mb1-edit", "Escape gives focus to the menu's trigger")
+    expect(!(await present("mb1e-popup")), "and nothing is open")
+
+    await id("mb1-help").hover()
+    await settled(page)
+    expect(!(await present("mb1h-popup")), "with nothing open, the pointer opens nothing")
+    await id("mb1-file").click()
+    await settled(page)
+    expect(await present("mb1f-popup"), "a press opens a menu")
+    await id("mb1-help").hover()
+    await snapshot("another opened by the pointer")
+    expect(await present("mb1h-popup"), "the pointer on another trigger opens that one")
+    expect(!(await present("mb1f-popup")), "in place of the first")
+    await id("mb1h-about").click()
+    await snapshot("chosen")
+    expect(!(await present("mb1h-popup")), "a chosen item closes the menu")
+    expect((await id("mb1-output").textContent()) === "mb1h-about", "and is heard")
+    expect((await focused()) === "mb1-help", "focus is on its trigger")
+  },
 }
 
 /** The second page's scenarios: generated ids, and a popover open when the page is first drawn. */
@@ -1834,7 +1952,8 @@ for (const engine of engines) {
       const [reference, ...others] = labels
       if (!reference) continue
       const served = Object.entries(sent).filter(([label]) => labels.includes(label))
-      if (!group) {
+      // With one scenario asked for, the page at rest may not have been recorded.
+      if (!group && snapshots[reference]!.has("collapsible / at rest")) {
         // A page rendered on a server is, before its scripts run, the page at rest: nothing but
         // the geometry the client measures is missing, and hydration finds nothing to correct.
         const rest = withoutStyles(snapshots[reference]!.get("collapsible / at rest") ?? "")

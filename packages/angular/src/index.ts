@@ -18,6 +18,7 @@ export {
   KuiDialogTrigger,
 } from "./dialog"
 export {
+  KuiContextMenuTrigger,
   KuiMenu,
   KuiMenuArrow,
   KuiMenuCheckboxItem,
@@ -35,6 +36,7 @@ export {
   KuiMenuSubmenuRoot,
   KuiMenuSubmenuTrigger,
   KuiMenuTrigger,
+  KuiMenubar,
 } from "./menu"
 export {
   KuiPopover,

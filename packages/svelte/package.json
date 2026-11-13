@@ -37,6 +37,10 @@
       "svelte": "./src/collapsible.ts",
       "default": "./src/collapsible.ts"
     },
+    "./context-menu": {
+      "svelte": "./src/context-menu.ts",
+      "default": "./src/context-menu.ts"
+    },
     "./dialog": {
       "svelte": "./src/dialog.ts",
       "default": "./src/dialog.ts"
@@ -64,6 +68,10 @@
     "./menu": {
       "svelte": "./src/menu.ts",
       "default": "./src/menu.ts"
+    },
+    "./menubar": {
+      "svelte": "./src/menubar.ts",
+      "default": "./src/menubar.ts"
     },
     "./meter": {
       "svelte": "./src/meter.ts",

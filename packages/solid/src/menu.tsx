@@ -11,6 +11,7 @@ import { Show, createContext, createUniqueId, splitProps, untrack, useContext } 
 import type { JSX } from "solid-js"
 
 import { DirectionContext } from "./direction-context.ts"
+import { MenubarContext } from "./menubar-context.ts"
 import { positioned } from "./popover.tsx"
 import type { PositionerProps } from "./popover.tsx"
 import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
@@ -43,10 +44,13 @@ export type RootProps = {
   children?: JSX.Element
 }
 
-function make(props: RootProps, parent: Controller | undefined): JSX.Element {
+function make(props: RootProps, kind: "menu" | "submenu" | "context"): JSX.Element {
   const generated = createUniqueId()
   const direction = useContext(DirectionContext)
-  const made = controller(within(createMenu, { parent, direction }), () => ({
+  const parent = kind === "submenu" ? useMenu() : undefined
+  const menubar = kind === "menu" ? (useContext(MenubarContext) ?? undefined) : undefined
+  const around = { parent, direction, menubar, context: kind === "context" }
+  const made = controller(within(createMenu, around), () => ({
     id: props.id ?? generated,
     open: props.open,
     defaultOpen: props.defaultOpen,
@@ -56,15 +60,20 @@ function make(props: RootProps, parent: Controller | undefined): JSX.Element {
   }))
   return (
     <Context.Provider value={made}>
-      {/* A group around a submenu is not a group of the submenu's own items. */}
-      <GroupContext.Provider value={null}>{props.children}</GroupContext.Provider>
+      {/* A group around a submenu is not a group of the submenu's own items; nor is a menu
+          written inside a bar's menu one of the bar's. */}
+      <MenubarContext.Provider value={null}>
+        <GroupContext.Provider value={null}>{props.children}</GroupContext.Provider>
+      </MenubarContext.Provider>
     </Context.Provider>
   )
 }
 
-const Root = (props: RootProps) => make(props, undefined)
+const Root = (props: RootProps) => make(props, "menu")
+/** A menu for an area of the page, opened at the pointer. Its trigger is the area. */
+const ContextRoot = (props: RootProps) => make(props, "context")
 /** A menu that one of this menu's items opens. Its trigger is `<Menu.SubmenuTrigger>`. */
-const SubmenuRoot = (props: RootProps) => make(props, useMenu())
+const SubmenuRoot = (props: RootProps) => make(props, "submenu")
 
 const Portal = (props: { children?: JSX.Element }) => (
   <BodyPortal mounted={useMenu().mounted}>{props.children}</BodyPortal>
@@ -194,7 +203,7 @@ function RadioItemIndicator(props: IndicatorProps): JSX.Element {
 }
 
 const part =
-  (name: "trigger" | "popup" | "arrow" | "separator", tag: string) =>
+  (name: "trigger" | "popup" | "arrow" | "separator" | "area", tag: string) =>
   (props: PartComponentProps) => <Part part={useMenu()[name]} tag={tag} {...props} />
 
 export const Menu = {
@@ -215,4 +224,11 @@ export const Menu = {
   RadioItemIndicator,
   SubmenuRoot,
   SubmenuTrigger: part("trigger", "div"),
+}
+
+export const ContextMenu = {
+  ...Menu,
+  Root: ContextRoot,
+  /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
+  Trigger: part("area", "div"),
 }

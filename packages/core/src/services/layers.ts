@@ -65,6 +65,12 @@ export function pushLayer(layer: Layer): () => void {
   }
 }
 
+/** The popup under `element`'s own in the stack: what it was opened from. */
+export function layerBelow(element: HTMLElement): HTMLElement | undefined {
+  const index = stack.findIndex((each) => each.element === element)
+  return index > 0 ? stack[index - 1]!.element : undefined
+}
+
 /** How many layers of this kind are open above `element`'s own. */
 export function layersAbove(element: HTMLElement, kind: string): number {
   const index = stack.findIndex((each) => each.element === element)

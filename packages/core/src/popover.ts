@@ -1,13 +1,12 @@
 import { bindable } from "./bindable.ts"
-import { details, flag } from "./part.ts"
+import { details } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
-import { focusScope } from "./services/focus.ts"
-import { pushLayer } from "./services/layers.ts"
-import { POSITION_DEFAULTS, createPosition, sameOptions } from "./services/position.ts"
+import { popupFocus } from "./services/popup-focus.ts"
+import { createPopup } from "./services/popup.ts"
+import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
-import { createPresence } from "./services/presence.ts"
 
 export interface PopoverProps {
   id: string
@@ -41,85 +40,40 @@ export function createPopover(props: ReadonlySignal<PopoverProps>): Popover {
     defaultValue: props.peek().defaultOpen ?? false,
     onChange: (value, by) => props.peek().onOpenChange?.(value, by),
   })
-  const presence = createPresence(open)
-  const positioning = signal<Partial<PositionOptions>>({})
-  const position = createPosition(
-    computed(() => ({ ...POSITION_DEFAULTS, ...positioning.get() }), sameOptions)
-  )
   const titled = signal(false)
   const described = signal(false)
-  let trigger: HTMLElement | undefined
 
   const setOpen = (next: boolean, by: ChangeDetails) => open.set(next, by)
+  const placement = createPlacement()
+  const popup = createPopup({ open, setOpen, kind: "popover", placement, focus: popupFocus() })
 
   return {
     open,
-    mounted: presence.mounted,
+    mounted: popup.mounted,
     setOpen,
-    positioning,
-    mount: () => presence.start(),
+    positioning: placement.positioning,
+    mount: () => popup.start(),
     trigger: {
       props: computed(() => ({
         type: "button",
         "aria-haspopup": "dialog",
-        "aria-expanded": String(open.get()),
-        "aria-controls": presence.mounted.get() ? popupId : undefined,
-        "data-popup-open": flag(open.get()),
+        ...popup.expanded(popupId),
         onClick: (event: Event) => setOpen(!open.peek(), details("trigger-press", event)),
       })),
-      attach(element) {
-        trigger = element
-        return () => {
-          if (trigger === element) trigger = undefined
-        }
-      },
+      attach: (element) => popup.attachTrigger(element),
     },
-    positioner: {
-      props: computed(() => ({
-        role: "presentation",
-        "data-open": flag(open.get()),
-        "data-closed": flag(!open.get()),
-        "data-side": position.side.get(),
-        "data-align": position.align.get(),
-      })),
-      attach(element) {
-        if (!trigger) return NOTHING
-        return position.attach(element, trigger)
-      },
-    },
+    positioner: popup.positioner,
     popup: {
-      props: computed(() => {
-        const status = presence.status.get()
-        return {
-          id: popupId,
-          role: "dialog",
-          tabindex: "-1",
-          "aria-labelledby": titled.get() ? `${id}-title` : undefined,
-          "aria-describedby": described.get() ? `${id}-description` : undefined,
-          "data-open": flag(open.get()),
-          "data-closed": flag(!open.get()),
-          "data-starting-style": flag(status === "starting"),
-          "data-ending-style": flag(status === "ending"),
-          "data-side": position.side.get(),
-          "data-align": position.align.get(),
-        }
-      }),
-      attach(element) {
-        const stops = [
-          presence.attach(element),
-          pushLayer({
-            element,
-            kind: "popover",
-            branches: () => [trigger],
-            onEscape: (event) => setOpen(false, details("escape-key", event)),
-            onOutsidePress: (event) => setOpen(false, details("outside-press", event)),
-          }),
-          focusScope(element, { restore: () => trigger }),
-        ]
-        return () => {
-          for (const stop of stops.reverse()) stop()
-        }
-      },
+      props: computed(() => ({
+        id: popupId,
+        role: "dialog",
+        tabindex: "-1",
+        "aria-labelledby": titled.get() ? `${id}-title` : undefined,
+        "aria-describedby": described.get() ? `${id}-description` : undefined,
+        ...popup.state(),
+        ...popup.placed(),
+      })),
+      attach: (element) => popup.attach(element),
     },
     title: {
       props: computed(() => ({ id: `${id}-title` })),

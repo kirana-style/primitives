@@ -1,13 +1,12 @@
 import { bindable } from "./bindable.ts"
-import { details, flag } from "./part.ts"
+import { flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { computed, signal } from "./reactivity.ts"
+import { computed } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createHover } from "./services/hover.ts"
-import { pushLayer } from "./services/layers.ts"
-import { POSITION_DEFAULTS, createPosition, sameOptions } from "./services/position.ts"
+import { createPopup } from "./services/popup.ts"
+import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
-import { createPresence } from "./services/presence.ts"
 
 export interface HoverPopupProps {
   id: string
@@ -35,8 +34,6 @@ export interface HoverPopup {
   readonly arrow: Part
 }
 
-const NOTHING = () => {}
-
 /**
  * What a tooltip and a hover card share: a popup placed against its trigger that the pointer or
  * the keyboard's focus opens. They differ in what the popup is to the trigger (a description, or
@@ -53,15 +50,18 @@ export function createHoverPopup(
     defaultValue: props.peek().defaultOpen ?? false,
     onChange: (value, by) => props.peek().onOpenChange?.(value, by),
   })
-  const presence = createPresence(open)
-  const positioning = signal<Partial<PositionOptions>>({})
-  const position = createPosition(
-    computed(() => ({ ...POSITION_DEFAULTS, side: "top", ...positioning.get() }), sameOptions)
-  )
-  let trigger: HTMLElement | undefined
-  let popup: HTMLElement | undefined
+  let element: HTMLElement | undefined
 
   const setOpen = (next: boolean, by: ChangeDetails) => open.set(next, by)
+  const placement = createPlacement({ side: "top" })
+  const popup = createPopup({
+    open,
+    setOpen,
+    kind: kind.name,
+    // Escape only: a press outside is not this popup's business, and focus stays where it is.
+    outsidePress: () => false,
+    placement,
+  })
   const hover = createHover({
     open,
     setOpen,
@@ -70,22 +70,17 @@ export function createHoverPopup(
       closeDelay: props.peek().closeDelay ?? kind.closeDelay,
       disabled: Boolean(props.peek().disabled),
     }),
-    trigger: () => trigger,
-    popup: () => popup,
-  })
-
-  const placed = () => ({
-    "data-side": position.side.get(),
-    "data-align": position.align.get(),
+    trigger: popup.trigger,
+    popup: () => element,
   })
 
   return {
     open,
-    mounted: presence.mounted,
+    mounted: popup.mounted,
     setOpen,
-    positioning,
+    positioning: placement.positioning,
     mount() {
-      const stops = [presence.start(), hover.start()]
+      const stops = [popup.start(), hover.start()]
       return () => {
         for (const stop of stops) stop()
       }
@@ -93,68 +88,30 @@ export function createHoverPopup(
     trigger: {
       props: computed(() => ({
         // A tooltip is the trigger's description while it shows, and only then.
-        "aria-describedby": kind.describes && presence.mounted.get() ? popupId : undefined,
+        "aria-describedby": kind.describes && popup.mounted.get() ? popupId : undefined,
         "data-popup-open": flag(open.get()),
         ...hover.handlers(),
       })),
-      attach(element) {
-        trigger = element
-        return () => {
-          if (trigger === element) trigger = undefined
-        }
-      },
+      attach: (given) => popup.attachTrigger(given),
     },
-    positioner: {
-      props: computed(() => ({
-        role: "presentation",
-        "data-open": flag(open.get()),
-        "data-closed": flag(!open.get()),
-        ...placed(),
-      })),
-      attach(element) {
-        if (!trigger) return NOTHING
-        return position.attach(element, trigger)
-      },
-    },
+    positioner: popup.positioner,
     popup: {
-      props: computed(() => {
-        const status = presence.status.get()
-        return {
-          id: popupId,
-          role: kind.describes ? "tooltip" : undefined,
-          "data-open": flag(open.get()),
-          "data-closed": flag(!open.get()),
-          "data-starting-style": flag(status === "starting"),
-          "data-ending-style": flag(status === "ending"),
-          "data-instant": hover.instant.get(),
-          ...placed(),
-        }
-      }),
-      attach(element) {
-        popup = element
-        const stops = [
-          presence.attach(element),
-          // For Escape only: a press outside is not this popup's business.
-          pushLayer({
-            element,
-            kind: kind.name,
-            branches: () => [trigger],
-            onEscape: (event) => setOpen(false, details("escape-key", event)),
-          }),
-        ]
+      props: computed(() => ({
+        id: popupId,
+        role: kind.describes ? "tooltip" : undefined,
+        ...popup.state(),
+        "data-instant": hover.instant.get(),
+        ...popup.placed(),
+      })),
+      attach(given) {
+        element = given
+        const detach = popup.attach(given)
         return () => {
-          for (const stop of stops.reverse()) stop()
-          if (popup === element) popup = undefined
+          detach()
+          if (element === given) element = undefined
         }
       },
     },
-    arrow: {
-      props: computed(() => ({
-        "aria-hidden": "true",
-        ...placed(),
-        "data-uncentered": flag(position.uncentered.get()),
-      })),
-      attach: (element) => position.arrow(element),
-    },
+    arrow: popup.arrow,
   }
 }

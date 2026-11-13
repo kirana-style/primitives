@@ -4,6 +4,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { createRoving } from "./services/roving.ts"
+import type { Orientation } from "./services/roving.ts"
 
 export interface MenubarProps {
   id: string
@@ -11,6 +12,8 @@ export interface MenubarProps {
   loop?: boolean | undefined
   /** No menu of the bar opens. */
   disabled?: boolean | undefined
+  /** A row (the default) or a column of menus. In a column a menu opens beside its trigger. */
+  orientation?: Orientation | undefined
 }
 
 /** A menu of the bar, as the bar knows it. */
@@ -24,6 +27,7 @@ export interface MenubarMember {
 /** What a menu needs of the bar it is in. Not for a caller. */
 export interface MenubarLink {
   readonly disabled: ReadonlySignal<boolean>
+  readonly vertical: ReadonlySignal<boolean>
   /** For a menu's trigger: it joins the bar's row. Returns the leaving. */
   join(trigger: HTMLElement, member: MenubarMember): () => void
   /** The bar is one stop for Tab: the trigger focus was last on, or any before there is one. */
@@ -62,6 +66,7 @@ export function createMenubar(
   let current: MenubarMember | undefined
   const disabled = computed(() => Boolean(props.get().disabled))
   const loop = () => props.peek().loop ?? true
+  const vertical = computed(() => props.get().orientation === "vertical")
 
   const triggerOf = (member: MenubarMember) => [...members].find(([, each]) => each === member)?.[0]
 
@@ -70,13 +75,15 @@ export function createMenubar(
     root: {
       props: computed(() => ({
         role: "menubar",
-        "aria-orientation": "horizontal",
+        "aria-orientation": vertical.get() ? "vertical" : "horizontal",
+        "data-orientation": vertical.get() ? "vertical" : "horizontal",
         "data-disabled": flag(disabled.get()),
       })),
       attach: () => NOTHING,
     },
     link: {
       disabled,
+      vertical,
       join(trigger, member) {
         members.set(trigger, member)
         const leave = roving.register(trigger)
@@ -94,7 +101,7 @@ export function createMenubar(
       focused: (trigger) => active.set(trigger),
       key: (event) =>
         roving.move(event, {
-          orientation: "horizontal",
+          orientation: vertical.peek() ? "vertical" : "horizontal",
           loop: loop(),
           direction: around.direction,
         }) !== undefined,

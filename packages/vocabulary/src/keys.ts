@@ -197,6 +197,84 @@ export const Collapsible = {
   },
 } as const
 
+export const Combobox = {
+  /** The text input. What is typed filters the list, which is placed against it. */
+  Input: {
+    /** Present when the list is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A button that opens and closes the list. */
+  Trigger: {
+    /** Present when the list is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Places the list against the input. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The list of items. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
+  },
+  /** One choice in the list. */
+  Item: {
+    /** Present on the chosen item. */
+    selected: "[data-selected]",
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A mark an item shows while it is the chosen one. */
+  ItemIndicator: {
+  },
+  /** What is shown when no item is. */
+  Empty: {
+  },
+} as const
+
 export const ContextMenu = {
   /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
   Trigger: {
@@ -267,6 +345,13 @@ export const ContextMenu = {
   },
   /** An action. Choosing it closes the menu. */
   Item: {
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** An item that is a link. Choosing it follows the link and closes the menu. */
+  LinkItem: {
     /** Present on the item the pointer or the keyboard is on. */
     highlighted: "[data-highlighted]",
     /** Present when it is disabled. */
@@ -561,6 +646,34 @@ export const HoverCard = {
   },
 } as const
 
+export const Listbox = {
+  /** The list. It is one stop for Tab. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** One choice in the list. */
+  Item: {
+    /** Present on a chosen item. */
+    selected: "[data-selected]",
+    /** Present on the item the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A mark an item shows while it is chosen. */
+  ItemIndicator: {
+    /** Present on a chosen item. */
+    selected: "[data-selected]",
+  },
+  /** Items that belong together, named by their label. */
+  Group: {
+  },
+  /** The name of a group. */
+  GroupLabel: {
+  },
+} as const
+
 export const Menu = {
   /** The button that opens the menu, and what it is placed against. */
   Trigger: {
@@ -638,6 +751,13 @@ export const Menu = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
+  /** An item that is a link. Choosing it follows the link and closes the menu. */
+  LinkItem: {
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
   /** Items that belong together, named by their label. */
   Group: {
   },
@@ -704,6 +824,11 @@ export const Menubar = {
   Root: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Whether its menus are in a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
   },
 } as const
 

@@ -40,6 +40,7 @@ export type RootProps = {
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   disabled?: boolean
   loop?: boolean
+  modal?: boolean
   id?: string
   children?: JSX.Element
 }
@@ -56,6 +57,7 @@ function make(props: RootProps, kind: "menu" | "submenu" | "context"): JSX.Eleme
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
     loop: props.loop,
+    modal: props.modal,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
   return (
@@ -92,6 +94,14 @@ function Item(props: PartComponentProps & ItemOptions): JSX.Element {
   const options = toSignal(() => ({ ...local }))
   const part = useMenu().item(() => defined(options.get()))
   return <Part part={part} tag="div" {...rest} />
+}
+
+/** An item that is a link: `href` and the rest go to its `<a>`. */
+function LinkItem(props: PartComponentProps & ItemOptions): JSX.Element {
+  const [local, rest] = splitProps(props, ITEM)
+  const options = toSignal(() => ({ ...local }))
+  const part = useMenu().item(() => defined(options.get()))
+  return <Part part={part} tag="a" {...rest} />
 }
 
 function Group(props: PartComponentProps & { id?: string }): JSX.Element {
@@ -214,6 +224,7 @@ export const Menu = {
   Popup: part("popup", "div"),
   Arrow: part("arrow", "div"),
   Item,
+  LinkItem,
   Group,
   GroupLabel,
   Separator: part("separator", "div"),

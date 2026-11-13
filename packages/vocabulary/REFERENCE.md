@@ -202,6 +202,77 @@ The content. In the page while open, and through its exit's motion.
 | `--collapsible-panel-height` | The panel's content height while it opens or closes, `auto` once it is open. |
 | `--collapsible-panel-width` | The panel's content width while it opens or closes, `auto` once it is open. |
 
+## Combobox
+
+### Combobox.Input
+
+The text input. What is typed filters the list, which is placed against it.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the list is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Combobox.Trigger
+
+A button that opens and closes the list.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the list is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Combobox.Positioner
+
+Places the list against the input. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Combobox.Popup
+
+The list of items.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-empty` | Present when no item is shown for what was typed. |
+
+### Combobox.Item
+
+One choice in the list.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on the chosen item. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Combobox.ItemIndicator
+
+A mark an item shows while it is the chosen one.
+
+### Combobox.Empty
+
+What is shown when no item is.
+
 ## ContextMenu
 
 ### ContextMenu.Trigger
@@ -257,6 +328,15 @@ An element that points at the trigger.
 ### ContextMenu.Item
 
 An action. Choosing it closes the menu.
+
+| Attribute | When |
+| --- | --- |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### ContextMenu.LinkItem
+
+An item that is a link. Choosing it follows the link and closes the menu.
 
 | Attribute | When |
 | --- | --- |
@@ -533,6 +613,42 @@ An element that points at the trigger, placed along the popup's edge.
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
 
+## Listbox
+
+### Listbox.Root
+
+The list. It is one stop for Tab.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Listbox.Item
+
+One choice in the list.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen item. |
+| `data-highlighted` | Present on the item the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Listbox.ItemIndicator
+
+A mark an item shows while it is chosen.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen item. |
+
+### Listbox.Group
+
+Items that belong together, named by their label.
+
+### Listbox.GroupLabel
+
+The name of a group.
+
 ## Menu
 
 ### Menu.Trigger
@@ -589,6 +705,15 @@ An element that points at the trigger.
 ### Menu.Item
 
 An action. Choosing it closes the menu.
+
+| Attribute | When |
+| --- | --- |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Menu.LinkItem
+
+An item that is a link. Choosing it follows the link and closes the menu.
 
 | Attribute | When |
 | --- | --- |
@@ -674,6 +799,7 @@ The row of menus. A menu inside it is one of its items.
 | Attribute | When |
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
+| `data-orientation` (horizontal, vertical) | Whether its menus are in a row or a column. |
 
 ## Meter
 

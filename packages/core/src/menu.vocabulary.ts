@@ -52,6 +52,10 @@ export const menuVocabulary = defineComponent({
     description: "An action. Choosing it closes the menu.",
     states: { highlighted: HIGHLIGHTED, disabled: DISABLED },
   },
+  linkItem: {
+    description: "An item that is a link. Choosing it follows the link and closes the menu.",
+    states: { highlighted: HIGHLIGHTED, disabled: DISABLED },
+  },
   group: { description: "Items that belong together, named by their label." },
   groupLabel: {
     description: "The name of a group. Outside a group it is plain text, and names nothing.",

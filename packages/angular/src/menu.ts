@@ -13,7 +13,7 @@ import {
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
+import type { Align, ChangeDetails, Orientation, Side } from "@kirana-ui/core"
 import { createMenu } from "@kirana-ui/core/menu"
 import type { Menu, MenuCheckboxItem, MenuGroup, MenuRadioGroup } from "@kirana-ui/core/menu"
 import { createMenubar } from "@kirana-ui/core/menubar"
@@ -35,6 +35,8 @@ abstract class MenuRoot implements OnInit {
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
+  /** Holds the page while the menu is open. Not for a submenu. */
+  readonly modal = input(false, { transform: booleanAttribute })
   readonly kuiId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
@@ -50,6 +52,7 @@ abstract class MenuRoot implements OnInit {
     defaultOpen: this.defaultOpen(),
     disabled: this.disabled(),
     loop: this.loop(),
+    modal: this.modal(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
       if (!details.canceled) {
@@ -102,6 +105,7 @@ export class KuiMenu extends MenuRoot {
 export class KuiMenubar implements OnInit {
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
+  readonly orientation = input<Orientation>()
   readonly kuiId = input<string>()
 
   controller!: Menubar
@@ -112,6 +116,7 @@ export class KuiMenubar implements OnInit {
     id: this.kuiId() ?? this.generated,
     loop: this.loop(),
     disabled: this.disabled(),
+    orientation: this.orientation(),
   }))
 
   ngOnInit(): void {
@@ -238,6 +243,29 @@ export class KuiMenuSeparator implements OnInit {
 export class KuiMenuItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What typing matches; the item's text when left out. */
+  readonly label = input<string>()
+  /** Whether choosing the item closes the menu. Default: it does. */
+  readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  private readonly root = inject(KUI_MENU)
+  private readonly put = hostPart()
+  private readonly options = inputsSignal(() => ({
+    disabled: this.disabled(),
+    label: this.label(),
+    closeOnClick: this.closeOnClick(),
+  }))
+
+  ngOnInit(): void {
+    const options = this.options()
+    this.put(this.root.controller.item(() => defined(options.get())))
+  }
+}
+
+/** `<a kuiMenuLinkItem href="…">`: an item that is a link. */
+@Directive({ selector: "a[kuiMenuLinkItem]" })
+export class KuiMenuLinkItem implements OnInit {
+  readonly disabled = input(false, { transform: booleanAttribute })
   readonly label = input<string>()
   /** Whether choosing the item closes the menu. Default: it does. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {

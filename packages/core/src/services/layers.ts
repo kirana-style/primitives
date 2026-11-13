@@ -14,6 +14,11 @@ export interface Layer {
   branches?: () => readonly (Element | null | undefined)[]
   /** Blocks what is under it: a press outside goes no further down the stack. */
   modal?: boolean
+  /**
+   * A press outside closes it and does nothing else: what was pressed does not hear it. For a
+   * popup that holds the page without making it inert (a modal menu, whose trigger stays live).
+   */
+  swallow?: () => boolean
   onEscape?(event: KeyboardEvent): void
   onOutsidePress?(event: PointerEvent): void
 }
@@ -42,8 +47,31 @@ function onPointerDown(event: PointerEvent) {
   for (const layer of [...stack].reverse()) {
     if (inside(layer, target)) return
     layer.onOutsidePress?.(event)
+    if (layer.swallow?.()) return swallow(event)
     if (layer.modal) return
   }
+}
+
+/** Keeps a press, and the click it would end in, from what is under the pointer. */
+function swallow(event: PointerEvent) {
+  const document = (event.target as Node).ownerDocument!
+  event.preventDefault()
+  event.stopPropagation()
+  const stop = (later: Event) => {
+    later.preventDefault()
+    later.stopPropagation()
+  }
+  const kinds = ["mousedown", "pointerup", "mouseup", "click"]
+  const done = () => {
+    for (const kind of kinds) document.removeEventListener(kind, stop, true)
+    document.removeEventListener("pointerdown", done, true)
+    clearTimeout(timer)
+  }
+  for (const kind of kinds) document.addEventListener(kind, stop, true)
+  // Until the press has ended in its click, or another has begun, or it never does.
+  document.addEventListener("click", () => setTimeout(done), { capture: true, once: true })
+  document.addEventListener("pointerdown", done, true)
+  const timer = setTimeout(done, 1000)
 }
 
 export function pushLayer(layer: Layer): () => void {

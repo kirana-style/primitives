@@ -8,7 +8,7 @@ import { computed, effect, keyed, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createList } from "./services/list.ts"
 import type { List, ListRow } from "./services/list.ts"
-import { popupFocus } from "./services/popup-focus.ts"
+import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement, pointAnchor } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
@@ -23,6 +23,11 @@ export interface MenuProps {
   disabled?: boolean | undefined
   /** Whether the arrows go round from the last item to the first. Default: they do. */
   loop?: boolean | undefined
+  /**
+   * Holds the page while the menu is open: its scroll is locked, and a press outside closes
+   * the menu and reaches nothing. Default: it does not. Not for a submenu.
+   */
+  modal?: boolean | undefined
 }
 
 export interface MenuItemOptions {
@@ -126,6 +131,9 @@ const ROWS = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio
 export const SUBMENU_DELAY = 100
 /** How long a finger rests on a context menu's area before the menu opens, in milliseconds. */
 export const LONG_PRESS = 500
+/** How far the pointer travels, and for how long, before letting go chooses what it is on. */
+const PRESS_SLOP = 4
+export const PRESS_HOLD = 200
 /** How far a finger may move and still be resting, in pixels. */
 const LONG_PRESS_SLOP = 10
 
@@ -176,8 +184,9 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
   const barTrigger = signal<HTMLElement | undefined>(undefined)
   // A submenu opens beside its trigger, on the side the text runs to.
   const beside = signal<"left" | "right">("right")
-  const placement = createPlacement(
-    parent ? () => ({ side: beside.get(), align: "start" }) : { align: "start" }
+  const placement = createPlacement(() =>
+    // Beside its trigger too, as a menu of a bar that is a column.
+    parent || bar?.vertical.get() ? { side: beside.get(), align: "start" } : { align: "start" }
   )
   const layer = createPopup({
     open,
@@ -186,6 +195,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     // The menu moves focus itself, to the row it was opened for; the popup gives it back.
     focus: popupFocus("none"),
     placement,
+    ...(parent ? {} : { swallow: () => Boolean(props.peek().modal), hold: lockPage }),
     ...(around.context
       ? {
           anchor: () => pointAnchor(() => point, area),
@@ -311,15 +321,40 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     "data-disabled": flag(disabled.get()),
     // In a bar it is one of the bar's items, and the bar is one stop for Tab.
     ...(bar ? { role: "menuitem", tabindex: bar.tabindex(barTrigger.get()) } : {}),
+    // A mouse opens it as the button goes down, so one press can open it, travel to an item
+    // and choose it by letting go. A finger opens it with the click: its press may be a scroll.
+    onPointerDown(event: PointerEvent) {
+      if (event.pointerType !== "mouse" || event.button !== 0 || event.ctrlKey) return
+      if (open.peek() || disabled.peek()) return
+      press = { x: event.clientX, y: event.clientY, at: Date.now() }
+      const by = details("trigger-press", event)
+      openFor("popup", by)
+      // Refused: there is no press to follow. Asked, not read back: a caller who holds `open`
+      // answers later, and the click that ends this press would then close the menu.
+      if (by.canceled) return void (press = undefined)
+      const document = (event.currentTarget as Element).ownerDocument
+      document.addEventListener("pointerup", release, { capture: true, once: true })
+    },
+    // Focus stays out of the button for that press: the menu takes it as it is drawn, in each
+    // framework's own time, and the browser would give it to the button after some of them.
+    onMouseDown(event: MouseEvent) {
+      if (press) event.preventDefault()
+    },
     onClick(event: Event) {
+      // The click that ends the press that opened it.
+      if (press) return void (press = undefined)
       if (open.peek()) setOpen(false, details("trigger-press", event))
       // From the keyboard, the first item takes focus; from a pointer, the menu itself.
       else openFor(byKeyboard(event) ? "first" : "popup", details("trigger-press", event))
     },
     onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return void bar?.key(event)
+      const column = Boolean(bar?.vertical.peek())
+      const opens = column
+        ? event.key === forward(event.currentTarget as Element)
+        : event.key === "ArrowDown" || event.key === "ArrowUp"
+      if (!opens) return void bar?.key(event)
       event.preventDefault()
-      openFor(event.key === "ArrowDown" ? "first" : "last", details("trigger-press", event))
+      openFor(event.key === "ArrowUp" ? "last" : "first", details("trigger-press", event))
     },
     ...(bar
       ? {
@@ -332,6 +367,21 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
         }
       : {}),
   })
+
+  /** The mouse press that opened the menu, until it ends. */
+  let press: { x: number; y: number; at: number } | undefined
+
+  /** The button let go: over an item the pointer travelled to, that item is chosen. */
+  function release(event: PointerEvent) {
+    const began = press
+    // Let go on the trigger, its click follows and ends the press; anywhere else, this does.
+    if (!trigger?.contains(event.target as Node)) press = undefined
+    if (!began || !open.peek()) return
+    const moved = Math.hypot(event.clientX - began.x, event.clientY - began.y) > PRESS_SLOP
+    if (!moved || Date.now() - began.at < PRESS_HOLD) return
+    const row = (event.target as Element).closest?.<HTMLElement>(ROWS)
+    if (row && list.rowOf(row)) row.click()
+  }
 
   function openAt(x: number, y: number, by: ChangeDetails) {
     if (disabled.peek()) return
@@ -537,8 +587,8 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           barTrigger.set(element)
           stops.push(bar.join(element, member), () => barTrigger.set(undefined))
         }
-        if (triggerRow) {
-          stops.push(triggerRow.attach(element))
+        if (triggerRow) stops.push(triggerRow.attach(element))
+        if (triggerRow || bar) {
           beside.set(directionOf(element, around.direction) === "rtl" ? "left" : "right")
         }
         return () => {
@@ -576,10 +626,15 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
             case "ArrowLeft":
             case "ArrowRight":
               // Back out of a submenu, to its trigger.
-              if (parent && event.key !== forward(event.currentTarget as Element)) {
+              // The same out of a menu that opened beside its trigger, in a bar that is a column.
+              if (
+                (parent || bar?.vertical.peek()) &&
+                event.key !== forward(event.currentTarget as Element)
+              ) {
                 event.preventDefault()
                 return setOpen(false, details("list-navigation", event))
               }
+              if (bar?.vertical.peek()) return
               // In a bar, across to the menu before or after.
               return link.sideways(
                 event.key === forward(event.currentTarget as Element) ? 1 : -1,

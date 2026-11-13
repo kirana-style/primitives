@@ -12,7 +12,9 @@
     Fieldset,
     Form,
     HoverCard,
+    Combobox,
     ContextMenu,
+    Listbox,
     Menu,
     Menubar,
     Meter,
@@ -52,6 +54,9 @@
   let fruit = $state<string | null>("Banana")
   let action = $state("none")
   let picked = $state("none")
+  let chosen = $state<readonly unknown[] | undefined>(["Banana"])
+  let pick = $state<unknown>(null)
+  let outside = $state(0)
   let view = $state<unknown>("list")
   let presses = $state(0)
   let locked = $state(false)
@@ -531,6 +536,120 @@
       </Menu.Root>
     </Menubar>
     <output data-testid="mb1-output">{picked}</output>
+  </section>
+  <section data-fixture="listbox">
+    <Listbox.Root
+      id="lb1"
+      aria-label="Fruit"
+      bind:value={chosen}
+      data-testid="lb1"
+    >
+      {#each FRUITS as each (each)}
+        <Listbox.Item
+          value={each}
+          disabled={each === "Blueberry"}
+          class="item"
+          data-testid={`lb1-${each}`}
+        >
+          <span>{each}</span>
+          <Listbox.ItemIndicator>✓</Listbox.ItemIndicator>
+        </Listbox.Item>
+      {/each}
+    </Listbox.Root>
+    <Listbox.Root id="lb2" aria-label="Plans" multiple data-testid="lb2">
+      <Listbox.Group id="lb2-g" data-testid="lb2-group">
+        <Listbox.GroupLabel data-testid="lb2-label">Plans</Listbox.GroupLabel>
+        {#each PLANS as each (each)}
+          <Listbox.Item value={each} class="item" data-testid={`lb2-${each}`}>
+            <span>{each}</span>
+          </Listbox.Item>
+        {/each}
+      </Listbox.Group>
+    </Listbox.Root>
+    <output data-testid="lb1-output">{(chosen as string[]).join(",")}</output>
+  </section>
+  <section data-fixture="combobox">
+    <form data-testid="cb1-form">
+      <Combobox.Root
+        id="cb1"
+        name="pick"
+        bind:value={pick}
+      >
+        <Combobox.Input aria-label="Fruit" data-testid="cb1-input" />
+        <Combobox.Trigger aria-label="Show fruits" data-testid="cb1-trigger">
+          ▾
+        </Combobox.Trigger>
+        <Combobox.Portal>
+          <Combobox.Positioner sideOffset={4} data-testid="cb1-positioner">
+            <Combobox.Popup class="popup" aria-label="Fruits" data-testid="cb1-popup">
+              {#each FRUITS as each (each)}
+                <Combobox.Item
+                  value={each}
+                  id={`cb1-${each}`}
+                  disabled={each === "Blueberry"}
+                  class="item"
+                  data-testid={`cb1-${each}`}
+                >
+                  <span>{each}</span>
+                  <Combobox.ItemIndicator>✓</Combobox.ItemIndicator>
+                </Combobox.Item>
+              {/each}
+              <Combobox.Empty data-testid="cb1-empty">No fruit</Combobox.Empty>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    </form>
+    <output data-testid="cb1-output">{pick ?? "none"}</output>
+  </section>
+  <section data-fixture="menu-more">
+    <div class="bar">
+      <button type="button" data-testid="mm1-outside" onclick={() => (outside += 1)}>
+        Outside
+      </button>
+      <Menu.Root id="mm1" modal>
+        <Menu.Trigger data-testid="mm1-trigger">Modal</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner data-testid="mm1-positioner">
+            <Menu.Popup class="popup" data-testid="mm1-popup">
+              <Menu.Item class="item" data-testid="mm1-plain">
+                Plain
+              </Menu.Item>
+              <Menu.LinkItem class="item" href="#mm1-linked" data-testid="mm1-link">
+                Link
+              </Menu.LinkItem>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    </div>
+    <Menubar id="vb1" orientation="vertical" class="column" data-testid="vb1">
+      <Menu.Root id="vb1a">
+        <Menu.Trigger data-testid="vb1-one">One</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner data-testid="vb1a-positioner">
+            <Menu.Popup class="popup" data-testid="vb1a-popup">
+              <Menu.Item class="item" data-testid="vb1a-x">
+                Alpha
+              </Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+      <Menu.Root id="vb1b">
+        <Menu.Trigger data-testid="vb1-two">Two</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner data-testid="vb1b-positioner">
+            <Menu.Popup class="popup" data-testid="vb1b-popup">
+              <Menu.Item class="item" data-testid="vb1b-x">
+                Beta
+              </Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    </Menubar>
+    <output data-testid="mm1-output">{outside}</output>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

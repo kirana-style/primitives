@@ -45,6 +45,7 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
       defaultOpen: Boolean,
       disabled: Boolean,
       loop: optional(Boolean),
+      modal: Boolean,
       id: String,
     },
     emits: ["update:open", "openChange"],
@@ -61,6 +62,7 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
           defaultOpen: props.defaultOpen,
           disabled: props.disabled,
           loop: props.loop,
+          modal: props.modal,
           onOpenChange(open: boolean, details: ChangeDetails) {
             emit("openChange", open, details)
             if (!details.canceled) emit("update:open", open)
@@ -90,6 +92,19 @@ const Item = defineComponent({
     const options = toSignal(() => ({ ...props }))
     const part = scope.use().item(() => defined(options.get()))
     const Element = partComponent("MenuItemElement", "div", () => part)
+    return () => h(Element, attrs, slots)
+  },
+})
+
+/** An item that is a link: `href` and the rest go to its `<a>`. */
+const LinkItem = defineComponent({
+  name: "MenuLinkItem",
+  inheritAttrs: false,
+  props: ITEM_PROPS,
+  setup(props, { attrs, slots }) {
+    const options = toSignal(() => ({ ...props }))
+    const part = scope.use().item(() => defined(options.get()))
+    const Element = partComponent("MenuLinkItemElement", "a", () => part)
     return () => h(Element, attrs, slots)
   },
 })
@@ -222,6 +237,7 @@ export const Menu = {
   Popup: partComponent("MenuPopup", "div", () => scope.use().popup),
   Arrow: partComponent("MenuArrow", "div", () => scope.use().arrow),
   Item,
+  LinkItem,
   Group,
   GroupLabel,
   Separator: partComponent("MenuSeparator", "div", () => scope.use().separator),

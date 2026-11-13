@@ -10,7 +10,7 @@
   import type { RootProps } from "../types.ts"
 
   // A menu for an area of the page, opened at the pointer. Its trigger is the area.
-  let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, id, children }: RootProps<MenuProps> = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, modal, id, children }: RootProps<MenuProps> = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -25,6 +25,7 @@
       defaultOpen,
       disabled,
       loop,
+      modal,
       onOpenChange: change,
     }))
   )

@@ -134,6 +134,8 @@ const IDIOM: Record<
         "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
     },
     extra: {
+      "Combobox.HiddenInput":
+        "the root is an `<ng-container>`, with no element to hold the hidden input: it is written",
       "Select.Input":
         "the root is an `<ng-container>`, with no element to hold the hidden input: it is written",
     },

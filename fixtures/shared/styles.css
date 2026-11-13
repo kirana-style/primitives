@@ -94,6 +94,17 @@ button {
   gap: 4px;
 }
 
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+/* A filtered item is `hidden`: a row's own `display` must not show it again. */
+[hidden] {
+  display: none !important;
+}
+
 .item {
   /* A row: white space between its parts, which each framework keeps or drops, draws nothing. */
   display: flex;

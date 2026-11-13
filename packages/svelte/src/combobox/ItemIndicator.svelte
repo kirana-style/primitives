@@ -1,0 +1,14 @@
+<script lang="ts">
+  import { getContext } from "svelte"
+
+  import { fromSignal } from "../runtime.svelte.ts"
+  import { ITEM, useCombobox } from "./context.ts"
+  import type { PartAttributes } from "../types.ts"
+
+  let { keepMounted = false, children, ...rest }: { keepMounted?: boolean } & PartAttributes = $props()
+  const selected = fromSignal(useCombobox().selected(getContext(ITEM)))
+</script>
+
+{#if selected.current || keepMounted}
+  <span aria-hidden="true" {...rest}>{@render children?.()}</span>
+{/if}

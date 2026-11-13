@@ -6,6 +6,7 @@ export {
   Group,
   GroupLabel,
   Item,
+  LinkItem,
   Popup,
   Portal,
   Positioner,

@@ -16,6 +16,8 @@ export class KuiSwitch implements OnInit {
   readonly readOnly = input(false, { transform: booleanAttribute })
   readonly required = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
+  /** The id of the form the control belongs to, when it is not inside it. */
+  readonly form = input<string>()
   readonly value = input<string>()
   readonly kuiId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
@@ -32,6 +34,7 @@ export class KuiSwitch implements OnInit {
     readOnly: this.readOnly(),
     required: this.required(),
     name: this.name(),
+    form: this.form(),
     value: this.value(),
     onCheckedChange: (checked: boolean, details: ChangeDetails) => {
       this.checkedChanged.emit({ checked, details })

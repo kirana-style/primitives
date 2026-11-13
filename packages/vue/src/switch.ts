@@ -23,6 +23,7 @@ const Root = defineComponent({
     readOnly: Boolean,
     required: Boolean,
     name: String,
+    form: String,
     value: String,
     id: String,
   },
@@ -39,6 +40,7 @@ const Root = defineComponent({
         readOnly: props.readOnly,
         required: props.required,
         name: props.name,
+        form: props.form,
         value: props.value,
         onCheckedChange(checked: boolean, details: ChangeDetails) {
           emit("checkedChange", checked, details)

@@ -33,6 +33,7 @@ function Root(props: RootProps): JSX.Element {
     "orientation",
     "disabled",
     "name",
+    "form",
     "format",
     "locale",
     "getAriaValueText",

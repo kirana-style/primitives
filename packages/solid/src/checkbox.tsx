@@ -26,6 +26,7 @@ export type RootProps = PartComponentProps & {
   readOnly?: boolean
   required?: boolean
   name?: string
+  form?: string
   value?: string
   id?: string
 }
@@ -40,6 +41,7 @@ function Root(props: RootProps): JSX.Element {
     "readOnly",
     "required",
     "name",
+    "form",
     "value",
     "id",
     "children",
@@ -55,6 +57,7 @@ function Root(props: RootProps): JSX.Element {
     readOnly: local.readOnly,
     required: local.required,
     name: local.name,
+    form: local.form,
     value: local.value,
     onCheckedChange: (checked: boolean, details: ChangeDetails) =>
       local.onCheckedChange?.(checked, details),

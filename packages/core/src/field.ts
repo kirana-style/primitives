@@ -4,6 +4,7 @@ import { flag } from "./part.ts"
 import type { Part } from "./part.ts"
 import { batch, computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
+import { onFormReset } from "./services/form-control.ts"
 import { createPresence } from "./services/presence.ts"
 
 /** What the browser found wrong with the value, by the names of its `ValidityState`. */
@@ -72,6 +73,8 @@ export interface FieldSubject {
 /** What a control that joined a field tells it. */
 export interface FieldMembership {
   changed(value: string): void
+  /** Its form was reset: the value it went back to. The field is as new again. */
+  reset(value: string): void
   focused(on: boolean): void
   leave(): void
 }
@@ -97,7 +100,7 @@ export interface Field {
   readonly focused: ReadonlySignal<boolean>
   /** Checks the value now, and says whether it is valid. */
   validate(): boolean | Promise<boolean>
-  /** The id a native control takes, which the label is `for`. */
+  /** The id the control's element takes, which the label is `for`. */
   readonly controlId: string
   readonly name: ReadonlySignal<string | undefined>
   /** Disabled by the field or by the fieldset around it. */
@@ -149,6 +152,25 @@ function wording(kind: FieldSubject["kind"], page: Document): string {
   probe.name = "probe"
   probe.required = true
   return probe.validationMessage
+}
+
+/** What a form's reset puts a control's value back to, as text. */
+function resting(control: FieldControl): string {
+  if (control instanceof HTMLSelectElement) {
+    const options = [...control.options]
+    const chosen = options.find((each) => each.defaultSelected)
+    // With none marked, a list of one line goes back to its first choice.
+    return (
+      (chosen ?? (control.multiple ? undefined : options.find((each) => !each.disabled)))?.value ??
+      ""
+    )
+  }
+  if (
+    control instanceof HTMLInputElement &&
+    (control.type === "checkbox" || control.type === "radio")
+  )
+    return control.defaultChecked ? control.value : ""
+  return control.defaultValue
 }
 
 /** A control's value as text: a box that is not ticked has none. */
@@ -282,6 +304,20 @@ export function createField(
     }
   }
 
+  /** After its form's reset: untouched, clean, unchecked, with the value the control went back to. */
+  function reset(value: string) {
+    clearTimeout(timer)
+    run++
+    subject?.mark("")
+    initial = value
+    batch(() => {
+      touched.set(false)
+      dirty.set(false)
+      filled.set(value !== "")
+      validity.set(UNCHECKED)
+    })
+  }
+
   function left() {
     batch(() => {
       focused.set(false)
@@ -345,6 +381,10 @@ export function createField(
           current = value
           changed(value)
         },
+        reset(value) {
+          current = value
+          reset(value)
+        },
         focused(on) {
           if (on) focused.set(true)
           else left()
@@ -362,9 +402,12 @@ export function createField(
         id: `${id}-label`,
         for: `${id}-control`,
         ...state(),
-        onClick() {
-          // A box has its hidden native input, which the label presses by itself.
-          if (joined && joined.kind !== "checkbox") joined.focus()
+        onClick(event: Event) {
+          // A box has its hidden native input, which the label presses by itself. Any other
+          // control takes focus, and no more: a label must not press a select's trigger open.
+          if (!joined || joined.kind === "checkbox") return
+          event.preventDefault()
+          joined.focus()
         },
       })),
       attach() {
@@ -390,7 +433,10 @@ export function createField(
       })),
       attach(element) {
         const control = element as FieldControl
-        return take({
+        // The browser puts the value back after the event: what it will be is read from the
+        // control's defaults.
+        const unhear = onFormReset(element, () => reset(resting(control)))
+        const release = take({
           element,
           focus: () => control.focus(),
           value: () => read(control),
@@ -406,6 +452,10 @@ export function createField(
           },
           mark: (message) => control.setCustomValidity(message),
         })
+        return () => {
+          unhear()
+          release()
+        }
       },
     },
     description: {

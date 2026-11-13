@@ -25,6 +25,8 @@ export class KuiRadioGroup implements OnInit {
   readonly readOnly = input(false, { transform: booleanAttribute })
   readonly required = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
+  /** The id of the form the control belongs to, when it is not inside it. */
+  readonly form = input<string>()
   readonly kuiId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
@@ -41,6 +43,7 @@ export class KuiRadioGroup implements OnInit {
     readOnly: this.readOnly(),
     required: this.required(),
     name: this.name(),
+    form: this.form(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {

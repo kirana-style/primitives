@@ -32,6 +32,22 @@ describe("a part on an element, with no framework", () => {
     expect(button.className).toBe("mine")
   })
 
+  it("never removes an attribute it did not write", () => {
+    const root = mount(`<button id="b" title="mine">B</button>`)
+    const button = find(root, "b")
+    const { props, part: own } = part({ id: undefined, title: undefined, "data-open": "" })
+    bind(button, own)
+    // A second pass with nothing to say about them still leaves the caller's alone.
+    props.set({ id: undefined, title: undefined, "data-open": undefined })
+    expect(button.id).toBe("b")
+    expect(button.title).toBe("mine")
+    expect(button.hasAttribute("data-open")).toBe(false)
+    // What it did write, it takes away.
+    props.set({ id: undefined, title: "part's", "data-open": undefined })
+    props.set({ id: undefined, title: undefined, "data-open": undefined })
+    expect(button.hasAttribute("title")).toBe(false)
+  })
+
   it("calls the handler the part has now", () => {
     const root = mount(`<button id="b">B</button>`)
     const button = find(root, "b")

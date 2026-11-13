@@ -33,6 +33,7 @@ const Root = defineComponent({
     disabled: Boolean,
     required: Boolean,
     name: String,
+    form: String,
     items: Array as PropType<readonly { value: unknown; label: string }[]>,
     id: String,
   },
@@ -50,6 +51,7 @@ const Root = defineComponent({
         disabled: props.disabled,
         required: props.required,
         name: props.name,
+        form: props.form,
         items: props.items,
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)

@@ -31,6 +31,7 @@ function Root<Value>({
   readOnly,
   required,
   name,
+  form,
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
@@ -45,6 +46,7 @@ function Root<Value>({
     readOnly,
     required,
     name,
+    form,
     id,
   }) as unknown as Controller
   return (

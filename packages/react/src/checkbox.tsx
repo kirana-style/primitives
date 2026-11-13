@@ -27,6 +27,7 @@ function Root({
   readOnly,
   required,
   name,
+  form,
   value,
   id,
   children,
@@ -43,6 +44,7 @@ function Root({
     readOnly,
     required,
     name,
+    form,
     value: value as string | undefined,
     id,
   })

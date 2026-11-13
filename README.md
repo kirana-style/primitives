@@ -3,7 +3,7 @@
 Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
 every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
 
-> **Status: pre-release.** Nothing is published. Twenty-two components on all five adapters:
+> **Status: 0.1, before 1.0.** On npm as `@kirana-ui/*`. Twenty-two components on all five adapters:
 > Accordion, Alert Dialog, Avatar, Button, Checkbox, Collapsible, Dialog, Field, Fieldset, Form, Hover Card, Meter,
 > Popover, Progress, Radio Group, Select, Separator, Slider, Switch, Tabs, Toggle, Tooltip; and the
 > Direction provider. The API will change.
@@ -19,7 +19,13 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   `data-ending-style`, so a design animates with transitions that reverse mid-flight. A closed
   panel leaves the page.
 - **Forms work as forms.** A checkbox, a switch and a radio hold a hidden native input: a form
-  submits it and a `<label>` reaches it, with no extra wiring.
+  submits it and a `<label>` reaches it, with no extra wiring. A form's `reset` takes every
+  control back to the value it began with, a `<fieldset disabled>` disables what is inside it,
+  and `form="id"` puts a control in a form it is not inside, as each does for a native control.
+- **Faults are held out by checks, not by care.** Every state of every component, on every
+  framework, is read for the faults this library and others have had: a state written as
+  `="false"`, a reference to an id that is not in the page, an id used twice, an attribute the
+  vocabulary does not name. What each one cost is in [docs/pitfalls.md](docs/pitfalls.md).
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
   out in, and a popup moved to the end of the page keeps the direction of its trigger. A
   Direction provider states it where no page can be asked, on a server.
@@ -31,15 +37,16 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 
 ## Layout
 
-| Path                                                  | Holds                                                                                                                                                                                    |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position, hover, roving focus, typeahead), a controller per component, the vocabulary, a plain-DOM binder |
-| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                         |
-| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))            |
-| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS        |
-| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                           |
-| `tests/core`                                          | the core's services on their own, with no framework, in a browser                                                                                                                        |
-| `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                                   |
+| Path                                                  | Holds                                                                                                                                                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, layers, focus, scroll lock, position, hover, roving focus, typeahead, form control), a controller per component, the vocabulary, a plain-DOM binder |
+| `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                                       |
+| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))                          |
+| `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                      |
+| `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                                         |
+| `docs/pitfalls.md`                                    | what cost debugging time, and the check that now holds each one out                                                                                                                                    |
+| `tests/core`                                          | the core's services on their own, with no framework, in a browser                                                                                                                                      |
+| `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                                                 |
 
 ## How a component is built
 

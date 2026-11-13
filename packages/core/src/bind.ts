@@ -31,7 +31,9 @@ export function bind(element: HTMLElement, part: Part): () => void {
     for (const key in current) {
       if (HANDLER.test(key) || key === "style") continue
       if (PROPERTIES.has(key) && key in element) continue
-      if (next[key] === undefined) element.removeAttribute(key)
+      // Only what the part wrote is the part's to take away: an attribute it has no value for
+      // may be the caller's own.
+      if (next[key] === undefined && current[key] !== undefined) element.removeAttribute(key)
     }
     for (const key in next) {
       const value = next[key]

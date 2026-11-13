@@ -25,6 +25,7 @@ const Root = defineComponent({
     readOnly: Boolean,
     required: Boolean,
     name: String,
+    form: String,
     id: String,
   },
   emits: ["update:value", "valueChange"],
@@ -40,6 +41,7 @@ const Root = defineComponent({
         readOnly: props.readOnly,
         required: props.required,
         name: props.name,
+        form: props.form,
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)

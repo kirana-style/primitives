@@ -28,6 +28,7 @@ const Root = defineComponent({
     orientation: String as PropType<"horizontal" | "vertical">,
     disabled: Boolean,
     name: String,
+    form: String,
     format: Object as PropType<Intl.NumberFormatOptions>,
     locale: String,
     getAriaValueText: Function as PropType<SliderProps["getAriaValueText"]>,

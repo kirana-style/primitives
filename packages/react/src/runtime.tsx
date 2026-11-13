@@ -15,7 +15,9 @@ import {
 import type { ReactElement, ReactNode, Ref } from "react"
 import { createPortal } from "react-dom"
 
-const useIsomorphicLayoutEffect = typeof document === "undefined" ? useEffect : useLayoutEffect
+/** A layout effect in the browser, an effect (which never runs) on a server. */
+export const useIsomorphicLayoutEffect =
+  typeof document === "undefined" ? useEffect : useLayoutEffect
 
 /** A core signal's value, re-rendering when it changes. */
 export function useSignal<T>(source: ReadonlySignal<T>): T {
@@ -57,8 +59,39 @@ export function useController<P extends object, C extends { mount(): () => void 
     }
     state.source.set(stable as P)
   })
-  useEffect(() => state.controller.mount(), [state.controller])
+  useMount(state.controller)
   return state.controller
+}
+
+/**
+ * Starts what a controller (or an item of one) runs while it is in the page. StrictMode runs an
+ * effect, undoes it and runs it again in one commit, to find effects that cannot be run twice:
+ * a mount is not undone for that. The cleanup waits a moment, and a mount that comes back in
+ * the meantime keeps what is running.
+ */
+export function useMount(mounted: { mount(): () => void }): void {
+  const [state] = useState(() => ({
+    of: mounted,
+    unmount: undefined as (() => void) | undefined,
+    leaving: false,
+  }))
+  useEffect(() => {
+    if (state.of !== mounted) {
+      state.unmount?.()
+      state.unmount = undefined
+      state.of = mounted
+    }
+    state.leaving = false
+    state.unmount ??= mounted.mount()
+    return () => {
+      state.leaving = true
+      queueMicrotask(() => {
+        if (!state.leaving) return
+        state.unmount?.()
+        state.unmount = undefined
+      })
+    }
+  }, [state, mounted])
 }
 
 /** A part's own options as a core signal that follows each render, after it commits. */
@@ -123,6 +156,14 @@ export interface PartComponentProps<State = undefined> {
   [attribute: string]: unknown
 }
 
+/** A part's DOM work on the element it is on. */
+interface Attached {
+  element: HTMLElement
+  part: Part
+  detach(): void
+  leaving: boolean
+}
+
 /**
  * Renders a part: its element (or the caller's `render`), with the caller's props merged under
  * the part's, and the part's DOM work attached to the element.
@@ -134,11 +175,32 @@ export function usePart<State = undefined>(
   state?: State
 ): ReactElement {
   const own = useSignal(part.props)
-  const detach = useRef<(() => void) | undefined>(undefined)
+  const held = useRef<Attached | undefined>(undefined)
   const attach = useCallback(
     (element: HTMLElement | null) => {
-      detach.current?.()
-      detach.current = element ? part.attach(element) : undefined
+      const now = held.current
+      if (!element) {
+        // React takes a ref away and hands it straight back when the caller's `ref` is a new
+        // function, and in StrictMode when the element is first drawn. The part's DOM work is
+        // not undone for that (a popup would close its layer and give focus back): it is
+        // undone a moment later, if the element has not come back.
+        if (now) {
+          now.leaving = true
+          queueMicrotask(() => {
+            if (!now.leaving) return
+            now.detach()
+            if (held.current === now) held.current = undefined
+          })
+        }
+      } else if (now && now.element === element && now.part === part) {
+        now.leaving = false
+      } else {
+        if (now) {
+          now.leaving = false
+          now.detach()
+        }
+        held.current = { element, part, detach: part.attach(element), leaving: false }
+      }
       if (typeof ref === "function") ref(element)
       else if (ref) (ref as { current: HTMLElement | null }).current = element
     },

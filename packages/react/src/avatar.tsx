@@ -3,7 +3,7 @@ import type { Avatar as Controller } from "@kirana-ui/core/avatar"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
-import { useController, usePart, useSignal } from "./runtime.tsx"
+import { useController, useIsomorphicLayoutEffect, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -31,8 +31,9 @@ function Image({
   ...props
 }: PartComponentProps & { src?: string | undefined }): ReactElement | null {
   const controller = useAvatar("Image")
-  // Read by the controller's effect, so written while rendering: nothing re-renders for it.
-  controller.source.set(src)
+  // After the render commits, never during it: the load it starts changes the status, which
+  // other parts are drawn from, and React forbids updating them mid-render.
+  useIsomorphicLayoutEffect(() => controller.source.set(src), [controller, src])
   const status = useSignal(controller.status)
   if (status !== "loaded") return null
   return <ImageElement {...props} />

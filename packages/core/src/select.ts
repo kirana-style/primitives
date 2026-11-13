@@ -10,7 +10,7 @@ import { POSITION_DEFAULTS, createPosition, sameOptions } from "./services/posit
 import type { PositionOptions } from "./services/position.ts"
 import { createPresence } from "./services/presence.ts"
 import { stepTo } from "./services/roving.ts"
-import { createTypeahead, printable } from "./services/typeahead.ts"
+import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
 export interface SelectProps<Value = unknown> {
   id: string
@@ -138,7 +138,7 @@ export function createSelect<Value = unknown>(
   function labelOf(element: Element, row: Row<Value>): string {
     // Read when it is needed, from the page as it is now.
     const text = texts.get(row.value) ?? element
-    return row.options().label ?? text.textContent?.trim() ?? ""
+    return row.options().label ?? textOf(text)
   }
 
   function learn(item: Value, text: string) {
@@ -404,7 +404,7 @@ export function createSelect<Value = unknown>(
           // A framework may write the text after the element attaches: read it a moment later.
           queueMicrotask(() => {
             if (!explicit.has(item) && element.isConnected) {
-              learn(item, element.textContent?.trim() ?? "")
+              learn(item, textOf(element))
             }
           })
           return () => {

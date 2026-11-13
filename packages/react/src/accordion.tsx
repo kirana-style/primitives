@@ -6,11 +6,11 @@ import type {
   AccordionProps,
   Accordion as Controller,
 } from "@kirana-ui/core/accordion"
-import { createContext, useContext, useEffect, useMemo } from "react"
+import { createContext, useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
-import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import { useController, useMount, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -77,7 +77,7 @@ function Item({ value, disabled, ...rest }: ItemProps): ReactElement {
     () => controller.item(value, () => defined(options.get())),
     [controller, value, options]
   )
-  useEffect(() => item.mount(), [item])
+  useMount(item)
   return (
     <ItemContext.Provider value={item}>
       <PartElement part={item.root} tag="div" {...rest} />

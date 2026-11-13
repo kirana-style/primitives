@@ -6,13 +6,13 @@ import type {
   FieldValidity,
   ValidityKey,
 } from "@kirana-ui/core/field"
-import { useContext, useEffect, useMemo } from "react"
+import { useContext, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
 import { FieldsetContext } from "./fieldset.tsx"
 import { FormContext } from "./form.tsx"
-import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import { useController, useMount, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 function useField(part: string): Controller {
@@ -75,7 +75,7 @@ function FieldError({ match, children, ...rest }: ErrorProps): ReactElement | nu
   const controller = useField("Error")
   const options = useOptions({ match })
   const error = useMemo(() => controller.error(() => options.get().match), [controller, options])
-  useEffect(() => error.mount(), [error])
+  useMount(error)
   const mounted = useSignal(error.mounted)
   const text = useSignal(error.text)
   if (!mounted) return null

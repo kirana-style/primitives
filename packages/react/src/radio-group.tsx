@@ -2,12 +2,12 @@ import { defined, within } from "@kirana-ui/core"
 import type { Part } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup as Controller, RadioGroupProps } from "@kirana-ui/core/radio-group"
-import { createContext, useContext, useEffect, useMemo } from "react"
+import { createContext, useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
-import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import { useController, useMount, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -92,7 +92,7 @@ function Indicator({ keepMounted, ...props }: IndicatorProps): ReactElement | nu
   const controller = useRadioGroup("Indicator")
   const value = useContext(ItemContext)
   const indicator = useMemo(() => controller.indicator(value), [controller, value])
-  useEffect(() => indicator.mount(), [indicator])
+  useMount(indicator)
   const mounted = useSignal(indicator.mounted)
   if (!mounted && !keepMounted) return null
   return <PartElement part={indicator.part} tag="span" {...props} />

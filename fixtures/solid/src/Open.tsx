@@ -1,8 +1,15 @@
-import { Collapsible, Field, Popover, Tabs } from "@kirana-ui/solid"
+import { Checkbox, Collapsible, Field, Popover, Tabs } from "@kirana-ui/solid"
+import { createSignal, onMount } from "solid-js"
 
 // The second page: no part is given an id, and a popover is open when the page is first drawn.
 // What a server and a client must agree on without help. The same in all five fixtures.
+// Then what only shows once the page is in a browser: a panel its caller opens as the page
+// mounts, a box in a `<fieldset disabled>`, an input whose caller rewrites what is typed.
 export function Open() {
+  const [late, setLate] = createSignal(false)
+  const [unlocked, setUnlocked] = createSignal(false)
+  const [nick, setNick] = createSignal("")
+  onMount(() => setLate(true))
   return (
     <main data-generated-ids="">
       <section data-fixture="ids">
@@ -47,6 +54,33 @@ export function Open() {
             </Popover.Positioner>
           </Popover.Portal>
         </Popover.Root>
+      </section>
+      <section data-fixture="late">
+        <Collapsible.Root open={late()} onOpenChange={setLate}>
+          <Collapsible.Trigger data-testid="o-l-trigger">Late</Collapsible.Trigger>
+          <Collapsible.Panel class="panel" data-testid="o-l-panel">
+            <p>Opened as the page mounted</p>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+        <fieldset disabled={!unlocked()} data-testid="o-s-set">
+          <Checkbox.Root name="terms" class="box" data-testid="o-s-box">
+            <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+          </Checkbox.Root>
+        </fieldset>
+        <button data-testid="o-s-unlock" onClick={() => setUnlocked((now) => !now)}>
+          Unlock
+        </button>
+        <Field.Root name="nick">
+          <Field.Label>Nickname</Field.Label>
+          <Field.Control
+            value={nick()}
+            onInput={(event: { currentTarget: HTMLInputElement }) =>
+              setNick(event.currentTarget.value.toUpperCase())
+            }
+            data-testid="o-h-control"
+          />
+        </Field.Root>
+        <output data-testid="o-h-output">{nick()}</output>
       </section>
     </main>
   )

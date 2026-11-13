@@ -1,0 +1,6 @@
+export { default as Root } from "./Root.svelte"
+export { default as Viewport } from "./Viewport.svelte"
+export { default as Content } from "./Content.svelte"
+export { default as Scrollbar } from "./Scrollbar.svelte"
+export { default as Thumb } from "./Thumb.svelte"
+export { default as Corner } from "./Corner.svelte"

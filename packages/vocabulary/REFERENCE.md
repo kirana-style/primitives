@@ -967,6 +967,65 @@ The mark. In the page while its item is the chosen one.
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
+## ScrollArea
+
+### ScrollArea.Root
+
+The area. It holds the viewport and the scrollbars.
+
+| Attribute | When |
+| --- | --- |
+| `data-has-overflow-x` | Present when there is more to see sideways. |
+| `data-has-overflow-y` | Present when there is more to see up or down. |
+| `data-scrolling` | Present while it is being scrolled, and a moment after. |
+| `data-hovering` | Present while the pointer is over the area. |
+
+| Variable | Holds |
+| --- | --- |
+| `--scroll-area-corner-width` | The width of the corner: the vertical scrollbar's. |
+| `--scroll-area-corner-height` | The height of the corner: the horizontal scrollbar's. |
+
+### ScrollArea.Viewport
+
+The element that scrolls.
+
+| Attribute | When |
+| --- | --- |
+| `data-has-overflow-x` | Present when there is more to see sideways. |
+| `data-has-overflow-y` | Present when there is more to see up or down. |
+| `data-scrolling` | Present while it is being scrolled, and a moment after. |
+
+### ScrollArea.Content
+
+What is scrolled.
+
+### ScrollArea.Scrollbar
+
+A scrollbar's track. In the page while there is something to scroll its way.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Which way the scrollbar scrolls. |
+| `data-hovering` | Present while the pointer is over the area. |
+| `data-scrolling` | Present while the area is scrolled its way. |
+
+### ScrollArea.Thumb
+
+The part of a scrollbar that shows where the view is, and can be dragged.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Which way the scrollbar scrolls. |
+
+| Variable | Holds |
+| --- | --- |
+| `--scroll-area-thumb-height` | A vertical thumb's height. |
+| `--scroll-area-thumb-width` | A horizontal thumb's width. |
+
+### ScrollArea.Corner
+
+The square where the two scrollbars meet.
+
 ## Select
 
 ### Select.Trigger
@@ -1206,6 +1265,73 @@ The button. It stays pressed until it is pressed again.
 | --- | --- |
 | `data-pressed` | Present while it is pressed. |
 | `data-disabled` | Present when it is disabled. |
+
+## ToggleGroup
+
+### ToggleGroup.Root
+
+The group. A toggle inside it with a `value` is one of its toggles.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether its toggles are in a row or a column. |
+| `data-multiple` | Present when several can be pressed at a time. |
+| `data-disabled` | Present when it is disabled. |
+
+## Toolbar
+
+### Toolbar.Root
+
+The toolbar. It is one stop for Tab.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
+| `data-disabled` | Present when it is disabled. |
+
+### Toolbar.Button
+
+A button of the toolbar.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
+| `data-disabled` | Present when it is disabled. |
+
+### Toolbar.Link
+
+A link of the toolbar.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
+| `data-disabled` | Present when it is disabled. |
+
+### Toolbar.Input
+
+A text input of the toolbar. The arrows are its own until the caret is at an end.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
+| `data-disabled` | Present when it is disabled. |
+
+### Toolbar.Group
+
+Items that belong together.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
+| `data-disabled` | Present when it is disabled. |
+
+### Toolbar.Separator
+
+A line between items, across the toolbar.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
 
 ## Tooltip
 

@@ -37,6 +37,8 @@
   "react/progress": 3100,
   "core/radio-group": 3900,
   "react/radio-group": 5700,
+  "core/scroll-area": 2700,
+  "react/scroll-area": 4400,
   "core/select": 15100,
   "react/select": 17100,
   "core/separator": 1000,
@@ -47,9 +49,13 @@
   "react/switch": 4100,
   "core/tabs": 3600,
   "react/tabs": 5400,
-  "core/toggle": 1300,
-  "react/toggle": 2650,
+  "core/toggle": 1450,
+  "react/toggle": 2900,
+  "core/toggle-group": 2100,
+  "react/toggle-group": 3550,
+  "core/toolbar": 2150,
+  "react/toolbar": 3800,
   "core/tooltip": 12300,
   "react/tooltip": 13950,
-  "react": 38800
+  "react": 41550
 }

@@ -1001,6 +1001,55 @@ export const RadioGroup = {
   },
 } as const
 
+export const ScrollArea = {
+  /** The area. It holds the viewport and the scrollbars. */
+  Root: {
+    /** Present when there is more to see sideways. */
+    hasOverflowX: "[data-has-overflow-x]",
+    /** Present when there is more to see up or down. */
+    hasOverflowY: "[data-has-overflow-y]",
+    /** Present while it is being scrolled, and a moment after. */
+    scrolling: "[data-scrolling]",
+    /** Present while the pointer is over the area. */
+    hovering: "[data-hovering]",
+  },
+  /** The element that scrolls. */
+  Viewport: {
+    /** Present when there is more to see sideways. */
+    hasOverflowX: "[data-has-overflow-x]",
+    /** Present when there is more to see up or down. */
+    hasOverflowY: "[data-has-overflow-y]",
+    /** Present while it is being scrolled, and a moment after. */
+    scrolling: "[data-scrolling]",
+  },
+  /** What is scrolled. */
+  Content: {
+  },
+  /** A scrollbar's track. In the page while there is something to scroll its way. */
+  Scrollbar: {
+    /** Which way the scrollbar scrolls. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present while the pointer is over the area. */
+    hovering: "[data-hovering]",
+    /** Present while the area is scrolled its way. */
+    scrolling: "[data-scrolling]",
+  },
+  /** The part of a scrollbar that shows where the view is, and can be dragged. */
+  Thumb: {
+    /** Which way the scrollbar scrolls. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** The square where the two scrollbars meet. */
+  Corner: {
+  },
+} as const
+
 export const Select = {
   /** The button that shows the value and opens the list. */
   Trigger: {
@@ -1286,6 +1335,82 @@ export const Toggle = {
     pressed: "[data-pressed]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+  },
+} as const
+
+export const ToggleGroup = {
+  /** The group. A toggle inside it with a `value` is one of its toggles. */
+  Root: {
+    /** Whether its toggles are in a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when several can be pressed at a time. */
+    multiple: "[data-multiple]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
+export const Toolbar = {
+  /** The toolbar. It is one stop for Tab. */
+  Root: {
+    /** Whether the toolbar is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A button of the toolbar. */
+  Button: {
+    /** Whether the toolbar is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A link of the toolbar. */
+  Link: {
+    /** Whether the toolbar is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A text input of the toolbar. The arrows are its own until the caret is at an end. */
+  Input: {
+    /** Whether the toolbar is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Items that belong together. */
+  Group: {
+    /** Whether the toolbar is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A line between items, across the toolbar. */
+  Separator: {
+    /** Whether the toolbar is a row or a column. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
   },
 } as const
 

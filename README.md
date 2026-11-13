@@ -3,9 +3,9 @@
 Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
 every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
 
-> **Status: 0.1, before 1.0.** On npm as `@kirana-ui/*`. Twenty-seven components on all five adapters:
+> **Status: 0.1, before 1.0.** On npm as `@kirana-ui/*`. Thirty components on all five adapters:
 > Accordion, Alert Dialog, Avatar, Button, Checkbox, Collapsible, Combobox, Context Menu, Dialog, Field, Fieldset, Form, Hover Card, Listbox, Menu, Menubar, Meter,
-> Popover, Progress, Radio Group, Select, Separator, Slider, Switch, Tabs, Toggle, Tooltip; and the
+> Popover, Progress, Radio Group, Select, Scroll Area, Separator, Slider, Switch, Tabs, Toggle, Toggle Group, Toolbar, Tooltip; and the
 > Direction provider. The API will change.
 
 - **The same on every framework.** One set of scenarios runs on every adapter in a real browser,

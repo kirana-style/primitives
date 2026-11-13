@@ -26,7 +26,10 @@
     Slider,
     Switch,
     Tabs,
+    ScrollArea,
     Toggle,
+    ToggleGroup,
+    Toolbar,
     Tooltip,
   } from "@kirana-ui/svelte"
 
@@ -54,6 +57,8 @@
   let fruit = $state<string | null>("Banana")
   let action = $state("none")
   let picked = $state("none")
+  let align = $state<readonly unknown[] | undefined>(["left"])
+  let tall = $state(false)
   let chosen = $state<readonly unknown[] | undefined>(["Banana"])
   let pick = $state<unknown>(null)
   let outside = $state(0)
@@ -650,6 +655,75 @@
       </Menu.Root>
     </Menubar>
     <output data-testid="mm1-output">{outside}</output>
+  </section>
+  <section data-fixture="toolbar">
+    <ToggleGroup
+      aria-label="Alignment"
+      bind:value={align}
+      class="bar"
+      data-testid="tg1"
+    >
+      <Toggle value="left" data-testid="tg1-left">
+        Left
+      </Toggle>
+      <Toggle value="centre" data-testid="tg1-centre">
+        Centre
+      </Toggle>
+      <Toggle value="justify" disabled data-testid="tg1-justify">
+        Justify
+      </Toggle>
+      <Toggle value="right" data-testid="tg1-right">
+        Right
+      </Toggle>
+    </ToggleGroup>
+    <output data-testid="tg1-output">{(align as string[]).join(",")}</output>
+    <Toolbar.Root aria-label="Editing" class="bar" data-testid="tb1">
+      <Toolbar.Button data-testid="tb1-save">Save</Toolbar.Button>
+      <Toolbar.Button disabled data-testid="tb1-gone">
+        Gone
+      </Toolbar.Button>
+      <Toolbar.Link href="#tb1-help" data-testid="tb1-link">
+        Help
+      </Toolbar.Link>
+      <Toolbar.Separator data-testid="tb1-line" />
+      <Toolbar.Input aria-label="Zoom" value="100" data-testid="tb1-zoom" />
+      <Toolbar.Group data-testid="tb1-group">
+        <ToggleGroup multiple aria-label="Marks" class="bar" data-testid="tb1-marks">
+          <Toggle value="bold" data-testid="tb1-bold">
+            Bold
+          </Toggle>
+          <Toggle value="italic" data-testid="tb1-italic">
+            Italic
+          </Toggle>
+        </ToggleGroup>
+      </Toolbar.Group>
+      <Toggle data-testid="tb1-pin">Pin</Toggle>
+    </Toolbar.Root>
+  </section>
+  <section data-fixture="scroll-area">
+    <ScrollArea.Root class="scroll" data-testid="sa1">
+      <ScrollArea.Viewport class="scroll-view" data-testid="sa1-view">
+        <ScrollArea.Content data-testid="sa1-content">
+          <div class={tall ? "scroll-tall" : "scroll-short"} data-testid="sa1-box">
+            Content
+          </div>
+        </ScrollArea.Content>
+      </ScrollArea.Viewport>
+      <ScrollArea.Scrollbar class="scroll-bar" data-testid="sa1-y">
+        <ScrollArea.Thumb class="scroll-thumb" data-testid="sa1-y-thumb" />
+      </ScrollArea.Scrollbar>
+      <ScrollArea.Scrollbar
+        orientation="horizontal"
+        class="scroll-bar"
+        data-testid="sa1-x"
+      >
+        <ScrollArea.Thumb class="scroll-thumb" data-testid="sa1-x-thumb" />
+      </ScrollArea.Scrollbar>
+      <ScrollArea.Corner class="scroll-corner" data-testid="sa1-corner" />
+    </ScrollArea.Root>
+    <button type="button" data-testid="sa1-grow" onclick={() => (tall = !tall)}>
+      Grow
+    </button>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

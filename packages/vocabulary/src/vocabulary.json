@@ -2417,6 +2417,117 @@
         }
       }
     },
+    "scrollArea": {
+      "parts": {
+        "root": {
+          "description": "The area. It holds the viewport and the scrollbars.",
+          "states": {
+            "hasOverflowX": {
+              "attribute": "data-has-overflow-x",
+              "description": "Present when there is more to see sideways.",
+              "selector": "[data-has-overflow-x]"
+            },
+            "hasOverflowY": {
+              "attribute": "data-has-overflow-y",
+              "description": "Present when there is more to see up or down.",
+              "selector": "[data-has-overflow-y]"
+            },
+            "scrolling": {
+              "attribute": "data-scrolling",
+              "description": "Present while it is being scrolled, and a moment after.",
+              "selector": "[data-scrolling]"
+            },
+            "hovering": {
+              "attribute": "data-hovering",
+              "description": "Present while the pointer is over the area.",
+              "selector": "[data-hovering]"
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--scroll-area-corner-width": "The width of the corner: the vertical scrollbar's.",
+            "--scroll-area-corner-height": "The height of the corner: the horizontal scrollbar's."
+          }
+        },
+        "viewport": {
+          "description": "The element that scrolls.",
+          "states": {
+            "hasOverflowX": {
+              "attribute": "data-has-overflow-x",
+              "description": "Present when there is more to see sideways.",
+              "selector": "[data-has-overflow-x]"
+            },
+            "hasOverflowY": {
+              "attribute": "data-has-overflow-y",
+              "description": "Present when there is more to see up or down.",
+              "selector": "[data-has-overflow-y]"
+            },
+            "scrolling": {
+              "attribute": "data-scrolling",
+              "description": "Present while it is being scrolled, and a moment after.",
+              "selector": "[data-scrolling]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "content": {
+          "description": "What is scrolled.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "scrollbar": {
+          "description": "A scrollbar's track. In the page while there is something to scroll its way.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Which way the scrollbar scrolls.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "hovering": {
+              "attribute": "data-hovering",
+              "description": "Present while the pointer is over the area.",
+              "selector": "[data-hovering]"
+            },
+            "scrolling": {
+              "attribute": "data-scrolling",
+              "description": "Present while the area is scrolled its way.",
+              "selector": "[data-scrolling]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "thumb": {
+          "description": "The part of a scrollbar that shows where the view is, and can be dragged.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Which way the scrollbar scrolls.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--scroll-area-thumb-height": "A vertical thumb's height.",
+            "--scroll-area-thumb-width": "A horizontal thumb's width."
+          }
+        },
+        "corner": {
+          "description": "The square where the two scrollbars meet.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "select": {
       "parts": {
         "trigger": {
@@ -3021,6 +3132,154 @@
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "toggleGroup": {
+      "parts": {
+        "root": {
+          "description": "The group. A toggle inside it with a `value` is one of its toggles.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether its toggles are in a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "multiple": {
+              "attribute": "data-multiple",
+              "description": "Present when several can be pressed at a time.",
+              "selector": "[data-multiple]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "toolbar": {
+      "parts": {
+        "root": {
+          "description": "The toolbar. It is one stop for Tab.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the toolbar is a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "button": {
+          "description": "A button of the toolbar.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the toolbar is a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "link": {
+          "description": "A link of the toolbar.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the toolbar is a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "input": {
+          "description": "A text input of the toolbar. The arrows are its own until the caret is at an end.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the toolbar is a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "group": {
+          "description": "Items that belong together.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the toolbar is a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A line between items, across the toolbar.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the toolbar is a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
             }
           },
           "exclusive": [],

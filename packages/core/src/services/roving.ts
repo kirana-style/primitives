@@ -1,5 +1,6 @@
 import { directionOf } from "../direction.ts"
 import type { Direction } from "../direction.ts"
+import { signal } from "../reactivity.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
 
 export type Orientation = "horizontal" | "vertical"
@@ -89,5 +90,38 @@ export function createRoving(): Roving {
       element.focus()
       return element
     },
+  }
+}
+
+/** A set of elements that is one stop for Tab: the arrows move inside it. */
+export interface TabStop {
+  readonly roving: Roving
+  /** Adds an element. Returns the removal. */
+  join(element: HTMLElement): () => void
+  /**
+   * An element's `tabindex`: the one focus was last on can take it; before there is one, any
+   * can, since a server cannot know which is first.
+   */
+  tabindex(element: HTMLElement | undefined): "0" | "-1"
+  focused(element: HTMLElement): void
+}
+
+export function createTabStop(): TabStop {
+  const roving = createRoving()
+  const active = signal<HTMLElement | undefined>(undefined)
+  return {
+    roving,
+    join(element) {
+      const leave = roving.register(element)
+      return () => {
+        leave()
+        if (active.peek() === element) active.set(undefined)
+      }
+    },
+    tabindex(element) {
+      const on = active.get()
+      return on === undefined || on === element ? "0" : "-1"
+    },
+    focused: (element) => active.set(element),
   }
 }

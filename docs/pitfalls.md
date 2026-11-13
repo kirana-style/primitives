@@ -106,6 +106,28 @@ note. Three places hold them:
 - **White space between a row's parts is drawn by some frameworks and not others.** A row is
   a flex box, or its parts are elements with nothing between them.
 
+## Toolbars, toggle groups and scroll areas
+
+- **One stop for Tab, and a server cannot know which element is first.** Until focus has
+  been in a toolbar or a toggle group every item can take it; after, only the one it was last
+  on (`createTabStop`, the same rule as the menubar's).
+- **A toggle group in a toolbar is the toolbar's.** It has no stop and no arrows of its own:
+  two rovings, one inside the other, each answer the same key.
+- **A text input in a toolbar keeps its arrows** until the caret is at that end of its text.
+- **An element first watched while a resize observer is reporting is an error.** Content that
+  grows is reported; measuring it shows there is something to scroll; the framework draws a
+  scrollbar, at once or a microtask later but still inside that report; the scrollbar is
+  nearer the root than the content, and the browser cannot deliver its size in that frame
+  ("ResizeObserver loop completed with undelivered notifications"). What asks to be watched
+  during a report is watched a task later. Held by `tests/core/scroll-area.test.ts`.
+- **A scroll area's viewport scrolls natively.** Only its own scrollbars are hidden
+  (`scrollbar-width: none`, written inline with `overflow: scroll`: the one style that is
+  not geometry, since the component is nothing without it). Wheel, touch, keys and
+  find-in-page work as in any scroller, and the viewport is a stop for Tab while there is
+  something to scroll.
+- **Pointer capture is best effort.** `setPointerCapture` throws for a pointer the browser
+  no longer has; a drag goes on without it.
+
 ## Forms
 
 - **`reset` is told before it happens.** The event is fired, then the browser puts the native

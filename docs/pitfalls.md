@@ -228,6 +228,11 @@ note. Three places hold them:
 - **Tasks a task `dependsOn` run side by side; a `&&` chain runs in order.** The gates that
   read nothing another writes are dependencies of one task (35 s together, 57 s in a row);
   the rehearsal `dependsOn` the packing, which it reads.
+- **A task's cache inputs are the folders it reads, not the repository.** With every source
+  as every task's input, any change (a line of docs) reran everything, and the cache restored
+  in CI never hit. The fixture build reads `fixtures`, `packages` and `scripts`; the core's
+  browser tests `packages/core` and `tests/core` (`sourcesIn` in `vite.config.ts`). A task
+  that starts reading somewhere new gets that folder added, or it replays a stale result.
 - **A task is given only the environment it names** (`cache.env`). `BROWSERS` was set in CI
   and never reached the test configuration: the core's tests ran in Chromium and Firefox
   whatever was asked, and never in WebKit. It showed the day each CI job installed one

@@ -16,6 +16,25 @@ export interface Typeahead {
   reset(): void
 }
 
+/**
+ * An element's text as a person reads it: without what is `hidden`, and without what is hidden
+ * from assistive technology (`aria-hidden`), such as a shortcut drawn beside a row's name. It is
+ * what typing searches, and what a trigger shows for the row once it is chosen.
+ */
+export function textOf(element: Element): string {
+  let text = ""
+  for (const node of element.childNodes) {
+    if (node.nodeType === 3) text += node.nodeValue ?? ""
+    else if (
+      node instanceof Element &&
+      !node.hasAttribute("hidden") &&
+      node.getAttribute("aria-hidden") !== "true"
+    )
+      text += textOf(node)
+  }
+  return text.replace(/\s+/g, " ").trim()
+}
+
 /** Whether a key press is a character to search with: not Space, not a shortcut. */
 export function printable(event: KeyboardEvent): boolean {
   return (

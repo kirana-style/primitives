@@ -64,7 +64,8 @@ note. Three places hold them:
 - **A control belongs to the form it names**, not only the one around it: read `input.form`.
 - **A `<fieldset disabled>` disables a native control without setting its `disabled`.** A
   control that is not native reads its ancestor fieldsets (but for the first legend) and
-  watches them, only when it has one.
+  watches them, only when it has one. It knows once it is in the page: a server draws it
+  enabled, and the browser corrects it as the page mounts.
 - **A hidden input is never `required`.** A form could not show its message. The field checks
   the control and words the message as the browser does.
 - **One path for a change.** A press on the box presses its native input, and so does a
@@ -75,6 +76,18 @@ note. Three places hold them:
 
 - **React** renders a caller's new state in a later task. Nothing the core needs may wait for
   a render, and nothing may assume one has happened.
+- **React in StrictMode** hands every ref over, takes it away and hands it back when an element
+  is first drawn, and does the same with every effect. A part's DOM work must not be undone
+  for that: a panel lost its entrance and a select opened on the wrong side with nothing
+  highlighted. The adapter undoes an attach or a mount a moment later, only if it has not come
+  back (`usePart`, `useMount`). The same happens whenever a caller passes a new `ref` function
+  on a render. A production build hides all of it, so the React fixture is built a second time
+  as a development build in StrictMode and every scenario is played on it, with React's own
+  warnings counted as failures.
+- **React forbids updating one component while another renders.** Writing a core signal during
+  render is exactly that when another part is drawn from it: the avatar wrote its image's
+  address while rendering, which started the load and changed the status its fallback reads.
+  A prop reaches the core after the render commits. Only the development build says so.
 - **Vue** may hand over an element before it is in the page. Anything that reads where the
   element is (`getRootNode()`, `closest("fieldset")`, a measure) waits until it is connected.
   Its `Teleport` writes markers on a server that hydration then empties: no portal is drawn on
@@ -95,6 +108,13 @@ note. Three places hold them:
   `--disable-gpu --disable-software-rasterizer`.
 - **A page that draws no frames must behave the same.** Nothing waits for an animation frame
   that can be decided at render or by reading a style.
+- **Layers close in any order.** What a layer makes inert is counted, and given back when the
+  last layer that needs it lets go; a layer that was already in the page when another opened
+  is lifted out of that one's isolation while it is open. Held by `tests/core/ledger.test.ts`.
+- **A press outside is decided where it begins.** A press that starts inside a popup and is
+  let go outside (a text selection, a thumb dragged past the edge) does not close it.
+- **A row's name is the text a person reads.** A shortcut drawn beside it with `aria-hidden`,
+  or anything `hidden`, is not part of what typing searches or a trigger shows (`textOf`).
 - **A popup moved to the end of `<body>` loses its `dir`.** The position service carries the
   anchor's direction onto the positioner.
 - **`overflow: hidden` on the page does not stop `scrollTo`.** A test of the scroll lock reads

@@ -2,11 +2,11 @@ import { defined, within } from "@kirana-ui/core"
 import type { Part } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs as Controller, TabsListOptions, TabsProps } from "@kirana-ui/core/tabs"
-import { createContext, useContext, useEffect, useMemo } from "react"
+import { createContext, useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
-import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import { useController, useMount, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -82,7 +82,7 @@ export interface PanelProps extends PartComponentProps {
 function Panel({ value, keepMounted, ...props }: PanelProps): ReactElement | null {
   const controller = useTabs("Panel")
   const panel = useMemo(() => controller.panel(value), [controller, value])
-  useEffect(() => panel.mount(), [panel])
+  useMount(panel)
   const mounted = useSignal(panel.mounted)
   if (!mounted && !keepMounted) return null
   return <PartElement part={panel.part} tag="div" {...props} />

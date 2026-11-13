@@ -1,5 +1,7 @@
-import { Component } from "@angular/core"
+import { Component, afterNextRender, signal } from "@angular/core"
 import {
+  KuiCheckbox,
+  KuiCheckboxIndicator,
   KuiCollapsible,
   KuiCollapsiblePanel,
   KuiCollapsibleTrigger,
@@ -23,9 +25,13 @@ import {
 
 // The second page: no part is given an id, and a popover is open when the page is first drawn.
 // What a server and a client must agree on without help. The same in all five fixtures.
+// Then what only shows once the page is in a browser: a panel its caller opens as the page
+// mounts, a box in a `<fieldset disabled>`, an input whose caller rewrites what is typed.
 @Component({
   selector: "app-root",
   imports: [
+    KuiCheckbox,
+    KuiCheckboxIndicator,
     KuiCollapsible,
     KuiCollapsiblePanel,
     KuiCollapsibleTrigger,
@@ -88,7 +94,40 @@ import {
           </ng-template>
         </ng-container>
       </section>
+      <section data-fixture="late">
+        <div kuiCollapsible [(open)]="late">
+          <button kuiCollapsibleTrigger data-testid="o-l-trigger">Late</button>
+          <div *kuiCollapsiblePanel class="panel" data-testid="o-l-panel">
+            <p>Opened as the page mounted</p>
+          </div>
+        </div>
+        <fieldset [disabled]="!unlocked()" data-testid="o-s-set">
+          <span kuiCheckbox [name]="'terms'" class="box" data-testid="o-s-box">
+            <span *kuiCheckboxIndicator class="mark">✓</span>
+          </span>
+        </fieldset>
+        <button data-testid="o-s-unlock" (click)="unlocked.set(!unlocked())">Unlock</button>
+        <div kuiField [name]="'nick'">
+          <label kuiFieldLabel>Nickname</label>
+          <input
+            kuiFieldControl
+            [value]="nick()"
+            (input)="nick.set($any($event.currentTarget).value.toUpperCase())"
+            data-testid="o-h-control"
+          />
+        </div>
+        <output data-testid="o-h-output">{{ nick() }}</output>
+      </section>
     </main>
   `,
 })
-export class Open {}
+export class Open {
+  protected readonly late = signal<boolean | undefined>(false)
+  protected readonly unlocked = signal(false)
+  protected readonly nick = signal("")
+
+  constructor() {
+    // In a browser only, as the other four's mount: a server draws the panel closed.
+    afterNextRender(() => this.late.set(true))
+  }
+}

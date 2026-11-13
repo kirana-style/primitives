@@ -56,6 +56,41 @@ const subjects = adapters.flatMap((adapter) => {
       second: true,
     },
   ]
+  // React once more as a development build in StrictMode: every effect run, undone and run
+  // again, every ref handed over twice, and React's own warnings (a hydration mismatch, a
+  // controlled input) reported as errors.
+  if (adapter === "react") {
+    all.push(
+      {
+        adapter,
+        label: "react+strict",
+        path: "/strict/index.html",
+        hydrated: false,
+        second: false,
+      },
+      {
+        adapter,
+        label: "react+strict+ssr",
+        path: "/strict/ssr.html",
+        hydrated: true,
+        second: false,
+      },
+      {
+        adapter,
+        label: "react+strict second",
+        path: "/strict/open.html",
+        hydrated: false,
+        second: true,
+      },
+      {
+        adapter,
+        label: "react+strict+ssr second",
+        path: "/strict/open-ssr.html",
+        hydrated: true,
+        second: true,
+      }
+    )
+  }
   return all.filter((each) => each.path === "/" || built(each.path.slice(1)))
 })
 
@@ -1349,6 +1384,53 @@ const second: Record<string, (run: Run) => Promise<void>> = {
     await id("o-p-popup").waitFor()
     expect(await present("o-p-close"), "and a press opens it again")
   },
+
+  // What only shows once the page is in a browser.
+  async late({ page, snapshot, id, present, attribute }) {
+    await id("o-p-popup").waitFor()
+    // The popover that is open from the start lies over this section.
+    await page.keyboard.press("Escape")
+    await id("o-p-popup").waitFor({ state: "detached" })
+    // A caller that opens the panel as the page mounts is heard, not dropped.
+    await id("o-l-panel").waitFor({ timeout: 3000 })
+    await snapshot("opened as the page mounted")
+    expect((await attribute("o-l-trigger", "aria-expanded")) === "true", "the trigger says open")
+    expect((await attribute("o-l-panel", "data-open")) === "", "and the panel")
+    await id("o-l-trigger").click()
+    await snapshot("closed by its trigger")
+    expect(!(await present("o-l-panel")), "and a press closes it")
+
+    // A `<fieldset disabled>` disables a box as it does a native control, and lets it go.
+    expect((await attribute("o-s-box", "aria-disabled")) === "true", "disabled by its fieldset")
+    expect((await attribute("o-s-box", "data-disabled")) === "", "and marked")
+    expect((await attribute("o-s-box", "tabindex")) === "-1", "out of Tab's way")
+    await id("o-s-box").click({ force: true })
+    expect((await attribute("o-s-box", "aria-checked")) === "false", "a press does nothing")
+    await id("o-s-unlock").click()
+    await snapshot("fieldset enabled")
+    expect((await attribute("o-s-box", "aria-disabled")) === null, "enabled with its fieldset")
+    await id("o-s-box").click()
+    await snapshot("box checked")
+    expect((await attribute("o-s-box", "aria-checked")) === "true", "and a press checks it")
+    await id("o-s-unlock").click()
+    await snapshot("fieldset disabled again")
+    expect((await attribute("o-s-box", "aria-disabled")) === "true", "and disabled again")
+    expect((await attribute("o-s-box", "aria-checked")) === "true", "keeping its value")
+
+    // A caller that holds an input's value and rewrites what is typed: every key lands, in
+    // order, and the field follows the value.
+    await id("o-h-control").click()
+    await page.keyboard.type("kirana ui", { delay: 15 })
+    await snapshot("typed into a held input")
+    expect((await id("o-h-control").inputValue()) === "KIRANA UI", "the caller's value is shown")
+    expect((await id("o-h-output").textContent()) === "KIRANA UI", "and the caller has it")
+    expect((await attribute("o-h-control", "data-filled")) === "", "the field knows it is filled")
+    expect((await attribute("o-h-control", "data-dirty")) === "", "and changed")
+    for (let key = 0; key < 9; key++) await page.keyboard.press("Backspace")
+    await snapshot("held input emptied")
+    expect((await id("o-h-control").inputValue()) === "", "emptied key by key")
+    expect((await attribute("o-h-control", "data-filled")) === null, "and no longer filled")
+  },
 }
 
 const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal", "data-hk"])
@@ -1401,12 +1483,14 @@ for (const engine of engines) {
             [...document.querySelectorAll("main [data-testid]")].map(
               (each) => `${each.getAttribute("data-testid")}=${each.id}`
             )
-          const before = await page.evaluate(ids)
+          // But for what a caller draws only once the page has mounted.
+          const late = (list: string[]) => list.filter((each) => !each.startsWith("o-l-panel="))
+          const before = late(await page.evaluate(ids))
           const live = await browser.newContext({ viewport: { width: 1000, height: 800 } })
           const hydrated = await live.newPage()
           await hydrated.goto(`http://localhost:${server.port}${path}`)
           await hydrated.locator('[data-testid="o-p-popup"]').waitFor()
-          const after = await hydrated.evaluate(ids)
+          const after = late(await hydrated.evaluate(ids))
           await live.close()
           if (before.join() !== after.join() || !before.some((each) => !each.endsWith("="))) {
             failed++

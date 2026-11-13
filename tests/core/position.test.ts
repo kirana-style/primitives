@@ -110,6 +110,34 @@ describe("positioning", () => {
     expect(box(positioner).left).toBe(80)
   })
 
+  it("measures the gap without the arrow: an arrow changes no offset", async () => {
+    const drawn = page("left: 100px; top: 100px", { sideOffset: 8 })
+    const arrow = document.createElement("div")
+    arrow.style.cssText = "width: 10px; height: 10px"
+    find(drawn.root, "popup").append(arrow)
+    drawn.position.arrow(arrow)
+    await drawn.placed()
+    await expect.poll(() => arrow.style.left).not.toBe("")
+    // Exactly the offset asked for, to the pixel: neither the arrow's size nor half of it added.
+    expect(box(drawn.positioner).top - box(drawn.anchor).bottom).toBe(8)
+  })
+
+  it("keeps the arrow at the anchor's centre on the side it flipped to", async () => {
+    const { position, positioner, anchor, placed, root } = page("left: 100px; bottom: 10px", {
+      sideOffset: 8,
+    })
+    const arrow = document.createElement("div")
+    arrow.style.cssText = "width: 10px; height: 10px"
+    find(root, "popup").append(arrow)
+    position.arrow(arrow)
+    await placed()
+    await expect.poll(() => arrow.style.left).not.toBe("")
+    // The side chosen, not the side asked for, is what the popup says and the gap is on.
+    expect(position.side.peek()).toBe("top")
+    expect(box(anchor).top - box(positioner).bottom).toBe(8)
+    expect(box(arrow).left + 5).toBe(box(anchor).left + box(anchor).width / 2)
+  })
+
   it("is not placed any more once stopped, and gives back the direction it wrote", async () => {
     const { position, positioner, stop, placed } = page("left: 200px; top: 100px", {}, "rtl")
     await placed()

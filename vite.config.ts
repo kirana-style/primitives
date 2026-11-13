@@ -85,7 +85,9 @@ export default defineConfig({
       // The core's services on their own, with no framework, in Chromium and Firefox.
       browser: {
         command: "vp test run --project browser",
-        cache: { input: SOURCES, output: [] },
+        // A task is given only the environment it names: without this, `BROWSERS` never
+        // reached the configuration, and every run was Chromium and Firefox whatever was asked.
+        cache: { input: SOURCES, output: [], env: ["BROWSERS"] },
       },
       // `@kirana-ui/vocabulary` from the core's part definitions; a test fails when it is stale.
       vocabulary: { command: "bun scripts/vocabulary.ts", cache: false },

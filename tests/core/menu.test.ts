@@ -534,6 +534,36 @@ describe("a submenu", () => {
     expect(focused()).toBe("m-trigger")
   })
 
+  it("does not follow its trigger while the two are on their way out", async () => {
+    const root = mount(PAGE)
+    const { top } = nested(root)
+    // As a design draws it: a popup at least as wide as its anchor, scaling away as it closes.
+    style(`
+      .menu { min-width: var(--anchor-width); transition: transform 200ms linear; }
+      .menu[data-ending-style] { transform: scale(0.5); }`)
+    const reported: string[] = []
+    const hear = (event: ErrorEvent) => void reported.push(event.message)
+    window.addEventListener("error", hear)
+    onTestFinished(() => window.removeEventListener("error", hear))
+    find(root, "m-trigger").focus()
+    await press("Enter")
+    await settled()
+    await press("ArrowDown")
+    await press("ArrowRight")
+    await settled()
+    await wait(50)
+    const positioner = root.querySelector<HTMLElement>("#s-popup")!.parentElement!
+    const width = positioner.style.getPropertyValue("--anchor-width")
+    await press("Enter")
+    expect(top.made.open.peek()).toBe(false)
+    // Through the exit: the submenu's trigger shrinks with its menu, and the submenu is not
+    // measured against it again, which resized it on every frame inside a resize observer.
+    await wait(120)
+    expect(positioner.style.getPropertyValue("--anchor-width")).toBe(width)
+    await wait(200)
+    expect(reported.filter((each) => each.includes("ResizeObserver"))).toEqual([])
+  })
+
   it("closes with its menu", async () => {
     const root = mount(PAGE)
     const { top, drawn } = nested(root)

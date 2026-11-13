@@ -208,7 +208,7 @@ export function createPopup(options: PopupOptions): Popup {
       })),
       attach(element) {
         if (!position || !trigger) return NOTHING
-        return position.attach(element, trigger)
+        return position.attach(element, trigger, open)
       },
     },
     arrow: {

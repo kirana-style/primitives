@@ -155,6 +155,12 @@ note. Three places hold them:
   was already inert. Focus in a popup opened from this one (its trigger is inside this one)
   counts as inside it. Held by `tests/core/menu.test.ts` ("whichever of the two closes
   first") and the menu's scenario on five adapters.
+- **A popup on its way out is not placed again.** It follows its anchor only while it is
+  open. A submenu's trigger is inside a menu that scales away as both close: measured again
+  on each frame, the trigger's shrinking width (`--anchor-width`) resized the submenu inside
+  the observer that watches its size, and the browser reported "ResizeObserver loop
+  completed with undelivered notifications" on every frame of the exit. Held by
+  `tests/core/position.test.ts` and `tests/core/menu.test.ts` ("on their way out").
 - **Where the pointer left is not in the `pointerleave`.** Its coordinates are where the
   pointer is by then, already on the next row. The way from a submenu's trigger to its popup
   starts from the pointer's last move on the trigger.
@@ -175,6 +181,12 @@ note. Three places hold them:
 - **Run the task, not the script, when a build stands between them.** `bun
   tests/conformance/run.ts` plays whatever the fixtures were last built from; `vp run
   conformance` builds them first. Three identical failures in a row were a stale build.
+- **A browser reports some faults to the window, not as an exception** (a resize observer
+  that could not deliver within a frame). Whether a test runner's "page error" hears them
+  varied between this machine and CI: the conformance page listens for the window's `error`
+  itself, so the two fail alike.
+- **CI's fonts and speed are not this machine's.** `bun tests/conformance/run.ts react
+  --only menu --slow 6` plays one scenario with the processor slowed.
 - **A probe that reads layout can hide the fault it looks for.** A scroll jump disappeared
   under a logger that read `scrollY`.
 - **Stop what you start, by its process id.** A server left running holds a port and memory

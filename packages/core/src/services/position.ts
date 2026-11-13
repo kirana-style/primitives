@@ -2,7 +2,7 @@ import { arrow, autoUpdate, computePosition, flip, offset, shift, size } from "@
 import type { Placement } from "@floating-ui/dom"
 
 import { carryDirection } from "../direction.ts"
-import { batch, computed, signal } from "../reactivity.ts"
+import { batch, computed, effect, signal } from "../reactivity.ts"
 import { setGeometry } from "./geometry.ts"
 import type { ReadonlySignal, Signal } from "../reactivity.ts"
 
@@ -35,8 +35,11 @@ export interface Position {
   readonly placed: ReadonlySignal<boolean>
   /** Whether the arrow could not sit at the anchor's centre: the popup was pushed along its edge. */
   readonly uncentered: ReadonlySignal<boolean>
-  /** Places `positioner` against `anchor` and keeps it placed. Returns the stop. */
-  attach(positioner: HTMLElement, anchor: Element): () => void
+  /**
+   * Places `positioner` against `anchor` and keeps it placed, while `following` holds (always,
+   * when left out): a popup on its way out stays where it was. Returns the stop.
+   */
+  attach(positioner: HTMLElement, anchor: Element, following?: ReadonlySignal<boolean>): () => void
   /**
    * An element that points at the anchor. It is placed along the popup's edge (`left` or `top`);
    * which edge it sits on is the design's, from `data-side`. Returns the removal.
@@ -82,7 +85,7 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
         if (pointer === element) pointer = undefined
       }
     },
-    attach(positioner, anchor) {
+    attach(positioner, anchor, following) {
       setGeometry(positioner, "position", "absolute")
       setGeometry(positioner, "left", "0px")
       setGeometry(positioner, "top", "0px")
@@ -143,16 +146,33 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
         })
       }
 
-      const stop = autoUpdate(anchor, positioner, update)
-      // An arrow that attaches after its positioner is placed with it from then on.
-      replace = update
-      // Placed again when the caller asks for another side or gap.
-      const follow = options.subscribe(update)
+      // Followed only while the popup is open. On its way out it keeps its place: its anchor may
+      // be moving or shrinking by then (a submenu's trigger, in a menu that is scaling away),
+      // and a popup sized from its anchor would be resized on every frame of that, inside the
+      // observer that watches its size.
+      let stop: (() => void) | undefined
+      const follow = (on: boolean) => {
+        if (on && !stop) {
+          const unwatch = autoUpdate(anchor, positioner, update)
+          // An arrow that attaches after its positioner is placed with it from then on.
+          replace = update
+          // Placed again when the caller asks for another side or gap.
+          const unsubscribe = options.subscribe(update)
+          stop = () => {
+            unwatch()
+            unsubscribe()
+            replace = undefined
+          }
+        } else if (!on && stop) {
+          stop()
+          stop = undefined
+        }
+      }
+      const unfollow = following ? effect(() => follow(following.get())) : (follow(true), undefined)
       return () => {
-        stop()
-        follow()
+        unfollow?.()
+        follow(false)
         forget()
-        replace = undefined
         placed.set(false)
       }
     },

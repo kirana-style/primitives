@@ -6,6 +6,7 @@
  * run fails. Every `data-*` attribute met is also held to the vocabulary.
  *
  *   bun tests/conformance/run.ts [adapter…]      default: every fixture that is built
+ *   bun tests/conformance/run.ts react --only menu --slow 6
  *
  * It serves each fixture's `dist/` itself and stops its servers and its browser before it exits.
  */
@@ -29,6 +30,15 @@ const flag = asked.indexOf("--browser")
 const engines = (flag < 0 ? "chromium" : asked.splice(flag, 2)[1]!).split(
   ","
 ) as (keyof typeof ENGINES)[]
+/** An option with a value, taken out of what was asked. */
+function option(name: string): string | undefined {
+  const at = asked.indexOf(name)
+  return at < 0 ? undefined : asked.splice(at, 2)[1]
+}
+// `--only menu`: one scenario. `--slow 6`: Chromium's processor six times slower, as a shared
+// runner's is: what depends on how fast a framework draws shows there.
+const only = option("--only")
+const slow = Number(option("--slow") ?? 1)
 const adapters = (asked.length > 0 ? asked : ALL).filter((each) => {
   const built = existsSync(join(ROOT, "fixtures", each, "dist/index.html"))
   if (!built) console.log(`skipped ${each}: fixtures/${each}/dist is not built`)
@@ -1679,8 +1689,13 @@ for (const engine of engines) {
         await context.close()
       }
       for (const [name, scenario] of Object.entries(subject.second ? second : scenarios)) {
+        if (only && name !== only) continue
         const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
         const page = await context.newPage()
+        if (slow > 1 && engine === "chromium") {
+          const session = await context.newCDPSession(page)
+          await session.send("Emulation.setCPUThrottlingRate", { rate: slow })
+        }
         const errors: string[] = []
         page.on("pageerror", (error) => errors.push(error.message))
         page.on("console", (message) => {
@@ -1689,6 +1704,13 @@ for (const engine of engines) {
           if (message.text().includes("scroll-linked positioning effect")) return
           if (message.type() === "error" || message.type() === "warning")
             errors.push(message.text())
+        })
+        // What a browser reports to the window and not as an exception (a resize observer that
+        // could not deliver within a frame): heard here whether or not the browser's tools say it.
+        await page.addInitScript(() => {
+          window.addEventListener("error", (event) => {
+            if (!event.error) console.error(`window error: ${event.message}`)
+          })
         })
         await page.goto(`http://localhost:${server.port}${path}`)
         await page.waitForSelector("main")

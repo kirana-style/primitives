@@ -7,10 +7,12 @@
  *
  *   bun tests/conformance/run.ts [adapter…]      default: every fixture that is built
  *   bun tests/conformance/run.ts react --only menu --slow 6
+ *   bun tests/conformance/run.ts --jobs 1        one subject at a time (default: up to 6 at once)
  *
  * It serves each fixture's `dist/` itself and stops its servers and its browser before it exits.
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { availableParallelism } from "node:os"
 import { join } from "node:path"
 
 import { chromium, firefox, webkit } from "playwright"
@@ -37,6 +39,55 @@ function option(name: string): string | undefined {
 }
 // `--only menu`: one scenario. `--slow 6`: Chromium's processor six times slower, as a shared
 // runner's is: what depends on how fast a framework draws shows there.
+// `--jobs 1`: one subject at a time (the default plays several at once, each in its own
+// browser context; a fault that only shows under load is looked at alone).
+const jobsAsked = option("--jobs") ?? process.env.CONFORMANCE_JOBS
+/**
+ * How many subjects at once. Chromium carries six, measured: 352 s one at a time, 120 s with six
+ * and its timed scenarios alone, every run passing. Firefox gained nothing from three and failed one run in two, on scenarios
+ * that time a press or a frame: it and WebKit play one at a time unless asked.
+ */
+const jobsFor = (engine: string) =>
+  Math.max(1, Number(jobsAsked ?? Math.min(engine === "chromium" ? 6 : 1, availableParallelism())))
+// Scenarios that measure a wait or look for one frame (a tooltip's delay, a dialog's first
+// style): played with nothing else on the machine, or what is measured is the machine and not
+// the component. Firefox failed both with six pages at once.
+const TIMED = new Set(["hover", "dialog"])
+let playing = 0
+let held = false
+let asking = 0
+const waiting: (() => void)[] = []
+const turn = () => new Promise<void>((resolve) => void waiting.push(resolve))
+const wake = () => {
+  for (const each of waiting.splice(0)) each()
+}
+
+/** With the others. Waits while a timed scenario has, or is asking for, the machine. */
+async function together(run: () => Promise<void>): Promise<void> {
+  while (held || asking > 0) await turn()
+  playing++
+  try {
+    await run()
+  } finally {
+    playing--
+    wake()
+  }
+}
+
+/** With nothing else being played. */
+async function alone(run: () => Promise<void>): Promise<void> {
+  asking++
+  while (held || playing > 0) await turn()
+  asking--
+  held = true
+  try {
+    await run()
+  } finally {
+    held = false
+    wake()
+  }
+}
+
 const only = option("--only")
 const slow = Number(option("--slow") ?? 1)
 const adapters = (asked.length > 0 ? asked : ALL).filter((each) => {
@@ -1536,6 +1587,217 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await present("cm1-popup")), "a plain press in the area closes it")
   },
 
+  async listbox({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const output = () => id("lb1-output").textContent()
+    expect((await attribute("lb1", "role")) === "listbox", "the list is a listbox")
+    expect((await attribute("lb1", "tabindex")) === "0", "and one stop for Tab")
+    expect((await attribute("lb1-Banana", "aria-selected")) === "true", "its value is chosen")
+
+    await id("lb1").focus()
+    await settled(page)
+    await snapshot("focus in the list")
+    expect((await focused()) === "lb1-Banana", "focus goes to the chosen item")
+    expect((await attribute("lb1", "tabindex")) === "-1", "the list is then no stop of its own")
+    await key("ArrowDown")
+    expect((await focused()) === "lb1-Cherry", "ArrowDown passes a disabled item")
+    await key(" ")
+    await snapshot("another chosen")
+    expect((await output()) === "Cherry", "Space chooses, one at a time")
+    expect((await attribute("lb1-Banana", "aria-selected")) === "false", "the other is let go")
+    await page.keyboard.type("ap")
+    expect((await focused()) === "lb1-Apple", "typing finds an item")
+    await key("Enter")
+    expect((await output()) === "Apple", "Enter chooses too")
+    await id("lb1-Grape").click()
+    await settled(page)
+    expect((await output()) === "Grape", "and a press")
+    expect((await focused()) === "lb1-Grape", "which takes focus there")
+    await id("lb1-Blueberry").click({ force: true })
+    await settled(page)
+    expect((await output()) === "Grape", "a disabled item is not chosen")
+
+    expect((await attribute("lb2", "aria-multiselectable")) === "true", "a list of several")
+    expect((await attribute("lb2-group", "aria-labelledby")) === "lb2-g-label", "a named group")
+    await id("lb2-free").click()
+    await id("lb2-team").click()
+    await id("lb2-free").click()
+    await snapshot("several, one taken away")
+    expect((await attribute("lb2-team", "aria-selected")) === "true", "a press adds")
+    expect((await attribute("lb2-free", "aria-selected")) === "false", "and takes away")
+  },
+
+  async combobox({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const output = () => id("cb1-output").textContent()
+    const submitted = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="cb1-form"]')!).get(
+          "pick"
+        )
+      )
+    const shown = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[data-testid="cb1-popup"] [role="option"]')]
+          .filter((each) => each.getClientRects().length > 0)
+          .map((each) => each.id.replace("cb1-", ""))
+          .join()
+      )
+    const text = () => id("cb1-input").inputValue()
+    await id("cb1-input").scrollIntoViewIfNeeded()
+    const scrolled = await page.evaluate(() => window.scrollY)
+    expect((await attribute("cb1-input", "role")) === "combobox", "the input is a combobox")
+    expect((await attribute("cb1-input", "aria-expanded")) === "false", "which is closed")
+
+    await id("cb1-input").focus()
+    await page.keyboard.type("ap")
+    await settled(page)
+    await snapshot("filtered by what is typed")
+    // "Grape" holds it too.
+    expect(
+      (await shown()) === "Apple,Apricot,Grape",
+      "typing opens the list on what holds the text"
+    )
+    expect((await focused()) === "cb1-input", "focus stays in the input")
+    expect(
+      (await attribute("cb1-input", "aria-activedescendant")) === "cb1-Apple",
+      "which names the first shown item"
+    )
+    expect((await attribute("cb1-Apple", "data-highlighted")) === "", "the highlighted one")
+    expect((await page.evaluate(() => window.scrollY)) === scrolled, "the page has not moved")
+    await key("ArrowDown")
+    expect(
+      (await attribute("cb1-input", "aria-activedescendant")) === "cb1-Apricot",
+      "ArrowDown moves the highlight"
+    )
+    await page.keyboard.type("x")
+    await settled(page)
+    await snapshot("nothing shown")
+    expect((await shown()) === "", "nothing holds the text")
+    expect(await present("cb1-empty"), "and the list says so")
+    await key("Backspace")
+    expect(!(await present("cb1-empty")), "until something does again")
+
+    await key("Enter")
+    await snapshot("chosen by Enter")
+    expect(!(await present("cb1-popup")), "Enter chooses the highlighted item and closes")
+    expect((await output()) === "Apple", "the caller hears the value")
+    expect((await text()) === "Apple", "the input says it")
+    expect((await submitted()) === "Apple", "the form submits it")
+    expect((await focused()) === "cb1-input", "focus is still in the input")
+
+    await key("ArrowDown")
+    await snapshot("open on every item")
+    expect(
+      (await shown()) === "Apple,Apricot,Banana,Blueberry,Cherry,Grape",
+      "opened, all are shown"
+    )
+    expect(
+      (await attribute("cb1-input", "aria-activedescendant")) === "cb1-Apple",
+      "on the chosen one"
+    )
+    expect((await attribute("cb1-Apple", "aria-selected")) === "true", "which is selected")
+    await page.keyboard.type("z")
+    await settled(page)
+    await key("Escape")
+    expect(!(await present("cb1-popup")), "Escape closes")
+    expect((await text()) === "Apple", "and the input says what is chosen again")
+
+    await id("cb1-trigger").click()
+    await settled(page)
+    expect(await present("cb1-popup"), "the button opens the list")
+    expect((await focused()) === "cb1-input", "with focus in the input")
+    await id("cb1-Blueberry").click({ force: true })
+    await settled(page)
+    expect(await present("cb1-popup"), "a disabled item is not chosen")
+    await id("cb1-Cherry").hover()
+    expect((await attribute("cb1-Cherry", "data-highlighted")) === "", "the pointer highlights")
+    await id("cb1-Cherry").click()
+    await snapshot("chosen by a press")
+    expect((await output()) === "Cherry", "a press chooses")
+    expect((await focused()) === "cb1-input", "and focus never left the input")
+
+    await id("cb1-input").fill("")
+    await settled(page)
+    expect((await output()) === "none", "emptied, nothing is chosen")
+    // At the page's corner: under the input, the open list may cover what is there.
+    await page.mouse.click(2, 2)
+    await snapshot("closed by a press outside")
+    expect(!(await present("cb1-popup")), "a press outside closes the list")
+  },
+
+  async "menu-more"({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const centre = (testid: string) =>
+      id(testid).evaluate((element) => {
+        const box = element.getBoundingClientRect()
+        return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+      })
+    await id("mm1-trigger").evaluate((element) => element.scrollIntoView({ block: "center" }))
+
+    // One press: down on the trigger, across to an item, and let go there.
+    const from = await centre("mm1-trigger")
+    await page.mouse.move(from.x, from.y)
+    await page.mouse.down()
+    await settled(page)
+    expect(await present("mm1-popup"), "the menu opens as the button goes down")
+    expect((await focused()) === "mm1-popup", "and has focus, not the pressed button")
+    await page.waitForTimeout(250)
+    const to = await centre("mm1-plain")
+    await page.mouse.move(to.x, to.y, { steps: 4 })
+    expect(
+      (await attribute("mm1-plain", "data-highlighted")) === "",
+      "the press travels to an item"
+    )
+    await page.mouse.up()
+    await settled(page)
+    expect(!(await present("mm1-popup")), "letting go there chooses it")
+
+    await id("mm1-trigger").click()
+    await snapshot("a modal menu open")
+    expect(await present("mm1-popup"), "a plain press opens it, and its click does not close it")
+    expect(
+      (await page.evaluate(() => getComputedStyle(document.documentElement).overflow)) === "hidden",
+      "a modal menu holds the page's scroll"
+    )
+    expect((await attribute("mm1-link", "role")) === "menuitem", "a link is an item")
+    await id("mm1-outside").click()
+    await snapshot("closed by a press that reached nothing")
+    expect(!(await present("mm1-popup")), "a press outside closes it")
+    expect((await id("mm1-output").textContent()) === "0", "and reaches nothing")
+    await id("mm1-outside").click()
+    await settled(page)
+    expect((await id("mm1-output").textContent()) === "1", "the next press is the page's")
+
+    await id("mm1-trigger").focus()
+    await key("Enter")
+    await key("End")
+    expect((await focused()) === "mm1-link", "the arrows reach a link item")
+    await key("Enter")
+    expect(page.url().endsWith("#mm1-linked"), "Enter follows the link")
+    expect(!(await present("mm1-popup")), "and closes the menu")
+
+    expect((await attribute("vb1", "aria-orientation")) === "vertical", "a bar that is a column")
+    await id("vb1-one").focus()
+    await key("ArrowDown")
+    expect((await focused()) === "vb1-two", "ArrowDown goes down its triggers")
+    await key("ArrowRight")
+    await snapshot("a column's menu open")
+    expect((await focused()) === "vb1b-x", "ArrowRight opens the menu")
+    expect((await attribute("vb1b-positioner", "data-side")) === "right", "beside its trigger")
+    await key("ArrowLeft")
+    expect((await focused()) === "vb1-two", "ArrowLeft closes it")
+  },
+
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)
@@ -1743,7 +2005,9 @@ for (const engine of engines) {
   console.log(`\n${engine}`)
 
   try {
-    for (const subject of subjects) {
+    // One subject: an adapter's page, one way it is served. What it says is kept until its turn
+    // to be printed, so the report reads in the same order however many are played at once.
+    const play = async (subject: (typeof subjects)[number], log: (line: string) => void) => {
       const { adapter, label, path } = subject
       const server = (servers[adapter] ??= serve(adapter))
       const recorded = new Map<string, string>()
@@ -1774,7 +2038,7 @@ for (const engine of engines) {
           await live.close()
           if (before.join() !== after.join() || !before.some((each) => !each.endsWith("="))) {
             failed++
-            console.log(`FAIL  ${label}  ids changed in hydration: ${before} -> ${after}`)
+            log(`FAIL  ${label}  ids changed in hydration: ${before} -> ${after}`)
           }
         }
         // A length that is the value itself is in what the server sent, not measured later.
@@ -1783,7 +2047,7 @@ for (const engine of engines) {
         )
         if (!subject.second && width !== "40%") {
           failed++
-          console.log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
+          log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
         }
         const place = await page.evaluate(() =>
           document
@@ -1792,7 +2056,7 @@ for (const engine of engines) {
         )
         if (!subject.second && place !== "40%") {
           failed++
-          console.log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
+          log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
         }
         // What a provider states is known on a server, which has no layout to read it from.
         const centred = await page.evaluate(() =>
@@ -1802,7 +2066,7 @@ for (const engine of engines) {
         )
         if (!subject.second && centred !== "50% -50%") {
           failed++
-          console.log(`FAIL  ${label}  the server centred a right-to-left thumb, got "${centred}"`)
+          log(`FAIL  ${label}  the server centred a right-to-left thumb, got "${centred}"`)
         }
         await context.close()
       }
@@ -1920,13 +2184,15 @@ for (const engine of engines) {
           },
         }
         try {
-          await scenario(run)
+          await (TIMED.has(name) ? alone : together)(() => scenario(run))
           expect(errors.length === 0, `the page reported: ${errors.join(" | ")}`)
-          console.log(`ok    ${label}  ${name}`)
+          log(`ok    ${label}  ${name}`)
         } catch (error) {
           failed++
-          const message = error instanceof Error ? error.message.split("\n")[0] : String(error)
-          console.log(`FAIL  ${label}  ${name}: ${message}`)
+          // The whole of it when one scenario was asked for: what was pressed, and why not.
+          const whole = error instanceof Error ? error.message : String(error)
+          const message = only ? whole : whole.split("\n")[0]
+          log(`FAIL  ${label}  ${name}: ${message}`)
         }
         await context.close()
       }
@@ -1935,6 +2201,26 @@ for (const engine of engines) {
         [...recorded].map(([step, dom]) => `### ${step}\n${dom}\n`).join("\n")
       )
     }
+
+    // Their place in what is compared is theirs before any is played.
+    for (const subject of subjects) snapshots[subject.label] = new Map()
+    const said = subjects.map(() => [] as string[])
+    const done = subjects.map(() => false)
+    let printed = 0
+    let next = 0
+    const worker = async () => {
+      while (next < subjects.length) {
+        const at = next++
+        await play(subjects[at]!, (line) => void said[at]!.push(line))
+        done[at] = true
+        while (printed < subjects.length && done[printed]) {
+          for (const line of said[printed]!) console.log(line)
+          printed++
+        }
+      }
+    }
+    const jobs = Math.min(jobsFor(engine), subjects.length)
+    await Promise.all(Array.from({ length: jobs }, worker))
 
     const firstDifference = (a: string, b: string, one: string, other: string) => {
       const left = a.split("\n")

@@ -8,6 +8,8 @@ export interface ListRowOptions {
   disabled?: boolean | undefined
   /** What typing matches; the row's text when left out. */
   label?: string | undefined
+  /** Not shown (filtered out): the keys pass it over as if it were not there. */
+  hidden?: boolean | undefined
 }
 
 /** One row of a list: an option, a menu's item. */
@@ -51,6 +53,7 @@ export interface List {
 }
 
 interface Entry extends ListRow {
+  hidden(): boolean
   readonly active: Signal<boolean>
 }
 
@@ -68,6 +71,11 @@ export function createList(config: {
   selector: string
   /** Whether a step past an end goes round to the other. Read at each step. */
   loop?: () => boolean
+  /**
+   * Focus stays where it is (a combobox's input) and the highlight alone moves; the element
+   * that has focus names the highlighted row with `aria-activedescendant`.
+   */
+  virtual?: boolean
 }): List {
   const entries = new WeakMap<Element, Entry>()
   const highlighted = signal<ListRow | undefined>(undefined)
@@ -80,7 +88,7 @@ export function createList(config: {
     for (const each of list.querySelectorAll(config.selector)) {
       // Only its own: a list inside one of its rows keeps the rows that are its.
       const entry = entries.get(each)
-      if (entry && !entry.disabled()) found.push(entry)
+      if (entry && !entry.disabled() && !entry.hidden()) found.push(entry)
     }
     return found
   }
@@ -97,7 +105,7 @@ export function createList(config: {
     }
     if (!focus) return
     const element = after ? after.element() : list
-    element?.focus({ preventScroll: true })
+    if (!config.virtual) element?.focus({ preventScroll: true })
     if (after && element) reveal(element)
   }
 
@@ -156,6 +164,7 @@ export function createList(config: {
         active: signal(false),
         element: () => own,
         disabled: () => Boolean(options().disabled),
+        hidden: () => Boolean(options().hidden),
         label: () => options().label ?? (own ? name(own) : ""),
         attach(element) {
           own = element

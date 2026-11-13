@@ -117,6 +117,7 @@ const RENAMED: Record<string, string> = {
   for: "htmlFor",
   readonly: "readOnly",
   novalidate: "noValidate",
+  autocomplete: "autoComplete",
 }
 
 /** A style as React takes it: `inset-inline-start` is `insetInlineStart`, `--x` stays as it is. */

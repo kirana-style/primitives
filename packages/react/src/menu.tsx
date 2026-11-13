@@ -113,6 +113,14 @@ function Item({ disabled, label, closeOnClick, ...props }: ItemProps): ReactElem
   return usePart(part, "div", props)
 }
 
+/** An item that is a link: `href` and the rest go to its `<a>`. */
+function LinkItem({ disabled, label, closeOnClick, ...props }: ItemProps): ReactElement {
+  const controller = useMenu("LinkItem")
+  const options = useOptions({ disabled, label, closeOnClick })
+  const part = useMemo(() => controller.item(() => defined(options.get())), [controller, options])
+  return usePart(part, "a", props)
+}
+
 function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
   const controller = useMenu("Group")
   const generated = useId()
@@ -221,6 +229,7 @@ export const Menu = {
   Popup,
   Arrow,
   Item,
+  LinkItem,
   Group,
   GroupLabel,
   Separator,

@@ -1,1 +1,4 @@
-vp run prepush
+# The quick checks only: format, lint, types and the unit tests, about a minute. Git holds its
+# connection to the remote open while this runs, and the full run (`vp run prepush`: browsers,
+# packing, conformance on five adapters) outlasts it. CI runs all of that on every pull request.
+vp run check && vp run types && vp run test

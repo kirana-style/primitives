@@ -473,6 +473,185 @@ export const vocabulary = {
         }
       }
     },
+    "combobox": {
+      "parts": {
+        "input": {
+          "description": "The text input. What is typed filters the list, which is placed against it.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "trigger": {
+          "description": "A button that opens and closes the list.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "positioner": {
+          "description": "Places the list against the input. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          }
+        },
+        "popup": {
+          "description": "The list of items.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "item": {
+          "description": "One choice in the list.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on the chosen item.",
+              "selector": "[data-selected]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "itemIndicator": {
+          "description": "A mark an item shows while it is the chosen one.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "empty": {
+          "description": "What is shown when no item is.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "contextMenu": {
       "parts": {
         "trigger": {
@@ -622,6 +801,23 @@ export const vocabulary = {
         },
         "item": {
           "description": "An action. Choosing it closes the menu.",
+          "states": {
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "linkItem": {
+          "description": "An item that is a link. Choosing it follows the link and closes the menu.",
           "states": {
             "highlighted": {
               "attribute": "data-highlighted",
@@ -1361,6 +1557,68 @@ export const vocabulary = {
         }
       }
     },
+    "listbox": {
+      "parts": {
+        "root": {
+          "description": "The list. It is one stop for Tab.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "One choice in the list.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen item.",
+              "selector": "[data-selected]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "itemIndicator": {
+          "description": "A mark an item shows while it is chosen.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen item.",
+              "selector": "[data-selected]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "group": {
+          "description": "Items that belong together, named by their label.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "groupLabel": {
+          "description": "The name of a group.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "menu": {
       "parts": {
         "trigger": {
@@ -1515,6 +1773,23 @@ export const vocabulary = {
         },
         "item": {
           "description": "An action. Choosing it closes the menu.",
+          "states": {
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "linkItem": {
+          "description": "An item that is a link. Choosing it follows the link and closes the menu.",
           "states": {
             "highlighted": {
               "attribute": "data-highlighted",
@@ -1701,6 +1976,14 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether its menus are in a row or a column.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
             }
           },
           "exclusive": [],

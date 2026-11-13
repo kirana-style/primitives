@@ -2,7 +2,7 @@ import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
-import { LONG_PRESS, SUBMENU_DELAY, createMenu } from "../../packages/core/src/menu.ts"
+import { LONG_PRESS, PRESS_HOLD, SUBMENU_DELAY, createMenu } from "../../packages/core/src/menu.ts"
 import type { Menu, MenuAround, MenuItemOptions, MenuProps } from "../../packages/core/src/menu.ts"
 import { details } from "../../packages/core/src/part.ts"
 import type { Part } from "../../packages/core/src/part.ts"
@@ -581,6 +581,122 @@ describe("a submenu", () => {
   })
 })
 
+describe("a menu opened by a press that travels", () => {
+  const mouse = (element: Element, type: string, x = 0, y = 0) =>
+    element.dispatchEvent(
+      new PointerEvent(type, {
+        pointerType: "mouse",
+        button: 0,
+        clientX: x,
+        clientY: y,
+        bubbles: true,
+        cancelable: true,
+      })
+    )
+
+  it("opens as the button goes down, and letting go over an item chooses it", async () => {
+    const root = mount(PAGE)
+    const { made, pressed, reasons } = file(root)
+    const trigger = find(root, "m-trigger")
+    mouse(trigger, "pointerdown", 10, 10)
+    expect(made.open.peek()).toBe(true)
+    await settled()
+    await wait(PRESS_HOLD + 30)
+    const print = find(root, "print")
+    mouse(print, "pointermove", 40, 80)
+    mouse(print, "pointerup", 40, 80)
+    expect(pressed).toEqual(["print"])
+    expect(made.open.peek()).toBe(false)
+    expect(reasons).toEqual(["trigger-press", "item-press"])
+  })
+
+  it("a plain click opens it and leaves it open; the next closes it", async () => {
+    const root = mount(PAGE)
+    const { made, pressed } = file(root)
+    const trigger = find(root, "m-trigger")
+    // Down, up and click on the trigger at once: nothing is chosen, and the click does not
+    // close what the press opened.
+    mouse(trigger, "pointerdown", 10, 10)
+    mouse(trigger, "pointerup", 10, 10)
+    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    expect(made.open.peek()).toBe(true)
+    await settled()
+    // A press let go at once on an item it did not travel to chooses nothing either.
+    expect(pressed).toEqual([])
+    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    expect(made.open.peek()).toBe(false)
+  })
+
+  it("a caller who holds `open` and answers later still gets one press, not open-and-close", async () => {
+    const root = mount(PAGE)
+    let answer: (() => void) | undefined
+    const props = signal<MenuProps>({ id: "m" })
+    props.set({
+      id: "m",
+      open: false,
+      // As Svelte and React do: the value comes back a moment after it was asked for.
+      onOpenChange: (next) => void (answer = () => props.set({ ...props.peek(), open: next })),
+    })
+    const made = createMenu(props)
+    const trigger = find(root, "m-trigger")
+    onTestFinished(bind(trigger, made.trigger))
+    onTestFinished(made.mount())
+    mouse(trigger, "pointerdown", 10, 10)
+    expect(made.open.peek()).toBe(false)
+    answer!()
+    expect(made.open.peek()).toBe(true)
+    mouse(trigger, "pointerup", 10, 10)
+    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    answer!()
+    expect(made.open.peek()).toBe(true)
+  })
+
+  it("keeps the browser from giving the pressed button focus over the menu", async () => {
+    const root = mount(PAGE)
+    file(root)
+    const trigger = find(root, "m-trigger")
+    mouse(trigger, "pointerdown", 10, 10)
+    const down = new MouseEvent("mousedown", { bubbles: true, cancelable: true })
+    trigger.dispatchEvent(down)
+    expect(down.defaultPrevented).toBe(true)
+    await userEvent.click(find(root, "before"))
+    // Not for a press that opens nothing.
+    const later = new MouseEvent("mousedown", { bubbles: true, cancelable: true })
+    trigger.dispatchEvent(later)
+    expect(later.defaultPrevented).toBe(false)
+  })
+})
+
+describe("a modal menu", () => {
+  it("holds the page: its scroll is locked, and a press outside closes it and reaches nothing", async () => {
+    const root = mount(PAGE)
+    const { made } = file(root, { modal: true })
+    let reached = 0
+    find(root, "before").addEventListener("click", () => reached++)
+    await userEvent.click(find(root, "m-trigger"))
+    await settled()
+    expect(getComputedStyle(document.documentElement).overflow).toBe("hidden")
+    // The page is not inert: the trigger is still the menu's own.
+    expect(find(root, "m-trigger").closest("[inert]")).toBe(null)
+    await userEvent.click(find(root, "before"))
+    expect(made.open.peek()).toBe(false)
+    expect(reached).toBe(0)
+    await expect.poll(() => getComputedStyle(document.documentElement).overflow).not.toBe("hidden")
+    // The press after it is the page's again.
+    await userEvent.click(find(root, "before"))
+    expect(reached).toBe(1)
+  })
+
+  it("its trigger still closes it", async () => {
+    const root = mount(PAGE)
+    const { made } = file(root, { modal: true })
+    await userEvent.click(find(root, "m-trigger"))
+    await settled()
+    await userEvent.click(find(root, "m-trigger"))
+    expect(made.open.peek()).toBe(false)
+  })
+})
+
 describe("a context menu", () => {
   const AREA = `<button id="before">Before</button><div id="area" style="width: 300px; height: 200px">Area</div>`
 
@@ -697,9 +813,9 @@ describe("a menubar", () => {
     </div>
     <button id="after">After</button>`
 
-  function bar(root: HTMLElement, dir?: "rtl") {
+  function bar(root: HTMLElement, dir?: "rtl", orientation?: "vertical") {
     if (dir) root.setAttribute("dir", dir)
-    const made = createMenubar(signal({ id: "bar" }))
+    const made = createMenubar(signal({ id: "bar", orientation }))
     onTestFinished(bind(find(root, "bar"), made.root))
     const menus: Record<string, Drawn> = {}
     const sub: { more?: Drawn } = {}
@@ -824,6 +940,29 @@ describe("a menubar", () => {
     expect(focused()).toBe("two-popup")
     await userEvent.hover(find(root, "off-trigger"))
     expect(menus.two!.made.open.peek()).toBe(true)
+  })
+
+  it("as a column, the arrows go down it and a menu opens beside its trigger", async () => {
+    const root = mount(BAR)
+    const { menus } = bar(root, undefined, "vertical")
+    expect(find(root, "bar").getAttribute("aria-orientation")).toBe("vertical")
+    find(root, "one-trigger").focus()
+    await press("ArrowDown")
+    expect(focused()).toBe("two-trigger")
+    await press("ArrowUp")
+    expect(focused()).toBe("one-trigger")
+    await press("ArrowRight")
+    await settled()
+    expect(focused()).toBe("one-a")
+    await expect
+      .poll(() => root.querySelector("#one-popup")?.parentElement?.getAttribute("data-side"))
+      .toBe("right")
+    // No menu across: the arrow back closes it.
+    await press("ArrowRight")
+    expect(menus.one!.made.open.peek()).toBe(true)
+    await press("ArrowLeft")
+    expect(menus.one!.made.open.peek()).toBe(false)
+    expect(focused()).toBe("one-trigger")
   })
 
   it("follows the reading direction", async () => {

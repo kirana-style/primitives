@@ -6,6 +6,8 @@ import { separatorVocabulary } from "./separator.vocabulary.ts"
 import { toggleVocabulary } from "./toggle.vocabulary.ts"
 import { accordionVocabulary } from "./accordion.vocabulary.ts"
 import { checkboxVocabulary } from "./checkbox.vocabulary.ts"
+import { comboboxVocabulary } from "./combobox.vocabulary.ts"
+import { listboxVocabulary } from "./listbox.vocabulary.ts"
 import { collapsibleVocabulary } from "./collapsible.vocabulary.ts"
 import { dialogVocabulary } from "./dialog.vocabulary.ts"
 import { fieldVocabulary } from "./field.vocabulary.ts"
@@ -36,6 +38,7 @@ export const vocabulary = {
   button: buttonVocabulary,
   checkbox: checkboxVocabulary,
   collapsible: collapsibleVocabulary,
+  combobox: comboboxVocabulary,
   // A context menu's parts are a menu's, but for its trigger: an area, not a button.
   contextMenu: {
     ...menuVocabulary,
@@ -50,6 +53,7 @@ export const vocabulary = {
   fieldset: fieldsetVocabulary,
   form: formVocabulary,
   hoverCard: hoverCardVocabulary,
+  listbox: listboxVocabulary,
   menu: menuVocabulary,
   menubar: menubarVocabulary,
   meter: meterVocabulary,

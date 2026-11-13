@@ -18,6 +18,25 @@ export {
   KuiDialogTrigger,
 } from "./dialog"
 export {
+  KuiCombobox,
+  KuiComboboxEmpty,
+  KuiComboboxHiddenInput,
+  KuiComboboxInput,
+  KuiComboboxItem,
+  KuiComboboxItemIndicator,
+  KuiComboboxPopup,
+  KuiComboboxPortal,
+  KuiComboboxPositioner,
+  KuiComboboxTrigger,
+} from "./combobox"
+export {
+  KuiListbox,
+  KuiListboxGroup,
+  KuiListboxGroupLabel,
+  KuiListboxItem,
+  KuiListboxItemIndicator,
+} from "./listbox"
+export {
   KuiContextMenuTrigger,
   KuiMenu,
   KuiMenuArrow,
@@ -26,6 +45,7 @@ export {
   KuiMenuGroup,
   KuiMenuGroupLabel,
   KuiMenuItem,
+  KuiMenuLinkItem,
   KuiMenuPopup,
   KuiMenuPortal,
   KuiMenuPositioner,

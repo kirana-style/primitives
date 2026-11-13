@@ -65,6 +65,26 @@ note. Three places hold them:
   `closeOnClick`.
 - **Focus is on the row**, not `aria-activedescendant`: a phone's screen reader does not
   follow the second.
+- **A filtered item is `hidden`, and a row's own `display` shows it again.** `.item { display:
+  flex }` beats the `hidden` attribute. A design that gives rows a display also writes
+  `[hidden] { display: none !important }` (most resets do).
+- **A combobox's highlight follows what is shown, not the key that was typed.** Where the
+  caller holds the input's text, the list is still filtered by the old text when the key is
+  heard: the first "shown" row was one about to be hidden, it stayed highlighted, and Enter
+  pressed it. The highlight is moved by an effect on the filter, and Enter presses only a row
+  that is shown. While the list is open, Enter is never the form's.
+- **A combobox's text is the core's to write.** A framework that held the input's `value`
+  would write it in its own time, over what was typed since.
+- **A menu opened as the button goes down asks, and does not read back.** One press opens it,
+  and the click that ends the press must not close it. Whether it opened is what was asked
+  for (unless cancelled), not `open` read back: on a framework that answers later the press
+  looked refused, and its click closed the menu it had opened.
+- **The pressed button is kept from taking focus** for a press that opens a menu
+  (`mousedown` is prevented): the browser gives the button focus after the handlers, which
+  is before or after the menu took it depending on when the framework drew.
+- **A modal menu is not an inert page.** Its trigger must stay live, so the page keeps its
+  scroll locked and a press outside is swallowed (it closes the menu and reaches nothing,
+  its click included); nothing is made inert.
 - **A context menu that is asked to move is not closed first.** A second secondary press in
   its area begins outside the popup; closing for it and opening again depends on when a
   caller who holds `open` answers, and the menu ended closed on some frameworks. The press
@@ -199,6 +219,21 @@ note. Three places hold them:
 - **Run the task, not the script, when a build stands between them.** `bun
   tests/conformance/run.ts` plays whatever the fixtures were last built from; `vp run
   conformance` builds them first. Three identical failures in a row were a stale build.
+- **Several pages at once is for Chromium.** The conformance run plays six subjects at a time
+  there (352 s one at a time, 120 s with six and its timed scenarios alone, the same results). Firefox gained nothing from
+  three and failed one run in two, each time on a scenario that times a press or looks for
+  one frame: it and WebKit play one at a time. Scenarios that measure a wait (`hover`,
+  `dialog`) are played with nothing else running, in any engine. A check that fails one run
+  in two is not a check.
+- **Tasks a task `dependsOn` run side by side; a `&&` chain runs in order.** The gates that
+  read nothing another writes are dependencies of one task (35 s together, 57 s in a row);
+  the rehearsal `dependsOn` the packing, which it reads.
+- **A task is given only the environment it names** (`cache.env`). `BROWSERS` was set in CI
+  and never reached the test configuration: the core's tests ran in Chromium and Firefox
+  whatever was asked, and never in WebKit. It showed the day each CI job installed one
+  browser only. A variable a task reads is listed in its `cache.env`.
+- **A git hook holds the push's connection open.** The pre-push hook is the quick checks
+  only; the full `vp run prepush` is run by hand, and by CI.
 - **A browser reports some faults to the window, not as an exception** (a resize observer
   that could not deliver within a frame). Whether a test runner's "page error" hears them
   varied between this machine and CI: the conformance page listens for the window's `error`

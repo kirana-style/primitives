@@ -11,7 +11,9 @@ import {
   Fieldset,
   Form,
   HoverCard,
+  Combobox,
   ContextMenu,
+  Listbox,
   Menu,
   Menubar,
   Meter,
@@ -51,6 +53,9 @@ export function App() {
   const [fruit, setFruit] = useState<string | null>("Banana")
   const [action, setAction] = useState("none")
   const [picked, setPicked] = useState("none")
+  const [chosen, setChosen] = useState<string[]>(["Banana"])
+  const [pick, setPick] = useState<string | null>(null)
+  const [outside, setOutside] = useState(0)
   const [view, setView] = useState("list")
   const [presses, setPresses] = useState(0)
   const [locked, setLocked] = useState(false)
@@ -638,6 +643,124 @@ export function App() {
           </Menu.Root>
         </Menubar>
         <output data-testid="mb1-output">{picked}</output>
+      </section>
+      <section data-fixture="listbox">
+        <Listbox.Root
+          id="lb1"
+          aria-label="Fruit"
+          value={chosen}
+          onValueChange={(next) => setChosen(next as string[])}
+          data-testid="lb1"
+        >
+          {FRUITS.map((each) => (
+            <Listbox.Item
+              key={each}
+              value={each}
+              disabled={each === "Blueberry"}
+              className="item"
+              data-testid={`lb1-${each}`}
+            >
+              <span>{each}</span>
+              <Listbox.ItemIndicator>✓</Listbox.ItemIndicator>
+            </Listbox.Item>
+          ))}
+        </Listbox.Root>
+        <Listbox.Root id="lb2" aria-label="Plans" multiple data-testid="lb2">
+          <Listbox.Group id="lb2-g" data-testid="lb2-group">
+            <Listbox.GroupLabel data-testid="lb2-label">Plans</Listbox.GroupLabel>
+            {PLANS.map((each) => (
+              <Listbox.Item key={each} value={each} className="item" data-testid={`lb2-${each}`}>
+                <span>{each}</span>
+              </Listbox.Item>
+            ))}
+          </Listbox.Group>
+        </Listbox.Root>
+        <output data-testid="lb1-output">{chosen.join(",")}</output>
+      </section>
+      <section data-fixture="combobox">
+        <form data-testid="cb1-form">
+          <Combobox.Root
+            id="cb1"
+            name="pick"
+            value={pick}
+            onValueChange={(next) => setPick(next as string | null)}
+          >
+            <Combobox.Input aria-label="Fruit" data-testid="cb1-input" />
+            <Combobox.Trigger aria-label="Show fruits" data-testid="cb1-trigger">
+              ▾
+            </Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner sideOffset={4} data-testid="cb1-positioner">
+                <Combobox.Popup className="popup" aria-label="Fruits" data-testid="cb1-popup">
+                  {FRUITS.map((each) => (
+                    <Combobox.Item
+                      key={each}
+                      value={each}
+                      id={`cb1-${each}`}
+                      disabled={each === "Blueberry"}
+                      className="item"
+                      data-testid={`cb1-${each}`}
+                    >
+                      <span>{each}</span>
+                      <Combobox.ItemIndicator>✓</Combobox.ItemIndicator>
+                    </Combobox.Item>
+                  ))}
+                  <Combobox.Empty data-testid="cb1-empty">No fruit</Combobox.Empty>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>
+        <output data-testid="cb1-output">{pick ?? "none"}</output>
+      </section>
+      <section data-fixture="menu-more">
+        <div className="bar">
+          <button type="button" data-testid="mm1-outside" onClick={() => setOutside(outside + 1)}>
+            Outside
+          </button>
+          <Menu.Root id="mm1" modal>
+            <Menu.Trigger data-testid="mm1-trigger">Modal</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="mm1-positioner">
+                <Menu.Popup className="popup" data-testid="mm1-popup">
+                  <Menu.Item className="item" data-testid="mm1-plain">
+                    Plain
+                  </Menu.Item>
+                  <Menu.LinkItem className="item" href="#mm1-linked" data-testid="mm1-link">
+                    Link
+                  </Menu.LinkItem>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+        <Menubar id="vb1" orientation="vertical" className="column" data-testid="vb1">
+          <Menu.Root id="vb1a">
+            <Menu.Trigger data-testid="vb1-one">One</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="vb1a-positioner">
+                <Menu.Popup className="popup" data-testid="vb1a-popup">
+                  <Menu.Item className="item" data-testid="vb1a-x">
+                    Alpha
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root id="vb1b">
+            <Menu.Trigger data-testid="vb1-two">Two</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="vb1b-positioner">
+                <Menu.Popup className="popup" data-testid="vb1b-popup">
+                  <Menu.Item className="item" data-testid="vb1b-x">
+                    Beta
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>
+        <output data-testid="mm1-output">{outside}</output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

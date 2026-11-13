@@ -27,7 +27,22 @@ import {
   KuiHoverCardPortal,
   KuiHoverCardPositioner,
   KuiHoverCardTrigger,
+  KuiCombobox,
+  KuiComboboxEmpty,
+  KuiComboboxHiddenInput,
+  KuiComboboxInput,
+  KuiComboboxItem,
+  KuiComboboxItemIndicator,
+  KuiComboboxPopup,
+  KuiComboboxPortal,
+  KuiComboboxPositioner,
+  KuiComboboxTrigger,
   KuiContextMenuTrigger,
+  KuiListbox,
+  KuiListboxGroup,
+  KuiListboxGroupLabel,
+  KuiListboxItem,
+  KuiListboxItemIndicator,
   KuiMenu,
   KuiMenubar,
   KuiMenuCheckboxItem,
@@ -35,6 +50,7 @@ import {
   KuiMenuGroup,
   KuiMenuGroupLabel,
   KuiMenuItem,
+  KuiMenuLinkItem,
   KuiMenuPopup,
   KuiMenuPortal,
   KuiMenuPositioner,
@@ -146,7 +162,22 @@ import {
     KuiHoverCardPortal,
     KuiHoverCardPositioner,
     KuiHoverCardTrigger,
+    KuiCombobox,
+    KuiComboboxEmpty,
+    KuiComboboxHiddenInput,
+    KuiComboboxInput,
+    KuiComboboxItem,
+    KuiComboboxItemIndicator,
+    KuiComboboxPopup,
+    KuiComboboxPortal,
+    KuiComboboxPositioner,
+    KuiComboboxTrigger,
     KuiContextMenuTrigger,
+    KuiListbox,
+    KuiListboxGroup,
+    KuiListboxGroupLabel,
+    KuiListboxItem,
+    KuiListboxItemIndicator,
     KuiMenu,
     KuiMenubar,
     KuiMenuCheckboxItem,
@@ -154,6 +185,7 @@ import {
     KuiMenuGroup,
     KuiMenuGroupLabel,
     KuiMenuItem,
+    KuiMenuLinkItem,
     KuiMenuPopup,
     KuiMenuPortal,
     KuiMenuPositioner,
@@ -786,6 +818,104 @@ import {
         </div>
         <output data-testid="mb1-output">{{ picked() }}</output>
       </section>
+      <section data-fixture="listbox">
+        <div kuiListbox [kuiId]="'lb1'" aria-label="Fruit" [(value)]="chosen" data-testid="lb1">
+          @for (each of fruits; track each) {
+            <div
+              kuiListboxItem
+              [value]="each"
+              [disabled]="each === 'Blueberry'"
+              class="item"
+              [attr.data-testid]="'lb1-' + each"
+            >
+              <span>{{ each }}</span>
+              <span *kuiListboxItemIndicator>✓</span>
+            </div>
+          }
+        </div>
+        <div kuiListbox [kuiId]="'lb2'" aria-label="Plans" [multiple]="true" data-testid="lb2">
+          <div kuiListboxGroup [kuiId]="'lb2-g'" data-testid="lb2-group">
+            <div kuiListboxGroupLabel data-testid="lb2-label">Plans</div>
+            @for (each of plans; track each) {
+              <div kuiListboxItem [value]="each" class="item" [attr.data-testid]="'lb2-' + each">
+                <span>{{ each }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <output data-testid="lb1-output">{{ chosen()?.join(",") }}</output>
+      </section>
+      <section data-fixture="combobox">
+        <form data-testid="cb1-form">
+          <ng-container kuiCombobox [kuiId]="'cb1'" [name]="'pick'" [(value)]="pick">
+            <input kuiComboboxInput aria-label="Fruit" data-testid="cb1-input" />
+            <button kuiComboboxTrigger aria-label="Show fruits" data-testid="cb1-trigger">▾</button>
+            <ng-template kuiComboboxPortal>
+              <div kuiComboboxPositioner [sideOffset]="4" data-testid="cb1-positioner">
+                <div kuiComboboxPopup class="popup" aria-label="Fruits" data-testid="cb1-popup">
+                  @for (each of fruits; track each) {
+                    <div
+                      kuiComboboxItem
+                      [value]="each"
+                      [kuiId]="'cb1-' + each"
+                      [disabled]="each === 'Blueberry'"
+                      class="item"
+                      [attr.data-testid]="'cb1-' + each"
+                    >
+                      <span>{{ each }}</span>
+                      <span *kuiComboboxItemIndicator>✓</span>
+                    </div>
+                  }
+                  <div *kuiComboboxEmpty data-testid="cb1-empty">No fruit</div>
+                </div>
+              </div>
+            </ng-template>
+            <input kuiComboboxHiddenInput />
+          </ng-container>
+        </form>
+        <output data-testid="cb1-output">{{ pick() ?? "none" }}</output>
+      </section>
+      <section data-fixture="menu-more">
+        <div class="bar">
+          <button type="button" data-testid="mm1-outside" (click)="outside.set(outside() + 1)">
+            Outside
+          </button>
+          <ng-container kuiMenu [kuiId]="'mm1'" [modal]="true">
+            <button kuiMenuTrigger data-testid="mm1-trigger">Modal</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="mm1-positioner">
+                <div kuiMenuPopup class="popup" data-testid="mm1-popup">
+                  <div kuiMenuItem class="item" data-testid="mm1-plain">Plain</div>
+                  <a kuiMenuLinkItem class="item" href="#mm1-linked" data-testid="mm1-link">Link</a>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+        <div kuiMenubar [kuiId]="'vb1'" [orientation]="'vertical'" class="column" data-testid="vb1">
+          <ng-container kuiMenu [kuiId]="'vb1a'">
+            <button kuiMenuTrigger data-testid="vb1-one">One</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="vb1a-positioner">
+                <div kuiMenuPopup class="popup" data-testid="vb1a-popup">
+                  <div kuiMenuItem class="item" data-testid="vb1a-x">Alpha</div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <ng-container kuiMenu [kuiId]="'vb1b'">
+            <button kuiMenuTrigger data-testid="vb1-two">Two</button>
+            <ng-template kuiMenuPortal>
+              <div kuiMenuPositioner data-testid="vb1b-positioner">
+                <div kuiMenuPopup class="popup" data-testid="vb1b-popup">
+                  <div kuiMenuItem class="item" data-testid="vb1b-x">Beta</div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+        <output data-testid="mm1-output">{{ outside() }}</output>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -978,6 +1108,9 @@ export class App {
   protected readonly fruit = signal<unknown>("Banana")
   protected readonly action = signal("none")
   protected readonly picked = signal("none")
+  protected readonly chosen = signal<readonly unknown[] | undefined>(["Banana"])
+  protected readonly pick = signal<unknown>(null)
+  protected readonly outside = signal(0)
   protected readonly view = signal<unknown>("list")
   protected readonly presses = signal(0)
   protected readonly locked = signal(false)

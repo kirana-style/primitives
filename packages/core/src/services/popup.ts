@@ -25,6 +25,13 @@ export interface PopupOptions {
    * does not carry the code.
    */
   focus?: PopupFocus
+  /**
+   * Holds the page without making it inert: a press outside closes the popup and reaches
+   * nothing, and `hold` applies. For a menu, whose trigger must stay live. Read as it opens.
+   */
+  swallow?: () => boolean
+  /** Elements that count as inside it beside its trigger: a second button that opens it. */
+  branches?: () => readonly (Element | null | undefined)[]
   /** What a modal popup holds for as long as it is in the page, its exit included (`lockPage`). */
   hold?: (element: HTMLElement) => () => void
   /**
@@ -102,8 +109,9 @@ export function createPopup(options: PopupOptions): Popup {
       pushLayer({
         element,
         kind,
-        branches: () => [trigger],
+        branches: () => [trigger, ...(options.branches?.() ?? [])],
         modal,
+        ...(options.swallow ? { swallow: options.swallow } : {}),
         onEscape: (event) => dismiss("escape-key", event),
         onOutsidePress(event) {
           if (options.outsidePress?.(event) === false) return
@@ -166,7 +174,7 @@ export function createPopup(options: PopupOptions): Popup {
       ]
       // The page's scroll is held until the popup has left, so nothing shifts under its exit.
       const hold = options.hold
-      if (hold && options.modal?.()) {
+      if (hold && (options.modal?.() || options.swallow?.())) {
         let unlock: (() => void) | undefined
         stops.push(
           effect(() => {

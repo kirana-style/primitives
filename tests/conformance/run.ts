@@ -2586,6 +2586,20 @@ for (const engine of engines) {
           const whole = error instanceof Error ? error.message : String(error)
           const message = only ? whole : whole.split("\n")[0]
           log(`FAIL  ${label}  ${name}: ${message}`)
+          // Where the page stood when it failed: a failure that comes one run in several is
+          // read from this, since it cannot be replayed.
+          const stood = await page
+            .evaluate(() => ({
+              focus:
+                document.activeElement?.getAttribute("data-testid") ??
+                document.activeElement?.tagName,
+              focused: document.hasFocus(),
+              shown: document.visibilityState,
+            }))
+            .catch(() => undefined)
+          log(
+            `      the page then: ${JSON.stringify(stood)}; it reported: ${errors.join(" | ") || "nothing"}`
+          )
         }
         await context.close()
       }

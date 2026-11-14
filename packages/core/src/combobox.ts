@@ -626,7 +626,7 @@ export function createCombobox<Value = unknown>(
             "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),
             onPointerMove(event: PointerEvent) {
-              if (!off && !row.active.peek() && pointerMoved(event)) list.highlight(row)
+              if (pointerMoved(event) && !off && !row.active.peek()) list.highlight(row)
             },
             onClick(event: Event) {
               if (!options().disabled) choose(item, row.label(), event)

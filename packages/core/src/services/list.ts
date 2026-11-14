@@ -95,32 +95,59 @@ interface Entry extends ListRow {
   readonly active: Signal<boolean>
 }
 
-// Where the pointer was at the move before this one, in each page that has a list. A browser
-// sends a pointer move of its own to whatever comes to lie under a pointer that is at rest (a
-// list that opens there, a list that scrolls under it): that is not the person moving.
+// Whether the pointer has moved since a row last answered for it. A browser sends a pointer
+// move of its own to whatever comes to lie under a pointer that is at rest (a list that opens
+// there, a list that scrolls under it): that is not the person moving. But a pointer that did
+// move, to where a row then arrives, is owed that row: so a move is kept until a row hears one.
 const tracked = new WeakSet<Document>()
-let was: readonly [number, number] | undefined
-let now: readonly [number, number] | undefined
+let last: readonly number[] | undefined
+let owed = false
+let asked: Event | undefined
+let answer = false
+
+// On the screen and in the page, both: one engine's driver leaves the screen's at zero for
+// every move, and a page that is itself moved keeps the page's the same.
+function place(event: PointerEvent): readonly number[] {
+  return [event.screenX, event.screenY, event.clientX, event.clientY]
+}
 
 function track(page: Document) {
   if (tracked.has(page)) return
   tracked.add(page)
-  const see = (event: PointerEvent) => {
-    was = now
-    now = [event.screenX, event.screenY]
-  }
   // Before any row hears it: a row asks whether this move went anywhere.
-  page.addEventListener("pointermove", see, true)
-  page.addEventListener("pointerdown", see, true)
+  page.addEventListener(
+    "pointermove",
+    (event) => {
+      const at = place(event)
+      if (!last || at.some((value, index) => value !== last![index])) owed = true
+      last = at
+    },
+    true
+  )
+  // A press or a key begins again: what opens for it opens under a pointer at rest.
+  page.addEventListener(
+    "pointerdown",
+    (event) => {
+      last = place(event)
+      owed = false
+    },
+    true
+  )
+  page.addEventListener("keydown", () => void (owed = false), true)
 }
 
 /**
- * Whether a pointer move over a row is the pointer moving: it is somewhere it was not at the
- * move before. A move with nowhere before it is one.
+ * Whether a pointer move over a row is the pointer moving: it has gone somewhere since a row
+ * last answered, or since the last press or key. Asked first by a row, before anything that
+ * would let the move pass: the asking is what settles it.
  */
 export function pointerMoved(event: PointerEvent): boolean {
-  if (!was) return true
-  return was[0] !== event.screenX || was[1] !== event.screenY
+  if (event !== asked) {
+    asked = event
+    answer = owed
+    owed = false
+  }
+  return answer
 }
 
 /**

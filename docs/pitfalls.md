@@ -301,7 +301,12 @@ note. Three places hold them:
 - **A pointer move is not always the pointer moving.** A browser sends one to whatever comes
   to lie under a pointer at rest (a list that opens there, a list that scrolls under it). A
   row takes the highlight only when `pointerMoved(event)` (`services/list.ts`) says the
-  pointer is somewhere it was not.
+  pointer has gone somewhere since a row last answered, or since the last press or key: on
+  the screen or in the page, either. A pointer that moved to where a row then arrives is
+  owed that row; compared only with the move before, a popup placed a moment late never
+  took the highlight. Read from the
+  screen alone, no row followed the pointer in WebKit under its test driver, where every
+  move's `screenX` and `screenY` were the same.
 - **A one-time code is one input.** The cells are drawn; the input lies over them, so a
   phone's code from a message, a password manager, a paste and a screen reader meet a text
   field. What it refuses, it refuses in `beforeinput`; what a paste keeps is put back with

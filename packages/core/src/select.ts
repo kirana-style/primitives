@@ -358,7 +358,7 @@ export function createSelect<Value = unknown>(
             "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),
             onPointerMove(event: PointerEvent) {
-              if (off || row.active.peek() || !pointerMoved(event)) return
+              if (!pointerMoved(event) || off || row.active.peek()) return
               list.highlight(row, true)
             },
             onClick(event: Event) {

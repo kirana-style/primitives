@@ -151,8 +151,8 @@ describe("list navigation", () => {
 
   it("a pointer at rest is not a pointer moving, whatever comes to lie under it", () => {
     list()
-    const move = (x: number, y: number) => {
-      const event = new PointerEvent("pointermove", { screenX: x, screenY: y, bubbles: true })
+    const move = (x: number, y: number, at: "screen" | "client" = "screen") => {
+      const event = new PointerEvent("pointermove", { [`${at}X`]: x, [`${at}Y`]: y, bubbles: true })
       let moved: boolean | undefined
       const ask = (heard: Event) => void (moved = pointerMoved(heard as PointerEvent))
       document.body.addEventListener("pointermove", ask, { once: true })
@@ -164,6 +164,18 @@ describe("list navigation", () => {
     // The browser's own move for what opened or scrolled under it: the same place.
     expect(move(910, 900)).toBe(false)
     expect(move(910, 901)).toBe(true)
+    // An engine whose driver leaves the screen's place at zero: the page's place tells.
+    move(40, 40, "client")
+    expect(move(60, 40, "client")).toBe(true)
+    expect(move(60, 40, "client")).toBe(false)
+    // A pointer that moved to where no row was yet is owed the row that arrives there.
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 80, clientY: 40 }))
+    expect(move(80, 40, "client")).toBe(true)
+    expect(move(80, 40, "client")).toBe(false)
+    // But not after a key: what a key opens or scrolls comes under a pointer at rest.
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 90, clientY: 40 }))
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }))
+    expect(move(90, 40, "client")).toBe(false)
   })
 
   it("has no rows and no highlight once its element is gone", () => {

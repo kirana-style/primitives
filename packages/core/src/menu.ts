@@ -291,7 +291,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           "data-highlighted": flag(row.active.get()),
           "data-disabled": flag(off),
           onPointerMove(event: PointerEvent) {
-            if (off || row.active.peek() || passing(event) || !pointerMoved(event)) return
+            if (!pointerMoved(event) || off || row.active.peek() || passing(event)) return
             list.highlight(row, true)
           },
           onPointerLeave(event: PointerEvent) {
@@ -414,7 +414,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     "data-highlighted": flag(row.active.get()),
     "data-disabled": flag(disabled.get()),
     onPointerMove(event: PointerEvent) {
-      if (disabled.peek() || event.pointerType === "touch" || !pointerMoved(event)) return
+      if (!pointerMoved(event) || disabled.peek() || event.pointerType === "touch") return
       rested = [event.clientX, event.clientY]
       if (!row.active.peek()) {
         if (within.onTheWay?.(event)) return

@@ -107,7 +107,7 @@
     },
     "packages/angular": {
       "name": "@kirana-ui/angular",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kirana-ui/core": "workspace:*",
         "tslib": "catalog:",
@@ -125,14 +125,14 @@
     },
     "packages/core": {
       "name": "@kirana-ui/core",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@floating-ui/dom": "catalog:",
       },
     },
     "packages/react": {
       "name": "@kirana-ui/react",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kirana-ui/core": "workspace:*",
       },
@@ -149,7 +149,7 @@
     },
     "packages/solid": {
       "name": "@kirana-ui/solid",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kirana-ui/core": "workspace:*",
       },
@@ -165,7 +165,7 @@
     },
     "packages/svelte": {
       "name": "@kirana-ui/svelte",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kirana-ui/core": "workspace:*",
       },
@@ -180,11 +180,11 @@
     },
     "packages/vocabulary": {
       "name": "@kirana-ui/vocabulary",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "packages/vue": {
       "name": "@kirana-ui/vue",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@kirana-ui/core": "workspace:*",
       },

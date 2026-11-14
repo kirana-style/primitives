@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.1](https://github.com/kirana-style/primitives/compare/v0.1.0...v0.1.1) (2026-11-14)
+
+
+### Features
+
+* combobox and listbox on five adapters, and the menu's open rows ([#27](https://github.com/kirana-style/primitives/pull/27)) ([4dbf850](https://github.com/kirana-style/primitives/commit/4dbf850a36cba5a46acf41ad90c59891d428ee98))
+* context menu and menubar on five adapters ([#26](https://github.com/kirana-style/primitives/pull/26)) ([cb600d0](https://github.com/kirana-style/primitives/commit/cb600d01981b91e139251f777884da5b1eff51c0))
+* form controls follow their form's reset, fieldset and form attribute ([#21](https://github.com/kirana-style/primitives/pull/21)) ([0b67501](https://github.com/kirana-style/primitives/commit/0b67501677c404f9dde69d8decc76e3126ff24de))
+* list navigation as a service, and the menu on five adapters ([#25](https://github.com/kirana-style/primitives/pull/25)) ([260c06b](https://github.com/kirana-style/primitives/commit/260c06b8e3cf74cf96eabe47bca24d8d5b586c48))
+* navigation menu on five adapters ([#30](https://github.com/kirana-style/primitives/pull/30)) ([715844b](https://github.com/kirana-style/primitives/commit/715844bf36dac933ac5ad80e3449208e96db2284))
+* one popup layer under dialog, popover, tooltip, hover card and select ([#24](https://github.com/kirana-style/primitives/pull/24)) ([2808998](https://github.com/kirana-style/primitives/commit/2808998de1589b6f534339c5f8b3b98f956861b5))
+* one-time code input and resizable panels on five adapters ([#33](https://github.com/kirana-style/primitives/pull/33)) ([4c08657](https://github.com/kirana-style/primitives/commit/4c08657f853f523b9e95e781bb1a04ffc0069ac7))
+* several values in a combobox, and a list that carries only what it uses ([#32](https://github.com/kirana-style/primitives/pull/32)) ([06c4a93](https://github.com/kirana-style/primitives/commit/06c4a9348c6e322331de7fc58b56ec3792e6ccab))
+* toast, carousel, qr code and a text area that sizes itself ([#34](https://github.com/kirana-style/primitives/pull/34)) ([569f2c1](https://github.com/kirana-style/primitives/commit/569f2c1ae789228dd8756d7c6a63b918205fc2cf))
+* toggle group, toolbar and scroll area on five adapters ([#29](https://github.com/kirana-style/primitives/pull/29)) ([79ca74d](https://github.com/kirana-style/primitives/commit/79ca74d66320d1960a78fd07d7285f8858cea773))
+* virtualized lists, a command palette, and the combobox's and listbox's open rows ([#31](https://github.com/kirana-style/primitives/pull/31)) ([61c5a9a](https://github.com/kirana-style/primitives/commit/61c5a9af2b27c1957ee6ffb1627c26411bc4df48))
+
+
+### Bug fixes
+
+* react in strict mode, layers closing in any order, a row's hidden text ([#23](https://github.com/kirana-style/primitives/pull/23)) ([2d64afc](https://github.com/kirana-style/primitives/commit/2d64afc7005b863451fcf5f127595267a5f67fd7))
+
 ## 0.1.0 (2026-11-12)
 
 

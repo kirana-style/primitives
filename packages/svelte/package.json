@@ -93,6 +93,22 @@
       "svelte": "./src/otp.ts",
       "default": "./src/otp.ts"
     },
+    "./qr-code": {
+      "svelte": "./src/qr-code.ts",
+      "default": "./src/qr-code.ts"
+    },
+    "./autosize": {
+      "svelte": "./src/autosize.ts",
+      "default": "./src/autosize.ts"
+    },
+    "./carousel": {
+      "svelte": "./src/carousel.ts",
+      "default": "./src/carousel.ts"
+    },
+    "./toast": {
+      "svelte": "./src/toast.ts",
+      "default": "./src/toast.ts"
+    },
     "./popover": {
       "svelte": "./src/popover.ts",
       "default": "./src/popover.ts"

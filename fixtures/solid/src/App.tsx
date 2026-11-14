@@ -1,4 +1,9 @@
 import {
+  Autosize,
+  Carousel,
+  QrCode,
+  Toast,
+  createToaster,
   Accordion,
   AlertDialog,
   Avatar,
@@ -37,6 +42,8 @@ import {
 import { For, createSignal } from "solid-js"
 
 // A picture of one pixel, and an address that is not a picture.
+// A page's toasts are made once, apart from any component: a long time, so a test reads them.
+const toaster = createToaster({ duration: 600_000 })
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 const BROKEN = "data:image/png;base64,AAAA"
 // What the fixture writes for a field's validity, and its own check of a value.
@@ -78,6 +85,7 @@ export function App() {
   const [picked, setPicked] = createSignal("none")
   const [code, setCode] = createSignal("none")
   const [shares, setShares] = createSignal("25,75")
+  const [slide, setSlide] = createSignal("0")
   const [first, setFirst] = createSignal(0)
   const [ran, setRan] = createSignal("none")
   const [tags, setTags] = createSignal<string[]>(["New"])
@@ -1068,6 +1076,68 @@ export function App() {
           </Resizable.Panel>
         </Resizable.Group>
         <output data-testid="rs1-output">{shares()}</output>
+      </section>
+      <section data-fixture="pieces">
+        <QrCode.Root id="qr1" value="https://kirana.style" class="qr" data-testid="qr1">
+          <QrCode.Frame aria-label="A link" class="qr-frame" data-testid="qr1-frame">
+            <QrCode.Pattern data-testid="qr1-pattern" />
+          </QrCode.Frame>
+        </QrCode.Root>
+        <Autosize.Textarea aria-label="Note" rows={1} class="note" data-testid="au1" />
+        <Carousel.Root
+          id="cr1"
+          aria-label="Pictures"
+          class="carousel"
+          data-testid="cr1"
+          onIndexChange={(next: number) => setSlide(String(next))}
+        >
+          <Carousel.Viewport class="carousel-view" data-testid="cr1-view">
+            <Carousel.Item index={0} class="carousel-item" data-testid="cr1-0">
+              One
+            </Carousel.Item>
+            <Carousel.Item index={1} class="carousel-item" data-testid="cr1-1">
+              Two
+            </Carousel.Item>
+            <Carousel.Item index={2} class="carousel-item" data-testid="cr1-2">
+              Three
+            </Carousel.Item>
+          </Carousel.Viewport>
+          <Carousel.Previous data-testid="cr1-previous">Previous</Carousel.Previous>
+          <Carousel.Next data-testid="cr1-next">Next</Carousel.Next>
+          <Carousel.Indicator index={0} aria-label="Slide 1" data-testid="cr1-dot-0" />
+          <Carousel.Indicator index={1} aria-label="Slide 2" data-testid="cr1-dot-1" />
+          <Carousel.Indicator index={2} aria-label="Slide 3" data-testid="cr1-dot-2" />
+        </Carousel.Root>
+        <output data-testid="cr1-output">{slide()}</output>
+        <button
+          type="button"
+          data-testid="ts1-add"
+          onClick={() =>
+            toaster.add({ title: "Saved", description: "Your changes are kept.", type: "success" })
+          }
+        >
+          Add a toast
+        </button>
+        <button
+          type="button"
+          data-testid="ts1-brief"
+          onClick={() => toaster.add({ title: "Gone soon", duration: 300 })}
+        >
+          Add a brief toast
+        </button>
+        <Toast.Viewport id="ts1" toaster={toaster} class="toasts" data-testid="ts1">
+          <Toast.List>
+            {(toast) => (
+              <Toast.Root toast={toast()} class="toast" data-testid={`ts1-${toast().id}`}>
+                <Toast.Title class="toast-title">{toast().title}</Toast.Title>
+                <Toast.Description>{toast().description}</Toast.Description>
+                <Toast.Close aria-label="Close" data-testid={`ts1-${toast().id}-close`}>
+                  Close
+                </Toast.Close>
+              </Toast.Root>
+            )}
+          </Toast.List>
+        </Toast.Viewport>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

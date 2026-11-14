@@ -82,6 +82,23 @@ import {
   KuiMeterTrack,
   KuiMeterValue,
   KuiOtp,
+  KuiQrCode,
+  KuiQrCodeFrame,
+  KuiQrCodePattern,
+  KuiAutosizeTextarea,
+  KuiCarousel,
+  KuiCarouselIndicator,
+  KuiCarouselItem,
+  KuiCarouselNext,
+  KuiCarouselPrevious,
+  KuiCarouselViewport,
+  KuiToastClose,
+  KuiToastDescription,
+  KuiToastList,
+  KuiToastRoot,
+  KuiToastTitle,
+  KuiToastViewport,
+  createToaster,
   KuiOtpCaret,
   KuiOtpGroup,
   KuiOtpInput,
@@ -254,6 +271,22 @@ import {
     KuiMeterTrack,
     KuiMeterValue,
     KuiOtp,
+    KuiQrCode,
+    KuiQrCodeFrame,
+    KuiQrCodePattern,
+    KuiAutosizeTextarea,
+    KuiCarousel,
+    KuiCarouselIndicator,
+    KuiCarouselItem,
+    KuiCarouselNext,
+    KuiCarouselPrevious,
+    KuiCarouselViewport,
+    KuiToastClose,
+    KuiToastDescription,
+    KuiToastList,
+    KuiToastRoot,
+    KuiToastTitle,
+    KuiToastViewport,
     KuiOtpCaret,
     KuiOtpGroup,
     KuiOtpInput,
@@ -1263,6 +1296,96 @@ import {
         </div>
         <output data-testid="rs1-output">{{ shares() }}</output>
       </section>
+      <section data-fixture="pieces">
+        <div
+          kuiQrCode
+          [kuiId]="'qr1'"
+          [value]="'https://kirana.style'"
+          class="qr"
+          data-testid="qr1"
+        >
+          <svg kuiQrCodeFrame aria-label="A link" class="qr-frame" data-testid="qr1-frame">
+            <path kuiQrCodePattern data-testid="qr1-pattern" />
+          </svg>
+        </div>
+        <textarea
+          kuiAutosizeTextarea
+          aria-label="Note"
+          rows="1"
+          class="note"
+          data-testid="au1"
+        ></textarea>
+        <div
+          kuiCarousel
+          [kuiId]="'cr1'"
+          aria-label="Pictures"
+          class="carousel"
+          data-testid="cr1"
+          (indexChanged)="slide.set('' + $event.index)"
+        >
+          <div kuiCarouselViewport class="carousel-view" data-testid="cr1-view">
+            <div kuiCarouselItem [index]="0" class="carousel-item" data-testid="cr1-0">One</div>
+            <div kuiCarouselItem [index]="1" class="carousel-item" data-testid="cr1-1">Two</div>
+            <div kuiCarouselItem [index]="2" class="carousel-item" data-testid="cr1-2">Three</div>
+          </div>
+          <button kuiCarouselPrevious data-testid="cr1-previous">Previous</button>
+          <button kuiCarouselNext data-testid="cr1-next">Next</button>
+          <button
+            kuiCarouselIndicator
+            [index]="0"
+            aria-label="Slide 1"
+            data-testid="cr1-dot-0"
+          ></button>
+          <button
+            kuiCarouselIndicator
+            [index]="1"
+            aria-label="Slide 2"
+            data-testid="cr1-dot-1"
+          ></button>
+          <button
+            kuiCarouselIndicator
+            [index]="2"
+            aria-label="Slide 3"
+            data-testid="cr1-dot-2"
+          ></button>
+        </div>
+        <output data-testid="cr1-output">{{ slide() }}</output>
+        <button
+          type="button"
+          data-testid="ts1-add"
+          (click)="
+            toaster.add({ title: 'Saved', description: 'Your changes are kept.', type: 'success' })
+          "
+        >
+          Add a toast
+        </button>
+        <button
+          type="button"
+          data-testid="ts1-brief"
+          (click)="toaster.add({ title: 'Gone soon', duration: 300 })"
+        >
+          Add a brief toast
+        </button>
+        <div kuiToastViewport [kuiId]="'ts1'" [toaster]="toaster" class="toasts" data-testid="ts1">
+          <div
+            *kuiToastList="let toast"
+            kuiToastRoot
+            [toast]="toast"
+            class="toast"
+            [attr.data-testid]="'ts1-' + toast.id"
+          >
+            <div kuiToastTitle class="toast-title">{{ toast.title }}</div>
+            <div kuiToastDescription>{{ toast.description }}</div>
+            <button
+              kuiToastClose
+              aria-label="Close"
+              [attr.data-testid]="'ts1-' + toast.id + '-close'"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -1457,6 +1580,9 @@ export class App {
   protected readonly picked = signal("none")
   protected readonly code = signal("none")
   protected readonly shares = signal("25,75")
+  protected readonly slide = signal("0")
+  // A page's toasts are made once: a long time, so a test reads them.
+  protected readonly toaster = createToaster({ duration: 600_000 })
   protected readonly rounded = (sizes: number[]) => sizes.map(Math.round).join(",")
   protected readonly align = signal<readonly unknown[] | undefined>(["left"])
   protected readonly tall = signal(false)

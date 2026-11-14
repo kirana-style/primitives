@@ -2195,6 +2195,128 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await share()) === "10", "Home takes the panel to its least")
   },
 
+  async pieces({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    /** Waits for what a scroll or a timer brings: neither is done when the press returns. */
+    const until = async (read: () => Promise<unknown>, wanted: unknown, message: string) => {
+      const from = Date.now()
+      let got = await read()
+      while (got !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+        got = await read()
+      }
+      expect(got === wanted, `${message} (it is ${String(got)})`)
+      await settled(page)
+    }
+    await id("qr1").scrollIntoViewIfNeeded()
+    expect((await attribute("qr1-frame", "role")) === "img", "a code is an image")
+    expect(
+      (await attribute("qr1-frame", "viewBox")) === "0 0 25 25",
+      "a module to the unit, in the smallest version that holds the text"
+    )
+    expect(
+      ((await attribute("qr1-pattern", "d")) ?? "").startsWith("M0 0h7v1h-7z"),
+      "its dark modules are one path, from the finder in the corner"
+    )
+    const drawn = await id("qr1-frame").evaluate((element) => element.getBoundingClientRect().width)
+    expect(drawn === 96, `the drawing fills what the design gives it (${drawn})`)
+
+    const tall = () => id("au1").evaluate((element) => element.getBoundingClientRect().height)
+    expect((await tall()) === 30, `a text area begins a line tall (${await tall()})`)
+    await id("au1").focus()
+    await page.keyboard.type("one")
+    await key("Enter")
+    await page.keyboard.type("two")
+    await until(tall, 50, "it grows with its text")
+    await snapshot("a text area two lines tall")
+    for (let line = 0; line < 6; line++) await page.keyboard.press("Enter")
+    await until(tall, 120, "and stops at what the design allows")
+    await key("ControlOrMeta+a")
+    await key("Backspace")
+    await until(tall, 30, "and shrinks again when the text goes")
+
+    const slide = () => id("cr1-output").textContent()
+    expect((await attribute("cr1", "role")) === "region", "a carousel is a region")
+    expect((await attribute("cr1", "aria-roledescription")) === "carousel", "called a carousel")
+    expect((await attribute("cr1-0", "aria-roledescription")) === "slide", "of slides")
+    expect((await attribute("cr1-0", "data-current")) === "", "the first is where it begins")
+    expect((await attribute("cr1-previous", "disabled")) === "", "with nothing before it")
+    expect((await attribute("cr1-next", "disabled")) === null, "and more after")
+    await id("cr1-next").click()
+    await until(slide, "1", "Next goes on a slide")
+    await until(() => attribute("cr1-1", "data-current"), "", "which is the current one")
+    await until(() => attribute("cr1-previous", "disabled"), null, "and Previous can be pressed")
+    expect((await attribute("cr1-dot-1", "aria-current")) === "true", "its button says so")
+    const scrolled = await id("cr1-view").evaluate((element) => element.scrollLeft)
+    expect(scrolled === 300, `the view has scrolled to it (${scrolled})`)
+    await snapshot("the second slide")
+    await id("cr1-dot-2").click()
+    await until(slide, "2", "a slide's button goes to it")
+    await until(() => attribute("cr1-next", "disabled"), "", "the last has nothing after it")
+    await id("cr1-view").focus()
+    await key("ArrowLeft")
+    await until(slide, "1", "the arrows move it when the view has focus")
+    await key("Home")
+    await until(slide, "0", "and Home goes to the first")
+    await id("cr1-view").evaluate((element) => element.scrollTo({ left: 600 }))
+    await until(slide, "2", "scrolled by hand, it says where it came to rest")
+    await id("cr1-view").evaluate((element) => element.scrollTo({ left: 0 }))
+    await until(slide, "0", "and back")
+
+    expect((await attribute("ts1", "role")) === "region", "the toasts are a region")
+    expect((await attribute("ts1", "aria-live")) === "polite", "that is read when it changes")
+    expect(!(await present("ts1-toast-1")), "with nothing in it to begin with")
+    await id("ts1-add").click()
+    await settled(page)
+    expect(await present("ts1-toast-1"), "a toast is drawn when it is added")
+    expect(
+      (await attribute("ts1-toast-1", "data-type")) === "success",
+      "of the kind it was added as"
+    )
+    expect(
+      (await attribute("ts1-toast-1", "aria-labelledby")) === "ts1-toast-1-title",
+      "named by its title"
+    )
+    expect(
+      (await attribute("ts1-toast-1", "aria-describedby")) === "ts1-toast-1-description",
+      "and described by what it says"
+    )
+    await snapshot("a toast")
+    await id("ts1-add").click()
+    await settled(page)
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid="ts1"] > [role="dialog"]')]
+        .map(
+          (each) =>
+            `${each.getAttribute("data-testid")}:${(each as HTMLElement).style.getPropertyValue("--toast-index")}`
+        )
+        .join(" ")
+    )
+    expect(order === "ts1-toast-2:0 ts1-toast-1:1", `the newest is first (${order})`)
+    await snapshot("two toasts")
+    await id("ts1-toast-2-close").click()
+    await until(() => present("ts1-toast-2"), false, "its button closes it, once its motion ends")
+    await until(
+      () => id("ts1-toast-1").evaluate((each) => each.style.getPropertyValue("--toast-index")),
+      "0",
+      "and the one behind comes forward"
+    )
+    await id("ts1-brief").click()
+    await settled(page)
+    expect(await present("ts1-toast-3"), "a brief toast is drawn")
+    await until(() => present("ts1-toast-3"), false, "and leaves when its time is up")
+    await key("F6")
+    expect((await focused()) === "ts1", "F6 goes to the toasts")
+    await key("Tab")
+    expect((await focused()) === "ts1-toast-1", "where each is a stop")
+    await key("Escape")
+    await until(() => present("ts1-toast-1"), false, "and Escape closes the one focus is on")
+    expect((await focused()) === "ts1", "focus stays with the toasts")
+    await snapshot("no toast left")
+  },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)
@@ -2374,6 +2496,8 @@ const second: Record<string, (run: Run) => Promise<void>> = {
 
 const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal", "data-hk"])
 const VARIABLES = new Set<string>()
+// States whose value is the caller's own: a row's place, the kind a toast was added as.
+const FREE = ["data-index", "data-type"]
 const VALUES: Record<string, string[]> = {}
 for (const component of Object.values(vocabulary)) {
   for (const part of Object.values<PartDefinition>(component)) {
@@ -2534,49 +2658,52 @@ for (const engine of engines) {
             )
             expect(unnamed.length === 0, `variables not in the vocabulary: ${unnamed.join(", ")}`)
             // Faults met in other libraries, held out of every state of every component.
-            const faults = await page.evaluate((values) => {
-              const found: string[] = []
-              const scope = [...document.querySelectorAll("main *, [data-kirana-portal] *")]
-              const called = (element: Element) =>
-                element.getAttribute("data-testid") ?? element.tagName.toLowerCase()
-              const ids = new Map<string, number>()
-              for (const element of scope) {
-                if (element.id) ids.set(element.id, (ids.get(element.id) ?? 0) + 1)
-                for (const each of element.attributes) {
-                  // `data-x="false"` matches `[data-x]`: a state that is off is absent.
-                  const allowed = values[each.name]
-                  // A thumb's `data-index` is a number: the one state that is neither.
-                  if (allowed && each.name !== "data-index" && !allowed.includes(each.value))
-                    found.push(`${called(element)} has ${each.name}="${each.value}"`)
-                }
-                // A reference names an element that is in the page.
-                for (const attribute of [
-                  "aria-controls",
-                  "aria-labelledby",
-                  "aria-describedby",
-                  "for",
-                ]) {
-                  for (const named of (element.getAttribute(attribute) ?? "")
-                    .split(" ")
-                    .filter(Boolean)) {
-                    if (!document.getElementById(named))
-                      found.push(
-                        `${called(element)} ${attribute} names "${named}", which is not in the page`
-                      )
+            const faults = await page.evaluate(
+              ({ values, free }) => {
+                const found: string[] = []
+                const scope = [...document.querySelectorAll("main *, [data-kirana-portal] *")]
+                const called = (element: Element) =>
+                  element.getAttribute("data-testid") ?? element.tagName.toLowerCase()
+                const ids = new Map<string, number>()
+                for (const element of scope) {
+                  if (element.id) ids.set(element.id, (ids.get(element.id) ?? 0) + 1)
+                  for (const each of element.attributes) {
+                    // `data-x="false"` matches `[data-x]`: a state that is off is absent.
+                    const allowed = values[each.name]
+                    // A thumb's `data-index` is a number: the one state that is neither.
+                    if (allowed && !free.includes(each.name) && !allowed.includes(each.value))
+                      found.push(`${called(element)} has ${each.name}="${each.value}"`)
+                  }
+                  // A reference names an element that is in the page.
+                  for (const attribute of [
+                    "aria-controls",
+                    "aria-labelledby",
+                    "aria-describedby",
+                    "for",
+                  ]) {
+                    for (const named of (element.getAttribute(attribute) ?? "")
+                      .split(" ")
+                      .filter(Boolean)) {
+                      if (!document.getElementById(named))
+                        found.push(
+                          `${called(element)} ${attribute} names "${named}", which is not in the page`
+                        )
+                    }
                   }
                 }
-              }
-              for (const [repeated, count] of ids)
-                if (count > 1) found.push(`${count} elements have the id "${repeated}"`)
-              // Modality is `inert` on what is behind, never the page made unpressable.
-              for (const root of [document.documentElement, document.body]) {
-                if (root.style.pointerEvents !== "")
-                  found.push(
-                    `${root.tagName.toLowerCase()} has pointer-events: ${root.style.pointerEvents}`
-                  )
-              }
-              return [...new Set(found)]
-            }, VALUES)
+                for (const [repeated, count] of ids)
+                  if (count > 1) found.push(`${count} elements have the id "${repeated}"`)
+                // Modality is `inert` on what is behind, never the page made unpressable.
+                for (const root of [document.documentElement, document.body]) {
+                  if (root.style.pointerEvents !== "")
+                    found.push(
+                      `${root.tagName.toLowerCase()} has pointer-events: ${root.style.pointerEvents}`
+                    )
+                }
+                return [...new Set(found)]
+              },
+              { values: VALUES, free: FREE }
+            )
             expect(faults.length === 0, faults.join("; "))
           },
         }

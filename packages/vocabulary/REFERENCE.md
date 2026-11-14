@@ -1012,6 +1012,129 @@ A mark between groups of cells.
 
 A caret drawn in the active cell while it is empty.
 
+## QrCode
+
+### QrCode.Root
+
+What holds the code.
+
+| Attribute | When |
+| --- | --- |
+| `data-invalid` | Present when the value is longer than a code holds. |
+
+### QrCode.Frame
+
+The drawing: an `<svg>` a module to the unit.
+
+### QrCode.Pattern
+
+The dark modules: one `<path>`, filled by the design.
+
+## Autosize
+
+### Autosize.Textarea
+
+A `<textarea>` as tall as its text. Its `height` is written; `min-height` and `max-height` are the design's.
+
+## Carousel
+
+### Carousel.Root
+
+The carousel: a region, named by the caller.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the slides go across or down. |
+
+### Carousel.Viewport
+
+What scrolls. The slides are its children; the design snaps them (`scroll-snap-type`) and says whether a step glides (`scroll-behavior`).
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the slides go across or down. |
+
+### Carousel.Item
+
+One slide.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the slides go across or down. |
+| `data-current` | Present on the slide the view is at, and on its button. |
+
+### Carousel.Previous
+
+Goes back a slide.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Carousel.Next
+
+Goes on a slide.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Carousel.Indicator
+
+A button for one slide.
+
+| Attribute | When |
+| --- | --- |
+| `data-current` | Present on the slide the view is at, and on its button. |
+
+## Toast
+
+### Toast.Viewport
+
+Where the toasts are drawn: a region that is always in the page.
+
+| Attribute | When |
+| --- | --- |
+| `data-expanded` | Present while the pointer or focus is on the stack: the toasts are spread out, and wait. |
+
+### Toast.Root
+
+One toast.
+
+| Attribute | When |
+| --- | --- |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-expanded` | Present while the pointer or focus is on the stack: the toasts are spread out, and wait. |
+| `data-type` | The kind the toast was added as. |
+| `data-limited` | Present on a toast behind as many as are shown at once. |
+| `data-swiping` | Present while the toast is dragged. |
+| `data-swipe-direction` (left, right, up, down) | The way the toast was dragged out, once it has been. |
+
+| Variable | Holds |
+| --- | --- |
+| `--toast-index` | Its place in the stack: 0 for the newest. |
+| `--toast-height` | Its height. |
+| `--toast-offset-y` | The height of the toasts in front of it. |
+| `--toast-swipe-movement-x` | How far it has been dragged across. |
+| `--toast-swipe-movement-y` | How far it has been dragged up or down. |
+
+### Toast.Title
+
+What the toast is called.
+
+### Toast.Description
+
+What the toast says.
+
+### Toast.Close
+
+Closes the toast.
+
+### Toast.Action
+
+A button of the toast's own; pressing it closes the toast too.
+
 ## Popover
 
 ### Popover.Trigger

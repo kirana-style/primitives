@@ -338,6 +338,14 @@ note. Three places hold them:
   that could not deliver within a frame). Whether a test runner's "page error" hears them
   varied between this machine and CI: the conformance page listens for the window's `error`
   itself, so the two fail alike.
+- **A check that fails now and then is replayed with every processor busy**, not waited for:
+  a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
+  virtual list's check failed four runs in six that way and never alone; it had read a row's
+  `data-highlighted` the moment the row had focus, a render before the framework drew it.
+  Focus is the core's and at once; an attribute is the framework's next render. A check
+  waits for the page to settle after waiting for focus.
+- **WebKit runs on this machine** once its system libraries are there
+  (`sudo env "PATH=$PATH" bunx playwright install-deps webkit`): `--browser webkit`.
 - **CI's fonts and speed are not this machine's.** `bun tests/conformance/run.ts react
   --only menu --slow 6` plays one scenario with the processor slowed.
 - **A probe that reads layout can hide the fault it looks for.** A scroll jump disappeared

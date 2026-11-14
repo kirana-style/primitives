@@ -1990,11 +1990,15 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     }
     const drawn = () =>
       page.evaluate(() => document.querySelectorAll('[data-testid="vl1"] [role="option"]').length)
-    const until = (testid: string) =>
-      page.waitForFunction(
+    // Focus is on a row the moment it is in the page; what a framework draws for it (that it
+    // is highlighted) comes with its next render. Under load that is not at once.
+    const until = async (testid: string) => {
+      await page.waitForFunction(
         (wanted) => document.activeElement?.getAttribute("data-testid") === wanted,
         testid
       )
+      await settled(page)
+    }
     await id("vl1").scrollIntoViewIfNeeded()
     const scrolled = await page.evaluate(() => window.scrollY)
     expect((await drawn()) <= 13, "a window of the ten thousand rows is in the page")

@@ -19,6 +19,7 @@
     Menubar,
     Meter,
     NavigationMenu,
+    Otp,
     Popover,
     Progress,
     RadioGroup,
@@ -27,6 +28,7 @@
     Slider,
     Switch,
     Tabs,
+    Resizable,
     ScrollArea,
     Toggle,
     ToggleGroup,
@@ -78,6 +80,8 @@
   let fruit = $state<string | null>("Banana")
   let action = $state("none")
   let picked = $state("none")
+  let code = $state("none")
+  let shares = $state("25,75")
   let first = $state(0)
   let ran = $state<unknown>("none")
   let tags = $state<readonly unknown[] | undefined>(["New"])
@@ -890,6 +894,53 @@
         </Combobox.Portal>
       </Combobox.Root>
     </form>
+  </section>
+  <section data-fixture="widgets">
+    <form data-testid="otp1-form">
+      <Otp.Root
+        id="otp1"
+        length={4}
+        name="code"
+        class="otp"
+        data-testid="otp1"
+        onComplete={(next: string) => (code = next)}
+      >
+        <Otp.Input aria-label="Code" class="otp-input" data-testid="otp1-input" />
+        <Otp.Group class="otp-group">
+          <Otp.Slot index={0} class="otp-slot" data-testid="otp1-0">
+            <Otp.Caret class="otp-caret" />
+          </Otp.Slot>
+          <Otp.Slot index={1} class="otp-slot" data-testid="otp1-1">
+            <Otp.Caret class="otp-caret" />
+          </Otp.Slot>
+        </Otp.Group>
+        <Otp.Separator class="otp-mark" />
+        <Otp.Group class="otp-group">
+          <Otp.Slot index={2} class="otp-slot" data-testid="otp1-2">
+            <Otp.Caret class="otp-caret" />
+          </Otp.Slot>
+          <Otp.Slot index={3} class="otp-slot" data-testid="otp1-3">
+            <Otp.Caret class="otp-caret" />
+          </Otp.Slot>
+        </Otp.Group>
+      </Otp.Root>
+    </form>
+    <output data-testid="otp1-output">{code}</output>
+    <Resizable.Group
+      id="rs1"
+      class="split"
+      data-testid="rs1"
+      onSizesChange={(next: number[]) => (shares = next.map(Math.round).join(","))}
+    >
+      <Resizable.Panel defaultSize={25} minSize={10} class="split-panel" data-testid="rs1-a">
+        A
+      </Resizable.Panel>
+      <Resizable.Handle aria-label="Resize" class="split-bar" data-testid="rs1-bar" />
+      <Resizable.Panel defaultSize={75} class="split-panel" data-testid="rs1-b">
+        B
+      </Resizable.Panel>
+    </Resizable.Group>
+    <output data-testid="rs1-output">{shares}</output>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

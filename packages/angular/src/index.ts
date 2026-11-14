@@ -77,6 +77,8 @@ export {
   KuiNavigationMenuTrigger,
   KuiNavigationMenuViewport,
 } from "./navigation-menu"
+export { KuiOtp, KuiOtpCaret, KuiOtpGroup, KuiOtpInput, KuiOtpSeparator, KuiOtpSlot } from "./otp"
+export { KuiResizableGroup, KuiResizableHandle, KuiResizablePanel } from "./resizable"
 export {
   KuiPopover,
   KuiPopoverClose,

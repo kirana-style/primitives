@@ -89,6 +89,10 @@
       "svelte": "./src/navigation-menu.ts",
       "default": "./src/navigation-menu.ts"
     },
+    "./otp": {
+      "svelte": "./src/otp.ts",
+      "default": "./src/otp.ts"
+    },
     "./popover": {
       "svelte": "./src/popover.ts",
       "default": "./src/popover.ts"
@@ -100,6 +104,10 @@
     "./radio-group": {
       "svelte": "./src/radio-group.ts",
       "default": "./src/radio-group.ts"
+    },
+    "./resizable": {
+      "svelte": "./src/resizable.ts",
+      "default": "./src/resizable.ts"
     },
     "./scroll-area": {
       "svelte": "./src/scroll-area.ts",

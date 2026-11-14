@@ -5,7 +5,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, keyed, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { byPlace } from "./services/list-places.ts"
-import { createList } from "./services/list.ts"
+import { createList, pointerMoved } from "./services/list.ts"
 import { createFormControl } from "./services/form-control.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
 import { createPopup } from "./services/popup.ts"
@@ -625,8 +625,8 @@ export function createCombobox<Value = unknown>(
             "data-selected": flag(selected.get()),
             "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),
-            onPointerMove() {
-              if (!off && !row.active.peek()) list.highlight(row)
+            onPointerMove(event: PointerEvent) {
+              if (!off && !row.active.peek() && pointerMoved(event)) list.highlight(row)
             },
             onClick(event: Event) {
               if (!options().disabled) choose(item, row.label(), event)

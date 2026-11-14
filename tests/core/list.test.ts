@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
-import { createList } from "../../packages/core/src/services/list.ts"
+import { createList, pointerMoved } from "../../packages/core/src/services/list.ts"
 import type { ListRow } from "../../packages/core/src/services/list.ts"
 import { find, focused, mount } from "./page.ts"
 
@@ -147,6 +147,23 @@ describe("list navigation", () => {
     made.highlight(rows[0], true)
     expect(find(root, "apple").getBoundingClientRect().top).toBeGreaterThanOrEqual(box.top + 2.5)
     expect(window.scrollY).toBe(0)
+  })
+
+  it("a pointer at rest is not a pointer moving, whatever comes to lie under it", () => {
+    list()
+    const move = (x: number, y: number) => {
+      const event = new PointerEvent("pointermove", { screenX: x, screenY: y, bubbles: true })
+      let moved: boolean | undefined
+      const ask = (heard: Event) => void (moved = pointerMoved(heard as PointerEvent))
+      document.body.addEventListener("pointermove", ask, { once: true })
+      document.body.dispatchEvent(event)
+      return moved
+    }
+    move(900, 900)
+    expect(move(910, 900)).toBe(true)
+    // The browser's own move for what opened or scrolled under it: the same place.
+    expect(move(910, 900)).toBe(false)
+    expect(move(910, 901)).toBe(true)
   })
 
   it("has no rows and no highlight once its element is gone", () => {

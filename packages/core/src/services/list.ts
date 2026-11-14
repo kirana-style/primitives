@@ -95,6 +95,34 @@ interface Entry extends ListRow {
   readonly active: Signal<boolean>
 }
 
+// Where the pointer was at the move before this one, in each page that has a list. A browser
+// sends a pointer move of its own to whatever comes to lie under a pointer that is at rest (a
+// list that opens there, a list that scrolls under it): that is not the person moving.
+const tracked = new WeakSet<Document>()
+let was: readonly [number, number] | undefined
+let now: readonly [number, number] | undefined
+
+function track(page: Document) {
+  if (tracked.has(page)) return
+  tracked.add(page)
+  const see = (event: PointerEvent) => {
+    was = now
+    now = [event.screenX, event.screenY]
+  }
+  // Before any row hears it: a row asks whether this move went anywhere.
+  page.addEventListener("pointermove", see, true)
+  page.addEventListener("pointerdown", see, true)
+}
+
+/**
+ * Whether a pointer move over a row is the pointer moving: it is somewhere it was not at the
+ * move before. A move with nowhere before it is one.
+ */
+export function pointerMoved(event: PointerEvent): boolean {
+  if (!was) return true
+  return was[0] !== event.screenX || was[1] !== event.screenY
+}
+
 /**
  * Moving through a list of rows with the pointer and the keyboard: a select's options, a menu's
  * items. The rows are read from the page, in its order, when a key needs them: nothing is
@@ -124,6 +152,8 @@ export function createList(config: {
   const highlighted = signal<ListRow | undefined>(undefined)
   const typeahead = createTypeahead()
   let list: HTMLElement | undefined
+  // From when a list is made, so where the pointer was before it opened is known.
+  if (typeof document !== "undefined") track(document)
   const places = config.places
 
   function rows(): Entry[] {

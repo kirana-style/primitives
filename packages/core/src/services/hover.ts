@@ -25,7 +25,9 @@ export interface Hover {
 // One popup closing makes the next open at once, for a moment: a person reading a row of them
 // does not wait at each. Shared by every popup of the page, with no provider.
 const GROUP = 400
-let closedAt = 0
+// Times are read from the clock that only goes forward (`performance.now()`): the wall clock
+// is set back and forth by the system, and a delay measured across that is any length.
+let closedAt = -Infinity
 // The one that is open, as a way to close it: the pointer reaching another's trigger closes this
 // one and opens that one at once, so two are never open together.
 let current: { close(): void } | undefined
@@ -71,7 +73,7 @@ export function createHover(config: {
     if (!config.open.peek()) return
     instant.set(why)
     config.setOpen(false, by)
-    closedAt = Date.now()
+    closedAt = performance.now()
   }
 
   /** Whether the pointer is on the trigger, the popup, or the strip between the two. */
@@ -107,7 +109,7 @@ export function createHover(config: {
         if (config.open.peek() || opening) return
         const other = current !== undefined && current !== self
         if (other) current?.close()
-        const grouped = other || Date.now() - closedAt < GROUP
+        const grouped = other || performance.now() - closedAt < GROUP
         const wait = grouped ? 0 : options.delay
         if (wait === 0) return open(grouped ? "delay" : undefined, details("trigger-hover", event))
         opening = setTimeout(() => {

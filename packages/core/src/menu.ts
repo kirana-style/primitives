@@ -6,7 +6,7 @@ import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartProps } from "./part.ts"
 import { computed, effect, keyed, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
-import { createList } from "./services/list.ts"
+import { createList, pointerMoved } from "./services/list.ts"
 import type { List, ListRow } from "./services/list.ts"
 import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
@@ -291,7 +291,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           "data-highlighted": flag(row.active.get()),
           "data-disabled": flag(off),
           onPointerMove(event: PointerEvent) {
-            if (off || row.active.peek() || passing(event)) return
+            if (off || row.active.peek() || passing(event) || !pointerMoved(event)) return
             list.highlight(row, true)
           },
           onPointerLeave(event: PointerEvent) {
@@ -326,7 +326,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     onPointerDown(event: PointerEvent) {
       if (event.pointerType !== "mouse" || event.button !== 0 || event.ctrlKey) return
       if (open.peek() || disabled.peek()) return
-      press = { x: event.clientX, y: event.clientY, at: Date.now() }
+      press = { x: event.clientX, y: event.clientY, at: performance.now() }
       const by = details("trigger-press", event)
       openFor("popup", by)
       // Refused: there is no press to follow. Asked, not read back: a caller who holds `open`
@@ -378,7 +378,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     if (!trigger?.contains(event.target as Node)) press = undefined
     if (!began || !open.peek()) return
     const moved = Math.hypot(event.clientX - began.x, event.clientY - began.y) > PRESS_SLOP
-    if (!moved || Date.now() - began.at < PRESS_HOLD) return
+    if (!moved || performance.now() - began.at < PRESS_HOLD) return
     const row = (event.target as Element).closest?.<HTMLElement>(ROWS)
     if (row && list.rowOf(row)) row.click()
   }
@@ -414,7 +414,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     "data-highlighted": flag(row.active.get()),
     "data-disabled": flag(disabled.get()),
     onPointerMove(event: PointerEvent) {
-      if (disabled.peek() || event.pointerType === "touch") return
+      if (disabled.peek() || event.pointerType === "touch" || !pointerMoved(event)) return
       rested = [event.clientX, event.clientY]
       if (!row.active.peek()) {
         if (within.onTheWay?.(event)) return

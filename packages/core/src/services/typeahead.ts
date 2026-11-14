@@ -53,11 +53,12 @@ export function printable(event: KeyboardEvent): boolean {
  */
 export function createTypeahead(): Typeahead {
   let typed = ""
-  let typedAt = 0
+  // On the clock that only goes forward: the wall clock can be set back between two keys.
+  let typedAt = -Infinity
 
   return {
     match(key, candidates, current) {
-      const now = Date.now()
+      const now = performance.now()
       if (now - typedAt > TYPEAHEAD_RESET) typed = ""
       typedAt = now
       typed += key.toLowerCase()
@@ -70,8 +71,8 @@ export function createTypeahead(): Typeahead {
     },
     reset() {
       typed = ""
-      typedAt = 0
+      typedAt = -Infinity
     },
-    typing: () => typed !== "" && Date.now() - typedAt <= TYPEAHEAD_RESET,
+    typing: () => typed !== "" && performance.now() - typedAt <= TYPEAHEAD_RESET,
   }
 }

@@ -36,11 +36,11 @@ export function createSafeArea(): SafeArea {
   return {
     leave(x, y) {
       from = [x, y]
-      at = Date.now()
+      at = performance.now()
     },
     holds(x, y, box) {
       if (!from) return false
-      const now = Date.now()
+      const now = performance.now()
       if (now - at > SAFE_AREA_REST) {
         from = undefined
         return false

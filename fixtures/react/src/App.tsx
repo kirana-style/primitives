@@ -18,6 +18,7 @@ import {
   Menubar,
   Meter,
   NavigationMenu,
+  Otp,
   Popover,
   Progress,
   RadioGroup,
@@ -26,6 +27,7 @@ import {
   Slider,
   Switch,
   Tabs,
+  Resizable,
   ScrollArea,
   Toggle,
   ToggleGroup,
@@ -78,6 +80,8 @@ export function App() {
   const [fruit, setFruit] = useState<string | null>("Banana")
   const [action, setAction] = useState("none")
   const [picked, setPicked] = useState("none")
+  const [code, setCode] = useState("none")
+  const [shares, setShares] = useState("25,75")
   const [first, setFirst] = useState(0)
   const [ran, setRan] = useState("none")
   const [tags, setTags] = useState<string[]>(["New"])
@@ -1015,6 +1019,58 @@ export function App() {
             </Combobox.Portal>
           </Combobox.Root>
         </form>
+      </section>
+      <section data-fixture="widgets">
+        <form data-testid="otp1-form">
+          <Otp.Root
+            id="otp1"
+            length={4}
+            name="code"
+            className="otp"
+            data-testid="otp1"
+            onComplete={(next: string) => setCode(next)}
+          >
+            <Otp.Input aria-label="Code" className="otp-input" data-testid="otp1-input" />
+            <Otp.Group className="otp-group">
+              <Otp.Slot index={0} className="otp-slot" data-testid="otp1-0">
+                <Otp.Caret className="otp-caret" />
+              </Otp.Slot>
+              <Otp.Slot index={1} className="otp-slot" data-testid="otp1-1">
+                <Otp.Caret className="otp-caret" />
+              </Otp.Slot>
+            </Otp.Group>
+            <Otp.Separator className="otp-mark" />
+            <Otp.Group className="otp-group">
+              <Otp.Slot index={2} className="otp-slot" data-testid="otp1-2">
+                <Otp.Caret className="otp-caret" />
+              </Otp.Slot>
+              <Otp.Slot index={3} className="otp-slot" data-testid="otp1-3">
+                <Otp.Caret className="otp-caret" />
+              </Otp.Slot>
+            </Otp.Group>
+          </Otp.Root>
+        </form>
+        <output data-testid="otp1-output">{code}</output>
+        <Resizable.Group
+          id="rs1"
+          className="split"
+          data-testid="rs1"
+          onSizesChange={(next: number[]) => setShares(next.map(Math.round).join(","))}
+        >
+          <Resizable.Panel
+            defaultSize={25}
+            minSize={10}
+            className="split-panel"
+            data-testid="rs1-a"
+          >
+            A
+          </Resizable.Panel>
+          <Resizable.Handle aria-label="Resize" className="split-bar" data-testid="rs1-bar" />
+          <Resizable.Panel defaultSize={75} className="split-panel" data-testid="rs1-b">
+            B
+          </Resizable.Panel>
+        </Resizable.Group>
+        <output data-testid="rs1-output">{shares}</output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

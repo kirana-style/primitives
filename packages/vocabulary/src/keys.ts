@@ -996,6 +996,43 @@ export const NavigationMenu = {
   },
 } as const
 
+export const Otp = {
+  /** The code: the input and its cells. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** Present when every character is in. */
+    complete: "[data-complete]",
+  },
+  /** The one input the code is typed in. A design lays it over the cells, unseen. */
+  Input: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Cells that are drawn together. */
+  Group: {
+  },
+  /** One cell of the code. */
+  Slot: {
+    /** The cell's place, from 0. */
+    index: "[data-index]",
+    /** Present on the cell the next character goes in, or that is selected. */
+    active: "[data-active]",
+    /** Present when the cell has its character. */
+    filled: "[data-filled]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A mark between groups of cells. */
+  Separator: {
+  },
+  /** A caret drawn in the active cell while it is empty. */
+  Caret: {
+  },
+} as const
+
 export const Popover = {
   /** The button that opens the popover, and what it is placed against. */
   Trigger: {
@@ -1144,6 +1181,39 @@ export const RadioGroup = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const Resizable = {
+  /** The panels and the bars between them. A design lays it out as a flex box. */
+  Group: {
+    /** Whether the panels are side by side or one over the other. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** One panel. It carries its share of the group. */
+  Panel: {
+    /** Whether the panels are side by side or one over the other. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** The bar between two panels: dragged, or moved with the arrows. */
+  Handle: {
+    /** Whether the panels are side by side or one over the other. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present while the bar is dragged. */
+    dragging: "[data-dragging]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 

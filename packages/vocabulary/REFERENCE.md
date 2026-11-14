@@ -969,6 +969,49 @@ An element behind the popup, for a design that dims the page.
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
+## Otp
+
+### Otp.Root
+
+The code: the input and its cells.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-focused` | Present while the input has focus. |
+| `data-complete` | Present when every character is in. |
+
+### Otp.Input
+
+The one input the code is typed in. A design lays it over the cells, unseen.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Otp.Group
+
+Cells that are drawn together.
+
+### Otp.Slot
+
+One cell of the code.
+
+| Attribute | When |
+| --- | --- |
+| `data-index` | The cell's place, from 0. |
+| `data-active` | Present on the cell the next character goes in, or that is selected. |
+| `data-filled` | Present when the cell has its character. |
+| `data-disabled` | Present when it is disabled. |
+
+### Otp.Separator
+
+A mark between groups of cells.
+
+### Otp.Caret
+
+A caret drawn in the active cell while it is empty.
+
 ## Popover
 
 ### Popover.Trigger
@@ -1112,6 +1155,39 @@ The mark. In the page while its item is the chosen one.
 | `data-required` | Present when the form needs it. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+## Resizable
+
+### Resizable.Group
+
+The panels and the bars between them. A design lays it out as a flex box.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the panels are side by side or one over the other. |
+| `data-disabled` | Present when it is disabled. |
+
+### Resizable.Panel
+
+One panel. It carries its share of the group.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the panels are side by side or one over the other. |
+
+| Variable | Holds |
+| --- | --- |
+| `--panel-size` | The panel's share, in hundredths of the group. |
+
+### Resizable.Handle
+
+The bar between two panels: dragged, or moved with the arrows.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the panels are side by side or one over the other. |
+| `data-dragging` | Present while the bar is dragged. |
+| `data-disabled` | Present when it is disabled. |
 
 ## ScrollArea
 

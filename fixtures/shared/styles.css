@@ -196,6 +196,59 @@ button {
   border: 1px solid #999;
 }
 
+.otp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* The one input, over the cells and unseen: a press anywhere on the code is a press on it. */
+.otp-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+}
+.otp-group {
+  display: flex;
+  gap: 2px;
+}
+.otp-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 36px;
+  border: 1px solid #999;
+}
+.otp-slot[data-active] {
+  border-color: #06c;
+}
+.otp-caret {
+  width: 1px;
+  height: 18px;
+  background: currentColor;
+}
+.otp-mark {
+  width: 8px;
+  height: 2px;
+  background: #999;
+}
+.split {
+  display: flex;
+  width: 410px;
+  height: 60px;
+  border: 1px solid #999;
+}
+.split-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+.split-bar {
+  flex: 0 0 10px;
+  background: #ccc;
+}
+
 .column {
   display: flex;
   flex-direction: column;

@@ -57,9 +57,11 @@ let clock = Date.now()
 
 describe("a popup that opens on hover", () => {
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] })
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date", "performance"] })
     clock += 60_000
     vi.setSystemTime(clock)
+    // The clock the service reads starts again with each set of fake timers.
+    vi.advanceTimersByTime(600_000)
   })
   afterEach(() => void vi.useRealTimers())
 

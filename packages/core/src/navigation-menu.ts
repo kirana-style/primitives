@@ -105,7 +105,7 @@ export function createNavigationMenu<Value = unknown>(
   let anchor: HTMLElement | undefined
   let opening: ReturnType<typeof setTimeout> | undefined
   let closing: ReturnType<typeof setTimeout> | undefined
-  let hovered = 0
+  let hovered = -Infinity
   // An item whose content takes focus as it is drawn: opened with the arrow that goes into it.
   let entering: Value | typeof NOTHING = NOTHING
 
@@ -207,7 +207,7 @@ export function createNavigationMenu<Value = unknown>(
           "data-popup-open": flag(shown.get()),
           onClick(event: Event) {
             // The pointer opened it a moment ago: the press that follows is not a second wish.
-            if (shown.peek() && Date.now() - hovered < HOVER_PRESS) return
+            if (shown.peek() && performance.now() - hovered < HOVER_PRESS) return
             setValue(shown.peek() ? null : key, details("trigger-press", event))
           },
           onPointerEnter(event: PointerEvent) {
@@ -216,7 +216,7 @@ export function createNavigationMenu<Value = unknown>(
             if (shown.peek()) return
             opening = setTimeout(() => {
               opening = undefined
-              hovered = Date.now()
+              hovered = performance.now()
               setValue(key, details("trigger-hover", event))
             }, props.peek().delay ?? NAVIGATION_DELAY)
           },

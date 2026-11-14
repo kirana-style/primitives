@@ -293,6 +293,33 @@ note. Three places hold them:
   one frame: it and WebKit play one at a time. Scenarios that measure a wait (`hover`,
   `dialog`) are played with nothing else running, in any engine. A check that fails one run
   in two is not a check.
+- **Time between two events is measured on the clock that only goes forward**
+  (`performance.now()`), never the wall clock (`Date.now()`), which the system sets back and
+  forth: a typed name, a hover's grouping and a pointer's rest were each any length when it
+  stepped. A "never" is `-Infinity`, not `0`: the forward clock is near zero on a new page.
+  A test that fakes timers fakes `performance` too.
+- **A pointer move is not always the pointer moving.** A browser sends one to whatever comes
+  to lie under a pointer at rest (a list that opens there, a list that scrolls under it). A
+  row takes the highlight only when `pointerMoved(event)` (`services/list.ts`) says the
+  pointer has gone somewhere since a row last answered, or since the last press or key: on
+  the screen or in the page, either. A pointer that moved to where a row then arrives is
+  owed that row; compared only with the move before, a popup placed a moment late never
+  took the highlight. Read from the
+  screen alone, no row followed the pointer in WebKit under its test driver, where every
+  move's `screenX` and `screenY` were the same.
+- **A one-time code is one input.** The cells are drawn; the input lies over them, so a
+  phone's code from a message, a password manager, a paste and a screen reader meet a text
+  field. What it refuses, it refuses in `beforeinput`; what a paste keeps is put back with
+  `insertText`, so undo still works. A cell's character is a text node of its own before
+  whatever the caller put in the cell, never the cell's whole content.
+- **A property written two ways is two different pages.** A server wrote `flex-grow`,
+  `flex-shrink` and `flex-basis` where a browser wrote `flex`; a panel's size is the one
+  shorthand and a `--panel-size` variable.
+- **What a part says of a neighbour must be sayable before the page exists.** A bar's
+  `aria-valuenow` is the panel before it: on a server that is the panel made just before the
+  bar, since no element can be asked.
+- **A framework renames attributes** (React's `inputMode`, `maxLength`, `autoComplete`): the
+  core writes HTML's names and the adapter's table renames them, or React warns and drops it.
 - **Tasks a task `dependsOn` run side by side; a `&&` chain runs in order.** The gates that
   read nothing another writes are dependencies of one task (35 s together, 57 s in a row);
   the rehearsal `dependsOn` the packing, which it reads.
@@ -311,6 +338,14 @@ note. Three places hold them:
   that could not deliver within a frame). Whether a test runner's "page error" hears them
   varied between this machine and CI: the conformance page listens for the window's `error`
   itself, so the two fail alike.
+- **A check that fails now and then is replayed with every processor busy**, not waited for:
+  a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
+  virtual list's check failed four runs in six that way and never alone; it had read a row's
+  `data-highlighted` the moment the row had focus, a render before the framework drew it.
+  Focus is the core's and at once; an attribute is the framework's next render. A check
+  waits for the page to settle after waiting for focus.
+- **WebKit runs on this machine** once its system libraries are there
+  (`sudo env "PATH=$PATH" bunx playwright install-deps webkit`): `--browser webkit`.
 - **CI's fonts and speed are not this machine's.** `bun tests/conformance/run.ts react
   --only menu --slow 6` plays one scenario with the processor slowed.
 - **A probe that reads layout can hide the fault it looks for.** A scroll jump disappeared

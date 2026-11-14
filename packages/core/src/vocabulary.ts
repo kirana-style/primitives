@@ -21,6 +21,8 @@ import { menuVocabulary } from "./menu.vocabulary.ts"
 import { menubarVocabulary } from "./menubar.vocabulary.ts"
 import { state } from "./states.ts"
 import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
+import { otpVocabulary } from "./otp.vocabulary.ts"
+import { resizableVocabulary } from "./resizable.vocabulary.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
 import { selectVocabulary } from "./select.vocabulary.ts"
@@ -62,9 +64,11 @@ export const vocabulary = {
   menubar: menubarVocabulary,
   meter: meterVocabulary,
   navigationMenu: navigationMenuVocabulary,
+  otp: otpVocabulary,
   popover: popoverVocabulary,
   progress: progressVocabulary,
   radioGroup: radioGroupVocabulary,
+  resizable: resizableVocabulary,
   scrollArea: scrollAreaVocabulary,
   select: selectVocabulary,
   separator: separatorVocabulary,

@@ -2361,6 +2361,89 @@ export const vocabulary = {
         }
       }
     },
+    "otp": {
+      "parts": {
+        "root": {
+          "description": "The code: the input and its cells.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present when every character is in.",
+              "selector": "[data-complete]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "input": {
+          "description": "The one input the code is typed in. A design lays it over the cells, unseen.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "group": {
+          "description": "Cells that are drawn together.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "slot": {
+          "description": "One cell of the code.",
+          "states": {
+            "index": {
+              "attribute": "data-index",
+              "description": "The cell's place, from 0.",
+              "selector": "[data-index]"
+            },
+            "active": {
+              "attribute": "data-active",
+              "description": "Present on the cell the next character goes in, or that is selected.",
+              "selector": "[data-active]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present when the cell has its character.",
+              "selector": "[data-filled]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A mark between groups of cells.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "caret": {
+          "description": "A caret drawn in the active cell while it is empty.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "popover": {
       "parts": {
         "trigger": {
@@ -2751,6 +2834,72 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
+          "variables": {}
+        }
+      }
+    },
+    "resizable": {
+      "parts": {
+        "group": {
+          "description": "The panels and the bars between them. A design lays it out as a flex box.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the panels are side by side or one over the other.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "panel": {
+          "description": "One panel. It carries its share of the group.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the panels are side by side or one over the other.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--panel-size": "The panel's share, in hundredths of the group."
+          }
+        },
+        "handle": {
+          "description": "The bar between two panels: dragged, or moved with the arrows.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the panels are side by side or one over the other.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while the bar is dragged.",
+              "selector": "[data-dragging]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
           "variables": {}
         }
       }

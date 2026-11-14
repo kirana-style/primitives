@@ -81,6 +81,15 @@ import {
   KuiMeterLabel,
   KuiMeterTrack,
   KuiMeterValue,
+  KuiOtp,
+  KuiOtpCaret,
+  KuiOtpGroup,
+  KuiOtpInput,
+  KuiOtpSeparator,
+  KuiOtpSlot,
+  KuiResizableGroup,
+  KuiResizableHandle,
+  KuiResizablePanel,
   KuiPopover,
   KuiPopoverClose,
   KuiPopoverDescription,
@@ -244,6 +253,15 @@ import {
     KuiMeterLabel,
     KuiMeterTrack,
     KuiMeterValue,
+    KuiOtp,
+    KuiOtpCaret,
+    KuiOtpGroup,
+    KuiOtpInput,
+    KuiOtpSeparator,
+    KuiOtpSlot,
+    KuiResizableGroup,
+    KuiResizableHandle,
+    KuiResizablePanel,
     KuiPopover,
     KuiPopoverClose,
     KuiPopoverDescription,
@@ -1192,6 +1210,59 @@ import {
           </ng-container>
         </form>
       </section>
+      <section data-fixture="widgets">
+        <form data-testid="otp1-form">
+          <div
+            kuiOtp
+            [kuiId]="'otp1'"
+            [length]="4"
+            [name]="'code'"
+            class="otp"
+            data-testid="otp1"
+            (completed)="code.set($event)"
+          >
+            <input kuiOtpInput aria-label="Code" class="otp-input" data-testid="otp1-input" />
+            <div kuiOtpGroup class="otp-group">
+              <div kuiOtpSlot [index]="0" class="otp-slot" data-testid="otp1-0">
+                <div *kuiOtpCaret class="otp-caret"></div>
+              </div>
+              <div kuiOtpSlot [index]="1" class="otp-slot" data-testid="otp1-1">
+                <div *kuiOtpCaret class="otp-caret"></div>
+              </div>
+            </div>
+            <div kuiOtpSeparator class="otp-mark"></div>
+            <div kuiOtpGroup class="otp-group">
+              <div kuiOtpSlot [index]="2" class="otp-slot" data-testid="otp1-2">
+                <div *kuiOtpCaret class="otp-caret"></div>
+              </div>
+              <div kuiOtpSlot [index]="3" class="otp-slot" data-testid="otp1-3">
+                <div *kuiOtpCaret class="otp-caret"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+        <output data-testid="otp1-output">{{ code() }}</output>
+        <div
+          kuiResizableGroup
+          [kuiId]="'rs1'"
+          class="split"
+          data-testid="rs1"
+          (sizesChanged)="shares.set(rounded($event.sizes))"
+        >
+          <div
+            kuiResizablePanel
+            [defaultSize]="25"
+            [minSize]="10"
+            class="split-panel"
+            data-testid="rs1-a"
+          >
+            A
+          </div>
+          <div kuiResizableHandle aria-label="Resize" class="split-bar" data-testid="rs1-bar"></div>
+          <div kuiResizablePanel [defaultSize]="75" class="split-panel" data-testid="rs1-b">B</div>
+        </div>
+        <output data-testid="rs1-output">{{ shares() }}</output>
+      </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
           <output kuiSliderValue data-testid="sl1-value"></output>
@@ -1384,6 +1455,9 @@ export class App {
   protected readonly fruit = signal<unknown>("Banana")
   protected readonly action = signal("none")
   protected readonly picked = signal("none")
+  protected readonly code = signal("none")
+  protected readonly shares = signal("25,75")
+  protected readonly rounded = (sizes: number[]) => sizes.map(Math.round).join(",")
   protected readonly align = signal<readonly unknown[] | undefined>(["left"])
   protected readonly tall = signal(false)
   protected readonly chosen = signal<readonly unknown[] | undefined>(["Banana"])

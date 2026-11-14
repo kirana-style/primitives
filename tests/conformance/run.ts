@@ -1990,11 +1990,15 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     }
     const drawn = () =>
       page.evaluate(() => document.querySelectorAll('[data-testid="vl1"] [role="option"]').length)
-    const until = (testid: string) =>
-      page.waitForFunction(
+    // Focus is on a row the moment it is in the page; what a framework draws for it (that it
+    // is highlighted) comes with its next render. Under load that is not at once.
+    const until = async (testid: string) => {
+      await page.waitForFunction(
         (wanted) => document.activeElement?.getAttribute("data-testid") === wanted,
         testid
       )
+      await settled(page)
+    }
     await id("vl1").scrollIntoViewIfNeeded()
     const scrolled = await page.evaluate(() => window.scrollY)
     expect((await drawn()) <= 13, "a window of the ten thousand rows is in the page")
@@ -2103,6 +2107,92 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await present("cbm-chip-New")), "a chip's button takes its value away")
     expect((await focused()) === "cbm-input", "and leaves focus in the input")
     expect((await sent()) === "", "with none chosen, nothing is sent")
+  },
+
+  async widgets({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const cell = (index: number) =>
+      id(`otp1-${index}`).evaluate((element) => ({
+        // Its own text, whatever a framework keeps around it.
+        text: [...element.childNodes]
+          .filter((each) => each.nodeType === 3)
+          .map((each) => each.nodeValue)
+          .join("")
+          .trim(),
+        caret: element.querySelector(".otp-caret") !== null,
+      }))
+    const sent = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="otp1-form"]')!).get(
+          "code"
+        )
+      )
+    await id("otp1").scrollIntoViewIfNeeded()
+    expect(
+      (await attribute("otp1-input", "autocomplete")) === "one-time-code",
+      "the code is one input a phone can fill"
+    )
+    await id("otp1-input").focus()
+    await settled(page)
+    expect((await attribute("otp1-0", "data-active")) === "", "focused, the first cell is active")
+    expect((await cell(0)).caret, "and shows a caret while it is empty")
+    await page.keyboard.type("12")
+    await settled(page)
+    await snapshot("two characters in")
+    expect((await cell(0)).text === "1", "a cell shows its character")
+    expect(!(await cell(0)).caret, "and no caret once it has one")
+    expect((await attribute("otp1-1", "data-filled")) === "", "a filled cell says so")
+    expect((await attribute("otp1-2", "data-active")) === "", "the next cell is the active one")
+    expect((await cell(2)).caret, "with the caret")
+    await page.keyboard.type("x")
+    await settled(page)
+    expect((await sent()) === "12", "what a code cannot hold never goes in")
+    await page.keyboard.type("34")
+    await settled(page)
+    await snapshot("every character in")
+    expect((await id("otp1-output").textContent()) === "1234", "the caller hears the finished code")
+    expect((await attribute("otp1", "data-complete")) === "", "the code says it is complete")
+    expect((await sent()) === "1234", "and it is sent with the form")
+    await key("Backspace")
+    expect((await cell(3)).text === "", "Backspace takes the last character")
+    expect((await attribute("otp1", "data-complete")) === null, "and it is complete no more")
+
+    const share = () => attribute("rs1-bar", "aria-valuenow")
+    const width = (testid: string) =>
+      id(testid).evaluate((element) => Math.round(element.getBoundingClientRect().width))
+    expect(
+      (await attribute("rs1-bar", "role")) === "separator",
+      "a bar between panels is a separator"
+    )
+    expect((await attribute("rs1-bar", "aria-orientation")) === "vertical", "which stands")
+    expect((await share()) === "25", "and says the share of the panel before it")
+    expect((await width("rs1-a")) === 100, "the panels share what the bar leaves")
+    await id("rs1-bar").focus()
+    await key("ArrowRight")
+    await snapshot("moved by an arrow")
+    expect((await share()) === "35", "an arrow moves the bar")
+    expect(
+      (await id("rs1-output").textContent()) === "35,65",
+      "the caller hears each panel's share"
+    )
+    expect((await width("rs1-a")) === 140, "and the panels follow")
+    const bar = await id("rs1-bar").evaluate((element) => {
+      const box = element.getBoundingClientRect()
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+    })
+    await page.mouse.move(bar.x, bar.y)
+    await page.mouse.down()
+    await page.mouse.move(bar.x + 40, bar.y, { steps: 4 })
+    await page.mouse.up()
+    await settled(page)
+    await snapshot("dragged")
+    expect((await share()) === "45", "a drag moves it as far as the pointer goes")
+    expect((await focused()) === "rs1-bar", "and leaves focus on the bar")
+    await key("Home")
+    expect((await share()) === "10", "Home takes the panel to its least")
   },
 
   async menubar({ page, snapshot, id, present, attribute, focused }) {
@@ -2500,6 +2590,20 @@ for (const engine of engines) {
           const whole = error instanceof Error ? error.message : String(error)
           const message = only ? whole : whole.split("\n")[0]
           log(`FAIL  ${label}  ${name}: ${message}`)
+          // Where the page stood when it failed: a failure that comes one run in several is
+          // read from this, since it cannot be replayed.
+          const stood = await page
+            .evaluate(() => ({
+              focus:
+                document.activeElement?.getAttribute("data-testid") ??
+                document.activeElement?.tagName,
+              focused: document.hasFocus(),
+              shown: document.visibilityState,
+            }))
+            .catch(() => undefined)
+          log(
+            `      the page then: ${JSON.stringify(stood)}; it reported: ${errors.join(" | ") || "nothing"}`
+          )
         }
         await context.close()
       }

@@ -118,6 +118,8 @@ const RENAMED: Record<string, string> = {
   readonly: "readOnly",
   novalidate: "noValidate",
   autocomplete: "autoComplete",
+  inputmode: "inputMode",
+  maxlength: "maxLength",
 }
 
 /** A style as React takes it: `inset-inline-start` is `insetInlineStart`, `--x` stays as it is. */

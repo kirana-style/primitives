@@ -162,8 +162,8 @@ describe("a scroll area", () => {
     // At rest it is at the start: the right.
     expect(Math.round(box(bar).right - box(thumb).right)).toBe(0)
     view.scrollLeft = -300
-    await drawn()
-    expect(Math.round(box(thumb).left - box(bar).left)).toBe(0)
+    // A browser says a box scrolled when it next draws, which is not always the next frame.
+    await expect.poll(() => Math.round(box(thumb).left - box(bar).left)).toBe(0)
   })
 
   it("has a corner while both scrollbars are in the page", async () => {

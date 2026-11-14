@@ -10,7 +10,7 @@ import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { byPlace } from "./services/list-places.ts"
-import { createList } from "./services/list.ts"
+import { createList, pointerMoved } from "./services/list.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
 import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
@@ -357,8 +357,8 @@ export function createSelect<Value = unknown>(
             "data-selected": flag(selected.get()),
             "data-highlighted": flag(row.active.get()),
             "data-disabled": flag(off),
-            onPointerMove() {
-              if (off || row.active.peek()) return
+            onPointerMove(event: PointerEvent) {
+              if (!pointerMoved(event) || off || row.active.peek()) return
               list.highlight(row, true)
             },
             onClick(event: Event) {

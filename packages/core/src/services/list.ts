@@ -95,6 +95,61 @@ interface Entry extends ListRow {
   readonly active: Signal<boolean>
 }
 
+// Whether the pointer has moved since a row last answered for it. A browser sends a pointer
+// move of its own to whatever comes to lie under a pointer that is at rest (a list that opens
+// there, a list that scrolls under it): that is not the person moving. But a pointer that did
+// move, to where a row then arrives, is owed that row: so a move is kept until a row hears one.
+const tracked = new WeakSet<Document>()
+let last: readonly number[] | undefined
+let owed = false
+let asked: Event | undefined
+let answer = false
+
+// On the screen and in the page, both: one engine's driver leaves the screen's at zero for
+// every move, and a page that is itself moved keeps the page's the same.
+function place(event: PointerEvent): readonly number[] {
+  return [event.screenX, event.screenY, event.clientX, event.clientY]
+}
+
+function track(page: Document) {
+  if (tracked.has(page)) return
+  tracked.add(page)
+  // Before any row hears it: a row asks whether this move went anywhere.
+  page.addEventListener(
+    "pointermove",
+    (event) => {
+      const at = place(event)
+      if (!last || at.some((value, index) => value !== last![index])) owed = true
+      last = at
+    },
+    true
+  )
+  // A press or a key begins again: what opens for it opens under a pointer at rest.
+  page.addEventListener(
+    "pointerdown",
+    (event) => {
+      last = place(event)
+      owed = false
+    },
+    true
+  )
+  page.addEventListener("keydown", () => void (owed = false), true)
+}
+
+/**
+ * Whether a pointer move over a row is the pointer moving: it has gone somewhere since a row
+ * last answered, or since the last press or key. Asked first by a row, before anything that
+ * would let the move pass: the asking is what settles it.
+ */
+export function pointerMoved(event: PointerEvent): boolean {
+  if (event !== asked) {
+    asked = event
+    answer = owed
+    owed = false
+  }
+  return answer
+}
+
 /**
  * Moving through a list of rows with the pointer and the keyboard: a select's options, a menu's
  * items. The rows are read from the page, in its order, when a key needs them: nothing is
@@ -124,6 +179,8 @@ export function createList(config: {
   const highlighted = signal<ListRow | undefined>(undefined)
   const typeahead = createTypeahead()
   let list: HTMLElement | undefined
+  // From when a list is made, so where the pointer was before it opened is known.
+  if (typeof document !== "undefined") track(document)
   const places = config.places
 
   function rows(): Entry[] {

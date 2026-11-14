@@ -19,6 +19,7 @@ import {
   Menubar,
   Meter,
   NavigationMenu,
+  Otp,
   Popover,
   Progress,
   RadioGroup,
@@ -27,6 +28,7 @@ import {
   Slider,
   Switch,
   Tabs,
+  Resizable,
   ScrollArea,
   Toggle,
   ToggleGroup,
@@ -79,6 +81,8 @@ const span = ref<number[]>([20, 80])
 const fruit = ref<string | null>("Banana")
 const action = ref("none")
 const picked = ref("none")
+const code = ref("none")
+const shares = ref("25,75")
 const first = ref(0)
 const ran = ref<unknown>("none")
 const tags = ref<string[]>(["New"])
@@ -843,6 +847,53 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Combobox.Portal>
         </Combobox.Root>
       </form>
+    </section>
+    <section data-fixture="widgets">
+      <form data-testid="otp1-form">
+        <Otp.Root
+          id="otp1"
+          :length="4"
+          name="code"
+          class="otp"
+          data-testid="otp1"
+          @complete="(next: string) => (code = next)"
+        >
+          <Otp.Input aria-label="Code" class="otp-input" data-testid="otp1-input" />
+          <Otp.Group class="otp-group">
+            <Otp.Slot :index="0" class="otp-slot" data-testid="otp1-0">
+              <Otp.Caret class="otp-caret" />
+            </Otp.Slot>
+            <Otp.Slot :index="1" class="otp-slot" data-testid="otp1-1">
+              <Otp.Caret class="otp-caret" />
+            </Otp.Slot>
+          </Otp.Group>
+          <Otp.Separator class="otp-mark" />
+          <Otp.Group class="otp-group">
+            <Otp.Slot :index="2" class="otp-slot" data-testid="otp1-2">
+              <Otp.Caret class="otp-caret" />
+            </Otp.Slot>
+            <Otp.Slot :index="3" class="otp-slot" data-testid="otp1-3">
+              <Otp.Caret class="otp-caret" />
+            </Otp.Slot>
+          </Otp.Group>
+        </Otp.Root>
+      </form>
+      <output data-testid="otp1-output">{{ code }}</output>
+      <Resizable.Group
+        id="rs1"
+        class="split"
+        data-testid="rs1"
+        @sizes-change="(next: number[]) => (shares = next.map(Math.round).join(','))"
+      >
+        <Resizable.Panel :default-size="25" :min-size="10" class="split-panel" data-testid="rs1-a">
+          A
+        </Resizable.Panel>
+        <Resizable.Handle aria-label="Resize" class="split-bar" data-testid="rs1-bar" />
+        <Resizable.Panel :default-size="75" class="split-panel" data-testid="rs1-b">
+          B
+        </Resizable.Panel>
+      </Resizable.Group>
+      <output data-testid="rs1-output">{{ shares }}</output>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

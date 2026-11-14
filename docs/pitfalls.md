@@ -338,6 +338,29 @@ note. Three places hold them:
   that could not deliver within a frame). Whether a test runner's "page error" hears them
   varied between this machine and CI: the conformance page listens for the window's `error`
   itself, so the two fail alike.
+- **Nothing says the pointer or focus left an element that was taken out.** A toast closed
+  under the pointer is gone before any leave is sent, and a framework that makes its own
+  leave from what was under the pointer (React) never makes that one; a button that had
+  focus and is removed sends no blur. The toasts stayed "held" and no timed toast ever
+  closed. Whether the pointer or focus is on the stack is asked of the page (each pointer
+  move, each focus change, each change of the list), never of an enter and a leave.
+- **A text area's content is its text.** A shared element component that leaves a marker
+  between an element's tags (Svelte's, on a server) made a text area whose text was
+  `<!---->`. The text area is its own element in that adapter.
+- **A part that is told its place says it on a server.** A slide that found its place from
+  the page had none on a server, so the current one was marked only after hydration. A
+  carousel's slide takes its `index`, like a code's cell.
+- **A scroll is the browser's.** The carousel scrolls a real box (`scrollBy`, with the
+  design's `scroll-behavior` and `scroll-snap`) and reads where it came to rest; nothing is
+  transformed. Where a scroll ends is read after it has been still a moment, and a test
+  waits for that, never for a fixed time.
+- **A QR encoder is checked against another, module for module**, once, across every
+  version's edge and every correction level (192 cases); the tests keep known answers from
+  that check, so no decoder ships as a dependency.
+- **vue-tsc trips on `//` in a plain attribute of a component** (`value="https://…"`): every
+  component after it is reported as lacking `.value`. Bind it (`:value="LINK"`).
+- **Asserting "still closed" right after a hover is a race.** A busy browser takes longer
+  to say the pointer arrived than a rest delay lasts.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

@@ -22,6 +22,10 @@ import { menubarVocabulary } from "./menubar.vocabulary.ts"
 import { state } from "./states.ts"
 import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
 import { otpVocabulary } from "./otp.vocabulary.ts"
+import { qrCodeVocabulary } from "./qr-code.vocabulary.ts"
+import { autosizeVocabulary } from "./autosize.vocabulary.ts"
+import { carouselVocabulary } from "./carousel.vocabulary.ts"
+import { toastVocabulary } from "./toast.vocabulary.ts"
 import { resizableVocabulary } from "./resizable.vocabulary.ts"
 import { popoverVocabulary } from "./popover.vocabulary.ts"
 import { radioGroupVocabulary } from "./radio-group.vocabulary.ts"
@@ -65,6 +69,10 @@ export const vocabulary = {
   meter: meterVocabulary,
   navigationMenu: navigationMenuVocabulary,
   otp: otpVocabulary,
+  qrCode: qrCodeVocabulary,
+  autosize: autosizeVocabulary,
+  carousel: carouselVocabulary,
+  toast: toastVocabulary,
   popover: popoverVocabulary,
   progress: progressVocabulary,
   radioGroup: radioGroupVocabulary,

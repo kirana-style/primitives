@@ -214,8 +214,9 @@ describe("a navigation menu", () => {
   it("opens for a pointer that rests on a trigger, stays under it, and goes when it leaves", async () => {
     const { root, made, reasons } = navigation()
     const trigger = find(root, "t-products")
+    // Not asked whether it is still closed here: a busy browser can take longer to say the
+    // pointer has arrived than the rest lasts. That a pass does not open is hover.test.ts's.
     await userEvent.hover(trigger)
-    expect(made.value.peek()).toBe(null)
     await wait(NAVIGATION_DELAY + 40)
     expect(made.value.peek()).toBe("products")
     // The press that follows the pointer's opening is not a wish to close.

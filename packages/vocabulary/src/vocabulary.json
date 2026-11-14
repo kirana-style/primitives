@@ -2442,6 +2442,227 @@
         }
       }
     },
+    "qrCode": {
+      "parts": {
+        "root": {
+          "description": "What holds the code.",
+          "states": {
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the value is longer than a code holds.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "frame": {
+          "description": "The drawing: an `<svg>` a module to the unit.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "pattern": {
+          "description": "The dark modules: one `<path>`, filled by the design.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "autosize": {
+      "parts": {
+        "textarea": {
+          "description": "A `<textarea>` as tall as its text. Its `height` is written; `min-height` and `max-height` are the design's.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "carousel": {
+      "parts": {
+        "root": {
+          "description": "The carousel: a region, named by the caller.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the slides go across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "viewport": {
+          "description": "What scrolls. The slides are its children; the design snaps them (`scroll-snap-type`) and says whether a step glides (`scroll-behavior`).",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the slides go across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "One slide.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the slides go across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the slide the view is at, and on its button.",
+              "selector": "[data-current]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "previous": {
+          "description": "Goes back a slide.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "next": {
+          "description": "Goes on a slide.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "indicator": {
+          "description": "A button for one slide.",
+          "states": {
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the slide the view is at, and on its button.",
+              "selector": "[data-current]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "toast": {
+      "parts": {
+        "viewport": {
+          "description": "Where the toasts are drawn: a region that is always in the page.",
+          "states": {
+            "expanded": {
+              "attribute": "data-expanded",
+              "description": "Present while the pointer or focus is on the stack: the toasts are spread out, and wait.",
+              "selector": "[data-expanded]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "root": {
+          "description": "One toast.",
+          "states": {
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "expanded": {
+              "attribute": "data-expanded",
+              "description": "Present while the pointer or focus is on the stack: the toasts are spread out, and wait.",
+              "selector": "[data-expanded]"
+            },
+            "type": {
+              "attribute": "data-type",
+              "description": "The kind the toast was added as.",
+              "selector": "[data-type]"
+            },
+            "limited": {
+              "attribute": "data-limited",
+              "description": "Present on a toast behind as many as are shown at once.",
+              "selector": "[data-limited]"
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the toast is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDirection": {
+              "attribute": "data-swipe-direction",
+              "description": "The way the toast was dragged out, once it has been.",
+              "values": {
+                "left": "[data-swipe-direction=\"left\"]",
+                "right": "[data-swipe-direction=\"right\"]",
+                "up": "[data-swipe-direction=\"up\"]",
+                "down": "[data-swipe-direction=\"down\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--toast-index": "Its place in the stack: 0 for the newest.",
+            "--toast-height": "Its height.",
+            "--toast-offset-y": "The height of the toasts in front of it.",
+            "--toast-swipe-movement-x": "How far it has been dragged across.",
+            "--toast-swipe-movement-y": "How far it has been dragged up or down."
+          }
+        },
+        "title": {
+          "description": "What the toast is called.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "description": {
+          "description": "What the toast says.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "close": {
+          "description": "Closes the toast.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "action": {
+          "description": "A button of the toast's own; pressing it closes the toast too.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "popover": {
       "parts": {
         "trigger": {

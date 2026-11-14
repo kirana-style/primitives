@@ -464,3 +464,61 @@ section[data-fixture="slider"] {
   border-radius: 50%;
   background: #222;
 }
+
+.qr {
+  width: 96px;
+  padding: 8px;
+  background: #fff;
+}
+.qr-frame {
+  display: block;
+  fill: #000;
+}
+.note {
+  display: block;
+  box-sizing: border-box;
+  width: 200px;
+  max-height: 120px;
+  padding: 4px;
+  border: 1px solid #999;
+  font: 14px/20px monospace;
+  resize: none;
+}
+.carousel {
+  width: 300px;
+}
+.carousel-view {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.carousel-item {
+  flex: 0 0 100%;
+  height: 60px;
+  scroll-snap-align: start;
+  background: #eee;
+}
+.carousel-item[data-current] {
+  background: #cde;
+}
+.toasts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 300px;
+  min-height: 4px;
+}
+.toast {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #999;
+  background: #fff;
+  transition: opacity 80ms;
+  translate: var(--toast-swipe-movement-x, 0) var(--toast-swipe-movement-y, 0);
+}
+.toast[data-starting-style],
+.toast[data-ending-style] {
+  opacity: 0;
+}

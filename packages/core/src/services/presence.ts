@@ -54,18 +54,7 @@ export function createPresence(open: ReadonlySignal<boolean>, hooks: PresenceHoo
     })
   }
 
-  function settle(target: HTMLElement, then: () => void) {
-    // Only what ends, on the page's clock: a scroll-driven animation and an endless one never do.
-    const timeline = target.ownerDocument.timeline
-    const animations = target
-      .getAnimations()
-      .filter(
-        (each) =>
-          each.timeline === timeline && each.effect?.getComputedTiming().endTime !== Infinity
-      )
-    if (animations.length === 0) return then()
-    void Promise.allSettled(animations.map((each) => each.finished)).then(then)
-  }
+  const settle = whenSettled
 
   function begin(target: HTMLElement) {
     if (status.peek() !== "starting") return
@@ -138,7 +127,7 @@ export function createPresence(open: ReadonlySignal<boolean>, hooks: PresenceHoo
  * Calls `then` once `attribute` is on the element (or off it), which is when the framework has
  * written the state the core just set. At once when it is so already.
  */
-function whenWritten(
+export function whenWritten(
   element: HTMLElement,
   attribute: string,
   present: boolean,
@@ -155,4 +144,19 @@ function whenWritten(
   queueMicrotask(() => {
     if (!element.isConnected) observer.disconnect()
   })
+}
+
+/**
+ * Calls `then` once the element's own motion has finished, and at once when it has none. Only
+ * what ends, on the page's clock: a scroll-driven animation and an endless one never do.
+ */
+export function whenSettled(target: HTMLElement, then: () => void): void {
+  const timeline = target.ownerDocument.timeline
+  const animations = target
+    .getAnimations()
+    .filter(
+      (each) => each.timeline === timeline && each.effect?.getComputedTiming().endTime !== Infinity
+    )
+  if (animations.length === 0) return then()
+  void Promise.allSettled(animations.map((each) => each.finished)).then(then)
 }

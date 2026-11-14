@@ -78,6 +78,26 @@ export {
   KuiNavigationMenuViewport,
 } from "./navigation-menu"
 export { KuiOtp, KuiOtpCaret, KuiOtpGroup, KuiOtpInput, KuiOtpSeparator, KuiOtpSlot } from "./otp"
+export { KuiQrCode, KuiQrCodeFrame, KuiQrCodePattern } from "./qr-code"
+export { KuiAutosizeTextarea } from "./autosize"
+export {
+  KuiCarousel,
+  KuiCarouselIndicator,
+  KuiCarouselItem,
+  KuiCarouselNext,
+  KuiCarouselPrevious,
+  KuiCarouselViewport,
+} from "./carousel"
+export {
+  KuiToastAction,
+  KuiToastClose,
+  KuiToastDescription,
+  KuiToastList,
+  KuiToastRoot,
+  KuiToastTitle,
+  KuiToastViewport,
+  createToaster,
+} from "./toast"
 export { KuiResizableGroup, KuiResizableHandle, KuiResizablePanel } from "./resizable"
 export {
   KuiPopover,

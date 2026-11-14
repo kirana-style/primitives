@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import {
+  Autosize,
+  Carousel,
+  QrCode,
+  Toast,
+  createToaster,
   Accordion,
   AlertDialog,
   Avatar,
@@ -83,6 +88,11 @@ const action = ref("none")
 const picked = ref("none")
 const code = ref("none")
 const shares = ref("25,75")
+const slide = ref("0")
+// Bound, not written in the template: the type checker trips on `//` in a plain attribute.
+const LINK = "https://kirana.style"
+// A page's toasts are made once: a long time, so a test reads them.
+const toaster = createToaster({ duration: 600_000 })
 const first = ref(0)
 const ran = ref<unknown>("none")
 const tags = ref<string[]>(["New"])
@@ -894,6 +904,60 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         </Resizable.Panel>
       </Resizable.Group>
       <output data-testid="rs1-output">{{ shares }}</output>
+    </section>
+    <section data-fixture="pieces">
+      <QrCode.Root id="qr1" :value="LINK" class="qr" data-testid="qr1">
+        <QrCode.Frame aria-label="A link" class="qr-frame" data-testid="qr1-frame">
+          <QrCode.Pattern data-testid="qr1-pattern" />
+        </QrCode.Frame>
+      </QrCode.Root>
+      <Autosize.Textarea aria-label="Note" rows="1" class="note" data-testid="au1" />
+      <Carousel.Root
+        id="cr1"
+        aria-label="Pictures"
+        class="carousel"
+        data-testid="cr1"
+        @index-change="(next: number) => (slide = String(next))"
+      >
+        <Carousel.Viewport class="carousel-view" data-testid="cr1-view">
+          <Carousel.Item :index="0" class="carousel-item" data-testid="cr1-0">One</Carousel.Item>
+          <Carousel.Item :index="1" class="carousel-item" data-testid="cr1-1">Two</Carousel.Item>
+          <Carousel.Item :index="2" class="carousel-item" data-testid="cr1-2">Three</Carousel.Item>
+        </Carousel.Viewport>
+        <Carousel.Previous data-testid="cr1-previous">Previous</Carousel.Previous>
+        <Carousel.Next data-testid="cr1-next">Next</Carousel.Next>
+        <Carousel.Indicator :index="0" aria-label="Slide 1" data-testid="cr1-dot-0" />
+        <Carousel.Indicator :index="1" aria-label="Slide 2" data-testid="cr1-dot-1" />
+        <Carousel.Indicator :index="2" aria-label="Slide 3" data-testid="cr1-dot-2" />
+      </Carousel.Root>
+      <output data-testid="cr1-output">{{ slide }}</output>
+      <button
+        type="button"
+        data-testid="ts1-add"
+        @click="
+          toaster.add({ title: 'Saved', description: 'Your changes are kept.', type: 'success' })
+        "
+      >
+        Add a toast
+      </button>
+      <button
+        type="button"
+        data-testid="ts1-brief"
+        @click="toaster.add({ title: 'Gone soon', duration: 300 })"
+      >
+        Add a brief toast
+      </button>
+      <Toast.Viewport id="ts1" :toaster="toaster" class="toasts" data-testid="ts1">
+        <Toast.List v-slot="{ toast }">
+          <Toast.Root :toast="toast" class="toast" :data-testid="`ts1-${toast.id}`">
+            <Toast.Title class="toast-title">{{ toast.title }}</Toast.Title>
+            <Toast.Description>{{ toast.description }}</Toast.Description>
+            <Toast.Close aria-label="Close" :data-testid="`ts1-${toast.id}-close`">
+              Close
+            </Toast.Close>
+          </Toast.Root>
+        </Toast.List>
+      </Toast.Viewport>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

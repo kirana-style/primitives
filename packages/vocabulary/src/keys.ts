@@ -14,6 +14,7 @@ export const exclusive: string[][] = [
   ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
+  ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
@@ -1030,6 +1031,112 @@ export const Otp = {
   },
   /** A caret drawn in the active cell while it is empty. */
   Caret: {
+  },
+} as const
+
+export const QrCode = {
+  /** What holds the code. */
+  Root: {
+    /** Present when the value is longer than a code holds. */
+    invalid: "[data-invalid]",
+  },
+  /** The drawing: an `<svg>` a module to the unit. */
+  Frame: {
+  },
+  /** The dark modules: one `<path>`, filled by the design. */
+  Pattern: {
+  },
+} as const
+
+export const Autosize = {
+  /** A `<textarea>` as tall as its text. Its `height` is written; `min-height` and `max-height` are the design's. */
+  Textarea: {
+  },
+} as const
+
+export const Carousel = {
+  /** The carousel: a region, named by the caller. */
+  Root: {
+    /** Whether the slides go across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** What scrolls. The slides are its children; the design snaps them (`scroll-snap-type`) and says whether a step glides (`scroll-behavior`). */
+  Viewport: {
+    /** Whether the slides go across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** One slide. */
+  Item: {
+    /** Whether the slides go across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present on the slide the view is at, and on its button. */
+    current: "[data-current]",
+  },
+  /** Goes back a slide. */
+  Previous: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Goes on a slide. */
+  Next: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A button for one slide. */
+  Indicator: {
+    /** Present on the slide the view is at, and on its button. */
+    current: "[data-current]",
+  },
+} as const
+
+export const Toast = {
+  /** Where the toasts are drawn: a region that is always in the page. */
+  Viewport: {
+    /** Present while the pointer or focus is on the stack: the toasts are spread out, and wait. */
+    expanded: "[data-expanded]",
+  },
+  /** One toast. */
+  Root: {
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present while the pointer or focus is on the stack: the toasts are spread out, and wait. */
+    expanded: "[data-expanded]",
+    /** The kind the toast was added as. */
+    type: "[data-type]",
+    /** Present on a toast behind as many as are shown at once. */
+    limited: "[data-limited]",
+    /** Present while the toast is dragged. */
+    swiping: "[data-swiping]",
+    /** The way the toast was dragged out, once it has been. */
+    swipeDirection: {
+      left: "[data-swipe-direction=\"left\"]",
+      right: "[data-swipe-direction=\"right\"]",
+      up: "[data-swipe-direction=\"up\"]",
+      down: "[data-swipe-direction=\"down\"]",
+    },
+  },
+  /** What the toast is called. */
+  Title: {
+  },
+  /** What the toast says. */
+  Description: {
+  },
+  /** Closes the toast. */
+  Close: {
+  },
+  /** A button of the toast's own; pressing it closes the toast too. */
+  Action: {
   },
 } as const
 

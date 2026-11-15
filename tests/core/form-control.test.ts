@@ -361,7 +361,13 @@ describe("the other controls in a form", () => {
     const props = signal<SelectProps<string>>({ id: "s", defaultValue: "apple" })
     const select = createSelect(props)
     bind(find(root, "trigger"), select.trigger)
-    select.setValue("pear", { reason: "test", event: undefined, cancel() {}, canceled: false })
+    select.setValue("pear", {
+      reason: "test",
+      event: undefined,
+      source: "programmatic",
+      cancel() {},
+      canceled: false,
+    })
     expect(select.value.peek()).toBe("pear")
     find<HTMLFormElement>(root, "f").reset()
     expect(select.value.peek()).toBe("apple")

@@ -82,6 +82,10 @@ import {
   KuiMeterTrack,
   KuiMeterValue,
   KuiOtp,
+  KuiDateField,
+  KuiDateFieldInput,
+  KuiDateFieldSegment,
+  KuiDateFieldSegments,
   KuiCalendar,
   KuiCalendarCell,
   KuiCalendarDay,
@@ -285,6 +289,10 @@ import {
     KuiMeterTrack,
     KuiMeterValue,
     KuiOtp,
+    KuiDateField,
+    KuiDateFieldInput,
+    KuiDateFieldSegment,
+    KuiDateFieldSegments,
     KuiCalendar,
     KuiCalendarCell,
     KuiCalendarDay,
@@ -1498,6 +1506,27 @@ import {
           </table>
         </div>
         <output data-testid="cal1-output">{{ dated() }}</output>
+        <form data-testid="df1-form">
+          <div
+            kuiDateField
+            [kuiId]="'df1'"
+            [locale]="'en-US'"
+            [name]="'born'"
+            aria-label="Date of birth"
+            class="date-field"
+            data-testid="df1"
+            (valueChanged)="born.set('' + $event.value)"
+          >
+            <span
+              *kuiDateFieldSegments="let segment"
+              kuiDateFieldSegment
+              [segment]="segment"
+              [attr.data-testid]="'df1-' + segment.type + '-' + segment.index"
+            ></span>
+            <input kuiDateFieldInput />
+          </div>
+        </form>
+        <output data-testid="df1-output">{{ born() }}</output>
       </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
@@ -1695,6 +1724,7 @@ export class App {
   protected readonly shares = signal("25,75")
   protected readonly slide = signal("0")
   protected readonly drawn = signal("closed")
+  protected readonly born = signal("none")
   protected readonly dated = signal("none")
   protected readonly rests = signal("0.5")
   protected readonly said = signal(8)

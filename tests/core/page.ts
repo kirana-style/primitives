@@ -1,4 +1,5 @@
 import { onTestFinished } from "vite-plus/test"
+import { userEvent } from "vite-plus/test/browser"
 
 /**
  * Puts markup in the page for one test and takes it out when the test ends. Answers its
@@ -28,3 +29,16 @@ export function style(css: string): void {
 
 /** The id of the element that has focus. */
 export const focused = (): string | undefined => document.activeElement?.id || undefined
+
+/**
+ * Takes the real pointer to the far corner of the page. It stays wherever the test before
+ * left it, in whatever file that was: a trigger that then appears under it is hovered, and a
+ * menu opens or closes for a pointer no test moved. For a file whose parts answer hover.
+ */
+export async function park(): Promise<void> {
+  const corner = document.createElement("div")
+  corner.style.cssText = "position:fixed;right:0;bottom:0;width:2px;height:2px"
+  document.body.append(corner)
+  await userEvent.hover(corner)
+  corner.remove()
+}

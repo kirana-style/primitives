@@ -80,6 +80,12 @@ export {
 export { KuiOtp, KuiOtpCaret, KuiOtpGroup, KuiOtpInput, KuiOtpSeparator, KuiOtpSlot } from "./otp"
 export { KuiQrCode, KuiQrCodeFrame, KuiQrCodePattern } from "./qr-code"
 export {
+  KuiDateField,
+  KuiDateFieldInput,
+  KuiDateFieldSegment,
+  KuiDateFieldSegments,
+} from "./date-field"
+export {
   KuiCalendar,
   KuiCalendarCell,
   KuiCalendarDay,

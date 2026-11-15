@@ -120,6 +120,10 @@ const RENAMED: Record<string, string> = {
   autocomplete: "autoComplete",
   inputmode: "inputMode",
   maxlength: "maxLength",
+  contenteditable: "contentEditable",
+  spellcheck: "spellCheck",
+  autocapitalize: "autoCapitalize",
+  enterkeyhint: "enterKeyHint",
 }
 
 /** A style as React takes it: `inset-inline-start` is `insetInlineStart`, `--x` stays as it is. */

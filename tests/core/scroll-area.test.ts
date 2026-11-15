@@ -86,12 +86,11 @@ describe("a scroll area", () => {
     expect(Math.round(box(thumb).height)).toBe(25)
     expect(thumb.style.getPropertyValue("--scroll-area-thumb-height")).toBe("25px")
     const top = box(thumb).top
+    // A browser says a box scrolled when it next draws, which is not always the next frame.
     view.scrollTop = 300
-    await drawn()
-    expect(Math.round(box(thumb).top - top)).toBe(75)
+    await expect.poll(() => Math.round(box(thumb).top - top)).toBe(75)
     view.scrollTop = 150
-    await drawn()
-    expect(Math.round(box(thumb).top - top)).toBe(38)
+    await expect.poll(() => Math.round(box(thumb).top - top)).toBe(38)
   })
 
   it("measures again when its content grows late", async () => {

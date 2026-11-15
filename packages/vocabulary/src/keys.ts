@@ -14,6 +14,7 @@ export const exclusive: string[][] = [
   ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
+  ["[data-segment=\"day\"]","[data-segment=\"month\"]","[data-segment=\"year\"]","[data-segment=\"literal\"]"],
   ["[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]","[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]"],
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
@@ -1032,6 +1033,37 @@ export const Otp = {
   },
   /** A caret drawn in the active cell while it is empty. */
   Caret: {
+  },
+} as const
+
+export const DateField = {
+  /** The field: a group of the date's parts. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when its value cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when the date is outside what it takes, or is asked for and half typed. */
+    invalid: "[data-invalid]",
+  },
+  /** One piece of the date: a part that is typed, or what stands between two. */
+  Segment: {
+    /** Which piece it is. */
+    segment: {
+      day: "[data-segment=\"day\"]",
+      month: "[data-segment=\"month\"]",
+      year: "[data-segment=\"year\"]",
+      literal: "[data-segment=\"literal\"]",
+    },
+    /** Present on a part that is empty. */
+    placeholder: "[data-placeholder]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the date is outside what it takes, or is asked for and half typed. */
+    invalid: "[data-invalid]",
+  },
+  /** The hidden input it is submitted by. */
+  Input: {
   },
 } as const
 

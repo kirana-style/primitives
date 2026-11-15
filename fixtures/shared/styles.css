@@ -576,3 +576,17 @@ section[data-fixture="slider"] {
 .calendar [data-outside-month] {
   opacity: 0.5;
 }
+
+.date-field {
+  display: inline-flex;
+  padding: 4px;
+  border: 1px solid #999;
+  font: 14px/20px monospace;
+}
+.date-field [data-placeholder] {
+  color: #777;
+}
+.date-field [role="spinbutton"]:focus {
+  outline: none;
+  background: #cde;
+}

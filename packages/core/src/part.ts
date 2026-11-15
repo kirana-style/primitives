@@ -27,9 +27,30 @@ export interface ChangeDetails {
   readonly reason: string
   /** The DOM event behind it, when there is one. */
   readonly event: Event | undefined
+  /**
+   * What made it: a mouse, a finger, a pen, the keyboard, something that presses without a
+   * pointer (a screen reader, `element.click()`), or code with no event at all.
+   */
+  readonly source: ChangeSource
   /** Keeps the value as it was. */
   cancel(): void
   readonly canceled: boolean
+}
+
+export type ChangeSource = "mouse" | "touch" | "pen" | "keyboard" | "virtual" | "programmatic"
+
+/** What made an event, read from the event: nothing is remembered between events. */
+function sourceOf(event: Event | undefined): ChangeSource {
+  if (!event) return "programmatic"
+  const type = (event as PointerEvent).pointerType
+  if (type === "mouse" || type === "touch" || type === "pen") return type
+  if (event.type.startsWith("key")) return "keyboard"
+  // A click no pointer made: Enter or Space on a button, a screen reader's press, code.
+  if (event.type === "click" && (event as MouseEvent).detail === 0) return "virtual"
+  if (event.type.startsWith("mouse") || event.type === "click" || event.type === "contextmenu")
+    return "mouse"
+  if (event.type.startsWith("touch")) return "touch"
+  return "virtual"
 }
 
 export function details(reason: string, event?: Event): ChangeDetails {
@@ -37,6 +58,9 @@ export function details(reason: string, event?: Event): ChangeDetails {
   return {
     reason,
     event,
+    get source() {
+      return sourceOf(event)
+    },
     cancel() {
       canceled = true
     },

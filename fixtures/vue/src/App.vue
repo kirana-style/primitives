@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Calendar,
+  DateField,
   Drawer,
   MessageScroller,
   Autosize,
@@ -93,6 +94,7 @@ const code = ref("none")
 const shares = ref("25,75")
 const slide = ref("0")
 const drawn = ref("closed")
+const born = ref("none")
 const dated = ref("none")
 const rests = ref("0.5")
 const said = ref(8)
@@ -1041,6 +1043,26 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         </Calendar.Grid>
       </Calendar.Root>
       <output data-testid="cal1-output">{{ dated }}</output>
+      <form data-testid="df1-form">
+        <DateField.Root
+          id="df1"
+          locale="en-US"
+          name="born"
+          aria-label="Date of birth"
+          class="date-field"
+          data-testid="df1"
+          @value-change="(next: string | null) => (born = String(next))"
+        >
+          <DateField.Segments v-slot="{ segment }">
+            <DateField.Segment
+              :segment="segment"
+              :data-testid="`df1-${segment.type}-${segment.index}`"
+            />
+          </DateField.Segments>
+          <DateField.Input />
+        </DateField.Root>
+      </form>
+      <output data-testid="df1-output">{{ born }}</output>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

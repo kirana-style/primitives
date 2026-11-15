@@ -2444,6 +2444,70 @@ export const vocabulary = {
         }
       }
     },
+    "dateField": {
+      "parts": {
+        "root": {
+          "description": "The field: a group of the date's parts.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when its value cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the date is outside what it takes, or is asked for and half typed.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "segment": {
+          "description": "One piece of the date: a part that is typed, or what stands between two.",
+          "states": {
+            "segment": {
+              "attribute": "data-segment",
+              "description": "Which piece it is.",
+              "values": {
+                "day": "[data-segment=\"day\"]",
+                "month": "[data-segment=\"month\"]",
+                "year": "[data-segment=\"year\"]",
+                "literal": "[data-segment=\"literal\"]"
+              }
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present on a part that is empty.",
+              "selector": "[data-placeholder]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the date is outside what it takes, or is asked for and half typed.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "input": {
+          "description": "The hidden input it is submitted by.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "calendar": {
       "parts": {
         "root": {

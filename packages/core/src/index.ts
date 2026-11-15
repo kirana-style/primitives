@@ -12,6 +12,7 @@ export {
 } from "./part.ts"
 export type {
   ChangeDetails,
+  ChangeSource,
   ComponentDefinition,
   Part,
   PartDefinition,

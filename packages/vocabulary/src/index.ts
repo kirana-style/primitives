@@ -2500,7 +2500,8 @@ export const vocabulary = {
           "variables": {
             "--drawer-swipe-movement-x": "How far it has been dragged across.",
             "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
-            "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1."
+            "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
+            "--drawer-snap-point-offset": "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point."
           }
         },
         "popup": {
@@ -2562,6 +2563,7 @@ export const vocabulary = {
             "--drawer-swipe-movement-x": "How far it has been dragged across.",
             "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
             "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
+            "--drawer-snap-point-offset": "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.",
             "--drawer-height": "Its height.",
             "--drawer-width": "Its width."
           }

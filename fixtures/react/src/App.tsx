@@ -94,6 +94,7 @@ export function App() {
   const [shares, setShares] = useState("25,75")
   const [slide, setSlide] = useState("0")
   const [drawn, setDrawn] = useState("closed")
+  const [rests, setRests] = useState("0.5")
   const [said, setSaid] = useState(8)
   const [first, setFirst] = useState(0)
   const [ran, setRan] = useState("none")
@@ -1165,6 +1166,21 @@ export function App() {
           </Drawer.Portal>
         </Drawer.Root>
         <output data-testid="dw1-output">{drawn}</output>
+        <Drawer.Root
+          id="dw2"
+          snapPoints={[0.5, 1]}
+          onSnapPointChange={(next: number) => setRests(String(next))}
+        >
+          <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
+          <Drawer.Portal>
+            <Drawer.Backdrop className="backdrop" data-testid="dw2-backdrop" />
+            <Drawer.Popup className="drawer" data-testid="dw2-popup">
+              <Drawer.Title>Details</Drawer.Title>
+              <Drawer.Close data-testid="dw2-close">Close</Drawer.Close>
+            </Drawer.Popup>
+          </Drawer.Portal>
+        </Drawer.Root>
+        <output data-testid="dw2-output">{rests}</output>
         <MessageScroller.Root id="ms1" className="chat" data-testid="ms1">
           <MessageScroller.Viewport className="chat-view" data-testid="ms1-view">
             <MessageScroller.Content className="chat-lines" data-testid="ms1-content">

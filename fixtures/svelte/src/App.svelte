@@ -91,6 +91,7 @@
   let shares = $state("25,75")
   let slide = $state("0")
   let drawn = $state("closed")
+  let rests = $state("0.5")
   let said = $state(8)
   // A page's toasts are made once: a long time, so a test reads them.
   const toaster = createToaster({ duration: 600_000 })
@@ -1022,6 +1023,21 @@
       </Drawer.Portal>
     </Drawer.Root>
     <output data-testid="dw1-output">{drawn}</output>
+    <Drawer.Root
+      id="dw2"
+      snapPoints={[0.5, 1]}
+      onSnapPointChange={(next: number) => (rests = String(next))}
+    >
+      <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Backdrop class="backdrop" data-testid="dw2-backdrop" />
+        <Drawer.Popup class="drawer" data-testid="dw2-popup">
+          <Drawer.Title>Details</Drawer.Title>
+          <Drawer.Close data-testid="dw2-close">Close</Drawer.Close>
+        </Drawer.Popup>
+      </Drawer.Portal>
+    </Drawer.Root>
+    <output data-testid="dw2-output">{rests}</output>
     <MessageScroller.Root id="ms1" class="chat" data-testid="ms1">
       <MessageScroller.Viewport class="chat-view" data-testid="ms1-view">
         <MessageScroller.Content class="chat-lines" data-testid="ms1-content">

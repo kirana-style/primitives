@@ -2387,6 +2387,40 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await key("Escape")
     await until(() => present("dw1-popup"), false, "and so does Escape")
 
+    // A drawer with places to rest: half shown, then whole.
+    const rests = () =>
+      id("dw2-popup").evaluate((element) =>
+        element.style.getPropertyValue("--drawer-snap-point-offset")
+      )
+    const lies = () =>
+      id("dw2-popup").evaluate((element) => Math.round(element.getBoundingClientRect().top))
+    const pull = async (by: number) => {
+      const box = (await id("dw2-popup").boundingBox())!
+      const x = box.x + box.width - 6
+      const y = box.y + 6
+      await page.mouse.move(x, y)
+      await page.mouse.down()
+      await page.mouse.move(x, y + by / 2, { steps: 3 })
+      await page.mouse.move(x, y + by, { steps: 3 })
+      await page.waitForTimeout(150)
+      await page.mouse.up()
+      await settled(page)
+    }
+    await id("dw2-trigger").click()
+    await settled(page)
+    expect((await rests()) === "116px", `it opens at its smallest place (${await rests()})`)
+    expect((await lies()) === 684, `half of it showing (${await lies()})`)
+    await snapshot("a drawer at its first place")
+    await pull(-70)
+    await until(rests, "0px", "dragged up, it rests whole")
+    expect((await id("dw2-output").textContent()) === "1", "and says which place it is at")
+    await until(lies, 568, "all of it showing")
+    await pull(60)
+    await until(rests, "116px", "dragged down a little, it rests at the place before")
+    expect(await present("dw2-popup"), "still open")
+    await pull(40)
+    await until(() => present("dw2-popup"), false, "and past its smallest, it closes")
+
     const top = () => id("ms1-view").evaluate((element) => Math.round(element.scrollTop))
     await id("ms1").scrollIntoViewIfNeeded()
     expect((await attribute("ms1-view", "role")) === "log", "a conversation is a log")

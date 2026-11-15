@@ -92,6 +92,7 @@ const code = ref("none")
 const shares = ref("25,75")
 const slide = ref("0")
 const drawn = ref("closed")
+const rests = ref("0.5")
 const said = ref(8)
 // Bound, not written in the template: the type checker trips on `//` in a plain attribute.
 const LINK = "https://kirana.style"
@@ -979,6 +980,21 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         </Drawer.Portal>
       </Drawer.Root>
       <output data-testid="dw1-output">{{ drawn }}</output>
+      <Drawer.Root
+        id="dw2"
+        :snap-points="[0.5, 1]"
+        @snap-point-change="(next: number) => (rests = String(next))"
+      >
+        <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
+        <Drawer.Portal>
+          <Drawer.Backdrop class="backdrop" data-testid="dw2-backdrop" />
+          <Drawer.Popup class="drawer" data-testid="dw2-popup">
+            <Drawer.Title>Details</Drawer.Title>
+            <Drawer.Close data-testid="dw2-close">Close</Drawer.Close>
+          </Drawer.Popup>
+        </Drawer.Portal>
+      </Drawer.Root>
+      <output data-testid="dw2-output">{{ rests }}</output>
       <MessageScroller.Root id="ms1" class="chat" data-testid="ms1">
         <MessageScroller.Viewport class="chat-view" data-testid="ms1-view">
           <MessageScroller.Content class="chat-lines" data-testid="ms1-content">

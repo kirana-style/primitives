@@ -1,8 +1,11 @@
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
+import { createDrawer } from "@kirana-ui/core/drawer"
+import type { DrawerSide } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
 import { defineComponent, useId } from "vue"
+import type { PropType } from "vue"
 
 import { context, controller, optional, partComponent, portalComponent } from "./runtime.ts"
 
@@ -71,3 +74,37 @@ export const Dialog = {
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
 export const AlertDialog = { ...Dialog, Root: AlertRoot }
+
+const DrawerRoot = defineComponent({
+  name: "DrawerRoot",
+  props: {
+    open: optional(Boolean),
+    defaultOpen: Boolean,
+    modal: { type: Boolean, default: true },
+    dismissible: { type: Boolean, default: true },
+    swipeDirection: String as PropType<DrawerSide>,
+    id: String,
+  },
+  emits: ["update:open", "openChange"],
+  setup(props, { slots, emit }) {
+    const generated = useId()
+    scope.provide(
+      controller(createDrawer, () => ({
+        id: props.id ?? generated,
+        open: props.open,
+        defaultOpen: props.defaultOpen,
+        modal: props.modal,
+        dismissible: props.dismissible,
+        swipeDirection: props.swipeDirection,
+        onOpenChange(open: boolean, details: ChangeDetails) {
+          emit("openChange", open, details)
+          if (!details.canceled) emit("update:open", open)
+        },
+      }))
+    )
+    return () => slots.default?.()
+  },
+})
+
+/** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
+export const Drawer = { ...Dialog, Root: DrawerRoot }

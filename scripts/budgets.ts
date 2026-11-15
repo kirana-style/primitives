@@ -32,6 +32,8 @@ const COMPONENTS: Record<string, string[]> = {
   meter: ["meter"],
   "navigation-menu": ["navigation-menu"],
   otp: [],
+  drawer: ["drawer"],
+  "message-scroller": [],
   "qr-code": [],
   autosize: [],
   carousel: [],

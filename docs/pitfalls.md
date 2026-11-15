@@ -361,6 +361,33 @@ note. Three places hold them:
   component after it is reported as lacking `.value`. Bind it (`:value="LINK"`).
 - **Asserting "still closed" right after a hover is a race.** A busy browser takes longer
   to say the pointer arrived than a rest delay lasts.
+- **A component that is another one, dragged, is that one.** A drawer is the dialog's
+  controller with two of its parts wrapped: the same focus (its first control, not the
+  drawer), the same press outside on its backdrop (there is no viewport over the page to
+  take it), the same stack. Each adapter gives it a root and the dialog's own parts.
+- **A drag says how far; the design moves the thing.** The drawer writes
+  `--drawer-swipe-movement-x/y` and `--drawer-swipe-progress` and never a `transform`, so a
+  design never needs `!important`. How far stays written through a swipe's exit, so the
+  drawer leaves from where it was let go, and is cleared when it opens again.
+- **The click a drag ends with is stopped in the capture phase, on the element**: a
+  framework that listens at the root never hears it, so a button a drag ends on is not
+  pressed in any adapter.
+- **What scrolls inside a dragged thing scrolls first.** A drag towards the closing edge
+  from inside a scrolling box moves the drawer only when the box is at that end; a field's
+  text is never a drag.
+- **Following is decided by which way the reader went, not by where they are.** A
+  conversation follows what is written until a scroll goes up and away from the end;
+  judged by "is it at the end now", a glide to the end (its button) stopped following
+  whenever a message came mid-glide.
+- **A browser reports a new size only when it next draws.** A conversation that followed
+  on a resize alone was a frame behind what was written, and in a page that draws nothing
+  (WebKit under the test runner) it never followed. What is written is heard as a mutation,
+  at once; the resize observer stays for what grows with nothing written.
+- **A flick is asked at the moment of letting go.** Speed from the last move alone called a
+  drag a flick when the pointer had then rested: a drawer dragged a little, held and let go
+  closed. A pointer still for 80 ms was not flicked.
+- **An id a part takes is not the test's.** A part that writes `id` (a viewport, a drawer's
+  popup) renames the element: a test finds it before binding, and styles it by class.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

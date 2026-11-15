@@ -1012,6 +1012,99 @@ A mark between groups of cells.
 
 A caret drawn in the active cell while it is empty.
 
+## Drawer
+
+### Drawer.Trigger
+
+The button that opens the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the dialog is open. |
+
+### Drawer.Backdrop
+
+The layer over the page behind the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-swiping` | Present while the drawer is dragged. |
+
+| Variable | Holds |
+| --- | --- |
+| `--drawer-swipe-movement-x` | How far it has been dragged across. |
+| `--drawer-swipe-movement-y` | How far it has been dragged up or down. |
+| `--drawer-swipe-progress` | How far it has been dragged, of its own size: 0 to 1. |
+
+### Drawer.Popup
+
+The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested-dialog-open` | Present when another dialog is open above this one. |
+| `data-swiping` | Present while the drawer is dragged. |
+| `data-swipe-direction` (up, down, left, right) | The way it is dragged to close it. |
+
+| Variable | Holds |
+| --- | --- |
+| `--nested-dialogs` | How many dialogs are open above this one. |
+| `--drawer-swipe-movement-x` | How far it has been dragged across. |
+| `--drawer-swipe-movement-y` | How far it has been dragged up or down. |
+| `--drawer-swipe-progress` | How far it has been dragged, of its own size: 0 to 1. |
+| `--drawer-height` | Its height. |
+| `--drawer-width` | Its width. |
+
+### Drawer.Title
+
+The heading that names the dialog.
+
+### Drawer.Description
+
+The text that describes the dialog.
+
+### Drawer.Close
+
+A button that closes the dialog.
+
+## MessageScroller
+
+### MessageScroller.Root
+
+What holds the conversation and its button.
+
+| Attribute | When |
+| --- | --- |
+| `data-at-bottom` | Present while the newest message is in view. |
+
+### MessageScroller.Viewport
+
+What scrolls: a log, reached by the keyboard.
+
+| Attribute | When |
+| --- | --- |
+| `data-at-bottom` | Present while the newest message is in view. |
+
+### MessageScroller.Content
+
+The messages: what grows as one is written.
+
+### MessageScroller.Button
+
+Goes to the newest message. Inert while that is in view.
+
+| Attribute | When |
+| --- | --- |
+| `data-at-bottom` | Present while the newest message is in view. |
+
 ## QrCode
 
 ### QrCode.Root

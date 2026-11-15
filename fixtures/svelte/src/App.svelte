@@ -1,5 +1,7 @@
 <script lang="ts">
   import {
+    Drawer,
+    MessageScroller,
     Autosize,
     Carousel,
     QrCode,
@@ -88,6 +90,8 @@
   let code = $state("none")
   let shares = $state("25,75")
   let slide = $state("0")
+  let drawn = $state("closed")
+  let said = $state(8)
   // A page's toasts are made once: a long time, so a test reads them.
   const toaster = createToaster({ duration: 600_000 })
   let first = $state(0)
@@ -1002,6 +1006,33 @@
         {/snippet}
       </Toast.List>
     </Toast.Viewport>
+    <Drawer.Root
+      id="dw1"
+      onOpenChange={(open: boolean, details: { reason: string }) =>
+        (drawn = open ? "open" : details.reason)}
+    >
+      <Drawer.Trigger data-testid="dw1-trigger">Open drawer</Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Backdrop class="backdrop" data-testid="dw1-backdrop" />
+        <Drawer.Popup class="drawer" data-testid="dw1-popup">
+          <Drawer.Title>Filters</Drawer.Title>
+          <button type="button" data-testid="dw1-apply">Apply</button>
+          <Drawer.Close data-testid="dw1-close">Close</Drawer.Close>
+        </Drawer.Popup>
+      </Drawer.Portal>
+    </Drawer.Root>
+    <output data-testid="dw1-output">{drawn}</output>
+    <MessageScroller.Root id="ms1" class="chat" data-testid="ms1">
+      <MessageScroller.Viewport class="chat-view" data-testid="ms1-view">
+        <MessageScroller.Content class="chat-lines" data-testid="ms1-content">
+          {#each Array.from({ length: said }, (_, at) => at + 1) as line (line)}
+            <p class="chat-line">Message {line}</p>
+          {/each}
+        </MessageScroller.Content>
+      </MessageScroller.Viewport>
+      <MessageScroller.Button data-testid="ms1-button">Newest</MessageScroller.Button>
+    </MessageScroller.Root>
+    <button type="button" data-testid="ms1-add" onclick={() => (said += 1)}>Add a message</button>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

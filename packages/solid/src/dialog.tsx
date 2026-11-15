@@ -1,6 +1,8 @@
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
+import { createDrawer } from "@kirana-ui/core/drawer"
+import type { DrawerSide } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "solid-js"
@@ -71,3 +73,20 @@ export const Dialog = {
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
 export const AlertDialog = { ...Dialog, Root: AlertRoot }
+
+function DrawerRoot(props: RootProps & { swipeDirection?: DrawerSide }): JSX.Element {
+  const generated = createUniqueId()
+  const made = controller(createDrawer, () => ({
+    id: props.id ?? generated,
+    open: props.open,
+    defaultOpen: props.defaultOpen,
+    modal: props.modal,
+    dismissible: props.dismissible,
+    swipeDirection: props.swipeDirection,
+    onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
+  }))
+  return <Context.Provider value={made}>{props.children}</Context.Provider>
+}
+
+/** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
+export const Drawer = { ...Dialog, Root: DrawerRoot }

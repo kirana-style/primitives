@@ -522,3 +522,38 @@ section[data-fixture="slider"] {
 .toast[data-ending-style] {
   opacity: 0;
 }
+
+.drawer {
+  position: fixed;
+  inset: auto 0 0;
+  height: 200px;
+  padding: 16px;
+  background: white;
+  touch-action: none;
+  transform: translateY(var(--drawer-swipe-movement-y, 0));
+  transition: transform 100ms;
+}
+.drawer[data-swiping] {
+  transition: none;
+}
+.drawer[data-starting-style],
+.drawer[data-ending-style] {
+  transform: translateY(100%);
+}
+.chat {
+  position: relative;
+  width: 300px;
+}
+.chat-view {
+  height: 100px;
+  overflow-y: auto;
+}
+.chat-lines {
+  display: flex;
+  flex-direction: column;
+}
+.chat-line {
+  height: 20px;
+  margin: 0;
+  font: 14px/20px monospace;
+}

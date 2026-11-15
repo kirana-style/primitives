@@ -93,6 +93,14 @@
       "svelte": "./src/otp.ts",
       "default": "./src/otp.ts"
     },
+    "./drawer": {
+      "svelte": "./src/drawer.ts",
+      "default": "./src/drawer.ts"
+    },
+    "./message-scroller": {
+      "svelte": "./src/message-scroller.ts",
+      "default": "./src/message-scroller.ts"
+    },
     "./qr-code": {
       "svelte": "./src/qr-code.ts",
       "default": "./src/qr-code.ts"

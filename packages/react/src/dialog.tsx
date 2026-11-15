@@ -1,6 +1,8 @@
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
+import { createDrawer } from "@kirana-ui/core/drawer"
+import type { DrawerProps } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
@@ -49,3 +51,13 @@ function AlertRoot({ children, ...props }: AlertRootProps): ReactElement {
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
 export const AlertDialog = { ...Dialog, Root: AlertRoot }
+
+export type DrawerRootProps = Omit<DrawerProps, "id"> & { id?: string; children?: ReactNode }
+
+function DrawerRoot({ children, ...props }: DrawerRootProps): ReactElement {
+  const controller = useController(createDrawer, props)
+  return <Context.Provider value={controller}>{children}</Context.Provider>
+}
+
+/** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
+export const Drawer = { ...Dialog, Root: DrawerRoot }

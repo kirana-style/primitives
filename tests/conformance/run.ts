@@ -1242,7 +1242,8 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await present("d1-popup")), "Escape closes the dialog")
     expect((await focused()) === "d1-trigger", "focus returns to the trigger")
     expect(
-      await page.evaluate(() => document.querySelector("[inert]") === null),
+      // But for what is inert of its own: a conversation's button while its newest is in view.
+      await page.evaluate(() => document.querySelector("[inert]:not([data-at-bottom])") === null),
       "nothing is left inert"
     )
     expect(
@@ -2316,6 +2317,98 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await until(() => present("ts1-toast-1"), false, "and Escape closes the one focus is on")
     expect((await focused()) === "ts1", "focus stays with the toasts")
     await snapshot("no toast left")
+  },
+  async sheets({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const until = async (read: () => Promise<unknown>, wanted: unknown, message: string) => {
+      const from = Date.now()
+      let got = await read()
+      while (got !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+        got = await read()
+      }
+      expect(got === wanted, `${message} (it is ${String(got)})`)
+      await settled(page)
+    }
+    const output = () => id("dw1-output").textContent()
+    const moved = () =>
+      id("dw1-popup").evaluate((element) =>
+        element.style.getPropertyValue("--drawer-swipe-movement-y")
+      )
+    /** Presses on the drawer's own edge, away from what is in it, and drags down. */
+    const drag = async (by: number, then: () => Promise<void>) => {
+      const box = (await id("dw1-popup").boundingBox())!
+      const x = box.x + box.width - 6
+      const y = box.y + 6
+      await page.mouse.move(x, y)
+      await page.mouse.down()
+      await page.mouse.move(x, y + by / 2, { steps: 3 })
+      await page.mouse.move(x, y + by, { steps: 3 })
+      await then()
+      // Held a moment: let go at once, a drag this quick is a flick, which closes.
+      await page.waitForTimeout(150)
+      await page.mouse.up()
+      await settled(page)
+    }
+    await id("dw1-trigger").scrollIntoViewIfNeeded()
+    expect((await attribute("dw1-trigger", "aria-haspopup")) === "dialog", "a drawer is a dialog")
+    await id("dw1-trigger").click()
+    await settled(page)
+    expect((await attribute("dw1-popup", "role")) === "dialog", "with a dialog's role")
+    expect((await attribute("dw1-popup", "aria-modal")) === "true", "modal as one is")
+    expect(
+      (await attribute("dw1-popup", "data-swipe-direction")) === "down",
+      "dragged down to close"
+    )
+    expect((await focused()) === "dw1-apply", "focus goes to its first control, as a dialog's does")
+    await snapshot("a drawer open")
+    await drag(30, async () => {
+      expect((await attribute("dw1-popup", "data-swiping")) === "", "a drag is said while it lasts")
+      expect((await moved()) === "30px", `and how far it has gone (${await moved()})`)
+    })
+    expect(await present("dw1-popup"), "let go early, it stays")
+    expect((await moved()) === "", "back where it was")
+    expect((await output()) === "open", "and nothing was said to have closed")
+    await drag(90, async () => {})
+    await until(() => present("dw1-popup"), false, "dragged far enough, it closes")
+    expect((await output()) === "swipe", "for the reason that it was dragged")
+    expect((await focused()) === "dw1-trigger", "and focus goes back to what opened it")
+    await id("dw1-trigger").click()
+    await settled(page)
+    expect((await moved()) === "", "opened again, it begins where it lies")
+    await page.mouse.click(20, 20)
+    await until(() => present("dw1-popup"), false, "a press on what is behind closes it")
+    expect((await output()) === "outside-press", "as a press outside")
+    await id("dw1-trigger").click()
+    await settled(page)
+    await key("Escape")
+    await until(() => present("dw1-popup"), false, "and so does Escape")
+
+    const top = () => id("ms1-view").evaluate((element) => Math.round(element.scrollTop))
+    await id("ms1").scrollIntoViewIfNeeded()
+    expect((await attribute("ms1-view", "role")) === "log", "a conversation is a log")
+    expect((await attribute("ms1-view", "tabindex")) === "0", "that the keyboard reaches")
+    expect((await top()) === 60, `it begins at its newest message (${await top()})`)
+    expect((await attribute("ms1", "data-at-bottom")) === "", "and says it is there")
+    expect((await attribute("ms1-button", "inert")) === "", "with nothing to press")
+    await snapshot("a conversation at its newest")
+    await id("ms1-add").click()
+    await until(top, 80, "a message that comes is followed")
+    await id("ms1-view").evaluate((element) => element.scrollTo({ top: 0 }))
+    await until(() => attribute("ms1", "data-at-bottom"), null, "scrolled up, it is not at the end")
+    expect((await attribute("ms1-button", "inert")) === null, "and its button can be pressed")
+    await id("ms1-add").click()
+    await settled(page)
+    expect((await top()) === 0, "a reader who went up is left where they are")
+    await snapshot("a conversation read from the top")
+    await id("ms1-button").click()
+    await until(top, 100, "the button goes to the newest")
+    await until(() => attribute("ms1", "data-at-bottom"), "", "which is the end again")
+    await id("ms1-add").click()
+    await until(top, 120, "and what comes after is followed again")
   },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {

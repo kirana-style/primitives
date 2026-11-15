@@ -10,6 +10,8 @@ import {
 import type { OnInit } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createDialog } from "@kirana-ui/core/dialog"
+import { createDrawer } from "@kirana-ui/core/drawer"
+import type { DrawerSide } from "@kirana-ui/core/drawer"
 import type { Dialog } from "@kirana-ui/core/dialog"
 
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
@@ -17,20 +19,24 @@ import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime
 /** On any element, or on `<ng-container>` to draw none. */
 /**
  * `kuiAlertDialog` in place of `kuiDialog` is a dialog that asks for an answer: a press outside
- * it does not close it. Its parts are a dialog's (`kuiDialogPopup` …).
+ * it does not close it. `kuiDrawer` is a dialog that comes from an edge and is dragged back to
+ * it (`swipeDirection`). Either way its parts are a dialog's (`kuiDialogPopup` …).
  */
-@Directive({ selector: "[kuiDialog],[kuiAlertDialog]", exportAs: "kuiDialog" })
+@Directive({ selector: "[kuiDialog],[kuiAlertDialog],[kuiDrawer]", exportAs: "kuiDialog" })
 export class KuiDialog implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly modal = input(true, { transform: booleanAttribute })
   readonly dismissible = input(true, { transform: booleanAttribute })
+  /** With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`. */
+  readonly swipeDirection = input<DrawerSide>()
   readonly kuiId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Dialog
   private readonly alert =
     inject(new HostAttributeToken("kuiAlertDialog"), { optional: true }) !== null
+  private readonly drawer = inject(new HostAttributeToken("kuiDrawer"), { optional: true }) !== null
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
@@ -38,6 +44,7 @@ export class KuiDialog implements OnInit {
     defaultOpen: this.defaultOpen(),
     modal: this.modal(),
     dismissible: this.dismissible(),
+    swipeDirection: this.swipeDirection(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
       if (!details.canceled) {
@@ -49,7 +56,9 @@ export class KuiDialog implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createDialog(this.props(), { alert: this.alert })
+    this.controller = this.drawer
+      ? createDrawer(this.props())
+      : createDialog(this.props(), { alert: this.alert })
     this.mount(this.controller)
   }
 }

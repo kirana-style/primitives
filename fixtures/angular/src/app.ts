@@ -1,4 +1,4 @@
-import { Component, signal } from "@angular/core"
+import { Component, computed, signal } from "@angular/core"
 import {
   KuiAccordion,
   KuiAccordionHeader,
@@ -82,6 +82,10 @@ import {
   KuiMeterTrack,
   KuiMeterValue,
   KuiOtp,
+  KuiMessageScroller,
+  KuiMessageScrollerButton,
+  KuiMessageScrollerContent,
+  KuiMessageScrollerViewport,
   KuiQrCode,
   KuiQrCodeFrame,
   KuiQrCodePattern,
@@ -271,6 +275,10 @@ import {
     KuiMeterTrack,
     KuiMeterValue,
     KuiOtp,
+    KuiMessageScroller,
+    KuiMessageScrollerButton,
+    KuiMessageScrollerContent,
+    KuiMessageScrollerViewport,
     KuiQrCode,
     KuiQrCodeFrame,
     KuiQrCodePattern,
@@ -1385,6 +1393,35 @@ import {
             </button>
           </div>
         </div>
+        <ng-container
+          kuiDrawer
+          [kuiId]="'dw1'"
+          (openChanged)="drawn.set($event.open ? 'open' : $event.details.reason)"
+        >
+          <button kuiDialogTrigger data-testid="dw1-trigger">Open drawer</button>
+          <ng-template kuiDialogPortal>
+            <div kuiDialogBackdrop class="backdrop" data-testid="dw1-backdrop"></div>
+            <div kuiDialogPopup class="drawer" data-testid="dw1-popup">
+              <h2 kuiDialogTitle>Filters</h2>
+              <button type="button" data-testid="dw1-apply">Apply</button>
+              <button kuiDialogClose data-testid="dw1-close">Close</button>
+            </div>
+          </ng-template>
+        </ng-container>
+        <output data-testid="dw1-output">{{ drawn() }}</output>
+        <div kuiMessageScroller [kuiId]="'ms1'" class="chat" data-testid="ms1">
+          <div kuiMessageScrollerViewport class="chat-view" data-testid="ms1-view">
+            <div kuiMessageScrollerContent class="chat-lines" data-testid="ms1-content">
+              @for (line of lines(); track line) {
+                <p class="chat-line">Message {{ line }}</p>
+              }
+            </div>
+          </div>
+          <button kuiMessageScrollerButton data-testid="ms1-button">Newest</button>
+        </div>
+        <button type="button" data-testid="ms1-add" (click)="said.set(said() + 1)">
+          Add a message
+        </button>
       </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
@@ -1581,6 +1618,9 @@ export class App {
   protected readonly code = signal("none")
   protected readonly shares = signal("25,75")
   protected readonly slide = signal("0")
+  protected readonly drawn = signal("closed")
+  protected readonly said = signal(8)
+  protected readonly lines = computed(() => Array.from({ length: this.said() }, (_, at) => at + 1))
   // A page's toasts are made once: a long time, so a test reads them.
   protected readonly toaster = createToaster({ duration: 600_000 })
   protected readonly rounded = (sizes: number[]) => sizes.map(Math.round).join(",")

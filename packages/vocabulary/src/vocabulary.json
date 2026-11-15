@@ -2442,6 +2442,194 @@
         }
       }
     },
+    "drawer": {
+      "parts": {
+        "trigger": {
+          "description": "The button that opens the dialog.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the dialog is open.",
+              "selector": "[data-popup-open]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "backdrop": {
+          "description": "The layer over the page behind the dialog.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the drawer is dragged.",
+              "selector": "[data-swiping]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--drawer-swipe-movement-x": "How far it has been dragged across.",
+            "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
+            "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1."
+          }
+        },
+        "popup": {
+          "description": "The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "nestedDialogOpen": {
+              "attribute": "data-nested-dialog-open",
+              "description": "Present when another dialog is open above this one.",
+              "selector": "[data-nested-dialog-open]"
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the drawer is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDirection": {
+              "attribute": "data-swipe-direction",
+              "description": "The way it is dragged to close it.",
+              "values": {
+                "up": "[data-swipe-direction=\"up\"]",
+                "down": "[data-swipe-direction=\"down\"]",
+                "left": "[data-swipe-direction=\"left\"]",
+                "right": "[data-swipe-direction=\"right\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--nested-dialogs": "How many dialogs are open above this one.",
+            "--drawer-swipe-movement-x": "How far it has been dragged across.",
+            "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
+            "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
+            "--drawer-height": "Its height.",
+            "--drawer-width": "Its width."
+          }
+        },
+        "title": {
+          "description": "The heading that names the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "description": {
+          "description": "The text that describes the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "close": {
+          "description": "A button that closes the dialog.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "messageScroller": {
+      "parts": {
+        "root": {
+          "description": "What holds the conversation and its button.",
+          "states": {
+            "atBottom": {
+              "attribute": "data-at-bottom",
+              "description": "Present while the newest message is in view.",
+              "selector": "[data-at-bottom]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "viewport": {
+          "description": "What scrolls: a log, reached by the keyboard.",
+          "states": {
+            "atBottom": {
+              "attribute": "data-at-bottom",
+              "description": "Present while the newest message is in view.",
+              "selector": "[data-at-bottom]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "content": {
+          "description": "The messages: what grows as one is written.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "button": {
+          "description": "Goes to the newest message. Inert while that is in view.",
+          "states": {
+            "atBottom": {
+              "attribute": "data-at-bottom",
+              "description": "Present while the newest message is in view.",
+              "selector": "[data-at-bottom]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "qrCode": {
       "parts": {
         "root": {

@@ -93,6 +93,10 @@
       "svelte": "./src/otp.ts",
       "default": "./src/otp.ts"
     },
+    "./date-field": {
+      "svelte": "./src/date-field.ts",
+      "default": "./src/date-field.ts"
+    },
     "./calendar": {
       "svelte": "./src/calendar.ts",
       "default": "./src/calendar.ts"

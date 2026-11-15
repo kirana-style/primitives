@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     Calendar,
+    DateField,
     Drawer,
     MessageScroller,
     Autosize,
@@ -92,6 +93,7 @@
   let shares = $state("25,75")
   let slide = $state("0")
   let drawn = $state("closed")
+  let born = $state("none")
   let dated = $state("none")
   let rests = $state("0.5")
   let said = $state(8)
@@ -1092,6 +1094,25 @@
       </Calendar.Grid>
     </Calendar.Root>
     <output data-testid="cal1-output">{dated}</output>
+    <form data-testid="df1-form">
+      <DateField.Root
+        id="df1"
+        locale="en-US"
+        name="born"
+        aria-label="Date of birth"
+        class="date-field"
+        data-testid="df1"
+        onValueChange={(next: string | null) => (born = String(next))}
+      >
+        <DateField.Segments>
+          {#snippet children(segment)}
+            <DateField.Segment {segment} data-testid={`df1-${segment.type}-${segment.index}`} />
+          {/snippet}
+        </DateField.Segments>
+        <DateField.Input />
+      </DateField.Root>
+    </form>
+    <output data-testid="df1-output">{born}</output>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

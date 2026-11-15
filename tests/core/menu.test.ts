@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished } from "vite-plus/test"
+import { beforeEach, describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
@@ -9,7 +9,9 @@ import type { Part } from "../../packages/core/src/part.ts"
 import { effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
 import { createMenubar } from "../../packages/core/src/menubar.ts"
 import { SAFE_AREA_REST, createSafeArea } from "../../packages/core/src/services/safe-area.ts"
-import { find, focused, mount, style } from "./page.ts"
+import { find, focused, mount, park, style } from "./page.ts"
+
+beforeEach(park)
 
 interface Drawn {
   made: Menu

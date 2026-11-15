@@ -29,6 +29,7 @@
     "./menubar": "./src/menubar.ts",
     "./navigation-menu": "./src/navigation-menu.ts",
     "./otp": "./src/otp.ts",
+    "./date-field": "./src/date-field.ts",
     "./calendar": "./src/calendar.ts",
     "./drawer": "./src/drawer.ts",
     "./message-scroller": "./src/message-scroller.ts",

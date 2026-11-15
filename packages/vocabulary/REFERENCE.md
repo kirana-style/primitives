@@ -1012,6 +1012,33 @@ A mark between groups of cells.
 
 A caret drawn in the active cell while it is empty.
 
+## DateField
+
+### DateField.Root
+
+The field: a group of the date's parts.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when its value cannot be changed. |
+| `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
+
+### DateField.Segment
+
+One piece of the date: a part that is typed, or what stands between two.
+
+| Attribute | When |
+| --- | --- |
+| `data-segment` (day, month, year, literal) | Which piece it is. |
+| `data-placeholder` | Present on a part that is empty. |
+| `data-disabled` | Present when it is disabled. |
+| `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
+
+### DateField.Input
+
+The hidden input it is submitted by.
+
 ## Calendar
 
 ### Calendar.Root

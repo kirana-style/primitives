@@ -1,11 +1,13 @@
-import { describe, expect, it, onTestFinished } from "vite-plus/test"
+import { beforeEach, describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
 import { NAVIGATION_DELAY, createNavigationMenu } from "../../packages/core/src/navigation-menu.ts"
 import type { NavigationMenuProps } from "../../packages/core/src/navigation-menu.ts"
 import { effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
-import { find, focused, mount, style } from "./page.ts"
+import { find, focused, mount, park, style } from "./page.ts"
+
+beforeEach(park)
 
 const PAGE = `
   <button id="before">Before</button>

@@ -1,5 +1,6 @@
 import {
   Calendar,
+  DateField,
   Drawer,
   MessageScroller,
   Autosize,
@@ -95,6 +96,7 @@ export function App() {
   const [shares, setShares] = useState("25,75")
   const [slide, setSlide] = useState("0")
   const [drawn, setDrawn] = useState("closed")
+  const [born, setBorn] = useState("none")
   const [dated, setDated] = useState("none")
   const [rests, setRests] = useState("0.5")
   const [said, setSaid] = useState(8)
@@ -1241,6 +1243,28 @@ export function App() {
           </Calendar.Grid>
         </Calendar.Root>
         <output data-testid="cal1-output">{dated}</output>
+        <form data-testid="df1-form">
+          <DateField.Root
+            id="df1"
+            locale="en-US"
+            name="born"
+            aria-label="Date of birth"
+            className="date-field"
+            data-testid="df1"
+            onValueChange={(next: string | null) => setBorn(String(next))}
+          >
+            <DateField.Segments>
+              {(segment) => (
+                <DateField.Segment
+                  segment={segment}
+                  data-testid={`df1-${segment.type}-${segment.index}`}
+                />
+              )}
+            </DateField.Segments>
+            <DateField.Input />
+          </DateField.Root>
+        </form>
+        <output data-testid="df1-output">{born}</output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

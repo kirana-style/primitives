@@ -416,6 +416,18 @@ note. Three places hold them:
 - **What a server wrote is kept when the page wakes.** Angular's heading wrote the month's
   name beside the one the server had sent: `March 2026March 2026`. A directive that writes
   text takes the text node that is there.
+- **A framework's event is not always the browser's.** React makes a `beforeinput` of its
+  own, with no `inputType` and none for a deletion. A part that needs the browser's event
+  listens for it on the element, in `attach`, and every adapter gets the same one.
+- **A typed date is parts, not text.** Each part is a spin button that takes digits, so
+  nothing is parsed and nothing typed can fail to be a date. A value is said once a part is
+  whole (a year is not 2, then 20, then 202), and when a part is left half typed.
+- **A part that is typed is `contenteditable` with `inputmode="numeric"`, and every write to
+  it is refused.** That is what brings a phone's digits up; the text is the field's own.
+  React needs `suppressContentEditableWarning` for it.
+- **Every change says what made it** (`details.source`: mouse, touch, pen, keyboard,
+  virtual, programmatic), read from the event when it is asked for. Nothing is remembered
+  between events to know it.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

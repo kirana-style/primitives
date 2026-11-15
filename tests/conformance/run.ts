@@ -2509,6 +2509,66 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     )
     await snapshot("a calendar back at its month")
   },
+  async "date-field"({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const shown = async () => ((await id("df1").textContent()) ?? "").replace(/\s+/g, "")
+    const output = () => id("df1-output").textContent()
+    const sent = () =>
+      page.evaluate(() =>
+        String(
+          new FormData(document.querySelector<HTMLFormElement>('[data-testid="df1-form"]')!).get(
+            "born"
+          )
+        )
+      )
+    await id("df1").scrollIntoViewIfNeeded()
+    expect((await attribute("df1", "role")) === "group", "a typed date is a group of its parts")
+    expect(
+      (await shown()) === "mm/dd/yyyy",
+      `in the order the locale writes one (${await shown()})`
+    )
+    expect((await attribute("df1-month-0", "role")) === "spinbutton", "each part a spin button")
+    expect(
+      (await attribute("df1-month-0", "aria-label")) === "month",
+      "named in the locale's words"
+    )
+    expect((await attribute("df1-month-0", "data-placeholder")) === "", "and empty to begin with")
+    expect(
+      (await attribute("df1-literal-1", "aria-hidden")) === "true",
+      "what stands between is not read"
+    )
+    expect((await sent()) === "", "nothing is submitted yet")
+    await snapshot("a date field, empty")
+
+    await id("df1-month-0").click()
+    await settled(page)
+    await page.keyboard.type("12")
+    await settled(page)
+    expect((await focused()) === "df1-day-2", "a part that is whole passes focus on")
+    await page.keyboard.type("25")
+    await settled(page)
+    expect((await focused()) === "df1-year-4", "and so does the next")
+    expect((await output()) === "none", "nothing is said until every part is in")
+    await page.keyboard.type("2026")
+    await settled(page)
+    expect((await shown()) === "12/25/2026", `it shows what was typed (${await shown()})`)
+    expect((await output()) === "2026-12-25", "and its value is an ISO date")
+    expect((await sent()) === "2026-12-25", "which its form submits")
+    expect((await attribute("df1-year-4", "aria-valuenow")) === "2026", "a part says its number")
+    await snapshot("a date typed")
+    await key("ArrowUp")
+    expect((await output()) === "2027-12-25", "the arrows turn a part")
+    await key("ArrowLeft")
+    expect((await focused()) === "df1-day-2", "and move between the parts")
+    await key("Backspace")
+    expect((await shown()) === "12/dd/2027", "Backspace empties a part")
+    expect((await output()) === "null", "and a date with a part missing is no date")
+    expect((await sent()) === "", "so nothing is submitted")
+    await snapshot("a date with a part emptied")
+  },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

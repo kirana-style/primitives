@@ -225,4 +225,142 @@ describe("a drawer", () => {
     expect(made.open.peek()).toBe(true)
     expect(movement("y")).toBe("")
   })
+
+  describe("with places to rest", () => {
+    const TWO = { snapPoints: [0.4, 1] }
+    const rests = (sheet: HTMLElement) => sheet.style.getPropertyValue("--drawer-snap-point-offset")
+    const flick = (sheet: HTMLElement, by: number) => {
+      pointer(sheet, "pointerdown", 100, 100)
+      pointer(sheet, "pointermove", 100, 100 + Math.sign(by) * 5)
+      return new Promise<void>((resolve) =>
+        setTimeout(() => {
+          pointer(sheet, "pointermove", 100, 100 + by)
+          pointer(sheet, "pointerup", 100, 100 + by)
+          resolve()
+        }, 20)
+      )
+    }
+
+    it("opens at the smallest, and says how far from whole it rests", async () => {
+      const { sheet, backdrop, made } = drawer(TWO)
+      await settled()
+      expect(made.snapPoint.peek()).toBe(0.4)
+      // Three fifths of its two hundred are out of view.
+      expect(rests(sheet)).toBe("120px")
+      expect(rests(backdrop)).toBe("120px")
+      expect(sheet.style.transform).toBe("")
+    })
+
+    it("opens where it is told, and whole when it has none", async () => {
+      const whole = drawer()
+      await settled()
+      expect(whole.made.snapPoint.peek()).toBe(1)
+      expect(rests(whole.sheet)).toBe("0px")
+      const told = drawer({ ...TWO, defaultSnapPoint: 1 })
+      await settled()
+      expect(rests(told.sheet)).toBe("0px")
+    })
+
+    it("is dragged to the place nearest where it is let go", async () => {
+      const heard: [number, string][] = []
+      const { sheet, made, movement } = drawer({
+        ...TWO,
+        onSnapPointChange: (value, details) => void heard.push([value, details.reason]),
+      })
+      await settled()
+      await pull(sheet, { y: -100 })
+      expect(made.snapPoint.peek()).toBe(1)
+      expect(rests(sheet)).toBe("0px")
+      expect(movement("y")).toBe("")
+      await pull(sheet, { y: 40 })
+      expect(made.snapPoint.peek()).toBe(1)
+      await pull(sheet, { y: 70 })
+      expect(made.snapPoint.peek()).toBe(0.4)
+      expect(rests(sheet)).toBe("120px")
+      expect(made.open.peek()).toBe(true)
+      expect(heard).toEqual([
+        [1, "swipe"],
+        [0.4, "swipe"],
+      ])
+    })
+
+    it("goes no further out than its largest", async () => {
+      const { sheet, movement } = drawer(TWO)
+      await settled()
+      await pull(sheet, { y: -300 }, false)
+      expect(movement("y")).toBe("-120px")
+      pointer(sheet, "pointerup", 100, -200)
+    })
+
+    it("is dragged by a pointer that has left it: pressed at its edge, moved away", async () => {
+      const { root, sheet, made } = drawer(TWO)
+      await settled()
+      // The moves and the release reach what is behind, never the drawer.
+      const behind = find(root, "trigger")
+      pointer(sheet, "pointerdown", 100, 100)
+      for (const y of [80, 50, 20]) {
+        await new Promise((resolve) => setTimeout(resolve, 40))
+        pointer(behind, "pointermove", 100, y)
+      }
+      expect(sheet.hasAttribute("data-swiping")).toBe(true)
+      pointer(behind, "pointerup", 100, 20)
+      expect(made.snapPoint.peek()).toBe(1)
+      // And nothing is heard once it is let go.
+      pointer(behind, "pointermove", 100, 300)
+      expect(sheet.hasAttribute("data-swiping")).toBe(false)
+    })
+
+    it("closes when it is let go well past its smallest", async () => {
+      const { sheet, made, why } = drawer(TWO)
+      await settled()
+      // A quarter of what shows at its smallest is twenty.
+      await pull(sheet, { y: 15 })
+      expect(made.open.peek()).toBe(true)
+      await pull(sheet, { y: 30 })
+      expect(made.open.peek()).toBe(false)
+      expect(why).toEqual(["swipe"])
+    })
+
+    it("a flick goes one place on: up to the next, down to the one before, then out", async () => {
+      const { sheet, made } = drawer(TWO)
+      await settled()
+      await flick(sheet, -30)
+      expect(made.snapPoint.peek()).toBe(1)
+      await flick(sheet, 30)
+      expect(made.snapPoint.peek()).toBe(0.4)
+      expect(made.open.peek()).toBe(true)
+      await flick(sheet, 30)
+      expect(made.open.peek()).toBe(false)
+    })
+
+    it("is moved by a caller, who may hold it or refuse", async () => {
+      const { sheet, made } = drawer(TWO)
+      await settled()
+      made.setSnapPoint(1, { reason: "button", canceled: false, cancel() {} } as never)
+      expect(rests(sheet)).toBe("0px")
+      const held = drawer({ ...TWO, snapPoint: 1 })
+      await settled()
+      await pull(held.sheet, { y: 70 })
+      // Held at whole: asked, not moved.
+      expect(held.made.snapPoint.peek()).toBe(1)
+      const refused = drawer({ ...TWO, onSnapPointChange: (_, details) => details.cancel() })
+      await settled()
+      await pull(refused.sheet, { y: -100 })
+      expect(refused.made.snapPoint.peek()).toBe(0.4)
+      expect(refused.movement("y")).toBe("")
+    })
+
+    it("rests at the nearest of its places when it is given one that is none", async () => {
+      const { sheet, made } = drawer({ snapPoints: [1, 0.25, 0.6], defaultSnapPoint: 0.5 })
+      await settled()
+      expect(made.snapPoint.peek()).toBe(0.6)
+      expect(rests(sheet)).toBe("80px")
+    })
+
+    it("rests towards the edge it closes at", async () => {
+      const { sheet } = drawer({ ...TWO, swipeDirection: "up" })
+      await settled()
+      expect(rests(sheet)).toBe("-120px")
+    })
+  })
 })

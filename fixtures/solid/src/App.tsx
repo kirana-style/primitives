@@ -89,6 +89,7 @@ export function App() {
   const [shares, setShares] = createSignal("25,75")
   const [slide, setSlide] = createSignal("0")
   const [drawn, setDrawn] = createSignal("closed")
+  const [rests, setRests] = createSignal("0.5")
   const [said, setSaid] = createSignal(8)
   const [first, setFirst] = createSignal(0)
   const [ran, setRan] = createSignal("none")
@@ -1161,6 +1162,21 @@ export function App() {
           </Drawer.Portal>
         </Drawer.Root>
         <output data-testid="dw1-output">{drawn()}</output>
+        <Drawer.Root
+          id="dw2"
+          snapPoints={[0.5, 1]}
+          onSnapPointChange={(next: number) => setRests(String(next))}
+        >
+          <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
+          <Drawer.Portal>
+            <Drawer.Backdrop class="backdrop" data-testid="dw2-backdrop" />
+            <Drawer.Popup class="drawer" data-testid="dw2-popup">
+              <Drawer.Title>Details</Drawer.Title>
+              <Drawer.Close data-testid="dw2-close">Close</Drawer.Close>
+            </Drawer.Popup>
+          </Drawer.Portal>
+        </Drawer.Root>
+        <output data-testid="dw2-output">{rests()}</output>
         <MessageScroller.Root id="ms1" class="chat" data-testid="ms1">
           <MessageScroller.Viewport class="chat-view" data-testid="ms1-view">
             <MessageScroller.Content class="chat-lines" data-testid="ms1-content">

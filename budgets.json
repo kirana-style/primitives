@@ -14,7 +14,7 @@
   "core/context-menu": 16800,
   "react/context-menu": 19250,
   "core/dialog": 4650,
-  "react/dialog": 7450,
+  "react/dialog": 7900,
   "core/field": 3700,
   "react/field": 5500,
   "core/fieldset": 1100,
@@ -35,8 +35,8 @@
   "react/navigation-menu": 16350,
   "core/otp": 2850,
   "react/otp": 4550,
-  "core/drawer": 5750,
-  "react/drawer": 7450,
+  "core/drawer": 6200,
+  "react/drawer": 7850,
   "core/message-scroller": 1550,
   "react/message-scroller": 3100,
   "core/qr-code": 3550,
@@ -75,5 +75,5 @@
   "react/toolbar": 3850,
   "core/tooltip": 12300,
   "react/tooltip": 14000,
-  "react": 57650
+  "react": 58100
 }

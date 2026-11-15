@@ -30,6 +30,12 @@ export class KuiDialog implements OnInit {
   readonly dismissible = input(true, { transform: booleanAttribute })
   /** With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`. */
   readonly swipeDirection = input<DrawerSide>()
+  /** With `kuiDrawer`: places it rests at, each the share of itself that shows. */
+  readonly snapPoints = input<readonly number[]>()
+  /** With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`. */
+  readonly snapPoint = model<number | undefined>(undefined)
+  readonly defaultSnapPoint = input<number>()
+  readonly snapPointChanged = output<{ snapPoint: number; details: ChangeDetails }>()
   readonly kuiId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
@@ -45,6 +51,17 @@ export class KuiDialog implements OnInit {
     modal: this.modal(),
     dismissible: this.dismissible(),
     swipeDirection: this.swipeDirection(),
+    snapPoints: this.snapPoints(),
+    snapPoint: this.snapPoint(),
+    defaultSnapPoint: this.defaultSnapPoint(),
+    onSnapPointChange: (snapPoint: number, details: ChangeDetails) => {
+      this.snapPointChanged.emit({ snapPoint, details })
+      // Written back only to a caller who holds it.
+      if (!details.canceled && this.snapPoint() !== undefined) {
+        this.snapPoint.set(snapPoint)
+        this.props.sync()
+      }
+    },
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
       if (!details.canceled) {

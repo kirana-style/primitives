@@ -14,6 +14,10 @@
     modal,
     dismissible,
     swipeDirection,
+    snapPoints,
+    snapPoint = $bindable(),
+    defaultSnapPoint,
+    onSnapPointChange,
     onOpenChange,
     id,
     children,
@@ -25,6 +29,12 @@
     if (!by.canceled) open = next
   }
 
+  function rest(next: number, by: ChangeDetails) {
+    onSnapPointChange?.(next, by)
+    // Written back only to a caller who holds it.
+    if (!by.canceled && snapPoint !== undefined) snapPoint = next
+  }
+
   provide(
     controller(createDrawer, () => ({
       id: id ?? generated,
@@ -33,6 +43,10 @@
       modal,
       dismissible,
       swipeDirection,
+      snapPoints,
+      snapPoint,
+      defaultSnapPoint,
+      onSnapPointChange: rest,
       onOpenChange: change,
     }))
   )

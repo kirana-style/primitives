@@ -386,6 +386,15 @@ note. Three places hold them:
 - **A flick is asked at the moment of letting go.** Speed from the last move alone called a
   drag a flick when the pointer had then rested: a drawer dragged a little, held and let go
   closed. A pointer still for 80 ms was not flicked.
+- **A drag is heard on the page from the press on, not on the thing dragged.** A pointer
+  pressed near a drawer's edge and moved away is off the drawer before the drag has taken
+  hold (capture comes only once it has, so a press on a button inside stays a press): the
+  drawer heard none of it, and could not be dragged up to its next snap point. Tests that
+  dispatch on the element never see this; the conformance scenario's real mouse did.
+- **A snap point is a share of the thing, written as how far from whole it rests**
+  (`--drawer-snap-point-offset`), beside how far it is dragged: the design adds the two.
+  Let go, it goes to the nearest place, one place on for a flick, and out past a quarter of
+  what shows at its smallest.
 - **An id a part takes is not the test's.** A part that writes `id` (a viewport, a drawer's
   popup) renames the element: a test finds it before binding, and styles it by class.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:

@@ -7,6 +7,8 @@ const MOVED = {
   "--drawer-swipe-movement-x": "How far it has been dragged across.",
   "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
   "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
+  "--drawer-snap-point-offset":
+    "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.",
 }
 
 // A drawer's parts are a dialog's; two of them also say how far it has been dragged.

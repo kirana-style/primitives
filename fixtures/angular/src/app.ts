@@ -1409,6 +1409,22 @@ import {
           </ng-template>
         </ng-container>
         <output data-testid="dw1-output">{{ drawn() }}</output>
+        <ng-container
+          kuiDrawer
+          [kuiId]="'dw2'"
+          [snapPoints]="[0.5, 1]"
+          (snapPointChanged)="rests.set('' + $event.snapPoint)"
+        >
+          <button kuiDialogTrigger data-testid="dw2-trigger">Open a drawer that rests</button>
+          <ng-template kuiDialogPortal>
+            <div kuiDialogBackdrop class="backdrop" data-testid="dw2-backdrop"></div>
+            <div kuiDialogPopup class="drawer" data-testid="dw2-popup">
+              <h2 kuiDialogTitle>Details</h2>
+              <button kuiDialogClose data-testid="dw2-close">Close</button>
+            </div>
+          </ng-template>
+        </ng-container>
+        <output data-testid="dw2-output">{{ rests() }}</output>
         <div kuiMessageScroller [kuiId]="'ms1'" class="chat" data-testid="ms1">
           <div kuiMessageScrollerViewport class="chat-view" data-testid="ms1-view">
             <div kuiMessageScrollerContent class="chat-lines" data-testid="ms1-content">
@@ -1619,6 +1635,7 @@ export class App {
   protected readonly shares = signal("25,75")
   protected readonly slide = signal("0")
   protected readonly drawn = signal("closed")
+  protected readonly rests = signal("0.5")
   protected readonly said = signal(8)
   protected readonly lines = computed(() => Array.from({ length: this.said() }, (_, at) => at + 1))
   // A page's toasts are made once: a long time, so a test reads them.

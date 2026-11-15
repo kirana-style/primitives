@@ -83,9 +83,12 @@ const DrawerRoot = defineComponent({
     modal: { type: Boolean, default: true },
     dismissible: { type: Boolean, default: true },
     swipeDirection: String as PropType<DrawerSide>,
+    snapPoints: Array as PropType<readonly number[]>,
+    snapPoint: optional(Number),
+    defaultSnapPoint: Number,
     id: String,
   },
-  emits: ["update:open", "openChange"],
+  emits: ["update:open", "openChange", "update:snapPoint", "snapPointChange"],
   setup(props, { slots, emit }) {
     const generated = useId()
     scope.provide(
@@ -96,6 +99,13 @@ const DrawerRoot = defineComponent({
         modal: props.modal,
         dismissible: props.dismissible,
         swipeDirection: props.swipeDirection,
+        snapPoints: props.snapPoints,
+        snapPoint: props.snapPoint,
+        defaultSnapPoint: props.defaultSnapPoint,
+        onSnapPointChange(snapPoint: number, details: ChangeDetails) {
+          emit("snapPointChange", snapPoint, details)
+          if (!details.canceled) emit("update:snapPoint", snapPoint)
+        },
         onOpenChange(open: boolean, details: ChangeDetails) {
           emit("openChange", open, details)
           if (!details.canceled) emit("update:open", open)

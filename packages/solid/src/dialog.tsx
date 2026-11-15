@@ -74,7 +74,15 @@ export const Dialog = {
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
 export const AlertDialog = { ...Dialog, Root: AlertRoot }
 
-function DrawerRoot(props: RootProps & { swipeDirection?: DrawerSide }): JSX.Element {
+function DrawerRoot(
+  props: RootProps & {
+    swipeDirection?: DrawerSide
+    snapPoints?: readonly number[]
+    snapPoint?: number
+    defaultSnapPoint?: number
+    onSnapPointChange?: (snapPoint: number, details: ChangeDetails) => void
+  }
+): JSX.Element {
   const generated = createUniqueId()
   const made = controller(createDrawer, () => ({
     id: props.id ?? generated,
@@ -83,6 +91,11 @@ function DrawerRoot(props: RootProps & { swipeDirection?: DrawerSide }): JSX.Ele
     modal: props.modal,
     dismissible: props.dismissible,
     swipeDirection: props.swipeDirection,
+    snapPoints: props.snapPoints,
+    snapPoint: props.snapPoint,
+    defaultSnapPoint: props.defaultSnapPoint,
+    onSnapPointChange: (snapPoint: number, details: ChangeDetails) =>
+      props.onSnapPointChange?.(snapPoint, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
   return <Context.Provider value={made}>{props.children}</Context.Provider>

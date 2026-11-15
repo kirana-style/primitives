@@ -22,6 +22,8 @@ import { menubarVocabulary } from "./menubar.vocabulary.ts"
 import { state } from "./states.ts"
 import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
 import { otpVocabulary } from "./otp.vocabulary.ts"
+import { drawerVocabulary } from "./drawer.vocabulary.ts"
+import { messageScrollerVocabulary } from "./message-scroller.vocabulary.ts"
 import { qrCodeVocabulary } from "./qr-code.vocabulary.ts"
 import { autosizeVocabulary } from "./autosize.vocabulary.ts"
 import { carouselVocabulary } from "./carousel.vocabulary.ts"
@@ -69,6 +71,8 @@ export const vocabulary = {
   meter: meterVocabulary,
   navigationMenu: navigationMenuVocabulary,
   otp: otpVocabulary,
+  drawer: drawerVocabulary,
+  messageScroller: messageScrollerVocabulary,
   qrCode: qrCodeVocabulary,
   autosize: autosizeVocabulary,
   carousel: carouselVocabulary,

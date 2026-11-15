@@ -32,6 +32,8 @@
     "./meter": "./src/meter.ts",
     "./navigation-menu": "./src/navigation-menu.ts",
     "./otp": "./src/otp.ts",
+    "./drawer": "./src/drawer.ts",
+    "./message-scroller": "./src/message-scroller.ts",
     "./qr-code": "./src/qr-code.ts",
     "./autosize": "./src/autosize.ts",
     "./carousel": "./src/carousel.ts",

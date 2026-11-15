@@ -1,4 +1,6 @@
 import {
+  Drawer,
+  MessageScroller,
   Autosize,
   Carousel,
   QrCode,
@@ -91,6 +93,8 @@ export function App() {
   const [code, setCode] = useState("none")
   const [shares, setShares] = useState("25,75")
   const [slide, setSlide] = useState("0")
+  const [drawn, setDrawn] = useState("closed")
+  const [said, setSaid] = useState(8)
   const [first, setFirst] = useState(0)
   const [ran, setRan] = useState("none")
   const [tags, setTags] = useState<string[]>(["New"])
@@ -1142,6 +1146,40 @@ export function App() {
             )}
           </Toast.List>
         </Toast.Viewport>
+        <Drawer.Root
+          id="dw1"
+          onOpenChange={(open: boolean, details: { reason: string }) =>
+            setDrawn(open ? "open" : details.reason)
+          }
+        >
+          <Drawer.Trigger data-testid="dw1-trigger">Open drawer</Drawer.Trigger>
+          <Drawer.Portal>
+            <Drawer.Backdrop className="backdrop" data-testid="dw1-backdrop" />
+            <Drawer.Popup className="drawer" data-testid="dw1-popup">
+              <Drawer.Title>Filters</Drawer.Title>
+              <button type="button" data-testid="dw1-apply">
+                Apply
+              </button>
+              <Drawer.Close data-testid="dw1-close">Close</Drawer.Close>
+            </Drawer.Popup>
+          </Drawer.Portal>
+        </Drawer.Root>
+        <output data-testid="dw1-output">{drawn}</output>
+        <MessageScroller.Root id="ms1" className="chat" data-testid="ms1">
+          <MessageScroller.Viewport className="chat-view" data-testid="ms1-view">
+            <MessageScroller.Content className="chat-lines" data-testid="ms1-content">
+              {Array.from({ length: said }, (_, at) => (
+                <p key={at} className="chat-line">
+                  Message {at + 1}
+                </p>
+              ))}
+            </MessageScroller.Content>
+          </MessageScroller.Viewport>
+          <MessageScroller.Button data-testid="ms1-button">Newest</MessageScroller.Button>
+        </MessageScroller.Root>
+        <button type="button" data-testid="ms1-add" onClick={() => setSaid((lines) => lines + 1)}>
+          Add a message
+        </button>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

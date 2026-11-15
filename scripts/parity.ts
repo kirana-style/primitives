@@ -130,6 +130,7 @@ const IDIOM: Record<
     rename: { Direction: "DirectionProvider", injectDirection: "useDirection" },
     without: {
       AlertDialog: "the dialog's directives with another selector on the root: `kuiAlertDialog`",
+      Drawer: "the dialog's directives with another selector on the root: `kuiDrawer`",
       ContextMenu:
         "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
     },

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import {
+  Drawer,
+  MessageScroller,
   Autosize,
   Carousel,
   QrCode,
@@ -89,6 +91,8 @@ const picked = ref("none")
 const code = ref("none")
 const shares = ref("25,75")
 const slide = ref("0")
+const drawn = ref("closed")
+const said = ref(8)
 // Bound, not written in the template: the type checker trips on `//` in a plain attribute.
 const LINK = "https://kirana.style"
 // A page's toasts are made once: a long time, so a test reads them.
@@ -958,6 +962,32 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Toast.Root>
         </Toast.List>
       </Toast.Viewport>
+      <Drawer.Root
+        id="dw1"
+        @open-change="
+          (open: boolean, details: { reason: string }) => (drawn = open ? 'open' : details.reason)
+        "
+      >
+        <Drawer.Trigger data-testid="dw1-trigger">Open drawer</Drawer.Trigger>
+        <Drawer.Portal>
+          <Drawer.Backdrop class="backdrop" data-testid="dw1-backdrop" />
+          <Drawer.Popup class="drawer" data-testid="dw1-popup">
+            <Drawer.Title>Filters</Drawer.Title>
+            <button type="button" data-testid="dw1-apply">Apply</button>
+            <Drawer.Close data-testid="dw1-close">Close</Drawer.Close>
+          </Drawer.Popup>
+        </Drawer.Portal>
+      </Drawer.Root>
+      <output data-testid="dw1-output">{{ drawn }}</output>
+      <MessageScroller.Root id="ms1" class="chat" data-testid="ms1">
+        <MessageScroller.Viewport class="chat-view" data-testid="ms1-view">
+          <MessageScroller.Content class="chat-lines" data-testid="ms1-content">
+            <p v-for="line in said" :key="line" class="chat-line">Message {{ line }}</p>
+          </MessageScroller.Content>
+        </MessageScroller.Viewport>
+        <MessageScroller.Button data-testid="ms1-button">Newest</MessageScroller.Button>
+      </MessageScroller.Root>
+      <button type="button" data-testid="ms1-add" @click="said += 1">Add a message</button>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

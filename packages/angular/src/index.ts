@@ -79,6 +79,12 @@ export {
 } from "./navigation-menu"
 export { KuiOtp, KuiOtpCaret, KuiOtpGroup, KuiOtpInput, KuiOtpSeparator, KuiOtpSlot } from "./otp"
 export { KuiQrCode, KuiQrCodeFrame, KuiQrCodePattern } from "./qr-code"
+export {
+  KuiMessageScroller,
+  KuiMessageScrollerButton,
+  KuiMessageScrollerContent,
+  KuiMessageScrollerViewport,
+} from "./message-scroller"
 export { KuiAutosizeTextarea } from "./autosize"
 export {
   KuiCarousel,

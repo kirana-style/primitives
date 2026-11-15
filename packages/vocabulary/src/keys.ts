@@ -14,6 +14,7 @@ export const exclusive: string[][] = [
   ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
+  ["[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]","[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]"],
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
@@ -1031,6 +1032,79 @@ export const Otp = {
   },
   /** A caret drawn in the active cell while it is empty. */
   Caret: {
+  },
+} as const
+
+export const Drawer = {
+  /** The button that opens the dialog. */
+  Trigger: {
+    /** Present when the dialog is open. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** The layer over the page behind the dialog. */
+  Backdrop: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present while the drawer is dragged. */
+    swiping: "[data-swiping]",
+  },
+  /** The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present when another dialog is open above this one. */
+    nestedDialogOpen: "[data-nested-dialog-open]",
+    /** Present while the drawer is dragged. */
+    swiping: "[data-swiping]",
+    /** The way it is dragged to close it. */
+    swipeDirection: {
+      up: "[data-swipe-direction=\"up\"]",
+      down: "[data-swipe-direction=\"down\"]",
+      left: "[data-swipe-direction=\"left\"]",
+      right: "[data-swipe-direction=\"right\"]",
+    },
+  },
+  /** The heading that names the dialog. */
+  Title: {
+  },
+  /** The text that describes the dialog. */
+  Description: {
+  },
+  /** A button that closes the dialog. */
+  Close: {
+  },
+} as const
+
+export const MessageScroller = {
+  /** What holds the conversation and its button. */
+  Root: {
+    /** Present while the newest message is in view. */
+    atBottom: "[data-at-bottom]",
+  },
+  /** What scrolls: a log, reached by the keyboard. */
+  Viewport: {
+    /** Present while the newest message is in view. */
+    atBottom: "[data-at-bottom]",
+  },
+  /** The messages: what grows as one is written. */
+  Content: {
+  },
+  /** Goes to the newest message. Inert while that is in view. */
+  Button: {
+    /** Present while the newest message is in view. */
+    atBottom: "[data-at-bottom]",
   },
 } as const
 

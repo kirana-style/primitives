@@ -1012,6 +1012,73 @@ A mark between groups of cells.
 
 A caret drawn in the active cell while it is empty.
 
+## Calendar
+
+### Calendar.Root
+
+The calendar.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when its value cannot be changed. |
+
+### Calendar.Heading
+
+Names the month shown. Read out when it changes.
+
+### Calendar.Previous
+
+Shows the month before.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Calendar.Next
+
+Shows the month after.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Calendar.Grid
+
+The table of days: a grid the arrows move in.
+
+### Calendar.HeadCell
+
+A column's heading: a day of the week.
+
+### Calendar.Cell
+
+A day's cell.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-today` | Present on today. |
+| `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
+| `data-disabled` | Present when it is disabled. |
+| `data-unavailable` | Present on a day that cannot be chosen. |
+| `data-range-start` | Present on the first day of a range. |
+| `data-range-end` | Present on the last day of a range. |
+
+### Calendar.Day
+
+The button for a day.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-today` | Present on today. |
+| `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
+| `data-disabled` | Present when it is disabled. |
+| `data-unavailable` | Present on a day that cannot be chosen. |
+| `data-range-start` | Present on the first day of a range. |
+| `data-range-end` | Present on the last day of a range. |
+
 ## Drawer
 
 ### Drawer.Trigger

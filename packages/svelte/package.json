@@ -93,6 +93,10 @@
       "svelte": "./src/otp.ts",
       "default": "./src/otp.ts"
     },
+    "./calendar": {
+      "svelte": "./src/calendar.ts",
+      "default": "./src/calendar.ts"
+    },
     "./drawer": {
       "svelte": "./src/drawer.ts",
       "default": "./src/drawer.ts"

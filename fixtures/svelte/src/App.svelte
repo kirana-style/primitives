@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    Calendar,
     Drawer,
     MessageScroller,
     Autosize,
@@ -91,6 +92,7 @@
   let shares = $state("25,75")
   let slide = $state("0")
   let drawn = $state("closed")
+  let dated = $state("none")
   let rests = $state("0.5")
   let said = $state(8)
   // A page's toasts are made once: a long time, so a test reads them.
@@ -1049,6 +1051,47 @@
       <MessageScroller.Button data-testid="ms1-button">Newest</MessageScroller.Button>
     </MessageScroller.Root>
     <button type="button" data-testid="ms1-add" onclick={() => (said += 1)}>Add a message</button>
+    <Calendar.Root
+      id="cal1"
+      locale="en-US"
+      defaultFocusedValue="2026-03-15"
+      class="calendar"
+      data-testid="cal1"
+      onValueChange={(next: unknown) => (dated = String(next))}
+    >
+      <Calendar.Previous aria-label="Previous month" data-testid="cal1-previous">
+        Previous
+      </Calendar.Previous>
+      <Calendar.Heading data-testid="cal1-heading" />
+      <Calendar.Next aria-label="Next month" data-testid="cal1-next">Next</Calendar.Next>
+      <Calendar.Grid data-testid="cal1-grid">
+        <thead>
+          <tr>
+            <Calendar.Weekdays>
+              {#snippet children(weekday)}
+                <Calendar.HeadCell {weekday}>{weekday.short}</Calendar.HeadCell>
+              {/snippet}
+            </Calendar.Weekdays>
+          </tr>
+        </thead>
+        <tbody>
+          <Calendar.Weeks>
+            {#snippet children(week)}
+              <tr>
+                {#each week as day (day.date)}
+                  <Calendar.Cell date={day.date}>
+                    <Calendar.Day date={day.date} data-testid={`cal1-${day.date}`}>
+                      {day.label}
+                    </Calendar.Day>
+                  </Calendar.Cell>
+                {/each}
+              </tr>
+            {/snippet}
+          </Calendar.Weeks>
+        </tbody>
+      </Calendar.Grid>
+    </Calendar.Root>
+    <output data-testid="cal1-output">{dated}</output>
   </section>
   <section data-fixture="slider">
     <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

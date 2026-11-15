@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  Calendar,
   Drawer,
   MessageScroller,
   Autosize,
@@ -92,6 +93,7 @@ const code = ref("none")
 const shares = ref("25,75")
 const slide = ref("0")
 const drawn = ref("closed")
+const dated = ref("none")
 const rests = ref("0.5")
 const said = ref(8)
 // Bound, not written in the template: the type checker trips on `//` in a plain attribute.
@@ -1004,6 +1006,41 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         <MessageScroller.Button data-testid="ms1-button">Newest</MessageScroller.Button>
       </MessageScroller.Root>
       <button type="button" data-testid="ms1-add" @click="said += 1">Add a message</button>
+      <Calendar.Root
+        id="cal1"
+        locale="en-US"
+        default-focused-value="2026-03-15"
+        class="calendar"
+        data-testid="cal1"
+        @value-change="(next: unknown) => (dated = String(next))"
+      >
+        <Calendar.Previous aria-label="Previous month" data-testid="cal1-previous">
+          Previous
+        </Calendar.Previous>
+        <Calendar.Heading data-testid="cal1-heading" />
+        <Calendar.Next aria-label="Next month" data-testid="cal1-next">Next</Calendar.Next>
+        <Calendar.Grid data-testid="cal1-grid">
+          <thead>
+            <tr>
+              <Calendar.Weekdays v-slot="{ weekday }">
+                <Calendar.HeadCell :weekday="weekday">{{ weekday.short }}</Calendar.HeadCell>
+              </Calendar.Weekdays>
+            </tr>
+          </thead>
+          <tbody>
+            <Calendar.Weeks v-slot="{ week }">
+              <tr>
+                <Calendar.Cell v-for="day in week" :key="day.date" :date="day.date">
+                  <Calendar.Day :date="day.date" :data-testid="`cal1-${day.date}`">
+                    {{ day.label }}
+                  </Calendar.Day>
+                </Calendar.Cell>
+              </tr>
+            </Calendar.Weeks>
+          </tbody>
+        </Calendar.Grid>
+      </Calendar.Root>
+      <output data-testid="cal1-output">{{ dated }}</output>
     </section>
     <section data-fixture="slider">
       <Slider.Root id="sl1" :default-value="40" name="volume" data-testid="sl1">

@@ -82,6 +82,16 @@ import {
   KuiMeterTrack,
   KuiMeterValue,
   KuiOtp,
+  KuiCalendar,
+  KuiCalendarCell,
+  KuiCalendarDay,
+  KuiCalendarGrid,
+  KuiCalendarHeadCell,
+  KuiCalendarHeading,
+  KuiCalendarNext,
+  KuiCalendarPrevious,
+  KuiCalendarWeekdays,
+  KuiCalendarWeeks,
   KuiMessageScroller,
   KuiMessageScrollerButton,
   KuiMessageScrollerContent,
@@ -275,6 +285,16 @@ import {
     KuiMeterTrack,
     KuiMeterValue,
     KuiOtp,
+    KuiCalendar,
+    KuiCalendarCell,
+    KuiCalendarDay,
+    KuiCalendarGrid,
+    KuiCalendarHeadCell,
+    KuiCalendarHeading,
+    KuiCalendarNext,
+    KuiCalendarPrevious,
+    KuiCalendarWeekdays,
+    KuiCalendarWeeks,
     KuiMessageScroller,
     KuiMessageScrollerButton,
     KuiMessageScrollerContent,
@@ -1438,6 +1458,46 @@ import {
         <button type="button" data-testid="ms1-add" (click)="said.set(said() + 1)">
           Add a message
         </button>
+        <div
+          kuiCalendar
+          [kuiId]="'cal1'"
+          [locale]="'en-US'"
+          [defaultFocusedValue]="'2026-03-15'"
+          class="calendar"
+          data-testid="cal1"
+          (valueChanged)="dated.set('' + $event.value)"
+        >
+          <button kuiCalendarPrevious aria-label="Previous month" data-testid="cal1-previous">
+            Previous
+          </button>
+          <div kuiCalendarHeading data-testid="cal1-heading"></div>
+          <button kuiCalendarNext aria-label="Next month" data-testid="cal1-next">Next</button>
+          <table kuiCalendarGrid data-testid="cal1-grid">
+            <thead>
+              <tr>
+                <th *kuiCalendarWeekdays="let weekday" kuiCalendarHeadCell [weekday]="weekday">
+                  {{ weekday.short }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *kuiCalendarWeeks="let week">
+                @for (day of week; track day.date) {
+                  <td kuiCalendarCell [date]="day.date">
+                    <button
+                      kuiCalendarDay
+                      [date]="day.date"
+                      [attr.data-testid]="'cal1-' + day.date"
+                    >
+                      {{ day.label }}
+                    </button>
+                  </td>
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <output data-testid="cal1-output">{{ dated() }}</output>
       </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
@@ -1635,6 +1695,7 @@ export class App {
   protected readonly shares = signal("25,75")
   protected readonly slide = signal("0")
   protected readonly drawn = signal("closed")
+  protected readonly dated = signal("none")
   protected readonly rests = signal("0.5")
   protected readonly said = signal(8)
   protected readonly lines = computed(() => Array.from({ length: this.said() }, (_, at) => at + 1))

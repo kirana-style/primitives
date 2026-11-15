@@ -397,6 +397,25 @@ note. Three places hold them:
   what shows at its smallest.
 - **An id a part takes is not the test's.** A part that writes `id` (a viewport, a drawer's
   popup) renames the element: a test finds it before binding, and styles it by class.
+- **A date in and out is an ISO string; the calendar it is drawn in is not the caller's
+  concern.** `value="2026-03-15"` whatever the locale; a Persian month is laid out from the
+  same value. A date library's own objects never cross the API, so a form, a URL and a
+  database take the value as it is.
+- **A calendar system is given, not found from the locale.** Finding it (`createCalendar`
+  by identifier) carries every calendar there is: 13.3 KB gzip against 9.4 with the
+  Gregorian alone. `calendarSystem={new PersianCalendar()}` brings the one a page uses.
+- **A computed that makes a new object each time is new each time.** The month shown was a
+  fresh date whenever focus moved, so every week was laid out again for every arrow key,
+  and a test's click landed on a button that had just been replaced. A computed of an
+  object is given what "the same" means.
+- **A day that cannot be chosen is still reached.** `aria-disabled`, not `disabled`: the
+  arrows would fall into the hole a disabled button leaves. A test's own click waits for
+  such a day to be "enabled"; it presses with `element.click()`.
+- **The locale is given to a calendar a server draws.** A server does not know the
+  reader's; a month named in one language and hydrated in another is two pages.
+- **What a server wrote is kept when the page wakes.** Angular's heading wrote the month's
+  name beside the one the server had sent: `March 2026March 2026`. A directive that writes
+  text takes the text node that is there.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

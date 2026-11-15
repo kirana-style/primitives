@@ -80,6 +80,18 @@ export {
 export { KuiOtp, KuiOtpCaret, KuiOtpGroup, KuiOtpInput, KuiOtpSeparator, KuiOtpSlot } from "./otp"
 export { KuiQrCode, KuiQrCodeFrame, KuiQrCodePattern } from "./qr-code"
 export {
+  KuiCalendar,
+  KuiCalendarCell,
+  KuiCalendarDay,
+  KuiCalendarGrid,
+  KuiCalendarHeadCell,
+  KuiCalendarHeading,
+  KuiCalendarNext,
+  KuiCalendarPrevious,
+  KuiCalendarWeekdays,
+  KuiCalendarWeeks,
+} from "./calendar"
+export {
   KuiMessageScroller,
   KuiMessageScrollerButton,
   KuiMessageScrollerContent,

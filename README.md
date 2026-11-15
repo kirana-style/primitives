@@ -3,8 +3,8 @@
 Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
 every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
 
-> **Status: 0.1, before 1.0.** On npm as `@kirana-ui/*`. Thirty-nine components on all five adapters:
-> Accordion, Alert Dialog, Autosize (a text area), Avatar, Button, Carousel, Checkbox, Collapsible, Combobox, Context Menu, Dialog, Drawer, Field, Fieldset, Form, Hover Card, Listbox, Menu, Menubar, Message Scroller, Meter, Navigation Menu, One-Time Code (`Otp`),
+> **Status: 0.1, before 1.0.** On npm as `@kirana-ui/*`. Forty components on all five adapters:
+> Accordion, Alert Dialog, Autosize (a text area), Avatar, Button, Calendar, Carousel, Checkbox, Collapsible, Combobox, Context Menu, Dialog, Drawer, Field, Fieldset, Form, Hover Card, Listbox, Menu, Menubar, Message Scroller, Meter, Navigation Menu, One-Time Code (`Otp`),
 > Popover, Progress, QR Code, Radio Group, Resizable, Select, Scroll Area, Separator, Slider, Switch, Tabs, Toast, Toggle, Toggle Group, Toolbar, Tooltip; and the
 > Direction provider. The API will change.
 
@@ -29,7 +29,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
   out in, and a popup moved to the end of the page keeps the direction of its trigger. A
   Direction provider states it where no page can be asked, on a server.
-- **Small.** The core has one dependency (`@floating-ui/dom`).
+- **Small.** The core has one dependency (`@floating-ui/dom`), and the calendar a second of its own
+  (`@internationalized/date`): a page that draws no calendar carries none of it.
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a
   server sends is the page at rest, and hydration finds nothing to correct (tested on all five).
   Ids nobody gave are the same on the server and in the browser, and a popup that is open from

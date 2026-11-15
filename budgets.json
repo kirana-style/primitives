@@ -35,6 +35,8 @@
   "react/navigation-menu": 16350,
   "core/otp": 2850,
   "react/otp": 4550,
+  "core/calendar": 9350,
+  "react/calendar": 11250,
   "core/drawer": 6200,
   "react/drawer": 7850,
   "core/message-scroller": 1550,
@@ -75,5 +77,5 @@
   "react/toolbar": 3850,
   "core/tooltip": 12300,
   "react/tooltip": 14000,
-  "react": 58100
+  "react": 67050
 }

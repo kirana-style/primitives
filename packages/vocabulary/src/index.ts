@@ -2444,6 +2444,153 @@ export const vocabulary = {
         }
       }
     },
+    "calendar": {
+      "parts": {
+        "root": {
+          "description": "The calendar.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when its value cannot be changed.",
+              "selector": "[data-readonly]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "heading": {
+          "description": "Names the month shown. Read out when it changes.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "previous": {
+          "description": "Shows the month before.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "next": {
+          "description": "Shows the month after.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "grid": {
+          "description": "The table of days: a grid the arrows move in.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "headCell": {
+          "description": "A column's heading: a day of the week.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "cell": {
+          "description": "A day's cell.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "selector": "[data-selected]"
+            },
+            "today": {
+              "attribute": "data-today",
+              "description": "Present on today.",
+              "selector": "[data-today]"
+            },
+            "outsideMonth": {
+              "attribute": "data-outside-month",
+              "description": "Present on the days of the month before and after that fill the first and last weeks.",
+              "selector": "[data-outside-month]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "unavailable": {
+              "attribute": "data-unavailable",
+              "description": "Present on a day that cannot be chosen.",
+              "selector": "[data-unavailable]"
+            },
+            "rangeStart": {
+              "attribute": "data-range-start",
+              "description": "Present on the first day of a range.",
+              "selector": "[data-range-start]"
+            },
+            "rangeEnd": {
+              "attribute": "data-range-end",
+              "description": "Present on the last day of a range.",
+              "selector": "[data-range-end]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "day": {
+          "description": "The button for a day.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "selector": "[data-selected]"
+            },
+            "today": {
+              "attribute": "data-today",
+              "description": "Present on today.",
+              "selector": "[data-today]"
+            },
+            "outsideMonth": {
+              "attribute": "data-outside-month",
+              "description": "Present on the days of the month before and after that fill the first and last weeks.",
+              "selector": "[data-outside-month]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "unavailable": {
+              "attribute": "data-unavailable",
+              "description": "Present on a day that cannot be chosen.",
+              "selector": "[data-unavailable]"
+            },
+            "rangeStart": {
+              "attribute": "data-range-start",
+              "description": "Present on the first day of a range.",
+              "selector": "[data-range-start]"
+            },
+            "rangeEnd": {
+              "attribute": "data-range-end",
+              "description": "Present on the last day of a range.",
+              "selector": "[data-range-end]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "drawer": {
       "parts": {
         "trigger": {

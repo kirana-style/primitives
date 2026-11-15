@@ -22,6 +22,7 @@ import { menubarVocabulary } from "./menubar.vocabulary.ts"
 import { state } from "./states.ts"
 import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
 import { otpVocabulary } from "./otp.vocabulary.ts"
+import { calendarVocabulary } from "./calendar.vocabulary.ts"
 import { drawerVocabulary } from "./drawer.vocabulary.ts"
 import { messageScrollerVocabulary } from "./message-scroller.vocabulary.ts"
 import { qrCodeVocabulary } from "./qr-code.vocabulary.ts"
@@ -71,6 +72,7 @@ export const vocabulary = {
   meter: meterVocabulary,
   navigationMenu: navigationMenuVocabulary,
   otp: otpVocabulary,
+  calendar: calendarVocabulary,
   drawer: drawerVocabulary,
   messageScroller: messageScrollerVocabulary,
   qrCode: qrCodeVocabulary,

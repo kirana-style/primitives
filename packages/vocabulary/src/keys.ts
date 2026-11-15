@@ -1035,6 +1035,69 @@ export const Otp = {
   },
 } as const
 
+export const Calendar = {
+  /** The calendar. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when its value cannot be changed. */
+    readonly: "[data-readonly]",
+  },
+  /** Names the month shown. Read out when it changes. */
+  Heading: {
+  },
+  /** Shows the month before. */
+  Previous: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Shows the month after. */
+  Next: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The table of days: a grid the arrows move in. */
+  Grid: {
+  },
+  /** A column's heading: a day of the week. */
+  HeadCell: {
+  },
+  /** A day's cell. */
+  Cell: {
+    /** Present on a chosen day, and on every day of a chosen range. */
+    selected: "[data-selected]",
+    /** Present on today. */
+    today: "[data-today]",
+    /** Present on the days of the month before and after that fill the first and last weeks. */
+    outsideMonth: "[data-outside-month]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present on a day that cannot be chosen. */
+    unavailable: "[data-unavailable]",
+    /** Present on the first day of a range. */
+    rangeStart: "[data-range-start]",
+    /** Present on the last day of a range. */
+    rangeEnd: "[data-range-end]",
+  },
+  /** The button for a day. */
+  Day: {
+    /** Present on a chosen day, and on every day of a chosen range. */
+    selected: "[data-selected]",
+    /** Present on today. */
+    today: "[data-today]",
+    /** Present on the days of the month before and after that fill the first and last weeks. */
+    outsideMonth: "[data-outside-month]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present on a day that cannot be chosen. */
+    unavailable: "[data-unavailable]",
+    /** Present on the first day of a range. */
+    rangeStart: "[data-range-start]",
+    /** Present on the last day of a range. */
+    rangeEnd: "[data-range-end]",
+  },
+} as const
+
 export const Drawer = {
   /** The button that opens the dialog. */
   Trigger: {

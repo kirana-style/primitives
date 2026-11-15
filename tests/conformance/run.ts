@@ -2444,6 +2444,71 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await id("ms1-add").click()
     await until(top, 120, "and what comes after is followed again")
   },
+  async calendar({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const heading = () => id("cal1-heading").textContent()
+    const output = () => id("cal1-output").textContent()
+    await id("cal1").scrollIntoViewIfNeeded()
+    expect(
+      (await heading())?.trim() === "March 2026",
+      `it names the month shown (${await heading()})`
+    )
+    expect((await attribute("cal1-grid", "role")) === "grid", "its days are a grid")
+    expect(
+      (await attribute("cal1-grid", "aria-labelledby")) === "cal1-heading",
+      "named by the month"
+    )
+    const columns = await id("cal1-grid").locator("th").allTextContents()
+    expect(
+      columns.map((each) => each.trim()).join(" ") === "Sun Mon Tue Wed Thu Fri Sat",
+      `a column for each day of the week, in the locale's order (${columns.join(" ")})`
+    )
+    expect((await id("cal1-grid").locator("tbody tr").count()) === 5, "a row for each week")
+    expect((await attribute("cal1-2026-03-15", "tabindex")) === "0", "one day is the stop for Tab")
+    expect((await attribute("cal1-2026-03-14", "tabindex")) === "-1", "and only one")
+    expect(
+      (await attribute("cal1-2026-03-15", "aria-label")) === "Sunday, March 15, 2026",
+      "a day says its whole date"
+    )
+    expect(
+      (await attribute("cal1-2026-04-01", "data-outside-month")) === "",
+      "the days that fill the last week are of another month"
+    )
+    await snapshot("a calendar at rest")
+
+    await id("cal1-2026-03-10").click()
+    await settled(page)
+    expect((await output()) === "2026-03-10", "a press chooses a day")
+    expect((await attribute("cal1-2026-03-10", "data-selected")) === "", "which says so")
+    expect((await focused()) === "cal1-2026-03-10", "and has focus")
+    await key("ArrowRight")
+    expect((await focused()) === "cal1-2026-03-11", "the arrows go by a day")
+    await key("ArrowDown")
+    expect((await focused()) === "cal1-2026-03-18", "and by a week")
+    await key("End")
+    expect((await focused()) === "cal1-2026-03-21", "End goes to the week's last day")
+    await snapshot("a day chosen, focus moved")
+    await key("PageDown")
+    expect((await heading())?.trim() === "April 2026", "Page Down turns the month")
+    expect((await focused()) === "cal1-2026-04-21", "and focus goes with it")
+    await key("Enter")
+    expect((await output()) === "2026-04-21", "Enter chooses the day focus is on")
+    await id("cal1-next").click()
+    await settled(page)
+    expect((await heading())?.trim() === "May 2026", "its buttons turn the month too")
+    await id("cal1-previous").click()
+    await id("cal1-previous").click()
+    await settled(page)
+    expect((await heading())?.trim() === "March 2026", "and back")
+    expect(
+      (await attribute("cal1-2026-03-10", "data-selected")) === null,
+      "the day chosen before is chosen no more"
+    )
+    await snapshot("a calendar back at its month")
+  },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

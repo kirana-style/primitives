@@ -559,3 +559,20 @@ section[data-fixture="slider"] {
   margin: 0;
   font: 14px/20px monospace;
 }
+
+.calendar {
+  width: 280px;
+}
+.calendar table {
+  border-collapse: collapse;
+}
+.calendar td button {
+  width: 36px;
+  height: 28px;
+}
+.calendar [data-selected] {
+  background: #cde;
+}
+.calendar [data-outside-month] {
+  opacity: 0.5;
+}

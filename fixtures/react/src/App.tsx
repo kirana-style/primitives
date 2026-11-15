@@ -1,4 +1,5 @@
 import {
+  Calendar,
   Drawer,
   MessageScroller,
   Autosize,
@@ -94,6 +95,7 @@ export function App() {
   const [shares, setShares] = useState("25,75")
   const [slide, setSlide] = useState("0")
   const [drawn, setDrawn] = useState("closed")
+  const [dated, setDated] = useState("none")
   const [rests, setRests] = useState("0.5")
   const [said, setSaid] = useState(8)
   const [first, setFirst] = useState(0)
@@ -1196,6 +1198,49 @@ export function App() {
         <button type="button" data-testid="ms1-add" onClick={() => setSaid((lines) => lines + 1)}>
           Add a message
         </button>
+        <Calendar.Root
+          id="cal1"
+          locale="en-US"
+          defaultFocusedValue="2026-03-15"
+          className="calendar"
+          data-testid="cal1"
+          onValueChange={(next: unknown) => setDated(String(next))}
+        >
+          <Calendar.Previous aria-label="Previous month" data-testid="cal1-previous">
+            Previous
+          </Calendar.Previous>
+          <Calendar.Heading data-testid="cal1-heading" />
+          <Calendar.Next aria-label="Next month" data-testid="cal1-next">
+            Next
+          </Calendar.Next>
+          <Calendar.Grid data-testid="cal1-grid">
+            <thead>
+              <tr>
+                <Calendar.Weekdays>
+                  {(weekday) => (
+                    <Calendar.HeadCell weekday={weekday}>{weekday.short}</Calendar.HeadCell>
+                  )}
+                </Calendar.Weekdays>
+              </tr>
+            </thead>
+            <tbody>
+              <Calendar.Weeks>
+                {(week) => (
+                  <tr>
+                    {week.map((day) => (
+                      <Calendar.Cell key={day.date} date={day.date}>
+                        <Calendar.Day date={day.date} data-testid={`cal1-${day.date}`}>
+                          {day.label}
+                        </Calendar.Day>
+                      </Calendar.Cell>
+                    ))}
+                  </tr>
+                )}
+              </Calendar.Weeks>
+            </tbody>
+          </Calendar.Grid>
+        </Calendar.Root>
+        <output data-testid="cal1-output">{dated}</output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

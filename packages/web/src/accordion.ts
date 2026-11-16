@@ -2,6 +2,7 @@ import { computed } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type { Accordion, AccordionItem, AccordionProps } from "@kirana-ui/core/accordion"
 
+import { list } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
 
 // An item's parts share the item: made when the first of them is met.
@@ -19,10 +20,6 @@ function itemOf(controller: Accordion<string>, element: HTMLElement): AccordionI
   }
   return item
 }
-
-/** Open items, as an attribute writes them: `default-value="a,b"`. */
-const list = (given: unknown): string[] | undefined =>
-  typeof given === "string" ? given.split(",").filter(Boolean) : (given as string[] | undefined)
 
 type Props = Omit<AccordionProps<string>, "value" | "defaultValue"> & {
   value?: string | readonly string[]

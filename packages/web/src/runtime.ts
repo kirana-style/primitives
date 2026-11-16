@@ -23,6 +23,13 @@ export interface Drawn {
   mount?(): () => void
   /** A hidden native input the part draws itself, as its last child. */
   readonly inner?: Part | undefined
+  /**
+   * Where the part is drawn while it is mounted, when that is not where it was written: a
+   * navigation menu's content, in the menu's one viewport. Out of the page while there is none.
+   */
+  readonly into?: ReadonlySignal<HTMLElement | undefined> | undefined
+  /** What the part's element says, when the page gave it nothing to say. */
+  readonly text?: ReadonlySignal<string | undefined> | undefined
 }
 
 type Kind = "boolean" | "string" | "number"
@@ -32,12 +39,20 @@ export interface ElementSpec<Props extends { id: string }, Controller> {
   tag: string
   /** Its props by attribute name, each with how an attribute's text is read. */
   props: Record<string, Kind>
-  create(props: ReadonlySignal<Props>): Controller
+  /** Props that are only properties: a function, an object. By their names as properties. */
+  properties?: readonly string[] | undefined
+  /**
+   * The hidden native input a form reads, for a component with no part to hold it: drawn as
+   * the element's last child, while `mounted` (a select with a name).
+   */
+  inner?(controller: Controller): { part: Part; mounted?: ReadonlySignal<boolean> | undefined }
+  /** `host` is the custom element: what is around it (a field, a group) is found from it. */
+  create(props: ReadonlySignal<Props>, host: HTMLElement): Controller
   /**
    * Its change callbacks: the event each is told as, and the prop the element then holds
    * (`open`). The event is cancelable: `preventDefault()` keeps the value as it was.
    */
-  changes: Record<string, { event: string; prop: string }>
+  changes: Record<string, { event: string; prop: string; hold?: boolean }>
   /** Each part by its `kui-part` name. */
   parts: Record<string, (controller: Controller, element: HTMLElement) => Part | Drawn | undefined>
 }
@@ -50,14 +65,43 @@ let made = 0
 
 type Owned = HTMLElement & { [OWNER]?: HTMLElement }
 
+/**
+ * Whether an element is a component's: one that was defined, or a `kui-` one that is yet to
+ * be (its entry is imported later). What is inside it is its own from the start, and not a
+ * part of the component around it that happens to have a part of the same name.
+ */
+const ours = (element: Element) =>
+  hosts.has(element.localName) || element.localName.startsWith("kui-")
+
 /** The component a part belongs to: the nearest around it, or the one that moved it to the page's end. */
 function ownerOf(element: Element): HTMLElement | null {
   for (let each: Element | null = element.parentElement; each; each = each.parentElement) {
-    if (hosts.has(each.localName)) return each as HTMLElement
+    if (ours(each)) return each as HTMLElement
     const moved = (each as Owned)[OWNER]
     if (moved) return moved
   }
   return null
+}
+
+/**
+ * The controller of the component around a custom element: the field a control is in, the
+ * group a toggle is one of. Through a portal too: what was moved to the page's end is still
+ * inside what it was written in.
+ */
+export function controllerAround<Controller>(host: Element, tag: string): Controller | undefined {
+  return hostAround(host, [tag])?.controller as Controller | undefined
+}
+
+/** The nearest component around a custom element that is one of `tags`: which, and its controller. */
+export function hostAround(
+  host: Element,
+  tags: readonly string[]
+): { tag: string; controller: unknown } | undefined {
+  for (let each: Element | null = ownerOf(host); each; each = ownerOf(each)) {
+    if (tags.includes(each.localName))
+      return { tag: each.localName, controller: (each as { controller?: unknown }).controller }
+  }
+  return undefined
 }
 
 /** The nearest element around `element` (or itself) that is the part called `name`. */
@@ -86,11 +130,78 @@ function put(element: HTMLElement, part: Part): () => void {
   }
 }
 
+/**
+ * The props of something inside a component that has props of its own (a menu's checkbox
+ * item, its radio group), read from its element's `kui-` attributes: `kui-checked`,
+ * `kui-default-value`. What it tells is told from that element, and may be refused; a value
+ * its element was given is held there, and one the page writes later is followed.
+ */
+export function partProps<Props>(
+  element: HTMLElement,
+  kinds: Record<string, Kind>,
+  changes: Record<string, { event: string; prop: string }>
+): { props: ReadonlySignal<Props>; mount(): () => void } {
+  const attribute = (name: string) => `kui-${name}`
+  const told: Record<string, unknown> = {}
+  const all = () => {
+    const next: Record<string, unknown> = { ...told }
+    for (const [name, kind] of Object.entries(kinds)) {
+      const text = element.getAttribute(attribute(name))
+      if (text !== null) next[camel(name)] = read(kind, text)
+    }
+    return next as Props
+  }
+  const source = signal<Props>({} as Props, sameProps as (a: Props, b: Props) => boolean)
+  for (const [callback, { event, prop }] of Object.entries(changes)) {
+    told[callback] = (value: unknown, details?: ChangeDetails) => {
+      const heard = new CustomEvent(event, {
+        detail: { [prop]: value, details },
+        bubbles: true,
+        cancelable: true,
+      })
+      if (!element.dispatchEvent(heard)) return details?.cancel()
+      const held = attribute(prop.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`))
+      if (element.hasAttribute(held)) element.setAttribute(held, String(value))
+      source.set(all())
+    }
+  }
+  source.set(all())
+  return {
+    props: source,
+    mount() {
+      const observer = new MutationObserver(() => source.set(all()))
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: Object.keys(kinds).map(attribute),
+      })
+      return () => observer.disconnect()
+    },
+  }
+}
+
 function read(kind: Kind, text: string | null): unknown {
   if (kind === "boolean") return text !== null && text !== "false"
   if (text === null) return undefined
   return kind === "number" ? Number(text) : text
 }
+
+// Components written inside one that has not begun: its element is not defined yet (its
+// entry is imported later), or it waits itself. They begin when it has.
+const waiting = new Set<{ begin(): void }>()
+
+/** Whether a component around `element` has yet to begin: what is inside it reads it. */
+function early(element: Element): boolean {
+  for (let each: Element | null = element.parentElement; each; each = each.parentElement) {
+    // Moved to the page's end by a component that had begun: on from that one.
+    const moved = (each as Owned)[OWNER]
+    if (moved) return early(moved)
+    if (ours(each) && !(each as { controller?: unknown }).controller) return true
+  }
+  return false
+}
+
+/** What can be a part: an element of the page, one of a drawing (`<svg>`, `<path>`) too. */
+const drawable = (node: Node): node is HTMLElement => node instanceof Element
 
 interface Held {
   stop(): void
@@ -103,10 +214,9 @@ interface Held {
  * `customElements.whenDefined`). Where there are no custom elements (a server) it defines
  * nothing.
  */
-export function defineElement<
-  Props extends { id: string },
-  Controller extends { mount(): () => void },
->(spec: ElementSpec<Props, Controller>): string {
+export function defineElement<Props extends { id: string }, Controller extends object>(
+  spec: ElementSpec<Props, Controller>
+): string {
   if (typeof customElements === "undefined" || customElements.get(spec.tag)) return spec.tag
   hosts.add(spec.tag)
   const names = Object.keys(spec.props)
@@ -124,7 +234,14 @@ export function defineElement<
 
     connectedCallback() {
       this.#leaving = false
-      if (this.controller) return
+      this.begin()
+    }
+
+    /** Begins, unless a component around it has not: then it waits for that one. */
+    begin() {
+      if (this.controller || !this.isConnected) return
+      if (early(this)) return void waiting.add(this)
+      waiting.delete(this)
       // It holds its parts and draws nothing: no box of its own between them and the page.
       if (!this.style.display) this.style.display = "contents"
       const initial: Record<string, unknown> = {
@@ -136,37 +253,59 @@ export function defineElement<
         if (text !== null) initial[camel(name)] = read(spec.props[name]!, text)
       }
       Object.assign(initial, this.#given)
-      for (const [callback, { event, prop }] of Object.entries(spec.changes)) {
-        initial[callback] = (value: unknown, details: ChangeDetails) => {
+      for (const [callback, { event, prop, hold }] of Object.entries(spec.changes)) {
+        initial[callback] = (value: unknown, details?: ChangeDetails) => {
           const told = new CustomEvent(event, {
             detail: { [prop]: value, details },
             bubbles: true,
             cancelable: true,
           })
-          if (!this.dispatchEvent(told)) return details.cancel()
+          if (!this.dispatchEvent(told)) return details?.cancel()
           // A value that was given is held by the element from then on, as `<details open>`
           // holds its own: it follows what happens to it.
-          if (this.given(prop) !== undefined) this.give(prop, value)
+          if (hold !== false && this.given(prop) !== undefined) this.give(prop, value)
         }
       }
       this.#props = signal(initial as Props, sameProps as (a: Props, b: Props) => boolean)
-      this.controller = spec.create(this.#props)
-      this.#stops.push(this.controller.mount())
+      this.controller = spec.create(this.#props, this)
+      const unmount = (this.controller as { mount?(): () => void }).mount?.()
+      if (unmount) this.#stops.push(unmount)
       // Parts that come and go: a page that draws its rows later, a list that changes.
       const observer = new MutationObserver((records) => {
         for (const record of records) {
           for (const node of record.removedNodes) {
-            if (node instanceof HTMLElement) this.#release(node)
+            if (drawable(node)) this.#release(node)
           }
-          for (const node of record.addedNodes) if (node instanceof HTMLElement) this.#scan(node)
+          for (const node of record.addedNodes) if (drawable(node)) this.#scan(node)
         }
       })
       observer.observe(this, { childList: true, subtree: true })
       this.#watch = (element) => observer.observe(element, { childList: true, subtree: true })
       this.#stops.push(() => observer.disconnect())
       // A copy: a part that is not in the page yet is taken out as it is met.
-      for (const each of Array.from(this.children))
-        if (each instanceof HTMLElement) this.#scan(each)
+      for (const each of Array.from(this.children)) if (drawable(each)) this.#scan(each)
+      const inner = spec.inner?.(this.controller)
+      if (inner) {
+        const input = this.ownerDocument.createElement("input")
+        let unbind: (() => void) | undefined
+        const drawn = effect(() => {
+          const wanted = inner.mounted?.get() ?? true
+          if (wanted && !unbind) {
+            this.append(input)
+            unbind = bind(input, inner.part)
+          } else if (!wanted && unbind) {
+            unbind()
+            unbind = undefined
+            input.remove()
+          }
+        })
+        this.#stops.push(() => {
+          drawn()
+          unbind?.()
+          input.remove()
+        })
+      }
+      for (const each of Array.from(waiting)) each.begin()
     }
 
     disconnectedCallback() {
@@ -174,6 +313,7 @@ export function defineElement<
       this.#leaving = true
       queueMicrotask(() => {
         if (!this.#leaving || this.isConnected) return
+        waiting.delete(this)
         for (const held of this.#held.values()) held.stop()
         this.#held.clear()
         for (const stop of this.#stops.splice(0).reverse()) stop()
@@ -201,8 +341,7 @@ export function defineElement<
     #scan(element: HTMLElement) {
       if (!element.isConnected) return
       if (element.hasAttribute("kui-part")) this.#adopt(element)
-      for (const each of Array.from(element.children))
-        if (each instanceof HTMLElement) this.#scan(each)
+      for (const each of Array.from(element.children)) if (drawable(each)) this.#scan(each)
     }
 
     #adopt(element: HTMLElement) {
@@ -232,6 +371,10 @@ export function defineElement<
           if (!taken) input.remove()
         })
       }
+      if (drawn.text && element.childNodes.length === 0) {
+        const { text } = drawn
+        stops.push(effect(() => void (element.textContent = text.get() ?? "")))
+      }
       const mounted = element.hasAttribute("kui-keep-mounted") ? undefined : drawn.mounted
       if (!mounted) return void stops.push(put(element, drawn.part))
       // In the page only while it is mounted: out of it otherwise, its place kept by a mark.
@@ -239,8 +382,14 @@ export function defineElement<
       let unbind: (() => void) | undefined
       stops.push(
         effect(() => {
-          if (mounted.get()) {
-            if (held.parked) {
+          const elsewhere = drawn.into?.get()
+          if (mounted.get() && (!drawn.into || elsewhere)) {
+            if (elsewhere) {
+              // Its place where it was written is kept by the mark all the while.
+              if (!held.parked && element.parentNode) element.replaceWith(home)
+              held.parked = true
+              if (element.parentNode !== elsewhere) elsewhere.append(element)
+            } else if (held.parked) {
               held.parked = false
               home.replaceWith(element)
             }
@@ -251,7 +400,7 @@ export function defineElement<
             if (!held.parked && element.parentNode) {
               held.parked = true
               element.replaceWith(home)
-            }
+            } else if (drawn.into) element.remove()
           }
         }),
         () => {
@@ -308,7 +457,7 @@ export function defineElement<
   }
 
   // Each prop as a property too: `element.open = true`, and what the element holds read back.
-  for (const name of names) {
+  for (const name of [...names, ...(spec.properties ?? [])]) {
     const prop = camel(name)
     Object.defineProperty(KuiElement.prototype, prop, {
       configurable: true,

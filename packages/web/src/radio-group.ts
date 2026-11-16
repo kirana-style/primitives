@@ -1,6 +1,7 @@
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroupProps } from "@kirana-ui/core/radio-group"
 
+import { fieldAround } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
 
 const valueOf = (element: HTMLElement) =>
@@ -28,7 +29,7 @@ export const tag = defineElement<
     name: "string",
     form: "string",
   },
-  create: (props) => createRadioGroup<string>(props),
+  create: (props, host) => createRadioGroup<string>(props, { field: fieldAround(host) }),
   changes: { onValueChange: { event: "value-change", prop: "value" } },
   parts: {
     root: (controller) => controller.root,

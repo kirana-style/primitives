@@ -1456,6 +1456,8 @@ import {
           ></button>
         </div>
         <output data-testid="cr1-output">{{ slide() }}</output>
+      </section>
+      <section data-fixture="toast">
         <button
           type="button"
           data-testid="ts1-add"
@@ -1497,6 +1499,8 @@ import {
             </button>
           </div>
         </div>
+      </section>
+      <section data-fixture="sheets">
         <ng-container
           kuiDrawer
           [kuiId]="'dw1'"
@@ -1542,6 +1546,8 @@ import {
         <button type="button" data-testid="ms1-add" (click)="said.set(said() + 1)">
           Add a message
         </button>
+      </section>
+      <section data-fixture="dates">
         <div
           kuiCalendar
           [kuiId]="'cal1'"
@@ -1603,6 +1609,8 @@ import {
           </div>
         </form>
         <output data-testid="df1-output">{{ born() }}</output>
+      </section>
+      <section data-fixture="command">
         <label kuiLabel for="in1" data-testid="in1-label">Name</label>
         <input kuiInput id="in1" data-testid="in1" (valueChanged)="named.set($event.value)" />
         <output data-testid="in1-output">{{ named() }}</output>
@@ -1718,6 +1726,8 @@ import {
             </div>
           </div>
         </div>
+      </section>
+      <section data-fixture="measures">
         <div
           kuiSlider
           [kuiId]="'sl4'"
@@ -1755,6 +1765,8 @@ import {
             </div>
           </ng-template>
         </ng-container>
+      </section>
+      <section data-fixture="entry">
         <div
           kuiNumberField
           [kuiId]="'nf1'"
@@ -1824,6 +1836,8 @@ import {
             </div>
           </ng-template>
         </ng-container>
+      </section>
+      <section data-fixture="picking">
         <ng-container
           kuiDatePicker
           [kuiId]="'dk1'"
@@ -1944,6 +1958,8 @@ import {
             </div>
           </ng-template>
         </ng-container>
+      </section>
+      <section data-fixture="groups">
         <ng-container kuiAutocomplete [kuiId]="'ac2'" [defaultValue]="'Par'">
           <input kuiComboboxInput aria-label="City" data-testid="ac2-input" />
           <ng-template kuiComboboxPortal>
@@ -1979,6 +1995,8 @@ import {
             </div>
           </ng-template>
         </ng-container>
+      </section>
+      <section data-fixture="container">
         <div #pcbox data-testid="pc1-box"></div>
         <ng-container kuiPortalProvider [container]="pcbox">
           <ng-container kuiPopover [kuiId]="'pc1'">

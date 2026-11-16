@@ -290,7 +290,9 @@ export function createNavigationMenu<Value = unknown>(
     const element = contents.get(key)
     if (!element || !Object.is(value.peek(), key)) return
     entering = NOTHING
-    tabbables(element)[0]?.focus()
+    // The content may not be placed yet (it is, a moment later, under a trigger that is in
+    // view): the page must not scroll to where an unplaced popup lies, its top.
+    tabbables(element)[0]?.focus({ preventScroll: true })
   }
 
   const hover = {

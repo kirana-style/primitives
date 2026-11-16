@@ -1136,6 +1136,8 @@ export function App() {
           <Carousel.Indicator index={2} aria-label="Slide 3" data-testid="cr1-dot-2" />
         </Carousel.Root>
         <output data-testid="cr1-output">{slide()}</output>
+      </section>
+      <section data-fixture="toast">
         <button
           type="button"
           data-testid="ts1-add"
@@ -1167,6 +1169,8 @@ export function App() {
             )}
           </Toast.List>
         </Toast.Viewport>
+      </section>
+      <section data-fixture="sheets">
         <Drawer.Root
           id="dw1"
           onOpenChange={(open: boolean, details: { reason: string }) =>
@@ -1214,6 +1218,8 @@ export function App() {
         <button type="button" data-testid="ms1-add" onClick={() => setSaid((lines) => lines + 1)}>
           Add a message
         </button>
+      </section>
+      <section data-fixture="dates">
         <Calendar.Root
           id="cal1"
           locale="en-US"
@@ -1281,6 +1287,8 @@ export function App() {
           </DateField.Root>
         </form>
         <output data-testid="df1-output">{born()}</output>
+      </section>
+      <section data-fixture="command">
         <Label for="in1" data-testid="in1-label">
           Name
         </Label>
@@ -1370,6 +1378,8 @@ export function App() {
             </Slider.Track>
           </Slider.Control>
         </Slider.Root>
+      </section>
+      <section data-fixture="measures">
         <Slider.Root id="sl4" defaultValue={0} thumbAlignment="edge" data-testid="sl4">
           <Slider.Control class="slider" data-testid="sl4-control">
             <Slider.Track class="slider-track">
@@ -1400,6 +1410,8 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
+      </section>
+      <section data-fixture="entry">
         <NumberField.Root
           id="nf1"
           name="qty"
@@ -1461,6 +1473,8 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
+      </section>
+      <section data-fixture="picking">
         <DatePicker.Root
           id="dk1"
           locale="en-US"
@@ -1579,6 +1593,8 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
+      </section>
+      <section data-fixture="groups">
         <Autocomplete.Root id="ac2" defaultValue="Par">
           <Autocomplete.Input aria-label="City" data-testid="ac2-input" />
           <Autocomplete.Portal>
@@ -1611,6 +1627,8 @@ export function App() {
             </Autocomplete.Positioner>
           </Autocomplete.Portal>
         </Autocomplete.Root>
+      </section>
+      <section data-fixture="container">
         <div ref={setBox} data-testid="pc1-box" />
         <PortalProvider container={box()}>
           <Popover.Root id="pc1">

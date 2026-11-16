@@ -47,12 +47,12 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
   out in, and a popup moved to the end of the page keeps the direction of its trigger. A
   Direction provider states it where no page can be asked, on a server.
-- **With no framework too, in progress.** `@kirana-ui/web` is the components as custom
-  elements. The element (`<kui-dialog>`) holds the component and draws nothing; its parts
-  are the page's own elements (`<button kui-part="trigger">`), with no shadow root, so the
-  page is the page the other adapters draw. Seven so far (Accordion, Checkbox, Collapsible,
-  Dialog, Radio Group, Switch, Tabs), held to the same scenarios and the same DOM as the
-  five frameworks; the rest follow.
+- **With no framework too.** `@kirana-ui/web` is the components as custom elements. The
+  element (`<kui-dialog>`) holds the component and draws nothing; its parts are the page's
+  own elements (`<button kui-part="trigger">`), with no shadow root, so the page is the page
+  the other adapters draw. 43 of the 48, held to the same scenarios and the same DOM as the
+  five frameworks; the five whose parts draw a list the page did not write (Calendar, Date
+  Field, Date Picker, Pagination, Toast) follow.
 - **Small.** The core has one dependency (`@floating-ui/dom`), and the calendar a second of its own
   (`@internationalized/date`): a page that draws no calendar carries none of it.
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a

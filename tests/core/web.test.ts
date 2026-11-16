@@ -5,6 +5,7 @@ import { createAgent } from "../../packages/core/src/agent.ts"
 import type { ChangeDetails } from "../../packages/core/src/part.ts"
 import { faults, settled } from "../../packages/core/src/testing.ts"
 import "../../packages/web/src/index.ts"
+import { controllerAround, defineElement } from "../../packages/web/src/runtime.ts"
 import { mount } from "./page.ts"
 
 type Told = CustomEvent<Record<string, unknown> & { details: ChangeDetails }>
@@ -227,6 +228,178 @@ describe("the components as custom elements", () => {
     await settled()
     trigger.click()
     expect(panel.hasAttribute("data-open")).toBe(true)
+  })
+
+  it("a component waits for the one around it, whichever was defined first", () => {
+    const seen: unknown[] = []
+    mount(`<kui-test-outer><p><kui-test-inner></kui-test-inner></p></kui-test-outer>`)
+    defineElement({
+      tag: "kui-test-inner",
+      props: {},
+      create(_props, host) {
+        seen.push(controllerAround(host, "kui-test-outer"))
+        return {}
+      },
+      changes: {},
+      parts: {},
+    })
+    // The one around it has no element yet: it has not begun, and neither has this one.
+    expect(seen).toEqual([])
+    const outer = { name: "outer" }
+    defineElement({
+      tag: "kui-test-outer",
+      props: {},
+      create: () => outer,
+      changes: {},
+      parts: {},
+    })
+    expect(seen).toEqual([outer])
+  })
+
+  it("a control in a field is the field's, and its parts stay its own", async () => {
+    const root = mount(`
+      <kui-field kui-id="f" name="level">
+        <div kui-part="root">
+          <label kui-part="label">Level</label>
+          <kui-slider default-value="10">
+            <div kui-part="root">
+              <div kui-part="control" id="held">
+                <div kui-part="track"><div kui-part="thumb"></div></div>
+              </div>
+            </div>
+          </kui-slider>
+          <kui-checkbox><span kui-part="root" id="box"></span></kui-checkbox>
+        </div>
+      </kui-field>`)
+    await settled()
+    // A slider has a part called `control` too: it is the slider's, not the field's control.
+    const control = root.querySelector("#held")!
+    expect(control.hasAttribute("name")).toBe(false)
+    expect(control.id).toBe("held")
+    // The slider's hidden input carries the field's name.
+    expect(root.querySelector<HTMLInputElement>('[kui-part="thumb"] input')!.name).toBe("level")
+    root.querySelector<HTMLElement>("#box")!.click()
+    await settled()
+    expect(root.querySelector('kui-field > [kui-part="root"]')!.hasAttribute("data-dirty")).toBe(
+      true
+    )
+  })
+
+  it("a part writes what it has to say, unless the page wrote something there", async () => {
+    const root = mount(`
+      <kui-progress value="40">
+        <div kui-part="root"><span kui-part="value" id="said"></span></div>
+      </kui-progress>
+      <kui-meter value="3" max="6">
+        <div kui-part="root"><span kui-part="value" id="own">Half</span></div>
+      </kui-meter>`)
+    await settled()
+    expect(root.querySelector("#said")!.textContent).toBe("40%")
+    expect(root.querySelector("#own")!.textContent).toBe("Half")
+    root.querySelector<HTMLElement & { value: number }>("kui-progress")!.value = 60
+    await settled()
+    expect(root.querySelector("#said")!.textContent).toBe("60%")
+  })
+
+  it("a select: its chosen text, and the hidden input a form reads as its last child", async () => {
+    const root = mount(`
+      <kui-select kui-id="s" name="fruit" default-value="b">
+        <button kui-part="trigger"><span kui-part="value" kui-placeholder="Pick"></span></button>
+        <div kui-part="portal">
+          <div kui-part="positioner">
+            <div kui-part="popup">
+              <div kui-part="item" kui-value="a"><span kui-part="item-text">Apple</span></div>
+              <div kui-part="item" kui-value="b" kui-label="Banana">
+                <span kui-part="item-text">Banana</span>
+                <span kui-part="item-indicator">✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </kui-select>`)
+    const host = root.querySelector<HTMLElement & { open: boolean }>("kui-select")!
+    const heard = hear(root, "value-change", "value")
+    await settled()
+    const input = host.lastElementChild as HTMLInputElement
+    expect(input.localName).toBe("input")
+    expect(input.name).toBe("fruit")
+    expect(input.value).toBe("b")
+    expect(document.querySelector('[kui-part="popup"]')).toBe(null)
+    host.open = true
+    await settled()
+    expect(root.querySelector('[kui-part="value"]')!.textContent).toBe("Banana")
+    // A mark is in the page only for the chosen item.
+    expect(document.querySelectorAll('[kui-part="item-indicator"]').length).toBe(1)
+    document.querySelector<HTMLElement>('[kui-value="a"]')!.click()
+    await settled()
+    expect(heard).toEqual(["value a item-press"])
+    expect(input.value).toBe("a")
+    expect(root.querySelector('[kui-part="value"]')!.textContent).toBe("Apple")
+  })
+
+  it("a menu's checkbox item has props of its own, told from its element", async () => {
+    const root = mount(`
+      <kui-menu default-open>
+        <button kui-part="trigger">File</button>
+        <div kui-part="portal">
+          <div kui-part="positioner">
+            <div kui-part="popup">
+              <div kui-part="checkbox-item" kui-checked="false" kui-close-on-click="false" id="wrap">
+                <span kui-part="checkbox-item-indicator">✓</span> Wrap
+              </div>
+            </div>
+          </div>
+        </div>
+      </kui-menu>`)
+    await settled()
+    const item = document.querySelector<HTMLElement>("#wrap")!
+    // Told from the item, which is drawn at the page's end.
+    const heard = hear(document.body, "checked-change", "checked")
+    expect(item.getAttribute("aria-checked")).toBe("false")
+    expect(item.querySelector('[kui-part="checkbox-item-indicator"]')).toBe(null)
+    item.click()
+    await settled()
+    // A value its element was given is held there.
+    expect(item.getAttribute("kui-checked")).toBe("true")
+    expect(item.getAttribute("aria-checked")).toBe("true")
+    expect(item.querySelector('[kui-part="checkbox-item-indicator"]')).not.toBe(null)
+    expect(heard.length).toBe(1)
+    // And one the page writes later is followed.
+    item.setAttribute("kui-checked", "false")
+    await expect.poll(() => item.getAttribute("aria-checked")).toBe("false")
+    root.querySelector<HTMLElement & { open: boolean }>("kui-menu")!.open = false
+    await settled()
+  })
+
+  it("a navigation menu's content is drawn in the one viewport, and goes back", async () => {
+    const root = mount(`
+      <kui-navigation-menu kui-id="n">
+        <nav kui-part="root">
+          <ul kui-part="list">
+            <li kui-part="item" kui-value="a">
+              <button kui-part="trigger">A</button>
+              <div kui-part="content" data-testid="content"><a kui-part="link" href="#x">x</a></div>
+            </li>
+          </ul>
+          <div kui-part="portal">
+            <div kui-part="positioner">
+              <div kui-part="popup"><div kui-part="viewport" data-testid="view"></div></div>
+            </div>
+          </div>
+        </nav>
+      </kui-navigation-menu>`)
+    await settled()
+    // A part names its element: it is found by something of the page's own.
+    const CONTENT = '[data-testid="content"]'
+    const host = root.querySelector<HTMLElement & { value: string | null }>("kui-navigation-menu")!
+    expect(root.querySelector(CONTENT)).toBe(null)
+    host.value = "a"
+    await expect.poll(() => document.querySelector(CONTENT)).not.toBe(null)
+    const drawn = document.querySelector(CONTENT)!
+    expect(drawn.parentElement!.getAttribute("data-testid")).toBe("view")
+    expect(drawn.hasAttribute("data-open")).toBe(true)
+    host.value = null
+    await expect.poll(() => document.querySelector(CONTENT)).toBe(null)
   })
 
   it("is read and used by the agent bridge like any other adapter's", async () => {

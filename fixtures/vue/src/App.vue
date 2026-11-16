@@ -4,9 +4,11 @@ import {
   Autocomplete,
   Command,
   DateField,
+  DatePicker,
   Input,
   Label,
   NumberField,
+  Pagination,
   Drawer,
   MessageScroller,
   Autosize,
@@ -103,6 +105,8 @@ const shares = ref("25,75")
 const slide = ref("0")
 const drawn = ref("closed")
 const born = ref("none")
+const due = ref("2026-03-14")
+const paged = ref("1")
 const qty = ref("5")
 const place = ref("")
 const named = ref("")
@@ -1243,6 +1247,113 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
                 </Select.Item>
               </Select.List>
               <Select.ScrollDownArrow class="scroll-arrow" data-testid="s4-down" />
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+      <DatePicker.Root
+        id="dk1"
+        locale="en-US"
+        name="due"
+        default-value="2026-03-14"
+        @value-change="(next: string | null) => (due = String(next))"
+      >
+        <DatePicker.Field aria-label="Due" class="date-field" data-testid="dk1-field">
+          <DatePicker.Segments v-slot="{ segment }">
+            <DatePicker.Segment
+              :segment="segment"
+              :data-testid="`dk1-${segment.type}-${segment.index}`"
+            />
+          </DatePicker.Segments>
+          <DatePicker.Input />
+        </DatePicker.Field>
+        <DatePicker.Trigger aria-label="Pick a day" data-testid="dk1-trigger"
+          >Pick</DatePicker.Trigger
+        >
+        <DatePicker.Portal>
+          <DatePicker.Positioner :side-offset="4" data-testid="dk1-positioner">
+            <DatePicker.Popup class="popup" aria-label="Calendar" data-testid="dk1-popup">
+              <DatePicker.Calendar class="calendar" data-testid="dk1-calendar">
+                <DatePicker.Previous aria-label="Previous month" data-testid="dk1-previous">
+                  Previous
+                </DatePicker.Previous>
+                <DatePicker.Heading data-testid="dk1-heading" />
+                <DatePicker.Next aria-label="Next month" data-testid="dk1-next"
+                  >Next</DatePicker.Next
+                >
+                <DatePicker.Grid data-testid="dk1-grid">
+                  <thead>
+                    <tr>
+                      <DatePicker.Weekdays v-slot="{ weekday }">
+                        <DatePicker.HeadCell :weekday="weekday">{{
+                          weekday.short
+                        }}</DatePicker.HeadCell>
+                      </DatePicker.Weekdays>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <DatePicker.Weeks v-slot="{ week }">
+                      <tr>
+                        <DatePicker.Cell v-for="day in week" :key="day.date" :date="day.date">
+                          <DatePicker.Day :date="day.date" :data-testid="`dk1-${day.date}`">
+                            {{ day.label }}
+                          </DatePicker.Day>
+                        </DatePicker.Cell>
+                      </tr>
+                    </DatePicker.Weeks>
+                  </tbody>
+                </DatePicker.Grid>
+              </DatePicker.Calendar>
+            </DatePicker.Popup>
+          </DatePicker.Positioner>
+        </DatePicker.Portal>
+      </DatePicker.Root>
+      <output data-testid="dk1-output">{{ due }}</output>
+      <Pagination.Root
+        id="pg1"
+        :count="200"
+        class="pagination"
+        data-testid="pg1"
+        @page-change="(next: number) => (paged = String(next))"
+      >
+        <Pagination.Previous data-testid="pg1-previous">Previous</Pagination.Previous>
+        <Pagination.Items v-slot="{ entry }">
+          <Pagination.Item
+            v-if="entry.type === 'page'"
+            :page="entry.page"
+            :data-testid="`pg1-${entry.page}`"
+          >
+            {{ entry.page }}
+          </Pagination.Item>
+          <Pagination.Ellipsis v-else :data-testid="`pg1-${entry.key}`">…</Pagination.Ellipsis>
+        </Pagination.Items>
+        <Pagination.Next data-testid="pg1-next">Next</Pagination.Next>
+      </Pagination.Root>
+      <output data-testid="pg1-output">{{ paged }}</output>
+      <Select.Root id="s5" default-value="Apple">
+        <Select.Trigger data-testid="s5-trigger">
+          <Select.Value data-testid="s5-value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner :side-offset="4" data-testid="s5-positioner">
+            <Select.Popup class="popup" data-testid="s5-popup">
+              <Select.GroupLabel data-testid="s5-lone">Produce</Select.GroupLabel>
+              <Select.Group id="s5-fruit" data-testid="s5-fruit">
+                <Select.GroupLabel data-testid="s5-fruit-label">Fruit</Select.GroupLabel>
+                <Select.Item value="Apple" class="item" data-testid="s5-Apple">
+                  <Select.ItemText>Apple</Select.ItemText>
+                </Select.Item>
+                <Select.Item value="Pear" class="item" data-testid="s5-Pear">
+                  <Select.ItemText>Pear</Select.ItemText>
+                </Select.Item>
+              </Select.Group>
+              <Select.Separator data-testid="s5-separator" />
+              <Select.Group id="s5-roots" data-testid="s5-roots">
+                <Select.GroupLabel data-testid="s5-roots-label">Roots</Select.GroupLabel>
+                <Select.Item value="Carrot" class="item" data-testid="s5-Carrot">
+                  <Select.ItemText>Carrot</Select.ItemText>
+                </Select.Item>
+              </Select.Group>
             </Select.Popup>
           </Select.Positioner>
         </Select.Portal>

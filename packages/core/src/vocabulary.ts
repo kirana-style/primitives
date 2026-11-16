@@ -28,6 +28,8 @@ import { labelVocabulary } from "./label.vocabulary.ts"
 import { commandVocabulary } from "./command.vocabulary.ts"
 import { numberFieldVocabulary } from "./number-field.vocabulary.ts"
 import { autocompleteVocabulary } from "./autocomplete.vocabulary.ts"
+import { paginationVocabulary } from "./pagination.vocabulary.ts"
+import { datePickerVocabulary } from "./date-picker.vocabulary.ts"
 import { calendarVocabulary } from "./calendar.vocabulary.ts"
 import { drawerVocabulary } from "./drawer.vocabulary.ts"
 import { messageScrollerVocabulary } from "./message-scroller.vocabulary.ts"
@@ -84,6 +86,8 @@ export const vocabulary = {
   command: commandVocabulary,
   numberField: numberFieldVocabulary,
   autocomplete: autocompleteVocabulary,
+  pagination: paginationVocabulary,
+  datePicker: datePickerVocabulary,
   calendar: calendarVocabulary,
   drawer: drawerVocabulary,
   messageScroller: messageScrollerVocabulary,

@@ -1334,6 +1334,171 @@ export const Autocomplete = {
   },
 } as const
 
+export const Pagination = {
+  /** The pages of a list, as a navigation. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A page: pressed, it is the one shown. */
+  Item: {
+    /** Present on the page that is shown. */
+    selected: "[data-selected]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The mark for pages that are left out of the row. */
+  Ellipsis: {
+  },
+  /** Goes to the page before. */
+  Previous: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Goes to the page after. */
+  Next: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
+export const DatePicker = {
+  /** The field: a group of the date's parts. */
+  Field: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when its value cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when the date is outside what it takes, or is asked for and half typed. */
+    invalid: "[data-invalid]",
+  },
+  /** One piece of the date: a part that is typed, or what stands between two. */
+  Segment: {
+    /** Which piece it is. */
+    segment: {
+      day: "[data-segment=\"day\"]",
+      month: "[data-segment=\"month\"]",
+      year: "[data-segment=\"year\"]",
+      literal: "[data-segment=\"literal\"]",
+    },
+    /** Present on a part that is empty. */
+    placeholder: "[data-placeholder]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the date is outside what it takes, or is asked for and half typed. */
+    invalid: "[data-invalid]",
+  },
+  /** The button that opens the popover, and what it is placed against. */
+  Trigger: {
+    /** Present when the popover is open. */
+    popupOpen: "[data-popup-open]",
+  },
+  /** Places the popup against the trigger. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The popover itself. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The calendar. */
+  Calendar: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when its value cannot be changed. */
+    readonly: "[data-readonly]",
+  },
+  /** Names the month shown. Read out when it changes. */
+  Heading: {
+  },
+  /** Shows the month before. */
+  Previous: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Shows the month after. */
+  Next: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The table of days: a grid the arrows move in. */
+  Grid: {
+  },
+  /** A column's heading: a day of the week. */
+  HeadCell: {
+  },
+  /** A day's cell. */
+  Cell: {
+    /** Present on a chosen day, and on every day of a chosen range. */
+    selected: "[data-selected]",
+    /** Present on today. */
+    today: "[data-today]",
+    /** Present on the days of the month before and after that fill the first and last weeks. */
+    outsideMonth: "[data-outside-month]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present on a day that cannot be chosen. */
+    unavailable: "[data-unavailable]",
+    /** Present on the first day of a range. */
+    rangeStart: "[data-range-start]",
+    /** Present on the last day of a range. */
+    rangeEnd: "[data-range-end]",
+  },
+  /** The button for a day. */
+  Day: {
+    /** Present on a chosen day, and on every day of a chosen range. */
+    selected: "[data-selected]",
+    /** Present on today. */
+    today: "[data-today]",
+    /** Present on the days of the month before and after that fill the first and last weeks. */
+    outsideMonth: "[data-outside-month]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present on a day that cannot be chosen. */
+    unavailable: "[data-unavailable]",
+    /** Present on the first day of a range. */
+    rangeStart: "[data-range-start]",
+    /** Present on the last day of a range. */
+    rangeEnd: "[data-range-end]",
+  },
+} as const
+
 export const Calendar = {
   /** The calendar. */
   Root: {
@@ -1859,6 +2024,15 @@ export const Select = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+  },
+  /** Items that belong together, named by their label. */
+  Group: {
+  },
+  /** The name of a group. Outside a group it is plain text, and names nothing. */
+  GroupLabel: {
+  },
+  /** A line between groups. */
+  Separator: {
   },
   /** The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls. */
   List: {

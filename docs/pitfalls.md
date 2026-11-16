@@ -473,6 +473,20 @@ note. Three places hold them:
 - **A drawer over a drawer is said by the one under it** (`--nested-drawers`,
   `--drawer-frontmost-height`, `data-nested-drawer-open`), from the order they opened in:
   no provider, and no drawer needs to be drawn inside another.
+- **A component made of others gives their parts their roots.** A date picker is a date
+  field, a popover and a calendar with one value between them: its root makes the three
+  controllers and provides each to that component's own parts, which are then the picker's
+  parts. Nothing is written twice, and a fix to a calendar is a fix to the picker's.
+- **A calendar shows the month of a value that came from elsewhere.** A day typed in the
+  picker's field was the calendar's chosen day, in a month it was not showing
+  (`date-picker.test.ts`, "is one value").
+- **A list that is drawn by key moves nothing that stays.** A row of pages only ever
+  ascends: what leaves is taken out and what is new goes in at its place. A kept element
+  that is taken out and put back, to "move" it, loses focus (Angular's
+  `ViewContainerRef.move`).
+- **A row of pages keeps its length.** The pages around the one shown shift, a mark stands
+  for two pages or more and a page for one: a button never moves from under a pointer
+  (`pagination.test.ts`, "keeps the row one length").
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

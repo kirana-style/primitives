@@ -117,6 +117,14 @@
       "svelte": "./src/autocomplete.ts",
       "default": "./src/autocomplete.ts"
     },
+    "./pagination": {
+      "svelte": "./src/pagination.ts",
+      "default": "./src/pagination.ts"
+    },
+    "./date-picker": {
+      "svelte": "./src/date-picker.ts",
+      "default": "./src/date-picker.ts"
+    },
     "./calendar": {
       "svelte": "./src/calendar.ts",
       "default": "./src/calendar.ts"

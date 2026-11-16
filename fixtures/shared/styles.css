@@ -634,3 +634,12 @@ section[data-fixture="slider"] {
 .scroll-arrow[data-direction="down"] {
   bottom: 0;
 }
+
+.pagination {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.pagination [data-selected] {
+  font-weight: 600;
+}

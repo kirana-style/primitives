@@ -2736,6 +2736,112 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await key("Escape")
     await until(() => present("s4-popup"), false, "Escape closes it")
   },
+  async picking({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const until = async (read: () => Promise<unknown>, wanted: unknown, message: string) => {
+      const from = Date.now()
+      let got = await read()
+      while (got !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+        got = await read()
+      }
+      expect(got === wanted, `${message} (it is ${String(got)})`)
+      await settled(page)
+    }
+    const shown = async () => ((await id("dk1-field").textContent()) ?? "").replace(/\s+/g, "")
+    const sent = () =>
+      page.evaluate(() => document.querySelector<HTMLInputElement>('input[name="due"]')?.value)
+    await id("dk1-field").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect(
+      (await shown()) === "03/14/2026",
+      `a date picker's field writes its day (${await shown()})`
+    )
+    expect((await sent()) === "2026-03-14", "and submits it")
+    expect((await attribute("dk1-trigger", "aria-haspopup")) === "dialog", "its button has a popup")
+    await id("dk1-trigger").click()
+    await until(() => present("dk1-popup"), true, "which opens its calendar")
+    expect(
+      (await id("dk1-heading").textContent())?.trim() === "March 2026",
+      "on the month of its day"
+    )
+    expect(
+      (await attribute("dk1-2026-03-14", "data-selected")) === "",
+      "where its day is the chosen one"
+    )
+    await snapshot("a date picker with its calendar open")
+    await id("dk1-2026-03-20").click()
+    await until(() => present("dk1-popup"), false, "a day picked closes the calendar")
+    expect((await shown()) === "03/20/2026", "and is written into the field")
+    expect((await id("dk1-output").textContent()) === "2026-03-20", "the caller hears it")
+    expect((await sent()) === "2026-03-20", "and the form's value follows")
+    expect((await focused()) === "dk1-trigger", "focus goes back to the button")
+    await id("dk1-month-0").click()
+    await settled(page)
+    await page.keyboard.type("04")
+    await settled(page)
+    expect((await id("dk1-output").textContent()) === "2026-04-20", "a day typed is its value too")
+    await id("dk1-trigger").click()
+    await until(() => present("dk1-popup"), true, "opened again")
+    expect(
+      (await id("dk1-heading").textContent())?.trim() === "April 2026",
+      "the calendar shows the month that was typed"
+    )
+    await snapshot("a date picker after a month was typed")
+    await key("Escape")
+    await until(() => present("dk1-popup"), false, "Escape closes it")
+
+    expect((await attribute("pg1", "aria-label")) === "Pagination", "pages are a navigation")
+    const row = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[data-testid="pg1"] > *')]
+          .slice(1, -1)
+          .map((each) => each.textContent?.trim())
+          .join(" ")
+      )
+    expect(
+      (await row()) === "1 2 3 4 5 … 20",
+      `the first of them, a mark, and the last (${await row()})`
+    )
+    expect(
+      (await attribute("pg1-1", "aria-current")) === "page",
+      "the page shown is the current one"
+    )
+    expect((await attribute("pg1-previous", "data-disabled")) === "", "with none before it")
+    await snapshot("pagination on its first page")
+    await id("pg1-5").click()
+    await settled(page)
+    expect((await row()) === "1 … 4 5 6 … 20", `the row follows the page (${await row()})`)
+    expect((await id("pg1-output").textContent()) === "5", "and the caller hears it")
+    expect((await focused()) === "pg1-5", "the page pressed keeps focus")
+    await id("pg1-next").click()
+    await settled(page)
+    expect((await attribute("pg1-6", "aria-current")) === "page", "Next goes a page on")
+    await snapshot("pagination in the middle")
+
+    await id("s5-trigger").click()
+    await until(() => present("s5-popup"), true, "a select with groups opens")
+    expect((await attribute("s5-fruit", "role")) === "group", "its items are in groups")
+    expect(
+      (await attribute("s5-fruit", "aria-labelledby")) === "s5-fruit-label",
+      "each named by its label"
+    )
+    expect(
+      (await attribute("s5-lone", "role")) === "presentation",
+      "a label with no group around it is plain text"
+    )
+    expect(
+      (await attribute("s5-separator", "role")) === "separator",
+      "a line stands between groups"
+    )
+    await key("End")
+    expect((await focused()) === "s5-Carrot", "the keys go through every group's items")
+    await snapshot("a select with groups")
+    await key("Escape")
+    await until(() => present("s5-popup"), false, "Escape closes it")
+  },
   async command({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

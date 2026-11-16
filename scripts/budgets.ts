@@ -38,6 +38,8 @@ const COMPONENTS: Record<string, string[]> = {
   command: [],
   "number-field": [],
   autocomplete: [],
+  pagination: [],
+  "date-picker": [],
   calendar: [],
   drawer: ["drawer"],
   "message-scroller": [],

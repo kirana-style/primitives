@@ -35,6 +35,8 @@
     "./command": "./src/command.ts",
     "./number-field": "./src/number-field.ts",
     "./autocomplete": "./src/autocomplete.ts",
+    "./pagination": "./src/pagination.ts",
+    "./date-picker": "./src/date-picker.ts",
     "./calendar": "./src/calendar.ts",
     "./drawer": "./src/drawer.ts",
     "./message-scroller": "./src/message-scroller.ts",

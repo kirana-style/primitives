@@ -14,6 +14,8 @@ import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 
 const scope = context<Controller>("Calendar")
+/** For a component made of this one's parts: a date picker. */
+export { scope as calendarScope }
 
 const RootElement = partComponent("CalendarRootElement", "div", () => scope.use().root)
 

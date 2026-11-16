@@ -187,6 +187,27 @@ describe("a select's list over its trigger", () => {
     await expect.poll(() => down.mounted.peek()).toBe(false)
   })
 
+  it("names a group by its label, and lets a label stand with no group around it", () => {
+    const { made } = select({ top: MID, align: false })
+    const root = mount(
+      `<div class="g"><div class="l">Fruit</div></div><div class="lone">More</div><div class="line"></div>`
+    )
+    const group = made.group("s-fruit")
+    const element = root.querySelector<HTMLElement>(".g")!
+    onTestFinished(bind(element, group.root))
+    expect(element.getAttribute("role")).toBe("group")
+    expect(element.getAttribute("aria-labelledby")).toBe(null)
+    onTestFinished(bind(root.querySelector<HTMLElement>(".l")!, group.label))
+    expect(element.getAttribute("aria-labelledby")).toBe("s-fruit-label")
+    const lone = root.querySelector<HTMLElement>(".lone")!
+    onTestFinished(bind(lone, made.groupLabel))
+    expect(lone.getAttribute("role")).toBe("presentation")
+    expect(lone.id).toBe("")
+    const line = root.querySelector<HTMLElement>(".line")!
+    onTestFinished(bind(line, made.separator))
+    expect(line.getAttribute("role")).toBe("separator")
+  })
+
   it("lies beside a trigger that is at the viewport's edge", async () => {
     const { trigger, positioner, placed } = select({ top: 4 })
     trigger.click()

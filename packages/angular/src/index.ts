@@ -106,6 +106,15 @@ export {
 export { KuiAutosizeTextarea } from "./autosize"
 export { KuiInput } from "./input"
 export {
+  KuiPagination,
+  KuiPaginationEllipsis,
+  KuiPaginationItem,
+  KuiPaginationItems,
+  KuiPaginationNext,
+  KuiPaginationPrevious,
+} from "./pagination"
+export { KuiDatePicker, KuiDatePickerCalendar, KuiDatePickerField } from "./date-picker"
+export {
   KuiNumberField,
   KuiNumberFieldDecrement,
   KuiNumberFieldGroup,
@@ -158,10 +167,13 @@ export {
   KuiSelectInput,
   KuiSelectItem,
   KuiSelectItemIndicator,
+  KuiSelectGroup,
+  KuiSelectGroupLabel,
   KuiSelectItemText,
   KuiSelectList,
   KuiSelectScrollDownArrow,
   KuiSelectScrollUpArrow,
+  KuiSelectSeparator,
   KuiSelectPopup,
   KuiSelectPortal,
   KuiSelectPositioner,

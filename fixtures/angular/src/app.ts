@@ -92,6 +92,18 @@ import {
   KuiCommandSeparator,
   KuiInput,
   KuiLabel,
+  KuiPagination,
+  KuiPaginationEllipsis,
+  KuiPaginationItem,
+  KuiPaginationItems,
+  KuiPaginationNext,
+  KuiPaginationPrevious,
+  KuiDatePicker,
+  KuiDatePickerCalendar,
+  KuiDatePickerField,
+  KuiSelectGroup,
+  KuiSelectGroupLabel,
+  KuiSelectSeparator,
   KuiNumberField,
   KuiNumberFieldDecrement,
   KuiNumberFieldGroup,
@@ -318,6 +330,18 @@ import {
     KuiCommandSeparator,
     KuiInput,
     KuiLabel,
+    KuiPagination,
+    KuiPaginationEllipsis,
+    KuiPaginationItem,
+    KuiPaginationItems,
+    KuiPaginationNext,
+    KuiPaginationPrevious,
+    KuiDatePicker,
+    KuiDatePickerCalendar,
+    KuiDatePickerField,
+    KuiSelectGroup,
+    KuiSelectGroupLabel,
+    KuiSelectSeparator,
     KuiNumberField,
     KuiNumberFieldDecrement,
     KuiNumberFieldGroup,
@@ -1792,6 +1816,126 @@ import {
             </div>
           </ng-template>
         </ng-container>
+        <ng-container
+          kuiDatePicker
+          [kuiId]="'dk1'"
+          [locale]="'en-US'"
+          [name]="'due'"
+          [defaultValue]="'2026-03-14'"
+          (valueChanged)="due.set('' + $event.value)"
+        >
+          <div kuiDatePickerField aria-label="Due" class="date-field" data-testid="dk1-field">
+            <span
+              *kuiDateFieldSegments="let segment"
+              kuiDateFieldSegment
+              [segment]="segment"
+              [attr.data-testid]="'dk1-' + segment.type + '-' + segment.index"
+            ></span>
+            <input kuiDateFieldInput />
+          </div>
+          <button kuiPopoverTrigger aria-label="Pick a day" data-testid="dk1-trigger">Pick</button>
+          <ng-template kuiPopoverPortal>
+            <div kuiPopoverPositioner [sideOffset]="4" data-testid="dk1-positioner">
+              <div kuiPopoverPopup class="popup" aria-label="Calendar" data-testid="dk1-popup">
+                <div kuiDatePickerCalendar class="calendar" data-testid="dk1-calendar">
+                  <button
+                    kuiCalendarPrevious
+                    aria-label="Previous month"
+                    data-testid="dk1-previous"
+                  >
+                    Previous
+                  </button>
+                  <div kuiCalendarHeading data-testid="dk1-heading"></div>
+                  <button kuiCalendarNext aria-label="Next month" data-testid="dk1-next">
+                    Next
+                  </button>
+                  <table kuiCalendarGrid data-testid="dk1-grid">
+                    <thead>
+                      <tr>
+                        <th
+                          *kuiCalendarWeekdays="let weekday"
+                          kuiCalendarHeadCell
+                          [weekday]="weekday"
+                        >
+                          {{ weekday.short }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *kuiCalendarWeeks="let week">
+                        @for (day of week; track day.date) {
+                          <td kuiCalendarCell [date]="day.date">
+                            <button
+                              kuiCalendarDay
+                              [date]="day.date"
+                              [attr.data-testid]="'dk1-' + day.date"
+                            >
+                              {{ day.label }}
+                            </button>
+                          </td>
+                        }
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <output data-testid="dk1-output">{{ due() }}</output>
+        <nav
+          kuiPagination
+          [kuiId]="'pg1'"
+          [count]="200"
+          class="pagination"
+          data-testid="pg1"
+          (pageChanged)="paged.set('' + $event.page)"
+        >
+          <button kuiPaginationPrevious data-testid="pg1-previous">Previous</button>
+          <ng-container *kuiPaginationItems="let entry">
+            @if (entry.type === "page") {
+              <button
+                kuiPaginationItem
+                [page]="entry.page"
+                [attr.data-testid]="'pg1-' + entry.page"
+              >
+                {{ entry.page }}
+              </button>
+            } @else {
+              <span kuiPaginationEllipsis [attr.data-testid]="'pg1-' + entry.key">…</span>
+            }
+          </ng-container>
+          <button kuiPaginationNext data-testid="pg1-next">Next</button>
+        </nav>
+        <output data-testid="pg1-output">{{ paged() }}</output>
+        <ng-container kuiSelect [kuiId]="'s5'" [defaultValue]="'Apple'">
+          <button kuiSelectTrigger data-testid="s5-trigger">
+            <span kuiSelectValue data-testid="s5-value"></span>
+          </button>
+          <ng-template kuiSelectPortal>
+            <div kuiSelectPositioner [sideOffset]="4" data-testid="s5-positioner">
+              <div kuiSelectPopup class="popup" data-testid="s5-popup">
+                <div kuiSelectGroupLabel data-testid="s5-lone">Produce</div>
+                <div kuiSelectGroup [kuiId]="'s5-fruit'" data-testid="s5-fruit">
+                  <div kuiSelectGroupLabel data-testid="s5-fruit-label">Fruit</div>
+                  <div kuiSelectItem [value]="'Apple'" class="item" data-testid="s5-Apple">
+                    <span kuiSelectItemText>Apple</span>
+                  </div>
+                  <div kuiSelectItem [value]="'Pear'" class="item" data-testid="s5-Pear">
+                    <span kuiSelectItemText>Pear</span>
+                  </div>
+                </div>
+                <div kuiSelectSeparator data-testid="s5-separator"></div>
+                <div kuiSelectGroup [kuiId]="'s5-roots'" data-testid="s5-roots">
+                  <div kuiSelectGroupLabel data-testid="s5-roots-label">Roots</div>
+                  <div kuiSelectItem [value]="'Carrot'" class="item" data-testid="s5-Carrot">
+                    <span kuiSelectItemText>Carrot</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
       </section>
       <section data-fixture="field">
         <form
@@ -1941,6 +2085,8 @@ export class App {
   protected readonly slide = signal("0")
   protected readonly drawn = signal("closed")
   protected readonly born = signal("none")
+  protected readonly due = signal("2026-03-14")
+  protected readonly paged = signal("1")
   protected readonly qty = signal("5")
   protected readonly place = signal("")
   protected readonly named = signal("")

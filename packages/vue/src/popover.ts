@@ -8,6 +8,8 @@ import type { Component, PropType } from "vue"
 import { context, controller, optional, partComponent, portalComponent } from "./runtime.ts"
 
 const scope = context<Controller>("Popover")
+/** For a component made of this one's parts: a date picker. */
+export { scope as popoverScope }
 
 const Root = defineComponent({
   name: "PopoverRoot",

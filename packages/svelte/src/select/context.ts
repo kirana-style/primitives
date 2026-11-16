@@ -1,4 +1,4 @@
-import type { Select } from "@kirana-ui/core/select"
+import type { Select, SelectGroup } from "@kirana-ui/core/select"
 import { getContext, setContext } from "svelte"
 
 const KEY = Symbol("Select")
@@ -12,3 +12,9 @@ export function useSelect(): Select {
 }
 
 export const ITEM = Symbol("SelectItem")
+
+const GROUP = Symbol("SelectGroup")
+
+export const provideGroup = (group: SelectGroup): SelectGroup => setContext(GROUP, group)
+/** The group a label is in, if it is in one. */
+export const useGroup = (): SelectGroup | undefined => getContext<SelectGroup | undefined>(GROUP)

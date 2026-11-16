@@ -13,6 +13,8 @@ import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 
 const scope = context<Controller>("DateField")
+/** For a component made of this one's parts: a date picker. */
+export { scope as dateFieldScope }
 
 const RootElement = partComponent("DateFieldRootElement", "div", () => scope.use().root)
 

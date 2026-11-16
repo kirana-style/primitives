@@ -123,7 +123,7 @@ function finish(
   shipped: string[],
   extra: Partial<Manifest> = {}
 ): string {
-  for (const file of ["README.md", "REFERENCE.md"]) {
+  for (const file of ["README.md", "REFERENCE.md", "llms.txt"]) {
     const from = path.join(root, "packages", name, file)
     if (existsSync(from)) cpSync(from, path.join(stage, file))
   }
@@ -139,7 +139,7 @@ function finish(
     },
     bugs: { url: "https://github.com/kirana-style/primitives/issues" },
     publishConfig: { access: "public" },
-    files: [...shipped, "README.md", "REFERENCE.md", "LICENSE"],
+    files: [...shipped, "README.md", "REFERENCE.md", "llms.txt", "LICENSE"],
     ...extra,
     exports: { ...exports, "./package.json": "./package.json" },
     dependencies: resolved(manifest.dependencies, manifest.version),

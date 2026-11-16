@@ -273,6 +273,15 @@ export const Combobox = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
+  /** Items that belong together, named by their label. Hidden while none is shown. */
+  Group: {
+  },
+  /** The name of a group. Outside a group it is plain text, and names nothing. */
+  GroupLabel: {
+  },
+  /** A line between groups. */
+  Separator: {
+  },
   /** A mark an item shows while it is the chosen one. */
   ItemIndicator: {
   },
@@ -1323,6 +1332,15 @@ export const Autocomplete = {
     highlighted: "[data-highlighted]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+  },
+  /** Items that belong together, named by their label. Hidden while none is shown. */
+  Group: {
+  },
+  /** The name of a group. Outside a group it is plain text, and names nothing. */
+  GroupLabel: {
+  },
+  /** A line between groups. */
+  Separator: {
   },
   /** What is shown when no item is. */
   Empty: {

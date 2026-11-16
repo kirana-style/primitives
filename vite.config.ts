@@ -132,6 +132,9 @@ export default defineConfig({
       budgets: { command: "bun scripts/budgets.ts --check", cache: false },
       // Every adapter exports the same components and parts, and the same entry per component.
       parity: { command: "bun scripts/parity.ts", cache: false },
+      // Each adapter's `llms.txt`, from its exports, the core's props and the vocabulary:
+      // `bun scripts/llms.ts` writes them, and this fails when one is out of date.
+      llms: { command: "bun scripts/llms.ts --check", cache: false },
       // The packages as they would be published (dist-packages/), then used from an empty
       // project: installed, every export loaded, rendered on a server, type-checked.
       pack: { command: "bun scripts/pack.ts && bun scripts/consume.ts", cache: false },
@@ -148,7 +151,7 @@ export default defineConfig({
       // but for the rehearsal, which waits for the packing.
       gates: {
         command: "echo gates: passed",
-        dependsOn: ["check", "types", "test", "browser", "parity", "budgets", "rehearse"],
+        dependsOn: ["check", "types", "test", "browser", "parity", "llms", "budgets", "rehearse"],
         cache: false,
       },
       // The whole gate: what is run before a change is handed over, and what CI runs. The

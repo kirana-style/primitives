@@ -73,6 +73,12 @@ export interface ComboboxItemOptions {
   index?: number | undefined
 }
 
+/** Items that belong together, named by their label. */
+export interface ComboboxGroup {
+  readonly root: Part
+  readonly label: Part
+}
+
 export interface Combobox<Value = unknown> {
   readonly open: ReadonlySignal<boolean>
   readonly mounted: ReadonlySignal<boolean>
@@ -108,7 +114,16 @@ export interface Combobox<Value = unknown> {
   readonly emptyPart: Part
   /** The hidden input that submits the value. Rendered only when the combobox has a name. */
   readonly hidden: Part
-  item(value: Value, options: () => ComboboxItemOptions): Part
+  item(value: Value, options: () => ComboboxItemOptions, group?: ComboboxGroup): Part
+  /**
+   * Items that belong together, named by their label: hidden while none of them is shown.
+   * `id` is its element's, and what its label's is made from.
+   */
+  group(id: string): ComboboxGroup
+  /** A label that is in no group: it names nothing, and is valid there. */
+  readonly groupLabel: Part
+  /** A line between groups. */
+  readonly separator: Part
   /** Whether `value` is the chosen one, for an item's indicator. */
   selected(value: Value): ReadonlySignal<boolean>
   /** The mark an item shows while it is the chosen one. */
@@ -123,6 +138,17 @@ const holds = (label: string, query: string) => label.toLowerCase().includes(que
 
 interface Shown {
   readonly shown: ReadonlySignal<boolean>
+}
+
+interface Members extends ComboboxGroup {
+  readonly members: Set<Shown>
+  readonly joined: Signal<number>
+}
+
+const LABEL: Part = { props: computed(() => ({ role: "presentation" })), attach: () => NOTHING }
+const SEPARATOR: Part = {
+  props: computed(() => ({ role: "separator", "aria-orientation": "horizontal" })),
+  attach: () => NOTHING,
 }
 
 /**
@@ -384,6 +410,8 @@ export function createCombobox<Value = unknown>(
         role: "combobox",
         // In a field, the id its label is `for`.
         id: field?.controlId,
+        // What it says, so a server draws it. In a page the core writes it too.
+        value: inputValue.get(),
         autocomplete: "off",
         "aria-autocomplete": "list",
         "aria-haspopup": "listbox",
@@ -626,8 +654,45 @@ export function createCombobox<Value = unknown>(
       },
     },
     itemIndicator: () => ({ props: INDICATOR, attach: () => NOTHING }),
-    item(item, options) {
+    groupLabel: LABEL,
+    separator: SEPARATOR,
+    group(groupId) {
+      const members = new Set<Shown>()
+      const joined = signal(0)
+      const labelled = signal(false)
+      const labelId = `${groupId}-label`
+      const any = computed(() => {
+        joined.get()
+        // Before any item is known (a server draws the group first), it is not hidden.
+        if (members.size === 0) return true
+        for (const each of members) if (each.shown.get()) return true
+        return false
+      })
+      const group: Members = {
+        members,
+        joined,
+        root: {
+          props: computed(() => ({
+            id: groupId,
+            role: "group",
+            "aria-labelledby": labelled.get() ? labelId : undefined,
+            hidden: flag(!any.get()),
+          })),
+          attach: () => NOTHING,
+        },
+        label: {
+          props: computed(() => ({ id: labelId, role: "presentation" })),
+          attach() {
+            labelled.set(true)
+            return () => labelled.set(false)
+          },
+        },
+      }
+      return group
+    },
+    item(item, options, group) {
       const selected = chosen(item)
+      const within = group as Members | undefined
       // Its text is known once it is in the page.
       const drawn = signal(0)
       const row: ListRow = list.row(() => ({
@@ -649,6 +714,7 @@ export function createCombobox<Value = unknown>(
       const record: Shown = { shown: visible }
       // Counted from when it is made: a server attaches nothing, and must not say "empty".
       shown.add(record)
+      within?.members.add(record)
       return {
         props: computed(() => {
           const off = Boolean(options().disabled)
@@ -674,6 +740,8 @@ export function createCombobox<Value = unknown>(
           const detach = row.attach(element)
           rows.set(item, row)
           shown.add(record)
+          within?.members.add(record)
+          within?.joined.set(within.joined.peek() + 1)
           registered.set(registered.peek() + 1)
           drawn.set(drawn.peek() + 1)
           // A framework may write the text after the element attaches: read it a moment later.
@@ -686,6 +754,8 @@ export function createCombobox<Value = unknown>(
             detach()
             if (rows.get(item) === row) rows.delete(item)
             shown.delete(record)
+            within?.members.delete(record)
+            within?.joined.set(within.joined.peek() + 1)
             registered.set(registered.peek() + 1)
           }
         },

@@ -3,7 +3,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
+import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -118,7 +118,7 @@ function Item(
     index: local.index,
     id: local.id ?? generated,
   }))
-  const part = useCombobox().item(value, () => options.get())
+  const part = useCombobox().item(value, () => options.get(), useContext(GroupContext))
   return (
     <ItemContext.Provider value={value}>
       <Part part={part} tag="div" {...rest} />
@@ -179,10 +179,28 @@ function Empty(props: PartComponentProps): JSX.Element {
   )
 }
 
-const part =
-  (name: "input" | "trigger" | "popup" | "chips", tag: string) => (props: PartComponentProps) => (
-    <Part part={useCombobox()[name]} tag={tag} {...props} />
+const GroupContext = createContext<ComboboxGroup>()
+
+/** Items that belong together, named by their `GroupLabel`. Hidden while none is shown. */
+function Group(props: PartComponentProps & { id?: string }): JSX.Element {
+  const [local, rest] = splitProps(props, ["id"])
+  const generated = createUniqueId()
+  const group = useCombobox().group(untrack(() => local.id) ?? generated)
+  return (
+    <GroupContext.Provider value={group}>
+      <Part part={group.root} tag="div" {...rest} />
+    </GroupContext.Provider>
   )
+}
+
+/** Names the group it is in. With no group around it, it is plain text. */
+const GroupLabel = (props: PartComponentProps) => (
+  <Part part={useContext(GroupContext)?.label ?? useCombobox().groupLabel} tag="div" {...props} />
+)
+
+const part =
+  (name: "input" | "trigger" | "popup" | "chips" | "separator", tag: string) =>
+  (props: PartComponentProps) => <Part part={useCombobox()[name]} tag={tag} {...props} />
 
 export type AutocompleteRootProps = Omit<AutocompleteProps, "id"> & {
   id?: string
@@ -225,6 +243,10 @@ export const Combobox = {
   Portal,
   Positioner,
   Popup: part("popup", "div"),
+  Group,
+  GroupLabel,
+  /** A line between groups. */
+  Separator: part("separator", "div"),
   Item,
   ItemIndicator,
   Empty,
@@ -238,6 +260,9 @@ export const Autocomplete = {
   Portal: Combobox.Portal,
   Positioner: Combobox.Positioner,
   Popup: Combobox.Popup,
+  Group: Combobox.Group,
+  GroupLabel: Combobox.GroupLabel,
+  Separator: Combobox.Separator,
   Item: Combobox.Item,
   Empty: Combobox.Empty,
 }

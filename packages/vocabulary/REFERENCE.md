@@ -265,6 +265,18 @@ One choice in the list.
 | `data-highlighted` | Present on the item the pointer or the keyboard is on. |
 | `data-disabled` | Present when it is disabled. |
 
+### Combobox.Group
+
+Items that belong together, named by their label. Hidden while none is shown.
+
+### Combobox.GroupLabel
+
+The name of a group. Outside a group it is plain text, and names nothing.
+
+### Combobox.Separator
+
+A line between groups.
+
 ### Combobox.ItemIndicator
 
 A mark an item shows while it is the chosen one.
@@ -1266,6 +1278,18 @@ One suggestion: chosen, its text is written into the input.
 | `data-selected` | Present on the chosen item. |
 | `data-highlighted` | Present on the item the pointer or the keyboard is on. |
 | `data-disabled` | Present when it is disabled. |
+
+### Autocomplete.Group
+
+Items that belong together, named by their label. Hidden while none is shown.
+
+### Autocomplete.GroupLabel
+
+The name of a group. Outside a group it is plain text, and names nothing.
+
+### Autocomplete.Separator
+
+A line between groups.
 
 ### Autocomplete.Empty
 

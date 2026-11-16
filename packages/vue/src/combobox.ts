@@ -3,7 +3,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
+import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
 import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
@@ -22,6 +22,29 @@ import {
 const scope = context<Controller>("Combobox")
 const ITEM: InjectionKey<unknown> = Symbol("ComboboxItem")
 const ANY = null as unknown as PropType<unknown>
+
+const GROUP: InjectionKey<ComboboxGroup | null> = Symbol("ComboboxGroup")
+
+/** Items that belong together, named by their `GroupLabel`. Hidden while none is shown. */
+const Group = defineComponent({
+  name: "ComboboxGroup",
+  inheritAttrs: false,
+  props: { id: String },
+  setup(props, { attrs, slots }) {
+    const generated = useId()
+    const group = scope.use().group(props.id ?? generated)
+    provide(GROUP, group)
+    const Element = partComponent("ComboboxGroupElement", "div", () => group.root)
+    return () => h(Element, attrs, slots)
+  },
+})
+
+/** Names the group it is in. With no group around it, it is plain text. */
+const GroupLabel = partComponent(
+  "ComboboxGroupLabel",
+  "div",
+  () => inject(GROUP, null)?.label ?? scope.use().groupLabel
+)
 
 const HiddenInput = partComponent("ComboboxHiddenInput", "input", () => scope.use().hidden)
 
@@ -128,7 +151,7 @@ const Item = defineComponent({
       index: props.index,
       id: props.id ?? generated,
     }))
-    const part = scope.use().item(value, () => options.get())
+    const part = scope.use().item(value, () => options.get(), inject(GROUP, null) ?? undefined)
     provide(ITEM, value)
     const Element = partComponent("ComboboxItemElement", "div", () => part)
     return () => h(Element, attrs, slots)
@@ -263,6 +286,10 @@ export const Combobox = {
     partComponent("ComboboxPositionerElement", "div", () => scope.use().positioner)
   ),
   Popup: partComponent("ComboboxPopup", "div", () => scope.use().popup),
+  Group,
+  GroupLabel,
+  /** A line between groups. */
+  Separator: partComponent("ComboboxSeparator", "div", () => scope.use().separator),
   Item,
   ItemIndicator,
   Empty,
@@ -276,6 +303,9 @@ export const Autocomplete = {
   Portal: Combobox.Portal,
   Positioner: Combobox.Positioner,
   Popup: Combobox.Popup,
+  Group: Combobox.Group,
+  GroupLabel: Combobox.GroupLabel,
+  Separator: Combobox.Separator,
   Item: Combobox.Item,
   Empty: Combobox.Empty,
 }

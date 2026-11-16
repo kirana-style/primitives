@@ -487,6 +487,16 @@ note. Three places hold them:
 - **A row of pages keeps its length.** The pages around the one shown shift, a mark stands
   for two pages or more and a page for one: a button never moves from under a pointer
   (`pagination.test.ts`, "keeps the row one length").
+- **A text the core owns is in its part's props, or a server draws an empty input.** A
+  combobox, a command list and a number field write their input's text themselves in a
+  page, when it changes; `value` in the part's props is what a server writes. React is given
+  it as `defaultValue` (`useOwnText`): a `value` with no `onChange` is, to React, an input
+  nobody can type in. Conformance compares what each server sent with the page at rest.
+- **What a guide quotes is a file a test runs.** `docs/authoring.md` is held to the example
+  it shows: the test reads both, and fails when they part.
+- **A generated file is checked where it is generated.** `llms.txt` and the vocabulary are
+  written by scripts and compared byte for byte in the gate: edit the definitions, never
+  the file.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

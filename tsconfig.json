@@ -16,9 +16,11 @@
   "include": [
     "packages/core/src",
     "packages/react/src",
+    "packages/react/examples",
     "packages/vue/src",
     "packages/vocabulary/src",
     "tests",
+    "docs/examples",
     "bench",
     "scripts",
     "vite.config.ts"

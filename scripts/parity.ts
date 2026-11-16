@@ -117,6 +117,9 @@ function angular(components: string[]): Shape {
  * What an adapter names or shapes its own way. `rename` maps its export to React's; `without`
  * lists parts it does not have and `extra` parts only it has, each with the reason.
  */
+const RUNTIME =
+  "what a part's directive is made with, from the one entry an Angular package has: the others have `./runtime`"
+
 const DATE_PICKER =
   "inside `kuiDatePicker` the date field's, the popover's and the calendar's own directives are its parts"
 
@@ -156,6 +159,13 @@ const IDIOM: Record<
         "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
     },
     extra: {
+      Ids: RUNTIME,
+      hostPart: RUNTIME,
+      innerPart: RUNTIME,
+      inputsSignal: RUNTIME,
+      mounted: RUNTIME,
+      onServer: RUNTIME,
+      presentWhile: RUNTIME,
       "Combobox.HiddenInput":
         "the root is an `<ng-container>`, with no element to hold the hidden input: it is written",
       "Select.Input":
@@ -181,10 +191,11 @@ const entries = (adapter: string) =>
     .filter((each) => each !== ".")
     .sort()
 const components = entries("core").filter(
-  (each) => !["./reactivity", "./dom", "./vocabulary"].includes(each)
+  (each) => !["./reactivity", "./dom", "./vocabulary", "./authoring"].includes(each)
 )
 for (const adapter of ["react", "vue", "solid", "svelte"]) {
-  const given = entries(adapter)
+  // Each adapter's own: what its parts are made with, for a component of one's own.
+  const given = entries(adapter).filter((each) => each !== "./runtime")
   const missing = components.filter((each) => !given.includes(each))
   const unknown = given.filter((each) => !components.includes(each))
   if (missing.length === 0 && unknown.length === 0) {

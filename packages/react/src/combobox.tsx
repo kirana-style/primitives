@@ -3,12 +3,19 @@ import type { PositionOptions } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
+import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { Portal as BodyPortal, useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import {
+  Portal as BodyPortal,
+  useController,
+  useOptions,
+  useOwnText,
+  usePart,
+  useSignal,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -41,7 +48,8 @@ function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
 }
 
 const HiddenInput = () => usePart(useCombobox("Root").hidden, "input", {})
-const Input = (props: PartComponentProps) => usePart(useCombobox("Input").input, "input", props)
+const Input = (props: PartComponentProps) =>
+  usePart(useOwnText(useCombobox("Input").input), "input", props)
 const Trigger = (props: PartComponentProps) =>
   usePart(useCombobox("Trigger").trigger, "button", props)
 const Popup = (props: PartComponentProps) => usePart(useCombobox("Popup").popup, "div", props)
@@ -66,6 +74,28 @@ function Positioner({
   return usePart(controller.positioner, "div", props)
 }
 
+const GroupContext = createContext<ComboboxGroup | null>(null)
+
+/** Items that belong together, named by their `GroupLabel`. Hidden while none is shown. */
+function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
+  const controller = useCombobox("Group")
+  const generated = useId()
+  const group = useMemo(() => controller.group(id ?? generated), [controller, id, generated])
+  return (
+    <GroupContext.Provider value={group}>{usePart(group.root, "div", props)}</GroupContext.Provider>
+  )
+}
+
+/** A group's name. Outside a group it is plain text, and names nothing. */
+function GroupLabel(props: PartComponentProps): ReactElement {
+  const lone = useCombobox("GroupLabel").groupLabel
+  return usePart(useContext(GroupContext)?.label ?? lone, "div", props)
+}
+
+/** A line between groups. */
+const Separator = (props: PartComponentProps) =>
+  usePart(useCombobox("Separator").separator, "div", props)
+
 export interface ItemProps extends PartComponentProps {
   value: unknown
   disabled?: boolean
@@ -78,11 +108,12 @@ export interface ItemProps extends PartComponentProps {
 
 function Item({ value, disabled, label, id, index, ...props }: ItemProps): ReactElement {
   const controller = useCombobox("Item")
+  const group = useContext(GroupContext) ?? undefined
   const generated = useId()
   const options = useOptions({ disabled, label, index, id: id ?? generated })
   const part = useMemo(
-    () => controller.item(value, () => options.get()),
-    [controller, value, options]
+    () => controller.item(value, () => options.get(), group),
+    [controller, value, options, group]
   )
   return <ItemContext.Provider value={value}>{usePart(part, "div", props)}</ItemContext.Provider>
 }
@@ -157,6 +188,9 @@ export const Autocomplete = {
   Portal,
   Positioner,
   Popup,
+  Group,
+  GroupLabel,
+  Separator,
   Item,
   Empty,
 }
@@ -172,6 +206,9 @@ export const Combobox = {
   Portal,
   Positioner,
   Popup,
+  Group,
+  GroupLabel,
+  Separator,
   Item,
   ItemIndicator,
   Empty,

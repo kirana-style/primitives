@@ -25,12 +25,15 @@ export {
   KuiComboboxClear,
   KuiComboboxEmpty,
   KuiComboboxHiddenInput,
+  KuiComboboxGroup,
+  KuiComboboxGroupLabel,
   KuiComboboxInput,
   KuiComboboxItem,
   KuiComboboxItemIndicator,
   KuiComboboxPopup,
   KuiComboboxPortal,
   KuiComboboxPositioner,
+  KuiComboboxSeparator,
   KuiComboboxTrigger,
 } from "./combobox"
 export {
@@ -247,3 +250,13 @@ export {
 export { KuiFieldset, KuiFieldsetLegend } from "./fieldset"
 export { KuiForm } from "./form"
 export { KuiDirection, injectDirection } from "./direction"
+// What a part's directive is made with, for a component of one's own.
+export {
+  KuiIds,
+  hostPart,
+  innerPart,
+  inputsSignal,
+  mounted,
+  onServer,
+  presentWhile,
+} from "./runtime"

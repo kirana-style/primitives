@@ -1,0 +1,1831 @@
+# @kirana-ui/svelte
+
+> Kirana UI Primitives for Svelte: headless, accessible components with no styles of their own. The same components, parts, attributes and behaviour as on the other four frameworks, from one core.
+
+Generated from the library's own definitions (`bun scripts/llms.ts`): what is here is what the components do.
+
+## Using it
+
+- Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.
+- A part renders its own element and takes that element's attributes. A `child` snippet draws the caller's own element, spreading the part's props: `{#snippet child({ props })}<a {...props}>…</a>{/snippet}`.
+- A value binds with `bind:value` (`bind:open`, `bind:page` …); `onValueChange={(value, details) => …}` carries the details.
+- A part that draws a list gives each entry to its `children` snippet: `{#snippet children(segment)}…{/snippet}`.
+- Svelte 5.
+- No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
+- A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
+- An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
+- A popup is drawn in a portal at the end of `<body>` and placed by its `Positioner`, which carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`.
+- Every change callback is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic), and `details.cancel()` to keep the value as it was.
+- A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.
+- A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.
+
+## Components
+
+### Accordion
+
+```
+import { Accordion } from "@kirana-ui/svelte/accordion"
+```
+
+Parts: `<Accordion.Root>`, `<Accordion.Item>`, `<Accordion.Header>`, `<Accordion.Trigger>`, `<Accordion.Panel>`.
+
+Props of its root:
+
+- `value?: readonly Value[]`: The values of the open items.
+- `defaultValue?: readonly Value[]`: Read once.
+- `onValueChange?: ((value: Value[], details: ChangeDetails) => void)`
+- `multiple?: boolean`: Whether several items can be open at once. Default `false`: opening one closes the others.
+- `disabled?: boolean`
+- `orientation?: Orientation`: The way the arrows move between triggers. Default `vertical`.
+- `loop?: boolean`: Whether the arrows wrap from the last trigger to the first. Default `true`.
+
+Attributes and CSS variables, by part:
+
+- root: Groups the items.
+    - `data-orientation="horizontal | vertical"`: The way the items are laid out, and the arrows that move between their triggers.
+    - `data-disabled`: Present when it is disabled.
+- item: One section: a header with its trigger, and a panel.
+    - `data-open`: Present when the item is open.
+    - `data-disabled`: Present when it is disabled.
+- header: The heading that holds the trigger.
+    - `data-open`: Present when the item is open.
+    - `data-disabled`: Present when it is disabled.
+- trigger: The button that opens and closes the item's panel.
+    - `data-panel-open`: Present when the item's panel is open.
+    - `data-disabled`: Present when it is disabled.
+- panel: The item's content. In the page while open, and through its exit's motion.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-disabled`: Present when it is disabled.
+    - `data-orientation="horizontal | vertical"`: The way the items are laid out, and the arrows that move between their triggers.
+    - `--accordion-panel-height`: The panel's content height while it opens or closes, `auto` once it is open.
+    - `--accordion-panel-width`: The panel's content width while it opens or closes, `auto` once it is open.
+
+### AlertDialog
+
+```
+import { AlertDialog } from "@kirana-ui/svelte/alert-dialog"
+```
+
+Parts: `<AlertDialog.Root>`, `<AlertDialog.Trigger>`, `<AlertDialog.Portal>`, `<AlertDialog.Backdrop>`, `<AlertDialog.Popup>`, `<AlertDialog.Title>`, `<AlertDialog.Description>`, `<AlertDialog.Close>`.
+
+Attributes and CSS variables, by part:
+
+- trigger: The button that opens the dialog.
+    - `data-popup-open`: Present when the dialog is open.
+- backdrop: The layer over the page behind the dialog.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- popup: The dialog itself.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
+    - `--nested-dialogs`: How many dialogs are open above this one.
+
+### Autocomplete
+
+```
+import { Autocomplete } from "@kirana-ui/svelte/autocomplete"
+```
+
+Parts: `<Autocomplete.Root>`, `<Autocomplete.Input>`, `<Autocomplete.Trigger>`, `<Autocomplete.Clear>`, `<Autocomplete.Portal>`, `<Autocomplete.Positioner>`, `<Autocomplete.Popup>`, `<Autocomplete.Group>`, `<Autocomplete.GroupLabel>`, `<Autocomplete.Separator>`, `<Autocomplete.Item>`, `<Autocomplete.Empty>`.
+
+Props of its root:
+
+- `value?: string`: What the input says: the text is the value.
+- `defaultValue?: string`
+- `onValueChange?: ((value: string, details: ChangeDetails) => void)`
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `mode?: "list" | "none"`: `"list"` (the default): the suggestions are filtered by what is typed. `"none"`: they are as the caller draws them.
+- `filter?: ((label: string, query: string) => boolean) | null`: Whether a suggestion is shown for what was typed; `null` shows every one.
+- `openOnInputClick?: boolean`: Whether a press on the input opens the list. Default: it opens when something is typed.
+- `disabled?: boolean`
+- `required?: boolean`
+- `name?: string`: The input's name in the form around it.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
+
+Attributes and CSS variables, by part:
+
+- input: The text input: its text is the value, and what is typed asks for suggestions.
+    - `data-popup-open`: Present when the list is open.
+    - `data-disabled`: Present when it is disabled.
+- trigger: A button that opens and closes the list.
+    - `data-popup-open`: Present when the list is open.
+    - `data-disabled`: Present when it is disabled.
+- positioner: Places the list against the input. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The list of items.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-empty`: Present when no item is shown for what was typed.
+- item: One suggestion: chosen, its text is written into the input.
+    - `data-selected`: Present on the chosen item.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- clear: A button that empties the input and the value.
+    - `data-disabled`: Present when it is disabled.
+
+### Autosize
+
+```
+import { Autosize } from "@kirana-ui/svelte/autosize"
+```
+
+Parts: `<Autosize.Textarea>`.
+
+Props of its root:
+
+- `value?: unknown`: The text, when the caller holds it: a change that no key made (a form filled by code) is then measured too.
+
+### Avatar
+
+```
+import { Avatar } from "@kirana-ui/svelte/avatar"
+```
+
+Parts: `<Avatar.Root>`, `<Avatar.Image>`, `<Avatar.Fallback>`.
+
+### Button
+
+```
+import { Button } from "@kirana-ui/svelte/button"
+```
+
+Props:
+
+- `disabled?: boolean`
+- `focusableWhenDisabled?: boolean`: Keeps a disabled button in the tab order, so what it would do can still be read.
+- `nativeButton?: boolean`: `false` when the element is not a `<button>`: it is given a button's role and keyboard.
+
+Attributes and CSS variables, by part:
+
+- root: The button.
+    - `data-disabled`: Present when it is disabled.
+
+### Calendar
+
+```
+import { Calendar } from "@kirana-ui/svelte/calendar"
+```
+
+Parts: `<Calendar.Root>`, `<Calendar.Heading>`, `<Calendar.Previous>`, `<Calendar.Next>`, `<Calendar.Grid>`, `<Calendar.Weekdays>`, `<Calendar.HeadCell>`, `<Calendar.Weeks>`, `<Calendar.Cell>`, `<Calendar.Day>`.
+
+Props of its root:
+
+- `value?: CalendarValue`: One day, or with `mode: "range"` a first and a last day; `null` for none.
+- `defaultValue?: CalendarValue`
+- `onValueChange?: ((value: CalendarValue, details: ChangeDetails) => void)`
+- `mode?: "single" | "range"`: Whether one day is chosen (the default) or a first and a last.
+- `defaultFocusedValue?: IsoDate`: The day it opens on, when it has no value: its month is the one shown.
+- `onMonthChange?: ((month: IsoDate) => void)`: Heard when another month is shown: its first day.
+- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
+- `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
+- `min?: IsoDate`: The first and the last day that can be chosen.
+- `max?: IsoDate`
+- `isDateUnavailable?: ((date: IsoDate) => boolean)`: Days that cannot be chosen, though they can be reached: a day off, a day taken.
+- `disabled?: boolean`
+- `readOnly?: boolean`
+- `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
+
+Attributes and CSS variables, by part:
+
+- root: The calendar.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when its value cannot be changed.
+- previous: Shows the month before.
+    - `data-disabled`: Present when it is disabled.
+- next: Shows the month after.
+    - `data-disabled`: Present when it is disabled.
+- cell: A day's cell.
+    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-today`: Present on today.
+    - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
+    - `data-disabled`: Present when it is disabled.
+    - `data-unavailable`: Present on a day that cannot be chosen.
+    - `data-range-start`: Present on the first day of a range.
+    - `data-range-end`: Present on the last day of a range.
+- day: The button for a day.
+    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-today`: Present on today.
+    - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
+    - `data-disabled`: Present when it is disabled.
+    - `data-unavailable`: Present on a day that cannot be chosen.
+    - `data-range-start`: Present on the first day of a range.
+    - `data-range-end`: Present on the last day of a range.
+
+### Carousel
+
+```
+import { Carousel } from "@kirana-ui/svelte/carousel"
+```
+
+Parts: `<Carousel.Root>`, `<Carousel.Viewport>`, `<Carousel.Item>`, `<Carousel.Previous>`, `<Carousel.Next>`, `<Carousel.Indicator>`.
+
+Props of its root:
+
+- `index?: number`: Which slide is at the start of the view, from 0.
+- `defaultIndex?: number`
+- `onIndexChange?: ((index: number, details: ChangeDetails) => void)`
+- `orientation?: Orientation`: Whether the slides go across (the default) or down.
+- `loop?: boolean`: Whether going on from the last slide comes round to the first.
+
+Attributes and CSS variables, by part:
+
+- root: The carousel: a region, named by the caller.
+    - `data-orientation="horizontal | vertical"`: Whether the slides go across or down.
+- viewport: What scrolls. The slides are its children; the design snaps them (`scroll-snap-type`) and says whether a step glides (`scroll-behavior`).
+    - `data-orientation="horizontal | vertical"`: Whether the slides go across or down.
+- item: One slide.
+    - `data-orientation="horizontal | vertical"`: Whether the slides go across or down.
+    - `data-current`: Present on the slide the view is at, and on its button.
+- previous: Goes back a slide.
+    - `data-disabled`: Present when it is disabled.
+- next: Goes on a slide.
+    - `data-disabled`: Present when it is disabled.
+- indicator: A button for one slide.
+    - `data-current`: Present on the slide the view is at, and on its button.
+
+### Checkbox
+
+```
+import { Checkbox } from "@kirana-ui/svelte/checkbox"
+```
+
+Parts: `<Checkbox.Root>`, `<Checkbox.Indicator>`.
+
+Props of its root:
+
+- `checked?: boolean`
+- `defaultChecked?: boolean`: Read once.
+- `onCheckedChange?: ((checked: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`
+- `name?: string`: With a name, the control is submitted with the form around it when it is checked.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+- `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
+
+Attributes and CSS variables, by part:
+
+- root: The box. It holds a hidden native checkbox, which a form and a label reach.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-indeterminate`: Present when it is neither checked nor unchecked.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+- indicator: The mark. In the page while the box is checked or indeterminate.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-indeterminate`: Present when it is neither checked nor unchecked.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### Collapsible
+
+```
+import { Collapsible } from "@kirana-ui/svelte/collapsible"
+```
+
+Parts: `<Collapsible.Root>`, `<Collapsible.Trigger>`, `<Collapsible.Panel>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`: Read once.
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- root: Groups the trigger and the panel.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-disabled`: Present when it is disabled.
+- trigger: The button that opens and closes the panel.
+    - `data-panel-open`: Present when the panel is open.
+    - `data-disabled`: Present when it is disabled.
+- panel: The content. In the page while open, and through its exit's motion.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `--collapsible-panel-height`: The panel's content height while it opens or closes, `auto` once it is open.
+    - `--collapsible-panel-width`: The panel's content width while it opens or closes, `auto` once it is open.
+
+### Combobox
+
+```
+import { Combobox } from "@kirana-ui/svelte/combobox"
+```
+
+Parts: `<Combobox.Root>`, `<Combobox.Input>`, `<Combobox.Trigger>`, `<Combobox.Clear>`, `<Combobox.Chips>`, `<Combobox.Chip>`, `<Combobox.ChipRemove>`, `<Combobox.Portal>`, `<Combobox.Positioner>`, `<Combobox.Popup>`, `<Combobox.Group>`, `<Combobox.GroupLabel>`, `<Combobox.Separator>`, `<Combobox.Item>`, `<Combobox.ItemIndicator>`, `<Combobox.Empty>`.
+
+Props of its root:
+
+- `value?: Value | null`: The chosen value; `null` is "none".
+- `defaultValue?: Value | null`
+- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`
+- `inputValue?: string`: What the input says.
+- `defaultInputValue?: string`
+- `onInputValueChange?: ((value: string, details: ChangeDetails) => void)`
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`
+- `name?: string`: With a name, the value is submitted with the form around it.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `items?: readonly { value: Value; label: string }[]`: The labels of the values, for the input to show a value before the list has ever been opened. Not needed for the list itself: its items are read from the markup.
+- `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
+- `multiple?: boolean`: Several values, each shown as a chip beside the input: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
+- `values?: readonly Value[]`
+- `defaultValues?: readonly Value[]`
+- `onValuesChange?: ((values: Value[], details: ChangeDetails) => void)`
+- `required?: boolean`: In a field, "none" is then wrong.
+- `inline?: boolean`: The list is always in the page, under the input, with no popup: a command palette. An item chosen is told to the caller, and the input keeps what was typed.
+- `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view). The caller then filters: the collection is what is left, and each item is given its `index`.
+
+Attributes and CSS variables, by part:
+
+- input: The text input. What is typed filters the list, which is placed against it.
+    - `data-popup-open`: Present when the list is open.
+    - `data-disabled`: Present when it is disabled.
+- trigger: A button that opens and closes the list.
+    - `data-popup-open`: Present when the list is open.
+    - `data-disabled`: Present when it is disabled.
+- positioner: Places the list against the input. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The list of items.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-empty`: Present when no item is shown for what was typed.
+- item: One choice in the list.
+    - `data-selected`: Present on the chosen item.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- clear: A button that empties the input and the value.
+    - `data-disabled`: Present when it is disabled.
+- chipRemove: A chip's button that takes its value away.
+    - `data-disabled`: Present when it is disabled.
+
+### Command
+
+```
+import { Command } from "@kirana-ui/svelte/command"
+```
+
+Parts: `<Command.Root>`, `<Command.Input>`, `<Command.List>`, `<Command.Empty>`, `<Command.Group>`, `<Command.GroupHeading>`, `<Command.Item>`, `<Command.Separator>`.
+
+Props of its root:
+
+- `inputValue?: string`: What the input says.
+- `defaultInputValue?: string`
+- `onInputValueChange?: ((value: string, details: ChangeDetails) => void)`
+- `onSelect?: ((value: string, details: ChangeDetails) => void)`: An item was chosen: pressed, or Enter while it was highlighted.
+- `filter?: ((label: string, query: string, keywords: readonly string[]) => boolean) | null`: Whether an item is shown for what was typed. Default: its label or one of its keywords holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
+- `loop?: boolean`: Whether a step past an end of the list goes round to the other.
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- root: A list of commands with the input that filters it.
+    - `data-disabled`: Present when it is disabled.
+- input: The text input. What is typed filters the list; focus stays in it.
+    - `data-disabled`: Present when it is disabled.
+- list: The commands.
+    - `data-empty`: Present when no item is shown for what was typed.
+- item: One command.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+
+### ContextMenu
+
+```
+import { ContextMenu } from "@kirana-ui/svelte/context-menu"
+```
+
+Parts: `<ContextMenu.Root>`, `<ContextMenu.Trigger>`, `<ContextMenu.Portal>`, `<ContextMenu.Positioner>`, `<ContextMenu.Popup>`, `<ContextMenu.Arrow>`, `<ContextMenu.Item>`, `<ContextMenu.LinkItem>`, `<ContextMenu.Group>`, `<ContextMenu.GroupLabel>`, `<ContextMenu.Separator>`, `<ContextMenu.CheckboxItem>`, `<ContextMenu.CheckboxItemIndicator>`, `<ContextMenu.RadioGroup>`, `<ContextMenu.RadioItem>`, `<ContextMenu.RadioItemIndicator>`, `<ContextMenu.SubmenuRoot>`, `<ContextMenu.SubmenuTrigger>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
+- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
+
+Attributes and CSS variables, by part:
+
+- trigger: The area a secondary press, or a long press on a touch screen, opens the menu in.
+    - `data-popup-open`: Present when the menu is open.
+- positioner: Places the menu against its trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The menu itself: the list of items.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+- arrow: An element that points at the trigger.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
+- item: An action. Choosing it closes the menu.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- linkItem: An item that is a link. Choosing it follows the link and closes the menu.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- checkboxItem: An item that is checked or not. Choosing it leaves the menu open.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- checkboxItemIndicator: A mark a checkbox item shows while it is checked.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+- radioGroup: Radio items of which one is chosen.
+    - `data-disabled`: Present when it is disabled.
+- radioItem: One choice of a radio group. Choosing it leaves the menu open.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- radioItemIndicator: A mark a radio item shows while it is the chosen one.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+- submenuTrigger: An item that opens a menu beside it.
+    - `data-popup-open`: Present when its menu is open.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+
+### DateField
+
+```
+import { DateField } from "@kirana-ui/svelte/date-field"
+```
+
+Parts: `<DateField.Root>`, `<DateField.Segments>`, `<DateField.Segment>`, `<DateField.Input>`.
+
+Props of its root:
+
+- `value?: IsoDate | null`: The day typed, once all of it is; `null` until then.
+- `defaultValue?: IsoDate | null`
+- `onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void)`
+- `locale?: string`: The language and region that order the day, the month and the year and put what stands between them (`"en-US"`: month/day/year). Give it: a server does not know the reader's.
+- `min?: IsoDate`: The first and the last day it takes: outside them it says it is invalid.
+- `max?: IsoDate`
+- `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`.
+- `disabled?: boolean`
+- `readOnly?: boolean`
+- `required?: boolean`
+- `name?: string`: The name it is submitted under, by its hidden input.
+- `form?: string`: The id of the form it belongs to, when it is not inside it.
+
+Attributes and CSS variables, by part:
+
+- root: The field: a group of the date's parts.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when its value cannot be changed.
+    - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
+- segment: One piece of the date: a part that is typed, or what stands between two.
+    - `data-segment="day | month | year | literal"`: Which piece it is.
+    - `data-placeholder`: Present on a part that is empty.
+    - `data-disabled`: Present when it is disabled.
+    - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
+
+### DatePicker
+
+```
+import { DatePicker } from "@kirana-ui/svelte/date-picker"
+```
+
+Parts: `<DatePicker.Root>`, `<DatePicker.Field>`, `<DatePicker.Segments>`, `<DatePicker.Segment>`, `<DatePicker.Input>`, `<DatePicker.Trigger>`, `<DatePicker.Portal>`, `<DatePicker.Positioner>`, `<DatePicker.Popup>`, `<DatePicker.Calendar>`, `<DatePicker.Heading>`, `<DatePicker.Previous>`, `<DatePicker.Next>`, `<DatePicker.Grid>`, `<DatePicker.Weekdays>`, `<DatePicker.HeadCell>`, `<DatePicker.Weeks>`, `<DatePicker.Cell>`, `<DatePicker.Day>`.
+
+Props of its root:
+
+- `value?: IsoDate | null`: The day, typed or picked; `null` for none.
+- `defaultValue?: IsoDate | null`
+- `onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void)`
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `locale?: string`: The language and region of the field and the calendar. Give it: a server does not know.
+- `min?: IsoDate`: The first and the last day that can be typed or picked.
+- `max?: IsoDate`
+- `isDateUnavailable?: CalendarProps["isDateUnavailable"]`: Days that cannot be picked in the calendar.
+- `calendarSystem?: CalendarProps["calendarSystem"]`: The calendar its months are laid out in, when it is not the Gregorian one.
+- `fixedWeeks?: boolean`: Always six rows of days.
+- `placeholders?: DateFieldProps["placeholders"]`: What an empty part of the field shows.
+- `disabled?: boolean`
+- `readOnly?: boolean`
+- `required?: boolean`
+- `name?: string`: The name it is submitted under.
+- `form?: string`: The id of the form it belongs to, when it is not inside it.
+
+Attributes and CSS variables, by part:
+
+- field: The field: a group of the date's parts.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when its value cannot be changed.
+    - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
+- segment: One piece of the date: a part that is typed, or what stands between two.
+    - `data-segment="day | month | year | literal"`: Which piece it is.
+    - `data-placeholder`: Present on a part that is empty.
+    - `data-disabled`: Present when it is disabled.
+    - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
+- trigger: The button that opens the popover, and what it is placed against.
+    - `data-popup-open`: Present when the popover is open.
+- positioner: Places the popup against the trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The popover itself.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+- calendar: The calendar.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when its value cannot be changed.
+- previous: Shows the month before.
+    - `data-disabled`: Present when it is disabled.
+- next: Shows the month after.
+    - `data-disabled`: Present when it is disabled.
+- cell: A day's cell.
+    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-today`: Present on today.
+    - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
+    - `data-disabled`: Present when it is disabled.
+    - `data-unavailable`: Present on a day that cannot be chosen.
+    - `data-range-start`: Present on the first day of a range.
+    - `data-range-end`: Present on the last day of a range.
+- day: The button for a day.
+    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-today`: Present on today.
+    - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
+    - `data-disabled`: Present when it is disabled.
+    - `data-unavailable`: Present on a day that cannot be chosen.
+    - `data-range-start`: Present on the first day of a range.
+    - `data-range-end`: Present on the last day of a range.
+
+### Dialog
+
+```
+import { Dialog } from "@kirana-ui/svelte/dialog"
+```
+
+Parts: `<Dialog.Root>`, `<Dialog.Trigger>`, `<Dialog.Portal>`, `<Dialog.Backdrop>`, `<Dialog.Popup>`, `<Dialog.Title>`, `<Dialog.Description>`, `<Dialog.Close>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
+- `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
+
+Attributes and CSS variables, by part:
+
+- trigger: The button that opens the dialog.
+    - `data-popup-open`: Present when the dialog is open.
+- backdrop: The layer over the page behind the dialog.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- popup: The dialog itself.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
+    - `--nested-dialogs`: How many dialogs are open above this one.
+
+### DirectionProvider
+
+```
+import { DirectionProvider } from "@kirana-ui/svelte/direction-provider"
+```
+
+### Drawer
+
+```
+import { Drawer } from "@kirana-ui/svelte/drawer"
+```
+
+Parts: `<Drawer.Root>`, `<Drawer.Trigger>`, `<Drawer.Portal>`, `<Drawer.Backdrop>`, `<Drawer.Popup>`, `<Drawer.Title>`, `<Drawer.Description>`, `<Drawer.Close>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
+- `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
+- `swipeDirection?: DrawerSide`: The way it is dragged to close it: the edge it came from. Default: `"down"`.
+- `snapPoints?: readonly number[]`: Places it rests at, each the share of itself that shows: `[0.4, 1]` is a drawer that opens two fifths shown and is dragged up to the whole. Without any, it is whole.
+- `snapPoint?: number`: Which of them it rests at.
+- `defaultSnapPoint?: number`: Where it opens. Default: the smallest.
+- `onSnapPointChange?: ((snapPoint: number, details: ChangeDetails) => void)`
+
+Attributes and CSS variables, by part:
+
+- trigger: The button that opens the dialog.
+    - `data-popup-open`: Present when the dialog is open.
+- backdrop: The layer over the page behind the dialog.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-swiping`: Present while the drawer is dragged.
+    - `--drawer-swipe-movement-x`: How far it has been dragged across.
+    - `--drawer-swipe-movement-y`: How far it has been dragged up or down.
+    - `--drawer-swipe-progress`: How far it has been dragged, of its own size: 0 to 1.
+    - `--drawer-snap-point-offset`: How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.
+- popup: The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
+    - `data-swiping`: Present while the drawer is dragged.
+    - `data-swipe-direction="up | down | left | right"`: The way it is dragged to close it.
+    - `data-swipe-dismiss`: Present once a drag has closed it.
+    - `data-expanded`: Present while it rests whole, of several snap points.
+    - `data-nested-drawer-open`: Present while another drawer is open over it.
+    - `data-nested-drawer-swiping`: Present while a drawer over it is dragged.
+    - `--nested-dialogs`: How many dialogs are open above this one.
+    - `--drawer-swipe-movement-x`: How far it has been dragged across.
+    - `--drawer-swipe-movement-y`: How far it has been dragged up or down.
+    - `--drawer-swipe-progress`: How far it has been dragged, of its own size: 0 to 1.
+    - `--drawer-snap-point-offset`: How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.
+    - `--drawer-height`: Its height.
+    - `--nested-drawers`: How many drawers are open over it.
+    - `--drawer-frontmost-height`: The height of the drawer in front of every other, while this one is open.
+    - `--drawer-swipe-strength`: Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner.
+    - `--drawer-width`: Its width.
+
+### Field
+
+```
+import { Field } from "@kirana-ui/svelte/field"
+```
+
+Parts: `<Field.Root>`, `<Field.Label>`, `<Field.Control>`, `<Field.Description>`, `<Field.Error>`, `<Field.Validity>`.
+
+Props of its root:
+
+- `name?: string`: The control's name in the form.
+- `disabled?: boolean`
+- `invalid?: boolean`: Invalid whatever the value: an error known from elsewhere.
+- `validate?: | (( value: string ) => string | readonly string[] | null | Promise<string | readonly string[] | null>)`: The field's own check, after the browser's: a message or several when the value is wrong, `null` when it is right. It may answer later, with a promise.
+- `validationMode?: ValidationMode`: When the value is checked; the form's by default, else `"onSubmit"`.
+- `validationDebounceTime?: number`: With `"onChange"`, how long the value must rest before it is checked, in milliseconds.
+
+Attributes and CSS variables, by part:
+
+- root: A control with its label, its description and its errors.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the control.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the control has a value.
+    - `data-focused`: Present while the control has focus.
+    - `data-valid`: Present once the value has been checked and found right.
+    - `data-invalid`: Present while the value is wrong.
+- label: The control's name: a press on it reaches the control.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the control.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the control has a value.
+    - `data-focused`: Present while the control has focus.
+    - `data-valid`: Present once the value has been checked and found right.
+    - `data-invalid`: Present while the value is wrong.
+- control: The control: an input, a textarea or a select.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the control.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the control has a value.
+    - `data-focused`: Present while the control has focus.
+    - `data-valid`: Present once the value has been checked and found right.
+    - `data-invalid`: Present while the value is wrong.
+- description: More about the control, said after its name.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the control.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the control has a value.
+    - `data-focused`: Present while the control has focus.
+    - `data-valid`: Present once the value has been checked and found right.
+    - `data-invalid`: Present while the value is wrong.
+- error: What is wrong with the value. In the page while it applies.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the control.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the control has a value.
+    - `data-focused`: Present while the control has focus.
+    - `data-valid`: Present once the value has been checked and found right.
+    - `data-invalid`: Present while the value is wrong.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### Fieldset
+
+```
+import { Fieldset } from "@kirana-ui/svelte/fieldset"
+```
+
+Parts: `<Fieldset.Root>`, `<Fieldset.Legend>`.
+
+Props of its root:
+
+- `disabled?: boolean`: Disables every field inside.
+
+Attributes and CSS variables, by part:
+
+- root: The group of fields.
+    - `data-disabled`: Present when it is disabled.
+- legend: The group's name.
+    - `data-disabled`: Present when it is disabled.
+
+### Form
+
+```
+import { Form } from "@kirana-ui/svelte/form"
+```
+
+Props:
+
+- `errors?: FormErrors`: Errors from outside the page (a server's), by field name. A field shows its own until its value changes.
+- `onClearErrors?: ((errors: FormErrors) => void)`: A field's value changed while it showed an error from `errors`: what is left of them.
+- `onFormSubmit?: ((values: FormValues, details: ChangeDetails) => void)`: Every field is valid. Given this, the page is not left: the values come as an object. Without it, the form submits as a form does.
+- `validationMode?: ValidationMode`: When the form's fields check their values, unless a field says otherwise. Default `"onSubmit"`.
+
+### HoverCard
+
+```
+import { HoverCard } from "@kirana-ui/svelte/hover-card"
+```
+
+Parts: `<HoverCard.Root>`, `<HoverCard.Trigger>`, `<HoverCard.Portal>`, `<HoverCard.Positioner>`, `<HoverCard.Popup>`, `<HoverCard.Arrow>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
+- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- trigger: The link the card previews.
+    - `data-popup-open`: Present when the card is open.
+- positioner: Places the popup against the trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The card itself.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
+- arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
+
+### Input
+
+```
+import { Input } from "@kirana-ui/svelte/input"
+```
+
+Props:
+
+- `disabled?: boolean`
+- `onValueChange?: ((value: string, details: ChangeDetails) => void)`: What was typed, as text, each time it changes.
+
+Attributes and CSS variables, by part:
+
+- input: A text input. Inside a field it is the field's control.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the input has a value.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: In a field: present once the value was checked and found right.
+    - `data-invalid`: In a field: present while the value is wrong.
+
+### Label
+
+```
+import { Label } from "@kirana-ui/svelte/label"
+```
+
+Attributes and CSS variables, by part:
+
+- label: A control's name. Inside a field it is the field's label, with its states.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left the control.
+    - `data-dirty`: Present while the value is not the one it started with.
+    - `data-filled`: Present while the control has a value.
+    - `data-focused`: Present while the control has focus.
+    - `data-valid`: Present once the value has been checked and found right.
+    - `data-invalid`: Present while the value is wrong.
+
+### Listbox
+
+```
+import { Listbox } from "@kirana-ui/svelte/listbox"
+```
+
+Parts: `<Listbox.Root>`, `<Listbox.Item>`, `<Listbox.ItemIndicator>`, `<Listbox.Group>`, `<Listbox.GroupLabel>`.
+
+Props of its root:
+
+- `value?: readonly Value[]`: The chosen values: none, one, or with `multiple` several.
+- `defaultValue?: readonly Value[]`
+- `onValueChange?: ((value: Value[], details: ChangeDetails) => void)`
+- `multiple?: boolean`: Whether more than one can be chosen: a press then adds or takes away.
+- `disabled?: boolean`
+- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do not.
+- `name?: string`: With a name, the chosen values are submitted with the form around the list.
+- `form?: string`: The id of the form the list belongs to, when it is not inside it.
+- `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view): how many there are, their names, and how to bring one into the page. Each item is then given its `index`.
+
+Attributes and CSS variables, by part:
+
+- root: The list. It is one stop for Tab.
+    - `data-disabled`: Present when it is disabled.
+- item: One choice in the list.
+    - `data-selected`: Present on a chosen item.
+    - `data-highlighted`: Present on the item the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- itemIndicator: A mark an item shows while it is chosen.
+    - `data-selected`: Present on a chosen item.
+
+### Menu
+
+```
+import { Menu } from "@kirana-ui/svelte/menu"
+```
+
+Parts: `<Menu.Root>`, `<Menu.Trigger>`, `<Menu.Portal>`, `<Menu.Positioner>`, `<Menu.Popup>`, `<Menu.Arrow>`, `<Menu.Item>`, `<Menu.LinkItem>`, `<Menu.Group>`, `<Menu.GroupLabel>`, `<Menu.Separator>`, `<Menu.CheckboxItem>`, `<Menu.CheckboxItemIndicator>`, `<Menu.RadioGroup>`, `<Menu.RadioItem>`, `<Menu.RadioItemIndicator>`, `<Menu.SubmenuRoot>`, `<Menu.SubmenuTrigger>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
+- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
+
+Attributes and CSS variables, by part:
+
+- trigger: The button that opens the menu, and what it is placed against.
+    - `data-popup-open`: Present when the menu is open.
+    - `data-disabled`: Present when it is disabled.
+- positioner: Places the menu against its trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The menu itself: the list of items.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+- arrow: An element that points at the trigger.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
+- item: An action. Choosing it closes the menu.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- linkItem: An item that is a link. Choosing it follows the link and closes the menu.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- checkboxItem: An item that is checked or not. Choosing it leaves the menu open.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- checkboxItemIndicator: A mark a checkbox item shows while it is checked.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+- radioGroup: Radio items of which one is chosen.
+    - `data-disabled`: Present when it is disabled.
+- radioItem: One choice of a radio group. Choosing it leaves the menu open.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+- radioItemIndicator: A mark a radio item shows while it is the chosen one.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+- submenuTrigger: An item that opens a menu beside it.
+    - `data-popup-open`: Present when its menu is open.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+
+### Menubar
+
+```
+import { Menubar } from "@kirana-ui/svelte/menubar"
+```
+
+Props:
+
+- `loop?: boolean`: Whether the arrows go round from the last menu to the first. Default: they do.
+- `disabled?: boolean`: No menu of the bar opens.
+- `orientation?: Orientation`: A row (the default) or a column of menus. In a column a menu opens beside its trigger.
+
+Attributes and CSS variables, by part:
+
+- root: The row of menus. A menu inside it is one of its items.
+    - `data-disabled`: Present when it is disabled.
+    - `data-orientation="horizontal | vertical"`: Whether its menus are in a row or a column.
+
+### MessageScroller
+
+```
+import { MessageScroller } from "@kirana-ui/svelte/message-scroller"
+```
+
+Parts: `<MessageScroller.Root>`, `<MessageScroller.Viewport>`, `<MessageScroller.Content>`, `<MessageScroller.Button>`.
+
+Props of its root:
+
+- `initial?: "bottom" | "top"`: Where it begins: at the newest message (the default), or at the first.
+- `threshold?: number`: How near the end counts as at it, in pixels. Default: 24.
+- `onAtBottomChange?: ((atBottom: boolean, details: ChangeDetails) => void)`: Heard when it comes to the end or leaves it.
+
+Attributes and CSS variables, by part:
+
+- root: What holds the conversation and its button.
+    - `data-at-bottom`: Present while the newest message is in view.
+- viewport: What scrolls: a log, reached by the keyboard.
+    - `data-at-bottom`: Present while the newest message is in view.
+- button: Goes to the newest message. Inert while that is in view.
+    - `data-at-bottom`: Present while the newest message is in view.
+
+### Meter
+
+```
+import { Meter } from "@kirana-ui/svelte/meter"
+```
+
+Parts: `<Meter.Root>`, `<Meter.Track>`, `<Meter.Indicator>`, `<Meter.Value>`, `<Meter.Label>`.
+
+### NavigationMenu
+
+```
+import { NavigationMenu } from "@kirana-ui/svelte/navigation-menu"
+```
+
+Parts: `<NavigationMenu.Root>`, `<NavigationMenu.List>`, `<NavigationMenu.Item>`, `<NavigationMenu.Trigger>`, `<NavigationMenu.Icon>`, `<NavigationMenu.Content>`, `<NavigationMenu.Link>`, `<NavigationMenu.Portal>`, `<NavigationMenu.Positioner>`, `<NavigationMenu.Popup>`, `<NavigationMenu.Viewport>`, `<NavigationMenu.Arrow>`, `<NavigationMenu.Backdrop>`.
+
+Props of its root:
+
+- `value?: Value | null`: The item whose content is shown; `null` is "none".
+- `defaultValue?: Value | null`
+- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`
+- `delay?: number`: How long the pointer rests on a trigger before its content shows, in milliseconds.
+- `closeDelay?: number`: How long after the pointer leaves the content goes, in milliseconds.
+- `orientation?: Orientation`
+
+Attributes and CSS variables, by part:
+
+- root: The navigation.
+    - `data-orientation="horizontal | vertical"`: Whether the list is a row or a column.
+- list: The row of items.
+    - `data-orientation="horizontal | vertical"`: Whether the list is a row or a column.
+- trigger: The button that shows an item's content.
+    - `data-popup-open`: Present while the item's content is shown.
+- icon: A mark on a trigger that shows whether its content is open.
+    - `data-popup-open`: Present while the item's content is shown.
+- content: What an item shows. It is drawn in the viewport every item shares.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-activation-direction="left | right"`: Which way it came from: the item before it, or after.
+- link: A link, in the list or in an item's content.
+    - `data-active`: Present on the link of the page the reader is on.
+- positioner: Places the popup against the open item's trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The open content's width.
+    - `--positioner-height`: The open content's height.
+- popup: The panel every item's content is shown in.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--popup-width`: The open content's width.
+    - `--popup-height`: The open content's height.
+- arrow: An element that points at the open item's trigger.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
+- backdrop: An element behind the popup, for a design that dims the page.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### NumberField
+
+```
+import { NumberField } from "@kirana-ui/svelte/number-field"
+```
+
+Parts: `<NumberField.Root>`, `<NumberField.Group>`, `<NumberField.Input>`, `<NumberField.Increment>`, `<NumberField.Decrement>`.
+
+Props of its root:
+
+- `value?: number | null`: The number; `null` is "none".
+- `defaultValue?: number | null`
+- `onValueChange?: ((value: number | null, details: ChangeDetails) => void)`
+- `onValueCommitted?: ((value: number | null, details: ChangeDetails) => void)`: Heard once a change is done: focus left the input, a key or a button stepped it.
+- `min?: number`
+- `max?: number`
+- `step?: number`: What the buttons and the arrows move by. Default 1.
+- `smallStep?: number`: With Alt held. Default 0.1.
+- `largeStep?: number`: With Shift held. Default 10.
+- `snapOnStep?: boolean`: A step lands on a multiple of the step, counted from `min`.
+- `allowWheelScrub?: boolean`: The wheel steps it while the pointer is over the input and focus is in it.
+- `format?: Intl.NumberFormatOptions`: How the number is written.
+- `locale?: string`: The language it is written in; the page's by default.
+- `disabled?: boolean`
+- `readOnly?: boolean`
+- `required?: boolean`
+- `name?: string`: With a name, the number is submitted with the form around it.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+
+Attributes and CSS variables, by part:
+
+- root: Groups the number field's parts.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- group: What holds the input and its buttons, as one control.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- input: The text input: it takes what its locale writes a number with.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- increment: A button that steps the number up. Held, it goes on.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- decrement: A button that steps the number down. Held, it goes on.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+
+### Otp
+
+```
+import { Otp } from "@kirana-ui/svelte/otp"
+```
+
+Parts: `<Otp.Root>`, `<Otp.Input>`, `<Otp.Group>`, `<Otp.Slot>`, `<Otp.Separator>`, `<Otp.Caret>`.
+
+Props of its root:
+
+- `length?: number`: How many characters the code has. Default: 6.
+- `value?: string`
+- `defaultValue?: string`
+- `onValueChange?: ((value: string, details: ChangeDetails) => void)`
+- `onComplete?: ((value: string) => void)`: Every character is in: the moment to send the code.
+- `mode?: "numeric" | "alphanumeric" | "text"`: What a character may be. Default: `numeric`.
+- `disabled?: boolean`
+- `name?: string`: With a name, the code is submitted with the form around it.
+- `form?: string`: The id of the form the input belongs to, when it is not inside it.
+
+Attributes and CSS variables, by part:
+
+- root: The code: the input and its cells.
+    - `data-disabled`: Present when it is disabled.
+    - `data-focused`: Present while the input has focus.
+    - `data-complete`: Present when every character is in.
+- input: The one input the code is typed in. A design lays it over the cells, unseen.
+    - `data-disabled`: Present when it is disabled.
+- slot: One cell of the code.
+    - `data-index`: The cell's place, from 0.
+    - `data-active`: Present on the cell the next character goes in, or that is selected.
+    - `data-filled`: Present when the cell has its character.
+    - `data-disabled`: Present when it is disabled.
+
+### Pagination
+
+```
+import { Pagination } from "@kirana-ui/svelte/pagination"
+```
+
+Parts: `<Pagination.Root>`, `<Pagination.Items>`, `<Pagination.Item>`, `<Pagination.Ellipsis>`, `<Pagination.Previous>`, `<Pagination.Next>`.
+
+Props of its root:
+
+- `page?: number`: The page shown, from 1.
+- `defaultPage?: number`
+- `onPageChange?: ((page: number, details: ChangeDetails) => void)`
+- `count: number`: How many items there are in all.
+- `pageSize?: number`: How many items a page holds. Default 10.
+- `siblingCount?: number`: How many pages are listed each side of the one shown. Default 1.
+- `boundaryCount?: number`: How many pages are always listed at each end. Default 1.
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- root: The pages of a list, as a navigation.
+    - `data-disabled`: Present when it is disabled.
+- item: A page: pressed, it is the one shown.
+    - `data-selected`: Present on the page that is shown.
+    - `data-disabled`: Present when it is disabled.
+- previous: Goes to the page before.
+    - `data-disabled`: Present when it is disabled.
+- next: Goes to the page after.
+    - `data-disabled`: Present when it is disabled.
+
+### Popover
+
+```
+import { Popover } from "@kirana-ui/svelte/popover"
+```
+
+Parts: `<Popover.Root>`, `<Popover.Trigger>`, `<Popover.Portal>`, `<Popover.Positioner>`, `<Popover.Popup>`, `<Popover.Title>`, `<Popover.Description>`, `<Popover.Close>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+
+Attributes and CSS variables, by part:
+
+- trigger: The button that opens the popover, and what it is placed against.
+    - `data-popup-open`: Present when the popover is open.
+- positioner: Places the popup against the trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The popover itself.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+
+### Progress
+
+```
+import { Progress } from "@kirana-ui/svelte/progress"
+```
+
+Parts: `<Progress.Root>`, `<Progress.Track>`, `<Progress.Indicator>`, `<Progress.Value>`, `<Progress.Label>`.
+
+Props of its root:
+
+- `value: number | null`: The value. For a progress bar, `null` is "under way, how far is not known".
+- `min?: number`: Default 0.
+- `max?: number`: Default 100.
+- `format?: Intl.NumberFormatOptions`: How the value is written; a percentage of the range by default.
+- `locale?: string`: The language the value is written in; the page's by default.
+- `getAriaValueText?: ((text: string | undefined, value: number | null) => string)`: What assistive technology reads for the value, when the written value is not enough.
+
+Attributes and CSS variables, by part:
+
+- root: The progress bar: it says the value to assistive technology.
+    - `data-progressing`: Present while the task is under way.
+    - `data-complete`: Present once the value has reached the end of the range.
+    - `data-indeterminate`: Present while how far the task has come is not known.
+- track: The whole range.
+    - `data-progressing`: Present while the task is under way.
+    - `data-complete`: Present once the value has reached the end of the range.
+    - `data-indeterminate`: Present while how far the task has come is not known.
+- indicator: The filled part: its width is the value's share of the range.
+    - `data-progressing`: Present while the task is under way.
+    - `data-complete`: Present once the value has reached the end of the range.
+    - `data-indeterminate`: Present while how far the task has come is not known.
+- value: The value, written.
+    - `data-progressing`: Present while the task is under way.
+    - `data-complete`: Present once the value has reached the end of the range.
+    - `data-indeterminate`: Present while how far the task has come is not known.
+- label: The bar's name.
+    - `data-progressing`: Present while the task is under way.
+    - `data-complete`: Present once the value has reached the end of the range.
+    - `data-indeterminate`: Present while how far the task has come is not known.
+
+### QrCode
+
+```
+import { QrCode } from "@kirana-ui/svelte/qr-code"
+```
+
+Parts: `<QrCode.Root>`, `<QrCode.Frame>`, `<QrCode.Pattern>`.
+
+Props of its root:
+
+- `value: string`: What the code says: a link, a text. Written as UTF-8.
+- `correction?: QrCorrection`: How much of it may be lost and still be read. Default: `"M"`.
+
+Attributes and CSS variables, by part:
+
+- root: What holds the code.
+    - `data-invalid`: Present when the value is longer than a code holds.
+
+### RadioGroup
+
+```
+import { RadioGroup } from "@kirana-ui/svelte/radio-group"
+```
+
+Parts: `<RadioGroup.Root>`, `<RadioGroup.Item>`, `<RadioGroup.Indicator>`.
+
+Props of its root:
+
+- `value?: Value | null`: The chosen value; `null` is "none".
+- `defaultValue?: Value | null`
+- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`: `null` only when a form's reset takes the group back to "none".
+- `disabled?: boolean`
+- `readOnly?: boolean`
+- `required?: boolean`
+- `name?: string`: With a name, the chosen value is submitted with the form around the group.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+
+Attributes and CSS variables, by part:
+
+- root: Groups the items: one of them is chosen at most.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+- item: One choice. It holds a hidden native radio, which a form and a label reach.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+- indicator: The mark. In the page while its item is the chosen one.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### Resizable
+
+```
+import { Resizable } from "@kirana-ui/svelte/resizable"
+```
+
+Parts: `<Resizable.Group>`, `<Resizable.Panel>`, `<Resizable.Handle>`.
+
+Props of its root:
+
+- `orientation?: Orientation`: Whether the panels are side by side (the default) or one over the other.
+- `onSizesChange?: ((sizes: number[], details: ChangeDetails) => void)`: Heard as the panels are resized: each panel's share, in the page's order, summing to 100.
+- `keyboardStep?: number`: How far an arrow key moves a handle, in hundredths of the group. Default: 10.
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- group: The panels and the bars between them. A design lays it out as a flex box.
+    - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
+    - `data-disabled`: Present when it is disabled.
+- panel: One panel. It carries its share of the group.
+    - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
+    - `--panel-size`: The panel's share, in hundredths of the group.
+- handle: The bar between two panels: dragged, or moved with the arrows.
+    - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
+    - `data-dragging`: Present while the bar is dragged.
+    - `data-disabled`: Present when it is disabled.
+
+### ScrollArea
+
+```
+import { ScrollArea } from "@kirana-ui/svelte/scroll-area"
+```
+
+Parts: `<ScrollArea.Root>`, `<ScrollArea.Viewport>`, `<ScrollArea.Content>`, `<ScrollArea.Scrollbar>`, `<ScrollArea.Thumb>`, `<ScrollArea.Corner>`.
+
+Attributes and CSS variables, by part:
+
+- root: The area. It holds the viewport and the scrollbars.
+    - `data-has-overflow-x`: Present when there is more to see sideways.
+    - `data-has-overflow-y`: Present when there is more to see up or down.
+    - `data-scrolling`: Present while it is being scrolled, and a moment after.
+    - `data-hovering`: Present while the pointer is over the area.
+    - `--scroll-area-corner-width`: The width of the corner: the vertical scrollbar's.
+    - `--scroll-area-corner-height`: The height of the corner: the horizontal scrollbar's.
+- viewport: The element that scrolls.
+    - `data-has-overflow-x`: Present when there is more to see sideways.
+    - `data-has-overflow-y`: Present when there is more to see up or down.
+    - `data-scrolling`: Present while it is being scrolled, and a moment after.
+- scrollbar: A scrollbar's track. In the page while there is something to scroll its way.
+    - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
+    - `data-hovering`: Present while the pointer is over the area.
+    - `data-scrolling`: Present while the area is scrolled its way.
+- thumb: The part of a scrollbar that shows where the view is, and can be dragged.
+    - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
+    - `--scroll-area-thumb-height`: A vertical thumb's height.
+    - `--scroll-area-thumb-width`: A horizontal thumb's width.
+
+### Select
+
+```
+import { Select } from "@kirana-ui/svelte/select"
+```
+
+Parts: `<Select.Root>`, `<Select.Trigger>`, `<Select.Value>`, `<Select.Portal>`, `<Select.Positioner>`, `<Select.Popup>`, `<Select.List>`, `<Select.ScrollUpArrow>`, `<Select.ScrollDownArrow>`, `<Select.Group>`, `<Select.GroupLabel>`, `<Select.Separator>`, `<Select.Item>`, `<Select.ItemText>`, `<Select.ItemIndicator>`.
+
+Props of its root:
+
+- `value?: Value | null`: The chosen value; `null` is "none".
+- `defaultValue?: Value | null`
+- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`
+- `required?: boolean`: In a field, "none" is then wrong.
+- `name?: string`: With a name, the value is submitted with the form around it.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `items?: readonly { value: Value; label: string }[]`: The labels of the values, for the trigger to show before the list has ever been opened. Not needed for the list itself: its items are read from the markup.
+- `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view). Each item is then given its `index`.
+
+Attributes and CSS variables, by part:
+
+- trigger: The button that shows the value and opens the list.
+    - `data-popup-open`: Present when the list is open.
+    - `data-placeholder`: Present while nothing is chosen.
+    - `data-disabled`: Present when it is disabled.
+- value: The chosen value's label, or the placeholder.
+    - `data-placeholder`: Present while nothing is chosen.
+- positioner: Places the list against the trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left | none"`: The side of the trigger it is on, after any flip; `none` when it lies over the trigger.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- scrollUpArrow: In the page while there is more of the list above: it scrolls the list while the pointer moves over it.
+    - `data-direction="up | down"`: The way it scrolls the list.
+    - `data-visible`: Present while there is more of the list its way.
+    - `data-side="top | right | bottom | left | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- scrollDownArrow: In the page while there is more of the list below: it scrolls the list while the pointer moves over it.
+    - `data-direction="up | down"`: The way it scrolls the list.
+    - `data-visible`: Present while there is more of the list its way.
+    - `data-side="top | right | bottom | left | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- popup: The list of items.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+- item: One choice in the list.
+    - `data-selected`: Present on the chosen item.
+    - `data-highlighted`: Present on the item the pointer or the keyboard is on.
+    - `data-disabled`: Present when it is disabled.
+
+### Separator
+
+```
+import { Separator } from "@kirana-ui/svelte/separator"
+```
+
+Props:
+
+- `orientation?: Orientation`
+
+Attributes and CSS variables, by part:
+
+- root: The line.
+    - `data-orientation="horizontal | vertical"`: The way the line runs.
+
+### Slider
+
+```
+import { Slider } from "@kirana-ui/svelte/slider"
+```
+
+Parts: `<Slider.Root>`, `<Slider.Value>`, `<Slider.Control>`, `<Slider.Track>`, `<Slider.Indicator>`, `<Slider.Thumb>`.
+
+Props of its root:
+
+- `value?: SliderValue`
+- `defaultValue?: SliderValue`: Read once. Default `min`.
+- `onValueChange?: ((value: number | number[], details: SliderChangeDetails) => void)`: Each step of a drag and each key.
+- `onValueCommitted?: ((value: number | number[], details: SliderChangeDetails) => void)`: When the pointer lets go, and after each key: the value to save.
+- `min?: number`: Default 0.
+- `max?: number`: Default 100.
+- `step?: number`: Default 1.
+- `largeStep?: number`: What Page Up, Page Down and an arrow with Shift move by. Default 10.
+- `minStepsBetweenValues?: number`: How many steps two thumbs of a range stay apart. Default 0.
+- `orientation?: Orientation`
+- `thumbAlignment?: "center" | "edge" | "edge-client-only"`: Where a thumb is at the ends of its range. `"center"` (the default): its centre on the control's edge, so half of it lies outside. `"edge"`: its edge on the control's edge, so it stays inside. `"edge-client-only"` is the same here: nothing waits for the browser.
+- `disabled?: boolean`
+- `name?: string`: With a name, each thumb's value is submitted with the form around the slider.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `format?: Intl.NumberFormatOptions`: How a value is written.
+- `locale?: string`: The language a value is written in; the page's by default.
+- `getAriaValueText?: ((text: string, value: number, index: number) => string)`: What assistive technology reads for a thumb, when the written value is not enough.
+
+Attributes and CSS variables, by part:
+
+- root: Groups the slider's parts.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while a pointer holds a thumb.
+- value: The value, written.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while a pointer holds a thumb.
+- control: What a pointer presses and drags on. It holds the track and the thumbs.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while a pointer holds a thumb.
+- track: The whole range.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while a pointer holds a thumb.
+- indicator: The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while a pointer holds a thumb.
+    - `--start-position`: With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.
+    - `--relative-size`: With thumbs that stay inside the control and a range: the filled part's length.
+- thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-index`: Which thumb it is, from 0.
+    - `--position`: With thumbs that stay inside the control: where the thumb's centre is.
+
+### Switch
+
+```
+import { Switch } from "@kirana-ui/svelte/switch"
+```
+
+Parts: `<Switch.Root>`, `<Switch.Thumb>`.
+
+Props of its root:
+
+- `checked?: boolean`
+- `defaultChecked?: boolean`: Read once.
+- `onCheckedChange?: ((checked: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`
+- `name?: string`: With a name, the control is submitted with the form around it when it is checked.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+
+Attributes and CSS variables, by part:
+
+- root: The track. It holds a hidden native checkbox, which a form and a label reach.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+- thumb: The knob that moves along the track.
+    - `data-checked`: Present when it is checked.
+    - `data-unchecked`: Present when it is not checked.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+
+### Tabs
+
+```
+import { Tabs } from "@kirana-ui/svelte/tabs"
+```
+
+Parts: `<Tabs.Root>`, `<Tabs.List>`, `<Tabs.Tab>`, `<Tabs.Indicator>`, `<Tabs.Panel>`.
+
+Props of its root:
+
+- `value?: Value | null`: The active tab's value; `null` is "none".
+- `defaultValue?: Value | null`: Read once. Without one, the first tab that can be chosen is, once the page is there.
+- `onValueChange?: ((value: Value, details: ChangeDetails) => void)`
+- `orientation?: Orientation`
+
+Attributes and CSS variables, by part:
+
+- root: Groups the tabs and their panels.
+    - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
+    - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
+- list: The row of tabs. The arrows move between them.
+    - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
+    - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
+- tab: A button that shows its panel.
+    - `data-active`: Present on the tab whose panel is shown.
+    - `data-disabled`: Present when it is disabled.
+    - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
+- indicator: A mark for the active tab: it carries that tab's position and size.
+    - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
+    - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
+    - `--active-tab-left`: The active tab's distance from the list's left edge.
+    - `--active-tab-right`: The active tab's distance from the list's right edge.
+    - `--active-tab-top`: The active tab's distance from the list's top edge.
+    - `--active-tab-bottom`: The active tab's distance from the list's bottom edge.
+    - `--active-tab-width`: The active tab's width.
+    - `--active-tab-height`: The active tab's height.
+- panel: A tab's content. In the page while its tab is active, and through its exit.
+    - `data-hidden`: Present while its tab is not the active one.
+    - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
+    - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### Toast
+
+```
+import { Toast } from "@kirana-ui/svelte/toast"
+```
+
+Parts: `<Toast.Viewport>`, `<Toast.List>`, `<Toast.Root>`, `<Toast.Content>`, `<Toast.Title>`, `<Toast.Description>`, `<Toast.Close>`, `<Toast.Action>`.
+
+Props of its root:
+
+- `toaster: Toaster`
+- `label?: string`: What the region of toasts is called, for assistive technology.
+- `hotkey?: string`: The key that takes focus to the toasts. Default: `"F6"`.
+- `swipeDirection?: "left" | "right" | "up" | "down"`: The way a toast is dragged to close it. Default: `"right"`.
+
+Attributes and CSS variables, by part:
+
+- viewport: Where the toasts are drawn: a region that is always in the page.
+    - `data-expanded`: Present while the pointer or focus is on the stack: the toasts are spread out, and wait.
+    - `--toast-frontmost-height`: The height of the newest toast.
+- root: One toast.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-expanded`: Present while the pointer or focus is on the stack: the toasts are spread out, and wait.
+    - `data-type`: The kind the toast was added as.
+    - `data-limited`: Present on a toast behind as many as are shown at once.
+    - `data-swiping`: Present while the toast is dragged.
+    - `data-swipe-direction="left | right | up | down"`: The way the toast was dragged out, once it has been.
+    - `--toast-index`: Its place in the stack: 0 for the newest.
+    - `--toast-height`: Its height.
+    - `--toast-offset-y`: The height of the toasts in front of it.
+    - `--toast-swipe-movement-x`: How far it has been dragged across.
+    - `--toast-swipe-movement-y`: How far it has been dragged up or down.
+- content: What holds a toast's contents, when the design sizes the toast itself.
+    - `data-behind`: Present on a toast that is behind the newest.
+    - `data-expanded`: Present while the pointer or focus is on the stack: the toasts are spread out, and wait.
+
+### Toggle
+
+```
+import { Toggle } from "@kirana-ui/svelte/toggle"
+```
+
+Props:
+
+- `pressed?: boolean`
+- `defaultPressed?: boolean`: Read once.
+- `onPressedChange?: ((pressed: boolean, details: ChangeDetails) => void)`
+- `disabled?: boolean`
+- `value?: unknown`: In a toggle group: what the group's value holds while this one is pressed.
+
+Attributes and CSS variables, by part:
+
+- root: The button. It stays pressed until it is pressed again.
+    - `data-pressed`: Present while it is pressed.
+    - `data-disabled`: Present when it is disabled.
+
+### ToggleGroup
+
+```
+import { ToggleGroup } from "@kirana-ui/svelte/toggle-group"
+```
+
+Props:
+
+- `value?: readonly Value[]`: The values of the pressed toggles: none, one, or with `multiple` several.
+- `defaultValue?: readonly Value[]`
+- `onValueChange?: ((value: Value[], details: ChangeDetails) => void)`
+- `multiple?: boolean`: Whether more than one can be pressed at a time.
+- `disabled?: boolean`
+- `orientation?: Orientation`
+- `loop?: boolean`: Whether the arrows go round from the last toggle to the first. Default: they do.
+
+Attributes and CSS variables, by part:
+
+- root: The group. A toggle inside it with a `value` is one of its toggles.
+    - `data-orientation="horizontal | vertical"`: Whether its toggles are in a row or a column.
+    - `data-multiple`: Present when several can be pressed at a time.
+    - `data-disabled`: Present when it is disabled.
+
+### Toolbar
+
+```
+import { Toolbar } from "@kirana-ui/svelte/toolbar"
+```
+
+Parts: `<Toolbar.Root>`, `<Toolbar.Button>`, `<Toolbar.Link>`, `<Toolbar.Input>`, `<Toolbar.Group>`, `<Toolbar.Separator>`.
+
+Props of its root:
+
+- `orientation?: Orientation`
+- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- root: The toolbar. It is one stop for Tab.
+    - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
+    - `data-disabled`: Present when it is disabled.
+- button: A button of the toolbar.
+    - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
+    - `data-disabled`: Present when it is disabled.
+- link: A link of the toolbar.
+    - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
+    - `data-disabled`: Present when it is disabled.
+- input: A text input of the toolbar. The arrows are its own until the caret is at an end.
+    - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
+    - `data-disabled`: Present when it is disabled.
+- group: Items that belong together.
+    - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
+    - `data-disabled`: Present when it is disabled.
+- separator: A line between items, across the toolbar.
+    - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
+
+### Tooltip
+
+```
+import { Tooltip } from "@kirana-ui/svelte/tooltip"
+```
+
+Parts: `<Tooltip.Root>`, `<Tooltip.Trigger>`, `<Tooltip.Portal>`, `<Tooltip.Positioner>`, `<Tooltip.Popup>`, `<Tooltip.Arrow>`.
+
+Props of its root:
+
+- `open?: boolean`
+- `defaultOpen?: boolean`
+- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
+- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
+- `disabled?: boolean`
+
+Attributes and CSS variables, by part:
+
+- trigger: The element the tooltip describes.
+    - `data-popup-open`: Present when the tooltip is open.
+- positioner: Places the popup against the trigger. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The tooltip itself.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
+- arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.

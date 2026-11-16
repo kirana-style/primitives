@@ -1,4 +1,4 @@
-import { mergeProps, sameProps, signal } from "@kirana-ui/core"
+import { computed, mergeProps, sameProps, signal } from "@kirana-ui/core"
 import type { Part, PartProps, ReadonlySignal, Signal } from "@kirana-ui/core"
 import {
   cloneElement,
@@ -8,6 +8,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -219,6 +220,24 @@ export function usePart<State = undefined>(
     return cloneElement(render, { ...toReact(mergeProps(render.props, props)), ref: attach })
   }
   return createElement(tag, props)
+}
+
+/**
+ * A text input whose text is the core's own (a combobox's, a number field's): its `value` is
+ * given to React as the input's default. To React a `value` with no `onChange` is an input
+ * that cannot be typed in; the core writes the text itself, as it changes.
+ */
+export function useOwnText(part: Part): Part {
+  return useMemo(
+    () => ({
+      props: computed(() => {
+        const { value, ...rest } = part.props.get()
+        return { ...rest, defaultValue: value }
+      }),
+      attach: (element) => part.attach(element),
+    }),
+    [part]
+  )
 }
 
 /** Its children in a container at the end of the page, once the page has hydrated. */

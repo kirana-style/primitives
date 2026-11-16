@@ -26,6 +26,12 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   framework, is read for the faults this library and others have had: a state written as
   `="false"`, a reference to an id that is not in the page, an id used twice, an attribute the
   vocabulary does not name. What each one cost is in [docs/pitfalls.md](docs/pitfalls.md).
+- **Yours to build on.** What the components are made from is public
+  (`@kirana-ui/core/authoring`, and each adapter's `runtime`): presence, popups, placement,
+  lists, roving focus, forms. [docs/authoring.md](docs/authoring.md) builds a component with
+  them end to end, and its example is one of the tests.
+- **Written down for models too.** Each package ships an `llms.txt`: every component, part,
+  prop, attribute and CSS variable, generated from the library's own definitions.
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
   out in, and a popup moved to the end of the page keeps the direction of its trigger. A
   Direction provider states it where no page can be asked, on a server.
@@ -46,6 +52,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 | `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                                                               |
 | `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                                                                                  |
 | `docs/pitfalls.md`                                    | what cost debugging time, and the check that now holds each one out                                                                                                                                                                             |
+| `docs/authoring.md`                                   | how a component is built, with one built end to end from the public services                                                                                                                                                                    |
+| `packages/*/llms.txt`                                 | each package for a model to read: generated (`bun scripts/llms.ts`), and held current by `vp run llms`                                                                                                                                          |
 | `tests/core`                                          | the core's services on their own, with no framework, in a browser                                                                                                                                                                               |
 | `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                                                                                          |
 

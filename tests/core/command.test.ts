@@ -155,6 +155,11 @@ describe("a command list", () => {
     expect(find(root, "lone").attributes.length).toBe(1)
   })
 
+  it("says its text in its part, so a server draws it", () => {
+    const made = createCommand(signal<CommandProps>({ id: "c", defaultInputValue: "cop" }))
+    expect(made.input.props.peek().value).toBe("cop")
+  })
+
   it("chooses what is pressed, but not a disabled item", async () => {
     const { root, heard } = palette()
     await userEvent.click(root.querySelector<HTMLElement>("#c-open")!)

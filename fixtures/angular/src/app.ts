@@ -92,6 +92,9 @@ import {
   KuiCommandSeparator,
   KuiInput,
   KuiLabel,
+  KuiComboboxGroup,
+  KuiComboboxGroupLabel,
+  KuiComboboxSeparator,
   KuiPagination,
   KuiPaginationEllipsis,
   KuiPaginationItem,
@@ -330,6 +333,9 @@ import {
     KuiCommandSeparator,
     KuiInput,
     KuiLabel,
+    KuiComboboxGroup,
+    KuiComboboxGroupLabel,
+    KuiComboboxSeparator,
     KuiPagination,
     KuiPaginationEllipsis,
     KuiPaginationItem,
@@ -1930,6 +1936,41 @@ import {
                   <div kuiSelectGroupLabel data-testid="s5-roots-label">Roots</div>
                   <div kuiSelectItem [value]="'Carrot'" class="item" data-testid="s5-Carrot">
                     <span kuiSelectItemText>Carrot</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <ng-container kuiAutocomplete [kuiId]="'ac2'" [defaultValue]="'Par'">
+          <input kuiComboboxInput aria-label="City" data-testid="ac2-input" />
+          <ng-template kuiComboboxPortal>
+            <div kuiComboboxPositioner [sideOffset]="4" data-testid="ac2-positioner">
+              <div kuiComboboxPopup class="popup" aria-label="Cities" data-testid="ac2-popup">
+                <div kuiComboboxGroupLabel data-testid="ac2-lone">Cities</div>
+                <div kuiComboboxGroup [kuiId]="'ac2-north'" data-testid="ac2-north">
+                  <div kuiComboboxGroupLabel data-testid="ac2-north-label">North</div>
+                  <div
+                    kuiComboboxItem
+                    [value]="'Oslo'"
+                    [kuiId]="'ac2-Oslo'"
+                    class="item"
+                    data-testid="ac2-Oslo"
+                  >
+                    Oslo
+                  </div>
+                </div>
+                <div kuiComboboxSeparator data-testid="ac2-separator"></div>
+                <div kuiComboboxGroup [kuiId]="'ac2-west'" data-testid="ac2-west">
+                  <div kuiComboboxGroupLabel data-testid="ac2-west-label">West</div>
+                  <div
+                    kuiComboboxItem
+                    [value]="'Paris'"
+                    [kuiId]="'ac2-Paris'"
+                    class="item"
+                    data-testid="ac2-Paris"
+                  >
+                    Paris
                   </div>
                 </div>
               </div>

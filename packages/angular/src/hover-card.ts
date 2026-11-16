@@ -98,7 +98,7 @@ export class KuiHoverCardPositioner implements OnInit {
   }
 }
 
-function part(name: "trigger" | "popup" | "arrow") {
+function part(name: "popup" | "arrow") {
   const root = inject(KuiHoverCard)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -106,10 +106,26 @@ function part(name: "trigger" | "popup" | "arrow") {
 
 @Directive({ selector: "[kuiHoverCardTrigger]" })
 export class KuiHoverCardTrigger implements OnInit {
-  private readonly init = part("trigger")
+  /** Its own waits, which come before the root's. */
+  readonly delay = input<number | undefined, unknown>(undefined, {
+    transform: numberAttribute,
+  })
+  readonly closeDelay = input<number | undefined, unknown>(undefined, {
+    transform: numberAttribute,
+  })
+  private readonly root = inject(KuiHoverCard)
+  private readonly put = hostPart()
+
+  constructor() {
+    effect(() => {
+      const timing = defined({ delay: this.delay(), closeDelay: this.closeDelay() })
+      untracked(() => this.root.controller?.timing.set(timing))
+    })
+  }
 
   ngOnInit(): void {
-    this.init()
+    this.root.controller.timing.set(defined({ delay: this.delay(), closeDelay: this.closeDelay() }))
+    this.put(this.root.controller.trigger)
   }
 }
 

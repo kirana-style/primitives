@@ -23,6 +23,9 @@ import { state } from "./states.ts"
 import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
 import { otpVocabulary } from "./otp.vocabulary.ts"
 import { dateFieldVocabulary } from "./date-field.vocabulary.ts"
+import { inputVocabulary } from "./input.vocabulary.ts"
+import { labelVocabulary } from "./label.vocabulary.ts"
+import { commandVocabulary } from "./command.vocabulary.ts"
 import { calendarVocabulary } from "./calendar.vocabulary.ts"
 import { drawerVocabulary } from "./drawer.vocabulary.ts"
 import { messageScrollerVocabulary } from "./message-scroller.vocabulary.ts"
@@ -74,6 +77,9 @@ export const vocabulary = {
   navigationMenu: navigationMenuVocabulary,
   otp: otpVocabulary,
   dateField: dateFieldVocabulary,
+  input: inputVocabulary,
+  label: labelVocabulary,
+  command: commandVocabulary,
   calendar: calendarVocabulary,
   drawer: drawerVocabulary,
   messageScroller: messageScrollerVocabulary,

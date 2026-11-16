@@ -38,7 +38,23 @@ export interface Toaster {
   dismiss(id?: string, details?: ChangeDetails): void
   /** Takes one out at once. What draws the toasts calls it when the motion has ended. */
   remove(id: string): void
+  /**
+   * One toast for something that takes time: `loading` (type `"loading"`) until the promise
+   * settles, then `success` or `error` in its place, each as a title, as options, or as a
+   * function of what the promise gave. Answers the promise itself.
+   */
+  promise<Value>(
+    promise: Promise<Value>,
+    states: {
+      loading: string | ToastOptions
+      success: string | ToastOptions | ((value: Value) => string | ToastOptions)
+      error: string | ToastOptions | ((error: unknown) => string | ToastOptions)
+    }
+  ): Promise<Value>
 }
+
+const said = (given: string | ToastOptions): ToastOptions =>
+  typeof given === "string" ? { title: given } : given
 
 /** How long a toast stays when it does not say. */
 export const TOAST_DURATION = 5000
@@ -55,7 +71,7 @@ export function createToaster(options: { duration?: number; limit?: number } = {
   const change = (id: string, to: (toast: ToastRecord) => ToastRecord) =>
     toasts.set(toasts.peek().map((each) => (each.id === id ? to(each) : each)))
 
-  return {
+  const toaster: Toaster = {
     toasts,
     limit: options.limit ?? 3,
     add({ id = `toast-${++made}`, ...given }) {
@@ -88,7 +104,32 @@ export function createToaster(options: { duration?: number; limit?: number } = {
     remove(id) {
       toasts.set(toasts.peek().filter((each) => each.id !== id))
     },
+    promise(promise, states) {
+      // It stays for as long as the work does.
+      const id = toaster.add({ type: "loading", ...said(states.loading), duration: Infinity })
+      const settle = <Given>(
+        type: string,
+        state: string | ToastOptions | ((given: Given) => string | ToastOptions),
+        given: Given
+      ) => {
+        // Closed while it waited: what came of it is not shown.
+        const waiting = toasts.peek().find((each) => each.id === id)
+        if (!waiting || waiting.closing) return
+        const next = said(typeof state === "function" ? state(given) : state)
+        toaster.update(id, {
+          type,
+          ...next,
+          duration: next.duration ?? options.duration ?? TOAST_DURATION,
+        })
+      }
+      promise.then(
+        (value) => settle("success", states.success, value),
+        (error: unknown) => settle("error", states.error, error)
+      )
+      return promise
+    },
   }
+  return toaster
 }
 
 export interface ToastProps {

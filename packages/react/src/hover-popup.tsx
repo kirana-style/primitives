@@ -9,6 +9,7 @@ import type { PartComponentProps } from "./runtime.tsx"
 
 export type RootProps = Omit<HoverPopupProps, "id"> & { id?: string; children?: ReactNode }
 export type PositionerProps = PartComponentProps & Partial<PositionOptions>
+export type TriggerProps = PartComponentProps & { delay?: number; closeDelay?: number }
 
 /** The parts of a popup the pointer opens: a tooltip's, a hover card's. */
 export function hoverPopup(
@@ -48,7 +49,12 @@ export function hoverPopup(
     return usePart(controller.positioner, "div", props)
   }
 
-  const Trigger = (props: PartComponentProps) => usePart(use("Trigger").trigger, triggerTag, props)
+  /** `delay` and `closeDelay` here come before the root's. */
+  function Trigger({ delay, closeDelay, ...props }: TriggerProps): ReactElement {
+    const controller = use("Trigger")
+    controller.timing.set(defined({ delay, closeDelay }))
+    return usePart(controller.trigger, triggerTag, props)
+  }
   const Popup = (props: PartComponentProps) => usePart(use("Popup").popup, "div", props)
   const Arrow = (props: PartComponentProps) => usePart(use("Arrow").arrow, "div", props)
 

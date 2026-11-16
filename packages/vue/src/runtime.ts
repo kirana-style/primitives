@@ -122,10 +122,12 @@ export function partComponent(name: string, tag: string, resolve: () => Part): C
         detach = wanted ? part.attach(wanted) : undefined
       }
       const attach = (target: unknown) => {
-        wanted =
-          target instanceof HTMLElement
-            ? target
-            : (((target as { $el?: unknown } | null)?.$el as HTMLElement | undefined) ?? null)
+        // On a component (`as-child` over one), the ref is its instance: its root element, or
+        // with several roots the first element after the fragment's own mark.
+        let found: unknown =
+          target instanceof HTMLElement ? target : (target as { $el?: unknown } | null)?.$el
+        while (found instanceof Node && !(found instanceof HTMLElement)) found = found.nextSibling
+        wanted = found instanceof HTMLElement ? found : null
         if (wanted) queuePostFlushCb(sync)
         else sync()
       }

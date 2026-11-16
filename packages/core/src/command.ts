@@ -63,6 +63,7 @@ export interface Command {
 
 const NOTHING = () => {}
 const EMPTY = computed(() => ({}))
+const STATUS = computed(() => ({ role: "status", "aria-live": "polite", "aria-atomic": "true" }))
 const holds = (label: string, query: string, keywords: readonly string[]) => {
   const text = query.toLowerCase()
   return (
@@ -202,7 +203,8 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
         }
       },
     },
-    emptyPart: { props: EMPTY, attach: () => NOTHING },
+    // Said when it comes into the page, where a reader's software follows a status.
+    emptyPart: { props: STATUS, attach: () => NOTHING },
     heading: { props: EMPTY, attach: () => NOTHING },
     group(groupId) {
       const members = new Set<Shown>()

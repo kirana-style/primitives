@@ -6,6 +6,7 @@ import type { RatingProps } from "../../docs/examples/rating.ts"
 import * as authoring from "../../packages/core/src/authoring.ts"
 import { bind } from "../../packages/core/src/bind.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
+import { faults, known } from "../../packages/core/src/testing.ts"
 import { focused, mount } from "./page.ts"
 
 // The guide and the files it quotes, as text.
@@ -88,16 +89,7 @@ describe("the guide to building a component", () => {
 
   it("writes only what its vocabulary says", () => {
     const { find } = rating({ defaultValue: 3, disabled: true })
-    const known = new Set(
-      Object.values(ratingVocabulary).flatMap((part) =>
-        Object.values(part.states).map((each) => each.attribute)
-      )
-    )
-    for (const element of [find("stars"), find("star1")]) {
-      for (const { name } of element.attributes) {
-        if (name.startsWith("data-")) expect(known.has(name), name).toBe(true)
-      }
-    }
+    expect(faults(find("form"), known(ratingVocabulary))).toEqual([])
   })
 
   it("follows its form: reset, and a disabled fieldset", async () => {

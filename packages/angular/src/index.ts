@@ -105,6 +105,13 @@ export {
 } from "./message-scroller"
 export { KuiAutosizeTextarea } from "./autosize"
 export { KuiInput } from "./input"
+export {
+  KuiNumberField,
+  KuiNumberFieldDecrement,
+  KuiNumberFieldGroup,
+  KuiNumberFieldIncrement,
+  KuiNumberFieldInput,
+} from "./number-field"
 export { KuiLabel } from "./label"
 export {
   KuiCommand,
@@ -152,6 +159,9 @@ export {
   KuiSelectItem,
   KuiSelectItemIndicator,
   KuiSelectItemText,
+  KuiSelectList,
+  KuiSelectScrollDownArrow,
+  KuiSelectScrollUpArrow,
   KuiSelectPopup,
   KuiSelectPortal,
   KuiSelectPositioner,

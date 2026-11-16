@@ -1,5 +1,6 @@
 import {
   Directive,
+  HostAttributeToken,
   booleanAttribute,
   effect,
   inject,
@@ -9,15 +10,21 @@ import {
   untracked,
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
-import { defined } from "@kirana-ui/core"
+import { computed, defined } from "@kirana-ui/core"
 import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core"
+import { createAutocomplete } from "@kirana-ui/core/autocomplete"
+import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox } from "@kirana-ui/core/combobox"
 
 import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiCombobox]", exportAs: "kuiCombobox" })
+/**
+ * `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the
+ * list only suggests. Its parts are the combobox's directives.
+ */
+@Directive({ selector: "[kuiCombobox],[kuiAutocomplete]", exportAs: "kuiCombobox" })
 export class KuiCombobox implements OnInit {
   readonly value = model<unknown>(undefined)
   readonly defaultValue = input<unknown>(null)
@@ -43,12 +50,18 @@ export class KuiCombobox implements OnInit {
   readonly inline = input(false, { transform: booleanAttribute })
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
+  /** With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them. */
+  readonly mode = input<AutocompleteProps["mode"]>()
+  /** With `kuiAutocomplete`: a press on the input opens the list. */
+  readonly openOnInputClick = input(false, { transform: booleanAttribute })
   readonly kuiId = input<string>()
   readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Combobox
+  private readonly autocomplete =
+    inject(new HostAttributeToken("kuiAutocomplete"), { optional: true }) !== null
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
@@ -76,6 +89,8 @@ export class KuiCombobox implements OnInit {
       }
     },
     inline: this.inline(),
+    mode: this.mode(),
+    openOnInputClick: this.openOnInputClick(),
     virtualized: this.virtualized(),
     onValueChange: (value: unknown, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
@@ -102,7 +117,33 @@ export class KuiCombobox implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createCombobox(this.props(), { field: this.field?.controller })
+    const around = { field: this.field?.controller }
+    const props = this.props()
+    this.controller = this.autocomplete
+      ? createAutocomplete(
+          computed<AutocompleteProps>(() => {
+            const own = props.get()
+            return {
+              id: own.id,
+              value: own.value as string | undefined,
+              defaultValue: (own.defaultValue as string | null) ?? undefined,
+              onValueChange: own.onValueChange,
+              open: own.open,
+              defaultOpen: own.defaultOpen,
+              onOpenChange: own.onOpenChange,
+              mode: own.mode,
+              filter: own.filter,
+              openOnInputClick: own.openOnInputClick,
+              disabled: own.disabled,
+              required: own.required,
+              name: own.name,
+              form: own.form,
+              virtualized: own.virtualized,
+            }
+          }),
+          around
+        )
+      : createCombobox(props, around)
     this.mount(this.controller)
   }
 }

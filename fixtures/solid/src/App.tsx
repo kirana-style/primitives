@@ -1,9 +1,11 @@
 import {
   Calendar,
+  Autocomplete,
   Command,
   DateField,
   Input,
   Label,
+  NumberField,
   Drawer,
   MessageScroller,
   Autosize,
@@ -78,6 +80,8 @@ const ROWS = {
   },
 }
 const COMMANDS = ["New", "Open", "Print"]
+const PLACES = ["Oslo", "Osaka", "Paris"]
+const LINES = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)
 const LOAD = ["load"]
 
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
@@ -96,6 +100,8 @@ export function App() {
   const [slide, setSlide] = createSignal("0")
   const [drawn, setDrawn] = createSignal("closed")
   const [born, setBorn] = createSignal("none")
+  const [qty, setQty] = createSignal("5")
+  const [place, setPlace] = createSignal("")
   const [named, setNamed] = createSignal("")
   const [did, setDid] = createSignal("none")
   const [dated, setDated] = createSignal("none")
@@ -1384,6 +1390,67 @@ export function App() {
                     </Select.Item>
                   )}
                 </For>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+        <NumberField.Root
+          id="nf1"
+          name="qty"
+          defaultValue={5}
+          min={0}
+          max={10}
+          data-testid="nf1"
+          onValueChange={(next: number | null) => setQty(String(next))}
+        >
+          <NumberField.Group class="number-group" data-testid="nf1-group">
+            <NumberField.Decrement data-testid="nf1-down">-</NumberField.Decrement>
+            <NumberField.Input aria-label="Quantity" data-testid="nf1-input" />
+            <NumberField.Increment data-testid="nf1-up">+</NumberField.Increment>
+          </NumberField.Group>
+        </NumberField.Root>
+        <output data-testid="nf1-output">{qty()}</output>
+        <Autocomplete.Root id="ac1" name="place" onValueChange={(next: string) => setPlace(next)}>
+          <Autocomplete.Input aria-label="Place" data-testid="ac1-input" />
+          <Autocomplete.Portal>
+            <Autocomplete.Positioner sideOffset={4} data-testid="ac1-positioner">
+              <Autocomplete.Popup class="popup" aria-label="Places" data-testid="ac1-popup">
+                <For each={PLACES}>
+                  {(each) => (
+                    <Autocomplete.Item
+                      value={each}
+                      id={`ac1-${each}`}
+                      class="item"
+                      data-testid={`ac1-${each}`}
+                    >
+                      {each}
+                    </Autocomplete.Item>
+                  )}
+                </For>
+                <Autocomplete.Empty data-testid="ac1-empty">No place</Autocomplete.Empty>
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>
+        <output data-testid="ac1-output">{place()}</output>
+        <Select.Root id="s4" defaultValue="Row 1">
+          <Select.Trigger data-testid="s4-trigger">
+            <Select.Value data-testid="s4-value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner sideOffset={4} data-testid="s4-positioner">
+              <Select.Popup class="popup arrowed" data-testid="s4-popup">
+                <Select.ScrollUpArrow class="scroll-arrow" data-testid="s4-up" />
+                <Select.List class="arrowed-list" data-testid="s4-list">
+                  <For each={LINES}>
+                    {(each) => (
+                      <Select.Item value={each} class="item" data-testid={`s4-${each}`}>
+                        <Select.ItemText>{each}</Select.ItemText>
+                      </Select.Item>
+                    )}
+                  </For>
+                </Select.List>
+                <Select.ScrollDownArrow class="scroll-arrow" data-testid="s4-down" />
               </Select.Popup>
             </Select.Positioner>
           </Select.Portal>

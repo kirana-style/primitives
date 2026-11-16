@@ -7,6 +7,8 @@ import {
   createComputed,
   createContext,
   createUniqueId,
+  onCleanup,
+  onMount,
   splitProps,
   untrack,
   useContext,
@@ -149,7 +151,20 @@ function ItemIndicator(props: PartComponentProps & { keepMounted?: boolean }): J
   )
 }
 
-const part = (name: "trigger" | "popup", tag: string) => (props: PartComponentProps) => (
+function scrollArrow(direction: "up" | "down") {
+  return (props: PartComponentProps): JSX.Element => {
+    const arrow = useSelect().scrollArrow(direction)
+    onMount(() => onCleanup(arrow.mount()))
+    const mounted = fromSignal(arrow.mounted)
+    return (
+      <Show when={mounted()}>
+        <Part part={arrow.part} tag="div" {...props} />
+      </Show>
+    )
+  }
+}
+
+const part = (name: "trigger" | "popup" | "list", tag: string) => (props: PartComponentProps) => (
   <Part part={useSelect()[name]} tag={tag} {...props} />
 )
 
@@ -163,4 +178,10 @@ export const Select = {
   ItemIndicator,
   Trigger: part("trigger", "button"),
   Popup: part("popup", "div"),
+  /** The items' own box inside the popup, when the popup also holds scroll arrows. */
+  List: part("list", "div"),
+  /** In the page while there is more of the list above: it scrolls it under a moving pointer. */
+  ScrollUpArrow: scrollArrow("up"),
+  /** In the page while there is more of the list below. */
+  ScrollDownArrow: scrollArrow("down"),
 }

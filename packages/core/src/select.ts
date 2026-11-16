@@ -9,6 +9,7 @@ import { createItemAlignment } from "./services/align-item.ts"
 import { createFormControl } from "./services/form-control.ts"
 import { popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
+import { createPresence } from "./services/presence.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { byPlace } from "./services/list-places.ts"
@@ -74,6 +75,13 @@ export interface Select<Value = unknown> {
   readonly valuePart: Part
   readonly positioner: Part
   readonly popup: Part
+  /**
+   * The items' own box inside the popup, when the popup holds more than its items (scroll
+   * arrows): it is then the listbox, and what scrolls.
+   */
+  readonly list: Part
+  /** A strip at the list's top or bottom that scrolls it while the pointer moves over it. */
+  scrollArrow(direction: "up" | "down"): SelectScrollArrow
   /** The hidden input that submits the value. Rendered only when the select has a name. */
   readonly input: Part
   /** An item's part. One per item element, with no controller of its own. */
@@ -86,7 +94,16 @@ export interface Select<Value = unknown> {
   selected(value: Value): ReadonlySignal<boolean>
 }
 
+/** In the page while there is more of the list its way, and through its exit. */
+export interface SelectScrollArrow {
+  readonly mounted: ReadonlySignal<boolean>
+  readonly part: Part
+  mount(): () => void
+}
+
 const NOTHING = () => {}
+// How near an end of its scroll a list is taken to be at it, in pixels.
+const NEAR = 1
 const NO_PROPS = computed(() => ({}))
 const INDICATOR_PROPS = computed(() => ({ "aria-hidden": "true" }))
 
@@ -128,6 +145,7 @@ export function createSelect<Value = unknown>(
   // Whether the list lies over its trigger now, and whether a finger opened it.
   const aligned = signal(false)
   let touched = false
+  const fingered = signal(false)
   const alignment = createItemAlignment()
   const layer = createPopup({
     open,
@@ -157,6 +175,19 @@ export function createSelect<Value = unknown>(
   let trigger: HTMLElement | undefined
   let popup: HTMLElement | undefined
   let shown: HTMLElement | undefined
+  // The items' own box, when there is one: the listbox, and what scrolls.
+  const listed = signal<HTMLElement | undefined>(undefined)
+  const scroller = () => listed.peek() ?? popup
+  // Whether there is more of the list above and below what is in view.
+  const more = { up: signal(false), down: signal(false) }
+
+  function seen() {
+    const box = scroller()
+    if (!box) return
+    const end = Math.max(0, box.scrollHeight - box.clientHeight)
+    more.up.set(box.scrollTop > NEAR)
+    more.down.set(box.scrollTop < end - NEAR)
+  }
 
   function learn(item: Value, text: string) {
     if (labels.get(item) === text) return
@@ -171,7 +202,10 @@ export function createSelect<Value = unknown>(
   function setOpen(next: boolean, by: ChangeDetails) {
     if (disabled.peek()) return
     // A finger's list is placed beside its trigger: over it, the finger would hide the item.
-    if (next) touched = by.source === "touch"
+    if (next) {
+      touched = by.source === "touch"
+      fingered.set(touched)
+    }
     open.set(next, by)
   }
 
@@ -230,7 +264,7 @@ export function createSelect<Value = unknown>(
         id: field?.controlId,
         role: "combobox",
         "aria-haspopup": "listbox",
-        ...layer.expanded(popupId),
+        ...layer.expanded(listed.get() ? `${id}-list` : popupId),
         // The trigger is the select's element in a form: its reset is heard through it.
         form: props.get().form,
         disabled: flag(disabled.get()),
@@ -320,6 +354,8 @@ export function createSelect<Value = unknown>(
             untracked(() => {
               // Closing, it stays where it is through its exit.
               if (!isOpen) return void (reopened = true)
+              // Placed, its room is known: whether there is more of the list than shows.
+              if (ready) seen()
               // Kept in the page and opened again: placed afresh, its trigger may have moved.
               if (!wanted || reopened) {
                 reopened = false
@@ -333,11 +369,13 @@ export function createSelect<Value = unknown>(
                   trigger,
                   positioner: element,
                   popup,
+                  scroller: scroller()!,
                   text: lead(),
                   value: shown,
                   rtl: directionOf(trigger) === "rtl",
                 })
               )
+              seen()
             })
           }),
         ]
@@ -352,7 +390,8 @@ export function createSelect<Value = unknown>(
       props: computed(() => {
         return {
           id: popupId,
-          role: "listbox",
+          // With a list inside, that is the listbox.
+          role: listed.get() ? "presentation" : "listbox",
           tabindex: "-1",
           ...layer.state(),
           ...layer.placed(),
@@ -377,10 +416,14 @@ export function createSelect<Value = unknown>(
       }),
       attach(element) {
         popup = element
-        const scrolled = () => alignment.scrolled()
-        element.addEventListener("scroll", scrolled)
+        const scrolled = () => {
+          alignment.scrolled()
+          seen()
+        }
+        // A scroll does not come up from the list inside: heard on its way down.
+        element.addEventListener("scroll", scrolled, true)
         const stops = [
-          () => element.removeEventListener("scroll", scrolled),
+          () => element.removeEventListener("scroll", scrolled, true),
           list.attach(element),
           layer.attach(element),
           // Each time it opens: the items attach around the list, in an order each framework
@@ -405,6 +448,91 @@ export function createSelect<Value = unknown>(
           if (popup === element) popup = undefined
         }
       },
+    },
+    list: {
+      props: computed(() => ({ id: `${id}-list`, role: "listbox" })),
+      attach(element) {
+        listed.set(element)
+        return () => {
+          if (listed.peek() === element) listed.set(undefined)
+        }
+      },
+    },
+    scrollArrow(direction) {
+      const up = direction === "up"
+      // A finger scrolls the list itself: the arrows are for a pointer that hovers.
+      const visible = computed(() => open.get() && more[direction].get() && !fingered.get())
+      const presence = createPresence(visible)
+      let own: HTMLElement | undefined
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const stop = () => {
+        clearTimeout(timer)
+        timer = undefined
+      }
+      /** A row at a time, for as long as the pointer stays: the next row comes whole into view. */
+      function step() {
+        const box = scroller()
+        if (!box) return stop()
+        list.highlight(undefined)
+        const end = Math.max(0, box.scrollHeight - box.clientHeight)
+        const from = Math.min(end, Math.max(0, box.scrollTop))
+        if (up ? from <= NEAR : from >= end - NEAR) return stop()
+        const strip = own?.offsetHeight ?? 0
+        const options = [...box.querySelectorAll<HTMLElement>('[role="option"]')]
+        const top = (row: HTMLElement) =>
+          row.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
+        let to = up ? 0 : end
+        if (up) {
+          // The last row that starts above what is in view, under the strip.
+          for (const row of options) {
+            if (top(row) >= from + strip - NEAR) break
+            to = top(row) - strip
+          }
+        } else {
+          for (const row of options) {
+            const bottom = top(row) + row.offsetHeight
+            if (bottom > from + box.clientHeight - strip + NEAR) {
+              to = bottom - box.clientHeight + strip
+              break
+            }
+          }
+        }
+        box.scrollTop = Math.min(end, Math.max(0, to))
+        timer = setTimeout(step, 40)
+      }
+      return {
+        mounted: presence.mounted,
+        mount: () => presence.start(),
+        part: {
+          props: computed(() => {
+            const status = presence.status.get()
+            return {
+              "aria-hidden": "true",
+              "data-direction": direction,
+              "data-visible": flag(visible.get()),
+              "data-side": aligned.get() ? "none" : placement.position.side.get(),
+              "data-starting-style": flag(status === "starting"),
+              "data-ending-style": flag(status === "ending"),
+              style: { position: "absolute" },
+              onMouseMove(event: MouseEvent) {
+                // A list that scrolls under a pointer at rest sends a move of its own.
+                if ((event.movementX === 0 && event.movementY === 0) || timer !== undefined) return
+                timer = setTimeout(step, 40)
+              },
+              onMouseLeave: stop,
+            }
+          }),
+          attach(element) {
+            own = element
+            const detach = presence.attach(element)
+            return () => {
+              detach()
+              stop()
+              if (own === element) own = undefined
+            }
+          },
+        },
+      }
     },
     input: {
       props: computed(() => {

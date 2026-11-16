@@ -11,6 +11,22 @@ import {
   valued,
 } from "./states.ts"
 
+const SCROLL_ARROW = (direction: string) => ({
+  description: `In the page while there is more of the list ${direction}: it scrolls the list while the pointer moves over it.`,
+  states: {
+    direction: valued("data-direction", ["up", "down"], "The way it scrolls the list."),
+    visible: state("data-visible", "Present while there is more of the list its way."),
+    side: valued(
+      "data-side",
+      ["top", "right", "bottom", "left", "none"],
+      "The side of the trigger the list is on; `none` when it lies over the trigger."
+    ),
+    startingStyle: TRANSITION.startingStyle,
+    endingStyle: TRANSITION.endingStyle,
+  },
+  exclusive: [["startingStyle", "endingStyle"]],
+})
+
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const selectVocabulary = defineComponent({
@@ -40,6 +56,12 @@ export const selectVocabulary = defineComponent({
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
   },
+  list: {
+    description:
+      "The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.",
+  },
+  scrollUpArrow: SCROLL_ARROW("above"),
+  scrollDownArrow: SCROLL_ARROW("below"),
   popup: {
     description: "The list of items.",
     states: { ...TRANSITION, ...PLACEMENT },

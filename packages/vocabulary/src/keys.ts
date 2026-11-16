@@ -19,6 +19,7 @@ export const exclusive: string[][] = [
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"none\"]"],
+  ["[data-direction=\"up\"]","[data-direction=\"down\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
 
@@ -1145,6 +1146,194 @@ export const Command = {
   },
 } as const
 
+export const NumberField = {
+  /** Groups the number field's parts. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** What holds the input and its buttons, as one control. */
+  Group: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** The text input: it takes what its locale writes a number with. */
+  Input: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** A button that steps the number up. Held, it goes on. */
+  Increment: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** A button that steps the number down. Held, it goes on. */
+  Decrement: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+} as const
+
+export const Autocomplete = {
+  /** The text input: its text is the value, and what is typed asks for suggestions. */
+  Input: {
+    /** Present when the list is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A button that opens and closes the list. */
+  Trigger: {
+    /** Present when the list is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Places the list against the input. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+  },
+  /** The list of items. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
+  },
+  /** One suggestion: chosen, its text is written into the input. */
+  Item: {
+    /** Present on the chosen item. */
+    selected: "[data-selected]",
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** What is shown when no item is. */
+  Empty: {
+  },
+  /** A button that empties the input and the value. */
+  Clear: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
 export const Calendar = {
   /** The calendar. */
   Root: {
@@ -1248,6 +1437,14 @@ export const Drawer = {
       left: "[data-swipe-direction=\"left\"]",
       right: "[data-swipe-direction=\"right\"]",
     },
+    /** Present once a drag has closed it. */
+    swipeDismiss: "[data-swipe-dismiss]",
+    /** Present while it rests whole, of several snap points. */
+    expanded: "[data-expanded]",
+    /** Present while another drawer is open over it. */
+    nestedDrawerOpen: "[data-nested-drawer-open]",
+    /** Present while a drawer over it is dragged. */
+    nestedDrawerSwiping: "[data-nested-drawer-swiping]",
   },
   /** The heading that names the dialog. */
   Title: {
@@ -1662,6 +1859,53 @@ export const Select = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+  },
+  /** The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls. */
+  List: {
+  },
+  /** In the page while there is more of the list above: it scrolls the list while the pointer moves over it. */
+  ScrollUpArrow: {
+    /** The way it scrolls the list. */
+    direction: {
+      up: "[data-direction=\"up\"]",
+      down: "[data-direction=\"down\"]",
+    },
+    /** Present while there is more of the list its way. */
+    visible: "[data-visible]",
+    /** The side of the trigger the list is on; `none` when it lies over the trigger. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+      none: "[data-side=\"none\"]",
+    },
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
+  /** In the page while there is more of the list below: it scrolls the list while the pointer moves over it. */
+  ScrollDownArrow: {
+    /** The way it scrolls the list. */
+    direction: {
+      up: "[data-direction=\"up\"]",
+      down: "[data-direction=\"down\"]",
+    },
+    /** Present while there is more of the list its way. */
+    visible: "[data-visible]",
+    /** The side of the trigger the list is on; `none` when it lies over the trigger. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+      none: "[data-side=\"none\"]",
+    },
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
   },
   /** The list of items. */
   Popup: {

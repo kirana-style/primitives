@@ -224,6 +224,51 @@ export class KuiSelectItemText implements OnInit {
   }
 }
 
+/** The items' own box inside the popup, when the popup also holds scroll arrows. */
+@Directive({ selector: "[kuiSelectList]" })
+export class KuiSelectList implements OnInit {
+  private readonly root = inject(KuiSelect)
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.root.controller.list)
+  }
+}
+
+function scrollArrow(direction: "up" | "down") {
+  const root = inject(KuiSelect)
+  const present = presentWhile()
+  const mount = mounted()
+  return () => {
+    const arrow = root.controller.scrollArrow(direction)
+    mount(arrow)
+    present(arrow.mounted, arrow.part)
+  }
+}
+
+/**
+ * `<div *kuiSelectScrollUpArrow>`: in the page while there is more of the list above. It
+ * scrolls the list while the pointer moves over it.
+ */
+@Directive({ selector: "[kuiSelectScrollUpArrow]" })
+export class KuiSelectScrollUpArrow implements OnInit {
+  private readonly init = scrollArrow("up")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/** `<div *kuiSelectScrollDownArrow>`: in the page while there is more of the list below. */
+@Directive({ selector: "[kuiSelectScrollDownArrow]" })
+export class KuiSelectScrollDownArrow implements OnInit {
+  private readonly init = scrollArrow("down")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
 /** `<span *kuiSelectItemIndicator>`: in the page while its item is the chosen one. */
 @Directive({ selector: "[kuiSelectItemIndicator]" })
 export class KuiSelectItemIndicator implements OnInit {

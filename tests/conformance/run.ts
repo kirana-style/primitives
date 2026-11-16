@@ -2637,6 +2637,105 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await settled(page)
     expect(!(await present("s3-popup")), "Escape closes it")
   },
+  async entry({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const until = async (read: () => Promise<unknown>, wanted: unknown, message: string) => {
+      const from = Date.now()
+      let got = await read()
+      while (got !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+        got = await read()
+      }
+      expect(got === wanted, `${message} (it is ${String(got)})`)
+      await settled(page)
+    }
+    const sent = (name: string) =>
+      page.evaluate(
+        (called) => document.querySelector<HTMLInputElement>(`input[name="${called}"]`)?.value,
+        name
+      )
+    await id("nf1").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect((await id("nf1-input").inputValue()) === "5", "a number field writes its number")
+    expect((await attribute("nf1-group", "role")) === "group", "its input and buttons are a group")
+    expect(
+      (await attribute("nf1-input", "aria-roledescription")) === "Number field",
+      "its input says what it is"
+    )
+    expect((await sent("qty")) === "5", "and a hidden input holds it for a form")
+    await id("nf1-input").focus()
+    await key("ArrowUp")
+    expect((await id("nf1-input").inputValue()) === "6", "an arrow steps it")
+    expect((await id("nf1-output").textContent()) === "6", "and the caller hears the number")
+    await id("nf1-up").click()
+    await settled(page)
+    expect((await id("nf1-input").inputValue()) === "7", "a button steps it")
+    expect((await focused()) === "nf1-input", "and focus stays in the input")
+    await key("End")
+    expect((await id("nf1-input").inputValue()) === "10", "End goes to its most")
+    expect((await attribute("nf1-up", "data-disabled")) === "", "where the button up is disabled")
+    await snapshot("a number field at its most")
+    await key("Control+a")
+    await page.keyboard.type("3x")
+    await settled(page)
+    expect((await id("nf1-input").inputValue()) === "3", "only a number is taken")
+    expect((await sent("qty")) === "3", "and the form's value follows")
+    await key("Tab")
+    expect((await attribute("nf1-input", "data-touched")) === "", "left, it says so")
+    await snapshot("a number field typed in and left")
+
+    expect((await attribute("ac1-input", "role")) === "combobox", "an autocomplete is a combobox")
+    expect((await attribute("ac1-input", "name")) === "place", "whose input is the form's own")
+    await id("ac1-input").focus()
+    await page.keyboard.type("os")
+    await until(() => present("ac1-popup"), true, "typing opens its suggestions")
+    expect(await present("ac1-Oslo"), "the ones that match")
+    expect((await attribute("ac1-Paris", "hidden")) !== null, "and not the ones that do not")
+    expect(
+      (await attribute("ac1-input", "aria-activedescendant")) === null,
+      "none is taken until an arrow goes to one"
+    )
+    await snapshot("an autocomplete suggesting")
+    await key("ArrowDown")
+    await key("ArrowDown")
+    expect(
+      (await attribute("ac1-input", "aria-activedescendant")) === "ac1-Osaka",
+      "the arrows go through them"
+    )
+    await key("Enter")
+    await until(() => present("ac1-popup"), false, "Enter takes the one the arrows are on")
+    expect((await id("ac1-input").inputValue()) === "Osaka", "and writes it into the input")
+    expect((await id("ac1-output").textContent()) === "Osaka", "which the caller hears")
+    await page.keyboard.type("x")
+    await until(() => present("ac1-empty"), true, "with nothing to suggest, it says so")
+    await key("Escape")
+    await until(() => present("ac1-popup"), false, "Escape closes the list")
+    expect((await id("ac1-input").inputValue()) === "Osakax", "and keeps what was typed")
+    await snapshot("an autocomplete closed on what was typed")
+
+    await id("s4-trigger").click()
+    await until(() => present("s4-popup"), true, "a select with a list inside its popup opens")
+    expect((await attribute("s4-list", "role")) === "listbox", "the list is the listbox")
+    expect((await attribute("s4-popup", "role")) === "presentation", "and the popup is not")
+    expect(
+      (await attribute("s4-trigger", "aria-controls")) === "s4-list",
+      "its trigger names the list"
+    )
+    await until(() => present("s4-down"), true, "there is more below: an arrow says so")
+    expect(!(await present("s4-up")), "and none above")
+    expect((await attribute("s4-down", "data-direction")) === "down", "it says which way it goes")
+    await snapshot("a select with more of its list below")
+    await id("s4-list").evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+    })
+    await until(() => present("s4-down"), false, "at the end the arrow down goes")
+    await until(() => present("s4-up"), true, "and the arrow up is there")
+    await snapshot("a select scrolled to its end")
+    await key("Escape")
+    await until(() => present("s4-popup"), false, "Escape closes it")
+  },
   async command({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

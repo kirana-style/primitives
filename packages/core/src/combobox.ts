@@ -131,9 +131,17 @@ interface Shown {
  */
 export function createCombobox<Value = unknown>(
   props: ReadonlySignal<ComboboxProps<Value>>,
-  around: { field?: Field | undefined } = {}
+  around: {
+    field?: Field | undefined
+    /**
+     * The text is the value, and the list only suggests (an autocomplete): an item chosen is
+     * written into the input, nothing stays chosen, and the input keeps what was typed when
+     * the list closes. Its function says whether a press on the input opens the list.
+     */
+    free?: (() => boolean) | undefined
+  } = {}
 ): Combobox<Value> {
-  const { field } = around
+  const { field, free } = around
   let member: FieldMembership | undefined
   const inline = Boolean(props.peek().inline)
   const id = props.peek().id
@@ -163,6 +171,7 @@ export function createCombobox<Value = unknown>(
     defaultValue: props.peek().defaultInputValue ?? labelOf(value.peek()),
     onChange: (next, by) => props.peek().onInputValueChange?.(next, by),
   })
+  const initialText = inputValue.peek()
   const multiple = Boolean(props.peek().multiple)
   const values = bindable<readonly Value[]>({
     value: () => props.get().values,
@@ -181,6 +190,12 @@ export function createCombobox<Value = unknown>(
       values.set(initialValues, by)
       inputValue.set("", details("form-reset", event))
       return member?.reset(held(by.canceled ? values.peek() : initialValues))
+    }
+    if (free) {
+      // The text it began with, which is its value.
+      if (input) input.defaultValue = initialText
+      inputValue.set(initialText, by)
+      return member?.reset(by.canceled ? inputValue.peek() : initialText)
     }
     value.set(initial, by)
     // What was asked for, not what is read back.
@@ -239,6 +254,8 @@ export function createCombobox<Value = unknown>(
   const placement = createPlacement({ align: "start" })
 
   let input: HTMLInputElement | undefined
+  // The text a field was last told, when the text is the value.
+  let told = inputValue.peek()
   let trigger: HTMLElement | undefined
   let popup: HTMLElement | undefined
   // The text the list was last filtered by.
@@ -250,6 +267,11 @@ export function createCombobox<Value = unknown>(
     open.set(false, by)
     if (by.canceled) return
     typed.set(false)
+    if (free) {
+      // What was typed stays; an item chosen is written in its place.
+      if (text !== undefined) inputValue.set(text, details("item-press", by.event))
+      return
+    }
     // With several, the text is not a value: it goes.
     const back = multiple ? "" : (text ?? labelOf(value.peek()))
     inputValue.set(back, details("input-reset", by.event))
@@ -297,6 +319,8 @@ export function createCombobox<Value = unknown>(
 
   /** The highlight a list opens on: the chosen item, or with something typed the first shown. */
   function land() {
+    // Suggestions wait to be asked: Enter is the typed text's until an arrow goes to one.
+    if (free) return
     if (multiple) {
       // No one value to open on: the first shown, once something is typed.
       if (!typed.peek()) return
@@ -387,6 +411,7 @@ export function createCombobox<Value = unknown>(
           if (!inline && !open.peek()) setOpen(true, details("input-change", event))
         },
         onClick(event: Event) {
+          if (free && !free()) return
           if (!inline && !open.peek()) setOpen(true, details("trigger-press", event))
         },
         onKeyDown(event: KeyboardEvent) {
@@ -407,9 +432,12 @@ export function createCombobox<Value = unknown>(
           if (event.key === "Enter" && (inline || open.peek())) {
             // Not the form's while the list is open: the highlighted item's own press, which a
             // caller's handler on it hears too. With none, nothing.
-            event.preventDefault()
             const row = list.highlighted.peek()
-            if (row && list.rows().includes(row)) row.element()?.click()
+            const on = row && list.rows().includes(row)
+            // With no suggestion taken, Enter is the form's, with the text as typed.
+            if (free && !on) return setOpen(false, details("input-submit", event))
+            event.preventDefault()
+            if (on) row.element()?.click()
           }
         },
         onBlur(event: FocusEvent) {
@@ -427,7 +455,13 @@ export function createCombobox<Value = unknown>(
           focus: () => element.focus(),
           kind: "select",
           required: () => Boolean(props.peek().required),
-          value: multiple ? held(values.peek()) : one === null ? "" : String(one),
+          value: free
+            ? inputValue.peek()
+            : multiple
+              ? held(values.peek())
+              : one === null
+                ? ""
+                : String(one),
         })
         const stops = [
           () => {
@@ -441,6 +475,8 @@ export function createCombobox<Value = unknown>(
           effect(() => {
             const text = inputValue.get()
             if (input && input.value !== text) input.value = text
+            // Its text is its value: the field hears every change of it.
+            if (free && text !== told) member?.changed((told = text))
           }),
         ]
         return () => {
@@ -525,6 +561,7 @@ export function createCombobox<Value = unknown>(
             untracked(() => {
               if (text === asked || !(inline || open.peek())) return void (asked = text)
               asked = text
+              if (free) return list.highlight(undefined)
               if (list.collection()) list.move("first")
               else list.highlight(list.rows()[0], true)
             })

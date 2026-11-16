@@ -36,6 +36,8 @@ const COMPONENTS: Record<string, string[]> = {
   input: [],
   label: [],
   command: [],
+  "number-field": [],
+  autocomplete: [],
   calendar: [],
   drawer: ["drawer"],
   "message-scroller": [],

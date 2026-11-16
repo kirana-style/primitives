@@ -9,6 +9,7 @@ import {
   createDrawer,
 } from "../../packages/core/src/drawer.ts"
 import type { DrawerProps } from "../../packages/core/src/drawer.ts"
+import { details as because } from "../../packages/core/src/part.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { find, focused, mount, style } from "./page.ts"
 
@@ -38,7 +39,7 @@ function drawer(given: Partial<DrawerProps> = {}) {
   const props = signal<DrawerProps>({
     id: "dw",
     defaultOpen: true,
-    onOpenChange: (open, details) => void why.push(open ? "open" : details.reason),
+    onOpenChange: (open, by) => void why.push(open ? "open" : by.reason),
     ...given,
   })
   const made = createDrawer(props)
@@ -136,6 +137,48 @@ describe("a drawer", () => {
     // Through its exit, how far it went stays written.
     expect(movement("y")).toBe("60px")
     await expect.poll(() => made.mounted.peek()).toBe(false)
+  })
+
+  it("says what Base UI's drawer says: that a drag closed it, and how soon it should rest", async () => {
+    const { sheet, made } = drawer()
+    expect(sheet.hasAttribute("data-swipe-dismiss")).toBe(false)
+    expect(sheet.style.getPropertyValue("--nested-drawers")).toBe("0")
+    expect(sheet.style.getPropertyValue("--drawer-frontmost-height")).toBe("200px")
+    pointer(sheet, "pointerdown", 100, 500)
+    pointer(document.body, "pointermove", 100, 500 + 200 * DRAWER_CLOSE + DRAWER_SLOP + 20)
+    await new Promise((resolve) => setTimeout(resolve, DRAWER_REST + 20))
+    pointer(document.body, "pointerup", 100, 500 + 200 * DRAWER_CLOSE + DRAWER_SLOP + 20)
+    expect(made.open.peek()).toBe(false)
+    expect(sheet.hasAttribute("data-swipe-dismiss")).toBe(true)
+    // Let go at rest: the design's own time.
+    expect(sheet.style.getPropertyValue("--drawer-swipe-strength")).toBe("1")
+  })
+
+  it("says how many drawers are over it, and how tall the frontmost is", async () => {
+    const under = drawer()
+    const root = mount(
+      `<div id="over" style="position: fixed; inset: auto 0 0; height: 120px"></div>`
+    )
+    const over = createDrawer(signal<DrawerProps>({ id: "dw2", defaultOpen: false }))
+    const second = find(root, "over")
+    onTestFinished(bind(second, over.popup))
+    onTestFinished(over.mount())
+    expect(under.sheet.hasAttribute("data-nested-drawer-open")).toBe(false)
+    over.setOpen(true, because("test"))
+    await expect.poll(() => under.sheet.hasAttribute("data-nested-drawer-open")).toBe(true)
+    expect(under.sheet.style.getPropertyValue("--nested-drawers")).toBe("1")
+    expect(under.sheet.style.getPropertyValue("--drawer-frontmost-height")).toBe("120px")
+    expect(second.style.getPropertyValue("--nested-drawers")).toBe("0")
+    over.setOpen(false, because("test"))
+    await expect.poll(() => under.sheet.hasAttribute("data-nested-drawer-open")).toBe(false)
+    expect(under.sheet.style.getPropertyValue("--drawer-frontmost-height")).toBe("200px")
+  })
+
+  it("says it is whole at the largest of several snap points", () => {
+    const { sheet, made } = drawer({ snapPoints: [0.4, 1] })
+    expect(sheet.hasAttribute("data-expanded")).toBe(false)
+    made.setSnapPoint(1, because("test"))
+    expect(sheet.hasAttribute("data-expanded")).toBe(true)
   })
 
   it("is not a flick when the pointer rested before it was let go", async () => {

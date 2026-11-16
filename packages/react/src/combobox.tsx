@@ -1,5 +1,7 @@
 import { defined, within } from "@kirana-ui/core"
 import type { PositionOptions } from "@kirana-ui/core"
+import { createAutocomplete } from "@kirana-ui/core/autocomplete"
+import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
 import { createContext, useContext, useId, useMemo } from "react"
@@ -130,6 +132,33 @@ const EmptyElement = (props: PartComponentProps) =>
 function Empty(props: PartComponentProps): ReactElement | null {
   const empty = useSignal(useCombobox("Empty").empty)
   return empty ? <EmptyElement {...props} /> : null
+}
+
+export type AutocompleteRootProps = Omit<AutocompleteProps, "id"> & {
+  id?: string
+  children?: ReactNode
+}
+
+/** A combobox whose text is the value: the list only suggests. */
+function AutocompleteRoot({ children, ...props }: AutocompleteRootProps): ReactElement {
+  const field = useContext(FieldContext) ?? undefined
+  const controller = useController<AutocompleteProps, Controller>(
+    within(createAutocomplete, { field }),
+    props
+  )
+  return <Context.Provider value={controller}>{children}</Context.Provider>
+}
+
+export const Autocomplete = {
+  Root: AutocompleteRoot,
+  Input,
+  Trigger,
+  Clear,
+  Portal,
+  Positioner,
+  Popup,
+  Item,
+  Empty,
 }
 
 export const Combobox = {

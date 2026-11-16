@@ -59,6 +59,8 @@ jobs:
       # Every adapter exports the same components, parts and entries.
       - name: Export parity
         run: vp run parity
+      - name: llms.txt is current
+        run: vp run llms
 
       # The packages as they would be published, installed into an empty project: every export
       # loads, renders on a server and type-checks.

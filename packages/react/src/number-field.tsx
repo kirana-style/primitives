@@ -1,12 +1,11 @@
-import { computed, within } from "@kirana-ui/core"
-import type { Part } from "@kirana-ui/core"
+import { within } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
 import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
-import { createContext, useContext, useMemo } from "react"
+import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { useController, usePart, useSignal } from "./runtime.tsx"
+import { useController, useOwnText, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -82,22 +81,9 @@ const RootElement = (props: PartComponentProps) =>
   usePart(useNumberField("Root").root, "div", props)
 const HiddenInput = () => usePart(useNumberField("Root").hidden, "input", {})
 const Group = (props: PartComponentProps) => usePart(useNumberField("Group").group, "div", props)
-/** The text input. Its text is the field's own: React is given it as the input's default. */
-function Input(props: PartComponentProps): ReactElement {
-  const { input } = useNumberField("Input")
-  // To React a `value` with no `onChange` is an input that cannot be typed in.
-  const part = useMemo<Part>(
-    () => ({
-      props: computed(() => {
-        const { value, ...rest } = input.props.get()
-        return { ...rest, defaultValue: value }
-      }),
-      attach: (element) => input.attach(element),
-    }),
-    [input]
-  )
-  return usePart(part, "input", props)
-}
+/** The text input. Its text is the field's own. */
+const Input = (props: PartComponentProps) =>
+  usePart(useOwnText(useNumberField("Input").input), "input", props)
 const Increment = (props: PartComponentProps) =>
   usePart(useNumberField("Increment").increment, "button", props)
 const Decrement = (props: PartComponentProps) =>

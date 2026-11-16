@@ -125,6 +125,8 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
     input: {
       props: computed(() => ({
         role: "combobox",
+        // What it says, so a server draws it. In a page the core writes it too.
+        value: inputValue.get(),
         autocomplete: "off",
         spellcheck: "false",
         "aria-autocomplete": "list",

@@ -2842,6 +2842,59 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await key("Escape")
     await until(() => present("s5-popup"), false, "Escape closes it")
   },
+  async groups({ page, snapshot, id, present, attribute }) {
+    const until = async (read: () => Promise<unknown>, wanted: unknown, message: string) => {
+      const from = Date.now()
+      let got = await read()
+      while (got !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+        got = await read()
+      }
+      expect(got === wanted, `${message} (it is ${String(got)})`)
+      await settled(page)
+    }
+    await id("ac2-input").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect(
+      (await id("ac2-input").inputValue()) === "Par",
+      "an input with a text to begin with says it, as its server drew it"
+    )
+    await snapshot("an autocomplete with a text to begin with")
+    await id("ac2-input").focus()
+    await page.keyboard.press("End")
+    await page.keyboard.type("i")
+    await until(() => present("ac2-popup"), true, "typing opens its suggestions")
+    expect((await attribute("ac2-west", "role")) === "group", "its suggestions are in groups")
+    expect(
+      (await attribute("ac2-west", "aria-labelledby")) === "ac2-west-label",
+      "each named by its label"
+    )
+    expect(
+      (await attribute("ac2-west", "hidden")) === null,
+      "a group with a suggestion shown is shown"
+    )
+    expect(
+      (await attribute("ac2-north", "hidden")) !== null,
+      "and one with none shown is hidden, its label with it"
+    )
+    expect(
+      (await attribute("ac2-lone", "role")) === "presentation",
+      "a label with no group around it is plain text"
+    )
+    expect(
+      (await attribute("ac2-separator", "role")) === "separator",
+      "a line stands between groups"
+    )
+    await snapshot("an autocomplete with one group shown")
+    await page.keyboard.press("ArrowDown")
+    await settled(page)
+    expect(
+      (await attribute("ac2-input", "aria-activedescendant")) === "ac2-Paris",
+      "the arrows go to what is shown, past a hidden group"
+    )
+    await page.keyboard.press("Enter")
+    await until(() => present("ac2-popup"), false, "Enter takes it")
+    expect((await id("ac2-input").inputValue()) === "Paris", "and writes it into the input")
+  },
   async command({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

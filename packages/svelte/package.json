@@ -13,6 +13,10 @@
       "svelte": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./runtime": {
+      "svelte": "./src/runtime.ts",
+      "default": "./src/runtime.ts"
+    },
     "./accordion": {
       "svelte": "./src/accordion.ts",
       "default": "./src/accordion.ts"

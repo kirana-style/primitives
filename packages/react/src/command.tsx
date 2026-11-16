@@ -3,7 +3,7 @@ import type { CommandGroup, CommandProps, Command as Controller } from "@kirana-
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement } from "react"
 
-import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import { useController, useOptions, useOwnText, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -46,7 +46,8 @@ function Root({
 }
 
 const RootElement = (props: PartComponentProps) => usePart(useCommand("Root").root, "div", props)
-const Input = (props: PartComponentProps) => usePart(useCommand("Input").input, "input", props)
+const Input = (props: PartComponentProps) =>
+  usePart(useOwnText(useCommand("Input").input), "input", props)
 const List = (props: PartComponentProps) => usePart(useCommand("List").list, "div", props)
 
 const EmptyElement = (props: PartComponentProps) =>

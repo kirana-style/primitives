@@ -49,6 +49,13 @@ export const comboboxVocabulary = defineComponent({
       disabled: DISABLED,
     },
   },
+  group: {
+    description: "Items that belong together, named by their label. Hidden while none is shown.",
+  },
+  groupLabel: {
+    description: "The name of a group. Outside a group it is plain text, and names nothing.",
+  },
+  separator: { description: "A line between groups." },
   itemIndicator: { description: "A mark an item shows while it is the chosen one." },
   empty: { description: "What is shown when no item is." },
   clear: {

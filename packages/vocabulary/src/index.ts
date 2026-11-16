@@ -638,6 +638,24 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {}
         },
+        "group": {
+          "description": "Items that belong together, named by their label. Hidden while none is shown.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "groupLabel": {
+          "description": "The name of a group. Outside a group it is plain text, and names nothing.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A line between groups.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
         "itemIndicator": {
           "description": "A mark an item shows while it is the chosen one.",
           "states": {},
@@ -3142,6 +3160,24 @@ export const vocabulary = {
               "selector": "[data-disabled]"
             }
           },
+          "exclusive": [],
+          "variables": {}
+        },
+        "group": {
+          "description": "Items that belong together, named by their label. Hidden while none is shown.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "groupLabel": {
+          "description": "The name of a group. Outside a group it is plain text, and names nothing.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A line between groups.",
+          "states": {},
           "exclusive": [],
           "variables": {}
         },

@@ -1577,6 +1577,38 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
+        <Autocomplete.Root id="ac2" defaultValue="Par">
+          <Autocomplete.Input aria-label="City" data-testid="ac2-input" />
+          <Autocomplete.Portal>
+            <Autocomplete.Positioner sideOffset={4} data-testid="ac2-positioner">
+              <Autocomplete.Popup class="popup" aria-label="Cities" data-testid="ac2-popup">
+                <Autocomplete.GroupLabel data-testid="ac2-lone">Cities</Autocomplete.GroupLabel>
+                <Autocomplete.Group id="ac2-north" data-testid="ac2-north">
+                  <Autocomplete.GroupLabel data-testid="ac2-north-label">
+                    North
+                  </Autocomplete.GroupLabel>
+                  <Autocomplete.Item value="Oslo" id="ac2-Oslo" class="item" data-testid="ac2-Oslo">
+                    Oslo
+                  </Autocomplete.Item>
+                </Autocomplete.Group>
+                <Autocomplete.Separator data-testid="ac2-separator" />
+                <Autocomplete.Group id="ac2-west" data-testid="ac2-west">
+                  <Autocomplete.GroupLabel data-testid="ac2-west-label">
+                    West
+                  </Autocomplete.GroupLabel>
+                  <Autocomplete.Item
+                    value="Paris"
+                    id="ac2-Paris"
+                    class="item"
+                    data-testid="ac2-Paris"
+                  >
+                    Paris
+                  </Autocomplete.Item>
+                </Autocomplete.Group>
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>
       </section>
       <section data-fixture="field">
         <Form

@@ -125,6 +125,45 @@ describe("an autocomplete", () => {
     expect(shown()).toEqual(["Oslo", "Osaka", "Paris"])
   })
 
+  it("says its text in its part, so a server draws it", () => {
+    const made = createAutocomplete(signal<AutocompleteProps>({ id: "a", defaultValue: "Rome" }))
+    // No element, no page: what a server reads.
+    expect(made.input.props.peek().value).toBe("Rome")
+  })
+
+  it("hides a group while none of its suggestions is shown, and lets a label stand alone", async () => {
+    const { made, input, list } = autocomplete()
+    const group = made.group("a-far")
+    const element = document.createElement("div")
+    const label = document.createElement("div")
+    const item = document.createElement("div")
+    item.textContent = "Lima"
+    element.append(label, item)
+    list.append(element)
+    onTestFinished(bind(element, group.root))
+    onTestFinished(bind(label, group.label))
+    onTestFinished(
+      bind(
+        item,
+        made.item("Lima", () => ({ id: "a-Lima" }), group)
+      )
+    )
+    const lone = document.createElement("div")
+    list.append(lone)
+    onTestFinished(bind(lone, made.groupLabel))
+    expect(element.getAttribute("role")).toBe("group")
+    expect(element.getAttribute("aria-labelledby")).toBe("a-far-label")
+    expect(lone.getAttribute("role")).toBe("presentation")
+    expect(element.hidden).toBe(false)
+    input.focus()
+    await userEvent.keyboard("os")
+    await settled()
+    expect(element.hidden).toBe(true)
+    await userEvent.keyboard("{Backspace}{Backspace}li")
+    await settled()
+    expect(element.hidden).toBe(false)
+  })
+
   it("goes back to the text it began with when its form is reset", async () => {
     const { input, form, made } = autocomplete({ defaultValue: "Rome" })
     input.focus()

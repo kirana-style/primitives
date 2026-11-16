@@ -15,7 +15,7 @@ import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox } from "@kirana-ui/core/combobox"
+import type { Combobox, ComboboxGroup } from "@kirana-ui/core/combobox"
 
 import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
@@ -233,6 +233,44 @@ export class KuiComboboxHiddenInput implements OnInit {
   }
 }
 
+/** Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown. */
+@Directive({ selector: "[kuiComboboxGroup]" })
+export class KuiComboboxGroup implements OnInit {
+  readonly kuiId = input<string>()
+  group!: ComboboxGroup
+  private readonly root = inject(KuiCombobox)
+  private readonly generated = inject(KuiIds).make()
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.group = this.root.controller.group(this.kuiId() ?? this.generated)
+    this.put(this.group.root)
+  }
+}
+
+/** Names the group it is in. With no group around it, it is plain text. */
+@Directive({ selector: "[kuiComboboxGroupLabel]" })
+export class KuiComboboxGroupLabel implements OnInit {
+  private readonly root = inject(KuiCombobox)
+  private readonly around = inject(KuiComboboxGroup, { optional: true })
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.around?.group.label ?? this.root.controller.groupLabel)
+  }
+}
+
+/** A line between groups. */
+@Directive({ selector: "[kuiComboboxSeparator]" })
+export class KuiComboboxSeparator implements OnInit {
+  private readonly root = inject(KuiCombobox)
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.root.controller.separator)
+  }
+}
+
 @Directive({ selector: "[kuiComboboxItem]" })
 export class KuiComboboxItem implements OnInit {
   readonly value = input.required<unknown>()
@@ -243,6 +281,7 @@ export class KuiComboboxItem implements OnInit {
   /** Its place among all the rows, in a virtualized list. */
   readonly index = input<number>()
   readonly root = inject(KuiCombobox)
+  private readonly within = inject(KuiComboboxGroup, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly options = inputsSignal(() => ({
@@ -254,7 +293,7 @@ export class KuiComboboxItem implements OnInit {
 
   ngOnInit(): void {
     const options = this.options()
-    this.put(this.root.controller.item(this.value(), () => options.get()))
+    this.put(this.root.controller.item(this.value(), () => options.get(), this.within?.group))
   }
 }
 

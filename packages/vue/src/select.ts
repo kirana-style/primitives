@@ -2,7 +2,7 @@ import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
-import { defineComponent, h, inject, provide, useId } from "vue"
+import { defineComponent, h, inject, provide, useId, watchEffect } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
 import { positionerComponent } from "./popover.ts"
@@ -125,16 +125,35 @@ const ItemIndicator = defineComponent({
   },
 })
 
+const PlacedPositioner = positionerComponent(
+  "SelectPlacedPositioner",
+  () => scope.use(),
+  partComponent("SelectPositionerElement", "div", () => scope.use().positioner)
+)
+
+/**
+ * `align-item-with-trigger`: the list opens over its trigger, the chosen item's text on the
+ * trigger's own, where there is room and unless a finger opened it.
+ */
+const Positioner = defineComponent({
+  name: "SelectPositioner",
+  inheritAttrs: false,
+  props: { alignItemWithTrigger: Boolean },
+  setup(props, { attrs, slots }) {
+    const made = scope.use()
+    watchEffect(() => made.alignItemWithTrigger.set(props.alignItemWithTrigger), {
+      flush: "sync",
+    })
+    return () => h(PlacedPositioner, attrs, slots)
+  },
+})
+
 export const Select = {
   Root,
   Trigger: partComponent("SelectTrigger", "button", () => scope.use().trigger),
   Value,
   Portal: portalComponent("SelectPortal", () => scope.use().mounted),
-  Positioner: positionerComponent(
-    "SelectPositioner",
-    () => scope.use(),
-    partComponent("SelectPositionerElement", "div", () => scope.use().positioner)
-  ),
+  Positioner,
   Popup: partComponent("SelectPopup", "div", () => scope.use().popup),
   Item,
   ItemText,

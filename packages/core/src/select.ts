@@ -2,8 +2,10 @@ import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { batch, computed, effect, keyed, signal } from "./reactivity.ts"
+import { directionOf } from "./direction.ts"
+import { batch, computed, effect, keyed, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
+import { createItemAlignment } from "./services/align-item.ts"
 import { createFormControl } from "./services/form-control.ts"
 import { popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
@@ -61,6 +63,12 @@ export interface Select<Value = unknown> {
   setOpen(open: boolean, details: ChangeDetails): void
   setValue(value: Value | null, details: ChangeDetails): void
   readonly positioning: Signal<Partial<PositionOptions>>
+  /**
+   * Whether the list opens over its trigger, the chosen item's text on the trigger's own (as
+   * a native select does), where there is room and unless a finger opened it. Its positioner's
+   * adapter writes it here. Off unless asked for.
+   */
+  readonly alignItemWithTrigger: Signal<boolean>
   mount(): () => void
   readonly trigger: Part
   readonly valuePart: Part
@@ -116,6 +124,11 @@ export function createSelect<Value = unknown>(
   )
   const name = computed(() => props.get().name ?? field?.name.get())
   const placement = createPlacement({ align: "start" })
+  const alignItemWithTrigger = signal(false)
+  // Whether the list lies over its trigger now, and whether a finger opened it.
+  const aligned = signal(false)
+  let touched = false
+  const alignment = createItemAlignment()
   const layer = createPopup({
     open,
     setOpen,
@@ -123,6 +136,8 @@ export function createSelect<Value = unknown>(
     // The list moves focus itself, once its rows are in the page; the popup gives it back.
     focus: popupFocus("none"),
     placement,
+    // Over its trigger, its place is its own: the usual one would take it back.
+    following: computed(() => open.get() && !aligned.get()),
   })
 
   const isSelected = keyed(value as ReadonlySignal<Value | null>)
@@ -141,6 +156,7 @@ export function createSelect<Value = unknown>(
 
   let trigger: HTMLElement | undefined
   let popup: HTMLElement | undefined
+  let shown: HTMLElement | undefined
 
   function learn(item: Value, text: string) {
     if (labels.get(item) === text) return
@@ -154,7 +170,24 @@ export function createSelect<Value = unknown>(
 
   function setOpen(next: boolean, by: ChangeDetails) {
     if (disabled.peek()) return
+    // A finger's list is placed beside its trigger: over it, the finger would hide the item.
+    if (next) touched = by.source === "touch"
     open.set(next, by)
+  }
+
+  /** The text the list lines up with the trigger's: the chosen item's, else the first's. */
+  function lead(): HTMLElement | undefined {
+    const chosen = value.peek()
+    const own = chosen === null ? undefined : texts.get(chosen)
+    if (own?.isConnected) return own
+    if (chosen !== null) return undefined
+    let first: HTMLElement | undefined
+    for (const each of texts.values()) {
+      if (!each.isConnected) continue
+      if (!first || each.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING)
+        first = each
+    }
+    return first
   }
 
   function setValue(next: Value | null, by: ChangeDetails) {
@@ -187,6 +220,7 @@ export function createSelect<Value = unknown>(
     setOpen,
     setValue,
     positioning: placement.positioning,
+    alignItemWithTrigger,
     mount: () => layer.start(),
     selected: (item) => isSelected.is(item),
     trigger: {
@@ -252,9 +286,68 @@ export function createSelect<Value = unknown>(
     },
     valuePart: {
       props: computed(() => ({ "data-placeholder": flag(value.get() === null) })),
-      attach: () => NOTHING,
+      attach(element) {
+        shown = element
+        return () => {
+          if (shown === element) shown = undefined
+        }
+      },
     },
-    positioner: layer.positioner,
+    positioner: {
+      props: computed(() => {
+        const own = layer.positioner.props.get()
+        // Over its trigger it is on no side of it.
+        return aligned.get() ? { ...own, "data-side": "none" } : own
+      }),
+      attach(element) {
+        const detach = layer.positioner.attach(element)
+        const view = element.ownerDocument.defaultView
+        // The window changed: what was measured no longer holds.
+        const resized = (event: Event) => {
+          if (aligned.peek()) setOpen(false, details("window-resize", event))
+        }
+        view?.addEventListener("resize", resized)
+        let reopened = false
+        const stops = [
+          detach,
+          () => view?.removeEventListener("resize", resized),
+          // Each time it opens, once it has been placed the usual way: its variables are
+          // written by then, and its items are in the page.
+          effect(() => {
+            const isOpen = open.get()
+            const wanted = alignItemWithTrigger.get()
+            const ready = placement.position.placed.get()
+            untracked(() => {
+              // Closing, it stays where it is through its exit.
+              if (!isOpen) return void (reopened = true)
+              // Kept in the page and opened again: placed afresh, its trigger may have moved.
+              if (!wanted || reopened) {
+                reopened = false
+                if (aligned.peek()) alignment.clear()
+                aligned.set(false)
+                if (!wanted) return
+              }
+              if (!ready || aligned.peek() || touched || !trigger || !popup) return
+              aligned.set(
+                alignment.place({
+                  trigger,
+                  positioner: element,
+                  popup,
+                  text: lead(),
+                  value: shown,
+                  rtl: directionOf(trigger) === "rtl",
+                })
+              )
+            })
+          }),
+        ]
+        return () => {
+          for (const stop of stops.reverse()) stop()
+          alignment.clear()
+          aligned.set(false)
+        }
+      },
+    },
     popup: {
       props: computed(() => {
         return {
@@ -284,7 +377,10 @@ export function createSelect<Value = unknown>(
       }),
       attach(element) {
         popup = element
+        const scrolled = () => alignment.scrolled()
+        element.addEventListener("scroll", scrolled)
         const stops = [
+          () => element.removeEventListener("scroll", scrolled),
           list.attach(element),
           layer.attach(element),
           // Each time it opens: the items attach around the list, in an order each framework

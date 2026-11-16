@@ -30,6 +30,7 @@ function Root(props: RootProps): JSX.Element {
     "step",
     "largeStep",
     "minStepsBetweenValues",
+    "thumbAlignment",
     "orientation",
     "disabled",
     "name",

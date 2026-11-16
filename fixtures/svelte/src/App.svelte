@@ -1010,8 +1010,10 @@
       <Toast.List>
         {#snippet children(toast)}
           <Toast.Root {toast} class="toast" data-testid={`ts1-${toast.id}`}>
-            <Toast.Title class="toast-title">{toast.title}</Toast.Title>
-            <Toast.Description>{toast.description}</Toast.Description>
+            <Toast.Content class="toast-content" data-testid={`ts1-${toast.id}-content`}>
+              <Toast.Title class="toast-title">{toast.title}</Toast.Title>
+              <Toast.Description>{toast.description}</Toast.Description>
+            </Toast.Content>
             <Toast.Close aria-label="Close" data-testid={`ts1-${toast.id}-close`}>Close</Toast.Close>
           </Toast.Root>
         {/snippet}
@@ -1202,6 +1204,30 @@
         </Slider.Track>
       </Slider.Control>
     </Slider.Root>
+      <Slider.Root id="sl4" defaultValue={0} thumbAlignment="edge" data-testid="sl4">
+        <Slider.Control class="slider" data-testid="sl4-control">
+          <Slider.Track class="slider-track">
+            <Slider.Indicator class="fill" data-testid="sl4-fill" />
+            <Slider.Thumb class="thumb thumb-inside" aria-label="Inside" data-testid="sl4-thumb" />
+          </Slider.Track>
+        </Slider.Control>
+      </Slider.Root>
+      <Select.Root id="s3" defaultValue="Cherry">
+        <Select.Trigger class="select-trigger" data-testid="s3-trigger">
+          <Select.Value data-testid="s3-value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner alignItemWithTrigger data-testid="s3-positioner">
+            <Select.Popup class="popup" data-testid="s3-popup">
+              {#each FRUITS as each (each)}
+                  <Select.Item value={each} class="item" data-testid={`s3-${each}`}>
+                    <Select.ItemText data-testid={`s3-${each}-text`}>{each}</Select.ItemText>
+                  </Select.Item>
+              {/each}
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
   </section>
   <section data-fixture="field">
     <Form

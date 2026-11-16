@@ -62,7 +62,14 @@ function Portal({ children }: { children?: ReactNode }): ReactElement | null {
   return mounted ? <BodyPortal>{children}</BodyPortal> : null
 }
 
-export type PositionerProps = PartComponentProps & Partial<PositionOptions>
+export type PositionerProps = PartComponentProps &
+  Partial<PositionOptions> & {
+    /**
+     * The list opens over its trigger, the chosen item's text on the trigger's own, where
+     * there is room and unless a finger opened it.
+     */
+    alignItemWithTrigger?: boolean
+  }
 
 function Positioner({
   side,
@@ -70,9 +77,11 @@ function Positioner({
   sideOffset,
   alignOffset,
   collisionPadding,
+  alignItemWithTrigger,
   ...props
 }: PositionerProps) {
   const controller = useSelect("Positioner")
+  controller.alignItemWithTrigger.set(Boolean(alignItemWithTrigger))
   controller.positioning.set(defined({ side, align, sideOffset, alignOffset, collisionPadding }))
   return usePart(controller.positioner, "div", props)
 }

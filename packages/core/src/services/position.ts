@@ -136,6 +136,8 @@ export function createPosition(options: ReadonlySignal<PositionOptions>): Positi
             ...(pointer ? [arrow({ element: pointer, padding: 4 })] : []),
           ],
         }).then((result) => {
+          // No longer followed: an answer that comes late must not move it.
+          if (!stop) return
           const [nextSide, nextAlign = "center"] = result.placement.split("-") as [Side, Align?]
           // Whole device pixels: a popup on a half pixel is drawn blurred.
           const ratio = positioner.ownerDocument.defaultView?.devicePixelRatio ?? 1

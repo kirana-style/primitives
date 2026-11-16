@@ -70,13 +70,14 @@ function Root({ toast, ...props }: PartComponentProps & { toast: ToastRecord }):
   )
 }
 
+const Content = (props: PartComponentProps) => usePart(useParts("Content").content, "div", props)
 const Title = (props: PartComponentProps) => usePart(useParts("Title").title, "div", props)
 const Description = (props: PartComponentProps) =>
   usePart(useParts("Description").description, "div", props)
 const Close = (props: PartComponentProps) => usePart(useParts("Close").close, "button", props)
 const Action = (props: PartComponentProps) => usePart(useParts("Action").action, "button", props)
 
-export const Toast = { Viewport, List, Root, Title, Description, Close, Action }
+export const Toast = { Viewport, List, Root, Content, Title, Description, Close, Action }
 
 export { createToaster } from "@kirana-ui/core/toast"
 export type { ToastOptions, ToastRecord, Toaster } from "@kirana-ui/core/toast"

@@ -13,7 +13,8 @@ function toasts(
   given: Partial<ToastProps> = {}
 ) {
   style(`
-    .toast { height: 40px; transition: opacity 60ms; }
+    .toast { display: flex; transition: opacity 60ms; }
+    .toast .title { height: 40px; }
     .toast[data-starting-style], .toast[data-ending-style] { opacity: 0; }`)
   const root = mount(`<button id="outside">Outside</button><div id="region"></div>`)
   const toaster: Toaster = createToaster({ duration: 60_000, ...options })
@@ -62,6 +63,49 @@ const pointer = (target: Element, type: string, x: number, y = 0) =>
   target.dispatchEvent(
     new PointerEvent(type, { clientX: x, clientY: y, button: 0, pointerId: 1, bubbles: true })
   )
+
+describe("a toast a design sizes", () => {
+  it("is measured as tall as it is, and the region says how tall the newest is", async () => {
+    const { toaster, region, of } = toasts()
+    style(`
+      .toast { height: var(--toast-frontmost-height); }
+      .toast .title { height: 30px; }`)
+    toaster.add({ id: "a", title: "One" })
+    await wait(20)
+    const tall = of("a").style.getPropertyValue("--toast-height")
+    expect(tall).toBe("30px")
+    expect(region.style.getPropertyValue("--toast-frontmost-height")).toBe(tall)
+    // An older toast is held to the newest's height by the design: its own is still known.
+    of("a").querySelector<HTMLElement>(".title")!.style.height = "60px"
+    toaster.add({ id: "b", title: "Two" })
+    await wait(20)
+    const front = region.style.getPropertyValue("--toast-frontmost-height")
+    expect(of("b").style.getPropertyValue("--toast-height")).toBe(front)
+    expect(front).toBe("30px")
+    expect(of("a").offsetHeight).toBe(30)
+    expect(of("a").style.getPropertyValue("--toast-height")).toBe("60px")
+    toaster.dismiss()
+    await wait(200)
+    expect(region.style.getPropertyValue("--toast-frontmost-height")).toBe("")
+  })
+
+  it("says what is behind the newest, and is measured again when what it holds changes", async () => {
+    const { toaster, made, of } = toasts()
+    toaster.add({ id: "a", title: "One" })
+    toaster.add({ id: "b", title: "Two" })
+    await wait(20)
+    const content = document.createElement("div")
+    of("a").append(content)
+    onTestFinished(bind(content, made.toast("a").content))
+    expect(content.hasAttribute("data-behind")).toBe(true)
+    const before = of("a").style.getPropertyValue("--toast-height")
+    content.textContent = "A line more"
+    content.style.height = "50px"
+    await expect.poll(() => of("a").style.getPropertyValue("--toast-height")).not.toBe(before)
+    toaster.dismiss("b")
+    await expect.poll(() => content.hasAttribute("data-behind")).toBe(false)
+  })
+})
 
 describe("a toaster", () => {
   it("shows one toast for a promise: loading, then what came of it", async () => {

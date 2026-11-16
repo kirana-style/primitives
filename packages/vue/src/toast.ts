@@ -64,12 +64,13 @@ const Root = defineComponent({
   },
 })
 
+const Content = partComponent("ToastContent", "div", () => toastScope.use().content)
 const Title = partComponent("ToastTitle", "div", () => toastScope.use().title)
 const Description = partComponent("ToastDescription", "div", () => toastScope.use().description)
 const Close = partComponent("ToastClose", "button", () => toastScope.use().close)
 const Action = partComponent("ToastAction", "button", () => toastScope.use().action)
 
-export const Toast = { Viewport, List, Root, Title, Description, Close, Action }
+export const Toast = { Viewport, List, Root, Content, Title, Description, Close, Action }
 
 export { createToaster } from "@kirana-ui/core/toast"
 export type { ToastOptions, ToastRecord, Toaster } from "@kirana-ui/core/toast"

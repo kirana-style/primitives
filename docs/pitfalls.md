@@ -440,6 +440,23 @@ note. Three places hold them:
   list to be drawn (`command.test.ts`, "lets a heading stand with no group around it").
 - **An output is not named after an event that comes up through it.** A text input's own
   `select` event bubbles: Angular's command says `itemSelected`.
+- **A popup is measured as it is laid out, not as its entrance draws it.** A list that comes
+  in scaled to 95% was placed 6px off on four adapters and right on the fifth, which had
+  attached a moment later. Its rectangles are divided by its drawn size over its laid-out
+  size. Nothing is written to undo the transform for the measure: that starts the design's
+  transition over (`select.test.ts`, "is measured as it lies").
+- **A placement that answers late must not move what is no longer followed.** Positioning
+  resolves in a promise; a popup that has taken its place another way since (a select over
+  its trigger) drops the answer.
+- **A toast's height is its own, whatever the design has made it.** A stacked toast is drawn
+  as tall as the newest: it is measured with its height let go for the read, and what holds
+  its contents is watched, so `--toast-height` is still true (`toast.test.ts`, "is measured
+  as tall as it is").
+- **A thumb that stays inside its track needs no measuring to be in the right place**: its
+  value's share from the start, moved back by that share of itself, which CSS knows. So a
+  server draws it where it will be, and it is never hidden for a measure. Once measured, its
+  centre is written as `--position`, as Base UI writes it; a design that animates a thumb's
+  `translate` would see that change.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

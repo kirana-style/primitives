@@ -1148,8 +1148,10 @@ export function App() {
           <Toast.List>
             {(toast) => (
               <Toast.Root toast={toast} className="toast" data-testid={`ts1-${toast.id}`}>
-                <Toast.Title className="toast-title">{toast.title}</Toast.Title>
-                <Toast.Description>{toast.description}</Toast.Description>
+                <Toast.Content className="toast-content" data-testid={`ts1-${toast.id}-content`}>
+                  <Toast.Title className="toast-title">{toast.title}</Toast.Title>
+                  <Toast.Description>{toast.description}</Toast.Description>
+                </Toast.Content>
                 <Toast.Close aria-label="Close" data-testid={`ts1-${toast.id}-close`}>
                   Close
                 </Toast.Close>
@@ -1360,6 +1362,34 @@ export function App() {
             </Slider.Track>
           </Slider.Control>
         </Slider.Root>
+        <Slider.Root id="sl4" defaultValue={0} thumbAlignment="edge" data-testid="sl4">
+          <Slider.Control className="slider" data-testid="sl4-control">
+            <Slider.Track className="slider-track">
+              <Slider.Indicator className="fill" data-testid="sl4-fill" />
+              <Slider.Thumb
+                className="thumb thumb-inside"
+                aria-label="Inside"
+                data-testid="sl4-thumb"
+              />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
+        <Select.Root id="s3" defaultValue="Cherry">
+          <Select.Trigger className="select-trigger" data-testid="s3-trigger">
+            <Select.Value data-testid="s3-value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger data-testid="s3-positioner">
+              <Select.Popup className="popup" data-testid="s3-popup">
+                {FRUITS.map((each) => (
+                  <Select.Item key={each} value={each} className="item" data-testid={`s3-${each}`}>
+                    <Select.ItemText data-testid={`s3-${each}-text`}>{each}</Select.ItemText>
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
       </section>
       <section data-fixture="field">
         <Form

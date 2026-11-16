@@ -1067,6 +1067,83 @@ export const DateField = {
   },
 } as const
 
+export const Input = {
+  /** A text input. Inside a field it is the field's control. */
+  Input: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the input has a value. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the value was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+} as const
+
+export const Label = {
+  /** A control's name. Inside a field it is the field's label, with its states. */
+  Label: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while the control has a value. */
+    filled: "[data-filled]",
+    /** Present while the control has focus. */
+    focused: "[data-focused]",
+    /** Present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+} as const
+
+export const Command = {
+  /** A list of commands with the input that filters it. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The text input. What is typed filters the list; focus stays in it. */
+  Input: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The commands. */
+  List: {
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
+  },
+  /** What is shown when no item is. */
+  Empty: {
+  },
+  /** Items under a heading. Hidden while none of them is shown. */
+  Group: {
+  },
+  /** A group's name. */
+  GroupHeading: {
+  },
+  /** One command. */
+  Item: {
+    /** Present on the item the pointer or the keyboard is on. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A line between groups. Hidden while something is typed. */
+  Separator: {
+  },
+} as const
+
 export const Calendar = {
   /** The calendar. */
   Root: {

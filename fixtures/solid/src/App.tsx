@@ -1,6 +1,9 @@
 import {
   Calendar,
+  Command,
   DateField,
+  Input,
+  Label,
   Drawer,
   MessageScroller,
   Autosize,
@@ -75,6 +78,7 @@ const ROWS = {
   },
 }
 const COMMANDS = ["New", "Open", "Print"]
+const LOAD = ["load"]
 
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 
@@ -92,6 +96,8 @@ export function App() {
   const [slide, setSlide] = createSignal("0")
   const [drawn, setDrawn] = createSignal("closed")
   const [born, setBorn] = createSignal("none")
+  const [named, setNamed] = createSignal("")
+  const [did, setDid] = createSignal("none")
   const [dated, setDated] = createSignal("none")
   const [rests, setRests] = createSignal("0.5")
   const [said, setSaid] = createSignal(8)
@@ -1261,6 +1267,59 @@ export function App() {
           </DateField.Root>
         </form>
         <output data-testid="df1-output">{born()}</output>
+        <Label for="in1" data-testid="in1-label">
+          Name
+        </Label>
+        <Input id="in1" data-testid="in1" onValueChange={(next: string) => setNamed(next)} />
+        <output data-testid="in1-output">{named()}</output>
+        <Field.Root id="in2" name="email" data-testid="in2">
+          <Label data-testid="in2-label">Email</Label>
+          <Input type="email" required data-testid="in2-input" />
+        </Field.Root>
+        <Command.Root
+          id="cm1"
+          loop
+          class="command"
+          data-testid="cm1"
+          onSelect={(next: string) => setDid(next)}
+        >
+          <Command.Input aria-label="Command" data-testid="cm1-input" />
+          <Command.List class="palette" aria-label="Commands" data-testid="cm1-list">
+            <Command.Group id="cm1-file" data-testid="cm1-file">
+              <Command.GroupHeading data-testid="cm1-file-heading">File</Command.GroupHeading>
+              <Command.Item value="new" id="cm1-new" class="item" data-testid="cm1-new">
+                New
+              </Command.Item>
+              <Command.Item
+                value="open"
+                id="cm1-open"
+                keywords={LOAD}
+                class="item"
+                data-testid="cm1-open"
+              >
+                Open
+              </Command.Item>
+            </Command.Group>
+            <Command.Separator class="separator" data-testid="cm1-separator" />
+            <Command.Group id="cm1-edit" data-testid="cm1-edit">
+              <Command.GroupHeading data-testid="cm1-edit-heading">Edit</Command.GroupHeading>
+              <Command.Item value="copy" id="cm1-copy" class="item" data-testid="cm1-copy">
+                Copy
+              </Command.Item>
+              <Command.Item
+                value="paste"
+                id="cm1-paste"
+                disabled
+                class="item"
+                data-testid="cm1-paste"
+              >
+                Paste
+              </Command.Item>
+            </Command.Group>
+            <Command.Empty data-testid="cm1-empty">Nothing found</Command.Empty>
+          </Command.List>
+        </Command.Root>
+        <output data-testid="cm1-output">{did()}</output>
       </section>
       <section data-fixture="slider">
         <Slider.Root id="sl1" defaultValue={40} name="volume" data-testid="sl1">

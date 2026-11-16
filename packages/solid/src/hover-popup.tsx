@@ -1,6 +1,7 @@
 import type { ChangeDetails, ReadonlySignal } from "@kirana-ui/core"
 import type { HoverPopup, HoverPopupProps } from "@kirana-ui/core/tooltip"
-import { createContext, createUniqueId, useContext } from "solid-js"
+import { defined } from "@kirana-ui/core"
+import { createComputed, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { positioned } from "./popover.tsx"
@@ -56,15 +57,25 @@ export function hoverPopup(
     return <Part part={made.positioner} tag="div" {...positioned(props, made.positioning)} />
   }
 
-  const part = (key: "trigger" | "popup" | "arrow", tag: string) => (props: PartComponentProps) => (
+  const part = (key: "popup" | "arrow", tag: string) => (props: PartComponentProps) => (
     <Part part={use()[key]} tag={tag} {...props} />
   )
+
+  /** `delay` and `closeDelay` here come before the root's. */
+  function Trigger(
+    props: PartComponentProps & { delay?: number; closeDelay?: number }
+  ): JSX.Element {
+    const [local, rest] = splitProps(props, ["delay", "closeDelay"])
+    const made = use()
+    createComputed(() => made.timing.set(defined({ ...local })))
+    return <Part part={made.trigger} tag={triggerTag} {...rest} />
+  }
 
   return {
     Root,
     Portal,
     Positioner,
-    Trigger: part("trigger", triggerTag),
+    Trigger,
     Popup: part("popup", "div"),
     Arrow: part("arrow", "div"),
   }

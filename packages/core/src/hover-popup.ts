@@ -1,7 +1,7 @@
 import { bindable } from "./bindable.ts"
 import { flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { computed } from "./reactivity.ts"
+import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createHover } from "./services/hover.ts"
 import { createPopup } from "./services/popup.ts"
@@ -26,6 +26,11 @@ export interface HoverPopup {
   setOpen(open: boolean, details: ChangeDetails): void
   /** Where the positioner goes; its part's adapter writes its own props here. */
   readonly positioning: Signal<Partial<PositionOptions>>
+  /**
+   * The trigger's own waits, which come before the root's; its part's adapter writes them
+   * here.
+   */
+  readonly timing: Signal<{ delay?: number | undefined; closeDelay?: number | undefined }>
   mount(): () => void
   readonly trigger: Part
   readonly positioner: Part
@@ -54,6 +59,7 @@ export function createHoverPopup(
 
   const setOpen = (next: boolean, by: ChangeDetails) => open.set(next, by)
   const placement = createPlacement({ side: "top" })
+  const timing = signal<{ delay?: number | undefined; closeDelay?: number | undefined }>({})
   const popup = createPopup({
     open,
     setOpen,
@@ -66,8 +72,8 @@ export function createHoverPopup(
     open,
     setOpen,
     options: () => ({
-      delay: props.peek().delay ?? kind.delay,
-      closeDelay: props.peek().closeDelay ?? kind.closeDelay,
+      delay: timing.peek().delay ?? props.peek().delay ?? kind.delay,
+      closeDelay: timing.peek().closeDelay ?? props.peek().closeDelay ?? kind.closeDelay,
       disabled: Boolean(props.peek().disabled),
     }),
     trigger: popup.trigger,
@@ -79,6 +85,7 @@ export function createHoverPopup(
     mounted: popup.mounted,
     setOpen,
     positioning: placement.positioning,
+    timing,
     mount() {
       const stops = [popup.start(), hover.start()]
       return () => {

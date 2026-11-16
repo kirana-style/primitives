@@ -82,6 +82,16 @@ import {
   KuiMeterTrack,
   KuiMeterValue,
   KuiOtp,
+  KuiCommand,
+  KuiCommandEmpty,
+  KuiCommandGroup,
+  KuiCommandGroupHeading,
+  KuiCommandInput,
+  KuiCommandItem,
+  KuiCommandList,
+  KuiCommandSeparator,
+  KuiInput,
+  KuiLabel,
   KuiDateField,
   KuiDateFieldInput,
   KuiDateFieldSegment,
@@ -289,6 +299,16 @@ import {
     KuiMeterTrack,
     KuiMeterValue,
     KuiOtp,
+    KuiCommand,
+    KuiCommandEmpty,
+    KuiCommandGroup,
+    KuiCommandGroupHeading,
+    KuiCommandInput,
+    KuiCommandItem,
+    KuiCommandList,
+    KuiCommandSeparator,
+    KuiInput,
+    KuiLabel,
     KuiDateField,
     KuiDateFieldInput,
     KuiDateFieldSegment,
@@ -1527,6 +1547,72 @@ import {
           </div>
         </form>
         <output data-testid="df1-output">{{ born() }}</output>
+        <label kuiLabel for="in1" data-testid="in1-label">Name</label>
+        <input kuiInput id="in1" data-testid="in1" (valueChanged)="named.set($event.value)" />
+        <output data-testid="in1-output">{{ named() }}</output>
+        <div kuiField [kuiId]="'in2'" [name]="'email'" data-testid="in2">
+          <label kuiLabel data-testid="in2-label">Email</label>
+          <input kuiInput type="email" required data-testid="in2-input" />
+        </div>
+        <div
+          kuiCommand
+          [kuiId]="'cm1'"
+          [loop]="true"
+          class="command"
+          data-testid="cm1"
+          (itemSelected)="did.set($event.value)"
+        >
+          <input kuiCommandInput aria-label="Command" data-testid="cm1-input" />
+          <div kuiCommandList class="palette" aria-label="Commands" data-testid="cm1-list">
+            <div kuiCommandGroup [kuiId]="'cm1-file'" data-testid="cm1-file">
+              <div kuiCommandGroupHeading data-testid="cm1-file-heading">File</div>
+              <div
+                kuiCommandItem
+                [value]="'new'"
+                [kuiId]="'cm1-new'"
+                class="item"
+                data-testid="cm1-new"
+              >
+                New
+              </div>
+              <div
+                kuiCommandItem
+                [value]="'open'"
+                [kuiId]="'cm1-open'"
+                [keywords]="load"
+                class="item"
+                data-testid="cm1-open"
+              >
+                Open
+              </div>
+            </div>
+            <div kuiCommandSeparator class="separator" data-testid="cm1-separator"></div>
+            <div kuiCommandGroup [kuiId]="'cm1-edit'" data-testid="cm1-edit">
+              <div kuiCommandGroupHeading data-testid="cm1-edit-heading">Edit</div>
+              <div
+                kuiCommandItem
+                [value]="'copy'"
+                [kuiId]="'cm1-copy'"
+                class="item"
+                data-testid="cm1-copy"
+              >
+                Copy
+              </div>
+              <div
+                kuiCommandItem
+                [value]="'paste'"
+                [kuiId]="'cm1-paste'"
+                [disabled]="true"
+                class="item"
+                data-testid="cm1-paste"
+              >
+                Paste
+              </div>
+            </div>
+            <div *kuiCommandEmpty data-testid="cm1-empty">Nothing found</div>
+          </div>
+        </div>
+        <output data-testid="cm1-output">{{ did() }}</output>
       </section>
       <section data-fixture="slider">
         <div kuiSlider [kuiId]="'sl1'" [defaultValue]="40" [name]="'volume'" data-testid="sl1">
@@ -1725,6 +1811,8 @@ export class App {
   protected readonly slide = signal("0")
   protected readonly drawn = signal("closed")
   protected readonly born = signal("none")
+  protected readonly named = signal("")
+  protected readonly did = signal("none")
   protected readonly dated = signal("none")
   protected readonly rests = signal("0.5")
   protected readonly said = signal(8)
@@ -1761,6 +1849,7 @@ export class App {
   protected readonly alerts = signal<boolean | undefined>(false)
   protected readonly plans = ["free", "pro", "team", "max"]
   protected readonly commands = ["New", "Open", "Print"]
+  protected readonly load = ["load"]
   protected readonly first = signal(0)
   protected readonly ran = signal<unknown>("none")
   protected readonly tags = signal<readonly unknown[] | undefined>(["New"])

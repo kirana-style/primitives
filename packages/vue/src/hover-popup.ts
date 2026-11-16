@@ -1,6 +1,7 @@
 import type { ChangeDetails, ReadonlySignal } from "@kirana-ui/core"
 import type { HoverPopup, HoverPopupProps } from "@kirana-ui/core/tooltip"
-import { defineComponent, useId } from "vue"
+import { defined } from "@kirana-ui/core"
+import { defineComponent, h, useId, watchEffect } from "vue"
 
 import { positionerComponent } from "./popover.ts"
 import { context, controller, optional, partComponent, portalComponent } from "./runtime.ts"
@@ -45,9 +46,27 @@ export function hoverPopup(
     },
   })
 
+  const TriggerElement = partComponent(
+    `${name}TriggerElement`,
+    triggerTag,
+    () => scope.use().trigger
+  )
+
+  /** `delay` and `close-delay` here come before the root's. */
+  const Trigger = defineComponent({
+    name: `${name}Trigger`,
+    inheritAttrs: false,
+    props: { delay: Number, closeDelay: Number },
+    setup(props, { attrs, slots }) {
+      const { timing } = scope.use()
+      watchEffect(() => timing.set(defined({ ...props })), { flush: "sync" })
+      return () => h(TriggerElement, attrs, slots)
+    },
+  })
+
   return {
     Root,
-    Trigger: partComponent(`${name}Trigger`, triggerTag, () => scope.use().trigger),
+    Trigger,
     Portal: portalComponent(`${name}Portal`, () => scope.use().mounted),
     Positioner: positionerComponent(
       `${name}Positioner`,

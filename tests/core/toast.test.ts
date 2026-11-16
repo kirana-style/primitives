@@ -64,6 +64,47 @@ const pointer = (target: Element, type: string, x: number, y = 0) =>
   )
 
 describe("a toaster", () => {
+  it("shows one toast for a promise: loading, then what came of it", async () => {
+    const toaster = createToaster({ duration: 1000 })
+    let done!: (value: number) => void
+    const work = new Promise<number>((resolve) => void (done = resolve))
+    const given = toaster.promise(work, {
+      loading: "Saving",
+      success: (rows) => ({ title: `Saved ${rows}`, description: "All of it" }),
+      error: "Failed",
+    })
+    expect(given).toBe(work)
+    expect(toaster.toasts.peek()).toMatchObject([
+      { title: "Saving", type: "loading", duration: Infinity },
+    ])
+    done(3)
+    await work
+    await Promise.resolve()
+    expect(toaster.toasts.peek()).toMatchObject([
+      { title: "Saved 3", description: "All of it", type: "success", duration: 1000 },
+    ])
+
+    const failing = Promise.reject(new Error("no"))
+    void toaster.promise(failing, {
+      loading: "Sending",
+      success: "Sent",
+      error: (error) => `Not sent: ${(error as Error).message}`,
+    })
+    await failing.catch(() => {})
+    await Promise.resolve()
+    expect(toaster.toasts.peek()[0]).toMatchObject({ title: "Not sent: no", type: "error" })
+
+    // Closed while it waited: nothing comes back for it.
+    let late!: () => void
+    const slow = new Promise<void>((resolve) => void (late = resolve))
+    void toaster.promise(slow, { loading: "Slow", success: "Done", error: "Failed" })
+    toaster.dismiss(toaster.toasts.peek()[0]!.id)
+    late()
+    await slow
+    await Promise.resolve()
+    expect(toaster.toasts.peek()[0]).toMatchObject({ title: "Slow", closing: true })
+  })
+
   it("holds its toasts apart from what draws them, the newest first", () => {
     const toaster = createToaster()
     const first = toaster.add({ title: "One" })

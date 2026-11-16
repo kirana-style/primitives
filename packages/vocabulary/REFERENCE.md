@@ -1039,6 +1039,89 @@ One piece of the date: a part that is typed, or what stands between two.
 
 The hidden input it is submitted by.
 
+## Input
+
+### Input.Input
+
+A text input. Inside a field it is the field's control.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the input has a value. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | In a field: present once the value was checked and found right. |
+| `data-invalid` | In a field: present while the value is wrong. |
+
+## Label
+
+### Label.Label
+
+A control's name. Inside a field it is the field's label, with its states.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left the control. |
+| `data-dirty` | Present while the value is not the one it started with. |
+| `data-filled` | Present while the control has a value. |
+| `data-focused` | Present while the control has focus. |
+| `data-valid` | Present once the value has been checked and found right. |
+| `data-invalid` | Present while the value is wrong. |
+
+## Command
+
+### Command.Root
+
+A list of commands with the input that filters it.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Command.Input
+
+The text input. What is typed filters the list; focus stays in it.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Command.List
+
+The commands.
+
+| Attribute | When |
+| --- | --- |
+| `data-empty` | Present when no item is shown for what was typed. |
+
+### Command.Empty
+
+What is shown when no item is.
+
+### Command.Group
+
+Items under a heading. Hidden while none of them is shown.
+
+### Command.GroupHeading
+
+A group's name.
+
+### Command.Item
+
+One command.
+
+| Attribute | When |
+| --- | --- |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Command.Separator
+
+A line between groups. Hidden while something is typed.
+
 ## Calendar
 
 ### Calendar.Root

@@ -158,12 +158,12 @@ const subjects = adapters.flatMap((adapter) => {
 /**
  * A serialized page without what only a browser adds: the geometry it measures, and the name a
  * part takes from an optional part (a progress bar's label, a fieldset's legend, a field's
- * description), which is known once that part is in the page.
+ * description, a command group's heading), which is known once that part is in the page.
  */
 const withoutStyles = (dom: string) =>
   dom
     .replace(/ style="[^"]*"/g, "")
-    .replace(/ aria-labelledby="[^"]*-(label|legend)"/g, "")
+    .replace(/ aria-labelledby="[^"]*-(label|legend|heading)"/g, "")
     .replace(/ aria-describedby="[^"]*-description"/g, "")
     // Whether a field has a value is its control's to say, once the control is in the page.
     .replace(/ data-filled/g, "")
@@ -2568,6 +2568,96 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await output()) === "null", "and a date with a part missing is no date")
     expect((await sent()) === "", "so nothing is submitted")
     await snapshot("a date with a part emptied")
+  },
+  async command({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const hidden = async (testid: string) => (await attribute(testid, "hidden")) !== null
+    await id("in1").scrollIntoViewIfNeeded()
+    expect((await attribute("in1-label", "for")) === "in1", "a label names its control")
+    await id("in1-label").click()
+    await settled(page)
+    expect((await focused()) === "in1", "and a press on it reaches the control")
+    expect((await attribute("in1", "data-focused")) === "", "an input says it has focus")
+    await page.keyboard.type("Ada")
+    await settled(page)
+    expect((await attribute("in1", "data-filled")) === "", "that it holds something")
+    expect((await attribute("in1", "data-dirty")) === "", "that it changed")
+    expect((await id("in1-output").textContent()) === "Ada", "and the caller hears the text")
+    await snapshot("an input typed in")
+    await id("in2-label").click()
+    await settled(page)
+    expect((await focused()) === "in2-input", "in a field, the label is the field's")
+    expect((await attribute("in1", "data-touched")) === "", "an input left says so")
+    expect(
+      (await attribute("in2-input", "id")) === "in2-control",
+      "and the input is the field's control"
+    )
+    await page.keyboard.type("a")
+    await settled(page)
+    expect((await attribute("in2", "data-dirty")) === "", "the field hears what is typed in it")
+    await snapshot("an input in a field")
+
+    expect((await attribute("cm1-input", "role")) === "combobox", "a command's input is a combobox")
+    expect((await attribute("cm1-input", "aria-controls")) === "cm1-list", "of its list")
+    expect((await attribute("cm1-file", "role")) === "group", "items are in groups")
+    expect(
+      (await attribute("cm1-file", "aria-labelledby")) === "cm1-file-heading",
+      "named by their headings"
+    )
+    await id("cm1-input").focus()
+    await settled(page)
+    expect(
+      (await attribute("cm1-input", "aria-activedescendant")) === "cm1-new",
+      "with focus in the input, the first command is the one Enter does"
+    )
+    expect((await attribute("cm1-new", "data-highlighted")) === "", "and is highlighted")
+    await snapshot("a command list in use")
+    await key("ArrowUp")
+    expect(
+      (await attribute("cm1-input", "aria-activedescendant")) === "cm1-copy",
+      "a step back from the first goes round to the last, past a disabled one"
+    )
+    await key("ArrowDown")
+    await key("ArrowDown")
+    expect(
+      (await attribute("cm1-open", "data-highlighted")) === "",
+      "the arrows move the highlight"
+    )
+    await key("Enter")
+    expect((await id("cm1-output").textContent()) === "open", "Enter chooses it")
+    expect((await focused()) === "cm1-input", "and focus stays in the input")
+    await id("cm1-paste").click({ force: true })
+    await settled(page)
+    expect((await id("cm1-output").textContent()) === "open", "a disabled item is not chosen")
+
+    await page.keyboard.type("lo")
+    await settled(page)
+    expect(!(await hidden("cm1-open")), "an item answers to its keywords")
+    expect(await hidden("cm1-new"), "one that does not match is hidden")
+    expect(await hidden("cm1-edit"), "and so is a group with none shown")
+    expect(await hidden("cm1-separator"), "and the line between groups")
+    expect(
+      (await attribute("cm1-input", "aria-activedescendant")) === "cm1-open",
+      "the highlight is on the first still shown"
+    )
+    await snapshot("a command list filtered")
+    await page.keyboard.type("x")
+    await settled(page)
+    expect(await present("cm1-empty"), "nothing found is said")
+    expect((await attribute("cm1-list", "data-empty")) === "", "and the list says it is empty")
+    await snapshot("a command list with nothing found")
+    await key("Backspace")
+    await key("Backspace")
+    await key("Backspace")
+    expect(!(await present("cm1-empty")), "emptied, every command is back")
+    expect(!(await hidden("cm1-edit")), "with its group")
+    await id("cm1-copy").click()
+    await settled(page)
+    expect((await id("cm1-output").textContent()) === "copy", "a press chooses an item")
+    await snapshot("a command list emptied again")
   },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {

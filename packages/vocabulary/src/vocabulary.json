@@ -2506,6 +2506,189 @@
         }
       }
     },
+    "input": {
+      "parts": {
+        "input": {
+          "description": "A text input. Inside a field it is the field's control.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the input has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the value was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
+    "label": {
+      "parts": {
+        "label": {
+          "description": "A control's name. Inside a field it is the field's label, with its states.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
+    "command": {
+      "parts": {
+        "root": {
+          "description": "A list of commands with the input that filters it.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "input": {
+          "description": "The text input. What is typed filters the list; focus stays in it.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "list": {
+          "description": "The commands.",
+          "states": {
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "empty": {
+          "description": "What is shown when no item is.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "group": {
+          "description": "Items under a heading. Hidden while none of them is shown.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "groupHeading": {
+          "description": "A group's name.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "One command.",
+          "states": {
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A line between groups. Hidden while something is typed.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "calendar": {
       "parts": {
         "root": {

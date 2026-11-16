@@ -428,6 +428,18 @@ note. Three places hold them:
 - **Every change says what made it** (`details.source`: mouse, touch, pen, keyboard,
   virtual, programmatic), read from the event when it is asked for. Nothing is remembered
   between events to know it.
+- **A text input's value is its framework's to hold.** `Input` keeps none: React's `value`,
+  `v-model`, `bind:value` and Angular's forms each write an input in their own time, and a
+  second holder would fight them. It says the input's state and tells the caller what was
+  typed. Where the core must write the text (a command list a caller filters), it writes the
+  element's `value` itself, from an effect.
+- **A command list keeps nothing chosen.** Its `aria-selected` is the highlight, which the
+  input names; the first command is highlighted when the input takes focus, not when the list
+  is drawn, so a server and a page at rest say the same.
+- **A heading with no group around it is a line of text**, never an error that waits for the
+  list to be drawn (`command.test.ts`, "lets a heading stand with no group around it").
+- **An output is not named after an event that comes up through it.** A text input's own
+  `select` event bubbles: Angular's command says `itemSelected`.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

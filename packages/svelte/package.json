@@ -97,6 +97,18 @@
       "svelte": "./src/date-field.ts",
       "default": "./src/date-field.ts"
     },
+    "./input": {
+      "svelte": "./src/input.ts",
+      "default": "./src/input.ts"
+    },
+    "./label": {
+      "svelte": "./src/label.ts",
+      "default": "./src/label.ts"
+    },
+    "./command": {
+      "svelte": "./src/command.ts",
+      "default": "./src/command.ts"
+    },
     "./calendar": {
       "svelte": "./src/calendar.ts",
       "default": "./src/calendar.ts"

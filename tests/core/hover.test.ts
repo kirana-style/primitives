@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
+import { bind } from "../../packages/core/src/bind.ts"
+import { details } from "../../packages/core/src/part.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
+import { createTooltip } from "../../packages/core/src/tooltip.ts"
+import type { HoverPopupProps } from "../../packages/core/src/tooltip.ts"
 import { createHover } from "../../packages/core/src/services/hover.ts"
 import type { HoverOptions } from "../../packages/core/src/services/hover.ts"
 import { find, mount } from "./page.ts"
@@ -82,6 +86,24 @@ describe("a popup that opens on hover", () => {
     leave()
     vi.advanceTimersByTime(1000)
     expect(open.peek()).toBe(false)
+  })
+
+  it("waits as its trigger says, before what its root says", () => {
+    const root = mount(`<button id="t">T</button>`)
+    const made = createTooltip(signal<HoverPopupProps>({ id: "tip", delay: 600 }))
+    onTestFinished(bind(find(root, "t"), made.trigger))
+    onTestFinished(made.mount())
+    const enter = () =>
+      (made.trigger.props.peek().onPointerEnter as (event: PointerEvent) => void)(
+        new PointerEvent("pointerenter", { pointerType: "mouse" })
+      )
+    onTestFinished(() => made.setOpen(false, details("test")))
+    made.timing.set({ delay: 100 })
+    enter()
+    vi.advanceTimersByTime(99)
+    expect(made.open.peek()).toBe(false)
+    vi.advanceTimersByTime(1)
+    expect(made.open.peek()).toBe(true)
   })
 
   it("opens at once with no delay", () => {

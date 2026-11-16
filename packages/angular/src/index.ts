@@ -104,6 +104,18 @@ export {
   KuiMessageScrollerViewport,
 } from "./message-scroller"
 export { KuiAutosizeTextarea } from "./autosize"
+export { KuiInput } from "./input"
+export { KuiLabel } from "./label"
+export {
+  KuiCommand,
+  KuiCommandEmpty,
+  KuiCommandGroup,
+  KuiCommandGroupHeading,
+  KuiCommandInput,
+  KuiCommandItem,
+  KuiCommandList,
+  KuiCommandSeparator,
+} from "./command"
 export {
   KuiCarousel,
   KuiCarouselIndicator,

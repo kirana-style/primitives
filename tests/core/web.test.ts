@@ -6,6 +6,7 @@ import type { ChangeDetails } from "../../packages/core/src/part.ts"
 import { faults, settled } from "../../packages/core/src/testing.ts"
 import "../../packages/web/src/index.ts"
 import { controllerAround, defineElement } from "../../packages/web/src/runtime.ts"
+import { toasterOf } from "../../packages/web/src/toast.ts"
 import { mount } from "./page.ts"
 
 type Told = CustomEvent<Record<string, unknown> & { details: ChangeDetails }>
@@ -301,6 +302,33 @@ describe("the components as custom elements", () => {
     expect(root.querySelector("#said")!.textContent).toBe("60%")
   })
 
+  it("a field's error comes and goes with what is wrong", async () => {
+    const root = mount(`
+      <kui-field kui-id="t">
+        <div kui-part="root">
+          <input kui-part="control" required />
+          <div kui-part="error" data-testid="said"></div>
+        </div>
+      </kui-field>`)
+    const input = root.querySelector("input")!
+    const said = () => root.querySelector('[data-testid="said"]')?.textContent
+    const field = root.querySelector<HTMLElement & { invalid: boolean }>("kui-field")!
+    await settled()
+    expect(said()).toBe(undefined)
+    field.invalid = true
+    await expect.poll(said).not.toBe(undefined)
+    field.invalid = false
+    await expect.poll(said).toBe(undefined)
+    // Wrong in another way the second time: the message is the new one, not the one it had.
+    input.type = "email"
+    input.required = false
+    input.value = "nobody"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    field.invalid = true
+    await expect.poll(said).not.toBe(undefined)
+    expect(root.querySelector('[data-testid="said"]')!.childNodes.length).toBeLessThan(2)
+  })
+
   it("a select: its chosen text, and the hidden input a form reads as its last child", async () => {
     const root = mount(`
       <kui-select kui-id="s" name="fruit" default-value="b">
@@ -400,6 +428,105 @@ describe("the components as custom elements", () => {
     expect(drawn.hasAttribute("data-open")).toBe(true)
     host.value = null
     await expect.poll(() => document.querySelector(CONTENT)).toBe(null)
+  })
+
+  it("a list is drawn from its template, and an entry that stays keeps its element", async () => {
+    const root = mount(`
+      <kui-pagination count="200">
+        <nav kui-part="root">
+          <button kui-part="previous">Previous</button>
+          <template kui-each="items">
+            <button kui-part="item" kui-when="page" data-testid="page-{page}">{page}</button>
+            <span kui-part="ellipsis" kui-when="ellipsis" data-testid="gap-{key}">…</span>
+          </template>
+          <button kui-part="next">Next</button>
+        </nav>
+      </kui-pagination>`)
+    await settled()
+    const nav = root.querySelector("nav")!
+    const drawn = () =>
+      [...nav.children].map((each) => each.getAttribute("data-testid") ?? "-").join(" ")
+    // The template has left the page: what is there is what a framework would draw.
+    expect(nav.querySelector("template")).toBe(null)
+    expect(drawn()).toBe("- page-1 page-2 page-3 page-4 page-5 gap-end page-20 -")
+    const last = nav.querySelector<HTMLElement>('[data-testid="page-20"]')!
+    const fifth = nav.querySelector<HTMLElement>('[data-testid="page-5"]')!
+    expect(fifth.textContent).toBe("5")
+    expect(nav.querySelector('[data-testid="page-1"]')!.getAttribute("aria-current")).toBe("page")
+    fifth.focus()
+    fifth.click()
+    await settled()
+    expect(drawn()).toBe("- page-1 gap-start page-4 page-5 page-6 gap-end page-20 -")
+    // Kept entries are the same elements, where they were: focus is not lost.
+    expect(nav.querySelector('[data-testid="page-5"]')).toBe(fifth)
+    expect(nav.querySelector('[data-testid="page-20"]')).toBe(last)
+    expect(document.activeElement).toBe(fifth)
+    expect(fifth.getAttribute("aria-current")).toBe("page")
+  })
+
+  it("a list in a list, and an entry whose text changes", async () => {
+    const root = mount(`
+      <kui-calendar locale="en-US" default-focused-value="2026-03-15">
+        <div kui-part="root">
+          <div kui-part="heading"></div>
+          <table kui-part="grid">
+            <tbody>
+              <template kui-each="weeks">
+                <tr>
+                  <template kui-each="days">
+                    <td kui-part="cell"><button kui-part="day" data-day="{date}">{label}</button></td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </kui-calendar>
+      <kui-toast>
+        <div kui-part="viewport">
+          <template kui-each="toasts">
+            <div kui-part="toast"><div kui-part="title">{title} {unknown}</div></div>
+          </template>
+        </div>
+      </kui-toast>`)
+    await settled()
+    expect(root.querySelector('[kui-part="heading"]')!.textContent).toBe("March 2026")
+    const rows = root.querySelectorAll("tbody tr")
+    expect(rows.length).toBeGreaterThan(3)
+    expect(rows[0]!.children.length).toBe(7)
+    const day = root.querySelector<HTMLElement>('[data-day="2026-03-14"]')!
+    expect(day.textContent).toBe("14")
+    expect(day.parentElement!.getAttribute("role")).toBe("gridcell")
+    const toaster = toasterOf(root.querySelector("kui-toast")!)
+    const title = () => root.querySelector('[kui-part="title"]')?.textContent
+    const id = toaster.add({ title: "Saving", duration: Infinity })
+    // A brace that names nothing of the entry's is the page's own text.
+    await expect.poll(title).toBe("Saving {unknown}")
+    const toast = root.querySelector('[kui-part="toast"]')
+    toaster.update(id, { title: "Saved" })
+    await expect.poll(title).toBe("Saved {unknown}")
+    expect(root.querySelector('[kui-part="toast"]')).toBe(toast)
+    toaster.remove(id)
+    await expect.poll(() => root.querySelector('[kui-part="toast"]')).toBe(null)
+  })
+
+  it("a combobox of several: a chip for each chosen value", async () => {
+    const root = mount(`
+      <kui-combobox multiple default-values="a,b">
+        <div kui-part="chips">
+          <template kui-each="chips">
+            <span kui-part="chip" data-chip="{value}">{value}<button kui-part="chip-remove">x</button></span>
+          </template>
+          <input kui-part="input" />
+        </div>
+      </kui-combobox>`)
+    await settled()
+    const chips = () =>
+      [...root.querySelectorAll("[data-chip]")].map((each) => each.getAttribute("data-chip")).join()
+    expect(chips()).toBe("a,b")
+    expect(root.querySelector('[kui-part="chips"]')!.lastElementChild!.localName).toBe("input")
+    root.querySelector<HTMLElement>('[data-chip="a"] button')!.click()
+    await expect.poll(chips).toBe("b")
   })
 
   it("is read and used by the agent bridge like any other adapter's", async () => {

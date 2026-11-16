@@ -934,6 +934,25 @@
           </kui-carousel>
           <output data-testid="cr1-output">0</output>
         </section>
+        <section data-fixture="toast">
+          <button type="button" data-testid="ts1-add">Add a toast</button>
+          <button type="button" data-testid="ts1-brief">Add a brief toast</button>
+          <kui-toast kui-id="ts1" duration="600000">
+            <div kui-part="viewport" class="toasts" data-testid="ts1">
+              <template kui-each="toasts">
+                <div kui-part="toast" class="toast" data-testid="ts1-{id}">
+                  <div kui-part="content" class="toast-content" data-testid="ts1-{id}-content">
+                    <div kui-part="title" class="toast-title">{title}</div>
+                    <div kui-part="description">{description}</div>
+                  </div>
+                  <button kui-part="close" aria-label="Close" data-testid="ts1-{id}-close">
+                    Close
+                  </button>
+                </div>
+              </template>
+            </div>
+          </kui-toast>
+        </section>
         <section data-fixture="sheets">
           <kui-drawer kui-id="dw1">
             <button kui-part="trigger" data-testid="dw1-trigger">Open drawer</button>
@@ -976,6 +995,47 @@
             </div>
           </kui-message-scroller>
           <button type="button" data-testid="ms1-add">Add a message</button>
+        </section>
+        <section data-fixture="dates">
+          <kui-calendar kui-id="cal1" locale="en-US" default-focused-value="2026-03-15">
+            <div kui-part="root" class="calendar" data-testid="cal1">
+              <button kui-part="previous" aria-label="Previous month" data-testid="cal1-previous">
+                Previous
+              </button>
+              <div kui-part="heading" data-testid="cal1-heading"></div>
+              <button kui-part="next" aria-label="Next month" data-testid="cal1-next">Next</button>
+              <table kui-part="grid" data-testid="cal1-grid">
+                <thead>
+                  <tr>
+                    <template kui-each="weekdays"><th kui-part="head-cell">{short}</th></template>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template kui-each="weeks">
+                    <tr>
+                      <template kui-each="days">
+                        <td kui-part="cell">
+                          <button kui-part="day" data-testid="cal1-{date}">{label}</button>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </kui-calendar>
+          <output data-testid="cal1-output">none</output>
+          <form data-testid="df1-form">
+            <kui-date-field kui-id="df1" locale="en-US" name="born">
+              <div kui-part="root" aria-label="Date of birth" class="date-field" data-testid="df1">
+                <template kui-each="segments"
+                  ><span kui-part="segment" data-testid="df1-{type}-{index}"></span
+                ></template>
+                <input kui-part="input" />
+              </div>
+            </kui-date-field>
+          </form>
+          <output data-testid="df1-output">none</output>
         </section>
         <section data-fixture="command">
           <kui-label>
@@ -1283,6 +1343,98 @@
                     class="scroll-arrow"
                     data-testid="s4-down"
                   ></div>
+                </div>
+              </div>
+            </div>
+          </kui-select>
+        </section>
+        <section data-fixture="picking">
+          <kui-date-picker kui-id="dk1" locale="en-US" name="due" default-value="2026-03-14">
+            <div kui-part="field" aria-label="Due" class="date-field" data-testid="dk1-field">
+              <template kui-each="segments"
+                ><span kui-part="segment" data-testid="dk1-{type}-{index}"></span
+              ></template>
+              <input kui-part="input" />
+            </div>
+            <button kui-part="trigger" aria-label="Pick a day" data-testid="dk1-trigger">
+              Pick
+            </button>
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="4" data-testid="dk1-positioner">
+                <div kui-part="popup" class="popup" aria-label="Calendar" data-testid="dk1-popup">
+                  <div kui-part="calendar" class="calendar" data-testid="dk1-calendar">
+                    <button
+                      kui-part="previous"
+                      aria-label="Previous month"
+                      data-testid="dk1-previous"
+                    >
+                      Previous
+                    </button>
+                    <div kui-part="heading" data-testid="dk1-heading"></div>
+                    <button kui-part="next" aria-label="Next month" data-testid="dk1-next">
+                      Next
+                    </button>
+                    <table kui-part="grid" data-testid="dk1-grid">
+                      <thead>
+                        <tr>
+                          <template kui-each="weekdays"
+                            ><th kui-part="head-cell">{short}</th></template
+                          >
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template kui-each="weeks">
+                          <tr>
+                            <template kui-each="days">
+                              <td kui-part="cell">
+                                <button kui-part="day" data-testid="dk1-{date}">{label}</button>
+                              </td>
+                            </template>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </kui-date-picker>
+          <output data-testid="dk1-output">2026-03-14</output>
+          <kui-pagination kui-id="pg1" count="200">
+            <nav kui-part="root" class="pagination" data-testid="pg1">
+              <button kui-part="previous" data-testid="pg1-previous">Previous</button>
+              <template kui-each="items">
+                <button kui-part="item" kui-when="page" data-testid="pg1-{page}">{page}</button>
+                <span kui-part="ellipsis" kui-when="ellipsis" data-testid="pg1-{key}">…</span>
+              </template>
+              <button kui-part="next" data-testid="pg1-next">Next</button>
+            </nav>
+          </kui-pagination>
+          <output data-testid="pg1-output">1</output>
+          <kui-select kui-id="s5" default-value="Apple">
+            <button kui-part="trigger" data-testid="s5-trigger">
+              <span kui-part="value" data-testid="s5-value"></span>
+            </button>
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="4" data-testid="s5-positioner">
+                <div kui-part="popup" class="popup" data-testid="s5-popup">
+                  <div kui-part="group-label" data-testid="s5-lone">Produce</div>
+                  <div kui-part="group" kui-id="s5-fruit" data-testid="s5-fruit">
+                    <div kui-part="group-label" data-testid="s5-fruit-label">Fruit</div>
+                    <div kui-part="item" kui-value="Apple" class="item" data-testid="s5-Apple">
+                      <span kui-part="item-text">Apple</span>
+                    </div>
+                    <div kui-part="item" kui-value="Pear" class="item" data-testid="s5-Pear">
+                      <span kui-part="item-text">Pear</span>
+                    </div>
+                  </div>
+                  <div kui-part="separator" data-testid="s5-separator"></div>
+                  <div kui-part="group" kui-id="s5-roots" data-testid="s5-roots">
+                    <div kui-part="group-label" data-testid="s5-roots-label">Roots</div>
+                    <div kui-part="item" kui-value="Carrot" class="item" data-testid="s5-Carrot">
+                      <span kui-part="item-text">Carrot</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

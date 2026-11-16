@@ -57,6 +57,9 @@ const WEB = [
   "pieces",
   "sheets",
   "command",
+  "toast",
+  "dates",
+  "picking",
 ]
 
 /**

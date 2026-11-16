@@ -1,9 +1,15 @@
+import { computed } from "@kirana-ui/core"
 import type { Combobox, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
 import { createCombobox } from "@kirana-ui/core/combobox"
 
-import { fieldAround, itemOptions, MARK, once, place, valueOf } from "./around.ts"
-import { partAround, defineElement } from "./runtime.ts"
-import type { Drawn } from "./runtime.ts"
+import { fieldAround, itemOptions, list, MARK, once, place, valueOf } from "./around.ts"
+import { defineElement, entryAround, partAround } from "./runtime.ts"
+import type { Drawn, Each } from "./runtime.ts"
+
+type Props = Omit<ComboboxProps<string>, "values" | "defaultValues"> & {
+  values?: string | readonly string[]
+  defaultValues?: string | readonly string[]
+}
 
 const groups = new WeakMap<HTMLElement, ComboboxGroup>()
 let made = 0
@@ -42,9 +48,26 @@ export const PARTS: Parts = {
       groupOf(controller, element.parentElement && partAround(element.parentElement, "group"))
     )
   },
+  chips: (controller) => controller.chips,
+  chip(controller, element) {
+    const value = entryAround<{ value: string }>(element)?.value
+    return value === undefined ? undefined : controller.chip(value)
+  },
+  "chip-remove"(controller, element) {
+    const value = entryAround<{ value: string }>(element)?.value
+    return value === undefined ? undefined : controller.chipRemove(value)
+  },
   "item-indicator": (controller, element) => ({
     part: MARK,
     mounted: controller.selected(valueOf(partAround(element, "item"))),
+  }),
+}
+
+/** With `multiple`: a chip for each chosen value, from a `<template kui-each="chips">`. */
+export const LISTS = {
+  chips: (controller: Combobox<string>): Each<{ value: string }> => ({
+    entries: computed(() => controller.values.get().map((value) => ({ value }))),
+    key: (chip) => chip.value,
   }),
 }
 
@@ -53,12 +76,15 @@ export const PARTS: Parts = {
  * and a `portal` with a `positioner` around the `popup`, which holds an `item` for each
  * `kui-value` (`kui-disabled`, `kui-label`, `kui-id`) with an `item-indicator`, in `group`s
  * with a `group-label` and `separator`s if it has them, and an `empty` part drawn while
- * nothing matches. With a name it draws the hidden input a form reads. `value`,
+ * nothing matches. With `multiple`, the input is in a `chips` part with a
+ * `<template kui-each="chips">` holding a `chip` (`{value}`) and its `chip-remove` button.
+ * With a name it draws the hidden input a form reads. `value`,
  * `default-value`, `input-value`, `default-input-value`, `open`, `default-open`, `disabled`,
- * `required`, `inline`, `name`, `form`; `items` and `filter` as properties; it tells
- * `value-change`, `input-value-change` and `open-change`.
+ * `required`, `inline`, `multiple`, `values` and `default-values` (with commas between),
+ * `name`, `form`; `items` and `filter` as properties; it tells `value-change`,
+ * `values-change`, `input-value-change` and `open-change`.
  */
-export const tag = defineElement<ComboboxProps<string>, Combobox<string>>({
+export const tag = defineElement<Props, Combobox<string>>({
   tag: "kui-combobox",
   props: {
     value: "string",
@@ -70,14 +96,26 @@ export const tag = defineElement<ComboboxProps<string>, Combobox<string>>({
     disabled: "boolean",
     required: "boolean",
     inline: "boolean",
+    multiple: "boolean",
+    values: "string",
+    "default-values": "string",
     name: "string",
     form: "string",
   },
   properties: ["items", "filter"],
-  create: (props, host) => createCombobox<string>(props, { field: fieldAround(host) }),
+  create: (props, host) =>
+    createCombobox<string>(
+      computed(() => {
+        const own = props.get()
+        return { ...own, values: list(own.values), defaultValues: list(own.defaultValues) }
+      }),
+      { field: fieldAround(host) }
+    ),
+  lists: LISTS,
   inner: (controller) => ({ part: controller.hidden, mounted: controller.named }),
   changes: {
     onValueChange: { event: "value-change", prop: "value" },
+    onValuesChange: { event: "values-change", prop: "values" },
     onInputValueChange: { event: "input-value-change", prop: "inputValue" },
     onOpenChange: { event: "open-change", prop: "open" },
   },

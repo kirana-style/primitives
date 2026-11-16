@@ -2,6 +2,7 @@ import "../../shared/styles.css"
 import { effect } from "@kirana-ui/core"
 import type { Field } from "@kirana-ui/core/field"
 import "@kirana-ui/web"
+import { toasterOf } from "@kirana-ui/web/toast"
 
 // What the other fixtures keep in their framework's state: here, a few listeners.
 const find = <T extends HTMLElement>(testid: string) =>
@@ -170,4 +171,19 @@ document.querySelector("kui-input")!.addEventListener("value-change", (event) =>
 })
 element("kui-command", "cm1").addEventListener("select", (event) => {
   find("cm1-output").textContent = (event as CustomEvent<{ value: string }>).detail.value
+})
+
+// Toasts are added from anywhere in the page: to the toaster the element draws.
+const toaster = toasterOf(element("kui-toast", "ts1"))
+find("ts1-add").addEventListener("click", () => {
+  toaster.add({ title: "Saved", description: "Your changes are kept.", type: "success" })
+})
+find("ts1-brief").addEventListener("click", () => {
+  toaster.add({ title: "Gone soon", duration: 300 })
+})
+one("kui-calendar", "cal1", "cal1-output")
+one("kui-date-field", "df1", "df1-output", "null")
+one("kui-date-picker", "dk1", "dk1-output", "null")
+element("kui-pagination", "pg1").addEventListener("page-change", (event) => {
+  find("pg1-output").textContent = String((event as CustomEvent<{ page: number }>).detail.page)
 })

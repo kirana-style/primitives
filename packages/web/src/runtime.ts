@@ -34,6 +34,46 @@ export interface Drawn {
 
 type Kind = "boolean" | "string" | "number"
 
+/** A list a component draws from a `<template kui-each>`. */
+export interface Each<Entry = any> {
+  readonly entries: ReadonlySignal<readonly Entry[]> | readonly Entry[]
+  /** What an entry is known by from one drawing to the next. */
+  key(entry: Entry): string | number
+  /**
+   * Which of the template's elements an entry is drawn with, when they differ: the ones
+   * whose `kui-when` says so (a page, an ellipsis). Elements without `kui-when` are for all.
+   */
+  type?(entry: Entry): string
+  /**
+   * What `{name}` stands for in the template's text and attributes
+   * (`data-testid="row-{id}"`). Left out: the entry's own fields.
+   */
+  values?(entry: Entry): Record<string, unknown>
+}
+
+const ENTRY = new WeakMap<Node, unknown>()
+
+/** The entry an element was stamped for, or the nearest around it: a part reads its own. */
+export function entryAround<Entry>(element: Node): Entry | undefined {
+  for (let each: Node | null = element; each; each = each.parentNode) {
+    if (ENTRY.has(each)) return ENTRY.get(each) as Entry
+  }
+  return undefined
+}
+
+/** `{name}` in a text, for each name there is a value for; another brace is the page's own. */
+const fill = (text: string, values: Record<string, unknown>) =>
+  text.replace(/\{([A-Za-z_][\w-]*)\}/g, (whole, name: string) =>
+    name in values ? String(values[name] ?? "") : whole
+  )
+
+interface Row {
+  entry: unknown
+  nodes: ChildNode[]
+  /** Where a `{name}` was written: read again when the entry changes. */
+  written: (readonly [Attr | Text, string])[]
+}
+
 export interface ElementSpec<Props extends { id: string }, Controller> {
   /** The custom element's name: `kui-dialog`. */
   tag: string
@@ -41,6 +81,14 @@ export interface ElementSpec<Props extends { id: string }, Controller> {
   props: Record<string, Kind>
   /** Props that are only properties: a function, an object. By their names as properties. */
   properties?: readonly string[] | undefined
+  /**
+   * What the component draws a list of, by name: a calendar's weeks, a toast for each
+   * message. The page writes one of an entry as a `<template kui-each="name">` where the
+   * list goes, and the element stamps it for each entry, keyed, so an entry that stays keeps
+   * its elements. `around` is the entry of the list this one is written in (a week, for its
+   * days).
+   */
+  lists?: Record<string, (controller: Controller, around: unknown) => Each | undefined>
   /**
    * The hidden native input a form reads, for a component with no part to hold it: drawn as
    * the element's last child, while `mounted` (a select with a name).
@@ -340,8 +388,110 @@ export function defineElement<Props extends { id: string }, Controller extends o
     /** Takes the parts in a subtree, in the page's order: one that leaves takes its own with it. */
     #scan(element: HTMLElement) {
       if (!element.isConnected) return
+      if (element instanceof HTMLTemplateElement) {
+        if (element.hasAttribute("kui-each") && ownerOf(element) === this) this.#each(element)
+        return
+      }
       if (element.hasAttribute("kui-part")) this.#adopt(element)
       for (const each of Array.from(element.children)) if (drawable(each)) this.#scan(each)
+    }
+
+    /** Draws a list from its template: a copy for each entry, where the template was. */
+    #each(template: HTMLTemplateElement) {
+      const list = spec.lists?.[template.getAttribute("kui-each")!]?.(
+        this.controller!,
+        entryAround(template)
+      )
+      if (!list) return
+      // The template leaves the page for a mark: what is drawn is the page a framework draws.
+      const mark = this.ownerDocument.createComment("")
+      if (ENTRY.has(template)) ENTRY.set(mark, ENTRY.get(template))
+      template.replaceWith(mark)
+      const rows = new Map<string | number, Row>()
+      const stamp = (entry: unknown): Row => {
+        const type = list.type?.(entry)
+        const copy = template.content.cloneNode(true) as DocumentFragment
+        for (const node of Array.from(copy.childNodes)) {
+          const blank = node.nodeType === Node.TEXT_NODE && !node.textContent!.trim()
+          const other =
+            node instanceof Element &&
+            node.hasAttribute("kui-when") &&
+            node.getAttribute("kui-when") !== type
+          if (blank || other || node.nodeType === Node.COMMENT_NODE) node.remove()
+        }
+        const written: (readonly [Attr | Text, string])[] = []
+        const walker = this.ownerDocument.createTreeWalker(
+          copy,
+          NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT
+        )
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          // A list written in this one is filled when it is drawn, for its own entries.
+          if (node instanceof Text) {
+            if (node.data.includes("{")) written.push([node, node.data])
+          } else if (!(node instanceof HTMLTemplateElement)) {
+            for (const attribute of Array.from((node as Element).attributes))
+              if (attribute.value.includes("{")) written.push([attribute, attribute.value])
+          }
+        }
+        const nodes = Array.from(copy.childNodes)
+        for (const node of nodes) ENTRY.set(node, entry)
+        return { entry, nodes, written }
+      }
+      const write = (row: Row) => {
+        const values =
+          list.values?.(row.entry) ?? (row.entry as Record<string, unknown> | undefined) ?? {}
+        for (const [node, text] of row.written) {
+          const next = fill(text, values)
+          if (node instanceof Text) {
+            if (node.data !== next) node.data = next
+          } else if (node.value !== next) node.value = next
+        }
+      }
+      const draw = () => {
+        const { entries } = list
+        const next = "get" in entries ? entries.get() : entries
+        const parent = mark.parentNode
+        if (!parent) return
+        const kept = new Set<string | number>()
+        const fresh: Row[] = []
+        const ordered = next.map((entry) => {
+          const key = list.key(entry)
+          kept.add(key)
+          let row = rows.get(key)
+          if (!row) {
+            rows.set(key, (row = stamp(entry)))
+            fresh.push(row)
+            write(row)
+          } else if (row.entry !== entry) {
+            row.entry = entry
+            for (const node of row.nodes) ENTRY.set(node, entry)
+            write(row)
+          }
+          return row
+        })
+        for (const [key, row] of rows) {
+          if (kept.has(key)) continue
+          rows.delete(key)
+          for (const node of row.nodes) node.remove()
+        }
+        // From the end: a copy that is where it belongs is not moved, and keeps focus.
+        let before: ChildNode = mark
+        for (const row of ordered.reverse()) {
+          for (const node of row.nodes.toReversed()) {
+            if (node.nextSibling !== before || node.parentNode !== parent)
+              parent.insertBefore(node, before)
+            before = node
+          }
+        }
+        for (const row of fresh) for (const node of row.nodes) if (drawable(node)) this.#scan(node)
+      }
+      const stop = effect(draw)
+      this.#stops.push(() => {
+        stop()
+        for (const row of rows.values()) for (const node of row.nodes) node.remove()
+        rows.clear()
+        mark.replaceWith(template)
+      })
     }
 
     #adopt(element: HTMLElement) {
@@ -373,7 +523,12 @@ export function defineElement<Props extends { id: string }, Controller extends o
       }
       if (drawn.text && element.childNodes.length === 0) {
         const { text } = drawn
-        stops.push(effect(() => void (element.textContent = text.get() ?? "")))
+        // Taken off, the element says nothing again: put back on (a popup opened a second
+        // time), the text is the part's to write still, and not taken for the page's.
+        stops.push(
+          effect(() => void (element.textContent = text.get() ?? "")),
+          () => void (element.textContent = "")
+        )
       }
       const mounted = element.hasAttribute("kui-keep-mounted") ? undefined : drawn.mounted
       if (!mounted) return void stops.push(put(element, drawn.part))

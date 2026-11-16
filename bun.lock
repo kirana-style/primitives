@@ -106,6 +106,18 @@
         "vue-tsc": "catalog:",
       },
     },
+    "fixtures/web": {
+      "name": "fixture-web",
+      "version": "0.0.0",
+      "dependencies": {
+        "@kirana-ui/core": "workspace:*",
+        "@kirana-ui/web": "workspace:*",
+      },
+      "devDependencies": {
+        "vite": "catalog:",
+        "vite-plus": "catalog:",
+      },
+    },
     "packages/angular": {
       "name": "@kirana-ui/angular",
       "version": "0.1.0",
@@ -1200,6 +1212,8 @@
     "fixture-svelte": ["fixture-svelte@workspace:fixtures/svelte"],
 
     "fixture-vue": ["fixture-vue@workspace:fixtures/vue"],
+
+    "fixture-web": ["fixture-web@workspace:fixtures/web"],
 
     "flatted": ["flatted@3.4.4", "", {}, "sha512-5+ybhBZANEJxaH3X5evAFatUxLfEHSr7n6kYJ+1Qd0mUqr4eu9gIf6GDbWHf8RJijHrjjO8G+la14SlL2SeS1Q=="],
 

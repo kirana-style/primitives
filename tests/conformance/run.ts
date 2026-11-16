@@ -24,7 +24,27 @@ import { vocabulary } from "../../packages/core/src/vocabulary.ts"
 const ENGINES = { chromium, firefox, webkit }
 const ROOT = join(import.meta.dirname, "../..")
 const OUT = join(import.meta.dirname, "out")
-const ALL = ["react", "vue", "svelte", "solid", "angular"]
+const ALL = ["react", "vue", "svelte", "solid", "angular", "web"]
+// The custom elements cover some of the page so far: the scenarios their sections have, each
+// named for its section (`data-fixture`). The rest of the page is the other adapters' only.
+const WEB = ["collapsible", "collapsible-controlled", "controls", "tabs", "accordion", "dialog"]
+
+/**
+ * A serialized page, the given sections of it: what lies in another section is left out, and
+ * what is drawn at the page's end, focus and the page's own state are kept.
+ */
+function sectionsOf(dom: string, names: readonly string[]): string {
+  const kept: string[] = []
+  let keeping = true
+  for (const line of dom.split("\n")) {
+    const section = /^ {2}<section data-fixture="([^"]+)"/.exec(line)
+    if (section) keeping = names.includes(section[1]!)
+    // Back at the page's own level: the section is over.
+    else if (!line.startsWith("    ") && !line.startsWith("  <section")) keeping = true
+    if (keeping) kept.push(line)
+  }
+  return kept.join("\n")
+}
 
 const asked = process.argv.slice(2)
 // `--browser firefox`, or several (`--browser chromium,firefox,webkit`): the whole run once in each.
@@ -229,6 +249,11 @@ function serialize(): string {
       return
     }
     if (!(node instanceof Element) || node.tagName === "SCRIPT") return
+    // A custom element holds a component and draws nothing: its parts are the page's.
+    if (node.localName.startsWith("kui-")) {
+      for (const child of node.childNodes) walk(child, depth)
+      return
+    }
     const attributes = [...node.attributes]
       // An Angular directive's selector stays on its element (`kuidialogtrigger`): how the
       // adapter is written, the one difference an Angular page is allowed.
@@ -3284,6 +3309,7 @@ for (const engine of engines) {
       }
       for (const [name, scenario] of Object.entries(subject.second ? second : scenarios)) {
         if (only && name !== only) continue
+        if (subject.adapter === "web" && !WEB.includes(name)) continue
         const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
         const page = await context.newPage()
         if (slow > 1 && engine === "chromium") {
@@ -3497,8 +3523,16 @@ for (const engine of engines) {
       }
       for (const adapter of others) {
         let different = 0
-        for (const [step, expected] of snapshots[reference]!) {
-          const actual = snapshots[adapter]!.get(step)
+        // An adapter that covers some of the page is compared on those sections, in the
+        // states its scenarios reach.
+        const partial = adapter === "web"
+        let compared = 0
+        for (const [step, whole] of snapshots[reference]!) {
+          const drawn = snapshots[adapter]!.get(step)
+          if (partial && drawn === undefined) continue
+          compared++
+          const expected = partial ? sectionsOf(whole, WEB) : whole
+          const actual = partial && drawn !== undefined ? sectionsOf(drawn, WEB) : drawn
           if (actual === expected) continue
           different++
           failed++
@@ -3506,7 +3540,7 @@ for (const engine of engines) {
           if (actual !== undefined) firstDifference(expected, actual, reference, adapter)
         }
         if (different === 0) {
-          console.log(`same  ${adapter} = ${reference}  (${snapshots[reference]!.size} states)`)
+          console.log(`same  ${adapter} = ${reference}  (${compared} states)`)
         }
       }
     }

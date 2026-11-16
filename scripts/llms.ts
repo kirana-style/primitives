@@ -166,7 +166,7 @@ const SHARED = [
   "A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.",
   "A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.",
   "`PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.",
-  'An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/core/agent` gives `snapshot()`, `act({ steps })` and `query()`; what it changes reaches the same callbacks with `details.source === "agent"`. Mark what needs a person with `data-agent-confirm`, what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`.',
+  'An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/core/agent` gives `snapshot()`, `act({ steps })` and `query()`; what it changes reaches the same callbacks with `details.source === "agent"`. Mark what needs a person with `data-agent-confirm`, what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`. `history()`, `undo()` and `redo()` keep what it changed and take it back.',
 ]
 
 const IDIOMS: Record<string, Idiom> = {

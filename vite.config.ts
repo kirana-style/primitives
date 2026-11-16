@@ -9,7 +9,7 @@ const BROWSERS = (process.env.BROWSERS ?? "chromium,firefox").split(",") as (
   | "webkit"
 )[]
 
-const FIXTURES = ["react", "vue", "svelte", "solid", "angular"]
+const FIXTURES = ["react", "vue", "svelte", "solid", "angular", "web"]
 
 /**
  * The workspace's sources, named rather than traced: tracing a task's file access can miss reads

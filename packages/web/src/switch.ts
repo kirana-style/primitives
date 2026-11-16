@@ -1,13 +1,13 @@
 import { createSwitch } from "@kirana-ui/core/switch"
 
-import { defineElement, innerInput } from "./runtime.ts"
+import { defineElement } from "./runtime.ts"
 
 /**
- * `<kui-switch>`: the switch itself, with `kui-part="thumb"` inside. It draws the hidden
- * native input a form and a label reach. `checked`, `default-checked`, `disabled`,
+ * `<kui-switch>` around a `kui-part="root"` button with a `thumb` inside. The root draws the
+ * hidden native input a form and a label reach. `checked`, `default-checked`, `disabled`,
  * `read-only`, `required`, `name`, `form`, `value`; it tells `checked-change`.
  */
-defineElement({
+export const tag = defineElement({
   tag: "kui-switch",
   props: {
     checked: "boolean",
@@ -20,8 +20,9 @@ defineElement({
     value: "string",
   },
   create: createSwitch,
-  root: (controller) => controller.root,
   changes: { onCheckedChange: { event: "checked-change", prop: "checked" } },
-  parts: { thumb: (controller) => controller.thumb },
-  setup: (controller, host) => innerInput(host, controller.input),
+  parts: {
+    root: (controller) => ({ part: controller.root, inner: controller.input }),
+    thumb: (controller) => controller.thumb,
+  },
 })

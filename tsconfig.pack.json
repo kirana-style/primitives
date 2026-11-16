@@ -20,6 +20,7 @@
     "packages/core/src",
     "packages/react/src",
     "packages/vue/src",
+    "packages/web/src",
     "packages/vocabulary/src"
   ],
   "exclude": ["**/*.test.ts", "**/*.test.tsx"]

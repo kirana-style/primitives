@@ -33,7 +33,7 @@ import path from "node:path"
 
 const root = path.resolve(import.meta.dirname, "..")
 const out = path.join(root, "dist-packages")
-const PLAIN = ["core", "vocabulary", "react", "vue"]
+const PLAIN = ["core", "vocabulary", "react", "vue", "web"]
 const INSTALL_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"]
 
 interface Manifest {

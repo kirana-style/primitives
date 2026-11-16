@@ -520,6 +520,21 @@ note. Three places hold them:
 - **Popups go where their provider says.** Each adapter has one place a portal is made:
   `PortalProvider` gives it another container than `<body>`, for every popup inside and the
   popups those open.
+- **A part taken off an element takes what it wrote with it.** A framework draws a new
+  element each time a part comes back; a custom element's parts are the page's own, bound
+  again and again. One that came back still said `data-closed` beside `data-open`, and a
+  trigger still named a panel that was gone: unbinding restores the element's own attributes.
+- **A custom element holds a component; it is not one of its parts.** With the root as the
+  custom element, the page was not the page the other adapters draw, and a part's attributes
+  landed on an element a design did not write. It takes no room (`display: contents`) and
+  the root is one of the parts inside it. A part that is out of the page is out of the page:
+  hiding it left an element the others do not have.
+- **Read the element a part is drawn on from the adapters, not from memory.** A checkbox, a
+  switch and a radio are `<span>`s that take focus and keys themselves; the comparison with
+  React's page said so in its first run.
+- **Undo is a step like any other.** The bridge takes a change back by asking the component
+  for what it held before, so the callback hears it and may refuse; a change a callback
+  refused was never kept, and a press is not a state to return to.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

@@ -2,7 +2,15 @@ import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
-import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
+import {
+  Show,
+  createComputed,
+  createContext,
+  createUniqueId,
+  splitProps,
+  untrack,
+  useContext,
+} from "solid-js"
 import type { JSX } from "solid-js"
 
 import { positioned } from "./popover.tsx"
@@ -71,9 +79,21 @@ const Portal = (props: { children?: JSX.Element }) => (
   <BodyPortal mounted={useSelect().mounted}>{props.children}</BodyPortal>
 )
 
-function Positioner(props: PositionerProps): JSX.Element {
+/**
+ * `alignItemWithTrigger`: the list opens over its trigger, the chosen item's text on the
+ * trigger's own, where there is room and unless a finger opened it.
+ */
+function Positioner(props: PositionerProps & { alignItemWithTrigger?: boolean }): JSX.Element {
   const made = useSelect()
-  return <Part part={made.positioner} tag="div" {...positioned(props, made.positioning)} />
+  const [local, rest] = splitProps(props, ["alignItemWithTrigger"])
+  createComputed(() => made.alignItemWithTrigger.set(Boolean(local.alignItemWithTrigger)))
+  return (
+    <Part
+      part={made.positioner}
+      tag="div"
+      {...positioned(rest as PositionerProps, made.positioning)}
+    />
+  )
 }
 
 /** Shows the chosen value's label, or `placeholder` while nothing is chosen. */

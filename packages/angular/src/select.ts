@@ -92,6 +92,11 @@ export class KuiSelectPositioner implements OnInit {
   readonly sideOffset = input<number>()
   readonly alignOffset = input<number>()
   readonly collisionPadding = input<number>()
+  /**
+   * The list opens over its trigger, the chosen item's text on the trigger's own, where
+   * there is room and unless a finger opened it.
+   */
+  readonly alignItemWithTrigger = input(false, { transform: booleanAttribute })
   private readonly root = inject(KuiSelect)
   private readonly put = hostPart()
   private readonly options = () =>
@@ -106,12 +111,17 @@ export class KuiSelectPositioner implements OnInit {
   constructor() {
     effect(() => {
       const next = this.options()
-      untracked(() => this.root.controller?.positioning.set(next))
+      const over = this.alignItemWithTrigger()
+      untracked(() => {
+        this.root.controller?.positioning.set(next)
+        this.root.controller?.alignItemWithTrigger.set(over)
+      })
     })
   }
 
   ngOnInit(): void {
     this.root.controller.positioning.set(untracked(this.options))
+    this.root.controller.alignItemWithTrigger.set(untracked(this.alignItemWithTrigger))
     this.put(this.root.controller.positioner)
   }
 }

@@ -10,6 +10,7 @@ export const toastVocabulary = defineComponent({
   viewport: {
     description: "Where the toasts are drawn: a region that is always in the page.",
     states: { expanded: EXPANDED },
+    variables: { "--toast-frontmost-height": "The height of the newest toast." },
   },
   root: {
     description: "One toast.",
@@ -32,6 +33,13 @@ export const toastVocabulary = defineComponent({
       "--toast-offset-y": "The height of the toasts in front of it.",
       "--toast-swipe-movement-x": "How far it has been dragged across.",
       "--toast-swipe-movement-y": "How far it has been dragged up or down.",
+    },
+  },
+  content: {
+    description: "What holds a toast's contents, when the design sizes the toast itself.",
+    states: {
+      behind: state("data-behind", "Present on a toast that is behind the newest."),
+      expanded: EXPANDED,
     },
   },
   title: { description: "What the toast is called." },

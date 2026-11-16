@@ -21,6 +21,12 @@ export const sliderVocabulary = defineComponent({
     description:
       "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
     states: STATES,
+    variables: {
+      "--start-position":
+        "With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.",
+      "--relative-size":
+        "With thumbs that stay inside the control and a range: the filled part's length.",
+    },
   },
   thumb: {
     description:
@@ -31,6 +37,9 @@ export const sliderVocabulary = defineComponent({
         attribute: "data-index",
         description: "Which thumb it is, from 0.",
       },
+    },
+    variables: {
+      "--position": "With thumbs that stay inside the control: where the thumb's centre is.",
     },
   },
 })

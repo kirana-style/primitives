@@ -145,6 +145,12 @@ export interface ToastProps {
 
 export interface ToastParts {
   readonly root: Part
+  /**
+   * What holds the toast's contents, when a design sizes the toast itself (one behind the
+   * frontmost is as tall as the frontmost): it says whether it is behind, and the toast is
+   * measured again when what it holds changes.
+   */
+  readonly content: Part
   readonly title: Part
   readonly description: Part
   /** Closes the toast. */
@@ -189,14 +195,24 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
   /** Each toast's height, and the height of the toasts in front of it. */
   function measure() {
     let front = 0
+    let frontmost: number | undefined
     for (const toast of toasts.peek()) {
       const element = elements.get(toast.id)
       if (!element) continue
+      // Its own height, whatever the design has made it for its place in the stack.
+      const given = element.style.height
+      element.style.height = "auto"
       const height = element.offsetHeight
+      element.style.height = given
       setGeometry(element, "--toast-height", `${height}px`)
       setGeometry(element, "--toast-offset-y", `${front}px`)
-      if (!toast.closing) front += height
+      if (toast.closing) continue
+      frontmost ??= height
+      front += height
     }
+    if (!region) return
+    if (frontmost === undefined) clearGeometry(region, "--toast-frontmost-height")
+    else setGeometry(region, "--toast-frontmost-height", `${frontmost}px`)
   }
 
   function make(toastId: string): ToastParts {
@@ -316,6 +332,25 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
           }
         },
       },
+      content: {
+        props: computed(() => ({
+          "data-behind": flag(index.get() > 0),
+          "data-expanded": flag(expanded.get()),
+        })),
+        attach(element) {
+          measure()
+          if (typeof ResizeObserver === "undefined") return NOTHING
+          // Its text changed, or it wraps another way: the toast is as tall as it now is.
+          const resized = new ResizeObserver(measure)
+          const changed = new MutationObserver(measure)
+          resized.observe(element)
+          changed.observe(element, { childList: true, subtree: true, characterData: true })
+          return () => {
+            resized.disconnect()
+            changed.disconnect()
+          }
+        },
+      },
       title: {
         props: computed(() => ({ id: `${id}-${toastId}-title` })),
         attach: named(titled),
@@ -432,6 +467,7 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
       })),
       attach(element) {
         region = element
+        measure()
         return () => {
           if (region === element) region = undefined
         }

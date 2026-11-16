@@ -41,6 +41,11 @@ export interface PopupOptions {
   placement?: PopupPlacement
   /** What it is placed against, when that is not its trigger: a point, for a context menu. */
   anchor?: () => Anchor | undefined
+  /**
+   * While its place is kept up with its trigger: while it is open, when left out. A popup that
+   * places itself another way, once placed, says when.
+   */
+  following?: ReadonlySignal<boolean>
 }
 
 /** What a popup's focus is told: whether the popup is modal, and its other elements. */
@@ -219,7 +224,7 @@ export function createPopup(options: PopupOptions): Popup {
       attach(element) {
         const anchor = options.anchor ? options.anchor() : trigger
         if (!position || !anchor) return NOTHING
-        return position.attach(element, anchor, open)
+        return position.attach(element, anchor, options.following ?? open)
       },
     },
     arrow: {

@@ -91,10 +91,20 @@ export class KuiToastRoot implements OnInit {
   }
 }
 
-function part(name: "title" | "description" | "close" | "action") {
+function part(name: "content" | "title" | "description" | "close" | "action") {
   const root = inject(KuiToastRoot)
   const put = hostPart()
   return () => put(root.parts[name])
+}
+
+/** What holds a toast's contents, when the design sizes the toast itself. */
+@Directive({ selector: "[kuiToastContent]" })
+export class KuiToastContent implements OnInit {
+  private readonly init = part("content")
+
+  ngOnInit(): void {
+    this.init()
+  }
 }
 
 @Directive({ selector: "[kuiToastTitle]" })

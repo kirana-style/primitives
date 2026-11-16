@@ -29,6 +29,8 @@ export class KuiSlider implements OnInit {
   readonly step = input(undefined, { transform: optionalNumber })
   readonly largeStep = input(undefined, { transform: optionalNumber })
   readonly minStepsBetweenValues = input(undefined, { transform: optionalNumber })
+  /** `"edge"` keeps a thumb inside the control at the ends of its range. */
+  readonly thumbAlignment = input<"center" | "edge" | "edge-client-only">()
   readonly orientation = input<"horizontal" | "vertical">()
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
@@ -56,6 +58,7 @@ export class KuiSlider implements OnInit {
     step: this.step(),
     largeStep: this.largeStep(),
     minStepsBetweenValues: this.minStepsBetweenValues(),
+    thumbAlignment: this.thumbAlignment(),
     orientation: this.orientation(),
     disabled: this.disabled(),
     name: this.name(),

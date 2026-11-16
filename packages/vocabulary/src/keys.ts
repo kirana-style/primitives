@@ -18,6 +18,7 @@ export const exclusive: string[][] = [
   ["[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]","[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]"],
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
+  ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"none\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
 
@@ -1372,6 +1373,13 @@ export const Toast = {
       down: "[data-swipe-direction=\"down\"]",
     },
   },
+  /** What holds a toast's contents, when the design sizes the toast itself. */
+  Content: {
+    /** Present on a toast that is behind the newest. */
+    behind: "[data-behind]",
+    /** Present while the pointer or focus is on the stack: the toasts are spread out, and wait. */
+    expanded: "[data-expanded]",
+  },
   /** What the toast is called. */
   Title: {
   },
@@ -1640,12 +1648,13 @@ export const Select = {
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the trigger it is on, after any flip; `none` when it lies over the trigger. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      none: "[data-side=\"none\"]",
     },
     /** How it is aligned with the anchor. */
     align: {

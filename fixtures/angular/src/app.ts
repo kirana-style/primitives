@@ -124,6 +124,7 @@ import {
   KuiToastDescription,
   KuiToastList,
   KuiToastRoot,
+  KuiToastContent,
   KuiToastTitle,
   KuiToastViewport,
   createToaster,
@@ -341,6 +342,7 @@ import {
     KuiToastDescription,
     KuiToastList,
     KuiToastRoot,
+    KuiToastContent,
     KuiToastTitle,
     KuiToastViewport,
     KuiOtpCaret,
@@ -1430,8 +1432,14 @@ import {
             class="toast"
             [attr.data-testid]="'ts1-' + toast.id"
           >
-            <div kuiToastTitle class="toast-title">{{ toast.title }}</div>
-            <div kuiToastDescription>{{ toast.description }}</div>
+            <div
+              kuiToastContent
+              class="toast-content"
+              [attr.data-testid]="'ts1-' + toast.id + '-content'"
+            >
+              <div kuiToastTitle class="toast-title">{{ toast.title }}</div>
+              <div kuiToastDescription>{{ toast.description }}</div>
+            </div>
             <button
               kuiToastClose
               aria-label="Close"
@@ -1662,6 +1670,43 @@ import {
             </div>
           </div>
         </div>
+        <div
+          kuiSlider
+          [kuiId]="'sl4'"
+          [defaultValue]="0"
+          [thumbAlignment]="'edge'"
+          data-testid="sl4"
+        >
+          <div kuiSliderControl class="slider" data-testid="sl4-control">
+            <div kuiSliderTrack class="slider-track">
+              <div kuiSliderIndicator class="fill" data-testid="sl4-fill"></div>
+              <div
+                kuiSliderThumb
+                class="thumb thumb-inside"
+                aria-label="Inside"
+                data-testid="sl4-thumb"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <ng-container kuiSelect [kuiId]="'s3'" [defaultValue]="'Cherry'">
+          <button kuiSelectTrigger class="select-trigger" data-testid="s3-trigger">
+            <span kuiSelectValue data-testid="s3-value"></span>
+          </button>
+          <ng-template kuiSelectPortal>
+            <div kuiSelectPositioner [alignItemWithTrigger]="true" data-testid="s3-positioner">
+              <div kuiSelectPopup class="popup" data-testid="s3-popup">
+                @for (each of fruits; track each) {
+                  <div kuiSelectItem [value]="each" class="item" [attr.data-testid]="'s3-' + each">
+                    <span kuiSelectItemText [attr.data-testid]="'s3-' + each + '-text'">{{
+                      each
+                    }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
       </section>
       <section data-fixture="field">
         <form

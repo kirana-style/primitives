@@ -78,6 +78,9 @@ function Root(props: PartComponentProps & { toast: ToastRecord }): JSX.Element {
   )
 }
 
+const Content = (props: PartComponentProps) => (
+  <Part part={useParts().content} tag="div" {...props} />
+)
 const Title = (props: PartComponentProps) => <Part part={useParts().title} tag="div" {...props} />
 const Description = (props: PartComponentProps) => (
   <Part part={useParts().description} tag="div" {...props} />
@@ -89,7 +92,7 @@ const Action = (props: PartComponentProps) => (
   <Part part={useParts().action} tag="button" {...props} />
 )
 
-export const Toast = { Viewport, List, Root, Title, Description, Close, Action }
+export const Toast = { Viewport, List, Root, Content, Title, Description, Close, Action }
 
 export { createToaster } from "@kirana-ui/core/toast"
 export type { ToastOptions, ToastRecord, Toaster } from "@kirana-ui/core/toast"

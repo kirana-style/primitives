@@ -3168,7 +3168,9 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {
+            "--toast-frontmost-height": "The height of the newest toast."
+          }
         },
         "root": {
           "description": "One toast.",
@@ -3222,6 +3224,23 @@ export const vocabulary = {
             "--toast-swipe-movement-x": "How far it has been dragged across.",
             "--toast-swipe-movement-y": "How far it has been dragged up or down."
           }
+        },
+        "content": {
+          "description": "What holds a toast's contents, when the design sizes the toast itself.",
+          "states": {
+            "behind": {
+              "attribute": "data-behind",
+              "description": "Present on a toast that is behind the newest.",
+              "selector": "[data-behind]"
+            },
+            "expanded": {
+              "attribute": "data-expanded",
+              "description": "Present while the pointer or focus is on the stack: the toasts are spread out, and wait.",
+              "selector": "[data-expanded]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
         },
         "title": {
           "description": "What the toast is called.",
@@ -3871,12 +3890,13 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the trigger it is on, after any flip; `none` when it lies over the trigger.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "none": "[data-side=\"none\"]"
               }
             },
             "align": {
@@ -4138,7 +4158,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {
+            "--start-position": "With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.",
+            "--relative-size": "With thumbs that stay inside the control and a range: the filled part's length."
+          }
         },
         "thumb": {
           "description": "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.",
@@ -4168,7 +4191,9 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {
+            "--position": "With thumbs that stay inside the control: where the thumb's centre is."
+          }
         }
       }
     },

@@ -4,7 +4,7 @@ import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartStyle } from "./part.ts"
-import { computed, signal } from "./reactivity.ts"
+import { computed, effect, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { createFormControl } from "./services/form-control.ts"
 import type { Orientation } from "./services/roving.ts"
@@ -37,6 +37,12 @@ export interface SliderProps {
   /** How many steps two thumbs of a range stay apart. Default 0. */
   minStepsBetweenValues?: number | undefined
   orientation?: Orientation | undefined
+  /**
+   * Where a thumb is at the ends of its range. `"center"` (the default): its centre on the
+   * control's edge, so half of it lies outside. `"edge"`: its edge on the control's edge, so
+   * it stays inside. `"edge-client-only"` is the same here: nothing waits for the browser.
+   */
+  thumbAlignment?: "center" | "edge" | "edge-client-only" | undefined
   disabled?: boolean | undefined
   /** With a name, each thumb's value is submitted with the form around the slider. */
   name?: string | undefined
@@ -147,6 +153,48 @@ export function createSlider(
   const thumbs = new Map<number, HTMLElement>()
   let stopDrag: (() => void) | undefined
 
+  // With thumbs that stay inside the control, a thumb's centre travels less than the
+  // control's length: by its own size. Both are measured, along the way the track runs.
+  const inset = computed(() => (props.get().thumbAlignment ?? "center") !== "center")
+  const sizes = signal<{ control: number; thumbs: readonly number[] } | undefined>(
+    undefined,
+    (a, b) =>
+      a === b ||
+      (a !== undefined &&
+        b !== undefined &&
+        a.control === b.control &&
+        sameList(a.thumbs, b.thumbs))
+  )
+  let controlElement: HTMLElement | undefined
+  let observer: ResizeObserver | undefined
+
+  function measure() {
+    if (!controlElement || !inset.peek()) return sizes.set(undefined)
+    const side = orientation.peek() === "vertical" ? "height" : "width"
+    const list: number[] = []
+    for (const [index, element] of thumbs) list[index] = element.getBoundingClientRect()[side]
+    sizes.set({ control: controlElement.getBoundingClientRect()[side], thumbs: list })
+  }
+
+  /** Measures when an element of the slider changes size, while it is in the page. */
+  function watch(element: HTMLElement): () => void {
+    if (typeof ResizeObserver === "undefined") return NOTHING
+    observer ??= new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer?.unobserve(element)
+  }
+
+  /**
+   * Where a thumb's centre is, as a share of the control, when it stays inside: `undefined`
+   * until it has been measured.
+   */
+  function centre(percent: number, index: number): number | undefined {
+    const known = sizes.get()
+    const thumb = known?.thumbs[index]
+    if (!known || thumb === undefined || known.control === 0) return undefined
+    return ((thumb / 2 + ((known.control - thumb) * percent) / 100) / known.control) * 100
+  }
+
   const share = (each: number) => {
     const { min, max } = range.get()
     return max === min ? 0 : ((each - min) / (max - min)) * 100
@@ -217,11 +265,15 @@ export function createSlider(
   function valueAt(event: PointerEvent, control: HTMLElement, offset: number) {
     const { min, max } = range.peek()
     const box = control.getBoundingClientRect()
+    // Thumbs that stay inside travel the control's length less a thumb, from half a thumb in.
+    const thumb = sizes.peek()?.thumbs.find((each) => each !== undefined) ?? 0
     let along: number
     if (orientation.peek() === "vertical") {
-      along = box.height === 0 ? 0 : 1 - (event.clientY - offset - box.top) / box.height
+      const length = box.height - thumb
+      along = length <= 0 ? 0 : 1 - (event.clientY - offset - box.top - thumb / 2) / length
     } else {
-      along = box.width === 0 ? 0 : (event.clientX - offset - box.left) / box.width
+      const length = box.width - thumb
+      along = length <= 0 ? 0 : (event.clientX - offset - box.left - thumb / 2) / length
       if (rtl.peek()) along = 1 - along
     }
     return min + Math.min(1, Math.max(0, along)) * (max - min)
@@ -357,30 +409,49 @@ export function createSlider(
       })),
       attach(element) {
         measured.set(directionOf(element) === "rtl")
-        return () => stopDrag?.()
+        controlElement = element
+        const unwatch = watch(element)
+        // And when the thumbs are asked to stay inside, or the track is turned.
+        const stop = effect(() => {
+          inset.get()
+          orientation.get()
+          untracked(measure)
+        })
+        return () => {
+          stop()
+          unwatch()
+          if (controlElement === element) controlElement = undefined
+          stopDrag?.()
+        }
       },
     },
     track: { props: computed(state), attach: () => NOTHING },
     indicator: {
       props: computed(() => {
         const list = values.get()
-        const start = list.length > 1 ? share(list[0]!) : 0
-        const end = list.length > 0 ? share(list[list.length - 1]!) : 0
-        // The value as a length, which a server can write: nothing is measured for it.
+        const last = list.length - 1
+        // The value as a length, which a server can write. With thumbs that stay inside it
+        // ends at a thumb's centre, which is measured: until then, the value's share, which
+        // is under the thumb wherever the thumb is.
+        const at = (index: number) =>
+          (inset.get() ? centre(share(list[index]!), index) : undefined) ?? share(list[index]!)
+        const start = list.length > 1 ? at(0) : 0
+        const end = list.length > 0 ? at(last) : 0
+        const sized = inset.get() && sizes.get() !== undefined
+        const from = sized && list.length > 1 ? "var(--start-position)" : `${start}%`
+        const length = !sized
+          ? `${end - start}%`
+          : list.length > 1
+            ? "var(--relative-size)"
+            : "var(--start-position)"
         const style: PartStyle =
           orientation.get() === "vertical"
-            ? {
-                position: "absolute",
-                bottom: `${start}%`,
-                height: `${end - start}%`,
-                width: "inherit",
-              }
-            : {
-                position: "relative",
-                "inset-inline-start": `${start}%`,
-                width: `${end - start}%`,
-                height: "inherit",
-              }
+            ? { position: "absolute", bottom: from, height: length, width: "inherit" }
+            : { position: "relative", "inset-inline-start": from, width: length, height: "inherit" }
+        if (sized) {
+          style["--start-position"] = `${list.length > 1 ? start : end}%`
+          if (list.length > 1) style["--relative-size"] = `${end - start}%`
+        }
         return { ...state(), style }
       }),
       attach: () => NOTHING,
@@ -395,19 +466,23 @@ export function createSlider(
           const vertical = orientation.get() === "vertical"
           const { format, getAriaValueText } = props.get()
           const written = getAriaValueText || format ? write(current) : undefined
+          const percent = share(current)
+          const inside = inset.get()
+          const at = inside ? centre(percent, index) : undefined
+          // Its centre at its value's share of the control. A thumb that stays inside is
+          // moved back by that share of its own size, which CSS knows without measuring;
+          // once it is measured, its centre is written as Base UI writes it.
+          const back = inside && at === undefined ? percent : 50
+          const place = at === undefined ? `${percent}%` : "var(--position)"
           const style: PartStyle = vertical
-            ? {
-                position: "absolute",
-                bottom: `${share(current)}%`,
-                left: "50%",
-                translate: "-50% 50%",
-              }
+            ? { position: "absolute", bottom: place, left: "50%", translate: `-50% ${back}%` }
             : {
                 position: "absolute",
-                "inset-inline-start": `${share(current)}%`,
+                "inset-inline-start": place,
                 top: "50%",
-                translate: `${rtl.get() ? "50%" : "-50%"} -50%`,
+                translate: `${rtl.get() ? back : -back}% -50%`,
               }
+          if (at !== undefined) style["--position"] = `${at}%`
           return {
             role: "slider",
             tabindex: disabled.get() ? "-1" : "0",
@@ -426,7 +501,10 @@ export function createSlider(
         }),
         attach(element) {
           thumbs.set(index, element)
+          const unwatch = watch(element)
+          measure()
           return () => {
+            unwatch()
             if (thumbs.get(index) === element) thumbs.delete(index)
           }
         },

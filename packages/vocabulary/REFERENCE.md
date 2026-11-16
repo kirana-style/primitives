@@ -1369,6 +1369,10 @@ Where the toasts are drawn: a region that is always in the page.
 | --- | --- |
 | `data-expanded` | Present while the pointer or focus is on the stack: the toasts are spread out, and wait. |
 
+| Variable | Holds |
+| --- | --- |
+| `--toast-frontmost-height` | The height of the newest toast. |
+
 ### Toast.Root
 
 One toast.
@@ -1390,6 +1394,15 @@ One toast.
 | `--toast-offset-y` | The height of the toasts in front of it. |
 | `--toast-swipe-movement-x` | How far it has been dragged across. |
 | `--toast-swipe-movement-y` | How far it has been dragged up or down. |
+
+### Toast.Content
+
+What holds a toast's contents, when the design sizes the toast itself.
+
+| Attribute | When |
+| --- | --- |
+| `data-behind` | Present on a toast that is behind the newest. |
+| `data-expanded` | Present while the pointer or focus is on the stack: the toasts are spread out, and wait. |
 
 ### Toast.Title
 
@@ -1671,7 +1684,7 @@ Places the list against the trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, none) | The side of the trigger it is on, after any flip; `none` when it lies over the trigger. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -1775,6 +1788,11 @@ The filled part: up to the thumb, or from the first thumb to the last. Its place
 | `data-disabled` | Present when it is disabled. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 
+| Variable | Holds |
+| --- | --- |
+| `--start-position` | With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends. |
+| `--relative-size` | With thumbs that stay inside the control and a range: the filled part's length. |
+
 ### Slider.Thumb
 
 What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.
@@ -1785,6 +1803,10 @@ What is dragged, and what the keyboard moves: a slider to assistive technology. 
 | `data-disabled` | Present when it is disabled. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 | `data-index` | Which thumb it is, from 0. |
+
+| Variable | Holds |
+| --- | --- |
+| `--position` | With thumbs that stay inside the control: where the thumb's centre is. |
 
 ## Switch
 

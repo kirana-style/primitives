@@ -2297,6 +2297,21 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
         .join(" ")
     )
     expect(order === "ts1-toast-2:0 ts1-toast-1:1", `the newest is first (${order})`)
+    expect(
+      (await attribute("ts1-toast-1-content", "data-behind")) === "",
+      "what an older toast holds says it is behind"
+    )
+    expect(
+      (await attribute("ts1-toast-2-content", "data-behind")) === null,
+      "and the newest's does not"
+    )
+    const frontmost = await id("ts1").evaluate((each) =>
+      each.style.getPropertyValue("--toast-frontmost-height")
+    )
+    const newest = await id("ts1-toast-2").evaluate(
+      (each) => `${(each as HTMLElement).offsetHeight}px`
+    )
+    expect(frontmost === newest, `the region says how tall the newest is (${frontmost})`)
     await snapshot("two toasts")
     await id("ts1-toast-2-close").click()
     await until(() => present("ts1-toast-2"), false, "its button closes it, once its motion ends")
@@ -2568,6 +2583,59 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await output()) === "null", "and a date with a part missing is no date")
     expect((await sent()) === "", "so nothing is submitted")
     await snapshot("a date with a part emptied")
+  },
+  async measures({ page, snapshot, id, present, attribute }) {
+    const box = (testid: string) =>
+      id(testid).evaluate((element) => {
+        const { left, right, top, height } = element.getBoundingClientRect()
+        return { left, right, middle: top + height / 2 }
+      })
+    await id("sl4").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    await settled(page)
+    const control = await box("sl4-control")
+    const low = await box("sl4-thumb")
+    expect(
+      Math.abs(low.left - control.left) < 0.5,
+      `a thumb that stays inside has its edge on the control's at the least (${low.left - control.left})`
+    )
+    expect(
+      (await id("sl4-thumb").evaluate((each) => each.style.getPropertyValue("--position"))) !== "",
+      "and says where its centre is"
+    )
+    await id("sl4-thumb").focus()
+    await page.keyboard.press("End")
+    await settled(page)
+    const high = await box("sl4-thumb")
+    expect(
+      Math.abs(high.right - control.right) < 0.5,
+      `and at the most (${high.right - control.right})`
+    )
+    await snapshot("a slider whose thumb stays inside, at its most")
+
+    expect((await id("s3-value").textContent()) === "Cherry", "a select shows its value")
+    await id("s3-trigger").click()
+    await settled(page)
+    const from = Date.now()
+    while ((await attribute("s3-positioner", "data-side")) !== "none" && Date.now() - from < 3000)
+      await page.waitForTimeout(25)
+    await settled(page)
+    expect(
+      (await attribute("s3-positioner", "data-side")) === "none",
+      "asked to, its list opens over its trigger: on no side of it"
+    )
+    const shown = await box("s3-value")
+    const item = await box("s3-Cherry-text")
+    expect(
+      Math.abs(item.middle - shown.middle) < 2,
+      `the chosen item's text lies on the trigger's (${item.middle - shown.middle})`
+    )
+    expect(Math.abs(item.left - shown.left) < 1, `from the same edge (${item.left - shown.left})`)
+    await snapshot("a select open over its trigger")
+    await page.keyboard.press("Escape")
+    const closing = Date.now()
+    while ((await present("s3-popup")) && Date.now() - closing < 3000) await page.waitForTimeout(25)
+    await settled(page)
+    expect(!(await present("s3-popup")), "Escape closes it")
   },
   async command({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {

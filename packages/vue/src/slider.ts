@@ -25,6 +25,7 @@ const Root = defineComponent({
     step: Number,
     largeStep: Number,
     minStepsBetweenValues: Number,
+    thumbAlignment: String as PropType<SliderProps["thumbAlignment"]>,
     orientation: String as PropType<"horizontal" | "vertical">,
     disabled: Boolean,
     name: String,

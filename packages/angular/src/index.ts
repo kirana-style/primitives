@@ -130,6 +130,7 @@ export {
   KuiToastDescription,
   KuiToastList,
   KuiToastRoot,
+  KuiToastContent,
   KuiToastTitle,
   KuiToastViewport,
   createToaster,

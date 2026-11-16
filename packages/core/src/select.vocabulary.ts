@@ -8,6 +8,7 @@ import {
   PLACEMENT,
   TRANSITION,
   state,
+  valued,
 } from "./states.ts"
 
 // The component's parts as data, apart from its controller: a page that uses the component does
@@ -27,7 +28,15 @@ export const selectVocabulary = defineComponent({
   },
   positioner: {
     description: "Places the list against the trigger. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT },
+    states: {
+      ...OPEN,
+      ...PLACEMENT,
+      side: valued(
+        "data-side",
+        ["top", "right", "bottom", "left", "none"],
+        "The side of the trigger it is on, after any flip; `none` when it lies over the trigger."
+      ),
+    },
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
   },

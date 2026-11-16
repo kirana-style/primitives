@@ -518,6 +518,10 @@ section[data-fixture="slider"] {
   transition: opacity 80ms;
   translate: var(--toast-swipe-movement-x, 0) var(--toast-swipe-movement-y, 0);
 }
+.toast-content {
+  display: flex;
+  gap: 8px;
+}
 .toast[data-starting-style],
 .toast[data-ending-style] {
   opacity: 0;
@@ -596,4 +600,8 @@ section[data-fixture="slider"] {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+}
+
+.thumb-inside {
+  margin: 0;
 }

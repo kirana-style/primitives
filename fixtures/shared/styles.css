@@ -431,7 +431,12 @@ section[data-fixture="simple"] {
   width: 1px;
   height: 16px;
 }
-section[data-fixture="slider"] {
+section[data-fixture="slider"],
+section[data-fixture="measures"],
+section[data-fixture="entry"],
+section[data-fixture="picking"],
+section[data-fixture="groups"],
+section[data-fixture="container"] {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;

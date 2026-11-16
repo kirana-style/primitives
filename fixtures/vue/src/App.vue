@@ -958,6 +958,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         <Carousel.Indicator :index="2" aria-label="Slide 3" data-testid="cr1-dot-2" />
       </Carousel.Root>
       <output data-testid="cr1-output">{{ slide }}</output>
+    </section>
+    <section data-fixture="toast">
       <button
         type="button"
         data-testid="ts1-add"
@@ -987,6 +989,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Toast.Root>
         </Toast.List>
       </Toast.Viewport>
+    </section>
+    <section data-fixture="sheets">
       <Drawer.Root
         id="dw1"
         @open-change="
@@ -1028,6 +1032,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         <MessageScroller.Button data-testid="ms1-button">Newest</MessageScroller.Button>
       </MessageScroller.Root>
       <button type="button" data-testid="ms1-add" @click="said += 1">Add a message</button>
+    </section>
+    <section data-fixture="dates">
       <Calendar.Root
         id="cal1"
         locale="en-US"
@@ -1083,6 +1089,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
         </DateField.Root>
       </form>
       <output data-testid="df1-output">{{ born }}</output>
+    </section>
+    <section data-fixture="command">
       <Label for="in1" data-testid="in1-label">Name</Label>
       <Input id="in1" data-testid="in1" @value-change="(next: string) => (named = next)" />
       <output data-testid="in1-output">{{ named }}</output>
@@ -1164,6 +1172,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Slider.Track>
         </Slider.Control>
       </Slider.Root>
+    </section>
+    <section data-fixture="measures">
       <Slider.Root id="sl4" :default-value="0" thumb-alignment="edge" data-testid="sl4">
         <Slider.Control class="slider" data-testid="sl4-control">
           <Slider.Track class="slider-track">
@@ -1192,6 +1202,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
+    </section>
+    <section data-fixture="entry">
       <NumberField.Root
         id="nf1"
         name="qty"
@@ -1253,6 +1265,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
+    </section>
+    <section data-fixture="picking">
       <DatePicker.Root
         id="dk1"
         locale="en-US"
@@ -1360,6 +1374,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
+    </section>
+    <section data-fixture="groups">
       <Autocomplete.Root id="ac2" default-value="Par">
         <Autocomplete.Input aria-label="City" data-testid="ac2-input" />
         <Autocomplete.Portal>
@@ -1390,6 +1406,8 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Autocomplete.Positioner>
         </Autocomplete.Portal>
       </Autocomplete.Root>
+    </section>
+    <section data-fixture="container">
       <div ref="box" data-testid="pc1-box"></div>
       <PortalProvider :container="box">
         <Popover.Root id="pc1">

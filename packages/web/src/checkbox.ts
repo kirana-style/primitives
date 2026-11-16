@@ -1,5 +1,6 @@
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 
+import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
 
 /**
@@ -21,7 +22,7 @@ export const tag = defineElement({
     form: "string",
     value: "string",
   },
-  create: createCheckbox,
+  create: (props, host) => createCheckbox(props, { field: fieldAround(host) }),
   changes: { onCheckedChange: { event: "checked-change", prop: "checked" } },
   parts: {
     root: (controller) => ({ part: controller.root, inner: controller.input }),

@@ -1,5 +1,6 @@
 import { createSwitch } from "@kirana-ui/core/switch"
 
+import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
 
 /**
@@ -19,7 +20,7 @@ export const tag = defineElement({
     form: "string",
     value: "string",
   },
-  create: createSwitch,
+  create: (props, host) => createSwitch(props, { field: fieldAround(host) }),
   changes: { onCheckedChange: { event: "checked-change", prop: "checked" } },
   parts: {
     root: (controller) => ({ part: controller.root, inner: controller.input }),

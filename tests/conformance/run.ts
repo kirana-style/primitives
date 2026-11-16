@@ -27,7 +27,37 @@ const OUT = join(import.meta.dirname, "out")
 const ALL = ["react", "vue", "svelte", "solid", "angular", "web"]
 // The custom elements cover some of the page so far: the scenarios their sections have, each
 // named for its section (`data-fixture`). The rest of the page is the other adapters' only.
-const WEB = ["collapsible", "collapsible-controlled", "controls", "tabs", "accordion", "dialog"]
+const WEB = [
+  "collapsible",
+  "collapsible-controlled",
+  "controls",
+  "tabs",
+  "accordion",
+  "simple",
+  "dialog",
+  "slider",
+  "field",
+  "hover",
+  "popover",
+  "listbox",
+  "toolbar",
+  "scroll-area",
+  "menu",
+  "context-menu",
+  "menubar",
+  "select",
+  "combobox",
+  "measures",
+  "entry",
+  "groups",
+  "menu-more",
+  "widgets",
+  "navigation-menu",
+  "field-controls",
+  "pieces",
+  "sheets",
+  "command",
+]
 
 /**
  * A serialized page, the given sections of it: what lies in another section is left out, and
@@ -1972,9 +2002,14 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await focused()) === "nm1-docs", "and on to what follows the trigger")
     expect(!(await present("nm1-popup")), "the content has gone")
 
+    const scrolled = await page.evaluate(() => window.scrollY)
     await key("ArrowDown")
     await snapshot("another item, from the keyboard")
     expect((await focused()) === "nm1-guide", "the arrow into a content opens it and goes in")
+    expect(
+      (await page.evaluate(() => window.scrollY)) === scrolled,
+      "and the page stays where it is: focus does not go looking for a content not yet placed"
+    )
     expect((await popupWidth()) === "120px", "the popup takes this content's size")
     await key("Escape")
     expect((await focused()) === "nm1-docs", "Escape closes it and gives focus to its trigger")
@@ -2221,7 +2256,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await share()) === "10", "Home takes the panel to its least")
   },
 
-  async pieces({ page, snapshot, id, present, attribute, focused }) {
+  async pieces({ page, snapshot, id, attribute }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)
       await settled(page)
@@ -2291,7 +2326,24 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await until(slide, "2", "scrolled by hand, it says where it came to rest")
     await id("cr1-view").evaluate((element) => element.scrollTo({ left: 0 }))
     await until(slide, "0", "and back")
-
+  },
+  async toast({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    /** Waits for what a scroll or a timer brings: neither is done when the press returns. */
+    const until = async (read: () => Promise<unknown>, wanted: unknown, message: string) => {
+      const from = Date.now()
+      let got = await read()
+      while (got !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+        got = await read()
+      }
+      expect(got === wanted, `${message} (it is ${String(got)})`)
+      await settled(page)
+    }
+    await id("ts1").scrollIntoViewIfNeeded()
     expect((await attribute("ts1", "role")) === "region", "the toasts are a region")
     expect((await attribute("ts1", "aria-live")) === "polite", "that is read when it changes")
     expect(!(await present("ts1-toast-1")), "with nothing in it to begin with")
@@ -3244,6 +3296,26 @@ for (const engine of engines) {
   try {
     // One subject: an adapter's page, one way it is served. What it says is kept until its turn
     // to be printed, so the report reads in the same order however many are played at once.
+    // An adapter that draws some of the page is given the rest of it as room: sections of the
+    // heights the reference draws them at, so what is placed against the page (a popup under
+    // its trigger) is placed where the reference places it.
+    let heights: Promise<[string, number][]> | undefined
+    const room = () =>
+      (heights ??= (async () => {
+        const reference = adapters[0]!
+        const server = (servers[reference] ??= serve(reference))
+        const context = await browser.newContext({ viewport: { width: 1000, height: 800 } })
+        const page = await context.newPage()
+        await page.goto(`http://localhost:${server.port}/`)
+        await page.waitForSelector("main")
+        const read = await page.evaluate(() =>
+          [...document.querySelectorAll<HTMLElement>("main > section")].map(
+            (each): [string, number] => [each.dataset.fixture!, each.offsetHeight]
+          )
+        )
+        await context.close()
+        return read
+      })())
     const play = async (subject: (typeof subjects)[number], log: (line: string) => void) => {
       const { adapter, label, path } = subject
       const server = (servers[adapter] ??= serve(adapter))
@@ -3334,6 +3406,24 @@ for (const engine of engines) {
         })
         await page.goto(`http://localhost:${server.port}${path}`)
         await page.waitForSelector("main")
+        if (adapter === "web" && adapters[0] !== "web") {
+          await page.evaluate(
+            (sections) => {
+              const main = document.querySelector("main")!
+              const own = (wanted: string) =>
+                main.querySelector(`:scope > [data-fixture="${wanted}"]`)
+              sections.forEach(([section, height], at) => {
+                if (own(section)) return
+                const spacer = document.createElement("section")
+                spacer.dataset.fixture = section
+                spacer.style.cssText = `box-sizing: border-box; height: ${height}px; display: block`
+                const after = sections.slice(at + 1).find(([later]) => own(later))
+                main.insertBefore(spacer, after ? own(after[0]) : null)
+              })
+            },
+            await room()
+          )
+        }
         const id = (testid: string) => page.locator(`[data-testid="${testid}"]`)
         const run: Run = {
           page,

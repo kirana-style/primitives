@@ -172,8 +172,12 @@ export function createSlider(
     if (!controlElement || !inset.peek()) return sizes.set(undefined)
     const side = orientation.peek() === "vertical" ? "height" : "width"
     const list: number[] = []
-    for (const [index, element] of thumbs) list[index] = element.getBoundingClientRect()[side]
-    sizes.set({ control: controlElement.getBoundingClientRect()[side], thumbs: list })
+    // To a thousandth of a pixel: WebKit's box has a seventh digit that changes with where
+    // the page is scrolled, and the share written from it would change with it.
+    const length = (element: HTMLElement) =>
+      Math.round(element.getBoundingClientRect()[side] * 1000) / 1000
+    for (const [index, element] of thumbs) list[index] = length(element)
+    sizes.set({ control: length(controlElement), thumbs: list })
   }
 
   /** Measures when an element of the slider changes size, while it is in the page. */

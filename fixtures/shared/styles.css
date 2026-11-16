@@ -605,3 +605,32 @@ section[data-fixture="slider"] {
 .thumb-inside {
   margin: 0;
 }
+
+.number-group {
+  display: inline-flex;
+  gap: 2px;
+}
+.number-group input {
+  width: 80px;
+}
+.arrowed {
+  position: relative;
+  overflow: visible;
+  max-height: none;
+}
+.arrowed-list {
+  max-height: 120px;
+  overflow-y: auto;
+}
+.scroll-arrow {
+  inset-inline: 0;
+  z-index: 1;
+  height: 12px;
+  background: #eee;
+}
+.scroll-arrow[data-direction="up"] {
+  top: 0;
+}
+.scroll-arrow[data-direction="down"] {
+  bottom: 0;
+}

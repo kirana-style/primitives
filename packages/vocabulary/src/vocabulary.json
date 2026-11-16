@@ -2689,6 +2689,480 @@
         }
       }
     },
+    "numberField": {
+      "parts": {
+        "root": {
+          "description": "Groups the number field's parts.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "group": {
+          "description": "What holds the input and its buttons, as one control.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "input": {
+          "description": "The text input: it takes what its locale writes a number with.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "increment": {
+          "description": "A button that steps the number up. Held, it goes on.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        },
+        "decrement": {
+          "description": "A button that steps the number down. Held, it goes on.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {}
+        }
+      }
+    },
+    "autocomplete": {
+      "parts": {
+        "input": {
+          "description": "The text input: its text is the value, and what is typed asks for suggestions.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "trigger": {
+          "description": "A button that opens and closes the list.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "positioner": {
+          "description": "Places the list against the input. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          }
+        },
+        "popup": {
+          "description": "The list of items.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "item": {
+          "description": "One suggestion: chosen, its text is written into the input.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on the chosen item.",
+              "selector": "[data-selected]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the item the pointer or the keyboard is on.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "empty": {
+          "description": "What is shown when no item is.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "clear": {
+          "description": "A button that empties the input and the value.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "calendar": {
       "parts": {
         "root": {
@@ -2938,6 +3412,26 @@
                 "left": "[data-swipe-direction=\"left\"]",
                 "right": "[data-swipe-direction=\"right\"]"
               }
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed it.",
+              "selector": "[data-swipe-dismiss]"
+            },
+            "expanded": {
+              "attribute": "data-expanded",
+              "description": "Present while it rests whole, of several snap points.",
+              "selector": "[data-expanded]"
+            },
+            "nestedDrawerOpen": {
+              "attribute": "data-nested-drawer-open",
+              "description": "Present while another drawer is open over it.",
+              "selector": "[data-nested-drawer-open]"
+            },
+            "nestedDrawerSwiping": {
+              "attribute": "data-nested-drawer-swiping",
+              "description": "Present while a drawer over it is dragged.",
+              "selector": "[data-nested-drawer-swiping]"
             }
           },
           "exclusive": [
@@ -2957,6 +3451,9 @@
             "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
             "--drawer-snap-point-offset": "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.",
             "--drawer-height": "Its height.",
+            "--nested-drawers": "How many drawers are open over it.",
+            "--drawer-frontmost-height": "The height of the drawer in front of every other, while this one is open.",
+            "--drawer-swipe-strength": "Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner.",
             "--drawer-width": "Its width."
           }
         },
@@ -3920,6 +4417,104 @@
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
           }
+        },
+        "list": {
+          "description": "The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "scrollUpArrow": {
+          "description": "In the page while there is more of the list above: it scrolls the list while the pointer moves over it.",
+          "states": {
+            "direction": {
+              "attribute": "data-direction",
+              "description": "The way it scrolls the list.",
+              "values": {
+                "up": "[data-direction=\"up\"]",
+                "down": "[data-direction=\"down\"]"
+              }
+            },
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while there is more of the list its way.",
+              "selector": "[data-visible]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the trigger the list is on; `none` when it lies over the trigger.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]",
+                "none": "[data-side=\"none\"]"
+              }
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "scrollDownArrow": {
+          "description": "In the page while there is more of the list below: it scrolls the list while the pointer moves over it.",
+          "states": {
+            "direction": {
+              "attribute": "data-direction",
+              "description": "The way it scrolls the list.",
+              "values": {
+                "up": "[data-direction=\"up\"]",
+                "down": "[data-direction=\"down\"]"
+              }
+            },
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while there is more of the list its way.",
+              "selector": "[data-visible]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the trigger the list is on; `none` when it lies over the trigger.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]",
+                "none": "[data-side=\"none\"]"
+              }
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
         },
         "popup": {
           "description": "The list of items.",

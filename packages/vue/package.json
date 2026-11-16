@@ -33,6 +33,8 @@
     "./input": "./src/input.ts",
     "./label": "./src/label.ts",
     "./command": "./src/command.ts",
+    "./number-field": "./src/number-field.ts",
+    "./autocomplete": "./src/autocomplete.ts",
     "./calendar": "./src/calendar.ts",
     "./drawer": "./src/drawer.ts",
     "./message-scroller": "./src/message-scroller.ts",

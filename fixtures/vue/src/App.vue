@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import {
   Calendar,
+  Autocomplete,
   Command,
   DateField,
   Input,
   Label,
+  NumberField,
   Drawer,
   MessageScroller,
   Autosize,
@@ -80,6 +82,8 @@ const ROWS = {
   },
 }
 const COMMANDS = ["New", "Open", "Print"]
+const PLACES = ["Oslo", "Osaka", "Paris"]
+const LINES = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)
 const LOAD = ["load"]
 const controlled = ref(false)
 const alerts = ref(false)
@@ -99,6 +103,8 @@ const shares = ref("25,75")
 const slide = ref("0")
 const drawn = ref("closed")
 const born = ref("none")
+const qty = ref("5")
+const place = ref("")
 const named = ref("")
 const did = ref("none")
 const dated = ref("none")
@@ -1176,6 +1182,67 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
               >
                 <Select.ItemText :data-testid="`s3-${each}-text`">{{ each }}</Select.ItemText>
               </Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+      <NumberField.Root
+        id="nf1"
+        name="qty"
+        :default-value="5"
+        :min="0"
+        :max="10"
+        data-testid="nf1"
+        @value-change="(next: number | null) => (qty = String(next))"
+      >
+        <NumberField.Group class="number-group" data-testid="nf1-group">
+          <NumberField.Decrement data-testid="nf1-down">-</NumberField.Decrement>
+          <NumberField.Input aria-label="Quantity" data-testid="nf1-input" />
+          <NumberField.Increment data-testid="nf1-up">+</NumberField.Increment>
+        </NumberField.Group>
+      </NumberField.Root>
+      <output data-testid="nf1-output">{{ qty }}</output>
+      <Autocomplete.Root id="ac1" name="place" @value-change="(next: string) => (place = next)">
+        <Autocomplete.Input aria-label="Place" data-testid="ac1-input" />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner :side-offset="4" data-testid="ac1-positioner">
+            <Autocomplete.Popup class="popup" aria-label="Places" data-testid="ac1-popup">
+              <Autocomplete.Item
+                v-for="each in PLACES"
+                :id="`ac1-${each}`"
+                :key="each"
+                :value="each"
+                class="item"
+                :data-testid="`ac1-${each}`"
+              >
+                {{ each }}
+              </Autocomplete.Item>
+              <Autocomplete.Empty data-testid="ac1-empty">No place</Autocomplete.Empty>
+            </Autocomplete.Popup>
+          </Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+      <output data-testid="ac1-output">{{ place }}</output>
+      <Select.Root id="s4" default-value="Row 1">
+        <Select.Trigger data-testid="s4-trigger">
+          <Select.Value data-testid="s4-value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner :side-offset="4" data-testid="s4-positioner">
+            <Select.Popup class="popup arrowed" data-testid="s4-popup">
+              <Select.ScrollUpArrow class="scroll-arrow" data-testid="s4-up" />
+              <Select.List class="arrowed-list" data-testid="s4-list">
+                <Select.Item
+                  v-for="each in LINES"
+                  :key="each"
+                  :value="each"
+                  class="item"
+                  :data-testid="`s4-${each}`"
+                >
+                  <Select.ItemText>{{ each }}</Select.ItemText>
+                </Select.Item>
+              </Select.List>
+              <Select.ScrollDownArrow class="scroll-arrow" data-testid="s4-down" />
             </Select.Popup>
           </Select.Positioner>
         </Select.Portal>

@@ -27,8 +27,9 @@ export interface ItemAlignment {
   place(given: {
     trigger: HTMLElement
     positioner: HTMLElement
-    /** What scrolls: the list. */
     popup: HTMLElement
+    /** What scrolls: the popup, or the list inside it. */
+    scroller: HTMLElement
     /** The item's text and the trigger's, when both are in the page. */
     text?: HTMLElement | undefined
     value?: HTMLElement | undefined
@@ -47,7 +48,9 @@ export interface ItemAlignment {
  * The measures are Base UI's, so a design written for it lies the same.
  */
 export function createItemAlignment(): ItemAlignment {
-  let placed: { positioner: HTMLElement; popup: HTMLElement; transform: string } | undefined
+  let placed:
+    | { positioner: HTMLElement; popup: HTMLElement; scroller: HTMLElement; transform: string }
+    | undefined
   // Whether the list is as tall as it may be: from then on a scroll is only a scroll.
   let full = false
 
@@ -57,20 +60,20 @@ export function createItemAlignment(): ItemAlignment {
   }
 
   return {
-    place({ trigger, positioner, popup, text, value, rtl }) {
+    place({ trigger, positioner, popup, scroller, text, value, rtl }) {
       const page = trigger.ownerDocument
       const view = page.defaultView
       if (!view) return false
       // Pinched in, a browser's own viewport is not the page's: the usual place is kept.
       if ((view.visualViewport?.scale ?? 1) !== 1) return false
       full = false
-      popup.scrollTop = 0
+      scroller.scrollTop = 0
       {
         const own = view.getComputedStyle(positioner)
         const list = view.getComputedStyle(popup)
         const at = trigger.getBoundingClientRect()
         const box = positioner.getBoundingClientRect()
-        const scrollHeight = popup.scrollHeight
+        const scrollHeight = scroller.scrollHeight
         const border = Number.parseFloat(list.borderBottomWidth) || 0
         const marginTop = Number.parseFloat(own.marginTop) || 10
         const marginBottom = Number.parseFloat(own.marginBottom) || 10
@@ -113,7 +116,7 @@ export function createItemAlignment(): ItemAlignment {
         setGeometry(positioner, "margin-bottom", `${marginBottom}px`)
         setGeometry(popup, "height", "100%")
 
-        const end = scrollEnd(popup)
+        const end = scrollEnd(scroller)
         const fromTop = scrollTop >= end - NEAR
         if (fromTop) height = Math.min(viewport, box.height) - (scrollTop - end)
         if (
@@ -125,7 +128,7 @@ export function createItemAlignment(): ItemAlignment {
           return false
         }
 
-        placed = { positioner, popup, transform: positioner.style.transform }
+        placed = { positioner, popup, scroller, transform: positioner.style.transform }
         const width = page.documentElement.clientWidth
         setGeometry(positioner, "position", "fixed")
         setGeometry(positioner, "transform", "none")
@@ -142,11 +145,11 @@ export function createItemAlignment(): ItemAlignment {
             box.height >= viewport - marginTop - marginBottom ? "0px" : `${room}px`
           )
           setGeometry(positioner, "height", `${height}px`)
-          popup.scrollTop = scrollEnd(popup)
+          scroller.scrollTop = scrollEnd(scroller)
         } else {
           setGeometry(positioner, "top", "auto")
           setGeometry(positioner, "bottom", "0px")
-          popup.scrollTop = scrollTop
+          scroller.scrollTop = scrollTop
         }
         if (middle !== undefined) {
           // It grows from where the item is.
@@ -159,7 +162,7 @@ export function createItemAlignment(): ItemAlignment {
     },
     scrolled() {
       if (!placed || full) return
-      const { positioner, popup } = placed
+      const { positioner, popup, scroller } = placed
       const view = positioner.ownerDocument.defaultView
       if (!view) return
       const fromTop = positioner.style.top === "0px"
@@ -173,28 +176,28 @@ export function createItemAlignment(): ItemAlignment {
           (Number.parseFloat(own.marginBottom) || 0),
         greatest(view.getComputedStyle(popup))
       )
-      const end = scrollEnd(popup)
+      const end = scrollEnd(scroller)
       // How far the list is from the end it grows away from.
-      const left = fromTop ? end - popup.scrollTop : popup.scrollTop
+      const left = fromTop ? end - scroller.scrollTop : scroller.scrollTop
       if (left <= NEAR) {
         const more = clamp(left, 0, room - now)
         if (more > 0) setGeometry(positioner, "height", `${now + more}px`)
-        popup.scrollTop = fromTop ? scrollEnd(popup) : 0
+        scroller.scrollTop = fromTop ? scrollEnd(scroller) : 0
         if (room - (now + more) <= NEAR) full = true
         return
       }
       const next = Math.min(now + left, room)
       let to: number | undefined
       if (room - next > NEAR) to = fromTop ? Infinity : 0
-      else if (fromBottom && popup.scrollTop < end)
-        to = popup.scrollTop - (left - (now + left - room))
+      else if (fromBottom && scroller.scrollTop < end)
+        to = scroller.scrollTop - (left - (now + left - room))
       const tall = Math.ceil(next)
       if (tall !== 0) setGeometry(positioner, "height", `${tall}px`)
       if (to !== undefined) {
         // Its bounds changed with its height.
-        const target = clamp(to, 0, scrollEnd(popup))
+        const target = clamp(to, 0, scrollEnd(scroller))
         // Nearly there is there: a write that changes nothing would be heard as a scroll.
-        if (Math.abs(popup.scrollTop - target) > NEAR) popup.scrollTop = target
+        if (Math.abs(scroller.scrollTop - target) > NEAR) scroller.scrollTop = target
       }
       if (tall >= room - NEAR) full = true
     },

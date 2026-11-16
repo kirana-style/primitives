@@ -1,12 +1,19 @@
 import { defined, within } from "@kirana-ui/core"
-import type { PositionOptions } from "@kirana-ui/core"
+import type { Part, PositionOptions } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
+import type { Select as Controller, SelectProps, SelectScrollArrow } from "@kirana-ui/core/select"
 import { createContext, useContext, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { Portal as BodyPortal, useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import {
+  Portal as BodyPortal,
+  useController,
+  useMount,
+  useOptions,
+  usePart,
+  useSignal,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
@@ -87,6 +94,34 @@ function Positioner({
 }
 
 const Popup = (props: PartComponentProps) => usePart(useSelect("Popup").popup, "div", props)
+/** The items' own box inside the popup, when the popup also holds scroll arrows. */
+const List = (props: PartComponentProps) => usePart(useSelect("List").list, "div", props)
+
+function ScrollArrowElement({
+  arrow,
+  ...props
+}: PartComponentProps & { arrow: SelectScrollArrow }): ReactElement | null {
+  useMount(arrow)
+  const mounted = useSignal(arrow.mounted)
+  return mounted ? <ArrowPart part={arrow.part} {...props} /> : null
+}
+
+const ArrowPart = ({ part, ...props }: PartComponentProps & { part: Part }) =>
+  usePart(part, "div", props)
+
+/** In the page while there is more of the list above: it scrolls it while the pointer moves over it. */
+function ScrollUpArrow(props: PartComponentProps): ReactElement {
+  const controller = useSelect("ScrollUpArrow")
+  const arrow = useMemo(() => controller.scrollArrow("up"), [controller])
+  return <ScrollArrowElement arrow={arrow} {...props} />
+}
+
+/** In the page while there is more of the list below. */
+function ScrollDownArrow(props: PartComponentProps): ReactElement {
+  const controller = useSelect("ScrollDownArrow")
+  const arrow = useMemo(() => controller.scrollArrow("down"), [controller])
+  return <ScrollArrowElement arrow={arrow} {...props} />
+}
 
 export interface ItemProps extends PartComponentProps {
   value: unknown
@@ -131,6 +166,9 @@ export const Select = {
   Portal,
   Positioner,
   Popup,
+  List,
+  ScrollUpArrow,
+  ScrollDownArrow,
   Item,
   ItemText,
   ItemIndicator,

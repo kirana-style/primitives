@@ -1,5 +1,7 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
+import { createAutocomplete } from "@kirana-ui/core/autocomplete"
+import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
@@ -182,6 +184,35 @@ const part =
     <Part part={useCombobox()[name]} tag={tag} {...props} />
   )
 
+export type AutocompleteRootProps = Omit<AutocompleteProps, "id"> & {
+  id?: string
+  children?: JSX.Element
+}
+
+/** A combobox whose text is the value: the list only suggests. */
+function AutocompleteRoot(props: AutocompleteRootProps): JSX.Element {
+  const generated = createUniqueId()
+  const field = useContext(FieldContext)
+  const made = controller(within(createAutocomplete, { field }), () => ({
+    id: props.id ?? generated,
+    value: props.value,
+    defaultValue: props.defaultValue,
+    open: props.open,
+    defaultOpen: props.defaultOpen,
+    mode: props.mode,
+    filter: props.filter,
+    openOnInputClick: props.openOnInputClick,
+    disabled: props.disabled,
+    required: props.required,
+    name: props.name,
+    form: props.form,
+    virtualized: props.virtualized,
+    onValueChange: (value: string, details: ChangeDetails) => props.onValueChange?.(value, details),
+    onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
+  }))
+  return <Context.Provider value={made}>{props.children}</Context.Provider>
+}
+
 export const Combobox = {
   Root,
   Input: part("input", "input"),
@@ -197,4 +228,16 @@ export const Combobox = {
   Item,
   ItemIndicator,
   Empty,
+}
+
+export const Autocomplete = {
+  Root: AutocompleteRoot,
+  Input: Combobox.Input,
+  Trigger: Combobox.Trigger,
+  Clear: Combobox.Clear,
+  Portal: Combobox.Portal,
+  Positioner: Combobox.Positioner,
+  Popup: Combobox.Popup,
+  Item: Combobox.Item,
+  Empty: Combobox.Empty,
 }

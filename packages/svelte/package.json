@@ -109,6 +109,14 @@
       "svelte": "./src/command.ts",
       "default": "./src/command.ts"
     },
+    "./number-field": {
+      "svelte": "./src/number-field.ts",
+      "default": "./src/number-field.ts"
+    },
+    "./autocomplete": {
+      "svelte": "./src/autocomplete.ts",
+      "default": "./src/autocomplete.ts"
+    },
     "./calendar": {
       "svelte": "./src/calendar.ts",
       "default": "./src/calendar.ts"

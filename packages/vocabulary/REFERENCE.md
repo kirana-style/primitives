@@ -1122,6 +1122,163 @@ One command.
 
 A line between groups. Hidden while something is typed.
 
+## NumberField
+
+### NumberField.Root
+
+Groups the number field's parts.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+### NumberField.Group
+
+What holds the input and its buttons, as one control.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+### NumberField.Input
+
+The text input: it takes what its locale writes a number with.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+### NumberField.Increment
+
+A button that steps the number up. Held, it goes on.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+### NumberField.Decrement
+
+A button that steps the number down. Held, it goes on.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+## Autocomplete
+
+### Autocomplete.Input
+
+The text input: its text is the value, and what is typed asks for suggestions.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the list is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Autocomplete.Trigger
+
+A button that opens and closes the list.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the list is open. |
+| `data-disabled` | Present when it is disabled. |
+
+### Autocomplete.Positioner
+
+Places the list against the input. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Autocomplete.Popup
+
+The list of items.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-empty` | Present when no item is shown for what was typed. |
+
+### Autocomplete.Item
+
+One suggestion: chosen, its text is written into the input.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on the chosen item. |
+| `data-highlighted` | Present on the item the pointer or the keyboard is on. |
+| `data-disabled` | Present when it is disabled. |
+
+### Autocomplete.Empty
+
+What is shown when no item is.
+
+### Autocomplete.Clear
+
+A button that empties the input and the value.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
 ## Calendar
 
 ### Calendar.Root
@@ -1231,6 +1388,10 @@ The drawer. A design moves it by what it says of the drag, and gives it `touch-a
 | `data-nested-dialog-open` | Present when another dialog is open above this one. |
 | `data-swiping` | Present while the drawer is dragged. |
 | `data-swipe-direction` (up, down, left, right) | The way it is dragged to close it. |
+| `data-swipe-dismiss` | Present once a drag has closed it. |
+| `data-expanded` | Present while it rests whole, of several snap points. |
+| `data-nested-drawer-open` | Present while another drawer is open over it. |
+| `data-nested-drawer-swiping` | Present while a drawer over it is dragged. |
 
 | Variable | Holds |
 | --- | --- |
@@ -1240,6 +1401,9 @@ The drawer. A design moves it by what it says of the drag, and gives it `touch-a
 | `--drawer-swipe-progress` | How far it has been dragged, of its own size: 0 to 1. |
 | `--drawer-snap-point-offset` | How far from whole it rests, towards the edge it closes at: 0px at its largest snap point. |
 | `--drawer-height` | Its height. |
+| `--nested-drawers` | How many drawers are open over it. |
+| `--drawer-frontmost-height` | The height of the drawer in front of every other, while this one is open. |
+| `--drawer-swipe-strength` | Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner. |
 | `--drawer-width` | Its width. |
 
 ### Drawer.Title
@@ -1694,6 +1858,34 @@ Places the list against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Select.List
+
+The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.
+
+### Select.ScrollUpArrow
+
+In the page while there is more of the list above: it scrolls the list while the pointer moves over it.
+
+| Attribute | When |
+| --- | --- |
+| `data-direction` (up, down) | The way it scrolls the list. |
+| `data-visible` | Present while there is more of the list its way. |
+| `data-side` (top, right, bottom, left, none) | The side of the trigger the list is on; `none` when it lies over the trigger. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+### Select.ScrollDownArrow
+
+In the page while there is more of the list below: it scrolls the list while the pointer moves over it.
+
+| Attribute | When |
+| --- | --- |
+| `data-direction` (up, down) | The way it scrolls the list. |
+| `data-visible` | Present while there is more of the list its way. |
+| `data-side` (top, right, bottom, left, none) | The side of the trigger the list is on; `none` when it lies over the trigger. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ### Select.Popup
 

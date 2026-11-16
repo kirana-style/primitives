@@ -133,6 +133,60 @@ describe("a select's list over its trigger", () => {
     await expect.poll(() => positioner.getBoundingClientRect().top).toBe(10)
   })
 
+  it("has arrows while there is more of the list their way, which scroll it under a pointer", async () => {
+    const { made, trigger, popup, placed } = select({ top: 40, count: 60, align: false })
+    const up = made.scrollArrow("up")
+    const down = made.scrollArrow("down")
+    onTestFinished(up.mount())
+    onTestFinished(down.mount())
+    const strip = document.createElement("div")
+    strip.style.height = "10px"
+    popup.parentElement!.append(strip)
+    onTestFinished(() => strip.remove())
+    onTestFinished(bind(strip, down.part))
+    expect(down.mounted.peek()).toBe(false)
+    trigger.click()
+    await placed()
+    await expect.poll(() => down.mounted.peek()).toBe(true)
+    expect(up.mounted.peek()).toBe(false)
+    expect(strip.getAttribute("data-direction")).toBe("down")
+    expect(strip.getAttribute("data-side")).toBe("bottom")
+    expect(strip.hasAttribute("data-visible")).toBe(true)
+    // A pointer that moves over it: a row at a time, for as long as it stays.
+    const before = popup.scrollTop
+    strip.dispatchEvent(new MouseEvent("mousemove", { movementY: 1, bubbles: true }))
+    await expect.poll(() => popup.scrollTop).toBeGreaterThan(before + 30)
+    await expect.poll(() => up.mounted.peek()).toBe(true)
+    strip.dispatchEvent(new MouseEvent("mouseleave"))
+    const stopped = popup.scrollTop
+    await new Promise((resolve) => setTimeout(resolve, 120))
+    expect(popup.scrollTop).toBe(stopped)
+    popup.scrollTop = popup.scrollHeight
+    await expect.poll(() => down.mounted.peek()).toBe(false)
+  })
+
+  it("is the listbox when the popup holds a list, and the list is what scrolls", async () => {
+    const { made, trigger, popup, placed } = select({ top: 40, count: 60, align: false })
+    const list = document.createElement("div")
+    list.style.cssText = "max-height: 100px; overflow-y: auto"
+    list.append(...popup.children)
+    popup.style.overflow = "visible"
+    popup.style.maxHeight = "none"
+    popup.append(list)
+    onTestFinished(bind(list, made.list))
+    const down = made.scrollArrow("down")
+    onTestFinished(down.mount())
+    expect(list.getAttribute("role")).toBe("listbox")
+    expect(popup.getAttribute("role")).toBe("presentation")
+    expect(trigger.getAttribute("aria-controls") ?? "s-list").toBe("s-list")
+    trigger.click()
+    await placed()
+    expect(trigger.getAttribute("aria-controls")).toBe("s-list")
+    await expect.poll(() => down.mounted.peek()).toBe(true)
+    list.scrollTop = list.scrollHeight
+    await expect.poll(() => down.mounted.peek()).toBe(false)
+  })
+
   it("lies beside a trigger that is at the viewport's edge", async () => {
     const { trigger, positioner, placed } = select({ top: 4 })
     trigger.click()

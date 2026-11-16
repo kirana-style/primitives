@@ -92,6 +92,14 @@ import {
   KuiCommandSeparator,
   KuiInput,
   KuiLabel,
+  KuiNumberField,
+  KuiNumberFieldDecrement,
+  KuiNumberFieldGroup,
+  KuiNumberFieldIncrement,
+  KuiNumberFieldInput,
+  KuiSelectList,
+  KuiSelectScrollDownArrow,
+  KuiSelectScrollUpArrow,
   KuiDateField,
   KuiDateFieldInput,
   KuiDateFieldSegment,
@@ -310,6 +318,14 @@ import {
     KuiCommandSeparator,
     KuiInput,
     KuiLabel,
+    KuiNumberField,
+    KuiNumberFieldDecrement,
+    KuiNumberFieldGroup,
+    KuiNumberFieldIncrement,
+    KuiNumberFieldInput,
+    KuiSelectList,
+    KuiSelectScrollDownArrow,
+    KuiSelectScrollUpArrow,
     KuiDateField,
     KuiDateFieldInput,
     KuiDateFieldSegment,
@@ -1707,6 +1723,75 @@ import {
             </div>
           </ng-template>
         </ng-container>
+        <div
+          kuiNumberField
+          [kuiId]="'nf1'"
+          [name]="'qty'"
+          [defaultValue]="5"
+          [min]="0"
+          [max]="10"
+          data-testid="nf1"
+          (valueChanged)="qty.set('' + $event.value)"
+        >
+          <div kuiNumberFieldGroup class="number-group" data-testid="nf1-group">
+            <button kuiNumberFieldDecrement data-testid="nf1-down">-</button>
+            <input kuiNumberFieldInput aria-label="Quantity" data-testid="nf1-input" />
+            <button kuiNumberFieldIncrement data-testid="nf1-up">+</button>
+          </div>
+        </div>
+        <output data-testid="nf1-output">{{ qty() }}</output>
+        <ng-container
+          kuiAutocomplete
+          [kuiId]="'ac1'"
+          [name]="'place'"
+          (valueChanged)="place.set('' + $event.value)"
+        >
+          <input kuiComboboxInput aria-label="Place" data-testid="ac1-input" />
+          <ng-template kuiComboboxPortal>
+            <div kuiComboboxPositioner [sideOffset]="4" data-testid="ac1-positioner">
+              <div kuiComboboxPopup class="popup" aria-label="Places" data-testid="ac1-popup">
+                @for (each of places; track each) {
+                  <div
+                    kuiComboboxItem
+                    [value]="each"
+                    [kuiId]="'ac1-' + each"
+                    class="item"
+                    [attr.data-testid]="'ac1-' + each"
+                  >
+                    {{ each }}
+                  </div>
+                }
+                <div *kuiComboboxEmpty data-testid="ac1-empty">No place</div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <output data-testid="ac1-output">{{ place() }}</output>
+        <ng-container kuiSelect [kuiId]="'s4'" [defaultValue]="'Row 1'">
+          <button kuiSelectTrigger data-testid="s4-trigger">
+            <span kuiSelectValue data-testid="s4-value"></span>
+          </button>
+          <ng-template kuiSelectPortal>
+            <div kuiSelectPositioner [sideOffset]="4" data-testid="s4-positioner">
+              <div kuiSelectPopup class="popup arrowed" data-testid="s4-popup">
+                <div *kuiSelectScrollUpArrow class="scroll-arrow" data-testid="s4-up"></div>
+                <div kuiSelectList class="arrowed-list" data-testid="s4-list">
+                  @for (each of numbered; track each) {
+                    <div
+                      kuiSelectItem
+                      [value]="each"
+                      class="item"
+                      [attr.data-testid]="'s4-' + each"
+                    >
+                      <span kuiSelectItemText>{{ each }}</span>
+                    </div>
+                  }
+                </div>
+                <div *kuiSelectScrollDownArrow class="scroll-arrow" data-testid="s4-down"></div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
       </section>
       <section data-fixture="field">
         <form
@@ -1856,6 +1941,8 @@ export class App {
   protected readonly slide = signal("0")
   protected readonly drawn = signal("closed")
   protected readonly born = signal("none")
+  protected readonly qty = signal("5")
+  protected readonly place = signal("")
   protected readonly named = signal("")
   protected readonly did = signal("none")
   protected readonly dated = signal("none")
@@ -1894,6 +1981,8 @@ export class App {
   protected readonly alerts = signal<boolean | undefined>(false)
   protected readonly plans = ["free", "pro", "team", "max"]
   protected readonly commands = ["New", "Open", "Print"]
+  protected readonly places = ["Oslo", "Osaka", "Paris"]
+  protected readonly numbered = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)
   protected readonly load = ["load"]
   protected readonly first = signal(0)
   protected readonly ran = signal<unknown>("none")

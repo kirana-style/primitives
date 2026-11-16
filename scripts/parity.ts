@@ -131,6 +131,8 @@ const IDIOM: Record<
     without: {
       AlertDialog: "the dialog's directives with another selector on the root: `kuiAlertDialog`",
       Drawer: "the dialog's directives with another selector on the root: `kuiDrawer`",
+      Autocomplete:
+        "the combobox's directives with another selector on the root: `kuiAutocomplete`",
       ContextMenu:
         "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
     },

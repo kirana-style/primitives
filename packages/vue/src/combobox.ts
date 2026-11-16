@@ -1,5 +1,7 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
+import { createAutocomplete } from "@kirana-ui/core/autocomplete"
+import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox as Controller, ComboboxProps } from "@kirana-ui/core/combobox"
 import { defineComponent, h, inject, provide, useId } from "vue"
@@ -190,6 +192,59 @@ const Empty = defineComponent({
   },
 })
 
+/** A combobox whose text is the value: `v-model` is the text. The list only suggests. */
+const AutocompleteRoot = defineComponent({
+  name: "AutocompleteRoot",
+  props: {
+    modelValue: String,
+    defaultValue: String,
+    open: optional(Boolean),
+    defaultOpen: Boolean,
+    mode: String as PropType<AutocompleteProps["mode"]>,
+    filter: {
+      type: null as unknown as PropType<AutocompleteProps["filter"]>,
+      default: undefined,
+    },
+    openOnInputClick: Boolean,
+    disabled: Boolean,
+    required: Boolean,
+    name: String,
+    form: String,
+    virtualized: Object as PropType<AutocompleteProps["virtualized"]>,
+    id: String,
+  },
+  emits: ["update:modelValue", "valueChange", "update:open", "openChange"],
+  setup(props, { slots, emit }) {
+    const generated = useId()
+    scope.provide(
+      controller(within(createAutocomplete, { field: useFieldAround() }), () => ({
+        id: props.id ?? generated,
+        value: props.modelValue,
+        defaultValue: props.defaultValue,
+        open: props.open,
+        defaultOpen: props.defaultOpen,
+        mode: props.mode,
+        filter: props.filter,
+        openOnInputClick: props.openOnInputClick,
+        disabled: props.disabled,
+        required: props.required,
+        name: props.name,
+        form: props.form,
+        virtualized: props.virtualized,
+        onValueChange(value: string, details: ChangeDetails) {
+          emit("valueChange", value, details)
+          if (!details.canceled) emit("update:modelValue", value)
+        },
+        onOpenChange(open: boolean, details: ChangeDetails) {
+          emit("openChange", open, details)
+          if (!details.canceled) emit("update:open", open)
+        },
+      }))
+    )
+    return () => slots.default?.()
+  },
+})
+
 export const Combobox = {
   Root,
   Input: partComponent("ComboboxInput", "input", () => scope.use().input),
@@ -211,4 +266,16 @@ export const Combobox = {
   Item,
   ItemIndicator,
   Empty,
+}
+
+export const Autocomplete = {
+  Root: AutocompleteRoot,
+  Input: Combobox.Input,
+  Trigger: Combobox.Trigger,
+  Clear: Combobox.Clear,
+  Portal: Combobox.Portal,
+  Positioner: Combobox.Positioner,
+  Popup: Combobox.Popup,
+  Item: Combobox.Item,
+  Empty: Combobox.Empty,
 }

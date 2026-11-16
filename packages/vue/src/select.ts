@@ -2,7 +2,16 @@ import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
-import { defineComponent, h, inject, provide, useId, watchEffect } from "vue"
+import {
+  defineComponent,
+  h,
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  useId,
+  watchEffect,
+} from "vue"
 import type { InjectionKey, PropType } from "vue"
 
 import { positionerComponent } from "./popover.ts"
@@ -148,6 +157,24 @@ const Positioner = defineComponent({
   },
 })
 
+function scrollArrow(name: string, direction: "up" | "down") {
+  return defineComponent({
+    name,
+    inheritAttrs: false,
+    setup(_props, { attrs, slots }) {
+      const arrow = scope.use().scrollArrow(direction)
+      let stop: (() => void) | undefined
+      onMounted(() => {
+        stop = arrow.mount()
+      })
+      onBeforeUnmount(() => stop?.())
+      const mounted = fromSignal(arrow.mounted)
+      const Element = partComponent(`${name}Element`, "div", () => arrow.part)
+      return () => (mounted.value ? h(Element, attrs, slots) : null)
+    },
+  })
+}
+
 export const Select = {
   Root,
   Trigger: partComponent("SelectTrigger", "button", () => scope.use().trigger),
@@ -155,6 +182,12 @@ export const Select = {
   Portal: portalComponent("SelectPortal", () => scope.use().mounted),
   Positioner,
   Popup: partComponent("SelectPopup", "div", () => scope.use().popup),
+  /** The items' own box inside the popup, when the popup also holds scroll arrows. */
+  List: partComponent("SelectList", "div", () => scope.use().list),
+  /** In the page while there is more of the list above: it scrolls it under a moving pointer. */
+  ScrollUpArrow: scrollArrow("SelectScrollUpArrow", "up"),
+  /** In the page while there is more of the list below. */
+  ScrollDownArrow: scrollArrow("SelectScrollDownArrow", "down"),
   Item,
   ItemText,
   ItemIndicator,

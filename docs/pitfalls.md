@@ -457,6 +457,22 @@ note. Three places hold them:
   server draws it where it will be, and it is never hidden for a measure. Once measured, its
   centre is written as `--position`, as Base UI writes it; a design that animates a thumb's
   `translate` would see that change.
+- **A number is typed as text and held as a number.** While it is typed the input says what
+  was typed (`1234.50` is not rewritten to `1,234.5` under the caret); the number follows
+  where the text is one, and is written out whole when focus leaves. A step from two
+  decimals is rounded to the decimals of its step: `0.2 + 0.1` is `0.3`.
+- **A form's reset writes an input's default after the event.** A control that writes its
+  own text on reset sets the input's `defaultValue` first, or the browser blanks it a moment
+  later (`number-field.test.ts`, "goes back to the number it began with").
+- **In an autocomplete, Enter is the typed text's** until an arrow has gone to a suggestion:
+  no suggestion is highlighted for having been typed at, and the form is submitted with
+  what the input says. A combobox, where an item must be chosen, highlights the first.
+- **Scroll arrows need the list to be its own box.** An element placed in what scrolls goes
+  with what scrolls: with arrows, the items are in `Select.List`, which is then the listbox
+  and what scrolls, and the popup holds the list and the arrows.
+- **A drawer over a drawer is said by the one under it** (`--nested-drawers`,
+  `--drawer-frontmost-height`, `data-nested-drawer-open`), from the order they opened in:
+  no provider, and no drawer needs to be drawn inside another.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

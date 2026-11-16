@@ -31,11 +31,26 @@ export const drawerVocabulary = defineComponent({
         ["up", "down", "left", "right"],
         "The way it is dragged to close it."
       ),
+      swipeDismiss: state("data-swipe-dismiss", "Present once a drag has closed it."),
+      expanded: state("data-expanded", "Present while it rests whole, of several snap points."),
+      nestedDrawerOpen: state(
+        "data-nested-drawer-open",
+        "Present while another drawer is open over it."
+      ),
+      nestedDrawerSwiping: state(
+        "data-nested-drawer-swiping",
+        "Present while a drawer over it is dragged."
+      ),
     },
     variables: {
       ...dialogVocabulary.popup.variables,
       ...MOVED,
       "--drawer-height": "Its height.",
+      "--nested-drawers": "How many drawers are open over it.",
+      "--drawer-frontmost-height":
+        "The height of the drawer in front of every other, while this one is open.",
+      "--drawer-swipe-strength":
+        "Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner.",
       "--drawer-width": "Its width.",
     },
   },

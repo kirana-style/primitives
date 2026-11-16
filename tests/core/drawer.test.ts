@@ -174,6 +174,23 @@ describe("a drawer", () => {
     expect(under.sheet.style.getPropertyValue("--drawer-frontmost-height")).toBe("200px")
   })
 
+  it("rests at a length as well as a share, and says the place as it was given", async () => {
+    const heard: unknown[] = []
+    const { sheet, made } = drawer({
+      snapPoints: ["80px", "50%", 1],
+      onSnapPointChange: (value) => void heard.push(value),
+    })
+    // 80 of its 200 pixels show: it lies 120 from whole.
+    expect(made.snapPoint.peek()).toBe(0.4)
+    expect(sheet.style.getPropertyValue("--drawer-snap-point-offset")).toBe("120px")
+    made.setSnapPoint("50%", because("test"))
+    expect(sheet.style.getPropertyValue("--drawer-snap-point-offset")).toBe("100px")
+    // Dragged up to the whole: the caller hears the place as they wrote it.
+    await pull(sheet, { y: -90 })
+    expect(heard).toEqual(["50%", 1])
+    expect(sheet.style.getPropertyValue("--drawer-snap-point-offset")).toBe("0px")
+  })
+
   it("says it is whole at the largest of several snap points", () => {
     const { sheet, made } = drawer({ snapPoints: [0.4, 1] })
     expect(sheet.hasAttribute("data-expanded")).toBe(false)
@@ -305,7 +322,7 @@ describe("a drawer", () => {
     })
 
     it("is dragged to the place nearest where it is let go", async () => {
-      const heard: [number, string][] = []
+      const heard: [number | string, string][] = []
       const { sheet, made, movement } = drawer({
         ...TWO,
         onSnapPointChange: (value, details) => void heard.push([value, details.reason]),

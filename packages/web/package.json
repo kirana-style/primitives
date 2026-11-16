@@ -1,0 +1,29 @@
+{
+  "name": "@kirana-ui/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kirana UI Primitives as custom elements, for a page with no framework",
+  "license": "MIT",
+  "author": "The Kirana authors",
+  "type": "module",
+  "sideEffects": [
+    "./src/index.ts",
+    "./src/checkbox.ts",
+    "./src/collapsible.ts",
+    "./src/dialog.ts",
+    "./src/switch.ts",
+    "./src/tabs.ts"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./runtime": "./src/runtime.ts",
+    "./checkbox": "./src/checkbox.ts",
+    "./collapsible": "./src/collapsible.ts",
+    "./dialog": "./src/dialog.ts",
+    "./switch": "./src/switch.ts",
+    "./tabs": "./src/tabs.ts"
+  },
+  "dependencies": {
+    "@kirana-ui/core": "workspace:*"
+  }
+}

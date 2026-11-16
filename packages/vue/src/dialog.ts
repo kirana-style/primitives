@@ -2,7 +2,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
-import type { DrawerSide } from "@kirana-ui/core/drawer"
+import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
 import { defineComponent, useId } from "vue"
 import type { PropType } from "vue"
@@ -83,9 +83,9 @@ const DrawerRoot = defineComponent({
     modal: { type: Boolean, default: true },
     dismissible: { type: Boolean, default: true },
     swipeDirection: String as PropType<DrawerSide>,
-    snapPoints: Array as PropType<readonly number[]>,
-    snapPoint: optional(Number),
-    defaultSnapPoint: Number,
+    snapPoints: Array as PropType<readonly DrawerSnapPoint[]>,
+    snapPoint: optional([Number, String] as PropType<DrawerSnapPoint>),
+    defaultSnapPoint: [Number, String] as PropType<DrawerSnapPoint>,
     id: String,
   },
   emits: ["update:open", "openChange", "update:snapPoint", "snapPointChange"],
@@ -102,7 +102,7 @@ const DrawerRoot = defineComponent({
         snapPoints: props.snapPoints,
         snapPoint: props.snapPoint,
         defaultSnapPoint: props.defaultSnapPoint,
-        onSnapPointChange(snapPoint: number, details: ChangeDetails) {
+        onSnapPointChange(snapPoint: DrawerSnapPoint, details: ChangeDetails) {
           emit("snapPointChange", snapPoint, details)
           if (!details.canceled) emit("update:snapPoint", snapPoint)
         },

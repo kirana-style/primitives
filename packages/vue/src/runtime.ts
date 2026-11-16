@@ -16,7 +16,7 @@ import {
   shallowRef,
   watchEffect,
 } from "vue"
-import type { Component, InjectionKey, ShallowRef, VNode } from "vue"
+import type { Component, InjectionKey, PropType, ShallowRef, VNode } from "vue"
 
 /** A core signal as a Vue ref, read-only: tracked by whatever reads `.value`. */
 export function fromSignal<T>(source: ReadonlySignal<T>): Readonly<ShallowRef<T>> {
@@ -144,12 +144,31 @@ export function partComponent(name: string, tag: string, resolve: () => Part): C
   })
 }
 
+const PORTAL_CONTAINER: InjectionKey<() => HTMLElement | null | undefined> =
+  Symbol("PortalContainer")
+
+/**
+ * Says where every popup inside it is drawn, the popups those open included: an element of
+ * the page (a shadow root's host, a full-screen element) in place of `<body>`.
+ */
+export const PortalProvider = defineComponent({
+  name: "PortalProvider",
+  props: {
+    container: { type: null as unknown as PropType<HTMLElement | null>, default: undefined },
+  },
+  setup(props, { slots }) {
+    provide(PORTAL_CONTAINER, () => props.container)
+    return () => slots.default?.()
+  },
+})
+
 /** Its slot in a container at the end of the page, while `mounted`. */
 export function portalComponent(name: string, mounted: () => ReadonlySignal<boolean>): Component {
   return defineComponent({
     name,
     setup(_props, { slots }) {
       const shown = fromSignal(mounted())
+      const container = inject(PORTAL_CONTAINER, undefined)
       // Only in a browser, once the page is in it: a server draws no portal, so hydration must
       // find none either. One that opens later is drawn at once.
       const ready = shallowRef(false)
@@ -158,7 +177,11 @@ export function portalComponent(name: string, mounted: () => ReadonlySignal<bool
       })
       return () =>
         shown.value && ready.value
-          ? h(Teleport, { to: "body" }, h("div", { "data-kirana-portal": "" }, slots.default?.()))
+          ? h(
+              Teleport,
+              { to: container?.() ?? "body" },
+              h("div", { "data-kirana-portal": "" }, slots.default?.())
+            )
           : null
     },
   })

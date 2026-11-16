@@ -14,6 +14,7 @@
     "./vocabulary": "./src/vocabulary.ts",
     "./authoring": "./src/authoring.ts",
     "./testing": "./src/testing.ts",
+    "./agent": "./src/agent.ts",
     "./accordion": "./src/accordion.ts",
     "./alert-dialog": "./src/alert-dialog.ts",
     "./avatar": "./src/avatar.ts",

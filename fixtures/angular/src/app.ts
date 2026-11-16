@@ -92,6 +92,7 @@ import {
   KuiCommandSeparator,
   KuiInput,
   KuiLabel,
+  KuiPortalProvider,
   KuiComboboxGroup,
   KuiComboboxGroupLabel,
   KuiComboboxSeparator,
@@ -333,6 +334,7 @@ import {
     KuiCommandSeparator,
     KuiInput,
     KuiLabel,
+    KuiPortalProvider,
     KuiComboboxGroup,
     KuiComboboxGroupLabel,
     KuiComboboxSeparator,
@@ -1976,6 +1978,19 @@ import {
               </div>
             </div>
           </ng-template>
+        </ng-container>
+        <div #pcbox data-testid="pc1-box"></div>
+        <ng-container kuiPortalProvider [container]="pcbox">
+          <ng-container kuiPopover [kuiId]="'pc1'">
+            <button kuiPopoverTrigger data-testid="pc1-trigger">Open in the box</button>
+            <ng-template kuiPopoverPortal>
+              <div kuiPopoverPositioner [sideOffset]="4" data-testid="pc1-positioner">
+                <div kuiPopoverPopup class="popup" aria-label="In the box" data-testid="pc1-popup">
+                  Inside
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
         </ng-container>
       </section>
       <section data-fixture="field">

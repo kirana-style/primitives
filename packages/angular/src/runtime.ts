@@ -2,6 +2,7 @@ import {
   DestroyRef,
   ElementRef,
   Injectable,
+  InjectionToken,
   PLATFORM_ID,
   TemplateRef,
   ViewContainerRef,
@@ -106,6 +107,11 @@ export function mounted(): (controller: { mount(): () => void }) => void {
   return (controller) => destroy.onDestroy(controller.mount())
 }
 
+/** Where the popups inside are drawn, when a `kuiPortalProvider` around them says. */
+export const KUI_PORTAL_CONTAINER = new InjectionToken<() => HTMLElement | null | undefined>(
+  "KuiPortalContainer"
+)
+
 /**
  * For a structural directive (`*kuiCollapsiblePanel`): its template is in the page only while
  * `show` holds, so a closed panel is really gone, its content with it. `part` goes on the
@@ -124,6 +130,7 @@ export function presentWhile(
   const destroy = inject(DestroyRef)
   const server = onServer()
   const put = binder()
+  const where = inject(KUI_PORTAL_CONTAINER, { optional: true })
   return (
     show: ReadonlySignal<boolean> | (() => boolean),
     part?: Part,
@@ -163,7 +170,7 @@ export function presentWhile(
           outlet = document.createElement("div")
           outlet.setAttribute("data-kirana-portal", "")
           outlet.append(...nodes)
-          document.body.appendChild(outlet)
+          ;(where?.() ?? document.body).appendChild(outlet)
         }
         // The content first, then the part: a panel is measured with its content in it.
         view.detectChanges()

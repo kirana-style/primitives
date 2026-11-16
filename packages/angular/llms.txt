@@ -16,9 +16,11 @@ Generated from the library's own definitions (`bun scripts/llms.ts`): what is he
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
 - An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
 - A popup is drawn in a portal at the end of `<body>` and placed by its `Positioner`, which carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`.
-- Every change callback is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic), and `details.cancel()` to keep the value as it was.
+- Every change callback is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was.
 - A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.
 - A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.
+- `PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.
+- An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/core/agent` gives `snapshot()`, `act({ steps })` and `query()`; what it changes reaches the same callbacks with `details.source === "agent"`. Mark what needs a person with `data-agent-confirm`, what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`.
 
 ## Components
 
@@ -684,10 +686,10 @@ Props of its root:
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
 - `swipeDirection?: DrawerSide`: The way it is dragged to close it: the edge it came from. Default: `"down"`.
-- `snapPoints?: readonly number[]`: Places it rests at, each the share of itself that shows: `[0.4, 1]` is a drawer that opens two fifths shown and is dragged up to the whole. Without any, it is whole.
-- `snapPoint?: number`: Which of them it rests at.
-- `defaultSnapPoint?: number`: Where it opens. Default: the smallest.
-- `onSnapPointChange?: ((snapPoint: number, details: ChangeDetails) => void)`
+- `snapPoints?: readonly DrawerSnapPoint[]`: Places it rests at, each how much of itself shows: a share (`0.4`, or `"40%"`) or a length (`"148px"`, `"20rem"`). `[0.4, 1]` is a drawer that opens two fifths shown and is dragged up to the whole. Without any, it is whole.
+- `snapPoint?: DrawerSnapPoint`: Which of them it rests at, as it was given.
+- `defaultSnapPoint?: DrawerSnapPoint`: Where it opens. Default: the smallest.
+- `onSnapPointChange?: ((snapPoint: DrawerSnapPoint, details: ChangeDetails) => void)`
 
 Attributes and CSS variables, by part:
 
@@ -1303,6 +1305,12 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+
+### PortalProvider
+
+```
+import { KuiPortalProvider } from "@kirana-ui/angular"
+```
 
 ### Progress
 

@@ -162,9 +162,11 @@ const SHARED = [
   'A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.',
   "An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.",
   "A popup is drawn in a portal at the end of `<body>` and placed by its `Positioner`, which carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`.",
-  "Every change callback is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic), and `details.cancel()` to keep the value as it was.",
+  "Every change callback is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was.",
   "A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.",
   "A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.",
+  "`PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.",
+  'An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/core/agent` gives `snapshot()`, `act({ steps })` and `query()`; what it changes reaches the same callbacks with `details.source === "agent"`. Mark what needs a person with `data-agent-confirm`, what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`.',
 ]
 
 const IDIOMS: Record<string, Idiom> = {

@@ -72,7 +72,8 @@ export function faults(
   options: FaultOptions = {}
 ): string[] {
   const found: string[] = []
-  const allow = new Set(["data-testid", ...(options.allow ?? [])])
+  // The page's own test ids, and the mark on what the library draws at the page's end.
+  const allow = new Set(["data-testid", "data-kirana-portal", ...(options.allow ?? [])])
   const free = new Set([...FREE, ...(options.free ?? [])])
   const page = root instanceof Document ? root : (root.ownerDocument ?? document)
   const called = (element: Element) =>

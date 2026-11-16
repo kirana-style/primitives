@@ -4,6 +4,7 @@ import {
   Show,
   children,
   createComputed,
+  createContext,
   createRenderEffect,
   createMemo,
   createSignal,
@@ -13,6 +14,7 @@ import {
   runWithOwner,
   splitProps,
   untrack,
+  useContext,
 } from "solid-js"
 import type { JSX } from "solid-js"
 import { Dynamic, Portal as SolidPortal, isServer } from "solid-js/web"
@@ -130,12 +132,36 @@ export function Into(props: { target: HTMLElement; children?: JSX.Element }): JS
   return null
 }
 
+const PortalContainer = createContext<() => HTMLElement | null | undefined>()
+
+export interface PortalProviderProps {
+  /** Where the popups inside are drawn; the end of `<body>` while it is not given. */
+  container?: HTMLElement | null | undefined
+  children?: JSX.Element
+}
+
+/**
+ * Says where every popup inside it is drawn, the popups those open included: an element of
+ * the page (a shadow root's host, a full-screen element) in place of `<body>`.
+ */
+export function PortalProvider(props: PortalProviderProps): JSX.Element {
+  return (
+    <PortalContainer.Provider value={() => props.container}>
+      {props.children}
+    </PortalContainer.Provider>
+  )
+}
+
 /** Its children in a container at the end of the page, while `mounted`. */
 export function Portal(props: { mounted: ReadonlySignal<boolean>; children?: JSX.Element }) {
   const shown = fromSignal(untrack(() => props.mounted))
+  const container = useContext(PortalContainer)
   return (
     <Show when={shown()}>
-      <SolidPortal ref={(container) => container.setAttribute("data-kirana-portal", "")}>
+      <SolidPortal
+        mount={container?.() ?? undefined}
+        ref={(outlet) => outlet.setAttribute("data-kirana-portal", "")}
+      >
         {props.children}
       </SolidPortal>
     </Show>

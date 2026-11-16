@@ -250,6 +250,7 @@ export {
 export { KuiFieldset, KuiFieldsetLegend } from "./fieldset"
 export { KuiForm } from "./form"
 export { KuiDirection, injectDirection } from "./direction"
+export { KuiPortalProvider } from "./portal"
 // What a part's directive is made with, for a component of one's own.
 export {
   KuiIds,

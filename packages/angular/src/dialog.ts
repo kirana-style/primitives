@@ -11,7 +11,7 @@ import type { OnInit } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
-import type { DrawerSide } from "@kirana-ui/core/drawer"
+import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog } from "@kirana-ui/core/dialog"
 
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
@@ -31,11 +31,11 @@ export class KuiDialog implements OnInit {
   /** With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`. */
   readonly swipeDirection = input<DrawerSide>()
   /** With `kuiDrawer`: places it rests at, each the share of itself that shows. */
-  readonly snapPoints = input<readonly number[]>()
+  readonly snapPoints = input<readonly DrawerSnapPoint[]>()
   /** With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`. */
-  readonly snapPoint = model<number | undefined>(undefined)
-  readonly defaultSnapPoint = input<number>()
-  readonly snapPointChanged = output<{ snapPoint: number; details: ChangeDetails }>()
+  readonly snapPoint = model<DrawerSnapPoint | undefined>(undefined)
+  readonly defaultSnapPoint = input<DrawerSnapPoint>()
+  readonly snapPointChanged = output<{ snapPoint: DrawerSnapPoint; details: ChangeDetails }>()
   readonly kuiId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
@@ -54,7 +54,7 @@ export class KuiDialog implements OnInit {
     snapPoints: this.snapPoints(),
     snapPoint: this.snapPoint(),
     defaultSnapPoint: this.defaultSnapPoint(),
-    onSnapPointChange: (snapPoint: number, details: ChangeDetails) => {
+    onSnapPointChange: (snapPoint: DrawerSnapPoint, details: ChangeDetails) => {
       this.snapPointChanged.emit({ snapPoint, details })
       // Written back only to a caller who holds it.
       if (!details.canceled && this.snapPoint() !== undefined) {

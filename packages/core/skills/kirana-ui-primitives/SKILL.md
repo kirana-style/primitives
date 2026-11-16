@@ -65,6 +65,17 @@ part is `{ props, attach }`: `props` a signal of attributes (HTML names) and han
 controller is made. Hold a value in `bindable`, and decide from `details.canceled`, never by
 reading the value back.
 
+## Letting an agent use the page
+
+`@kirana-ui/core/agent`: `createAgent({ allow })` gives `snapshot()` (each component's ref,
+kind, label, state and actions), `act({ steps: [{ ref, action, args }] })` and `query()`. A
+step goes through the component's own handlers: its callback runs with
+`details.source === "agent"` and may cancel. Give every control an accessible name (a
+`<label>`, `aria-label`): it is how an agent finds it. Mark a destructive control
+`data-agent-confirm="what it does"`, private regions `data-agent-hidden`, secrets
+`data-agent-secret`. `agentTools` are the three tools as JSON Schema for your model;
+`registerTools(agent, { allow })` gives them to a browser's own agent where it has one.
+
 ## Checking the result
 
 `@kirana-ui/core/testing`, in a real browser test:

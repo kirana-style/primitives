@@ -9,6 +9,7 @@ import {
   Label,
   NumberField,
   Pagination,
+  PortalProvider,
   Drawer,
   MessageScroller,
   Autosize,
@@ -105,6 +106,7 @@ const shares = ref("25,75")
 const slide = ref("0")
 const drawn = ref("closed")
 const born = ref("none")
+const box = ref<HTMLElement | null>(null)
 const due = ref("2026-03-14")
 const paged = ref("1")
 const qty = ref("5")
@@ -1005,7 +1007,7 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
       <Drawer.Root
         id="dw2"
         :snap-points="[0.5, 1]"
-        @snap-point-change="(next: number) => (rests = String(next))"
+        @snap-point-change="(next: number | string) => (rests = String(next))"
       >
         <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
         <Drawer.Portal>
@@ -1388,6 +1390,19 @@ function press(event: Event & { preventKiranaHandler?: () => void }) {
           </Autocomplete.Positioner>
         </Autocomplete.Portal>
       </Autocomplete.Root>
+      <div ref="box" data-testid="pc1-box"></div>
+      <PortalProvider :container="box">
+        <Popover.Root id="pc1">
+          <Popover.Trigger data-testid="pc1-trigger">Open in the box</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner :side-offset="4" data-testid="pc1-positioner">
+              <Popover.Popup class="popup" aria-label="In the box" data-testid="pc1-popup">
+                Inside
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </PortalProvider>
     </section>
     <section data-fixture="field">
       <Form

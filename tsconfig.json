@@ -18,6 +18,7 @@
     "packages/react/src",
     "packages/react/examples",
     "packages/vue/src",
+    "packages/web/src",
     "packages/vocabulary/src",
     "tests",
     "docs/examples",

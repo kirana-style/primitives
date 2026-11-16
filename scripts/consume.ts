@@ -37,10 +37,14 @@ const catalog = (
 ).workspaces.catalog
 // What the project depends on: each tarball, or each package at the released version.
 const names = released
-  ? readdirSync(path.join(root, "packages")).map((stage) => ({
-      name: `@kirana-ui/${stage}`,
-      spec: released,
-    }))
+  ? readdirSync(path.join(root, "packages"))
+      // Not released yet: its npm name is not reserved, and `scripts/pack.ts` does not pack
+      // it. Both change together, with its trusted publisher.
+      .filter((stage) => stage !== "web")
+      .map((stage) => ({
+        name: `@kirana-ui/${stage}`,
+        spec: released,
+      }))
   : tarballs.map((file) => ({
       name: `@kirana-ui/${file.replace(/^kirana-ui-/, "").replace(/-\d.*$/, "")}`,
       spec: `file:${path.join(packed, file)}`,

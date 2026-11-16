@@ -29,7 +29,7 @@
     if (!by.canceled) open = next
   }
 
-  function rest(next: number, by: ChangeDetails) {
+  function rest(next: number | string, by: ChangeDetails) {
     onSnapPointChange?.(next, by)
     // Written back only to a caller who holds it.
     if (!by.canceled && snapPoint !== undefined) snapPoint = next

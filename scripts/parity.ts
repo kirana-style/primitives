@@ -191,7 +191,8 @@ const entries = (adapter: string) =>
     .filter((each) => each !== ".")
     .sort()
 const components = entries("core").filter(
-  (each) => !["./reactivity", "./dom", "./vocabulary", "./authoring", "./testing"].includes(each)
+  (each) =>
+    !["./reactivity", "./dom", "./vocabulary", "./authoring", "./testing", "./agent"].includes(each)
 )
 for (const adapter of ["react", "vue", "solid", "svelte"]) {
   // Each adapter's own: what its parts are made with, for a component of one's own.

@@ -2895,6 +2895,29 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await until(() => present("ac2-popup"), false, "Enter takes it")
     expect((await id("ac2-input").inputValue()) === "Paris", "and writes it into the input")
   },
+  async container({ page, snapshot, id, present }) {
+    await id("pc1-trigger").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    await id("pc1-trigger").click()
+    const from = Date.now()
+    while (!(await present("pc1-popup")) && Date.now() - from < 3000) await page.waitForTimeout(25)
+    await settled(page)
+    expect(await present("pc1-popup"), "a popup inside a portal provider opens")
+    const where = await id("pc1-popup").evaluate(
+      (element) =>
+        element.closest("[data-kirana-portal]")?.parentElement?.getAttribute("data-testid") ?? null
+    )
+    expect(
+      where === "pc1-box",
+      `and is drawn in the provider's container, not the page's end (${where})`
+    )
+    await snapshot("a popup in a container")
+    await page.keyboard.press("Escape")
+    const closing = Date.now()
+    while ((await present("pc1-popup")) && Date.now() - closing < 3000)
+      await page.waitForTimeout(25)
+    await settled(page)
+    expect(!(await present("pc1-popup")), "Escape closes it")
+  },
   async command({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)

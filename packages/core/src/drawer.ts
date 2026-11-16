@@ -13,22 +13,26 @@ export interface DrawerProps extends DialogProps {
   /** The way it is dragged to close it: the edge it came from. Default: `"down"`. */
   swipeDirection?: DrawerSide | undefined
   /**
-   * Places it rests at, each the share of itself that shows: `[0.4, 1]` is a drawer that
-   * opens two fifths shown and is dragged up to the whole. Without any, it is whole.
+   * Places it rests at, each how much of itself shows: a share (`0.4`, or `"40%"`) or a
+   * length (`"148px"`, `"20rem"`). `[0.4, 1]` is a drawer that opens two fifths shown and is
+   * dragged up to the whole. Without any, it is whole.
    */
-  snapPoints?: readonly number[] | undefined
-  /** Which of them it rests at. */
-  snapPoint?: number | undefined
+  snapPoints?: readonly DrawerSnapPoint[] | undefined
+  /** Which of them it rests at, as it was given. */
+  snapPoint?: DrawerSnapPoint | undefined
   /** Where it opens. Default: the smallest. */
-  defaultSnapPoint?: number | undefined
-  onSnapPointChange?: ((snapPoint: number, details: ChangeDetails) => void) | undefined
+  defaultSnapPoint?: DrawerSnapPoint | undefined
+  onSnapPointChange?: ((snapPoint: DrawerSnapPoint, details: ChangeDetails) => void) | undefined
 }
+
+/** How much of a drawer shows at a place it rests: a share of it, or a length. */
+export type DrawerSnapPoint = number | string
 
 export interface Drawer extends Dialog {
   /** The share of the drawer that shows where it rests: 1 without snap points. */
   readonly snapPoint: ReadonlySignal<number>
   /** Moves it to another of its snap points: what a button or a key of the caller's does. */
-  setSnapPoint(snapPoint: number, details: ChangeDetails): void
+  setSnapPoint(snapPoint: DrawerSnapPoint, details: ChangeDetails): void
 }
 
 /** How far a press moves before it is a drag, in pixels. */
@@ -71,22 +75,53 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
   const dialog = createDialog(props)
   const way = computed(() => props.get().swipeDirection ?? "down")
   /** The places it rests at, the smallest first; the whole drawer when none is given. */
-  const points = computed(() => {
-    const given = (props.get().snapPoints ?? []).filter((each) => each > 0 && each <= 1)
-    return given.length > 0 ? given.toSorted((x, y) => x - y) : [1]
+  // Its length along the way it is dragged, once it is in the page: a length is a share of it.
+  const extent = signal(0)
+  /** A place as the share of the drawer that shows. A length is one once the drawer is measured. */
+  function shareOf(given: DrawerSnapPoint): number {
+    if (typeof given === "number") return given
+    const amount = Number.parseFloat(given)
+    if (!Number.isFinite(amount)) return 1
+    if (given.endsWith("%")) return amount / 100
+    const size = extent.get()
+    // Not measured (a server, or before it is drawn): whole, and placed once it is.
+    if (size <= 0) return 1
+    const root =
+      given.endsWith("rem") && typeof document !== "undefined"
+        ? Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+        : 1
+    return Math.min(1, (amount * root) / size)
+  }
+  /** The places it rests at as given, by their shares; the whole drawer when none is given. */
+  const places = computed(() => {
+    const given = (props.get().snapPoints ?? [])
+      .map((each) => ({ given: each, share: shareOf(each) }))
+      .filter((each) => each.share > 0 && each.share <= 1)
+    return given.length > 0
+      ? given.toSorted((x, y) => x.share - y.share)
+      : [{ given: 1 as DrawerSnapPoint, share: 1 }]
   })
-  const snap = bindable<number>({
+  /** Their shares, the smallest first. */
+  const points = computed(() => places.get().map((each) => each.share))
+  // With none asked for it rests at the smallest, which for a length is known once the
+  // drawer has been measured: so "none" is kept, not answered early.
+  const snap = bindable<DrawerSnapPoint | undefined>({
     value: () => props.get().snapPoint,
-    defaultValue: props.peek().defaultSnapPoint ?? points.peek()[0]!,
-    onChange: (value, by) => props.peek().onSnapPointChange?.(value, by),
+    defaultValue: props.peek().defaultSnapPoint,
+    onChange: (value, by) => value !== undefined && props.peek().onSnapPointChange?.(value, by),
   })
   /** The one of its places nearest what is asked: a caller may hold a value that is none. */
   const resting = computed(() => {
-    const wanted = snap.get()
+    const asked = snap.get()
+    if (asked === undefined) return points.get()[0]!
+    const wanted = shareOf(asked)
     return points
       .get()
       .reduce((best, each) => (Math.abs(each - wanted) < Math.abs(best - wanted) ? each : best))
   })
+  /** A place as the caller wrote it. */
+  const givenOf = (share: number) =>
+    places.peek().find((each) => each.share === share)?.given ?? share
   const swiping = signal(false)
   // Whether a drag closed it: it then leaves from where it was let go.
   const dismissed = signal(false)
@@ -247,7 +282,7 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
       // It leaves from where it was let go: how far stays written through its exit.
       if (!by.canceled) return dismissed.set(true)
     } else {
-      snap.set(to, by)
+      snap.set(givenOf(to), by)
     }
     clear()
   }
@@ -335,6 +370,7 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
         // Its size, for a design that stacks drawers or moves the page behind one; where it
         // rests is a share of it.
         const size = () => {
+          extent.set(length())
           setGeometry(element, "--drawer-height", `${element.offsetHeight}px`)
           setGeometry(element, "--drawer-width", `${element.offsetWidth}px`)
           rest()

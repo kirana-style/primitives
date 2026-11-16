@@ -2,7 +2,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
-import type { DrawerSide } from "@kirana-ui/core/drawer"
+import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "solid-js"
@@ -77,10 +77,10 @@ export const AlertDialog = { ...Dialog, Root: AlertRoot }
 function DrawerRoot(
   props: RootProps & {
     swipeDirection?: DrawerSide
-    snapPoints?: readonly number[]
-    snapPoint?: number
-    defaultSnapPoint?: number
-    onSnapPointChange?: (snapPoint: number, details: ChangeDetails) => void
+    snapPoints?: readonly DrawerSnapPoint[]
+    snapPoint?: DrawerSnapPoint
+    defaultSnapPoint?: DrawerSnapPoint
+    onSnapPointChange?: (snapPoint: DrawerSnapPoint, details: ChangeDetails) => void
   }
 ): JSX.Element {
   const generated = createUniqueId()
@@ -94,7 +94,7 @@ function DrawerRoot(
     snapPoints: props.snapPoints,
     snapPoint: props.snapPoint,
     defaultSnapPoint: props.defaultSnapPoint,
-    onSnapPointChange: (snapPoint: number, details: ChangeDetails) =>
+    onSnapPointChange: (snapPoint: DrawerSnapPoint, details: ChangeDetails) =>
       props.onSnapPointChange?.(snapPoint, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))

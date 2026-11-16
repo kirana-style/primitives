@@ -8,6 +8,7 @@ import {
   Label,
   NumberField,
   Pagination,
+  PortalProvider,
   Drawer,
   MessageScroller,
   Autosize,
@@ -107,6 +108,7 @@ export function App() {
   const [slide, setSlide] = useState("0")
   const [drawn, setDrawn] = useState("closed")
   const [born, setBorn] = useState("none")
+  const [box, setBox] = useState<HTMLElement | null>(null)
   const [due, setDue] = useState("2026-03-14")
   const [paged, setPaged] = useState("1")
   const [qty, setQty] = useState("5")
@@ -1191,7 +1193,7 @@ export function App() {
         <Drawer.Root
           id="dw2"
           snapPoints={[0.5, 1]}
-          onSnapPointChange={(next: number) => setRests(String(next))}
+          onSnapPointChange={(next: number | string) => setRests(String(next))}
         >
           <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
           <Drawer.Portal>
@@ -1614,6 +1616,19 @@ export function App() {
             </Autocomplete.Positioner>
           </Autocomplete.Portal>
         </Autocomplete.Root>
+        <div ref={setBox} data-testid="pc1-box" />
+        <PortalProvider container={box}>
+          <Popover.Root id="pc1">
+            <Popover.Trigger data-testid="pc1-trigger">Open in the box</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner sideOffset={4} data-testid="pc1-positioner">
+                <Popover.Popup className="popup" aria-label="In the box" data-testid="pc1-popup">
+                  Inside
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </PortalProvider>
       </section>
       <section data-fixture="field">
         <Form

@@ -3,12 +3,14 @@
   import type { Snippet } from "svelte"
 
   import PortalContent from "./PortalContent.svelte"
+  import { usePortalContainer } from "./portal-context.ts"
 
   // Its children in a container at the end of the page, while `mounted`. Mounted there, not
   // moved there: an element that is moved loses focus. With `into`, they are children of that
   // element instead, with nothing around them.
   let { mounted, into, children }: { mounted: boolean; into?: HTMLElement; children?: Snippet } = $props()
   const context = getAllContexts()
+  const container = usePortalContainer()
 
   $effect(() => {
     if (!mounted) return
@@ -18,7 +20,7 @@
     }
     const target = document.createElement("div")
     target.setAttribute("data-kirana-portal", "")
-    document.body.appendChild(target)
+    ;(container?.() ?? document.body).appendChild(target)
     const content = mount(PortalContent, { target, props: { children }, context })
     return () => {
       void unmount(content)

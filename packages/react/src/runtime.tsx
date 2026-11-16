@@ -2,9 +2,11 @@ import { computed, mergeProps, sameProps, signal } from "@kirana-ui/core"
 import type { Part, PartProps, ReadonlySignal, Signal } from "@kirana-ui/core"
 import {
   cloneElement,
+  createContext,
   createElement,
   isValidElement,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useLayoutEffect,
@@ -240,10 +242,27 @@ export function useOwnText(part: Part): Part {
   )
 }
 
+const PortalContainer = createContext<HTMLElement | null | undefined>(undefined)
+
+export interface PortalProviderProps {
+  /** Where the popups inside are drawn; the end of `<body>` while it is not given. */
+  container?: HTMLElement | null | undefined
+  children?: ReactNode
+}
+
+/**
+ * Says where every popup inside it is drawn, the popups those open included: an element of
+ * the page (a shadow root's host, a full-screen element, a frame) in place of `<body>`.
+ */
+export function PortalProvider({ container, children }: PortalProviderProps): ReactElement {
+  return <PortalContainer.Provider value={container}>{children}</PortalContainer.Provider>
+}
+
 /** Its children in a container at the end of the page, once the page has hydrated. */
 export function Portal({ children }: { children?: ReactNode }): ReactElement | null {
+  const container = useContext(PortalContainer)
   const [ready, setReady] = useState(false)
   useIsomorphicLayoutEffect(() => setReady(true), [])
   if (!ready) return null
-  return createPortal(<div data-kirana-portal="">{children}</div>, document.body)
+  return createPortal(<div data-kirana-portal="">{children}</div>, container ?? document.body)
 }

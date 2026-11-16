@@ -9,6 +9,7 @@
     Label,
     NumberField,
     Pagination,
+    PortalProvider,
     Drawer,
     MessageScroller,
     Autosize,
@@ -104,6 +105,7 @@
   let slide = $state("0")
   let drawn = $state("closed")
   let born = $state("none")
+  let box = $state<HTMLElement | null>(null)
   let due = $state("2026-03-14")
   let paged = $state("1")
   let qty = $state("5")
@@ -1048,7 +1050,7 @@
     <Drawer.Root
       id="dw2"
       snapPoints={[0.5, 1]}
-      onSnapPointChange={(next: number) => (rests = String(next))}
+      onSnapPointChange={(next: number | string) => (rests = String(next))}
     >
       <Drawer.Trigger data-testid="dw2-trigger">Open a drawer that rests</Drawer.Trigger>
       <Drawer.Portal>
@@ -1425,6 +1427,19 @@
         </Autocomplete.Positioner>
       </Autocomplete.Portal>
     </Autocomplete.Root>
+    <div bind:this={box} data-testid="pc1-box"></div>
+    <PortalProvider container={box}>
+      <Popover.Root id="pc1">
+        <Popover.Trigger data-testid="pc1-trigger">Open in the box</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner sideOffset={4} data-testid="pc1-positioner">
+            <Popover.Popup class="popup" aria-label="In the box" data-testid="pc1-popup">
+              Inside
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    </PortalProvider>
   </section>
   <section data-fixture="field">
     <Form

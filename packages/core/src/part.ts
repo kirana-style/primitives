@@ -29,7 +29,8 @@ export interface ChangeDetails {
   readonly event: Event | undefined
   /**
    * What made it: a mouse, a finger, a pen, the keyboard, something that presses without a
-   * pointer (a screen reader, `element.click()`), or code with no event at all.
+   * pointer (a screen reader, `element.click()`), code with no event at all, or an agent
+   * acting through the bridge (`@kirana-ui/core/agent`).
    */
   readonly source: ChangeSource
   /** Keeps the value as it was. */
@@ -37,7 +38,30 @@ export interface ChangeDetails {
   readonly canceled: boolean
 }
 
-export type ChangeSource = "mouse" | "touch" | "pen" | "keyboard" | "virtual" | "programmatic"
+export type ChangeSource =
+  | "mouse"
+  | "touch"
+  | "pen"
+  | "keyboard"
+  | "virtual"
+  | "programmatic"
+  | "agent"
+
+// How many agent actions are under way: a change made while one is, is the agent's.
+let acting = 0
+
+/**
+ * Runs what an agent asked for. Every change a component makes while it runs says
+ * `source: "agent"`, so a caller's callback can tell it from a person's, and refuse it.
+ */
+export function asAgent<Result>(run: () => Result): Result {
+  acting++
+  try {
+    return run()
+  } finally {
+    acting--
+  }
+}
 
 /** What made an event, read from the event: nothing is remembered between events. */
 function sourceOf(event: Event | undefined): ChangeSource {
@@ -55,11 +79,13 @@ function sourceOf(event: Event | undefined): ChangeSource {
 
 export function details(reason: string, event?: Event): ChangeDetails {
   let canceled = false
+  // Known when the change is made: it may be read long after the agent's turn is over.
+  const agent = acting > 0
   return {
     reason,
     event,
     get source() {
-      return sourceOf(event)
+      return agent ? "agent" : sourceOf(event)
     },
     cancel() {
       canceled = true

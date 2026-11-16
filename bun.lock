@@ -197,6 +197,13 @@
         "vue": "^3.5.0",
       },
     },
+    "packages/web": {
+      "name": "@kirana-ui/web",
+      "version": "0.1.0",
+      "dependencies": {
+        "@kirana-ui/core": "workspace:*",
+      },
+    },
   },
   "trustedDependencies": [
     "esbuild",
@@ -431,6 +438,8 @@
     "@kirana-ui/vocabulary": ["@kirana-ui/vocabulary@workspace:packages/vocabulary"],
 
     "@kirana-ui/vue": ["@kirana-ui/vue@workspace:packages/vue"],
+
+    "@kirana-ui/web": ["@kirana-ui/web@workspace:packages/web"],
 
     "@lmdb/lmdb-darwin-arm64": ["@lmdb/lmdb-darwin-arm64@3.5.6", "", { "os": "darwin", "cpu": "arm64" }, "sha512-mY5FG4TjPAkY4P0w+OhHaUka5mDh2TX2WKYIwuKzJ1zeW3VvRgxdam/lGJTquI+bthTx5CSHDW+BAQCnNAzkEA=="],
 

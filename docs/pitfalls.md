@@ -503,6 +503,23 @@ note. Three places hold them:
 - **An empty state is a status.** What a combobox or a command list says when nothing
   matches has `role="status"`, so software that follows one reads it. It is in the page only
   while nothing matches: a design's padding on it takes no room otherwise.
+- **An agent asks the way a person presses.** The bridge clicks, types and sends keys to
+  the parts' own elements, inside `asAgent`, so a change goes through the component's
+  handlers and callback like any other and only its `source` differs. Whether a change is
+  the agent's is known when its details are made, not when they are read: a callback may
+  read them after the agent's turn is over.
+- **A length is a share once there is something to measure.** A drawer's snap point given
+  as `"148px"` is whole until the drawer is in the page: so "the smallest of its places" is
+  not decided when the controller is made, where a length looked like the largest.
+- **A part that starts out of the page is hidden from the start.** An effect that only acts
+  on a change of "mounted" did nothing for one that began unmounted: a custom element's
+  panel stayed in view. Its first state is written before the effect runs.
+- **A custom element is not a button.** It takes no focus and no key by itself. A
+  component's root is the custom element; its parts are the page's own elements, named by
+  an attribute, so a trigger is a `<button>` and nothing is wrapped.
+- **Popups go where their provider says.** Each adapter has one place a portal is made:
+  `PortalProvider` gives it another container than `<body>`, for every popup inside and the
+  popups those open.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

@@ -80,6 +80,12 @@ export interface Select<Value = unknown> {
    * arrows): it is then the listbox, and what scrolls.
    */
   readonly list: Part
+  /** Items that belong together; `id` is its element's, and what its label's is made from. */
+  group(id: string): SelectGroup
+  /** A label that is in no group: it names nothing, and is valid there. */
+  readonly groupLabel: Part
+  /** A line between groups. */
+  readonly separator: Part
   /** A strip at the list's top or bottom that scrolls it while the pointer moves over it. */
   scrollArrow(direction: "up" | "down"): SelectScrollArrow
   /** The hidden input that submits the value. Rendered only when the select has a name. */
@@ -94,6 +100,12 @@ export interface Select<Value = unknown> {
   selected(value: Value): ReadonlySignal<boolean>
 }
 
+/** Items that belong together, named by their label. */
+export interface SelectGroup {
+  readonly root: Part
+  readonly label: Part
+}
+
 /** In the page while there is more of the list its way, and through its exit. */
 export interface SelectScrollArrow {
   readonly mounted: ReadonlySignal<boolean>
@@ -106,6 +118,11 @@ const NOTHING = () => {}
 const NEAR = 1
 const NO_PROPS = computed(() => ({}))
 const INDICATOR_PROPS = computed(() => ({ "aria-hidden": "true" }))
+const LABEL: Part = { props: computed(() => ({ role: "presentation" })), attach: () => NOTHING }
+const SEPARATOR: Part = {
+  props: computed(() => ({ role: "separator", "aria-orientation": "horizontal" })),
+  attach: () => NOTHING,
+}
 
 export function createSelect<Value = unknown>(
   props: ReadonlySignal<SelectProps<Value>>,
@@ -448,6 +465,29 @@ export function createSelect<Value = unknown>(
           if (popup === element) popup = undefined
         }
       },
+    },
+    groupLabel: LABEL,
+    separator: SEPARATOR,
+    group(groupId) {
+      const labelled = signal(false)
+      const labelId = `${groupId}-label`
+      return {
+        root: {
+          props: computed(() => ({
+            id: groupId,
+            role: "group",
+            "aria-labelledby": labelled.get() ? labelId : undefined,
+          })),
+          attach: () => NOTHING,
+        },
+        label: {
+          props: computed(() => ({ id: labelId, role: "presentation" })),
+          attach() {
+            labelled.set(true)
+            return () => labelled.set(false)
+          },
+        },
+      }
     },
     list: {
       props: computed(() => ({ id: `${id}-list`, role: "listbox" })),

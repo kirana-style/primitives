@@ -1,8 +1,13 @@
 import { defined, within } from "@kirana-ui/core"
 import type { Part, PositionOptions } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller, SelectProps, SelectScrollArrow } from "@kirana-ui/core/select"
-import { createContext, useContext, useMemo } from "react"
+import type {
+  Select as Controller,
+  SelectGroup,
+  SelectProps,
+  SelectScrollArrow,
+} from "@kirana-ui/core/select"
+import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
@@ -94,6 +99,28 @@ function Positioner({
 }
 
 const Popup = (props: PartComponentProps) => usePart(useSelect("Popup").popup, "div", props)
+const GroupContext = createContext<SelectGroup | null>(null)
+
+/** Items that belong together, named by their `<Select.GroupLabel>`. */
+function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
+  const controller = useSelect("Group")
+  const generated = useId()
+  const group = useMemo(() => controller.group(id ?? generated), [controller, id, generated])
+  return (
+    <GroupContext.Provider value={group}>{usePart(group.root, "div", props)}</GroupContext.Provider>
+  )
+}
+
+/** A group's name. Outside a group it is plain text, and names nothing. */
+function GroupLabel(props: PartComponentProps): ReactElement {
+  const lone = useSelect("GroupLabel").groupLabel
+  return usePart(useContext(GroupContext)?.label ?? lone, "div", props)
+}
+
+/** A line between groups. */
+const Separator = (props: PartComponentProps) =>
+  usePart(useSelect("Separator").separator, "div", props)
+
 /** The items' own box inside the popup, when the popup also holds scroll arrows. */
 const List = (props: PartComponentProps) => usePart(useSelect("List").list, "div", props)
 
@@ -169,6 +196,9 @@ export const Select = {
   List,
   ScrollUpArrow,
   ScrollDownArrow,
+  Group,
+  GroupLabel,
+  Separator,
   Item,
   ItemText,
   ItemIndicator,

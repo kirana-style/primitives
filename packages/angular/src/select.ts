@@ -14,7 +14,7 @@ import type { OnInit } from "@angular/core"
 import { defined, effect as coreEffect } from "@kirana-ui/core"
 import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select } from "@kirana-ui/core/select"
+import type { Select, SelectGroup } from "@kirana-ui/core/select"
 
 import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
@@ -221,6 +221,44 @@ export class KuiSelectItemText implements OnInit {
 
   ngOnInit(): void {
     this.put(this.item.root.controller.itemText(this.item.value()))
+  }
+}
+
+/** Items that belong together, named by their `kuiSelectGroupLabel`. */
+@Directive({ selector: "[kuiSelectGroup]" })
+export class KuiSelectGroup implements OnInit {
+  readonly kuiId = input<string>()
+  group!: SelectGroup
+  private readonly root = inject(KuiSelect)
+  private readonly generated = inject(KuiIds).make()
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.group = this.root.controller.group(this.kuiId() ?? this.generated)
+    this.put(this.group.root)
+  }
+}
+
+/** Names the group it is in. With no group around it, it is plain text. */
+@Directive({ selector: "[kuiSelectGroupLabel]" })
+export class KuiSelectGroupLabel implements OnInit {
+  private readonly root = inject(KuiSelect)
+  private readonly around = inject(KuiSelectGroup, { optional: true })
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.around?.group.label ?? this.root.controller.groupLabel)
+  }
+}
+
+/** A line between groups. */
+@Directive({ selector: "[kuiSelectSeparator]" })
+export class KuiSelectSeparator implements OnInit {
+  private readonly root = inject(KuiSelect)
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.root.controller.separator)
   }
 }
 

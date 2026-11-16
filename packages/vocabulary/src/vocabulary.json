@@ -3163,6 +3163,384 @@
         }
       }
     },
+    "pagination": {
+      "parts": {
+        "root": {
+          "description": "The pages of a list, as a navigation.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "item": {
+          "description": "A page: pressed, it is the one shown.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on the page that is shown.",
+              "selector": "[data-selected]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "ellipsis": {
+          "description": "The mark for pages that are left out of the row.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "previous": {
+          "description": "Goes to the page before.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "next": {
+          "description": "Goes to the page after.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
+    "datePicker": {
+      "parts": {
+        "field": {
+          "description": "The field: a group of the date's parts.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when its value cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the date is outside what it takes, or is asked for and half typed.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "segment": {
+          "description": "One piece of the date: a part that is typed, or what stands between two.",
+          "states": {
+            "segment": {
+              "attribute": "data-segment",
+              "description": "Which piece it is.",
+              "values": {
+                "day": "[data-segment=\"day\"]",
+                "month": "[data-segment=\"month\"]",
+                "year": "[data-segment=\"year\"]",
+                "literal": "[data-segment=\"literal\"]"
+              }
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present on a part that is empty.",
+              "selector": "[data-placeholder]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the date is outside what it takes, or is asked for and half typed.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "trigger": {
+          "description": "The button that opens the popover, and what it is placed against.",
+          "states": {
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the popover is open.",
+              "selector": "[data-popup-open]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "positioner": {
+          "description": "Places the popup against the trigger. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          }
+        },
+        "popup": {
+          "description": "The popover itself.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {}
+        },
+        "calendar": {
+          "description": "The calendar.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when its value cannot be changed.",
+              "selector": "[data-readonly]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "heading": {
+          "description": "Names the month shown. Read out when it changes.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "previous": {
+          "description": "Shows the month before.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "next": {
+          "description": "Shows the month after.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "grid": {
+          "description": "The table of days: a grid the arrows move in.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "headCell": {
+          "description": "A column's heading: a day of the week.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "cell": {
+          "description": "A day's cell.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "selector": "[data-selected]"
+            },
+            "today": {
+              "attribute": "data-today",
+              "description": "Present on today.",
+              "selector": "[data-today]"
+            },
+            "outsideMonth": {
+              "attribute": "data-outside-month",
+              "description": "Present on the days of the month before and after that fill the first and last weeks.",
+              "selector": "[data-outside-month]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "unavailable": {
+              "attribute": "data-unavailable",
+              "description": "Present on a day that cannot be chosen.",
+              "selector": "[data-unavailable]"
+            },
+            "rangeStart": {
+              "attribute": "data-range-start",
+              "description": "Present on the first day of a range.",
+              "selector": "[data-range-start]"
+            },
+            "rangeEnd": {
+              "attribute": "data-range-end",
+              "description": "Present on the last day of a range.",
+              "selector": "[data-range-end]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        },
+        "day": {
+          "description": "The button for a day.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "selector": "[data-selected]"
+            },
+            "today": {
+              "attribute": "data-today",
+              "description": "Present on today.",
+              "selector": "[data-today]"
+            },
+            "outsideMonth": {
+              "attribute": "data-outside-month",
+              "description": "Present on the days of the month before and after that fill the first and last weeks.",
+              "selector": "[data-outside-month]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "unavailable": {
+              "attribute": "data-unavailable",
+              "description": "Present on a day that cannot be chosen.",
+              "selector": "[data-unavailable]"
+            },
+            "rangeStart": {
+              "attribute": "data-range-start",
+              "description": "Present on the first day of a range.",
+              "selector": "[data-range-start]"
+            },
+            "rangeEnd": {
+              "attribute": "data-range-end",
+              "description": "Present on the last day of a range.",
+              "selector": "[data-range-end]"
+            }
+          },
+          "exclusive": [],
+          "variables": {}
+        }
+      }
+    },
     "calendar": {
       "parts": {
         "root": {
@@ -4417,6 +4795,24 @@
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
           }
+        },
+        "group": {
+          "description": "Items that belong together, named by their label.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "groupLabel": {
+          "description": "The name of a group. Outside a group it is plain text, and names nothing.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
+        },
+        "separator": {
+          "description": "A line between groups.",
+          "states": {},
+          "exclusive": [],
+          "variables": {}
         },
         "list": {
           "description": "The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.",

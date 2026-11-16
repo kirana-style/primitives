@@ -9,6 +9,8 @@ import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller>()
+/** For a component made of this one's parts: a date picker. */
+export { Context as PopoverContext }
 
 function usePopover(): Controller {
   const made = useContext(Context)

@@ -1279,6 +1279,173 @@ A button that empties the input and the value.
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
 
+## Pagination
+
+### Pagination.Root
+
+The pages of a list, as a navigation.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Pagination.Item
+
+A page: pressed, it is the one shown.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on the page that is shown. |
+| `data-disabled` | Present when it is disabled. |
+
+### Pagination.Ellipsis
+
+The mark for pages that are left out of the row.
+
+### Pagination.Previous
+
+Goes to the page before.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Pagination.Next
+
+Goes to the page after.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+## DatePicker
+
+### DatePicker.Field
+
+The field: a group of the date's parts.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when its value cannot be changed. |
+| `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
+
+### DatePicker.Segment
+
+One piece of the date: a part that is typed, or what stands between two.
+
+| Attribute | When |
+| --- | --- |
+| `data-segment` (day, month, year, literal) | Which piece it is. |
+| `data-placeholder` | Present on a part that is empty. |
+| `data-disabled` | Present when it is disabled. |
+| `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
+
+### DatePicker.Trigger
+
+The button that opens the popover, and what it is placed against.
+
+| Attribute | When |
+| --- | --- |
+| `data-popup-open` | Present when the popover is open. |
+
+### DatePicker.Positioner
+
+Places the popup against the trigger. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### DatePicker.Popup
+
+The popover itself.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+
+### DatePicker.Calendar
+
+The calendar.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when its value cannot be changed. |
+
+### DatePicker.Heading
+
+Names the month shown. Read out when it changes.
+
+### DatePicker.Previous
+
+Shows the month before.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### DatePicker.Next
+
+Shows the month after.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### DatePicker.Grid
+
+The table of days: a grid the arrows move in.
+
+### DatePicker.HeadCell
+
+A column's heading: a day of the week.
+
+### DatePicker.Cell
+
+A day's cell.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-today` | Present on today. |
+| `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
+| `data-disabled` | Present when it is disabled. |
+| `data-unavailable` | Present on a day that cannot be chosen. |
+| `data-range-start` | Present on the first day of a range. |
+| `data-range-end` | Present on the last day of a range. |
+
+### DatePicker.Day
+
+The button for a day.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-today` | Present on today. |
+| `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
+| `data-disabled` | Present when it is disabled. |
+| `data-unavailable` | Present on a day that cannot be chosen. |
+| `data-range-start` | Present on the first day of a range. |
+| `data-range-end` | Present on the last day of a range. |
+
 ## Calendar
 
 ### Calendar.Root
@@ -1858,6 +2025,18 @@ Places the list against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Select.Group
+
+Items that belong together, named by their label.
+
+### Select.GroupLabel
+
+The name of a group. Outside a group it is plain text, and names nothing.
+
+### Select.Separator
+
+A line between groups.
 
 ### Select.List
 

@@ -4,9 +4,11 @@
     Autocomplete,
     Command,
     DateField,
+    DatePicker,
     Input,
     Label,
     NumberField,
+    Pagination,
     Drawer,
     MessageScroller,
     Autosize,
@@ -102,6 +104,8 @@
   let slide = $state("0")
   let drawn = $state("closed")
   let born = $state("none")
+  let due = $state("2026-03-14")
+  let paged = $state("1")
   let qty = $state("5")
   let place = $state("")
   let named = $state("")
@@ -1291,6 +1295,113 @@
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
+    <DatePicker.Root
+      id="dk1"
+      locale="en-US"
+      name="due"
+      defaultValue="2026-03-14"
+      onValueChange={(next: string | null) => (due = String(next))}
+    >
+      <DatePicker.Field aria-label="Due" class="date-field" data-testid="dk1-field">
+        <DatePicker.Segments>
+            {#snippet children(segment)}
+              <DatePicker.Segment {segment} data-testid={`dk1-${segment.type}-${segment.index}`} />
+            {/snippet}
+          </DatePicker.Segments>
+        <DatePicker.Input />
+      </DatePicker.Field>
+      <DatePicker.Trigger aria-label="Pick a day" data-testid="dk1-trigger">
+        Pick
+      </DatePicker.Trigger>
+      <DatePicker.Portal>
+        <DatePicker.Positioner sideOffset={4} data-testid="dk1-positioner">
+          <DatePicker.Popup class="popup" aria-label="Calendar" data-testid="dk1-popup">
+            <DatePicker.Calendar class="calendar" data-testid="dk1-calendar">
+              <DatePicker.Previous aria-label="Previous month" data-testid="dk1-previous">
+                  Previous
+                </DatePicker.Previous>
+                <DatePicker.Heading data-testid="dk1-heading" />
+                <DatePicker.Next aria-label="Next month" data-testid="dk1-next">Next</DatePicker.Next>
+                <DatePicker.Grid data-testid="dk1-grid">
+                  <thead>
+                    <tr>
+                      <DatePicker.Weekdays>
+                        {#snippet children(weekday)}
+                          <DatePicker.HeadCell {weekday}>{weekday.short}</DatePicker.HeadCell>
+                        {/snippet}
+                      </DatePicker.Weekdays>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <DatePicker.Weeks>
+                      {#snippet children(week)}
+                        <tr>
+                          {#each week as day (day.date)}
+                            <DatePicker.Cell date={day.date}>
+                              <DatePicker.Day date={day.date} data-testid={`dk1-${day.date}`}>
+                                {day.label}
+                              </DatePicker.Day>
+                            </DatePicker.Cell>
+                          {/each}
+                        </tr>
+                      {/snippet}
+                    </DatePicker.Weeks>
+                  </tbody>
+                </DatePicker.Grid>
+            </DatePicker.Calendar>
+          </DatePicker.Popup>
+        </DatePicker.Positioner>
+      </DatePicker.Portal>
+    </DatePicker.Root>
+    <output data-testid="dk1-output">{due}</output>
+    <Pagination.Root
+      id="pg1"
+      count={200}
+      class="pagination"
+      data-testid="pg1"
+      onPageChange={(next: number) => (paged = String(next))}
+    >
+      <Pagination.Previous data-testid="pg1-previous">Previous</Pagination.Previous>
+      <Pagination.Items>
+        {#snippet children(entry)}
+          {#if entry.type === "page"}
+            <Pagination.Item page={entry.page} data-testid={`pg1-${entry.page}`}>{entry.page}</Pagination.Item>
+          {:else}
+            <Pagination.Ellipsis data-testid={`pg1-${entry.key}`}>…</Pagination.Ellipsis>
+          {/if}
+        {/snippet}
+      </Pagination.Items>
+      <Pagination.Next data-testid="pg1-next">Next</Pagination.Next>
+    </Pagination.Root>
+    <output data-testid="pg1-output">{paged}</output>
+    <Select.Root id="s5" defaultValue="Apple">
+      <Select.Trigger data-testid="s5-trigger">
+        <Select.Value data-testid="s5-value" />
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Positioner sideOffset={4} data-testid="s5-positioner">
+          <Select.Popup class="popup" data-testid="s5-popup">
+            <Select.GroupLabel data-testid="s5-lone">Produce</Select.GroupLabel>
+            <Select.Group id="s5-fruit" data-testid="s5-fruit">
+              <Select.GroupLabel data-testid="s5-fruit-label">Fruit</Select.GroupLabel>
+              <Select.Item value="Apple" class="item" data-testid="s5-Apple">
+                <Select.ItemText>Apple</Select.ItemText>
+              </Select.Item>
+              <Select.Item value="Pear" class="item" data-testid="s5-Pear">
+                <Select.ItemText>Pear</Select.ItemText>
+              </Select.Item>
+            </Select.Group>
+            <Select.Separator data-testid="s5-separator" />
+            <Select.Group id="s5-roots" data-testid="s5-roots">
+              <Select.GroupLabel data-testid="s5-roots-label">Roots</Select.GroupLabel>
+              <Select.Item value="Carrot" class="item" data-testid="s5-Carrot">
+                <Select.ItemText>Carrot</Select.ItemText>
+              </Select.Item>
+            </Select.Group>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Portal>
+    </Select.Root>
   </section>
   <section data-fixture="field">
     <Form

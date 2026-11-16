@@ -1,7 +1,7 @@
 import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
+import type { Select as Controller, SelectGroup, SelectProps } from "@kirana-ui/core/select"
 import {
   Show,
   createComputed,
@@ -151,6 +151,25 @@ function ItemIndicator(props: PartComponentProps & { keepMounted?: boolean }): J
   )
 }
 
+const GroupContext = createContext<SelectGroup>()
+
+/** Items that belong together, named by their `<Select.GroupLabel>`. */
+function Group(props: PartComponentProps & { id?: string }): JSX.Element {
+  const [local, rest] = splitProps(props, ["id"])
+  const generated = createUniqueId()
+  const group = useSelect().group(untrack(() => local.id) ?? generated)
+  return (
+    <GroupContext.Provider value={group}>
+      <Part part={group.root} tag="div" {...rest} />
+    </GroupContext.Provider>
+  )
+}
+
+/** Names the group it is in. With no group around it, it is plain text. */
+const GroupLabel = (props: PartComponentProps) => (
+  <Part part={useContext(GroupContext)?.label ?? useSelect().groupLabel} tag="div" {...props} />
+)
+
 function scrollArrow(direction: "up" | "down") {
   return (props: PartComponentProps): JSX.Element => {
     const arrow = useSelect().scrollArrow(direction)
@@ -164,9 +183,9 @@ function scrollArrow(direction: "up" | "down") {
   }
 }
 
-const part = (name: "trigger" | "popup" | "list", tag: string) => (props: PartComponentProps) => (
-  <Part part={useSelect()[name]} tag={tag} {...props} />
-)
+const part =
+  (name: "trigger" | "popup" | "list" | "separator", tag: string) =>
+  (props: PartComponentProps) => <Part part={useSelect()[name]} tag={tag} {...props} />
 
 export const Select = {
   Root,
@@ -184,4 +203,8 @@ export const Select = {
   ScrollUpArrow: scrollArrow("up"),
   /** In the page while there is more of the list below. */
   ScrollDownArrow: scrollArrow("down"),
+  Group,
+  GroupLabel,
+  /** A line between groups. */
+  Separator: part("separator", "div"),
 }

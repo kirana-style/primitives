@@ -1,7 +1,7 @@
 import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller, SelectProps } from "@kirana-ui/core/select"
+import type { Select as Controller, SelectGroup, SelectProps } from "@kirana-ui/core/select"
 import {
   defineComponent,
   h,
@@ -157,6 +157,29 @@ const Positioner = defineComponent({
   },
 })
 
+const GROUP: InjectionKey<SelectGroup | null> = Symbol("SelectGroup")
+
+/** Items that belong together, named by their `<Select.GroupLabel>`. */
+const Group = defineComponent({
+  name: "SelectGroup",
+  inheritAttrs: false,
+  props: { id: String },
+  setup(props, { attrs, slots }) {
+    const generated = useId()
+    const group = scope.use().group(props.id ?? generated)
+    provide(GROUP, group)
+    const Element = partComponent("SelectGroupElement", "div", () => group.root)
+    return () => h(Element, attrs, slots)
+  },
+})
+
+/** Names the group it is in. With no group around it, it is plain text. */
+const GroupLabel = partComponent(
+  "SelectGroupLabel",
+  "div",
+  () => inject(GROUP, null)?.label ?? scope.use().groupLabel
+)
+
 function scrollArrow(name: string, direction: "up" | "down") {
   return defineComponent({
     name,
@@ -188,6 +211,10 @@ export const Select = {
   ScrollUpArrow: scrollArrow("SelectScrollUpArrow", "up"),
   /** In the page while there is more of the list below. */
   ScrollDownArrow: scrollArrow("SelectScrollDownArrow", "down"),
+  Group,
+  GroupLabel,
+  /** A line between groups. */
+  Separator: partComponent("SelectSeparator", "div", () => scope.use().separator),
   Item,
   ItemText,
   ItemIndicator,

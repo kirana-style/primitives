@@ -117,6 +117,9 @@ function angular(components: string[]): Shape {
  * What an adapter names or shapes its own way. `rename` maps its export to React's; `without`
  * lists parts it does not have and `extra` parts only it has, each with the reason.
  */
+const DATE_PICKER =
+  "inside `kuiDatePicker` the date field's, the popover's and the calendar's own directives are its parts"
+
 const IDIOM: Record<
   string,
   {
@@ -133,6 +136,22 @@ const IDIOM: Record<
       Drawer: "the dialog's directives with another selector on the root: `kuiDrawer`",
       Autocomplete:
         "the combobox's directives with another selector on the root: `kuiAutocomplete`",
+      "DatePicker.Cell": DATE_PICKER,
+      "DatePicker.Day": DATE_PICKER,
+      "DatePicker.Grid": DATE_PICKER,
+      "DatePicker.HeadCell": DATE_PICKER,
+      "DatePicker.Heading": DATE_PICKER,
+      "DatePicker.Input": DATE_PICKER,
+      "DatePicker.Next": DATE_PICKER,
+      "DatePicker.Popup": DATE_PICKER,
+      "DatePicker.Portal": DATE_PICKER,
+      "DatePicker.Positioner": DATE_PICKER,
+      "DatePicker.Previous": DATE_PICKER,
+      "DatePicker.Segment": DATE_PICKER,
+      "DatePicker.Segments": DATE_PICKER,
+      "DatePicker.Trigger": DATE_PICKER,
+      "DatePicker.Weekdays": DATE_PICKER,
+      "DatePicker.Weeks": DATE_PICKER,
       ContextMenu:
         "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
     },

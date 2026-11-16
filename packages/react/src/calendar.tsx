@@ -14,6 +14,8 @@ import { useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 const Context = createContext<Controller | null>(null)
+/** For a component made of this one's parts: a date picker. */
+export { Context as CalendarContext }
 
 function useCalendar(part: string): Controller {
   const controller = useContext(Context)

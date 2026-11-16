@@ -56,6 +56,11 @@ export const selectVocabulary = defineComponent({
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
   },
+  group: { description: "Items that belong together, named by their label." },
+  groupLabel: {
+    description: "The name of a group. Outside a group it is plain text, and names nothing.",
+  },
+  separator: { description: "A line between groups." },
   list: {
     description:
       "The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.",

@@ -497,6 +497,12 @@ note. Three places hold them:
 - **A generated file is checked where it is generated.** `llms.txt` and the vocabulary are
   written by scripts and compared byte for byte in the gate: edit the definitions, never
   the file.
+- **A ref on a component is not an element.** Vue hands a ref on a component its instance:
+  its root element is `$el`, and with several roots `$el` is the fragment's own mark, with
+  the first element after it. A part drawn onto a component (`as-child`) takes that element.
+- **An empty state is a status.** What a combobox or a command list says when nothing
+  matches has `role="status"`, so software that follows one reads it. It is in the page only
+  while nothing matches: a design's padding on it takes no room otherwise.
 - **A check that fails now and then is replayed with every processor busy**, not waited for:
   a dozen `(while :; do :; done) &` beside the scenario, stopped by their pids after. The
   virtual list's check failed four runs in six that way and never alone; it had read a row's

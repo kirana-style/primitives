@@ -9,8 +9,8 @@
   "react/checkbox": 5000,
   "core/collapsible": 2450,
   "react/collapsible": 4100,
-  "core/combobox": 17000,
-  "react/combobox": 19600,
+  "core/combobox": 17050,
+  "react/combobox": 19650,
   "core/context-menu": 16900,
   "react/context-menu": 19450,
   "core/dialog": 4800,
@@ -42,10 +42,10 @@
   "core/label": 1100,
   "react/label": 2250,
   "core/command": 4050,
-  "react/command": 6000,
+  "react/command": 6050,
   "core/number-field": 4550,
   "react/number-field": 6300,
-  "core/autocomplete": 17200,
+  "core/autocomplete": 17250,
   "react/autocomplete": 19400,
   "core/pagination": 2000,
   "react/pagination": 3750,
@@ -93,5 +93,5 @@
   "react/toolbar": 3900,
   "core/tooltip": 12450,
   "react/tooltip": 14250,
-  "react": 80400
+  "react": 80450
 }

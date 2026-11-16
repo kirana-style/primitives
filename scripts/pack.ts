@@ -127,6 +127,9 @@ function finish(
     const from = path.join(root, "packages", name, file)
     if (existsSync(from)) cpSync(from, path.join(stage, file))
   }
+  // What an agent is given to work with the package: a skill, where the package has one.
+  const skills = path.join(root, "packages", name, "skills")
+  if (existsSync(skills)) cpSync(skills, path.join(stage, "skills"), { recursive: true })
   cpSync(path.join(root, "LICENSE"), path.join(stage, "LICENSE"))
   const { private: _private, devDependencies: _dev, scripts: _scripts, ...kept } = manifest
   const published: Manifest = {
@@ -139,7 +142,7 @@ function finish(
     },
     bugs: { url: "https://github.com/kirana-style/primitives/issues" },
     publishConfig: { access: "public" },
-    files: [...shipped, "README.md", "REFERENCE.md", "llms.txt", "LICENSE"],
+    files: [...shipped, "README.md", "REFERENCE.md", "llms.txt", "skills", "LICENSE"],
     ...extra,
     exports: { ...exports, "./package.json": "./package.json" },
     dependencies: resolved(manifest.dependencies, manifest.version),

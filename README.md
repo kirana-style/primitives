@@ -32,6 +32,10 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   them end to end, and its example is one of the tests.
 - **Written down for models too.** Each package ships an `llms.txt`: every component, part,
   prop, attribute and CSS variable, generated from the library's own definitions.
+  The core ships a skill for an agent (`skills/kirana-ui-primitives`).
+- **Its checks are yours.** `@kirana-ui/core/testing` reads a page for the faults every
+  component here is held out of, writes it as text two frameworks can be compared by, and
+  waits for motion to end: for a design system built on these, or a component of your own.
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
   out in, and a popup moved to the end of the page keeps the direction of its trigger. A
   Direction provider states it where no page can be asked, on a server.

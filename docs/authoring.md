@@ -265,8 +265,26 @@ The other adapters have the same two pieces under their own names: `controller` 
 ## Testing it
 
 A controller needs no framework to test: bind its parts to elements in a real browser and
-press them. `tests/core/authoring.test.ts` does that for the rating above, and holds this
-page to the files it quotes.
+press them. `@kirana-ui/core/testing` is what this library's own checks are made of:
+
+```ts
+import { faults, known, recorder, serialize, settled } from "@kirana-ui/core/testing"
+
+const heard = recorder<number>()
+const rating = createRating(signal({ defaultValue: 2, onValueChange: heard.listen }))
+// … bind its parts, press a star …
+await settled() // a framework has had its turn, and nothing is moving
+expect(heard.said()).toEqual(["4 item-press"])
+// No attribute or variable a vocabulary does not name, no state written `="false"`, no
+// reference to an id that is not in the page, no id used twice.
+expect(faults(document.body, known(ratingVocabulary))).toEqual([])
+// The same component on two frameworks draws the same text.
+expect(serialize(reactRoot)).toBe(serialize(vueRoot))
+```
+
+`heard.refuse()` makes the recorder cancel every change, for the case every component must
+pass: a caller who says no. `tests/core/authoring.test.ts` does all of this for the rating
+above, and holds this page to the files it quotes.
 
 ## What to keep to
 

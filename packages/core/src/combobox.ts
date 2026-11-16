@@ -134,6 +134,7 @@ const NOTHING = () => {}
 const NONE: readonly never[] = []
 const INDICATOR = computed(() => ({ "aria-hidden": "true" }))
 const EMPTY = computed(() => ({}))
+const STATUS = computed(() => ({ role: "status", "aria-live": "polite", "aria-atomic": "true" }))
 const holds = (label: string, query: string) => label.toLowerCase().includes(query.toLowerCase())
 
 interface Shown {
@@ -601,7 +602,8 @@ export function createCombobox<Value = unknown>(
         }
       },
     },
-    emptyPart: { props: EMPTY, attach: () => NOTHING },
+    // Said when it comes into the page, where a reader's software follows a status.
+    emptyPart: { props: STATUS, attach: () => NOTHING },
     hidden: {
       props: computed(() => {
         const current = value.get()

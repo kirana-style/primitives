@@ -13,6 +13,7 @@
     "./dom": "./src/bind.ts",
     "./vocabulary": "./src/vocabulary.ts",
     "./authoring": "./src/authoring.ts",
+    "./testing": "./src/testing.ts",
     "./accordion": "./src/accordion.ts",
     "./alert-dialog": "./src/alert-dialog.ts",
     "./avatar": "./src/avatar.ts",

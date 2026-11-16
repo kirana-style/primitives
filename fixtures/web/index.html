@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kirana UI Primitives · Custom elements</title>
+  </head>
+  <body>
+    <div id="root">
+      <main>
+        <section data-fixture="collapsible">
+          <kui-collapsible kui-id="c1">
+            <div kui-part="root">
+              <button kui-part="trigger" data-testid="c1-trigger">Details</button>
+              <div kui-part="panel" class="panel" data-testid="c1-panel">
+                <p>Panel content</p>
+                <kui-collapsible kui-id="c2">
+                  <div kui-part="root">
+                    <button kui-part="trigger" data-testid="c2-trigger">Nested</button>
+                    <div kui-part="panel" class="panel" data-testid="c2-panel">
+                      <p>Nested content</p>
+                    </div>
+                  </div>
+                </kui-collapsible>
+              </div>
+            </div>
+          </kui-collapsible>
+        </section>
+        <section data-fixture="collapsible-controlled">
+          <button data-testid="c3-outside">Toggle from outside</button>
+          <kui-collapsible kui-id="c3">
+            <div kui-part="root">
+              <button kui-part="trigger" data-testid="c3-trigger">Controlled</button>
+              <div kui-part="panel" kui-keep-mounted class="panel" data-testid="c3-panel">
+                <p>Kept in the page</p>
+              </div>
+            </div>
+          </kui-collapsible>
+          <kui-collapsible kui-id="c4" default-open disabled>
+            <div kui-part="root">
+              <button kui-part="trigger" data-testid="c4-trigger">Disabled, open</button>
+              <div kui-part="panel" class="panel" data-testid="c4-panel">
+                <p>Open from the start</p>
+              </div>
+            </div>
+          </kui-collapsible>
+        </section>
+        <section data-fixture="controls">
+          <form data-testid="f1-form">
+            <label data-testid="x1-label">
+              <kui-checkbox kui-id="x1" name="terms">
+                <span kui-part="root" class="box" data-testid="x1">
+                  <span kui-part="indicator" class="mark">✓</span>
+                </span>
+              </kui-checkbox>
+              Accept
+            </label>
+            <kui-checkbox kui-id="x2" default-checked disabled>
+              <span kui-part="root" class="box" data-testid="x2">
+                <span kui-part="indicator" class="mark">✓</span>
+              </span>
+            </kui-checkbox>
+            <kui-checkbox kui-id="x3" indeterminate>
+              <span kui-part="root" class="box" data-testid="x3">
+                <span kui-part="indicator" class="mark">–</span>
+              </span>
+            </kui-checkbox>
+            <kui-switch kui-id="w1" name="alerts">
+              <span kui-part="root" class="switch" data-testid="w1">
+                <span kui-part="thumb" class="thumb"></span>
+              </span>
+            </kui-switch>
+            <label for="w1" data-testid="w1-label">Alerts</label>
+            <kui-radio-group kui-id="r1" name="plan" default-value="pro">
+              <div kui-part="root" data-testid="r1">
+                <label>
+                  <span kui-part="item" kui-value="free" class="radio" data-testid="r1-free">
+                    <span kui-part="indicator" class="dot"></span>
+                  </span>
+                  free
+                </label>
+                <label>
+                  <span kui-part="item" kui-value="pro" class="radio" data-testid="r1-pro">
+                    <span kui-part="indicator" class="dot"></span>
+                  </span>
+                  pro
+                </label>
+                <label>
+                  <span
+                    kui-part="item"
+                    kui-value="team"
+                    kui-disabled
+                    class="radio"
+                    data-testid="r1-team"
+                  >
+                    <span kui-part="indicator" class="dot"></span>
+                  </span>
+                  team
+                </label>
+                <label>
+                  <span kui-part="item" kui-value="max" class="radio" data-testid="r1-max">
+                    <span kui-part="indicator" class="dot"></span>
+                  </span>
+                  max
+                </label>
+              </div>
+            </kui-radio-group>
+            <button type="reset" data-testid="f1-reset">Reset</button>
+          </form>
+          <output data-testid="w1-output">off</output>
+        </section>
+        <section data-fixture="tabs">
+          <kui-tabs kui-id="t1" default-value="account">
+            <div kui-part="root" data-testid="t1">
+              <div kui-part="list" class="tabs" data-testid="t1-list">
+                <button kui-part="tab" kui-value="account" data-testid="t1-account">Account</button>
+                <button kui-part="tab" kui-value="password" data-testid="t1-password">
+                  Password
+                </button>
+                <button kui-part="tab" kui-value="billing" kui-disabled data-testid="t1-billing">
+                  Billing
+                </button>
+                <button kui-part="tab" kui-value="team" data-testid="t1-team">Team</button>
+                <span kui-part="indicator" class="tab-mark" data-testid="t1-mark"></span>
+              </div>
+              <div kui-part="panel" kui-value="account" data-testid="t1-panel-account">
+                <p>Account settings</p>
+                <kui-tabs kui-id="t2" default-value="one">
+                  <div kui-part="root" data-testid="t2">
+                    <div kui-part="list" class="tabs" data-testid="t2-list">
+                      <button kui-part="tab" kui-value="one" data-testid="t2-one">One</button>
+                      <button kui-part="tab" kui-value="two" data-testid="t2-two">Two</button>
+                    </div>
+                    <div kui-part="panel" kui-value="one" data-testid="t2-panel-one">First</div>
+                    <div kui-part="panel" kui-value="two" data-testid="t2-panel-two">Second</div>
+                  </div>
+                </kui-tabs>
+              </div>
+              <div kui-part="panel" kui-value="password" data-testid="t1-panel-password">
+                <p>Password settings</p>
+              </div>
+              <div kui-part="panel" kui-value="billing" data-testid="t1-panel-billing">
+                <p>Billing settings</p>
+              </div>
+              <div kui-part="panel" kui-value="team" data-testid="t1-panel-team">
+                <p>Team settings</p>
+              </div>
+            </div>
+          </kui-tabs>
+        </section>
+        <section data-fixture="accordion">
+          <kui-accordion kui-id="a1">
+            <div kui-part="root" data-testid="a1">
+              <div kui-part="item" kui-value="one" data-testid="a1-one">
+                <h3 kui-part="header">
+                  <button kui-part="trigger" data-testid="a1-one-trigger">Section one</button>
+                </h3>
+                <div kui-part="panel" class="fold" data-testid="a1-one-panel">
+                  <p>Content one</p>
+                </div>
+              </div>
+              <div kui-part="item" kui-value="two" data-testid="a1-two">
+                <h3 kui-part="header">
+                  <button kui-part="trigger" data-testid="a1-two-trigger">Section two</button>
+                </h3>
+                <div kui-part="panel" class="fold" data-testid="a1-two-panel">
+                  <p>Content two</p>
+                </div>
+              </div>
+              <div kui-part="item" kui-value="three" kui-disabled data-testid="a1-three">
+                <h3 kui-part="header">
+                  <button kui-part="trigger" data-testid="a1-three-trigger">Section three</button>
+                </h3>
+                <div kui-part="panel" class="fold" data-testid="a1-three-panel">
+                  <p>Content three</p>
+                </div>
+              </div>
+              <div kui-part="item" kui-value="four" data-testid="a1-four">
+                <h3 kui-part="header">
+                  <button kui-part="trigger" data-testid="a1-four-trigger">Section four</button>
+                </h3>
+                <div kui-part="panel" class="fold" data-testid="a1-four-panel">
+                  <p>Content four</p>
+                </div>
+              </div>
+            </div>
+          </kui-accordion>
+          <kui-accordion kui-id="a2" multiple default-value="x">
+            <div kui-part="root" data-testid="a2">
+              <div kui-part="item" kui-value="x" data-testid="a2-x">
+                <h3 kui-part="header">
+                  <button kui-part="trigger" data-testid="a2-x-trigger">Part x</button>
+                </h3>
+                <div kui-part="panel" class="fold" data-testid="a2-x-panel">
+                  <p>Content x</p>
+                </div>
+              </div>
+              <div kui-part="item" kui-value="y" data-testid="a2-y">
+                <h3 kui-part="header">
+                  <button kui-part="trigger" data-testid="a2-y-trigger">Part y</button>
+                </h3>
+                <div kui-part="panel" class="fold" data-testid="a2-y-panel">
+                  <p>Content y</p>
+                </div>
+              </div>
+            </div>
+          </kui-accordion>
+        </section>
+        <section data-fixture="dialog">
+          <kui-dialog kui-id="d1">
+            <button kui-part="trigger" data-testid="d1-trigger">Open dialog</button>
+            <div kui-part="portal">
+              <div kui-part="backdrop" class="backdrop" data-testid="d1-backdrop"></div>
+              <div kui-part="popup" class="dialog" data-testid="d1-popup">
+                <h2 kui-part="title">Edit profile</h2>
+                <p kui-part="description">Change your name.</p>
+                <input data-testid="d1-input" aria-label="Name" />
+                <kui-dialog kui-id="d2">
+                  <button kui-part="trigger" data-testid="d2-trigger">Open nested</button>
+                  <div kui-part="portal">
+                    <div kui-part="backdrop" class="backdrop" data-testid="d2-backdrop"></div>
+                    <div kui-part="popup" class="dialog" data-testid="d2-popup">
+                      <h2 kui-part="title">Are you sure?</h2>
+                      <button kui-part="close" data-testid="d2-close">Back</button>
+                    </div>
+                  </div>
+                </kui-dialog>
+                <button kui-part="close" data-testid="d1-close">Close</button>
+              </div>
+            </div>
+          </kui-dialog>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

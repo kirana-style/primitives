@@ -1,14 +1,14 @@
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 
-import { defineElement, innerInput } from "./runtime.ts"
+import { defineElement } from "./runtime.ts"
 
 /**
- * `<kui-checkbox>`: the box itself, with `kui-part="indicator"` inside, in the page while it
- * is checked. It draws the hidden native input a form and a label reach. `checked`,
- * `default-checked`, `indeterminate`, `disabled`, `read-only`, `required`, `name`, `form`,
- * `value`; it tells `checked-change`.
+ * `<kui-checkbox>` around a `kui-part="root"` button with an `indicator` inside, which is in
+ * the page while the box is checked or indeterminate. The root draws the hidden native input a
+ * form and a label reach. `checked`, `default-checked`, `indeterminate`, `disabled`,
+ * `read-only`, `required`, `name`, `form`, `value`; it tells `checked-change`.
  */
-defineElement({
+export const tag = defineElement({
   tag: "kui-checkbox",
   props: {
     checked: "boolean",
@@ -22,13 +22,12 @@ defineElement({
     value: "string",
   },
   create: createCheckbox,
-  root: (controller) => controller.root,
   changes: { onCheckedChange: { event: "checked-change", prop: "checked" } },
   parts: {
+    root: (controller) => ({ part: controller.root, inner: controller.input }),
     indicator: (controller) => ({
       mounted: controller.indicatorMounted,
       part: controller.indicator,
     }),
   },
-  setup: (controller, host) => innerInput(host, controller.input),
 })

@@ -205,6 +205,47 @@ describe("the agent bridge", () => {
     expect(wrong.error).toBe('Step 1 (Volume): A slider has no action "press" now: setValue')
   })
 
+  it("keeps what it changed, and takes it back through the same handlers", async () => {
+    const { agent, toggled, typed, find, pressed, root } = page()
+    await agent.act({
+      steps: [
+        { ref: "Notifications", action: "toggle" },
+        { ref: "Project name", action: "setValue", args: ["Atlas"] },
+      ],
+    })
+    // A person's change is not the agent's to take back.
+    find(".more").click()
+    expect(
+      agent.history().map((each) => `${each.before.label} ${each.action} ${each.undone}`)
+    ).toEqual(["Notifications toggle false", "Project name setValue false"])
+    expect((await agent.undo()).ok).toBe(true)
+    expect(find<HTMLInputElement>("#name").value).toBe("Apollo")
+    expect(typed.calls.at(-1)).toEqual({ value: "Apollo", reason: "input-change", source: "agent" })
+    await agent.undo()
+    expect(find(".switch").getAttribute("aria-checked")).toBe("false")
+    expect(toggled.calls.map((each) => each.source)).toEqual(["agent", "agent"])
+    expect((await agent.undo()).error).toBe("Nothing to take back")
+    expect(agent.history().every((each) => each.undone)).toBe(true)
+    // Again, and a new change forgets what was taken back after it.
+    await agent.redo()
+    expect(find(".switch").getAttribute("aria-checked")).toBe("true")
+    await agent.act({ steps: [{ ref: "Volume", action: "setValue", args: [45] }] })
+    expect(agent.history().map((each) => each.before.label)).toEqual(["Notifications", "Volume"])
+    expect((await agent.redo()).error).toBe("Nothing to do again")
+    // A press is not a state to go back to.
+    const guarded = createAgent({ root, allow: () => true })
+    await guarded.act({ steps: [{ ref: "Delete", action: "press" }] })
+    expect(pressed).toEqual(["delete"])
+    expect(guarded.history()).toEqual([])
+  })
+
+  it("does not keep a change a callback refused", async () => {
+    const { agent, toggled } = page()
+    toggled.refuse()
+    await agent.act({ steps: [{ ref: "Notifications", action: "toggle" }] })
+    expect(agent.history()).toEqual([])
+  })
+
   it("hears what changed, whoever changed it", async () => {
     const { agent, find } = page()
     const heard: string[] = []

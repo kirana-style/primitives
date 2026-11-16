@@ -65,6 +65,18 @@ export interface AgentResult {
   readonly error?: string
 }
 
+/** One change an agent made: what it asked, and the component before and after. */
+export interface AgentChange {
+  readonly ref: string
+  readonly action: string
+  readonly args: readonly unknown[]
+  readonly before: AgentComponent
+  /** Absent when the component left the page with the change. */
+  readonly after: AgentComponent | undefined
+  /** Whether `undo` took it back since. */
+  readonly undone: boolean
+}
+
 export interface AgentOptions {
   /** The part of the page the agent may read and use. Default: the document. */
   root?: ParentNode | undefined
@@ -87,6 +99,16 @@ export interface Agent {
   query(request: { text?: string; within?: string; kind?: string }): Promise<AgentComponent[]>
   /** Hears the components that changed, a moment after they do. Returns the stop. */
   subscribe(listener: (changed: AgentComponent[]) => void): () => void
+  /** What the agent changed through `act`, the oldest first. A person's changes are not here. */
+  history(): AgentChange[]
+  /**
+   * Takes the agent's last change back: the component is asked for what it held before, the
+   * way any step asks (its callback hears an agent, and `allow` is asked). A press cannot be
+   * taken back.
+   */
+  undo(): Promise<AgentResult>
+  /** Makes the last change taken back again. */
+  redo(): Promise<AgentResult>
 }
 
 const REDACTED = "[redacted]"
@@ -420,7 +442,51 @@ export function createAgent(given: AgentOptions = {}): Agent {
     }
   }
 
-  async function act({ steps }: { steps: readonly AgentStep[] }): Promise<AgentResult> {
+  // What `act` changed, in order; `standing` is how many of them stand (the rest were taken back).
+  const changes: (Omit<AgentChange, "undone"> & { step: AgentStep })[] = []
+  let standing = 0
+
+  /** The step that puts a component back as it was read. */
+  function back(change: (typeof changes)[number]): AgentStep | undefined {
+    const { before, ref } = change
+    if (before.checked !== undefined && before.checked !== "mixed")
+      return { ref, action: "setChecked", args: [before.checked] }
+    if (
+      before.open !== undefined &&
+      before.actions.some((each) => each === "open" || each === "close")
+    ) {
+      if (before.value === change.after?.value)
+        return { ref, action: before.open ? "open" : "close" }
+    }
+    if (before.value !== undefined && before.actions.includes("setValue"))
+      return { ref, action: "setValue", args: [before.value] }
+    return undefined
+  }
+
+  const act = (request: { steps: readonly AgentStep[] }) => run(request, true)
+
+  async function undo(): Promise<AgentResult> {
+    const change = changes[standing - 1]
+    if (!change) return { ok: false, steps: [], error: "Nothing to take back" }
+    const step = back(change)
+    if (!step) return { ok: false, steps: [], error: `A ${change.action} cannot be taken back` }
+    const result = await run({ steps: [step] }, false)
+    if (result.ok) standing--
+    return result
+  }
+
+  async function redo(): Promise<AgentResult> {
+    const change = changes[standing]
+    if (!change) return { ok: false, steps: [], error: "Nothing to do again" }
+    const result = await run({ steps: [change.step] }, false)
+    if (result.ok) standing++
+    return result
+  }
+
+  async function run(
+    { steps }: { steps: readonly AgentStep[] },
+    record: boolean
+  ): Promise<AgentResult> {
     const done: AgentStepResult[] = []
     for (const [at, step] of steps.entries()) {
       try {
@@ -447,11 +513,24 @@ export function createAgent(given: AgentOptions = {}): Agent {
         await perform(element, now.component, step.action, action.args)
         // A framework has its turn, and a popup its first frame.
         await turn(20)
-        done.push({
-          ref: now.ref,
-          action: step.action,
-          ...(element.isConnected ? { now: read(element) } : {}),
-        })
+        const after = element.isConnected ? read(element) : undefined
+        done.push({ ref: now.ref, action: step.action, ...(after ? { now: after } : {}) })
+        // Only what took effect is a change: a callback may have refused it.
+        const { ref: _ref, ...was } = now
+        const { ref: _same, ...is } = after ?? now
+        if (record && (!after || JSON.stringify(was) !== JSON.stringify(is))) {
+          // A new change after some were taken back: those are gone.
+          changes.splice(standing)
+          changes.push({
+            ref: now.ref,
+            action: step.action,
+            args: action.args,
+            before: now,
+            after,
+            step: { ref: now.ref, action: step.action, args: action.args },
+          })
+          standing = changes.length
+        }
       } catch (error) {
         return {
           ok: false,
@@ -516,7 +595,19 @@ export function createAgent(given: AgentOptions = {}): Agent {
     }
   }
 
-  return { snapshot, act, query, subscribe }
+  return {
+    snapshot,
+    act,
+    query,
+    subscribe,
+    history: () =>
+      changes.map(({ step: _step, ...change }, index) => ({
+        ...change,
+        undone: index >= standing,
+      })),
+    undo,
+    redo,
+  }
 }
 
 /** The bridge as tools a model is given: a name, what it does, and its input's JSON Schema. */

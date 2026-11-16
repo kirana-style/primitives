@@ -3,11 +3,12 @@ import { createDialog } from "@kirana-ui/core/dialog"
 import { defineElement } from "./runtime.ts"
 
 /**
- * `<kui-dialog>` with `kui-part="trigger"`, and inside `kui-part="portal"` (drawn at the end
- * of the page while it is open) `backdrop`, `popup`, `title`, `description` and `close`.
- * `open`, `default-open`, `modal`, `dismissible`; it tells `open-change`.
+ * `<kui-dialog>` around a `kui-part="trigger"` button and a `portal`, which is drawn at the
+ * end of the page while the dialog is open and holds its `backdrop` and its `popup`, with a
+ * `title`, a `description` and a `close` button. `open`, `default-open`, `modal`,
+ * `dismissible`; it tells `open-change`.
  */
-defineElement({
+export const tag = defineElement({
   tag: "kui-dialog",
   props: {
     open: "boolean",

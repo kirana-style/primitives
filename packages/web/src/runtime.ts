@@ -4,17 +4,25 @@ import type { ChangeDetails, Part, ReadonlySignal, Signal } from "@kirana-ui/cor
 /**
  * A component as a custom element, for a page with no framework.
  *
- * The root is the custom element (`<kui-dialog>`); its parts are the page's own elements,
- * named by `kui-part` (`<button kui-part="trigger">`). So a trigger is a real button, a panel
- * a real `<div>`, and the page is the page the other adapters draw: nothing is wrapped, and
- * there is no shadow root for a design to reach into.
+ * The custom element (`<kui-dialog>`) holds the component and draws nothing: it takes no room
+ * (`display: contents`) and no attribute of the component's. Its parts are the page's own
+ * elements, named by `kui-part` (`<button kui-part="trigger">`), the root among them. So a
+ * trigger is a real button and a switch a real button, and the page is the page the other
+ * adapters draw: nothing is wrapped, and there is no shadow root for a design to reach into.
+ *
+ * A part that is in the page only some of the time (a closed panel, a popup) is taken out of
+ * the page while it is not, and put back where it was; `kui-keep-mounted` keeps it.
  */
 
-/** A part that is in the page only some of the time: hidden while it is not. */
-export interface PresentPart {
-  readonly mounted: ReadonlySignal<boolean>
+/** What a part's name gives: the part, and what comes with it. */
+export interface Drawn {
   readonly part: Part
+  /** In the page only while this holds. */
+  readonly mounted?: ReadonlySignal<boolean> | undefined
+  /** Runs while the part is the component's. Returns the stop. */
   mount?(): () => void
+  /** A hidden native input the part draws itself, as its last child. */
+  readonly inner?: Part | undefined
 }
 
 type Kind = "boolean" | "string" | "number"
@@ -25,38 +33,57 @@ export interface ElementSpec<Props extends { id: string }, Controller> {
   /** Its props by attribute name, each with how an attribute's text is read. */
   props: Record<string, Kind>
   create(props: ReadonlySignal<Props>): Controller
-  /** The root element's own part, when the component has one. */
-  root?(controller: Controller): Part
   /**
    * Its change callbacks: the event each is told as, and the prop the element then holds
    * (`open`). The event is cancelable: `preventDefault()` keeps the value as it was.
    */
   changes: Record<string, { event: string; prop: string }>
   /** Each part by its `kui-part` name. */
-  parts: Record<
-    string,
-    (controller: Controller, element: HTMLElement) => Part | PresentPart | undefined
-  >
-  /** Called once the controller is made: for what the root draws itself (a hidden input). */
-  setup?(controller: Controller, host: HTMLElement): (() => void) | undefined
+  parts: Record<string, (controller: Controller, element: HTMLElement) => Part | Drawn | undefined>
 }
 
 const camel = (name: string) =>
   name.replace(/-([a-z])/g, (_all, letter: string) => letter.toUpperCase())
-const roots = new Set<string>()
+const hosts = new Set<string>()
 const OWNER = Symbol("kui-owner")
 let made = 0
 
 type Owned = HTMLElement & { [OWNER]?: HTMLElement }
 
-/** The root a part belongs to: the nearest around it, or the one that moved it to the page's end. */
+/** The component a part belongs to: the nearest around it, or the one that moved it to the page's end. */
 function ownerOf(element: Element): HTMLElement | null {
   for (let each: Element | null = element.parentElement; each; each = each.parentElement) {
-    if (roots.has(each.localName)) return each as HTMLElement
+    if (hosts.has(each.localName)) return each as HTMLElement
     const moved = (each as Owned)[OWNER]
     if (moved) return moved
   }
   return null
+}
+
+/** The nearest element around `element` (or itself) that is the part called `name`. */
+export function partAround(element: Element, name: string): HTMLElement | null {
+  return element.closest<HTMLElement>(`[kui-part="${name}"]`)
+}
+
+/**
+ * Puts a part on an element, and takes it off whole: what the part wrote is gone with it. A
+ * framework draws a new element each time a part comes back; here the same element is the
+ * part again, and must not still say what it said before (`data-closed`, `aria-controls`).
+ */
+function put(element: HTMLElement, part: Part): () => void {
+  const before = new Map(Array.from(element.attributes, (each) => [each.name, each.value]))
+  const unbind = bind(element, part)
+  return () => {
+    unbind()
+    for (const { name } of Array.from(element.attributes)) {
+      // Its classes are the page's own, whatever was added to them since.
+      if (!before.has(name) && name !== "class") element.removeAttribute(name)
+    }
+    for (const [name, value] of before) {
+      if (name !== "class" && element.getAttribute(name) !== value)
+        element.setAttribute(name, value)
+    }
+  }
 }
 
 function read(kind: Kind, text: string | null): unknown {
@@ -65,56 +92,48 @@ function read(kind: Kind, text: string | null): unknown {
   return kind === "number" ? Number(text) : text
 }
 
-/**
- * The hidden native input a control draws itself, as its host's last child: what a form and
- * a `<label>` reach. One a server wrote there is taken over. Returns the removal.
- */
-export function innerInput(host: HTMLElement, part: Part): () => void {
-  const last = host.lastElementChild
-  const taken =
-    last instanceof HTMLInputElement && last.hasAttribute("kui-input") ? last : undefined
-  const input = taken ?? host.ownerDocument.createElement("input")
-  if (!taken) host.append(input)
-  const unbind = bind(input, part)
-  return () => {
-    unbind()
-    if (!taken) input.remove()
-  }
+interface Held {
+  stop(): void
+  /** Taken out of the page by the component itself: still its part. */
+  parked: boolean
 }
 
-/** Defines a component's custom element. Does nothing where there are none (a server). */
+/**
+ * Defines a component's custom element, and gives its name (for
+ * `customElements.whenDefined`). Where there are no custom elements (a server) it defines
+ * nothing.
+ */
 export function defineElement<
   Props extends { id: string },
   Controller extends { mount(): () => void },
->(spec: ElementSpec<Props, Controller>): void {
-  if (typeof customElements === "undefined" || customElements.get(spec.tag)) return
-  roots.add(spec.tag)
+>(spec: ElementSpec<Props, Controller>): string {
+  if (typeof customElements === "undefined" || customElements.get(spec.tag)) return spec.tag
+  hosts.add(spec.tag)
   const names = Object.keys(spec.props)
 
   class KuiElement extends HTMLElement {
     static observedAttributes = names
     controller?: Controller
-    #props?: Signal<Props>
+    #props?: Signal<Props> | undefined
     // Set as properties before the element was upgraded, or before it joined the page.
     #given: Record<string, unknown> = {}
-    #bound = new Map<Element, () => void>()
+    #held = new Map<HTMLElement, Held>()
     #stops: (() => void)[] = []
     #leaving = false
+    #watch: (element: HTMLElement) => void = () => {}
 
     connectedCallback() {
       this.#leaving = false
       if (this.controller) return
-      const initial: Record<string, unknown> = { id: this.id || `kui-${++made}` }
+      // It holds its parts and draws nothing: no box of its own between them and the page.
+      if (!this.style.display) this.style.display = "contents"
+      const initial: Record<string, unknown> = {
+        id: this.getAttribute("kui-id") || `kui-${++made}`,
+      }
       for (const name of names) {
-        const kind = spec.props[name]!
         const text = this.getAttribute(name)
         // An attribute that is not there says nothing: the component's own default holds.
-        if (text !== null || kind === "boolean") initial[camel(name)] = read(kind, text)
-      }
-      // A value the element holds starts as the component's own: `open` absent is "not said".
-      for (const { prop } of Object.values(spec.changes)) {
-        if (!this.hasAttribute(prop.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)))
-          delete initial[prop]
+        if (text !== null) initial[camel(name)] = read(spec.props[name]!, text)
       }
       Object.assign(initial, this.#given)
       for (const [callback, { event, prop }] of Object.entries(spec.changes)) {
@@ -131,42 +150,35 @@ export function defineElement<
         }
       }
       this.#props = signal(initial as Props, sameProps as (a: Props, b: Props) => boolean)
-      const controller = spec.create(this.#props)
-      this.controller = controller
-      const root = spec.root?.(controller)
-      if (root) this.#stops.push(bind(this, root))
-      const undo = spec.setup?.(controller, this)
-      if (undo) this.#stops.push(undo)
-      this.#stops.push(controller.mount())
-      for (const each of this.querySelectorAll<HTMLElement>("[kui-part]")) this.#adopt(each)
+      this.controller = spec.create(this.#props)
+      this.#stops.push(this.controller.mount())
       // Parts that come and go: a page that draws its rows later, a list that changes.
       const observer = new MutationObserver((records) => {
         for (const record of records) {
-          for (const node of record.removedNodes)
+          for (const node of record.removedNodes) {
             if (node instanceof HTMLElement) this.#release(node)
-          for (const node of record.addedNodes) {
-            if (!(node instanceof HTMLElement)) continue
-            if (node.hasAttribute("kui-part")) this.#adopt(node)
-            for (const each of node.querySelectorAll<HTMLElement>("[kui-part]")) this.#adopt(each)
           }
+          for (const node of record.addedNodes) if (node instanceof HTMLElement) this.#scan(node)
         }
       })
       observer.observe(this, { childList: true, subtree: true })
       this.#watch = (element) => observer.observe(element, { childList: true, subtree: true })
       this.#stops.push(() => observer.disconnect())
+      // A copy: a part that is not in the page yet is taken out as it is met.
+      for (const each of Array.from(this.children))
+        if (each instanceof HTMLElement) this.#scan(each)
     }
-
-    #watch: (element: HTMLElement) => void = () => {}
 
     disconnectedCallback() {
       // Moved, it comes straight back: only an element that has left is taken apart.
       this.#leaving = true
       queueMicrotask(() => {
         if (!this.#leaving || this.isConnected) return
-        for (const stop of this.#bound.values()) stop()
-        this.#bound.clear()
+        for (const held of this.#held.values()) held.stop()
+        this.#held.clear()
         for (const stop of this.#stops.splice(0).reverse()) stop()
         delete this.controller
+        this.#props = undefined
       })
     }
 
@@ -185,34 +197,68 @@ export function defineElement<
         this.#props.set({ ...this.#props.peek(), [prop]: value })
     }
 
+    /** Takes the parts in a subtree, in the page's order: one that leaves takes its own with it. */
+    #scan(element: HTMLElement) {
+      if (!element.isConnected) return
+      if (element.hasAttribute("kui-part")) this.#adopt(element)
+      for (const each of Array.from(element.children))
+        if (each instanceof HTMLElement) this.#scan(each)
+    }
+
     #adopt(element: HTMLElement) {
-      if (this.#bound.has(element) || ownerOf(element) !== this || !this.controller) return
+      if (this.#held.has(element) || ownerOf(element) !== this || !this.controller) return
       const name = element.getAttribute("kui-part")!
       if (name === "portal") return this.#portal(element)
-      const part = spec.parts[name]?.(this.controller, element)
-      if (!part) return
-      if ("attach" in part) return void this.#bound.set(element, bind(element, part))
-      // In the page only while it is mounted: hidden otherwise, with nothing listening.
+      const given = spec.parts[name]?.(this.controller, element)
+      if (!given) return
+      const drawn: Drawn = "attach" in given ? { part: given } : given
+      const stops: (() => void)[] = []
+      const held: Held = {
+        parked: false,
+        stop: () => {
+          for (const stop of stops.splice(0).reverse()) stop()
+        },
+      }
+      this.#held.set(element, held)
+      const unmount = drawn.mount?.()
+      if (unmount) stops.push(unmount)
+      if (drawn.inner) {
+        // One a server wrote there is taken over.
+        const last = element.lastElementChild
+        const taken = last instanceof HTMLInputElement && last.type === "hidden" ? last : undefined
+        const input = taken ?? this.ownerDocument.createElement("input")
+        if (!taken) element.append(input)
+        stops.push(bind(input, drawn.inner), () => {
+          if (!taken) input.remove()
+        })
+      }
+      const mounted = element.hasAttribute("kui-keep-mounted") ? undefined : drawn.mounted
+      if (!mounted) return void stops.push(put(element, drawn.part))
+      // In the page only while it is mounted: out of it otherwise, its place kept by a mark.
+      const home = this.ownerDocument.createComment("")
       let unbind: (() => void) | undefined
-      const unmount = part.mount?.()
-      element.hidden = !part.mounted.peek()
-      const stop = effect(() => {
-        const on = part.mounted.get()
-        if (on === (unbind !== undefined)) return
-        if (on) {
-          element.hidden = false
-          unbind = bind(element, part.part)
-        } else {
+      stops.push(
+        effect(() => {
+          if (mounted.get()) {
+            if (held.parked) {
+              held.parked = false
+              home.replaceWith(element)
+            }
+            unbind ??= put(element, drawn.part)
+          } else {
+            unbind?.()
+            unbind = undefined
+            if (!held.parked && element.parentNode) {
+              held.parked = true
+              element.replaceWith(home)
+            }
+          }
+        }),
+        () => {
           unbind?.()
-          unbind = undefined
-          element.hidden = true
+          if (held.parked) home.replaceWith(element)
         }
-      })
-      this.#bound.set(element, () => {
-        stop()
-        unbind?.()
-        unmount?.()
-      })
+      )
     }
 
     /** What is inside is drawn at the end of the page while the component is mounted. */
@@ -220,42 +266,43 @@ export function defineElement<
       const mounted = (this.controller as { mounted?: ReadonlySignal<boolean> }).mounted
       if (!mounted) return
       ;(element as Owned)[OWNER] = this
-      const home = this.ownerDocument.createComment("kui-portal")
-      let outlet: HTMLElement | undefined
+      const home = this.ownerDocument.createComment("")
+      const held: Held = { parked: false, stop: () => {} }
+      this.#held.set(element, held)
       this.#watch(element)
+      const body = this.ownerDocument.body
       const stop = effect(() => {
-        if (mounted.get() === (outlet !== undefined)) return
         if (mounted.get()) {
-          element.before(home)
-          outlet = this.ownerDocument.createElement("div")
-          outlet.setAttribute("data-kirana-portal", "")
-          this.ownerDocument.body.append(outlet)
-          outlet.append(element)
-          element.hidden = false
-        } else {
-          element.hidden = true
-          home.replaceWith(element)
-          outlet?.remove()
-          outlet = undefined
+          if (element.parentNode === body) return
+          // Its place in the page is kept by a mark, for when the component leaves.
+          if (!home.parentNode && element.parentNode) element.replaceWith(home)
+          held.parked = false
+          element.setAttribute("data-kirana-portal", "")
+          body.append(element)
+          this.#scan(element)
+        } else if (!held.parked) {
+          held.parked = true
+          if (!home.parentNode && element.parentNode) element.replaceWith(home)
+          else element.remove()
         }
       })
-      element.hidden = !mounted.peek()
-      this.#bound.set(element, () => {
+      held.stop = () => {
         stop()
-        if (outlet) {
-          home.replaceWith(element)
-          outlet.remove()
-        }
-      })
+        element.removeAttribute("data-kirana-portal")
+        if (home.parentNode) home.replaceWith(element)
+        else element.remove()
+      }
     }
 
     #release(element: HTMLElement) {
-      // Moved to the page's end by its own portal: still this component's.
+      // Moved to the page's end by its own portal, or put back: still this component's.
       if (element.isConnected) return
-      for (const [each, stop] of this.#bound) {
+      for (const [each, held] of this.#held) {
         if (each !== element && !element.contains(each)) continue
-        stop()
-        this.#bound.delete(each)
+        // Taken out by the component itself: it is still the component's, to be put back.
+        if (each === element && held.parked) continue
+        held.stop()
+        this.#held.delete(each)
       }
     }
   }
@@ -277,4 +324,5 @@ export function defineElement<
     })
   }
   customElements.define(spec.tag, KuiElement)
+  return spec.tag
 }

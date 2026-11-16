@@ -19,101 +19,165 @@ function hear(root: HTMLElement, event: string, prop: string): string[] {
   return heard
 }
 
+const COLLAPSIBLE = `
+  <kui-collapsible kui-id="c">
+    <div kui-part="root">
+      <button kui-part="trigger">More</button>
+      <div kui-part="panel" id="panel">Text</div>
+    </div>
+  </kui-collapsible>`
+
 describe("the components as custom elements", () => {
-  it("a collapsible: its parts are the page's own elements", async () => {
-    const root = mount(
-      `<kui-collapsible><button kui-part="trigger">More</button><div kui-part="panel">Text</div></kui-collapsible>`
-    )
+  it("a collapsible: its parts are the page's own elements, and a closed panel is not in the page", async () => {
+    const root = mount(COLLAPSIBLE)
+    const host = root.querySelector<HTMLElement & { open: boolean }>("kui-collapsible")!
     const trigger = root.querySelector("button")!
-    const panel = root.querySelector<HTMLElement>('[kui-part="panel"]')!
-    const element = root.firstElementChild as HTMLElement & { open: boolean }
     const heard = hear(root, "open-change", "open")
+    // The element holds the component and draws nothing.
+    expect(getComputedStyle(host).display).toBe("contents")
+    expect(host.attributes.length).toBe(2)
     expect(trigger.getAttribute("aria-expanded")).toBe("false")
     expect(trigger.type).toBe("button")
-    expect(panel.hidden).toBe(true)
+    expect(root.querySelector('[kui-part="panel"]')).toBe(null)
     trigger.click()
     await settled()
-    expect(panel.hidden).toBe(false)
+    const panel = root.querySelector<HTMLElement>('[kui-part="panel"]')!
     expect(panel.hasAttribute("data-open")).toBe(true)
+    expect(panel.previousElementSibling).toBe(trigger)
     expect(trigger.getAttribute("aria-controls")).toBe(panel.id)
-    expect(element.open).toBe(true)
+    expect(host.open).toBe(true)
     expect(heard).toEqual(["open true trigger-press"])
     expect(faults(root)).toEqual([])
     // As a property, too.
-    element.open = false
+    host.open = false
     await settled()
-    expect(panel.hidden).toBe(true)
+    expect(root.querySelector('[kui-part="panel"]')).toBe(null)
     expect(trigger.getAttribute("aria-expanded")).toBe("false")
   })
 
-  it("is refused by a listener that prevents the change, and starts as its attributes say", async () => {
+  it("is refused by a listener that prevents the change, starts as its attributes say, and keeps a panel it is told to", async () => {
     const root = mount(
-      `<kui-collapsible default-open><button kui-part="trigger">More</button><div kui-part="panel">Text</div></kui-collapsible>`
+      COLLAPSIBLE.replace("<kui-collapsible", "<kui-collapsible default-open") +
+        COLLAPSIBLE.replace('kui-id="c"', 'kui-id="k"').replace(
+          'kui-part="panel"',
+          'kui-part="panel" kui-keep-mounted'
+        )
     )
-    const panel = root.querySelector<HTMLElement>('[kui-part="panel"]')!
-    expect(panel.hidden).toBe(false)
-    root.addEventListener("open-change", (event) => event.preventDefault())
-    root.querySelector("button")!.click()
+    const [first, kept] = [...root.querySelectorAll("kui-collapsible")]
+    expect(first!.querySelector('[kui-part="panel"]')).not.toBe(null)
+    first!.addEventListener("open-change", (event) => event.preventDefault())
+    first!.querySelector("button")!.click()
     await settled()
-    expect(panel.hidden).toBe(false)
+    expect(first!.querySelector('[kui-part="panel"]')).not.toBe(null)
+    // Kept in the page while closed, and hidden by its own part.
+    const panel = kept!.querySelector<HTMLElement>('[kui-part="panel"]')!
+    expect(panel.hidden).toBe(true)
   })
 
-  it("a switch and a checkbox: a form's own controls", async () => {
+  it("a switch, a checkbox and radios: real buttons, and a form's own controls", async () => {
     const root = mount(
-      `<form><label id="l">Wi-Fi</label>
-         <kui-switch name="wifi" aria-labelledby="l"><span kui-part="thumb"></span></kui-switch>
-         <kui-checkbox name="terms" value="yes" default-checked aria-label="Terms"><span kui-part="indicator">✓</span></kui-checkbox>
+      `<form>
+         <kui-switch kui-id="w" name="wifi"><button kui-part="root" aria-label="Wi-Fi"><span kui-part="thumb"></span></button></kui-switch>
+         <kui-checkbox name="terms" value="yes" default-checked><button kui-part="root" aria-label="Terms"><span kui-part="indicator">✓</span></button></kui-checkbox>
+         <kui-radio-group name="plan" default-value="pro">
+           <div kui-part="root">
+             <button kui-part="item" kui-value="free" aria-label="Free"><span kui-part="indicator"></span></button>
+             <button kui-part="item" kui-value="pro" aria-label="Pro"><span kui-part="indicator"></span></button>
+           </div>
+         </kui-radio-group>
        </form>`
     )
     const form = root.querySelector("form")!
-    const wifi = root.querySelector<HTMLElement>("kui-switch")!
-    const terms = root.querySelector<HTMLElement>("kui-checkbox")!
-    const mark = root.querySelector<HTMLElement>('[kui-part="indicator"]')!
-    expect(wifi.getAttribute("role")).toBe("switch")
-    expect(wifi.getAttribute("aria-checked")).toBe("false")
-    expect(terms.getAttribute("aria-checked")).toBe("true")
-    expect(mark.hidden).toBe(false)
-    expect([...new FormData(form).entries()]).toEqual([["terms", "yes"]])
-    wifi.click()
-    terms.click()
+    const [wifi, terms, free, pro] = [...root.querySelectorAll<HTMLButtonElement>("button")]
+    expect(wifi!.getAttribute("role")).toBe("switch")
+    expect(wifi!.getAttribute("aria-checked")).toBe("false")
+    expect(terms!.getAttribute("aria-checked")).toBe("true")
+    expect(terms!.querySelector('[kui-part="indicator"]')).not.toBe(null)
+    expect(pro!.getAttribute("aria-checked")).toBe("true")
+    expect(free!.querySelector('[kui-part="indicator"]')).toBe(null)
+    expect(pro!.querySelector('[kui-part="indicator"]')).not.toBe(null)
+    expect([...new FormData(form).entries()]).toEqual([
+      ["terms", "yes"],
+      ["plan", "pro"],
+    ])
+    // By the keyboard: they are buttons.
+    wifi!.focus()
+    await userEvent.keyboard(" ")
+    terms!.click()
+    free!.click()
     await settled()
-    expect(wifi.getAttribute("aria-checked")).toBe("true")
-    expect(wifi.querySelector("span")!.hasAttribute("data-checked")).toBe(true)
-    expect(mark.hidden).toBe(true)
-    expect([...new FormData(form).entries()]).toEqual([["wifi", "on"]])
+    expect(wifi!.getAttribute("aria-checked")).toBe("true")
+    expect(wifi!.querySelector("span")!.hasAttribute("data-checked")).toBe(true)
+    expect(terms!.querySelector('[kui-part="indicator"]')).toBe(null)
+    expect(free!.getAttribute("aria-checked")).toBe("true")
+    expect([...new FormData(form).entries()]).toEqual([
+      ["wifi", "on"],
+      ["plan", "free"],
+    ])
     form.reset()
     await settled()
-    expect(wifi.getAttribute("aria-checked")).toBe("false")
-    expect(terms.getAttribute("aria-checked")).toBe("true")
+    expect(wifi!.getAttribute("aria-checked")).toBe("false")
+    expect(terms!.getAttribute("aria-checked")).toBe("true")
+    expect(pro!.getAttribute("aria-checked")).toBe("true")
     expect(faults(root)).toEqual([])
   })
 
   it("tabs: a part for each value, and the arrows between them", async () => {
     const root = mount(
       `<kui-tabs default-value="a">
-         <div kui-part="list"><button kui-part="tab" value="a">One</button><button kui-part="tab" value="b">Two</button></div>
-         <div kui-part="panel" value="a">First</div><div kui-part="panel" value="b">Second</div>
+         <div kui-part="root">
+           <div kui-part="list"><button kui-part="tab" kui-value="a">One</button><button kui-part="tab" kui-value="b">Two</button></div>
+           <div kui-part="panel" kui-value="a">First</div><div kui-part="panel" kui-value="b">Second</div>
+         </div>
        </kui-tabs>`
     )
     const [one, two] = [...root.querySelectorAll<HTMLElement>('[kui-part="tab"]')]
-    const [first, second] = [...root.querySelectorAll<HTMLElement>('[kui-part="panel"]')]
+    const shown = () =>
+      [...root.querySelectorAll('[kui-part="panel"]')].map((each) => each.textContent).join()
     const heard = hear(root, "value-change", "value")
     await settled()
     expect(one!.getAttribute("aria-selected")).toBe("true")
-    expect(first!.hidden).toBe(false)
-    expect(second!.hidden).toBe(true)
+    expect(shown()).toBe("First")
     one!.focus()
     await userEvent.keyboard("{ArrowRight}{Enter}")
     await settled()
     expect(two!.getAttribute("aria-selected")).toBe("true")
-    expect(second!.hidden).toBe(false)
-    expect(first!.hidden).toBe(true)
+    expect(shown()).toBe("Second")
     expect(heard.length).toBe(1)
     expect(heard[0]).toContain("value b")
     expect(faults(root)).toEqual([])
   })
 
-  it("a dialog: drawn at the end of the page while it is open, and back when it closes", async () => {
+  it("an accordion: each item's parts share the item", async () => {
+    const root = mount(
+      `<kui-accordion default-value="b">
+         <div kui-part="root">
+           ${["a", "b"]
+             .map(
+               (each) => `<div kui-part="item" kui-value="${each}">
+                 <h3 kui-part="header"><button kui-part="trigger">${each}</button></h3>
+                 <div kui-part="panel">Content ${each}</div>
+               </div>`
+             )
+             .join("")}
+         </div>
+       </kui-accordion>`
+    )
+    const [a, b] = [...root.querySelectorAll("button")]
+    const shown = () =>
+      [...root.querySelectorAll('[kui-part="panel"]')].map((each) => each.textContent).join()
+    await settled()
+    expect(shown()).toBe("Content b")
+    expect(b!.getAttribute("aria-expanded")).toBe("true")
+    a!.click()
+    await settled()
+    // One at a time, unless it is told otherwise.
+    expect(shown()).toBe("Content a")
+    expect(a!.closest('[kui-part="item"]')!.hasAttribute("data-open")).toBe(true)
+    expect(faults(root)).toEqual([])
+  })
+
+  it("a dialog: drawn at the end of the page while it is open, and out of it when it closes", async () => {
     const root = mount(
       `<kui-dialog>
          <button kui-part="trigger">Open</button>
@@ -124,38 +188,40 @@ describe("the components as custom elements", () => {
        </kui-dialog>`
     )
     const trigger = root.querySelector("button")!
-    const portal = root.querySelector<HTMLElement>('[kui-part="portal"]')!
-    const popup = root.querySelector<HTMLElement>('[kui-part="popup"]')!
-    expect(portal.hidden).toBe(true)
-    expect(portal.closest("kui-dialog")).not.toBe(null)
+    expect(root.querySelector('[kui-part="portal"]')).toBe(null)
     trigger.click()
     await settled()
-    expect(portal.parentElement!.hasAttribute("data-kirana-portal")).toBe(true)
-    expect(portal.parentElement!.parentElement).toBe(document.body)
+    const portal = document.querySelector<HTMLElement>("body > [data-kirana-portal]")!
+    const popup = portal.querySelector<HTMLElement>('[kui-part="popup"]')!
     expect(popup.getAttribute("role")).toBe("dialog")
     expect(popup.getAttribute("aria-labelledby")).toBe(popup.querySelector("h2")!.id)
     expect(popup.contains(document.activeElement)).toBe(true)
     expect(faults(document.body)).toEqual([])
     await userEvent.keyboard("{Escape}")
     await settled()
-    await expect.poll(() => portal.closest("kui-dialog")).not.toBe(null)
-    expect(portal.hidden).toBe(true)
+    await expect.poll(() => document.querySelector("[data-kirana-portal]")).toBe(null)
     expect(document.activeElement).toBe(trigger)
-    expect(document.querySelector("[data-kirana-portal]")).toBe(null)
+    // And again: it is put back, not made anew.
+    trigger.click()
+    await settled()
+    expect(document.querySelector("body > [data-kirana-portal]")).toBe(portal)
+    popup.querySelector("button")!.click()
+    await settled()
+    await expect.poll(() => document.querySelector("[data-kirana-portal]")).toBe(null)
   })
 
   it("takes parts that are added later, and lets go of ones that leave", async () => {
     const root = mount(
-      `<kui-collapsible><button kui-part="trigger">More</button></kui-collapsible>`
+      `<kui-collapsible><div kui-part="root"><button kui-part="trigger">More</button></div></kui-collapsible>`
     )
-    const element = root.firstElementChild!
     const trigger = root.querySelector("button")!
     const panel = document.createElement("div")
     panel.setAttribute("kui-part", "panel")
-    element.append(panel)
-    await expect.poll(() => panel.hidden).toBe(true)
+    trigger.after(panel)
+    await expect.poll(() => panel.isConnected).toBe(false)
     trigger.click()
     await settled()
+    expect(panel.isConnected).toBe(true)
     expect(panel.hasAttribute("data-open")).toBe(true)
     trigger.remove()
     await settled()
@@ -164,7 +230,9 @@ describe("the components as custom elements", () => {
   })
 
   it("is read and used by the agent bridge like any other adapter's", async () => {
-    const root = mount(`<kui-switch aria-label="Wi-Fi"></kui-switch>`)
+    const root = mount(
+      `<kui-switch><button kui-part="root" aria-label="Wi-Fi"></button></kui-switch>`
+    )
     const sources: string[] = []
     root.addEventListener("checked-change", (told) =>
       sources.push((told as Told).detail.details.source)

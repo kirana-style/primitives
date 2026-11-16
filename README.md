@@ -39,17 +39,20 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   "agent"` and may refuse. It reads what every part writes on its element, so one bridge
   serves every adapter. `allow`, `data-agent-confirm`, `data-agent-hidden` and
   `data-agent-secret` say what an agent may do and see; `registerTools` gives it to a
-  browser's own agent (WebMCP) where there is one.
+  browser's own agent (WebMCP) where there is one. `history()`, `undo()` and `redo()` keep
+  what an agent changed, and take it back through the same handlers.
 - **Its checks are yours.** `@kirana-ui/core/testing` reads a page for the faults every
   component here is held out of, writes it as text two frameworks can be compared by, and
   waits for motion to end: for a design system built on these, or a component of your own.
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
   out in, and a popup moved to the end of the page keeps the direction of its trigger. A
   Direction provider states it where no page can be asked, on a server.
-- **With no framework too, in progress.** `packages/web` is the components as custom
-  elements: the root is the element (`<kui-dialog>`), its parts the page's own elements
-  (`<button kui-part="trigger">`), with no shadow root. Five so far (Checkbox, Collapsible,
-  Dialog, Switch, Tabs); it is not published yet.
+- **With no framework too, in progress.** `@kirana-ui/web` is the components as custom
+  elements. The element (`<kui-dialog>`) holds the component and draws nothing; its parts
+  are the page's own elements (`<button kui-part="trigger">`), with no shadow root, so the
+  page is the page the other adapters draw. Seven so far (Accordion, Checkbox, Collapsible,
+  Dialog, Radio Group, Switch, Tabs), held to the same scenarios and the same DOM as the
+  five frameworks; the rest follow.
 - **Small.** The core has one dependency (`@floating-ui/dom`), and the calendar a second of its own
   (`@internationalized/date`): a page that draws no calendar carries none of it.
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a

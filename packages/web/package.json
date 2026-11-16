@@ -6,20 +6,15 @@
   "license": "MIT",
   "author": "The Kirana authors",
   "type": "module",
-  "sideEffects": [
-    "./src/index.ts",
-    "./src/checkbox.ts",
-    "./src/collapsible.ts",
-    "./src/dialog.ts",
-    "./src/switch.ts",
-    "./src/tabs.ts"
-  ],
+  "sideEffects": true,
   "exports": {
     ".": "./src/index.ts",
     "./runtime": "./src/runtime.ts",
+    "./accordion": "./src/accordion.ts",
     "./checkbox": "./src/checkbox.ts",
     "./collapsible": "./src/collapsible.ts",
     "./dialog": "./src/dialog.ts",
+    "./radio-group": "./src/radio-group.ts",
     "./switch": "./src/switch.ts",
     "./tabs": "./src/tabs.ts"
   },

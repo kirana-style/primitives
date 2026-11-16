@@ -1,0 +1,18 @@
+{
+  "name": "fixture-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev --port 4106",
+    "build": "vp build"
+  },
+  "dependencies": {
+    "@kirana-ui/core": "workspace:*",
+    "@kirana-ui/web": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

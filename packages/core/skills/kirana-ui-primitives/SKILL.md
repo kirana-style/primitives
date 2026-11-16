@@ -75,6 +75,8 @@ step goes through the component's own handlers: its callback runs with
 `data-agent-confirm="what it does"`, private regions `data-agent-hidden`, secrets
 `data-agent-secret`. `agentTools` are the three tools as JSON Schema for your model;
 `registerTools(agent, { allow })` gives them to a browser's own agent where it has one.
+`agent.history()` lists what the agent changed; `agent.undo()` and `agent.redo()` take a
+change back and make it again, through the same handlers.
 
 ## Checking the result
 

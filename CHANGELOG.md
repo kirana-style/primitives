@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/kirana-style/primitives/compare/v0.1.1...v0.2.0) (2026-11-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* typed parts, composition, positioning and a complete llms.txt ([#49](https://github.com/kirana-style/primitives/issues/49))
+
+### Features
+
+* typed parts, composition, positioning and a complete llms.txt ([#49](https://github.com/kirana-style/primitives/issues/49)) ([25665bd](https://github.com/kirana-style/primitives/commit/25665bd197f0269386f15dc1231a0630475f5200))
+
 ## [0.1.1](https://github.com/kirana-style/primitives/compare/v0.1.0...v0.1.1) (2026-11-16)
 
 

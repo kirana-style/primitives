@@ -1,9 +1,10 @@
 # Kirana UI Primitives
 
-Headless components for React, Vue, Svelte, Solid and Angular: one framework-free core that holds
-every behaviour, and a thin adapter per framework that renders it in that framework's idiom.
+Headless components for React, Vue, Svelte, Solid and Angular, and as custom elements where there
+is no framework: one framework-free core that holds every behaviour, and a thin adapter per
+framework that renders it in that framework's idiom.
 
-> **Status: 0.1, before 1.0.** On npm as `@kirana-ui/*`. Forty-nine components on all five adapters:
+> **Status: before 1.0.** On npm as `@kirana-ui/*`, one version for every package. Forty-nine components on every adapter:
 > Accordion, Alert Dialog, Autocomplete, Autosize (a text area), Avatar, Button, Calendar, Carousel, Checkbox, Checkbox Group, Collapsible, Combobox, Command, Context Menu, Date Field, Date Picker, Dialog, Drawer, Field, Fieldset, Form, Hover Card, Input, Label, Listbox, Menu, Menubar, Message Scroller, Meter, Navigation Menu, Number Field, One-Time Code (`Otp`), Pagination,
 > Popover, Progress, QR Code, Radio Group, Resizable, Select, Scroll Area, Separator, Slider, Switch, Tabs, Toast, Toggle, Toggle Group, Toolbar, Tooltip; and the
 > Direction provider. The API will change.
@@ -22,6 +23,8 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   submits it and a `<label>` reaches it, with no extra wiring. A form's `reset` takes every
   control back to the value it began with, a `<fieldset disabled>` disables what is inside it,
   and `form="id"` puts a control in a form it is not inside, as each does for a native control.
+  A read-only control keeps its focus and its place in the form, and takes no change; a
+  checkbox group holds its boxes' values, with a parent box that checks them all.
 - **Faults are held out by checks, not by care.** Every state of every component, on every
   framework, is read for the faults this library and others have had: a state written as
   `="false"`, a reference to an id that is not in the page, an id used twice, an attribute the
@@ -72,6 +75,7 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, the popup layer over layers, focus, scroll lock and position, hover, roving focus, list navigation, typeahead, form control), a controller per component, the vocabulary, a plain-DOM binder |
 | `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                                                                                |
+| `packages/web`                                        | `@kirana-ui/web`: every component as a custom element whose parts are the page's own elements                                                                                                                                                   |
 | `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's place, states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))                                                            |
 | `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                                                               |
 | `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                                                                                  |
@@ -184,8 +188,10 @@ bun tests/conformance/run.ts --browser firefox   # or chromium,firefox,webkit: o
 vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives
 vp run budgets        # gzip per component, against the limits in budgets.json
 vp run parity         # every adapter exports the same components, parts, part props and entries
+vp run llms           # each adapter's llms.txt is current and keeps its rules (bun scripts/llms.ts writes it)
 vp run rehearse       # the release path against a registry of its own; nothing reaches npm
 vp run pack           # the packages as published (dist-packages/), then used from an empty project
+vp run prepush        # the checks a pull request is held to, then the conformance run
 ```
 
 ## Licence

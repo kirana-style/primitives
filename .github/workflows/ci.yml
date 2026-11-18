@@ -76,7 +76,9 @@ jobs:
   conformance:
     runs-on: ubuntu-26.04
     name: build and conformance (${{ matrix.browser }})
-    timeout-minutes: 20
+    # Firefox plays one subject at a time, the slowest of the three: at 20 minutes it was stopped
+    # in the eleventh of thirteen subjects with nothing failed, once the run gained five scenarios.
+    timeout-minutes: 35
     strategy:
       # One engine's failure does not hide what the others would have said.
       fail-fast: false

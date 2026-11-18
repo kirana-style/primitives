@@ -2105,10 +2105,16 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
             ?.style.transform.startsWith("translate"),
         testid
       )
-    await id("pl1-trigger").evaluate((element) => element.scrollIntoView({ block: "start" }))
-    // The page is now at its end, and nothing that opens here may move it. A browser holds a
-    // page still by what is at the top of the view (scroll anchoring), and moves the page when
-    // that has moved: the sections above must be at rest.
+    // The trigger a little under the top of the view, wholly in it: a page scrolls by whole
+    // pixels in WebKit while its boxes lie on parts of one, so a trigger brought to the very top
+    // is a quarter of a pixel out, and the press that follows scrolls it in, one pixel.
+    await id("pl1-trigger").evaluate((element) => {
+      element.scrollIntoView({ block: "start" })
+      window.scrollBy(0, -8)
+    })
+    // Nothing that opens here may move the page. A browser holds a page still by what is at the
+    // top of the view (scroll anchoring), and moves the page when that has moved: the sections
+    // above must be at rest.
     const scroll = () => page.evaluate(() => window.scrollY)
     const scrolled = await scroll()
 

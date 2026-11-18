@@ -901,3 +901,9 @@ note. Three places hold them:
   for the next run.
 - **A dependency change is checked in a fresh clone** with a frozen lockfile: links of removed
   packages stay in `node_modules`.
+- **A trigger brought to the very top of the view is not wholly in it.** WebKit scrolls a page
+  by whole pixels while its boxes lie on parts of one: after `scrollIntoView({ block: "start"
+  })` a trigger was a quarter of a pixel above the view, and the press that followed scrolled
+  it in, one pixel, before anything had opened. A scenario that asserts the page stays still
+  leaves room over what it presses (`placing`). It showed once the section stopped being the
+  page's last, where the page could not scroll that far.

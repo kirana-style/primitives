@@ -1,4 +1,4 @@
-import type { ComboboxProps } from "@kirana-ui/core/combobox"
+import type { ComboboxEntry, ComboboxProps, ComboboxShown } from "@kirana-ui/core/combobox"
 import type { Snippet } from "svelte"
 
 import type { PartAttributes, Placement, Renderless, StateFor } from "../types.ts"
@@ -90,3 +90,36 @@ export type SeparatorProps = PartAttributes<"div", StateFor<"combobox", "separat
 
 /** Drawn while no item is shown for what was typed. */
 export type EmptyProps = PartAttributes<"div", StateFor<"combobox", "empty">>
+
+/**
+ * Says how the list stands ("3 results", "Loading") to software that reads the page, as its
+ * text changes. Keep it in the page and change what it holds: inside the popup, or beside the
+ * input.
+ */
+export type StatusProps = PartAttributes<"div", StateFor<"combobox", "status">>
+
+/**
+ * The chosen value's label, for a button that is the combobox, its input inside the popup. It
+ * draws no element.
+ */
+export type ValueProps = {
+  /** Shown while nothing is chosen. */
+  placeholder?: string | undefined
+  /**
+   * Draws something else than the label: it is given what is chosen (`value` and `label`;
+   * with `multiple`, `values` and `labels`, in the order they were chosen).
+   */
+  children?: Snippet<[shown: ComboboxShown]> | undefined
+}
+
+/**
+ * Draws the list from the root's `items`: its snippet once for each item left for what was
+ * typed, or for each group that has items left. The root then filters, and no item hides
+ * itself. It draws no element.
+ */
+export type CollectionProps = {
+  /** A group the root's `items` gave: its items left are then what is drawn. */
+  of?: ComboboxEntry | undefined
+  /** Drawn once for each item left, or for each group that has items left. */
+  children: Snippet<[entry: ComboboxEntry]>
+}

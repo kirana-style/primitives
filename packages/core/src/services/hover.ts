@@ -20,6 +20,11 @@ export interface Hover {
   handlers(): Record<string, (event: never) => void>
   /** Follows the pointer while the popup is open. Returns the stop. */
   start(): () => void
+  /**
+   * Lets the popup go without closing it: it was opened or kept another way (a press), and is
+   * no longer the pointer's. A wait that has not ended is forgotten.
+   */
+  forget(): void
 }
 
 // One popup closing makes the next open at once, for a moment: a person reading a row of them
@@ -138,6 +143,10 @@ export function createHover(config: {
         close("dismiss", details("trigger-press", event))
       },
     }),
+    forget() {
+      clear()
+      if (current === self) current = undefined
+    },
     start() {
       let unwatch: (() => void) | undefined
       const stop = effect(() => {

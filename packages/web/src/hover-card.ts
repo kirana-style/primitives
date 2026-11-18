@@ -1,6 +1,7 @@
 import { createHoverCard } from "@kirana-ui/core/hover-card"
 
 import { hoverPopup } from "./hover-popup.ts"
+import type { Placed } from "./around.ts"
 import type { ElementOf } from "./runtime.ts"
 
 /**
@@ -12,6 +13,6 @@ export const tag = hoverPopup("kui-hover-card", createHoverCard)
 
 declare global {
   interface HTMLElementTagNameMap {
-    "kui-hover-card": ElementOf<typeof tag, { "open-change": ["onOpenChange", "open"] }>
+    "kui-hover-card": ElementOf<typeof tag, { "open-change": ["onOpenChange", "open"] }> & Placed
   }
 }

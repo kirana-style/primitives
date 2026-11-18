@@ -4,6 +4,7 @@
   import { createCheckbox } from "@kirana-ui/core/checkbox"
 
   import Part from "../Part.svelte"
+  import { useCheckboxGroupAround } from "../checkbox-group/context.ts"
   import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
@@ -14,6 +15,7 @@
     defaultChecked,
     onCheckedChange,
     indeterminate,
+    parent,
     disabled,
     readOnly,
     required,
@@ -31,12 +33,14 @@
     if (!by.canceled) checked = next
   }
 
+  const around = { field: useFieldAround(), group: useCheckboxGroupAround() }
   const made = provide(
-    controller(within(createCheckbox, { field: useFieldAround() }), () => ({
+    controller(within(createCheckbox, around), () => ({
       id: id ?? generated,
       checked,
       defaultChecked,
-    indeterminate,
+      indeterminate,
+      parent,
       disabled,
       readOnly,
       required,

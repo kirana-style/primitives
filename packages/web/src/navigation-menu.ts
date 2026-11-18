@@ -7,6 +7,7 @@ import type {
 } from "@kirana-ui/core/navigation-menu"
 
 import { once, ownValue, positioner } from "./around.ts"
+import type { Placed } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
 
@@ -68,6 +69,7 @@ export const tag = defineElement<NavigationMenuProps<string>, NavigationMenu<str
 
 declare global {
   interface HTMLElementTagNameMap {
-    "kui-navigation-menu": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+    "kui-navigation-menu": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }> &
+      Placed
   }
 }

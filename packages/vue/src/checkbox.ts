@@ -2,8 +2,9 @@ import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { CheckboxProps, Checkbox as Controller } from "@kirana-ui/core/checkbox"
-import { defineComponent, h, useId } from "vue"
+import { defineComponent, h, inject, useId } from "vue"
 
+import { CHECKBOX_GROUP } from "./checkbox-group-context.ts"
 import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
@@ -35,6 +36,7 @@ const Root = defineComponent({
     checked: optional(Boolean),
     defaultChecked: Boolean,
     indeterminate: Boolean,
+    parent: Boolean,
     disabled: Boolean,
     readOnly: Boolean,
     required: Boolean,
@@ -47,12 +49,14 @@ const Root = defineComponent({
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
     const field = useFieldAround()
+    const group = inject(CHECKBOX_GROUP, null) ?? undefined
     scope.provide(
-      controller(within(createCheckbox, { field }), () => ({
+      controller(within(createCheckbox, { field, group }), () => ({
         id: props.id ?? generated,
         checked: props.checked,
         defaultChecked: props.defaultChecked,
         indeterminate: props.indeterminate,
+        parent: props.parent,
         disabled: props.disabled,
         readOnly: props.readOnly,
         required: props.required,

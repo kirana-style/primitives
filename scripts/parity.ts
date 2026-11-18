@@ -365,7 +365,6 @@ const PROPS: Record<string, PropIdiom> = {
       "Autocomplete.Root.inputValue": ONE_COMBOBOX,
       "Autocomplete.Root.defaultInputValue": ONE_COMBOBOX,
       "Autocomplete.Root.onInputValueChange": ONE_COMBOBOX,
-      "Autocomplete.Root.items": ONE_COMBOBOX,
       "Autocomplete.Root.multiple": ONE_COMBOBOX,
       "Autocomplete.Root.values": ONE_COMBOBOX,
       "Autocomplete.Root.defaultValues": ONE_COMBOBOX,

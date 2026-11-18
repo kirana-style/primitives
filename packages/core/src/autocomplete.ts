@@ -33,6 +33,20 @@ export interface AutocompleteProps {
   openOnInputClick?: boolean | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /**
+   * Its text can be read and not changed: nothing typed is taken, no suggestion pressed is
+   * written in, and its clear button does nothing. The list still opens (by its button, the
+   * arrows, or a press with `openOnInputClick`) and can be gone through. It keeps focus, and
+   * its text is still submitted.
+   */
+  readOnly?: boolean | undefined
+  /**
+   * The suggestions as data, for a `Collection` to draw: a list of them with their labels,
+   * groups of them (`{ value, items }`, `value` the group's name), or the labels by value. The
+   * autocomplete filters them by what is typed (not with `mode: "none"`), and the `Collection`
+   * draws what is left.
+   */
+  items?: ComboboxProps<string>["items"]
   /** Needed: in a `Field`, leaving it empty is then invalid. */
   required?: boolean | undefined
   /** The input's name in the form around it. */
@@ -77,6 +91,8 @@ export function createAutocomplete(
       onOpenChange: (open, by) => props.peek().onOpenChange?.(open, by),
       filter: own.mode === "none" ? null : own.filter,
       disabled: own.disabled,
+      readOnly: own.readOnly,
+      items: own.items,
       required: own.required,
       form: own.form,
       virtualized: own.virtualized,

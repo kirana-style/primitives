@@ -10,6 +10,7 @@ import {
   KuiAvatarImage,
   KuiButton,
   KuiCheckbox,
+  KuiCheckboxGroup,
   KuiCheckboxIndicator,
   KuiCollapsible,
   KuiCollapsiblePanel,
@@ -23,6 +24,7 @@ import {
   KuiDialogPortal,
   KuiDialogTitle,
   KuiDialogTrigger,
+  KuiDialogViewport,
   KuiHoverCard,
   KuiHoverCardPopup,
   KuiHoverCardPortal,
@@ -33,6 +35,7 @@ import {
   KuiComboboxChipRemove,
   KuiComboboxChips,
   KuiComboboxClear,
+  KuiComboboxCollection,
   KuiComboboxEmpty,
   KuiComboboxHiddenInput,
   KuiComboboxInput,
@@ -42,7 +45,9 @@ import {
   KuiComboboxPopup,
   KuiComboboxPortal,
   KuiComboboxPositioner,
+  KuiComboboxStatus,
   KuiComboboxTrigger,
+  KuiComboboxValue,
   KuiContextMenuTrigger,
   KuiListbox,
   KuiListboxGroup,
@@ -115,6 +120,8 @@ import {
   KuiNumberFieldGroup,
   KuiNumberFieldIncrement,
   KuiNumberFieldInput,
+  KuiNumberFieldScrubArea,
+  KuiNumberFieldScrubAreaCursor,
   KuiSelectList,
   KuiSelectScrollDownArrow,
   KuiSelectScrollUpArrow,
@@ -164,6 +171,8 @@ import {
   KuiResizableHandle,
   KuiResizablePanel,
   KuiPopover,
+  KuiPopoverArrow,
+  KuiPopoverBackdrop,
   KuiPopoverClose,
   KuiPopoverDescription,
   KuiPopoverPopup,
@@ -234,6 +243,7 @@ import {
   KuiTooltipPositioner,
   KuiTooltipTrigger,
 } from "@kirana-ui/angular"
+import type { OffsetFunction } from "@kirana-ui/angular"
 
 /**
  * The page every adapter draws, element for element: the conformance run walks it and compares
@@ -255,6 +265,7 @@ import {
     KuiAvatarImage,
     KuiButton,
     KuiCheckbox,
+    KuiCheckboxGroup,
     KuiCheckboxIndicator,
     KuiCollapsible,
     KuiCollapsiblePanel,
@@ -268,6 +279,7 @@ import {
     KuiDialogPortal,
     KuiDialogTitle,
     KuiDialogTrigger,
+    KuiDialogViewport,
     KuiHoverCard,
     KuiHoverCardPopup,
     KuiHoverCardPortal,
@@ -278,6 +290,7 @@ import {
     KuiComboboxChipRemove,
     KuiComboboxChips,
     KuiComboboxClear,
+    KuiComboboxCollection,
     KuiComboboxEmpty,
     KuiComboboxHiddenInput,
     KuiComboboxInput,
@@ -287,7 +300,9 @@ import {
     KuiComboboxPopup,
     KuiComboboxPortal,
     KuiComboboxPositioner,
+    KuiComboboxStatus,
     KuiComboboxTrigger,
+    KuiComboboxValue,
     KuiContextMenuTrigger,
     KuiListbox,
     KuiListboxGroup,
@@ -360,6 +375,8 @@ import {
     KuiNumberFieldGroup,
     KuiNumberFieldIncrement,
     KuiNumberFieldInput,
+    KuiNumberFieldScrubArea,
+    KuiNumberFieldScrubAreaCursor,
     KuiSelectList,
     KuiSelectScrollDownArrow,
     KuiSelectScrollUpArrow,
@@ -408,6 +425,8 @@ import {
     KuiResizableHandle,
     KuiResizablePanel,
     KuiPopover,
+    KuiPopoverArrow,
+    KuiPopoverBackdrop,
     KuiPopoverClose,
     KuiPopoverDescription,
     KuiPopoverPopup,
@@ -812,6 +831,19 @@ import {
                 </ng-template>
               </ng-container>
               <button kuiDialogClose data-testid="d1-close">Close</button>
+            </div>
+          </ng-template>
+        </ng-container>
+        <ng-container kuiDialog [kuiId]="'d3'">
+          <button kuiDialogTrigger data-testid="d3-trigger">Open long dialog</button>
+          <ng-template kuiDialogPortal>
+            <div kuiDialogBackdrop class="backdrop" data-testid="d3-backdrop"></div>
+            <div kuiDialogViewport class="viewport" data-testid="d3-viewport">
+              <div kuiDialogPopup class="dialog long" data-testid="d3-popup">
+                <h2 kuiDialogTitle>Terms</h2>
+                <p kuiDialogDescription>Longer than the page: its viewport scrolls.</p>
+                <button kuiDialogClose data-testid="d3-close">Close</button>
+              </div>
             </div>
           </ng-template>
         </ng-container>
@@ -1918,9 +1950,14 @@ import {
           [defaultValue]="5"
           [min]="0"
           [max]="10"
+          class="number-field"
           data-testid="nf1"
           (valueChanged)="qty.set('' + $event.value)"
         >
+          <span kuiNumberFieldScrubArea class="scrub" data-testid="nf1-scrub">
+            <span>Quantity</span>
+            <span *kuiNumberFieldScrubAreaCursor class="scrub-cursor"></span>
+          </span>
           <div kuiNumberFieldGroup class="number-group" data-testid="nf1-group">
             <button kuiNumberFieldDecrement data-testid="nf1-down">-</button>
             <input kuiNumberFieldInput aria-label="Quantity" data-testid="nf1-input" />
@@ -2247,6 +2284,87 @@ import {
         </form>
         <span data-testid="f2-sent">{{ sent2() }}</span>
       </section>
+      <section data-fixture="checkbox-group">
+        <form data-testid="cg1-form">
+          <div
+            kuiCheckboxGroup
+            [kuiId]="'cg1'"
+            [(value)]="toppings"
+            [allValues]="toppingValues"
+            class="bar"
+            data-testid="cg1"
+          >
+            <span
+              kuiCheckbox
+              [parent]="true"
+              [kuiId]="'cg1-all-input'"
+              class="box"
+              aria-label="All"
+              data-testid="cg1-all"
+            >
+              <span *kuiCheckboxIndicator class="mark">✓</span>
+            </span>
+            @for (each of toppingValues; track each) {
+              <span
+                kuiCheckbox
+                [kuiId]="'cg1-' + each + '-input'"
+                [name]="'topping'"
+                [value]="each"
+                class="box"
+                [attr.aria-label]="each"
+                [attr.data-testid]="'cg1-' + each"
+              >
+                <span *kuiCheckboxIndicator class="mark">✓</span>
+              </span>
+            }
+          </div>
+          <button type="reset" data-testid="cg1-reset">Reset</button>
+        </form>
+        <output data-testid="cg1-output">{{ toppings()?.join(",") }}</output>
+        <div kuiField [kuiId]="'cg2'" [name]="'extras'" data-testid="cg2">
+          <label kuiFieldLabel data-testid="cg2-label">Extras</label>
+          <div kuiCheckboxGroup [defaultValue]="['napkins']" class="bar" data-testid="cg2-group">
+            @for (each of extras; track each) {
+              <span
+                kuiCheckbox
+                [kuiId]="'cg2-' + each + '-input'"
+                [value]="each"
+                class="box"
+                [attr.aria-label]="each"
+                [attr.data-testid]="'cg2-' + each"
+              >
+                <span *kuiCheckboxIndicator class="mark">✓</span>
+              </span>
+            }
+          </div>
+        </div>
+      </section>
+      <section data-fixture="read-only">
+        <div kuiSlider [kuiId]="'ro1'" [defaultValue]="40" [readOnly]="true" data-testid="ro1">
+          <div kuiSliderControl class="slider" data-testid="ro1-control">
+            <div kuiSliderTrack class="slider-track">
+              <div kuiSliderIndicator class="fill"></div>
+              <div kuiSliderThumb class="thumb" aria-label="Level" data-testid="ro1-thumb"></div>
+            </div>
+          </div>
+        </div>
+        <ng-container kuiSelect [kuiId]="'ro2'" [defaultValue]="'Banana'" [readOnly]="true">
+          <button kuiSelectTrigger data-testid="ro2-trigger">
+            <span kuiSelectValue data-testid="ro2-value"></span>
+          </button>
+          <ng-template kuiSelectPortal>
+            <div kuiSelectPositioner [sideOffset]="4">
+              <div kuiSelectPopup class="popup" data-testid="ro2-popup">
+                @for (each of lockedFruits; track each) {
+                  <div kuiSelectItem [value]="each" class="item" [attr.data-testid]="'ro2-' + each">
+                    <span kuiSelectItemText>{{ each }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+      </section>
       <section data-fixture="direction">
         <button
           type="button"
@@ -2370,6 +2488,151 @@ import {
           <output data-testid="pl3-output">{{ sought() ?? "none" }}</output>
         </div>
       </section>
+      <section data-fixture="popover-more">
+        <div class="bar">
+          <ng-container kuiPopover [kuiId]="'pm1'" [modal]="true">
+            <button kuiPopoverTrigger data-testid="pm1-trigger">Modal popover</button>
+            <ng-template kuiPopoverPortal>
+              <div kuiPopoverBackdrop class="backdrop" data-testid="pm1-backdrop"></div>
+              <div
+                kuiPopoverPositioner
+                [sideOffset]="8"
+                [arrowPadding]="8"
+                [sticky]="true"
+                data-testid="pm1-positioner"
+              >
+                <div kuiPopoverPopup class="popup pointed" data-testid="pm1-popup">
+                  <div kuiPopoverArrow class="arrow" data-testid="pm1-arrow"></div>
+                  <h2 kuiPopoverTitle>Modal</h2>
+                  <button type="button" data-testid="pm1-first">First</button>
+                  <button kuiPopoverClose data-testid="pm1-close">Close</button>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <ng-container kuiPopover [kuiId]="'pm2'" [modal]="'trap-focus'">
+            <button kuiPopoverTrigger [openOnHover]="true" [delay]="50" data-testid="pm2-trigger">
+              Hover popover
+            </button>
+            <ng-template kuiPopoverPortal>
+              <div kuiPopoverPositioner [sideOffset]="8" data-testid="pm2-positioner">
+                <div kuiPopoverPopup class="popup" data-testid="pm2-popup">
+                  <h2 kuiPopoverTitle>Hovered</h2>
+                  <button type="button" data-testid="pm2-first">First</button>
+                  <button kuiPopoverClose data-testid="pm2-close">Close</button>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <ng-container kuiPopover [kuiId]="'pm3'">
+            <button kuiPopoverTrigger data-testid="pm3-trigger">Placed popover</button>
+            <ng-template kuiPopoverPortal>
+              <div
+                kuiPopoverPositioner
+                [side]="'top'"
+                [align]="'start'"
+                [positionMethod]="'fixed'"
+                [sideOffset]="anchorHigh"
+                [collisionPadding]="{ left: 12, right: 12 }"
+                [collisionAvoidance]="{ side: 'none' }"
+                data-testid="pm3-positioner"
+              >
+                <div kuiPopoverPopup class="popup" aria-label="Placed" data-testid="pm3-popup">
+                  Placed
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+      </section>
+      <section data-fixture="combobox-data">
+        <div class="bar">
+          <ng-container
+            kuiCombobox
+            [kuiId]="'cd1'"
+            [items]="pantry"
+            [autoHighlight]="true"
+            (inputValueChanged)="looked.set($event.value)"
+          >
+            <button kuiComboboxTrigger data-testid="cd1-trigger">
+              <span kuiComboboxValue [placeholder]="'Pick one'" data-testid="cd1-value"></span>
+            </button>
+            <div kuiComboboxStatus data-testid="cd1-status">{{ pantryLeft(looked()) }}</div>
+            <ng-template kuiComboboxPortal>
+              <div kuiComboboxPositioner [sideOffset]="4" data-testid="cd1-positioner">
+                <div kuiComboboxPopup class="popup" aria-label="Pantry" data-testid="cd1-popup">
+                  <input
+                    kuiComboboxInput
+                    class="search"
+                    aria-label="Search the pantry"
+                    data-testid="cd1-input"
+                  />
+                  <div kuiComboboxList aria-label="Pantry" data-testid="cd1-list">
+                    <ng-container *kuiComboboxCollection="let group">
+                      <div
+                        kuiComboboxGroup
+                        [kuiId]="'cd1-g-' + group.label"
+                        [attr.data-testid]="'cd1-g-' + group.label"
+                      >
+                        <div kuiComboboxGroupLabel>{{ group.label }}</div>
+                        <ng-container *kuiComboboxCollection="let item of group">
+                          <div
+                            kuiComboboxItem
+                            [value]="item.value"
+                            [kuiId]="'cd1-' + item.key"
+                            [disabled]="item.disabled"
+                            class="item"
+                            [attr.data-testid]="'cd1-' + item.key"
+                          >
+                            {{ item.label }}
+                          </div>
+                        </ng-container>
+                      </div>
+                    </ng-container>
+                  </div>
+                  <div *kuiComboboxEmpty data-testid="cd1-empty">Nothing in the pantry</div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+        <div class="bar">
+          <ng-container
+            kuiCombobox
+            [kuiId]="'cd2'"
+            [name]="'berry'"
+            [items]="berries"
+            [defaultValue]="'cherry'"
+            [readOnly]="sealed()"
+            [autoHighlight]="true"
+          >
+            <input kuiComboboxInput aria-label="Berry" data-testid="cd2-input" />
+            <button *kuiComboboxClear aria-label="Clear the berry" data-testid="cd2-clear">
+              ×
+            </button>
+            <ng-template kuiComboboxPortal>
+              <div kuiComboboxPositioner [sideOffset]="4" data-testid="cd2-positioner">
+                <div kuiComboboxPopup class="popup" aria-label="Berries" data-testid="cd2-popup">
+                  <ng-container *kuiComboboxCollection="let item">
+                    <div
+                      kuiComboboxItem
+                      [value]="item.value"
+                      [kuiId]="'cd2-' + item.key"
+                      class="item"
+                      [attr.data-testid]="'cd2-' + item.key"
+                    >
+                      {{ item.label }}
+                    </div>
+                  </ng-container>
+                  <div *kuiComboboxEmpty data-testid="cd2-empty">No berry</div>
+                </div>
+              </div>
+            </ng-template>
+            <input kuiComboboxHiddenInput />
+          </ng-container>
+          <button type="button" data-testid="cd2-unlock" (click)="sealed.set(false)">Unlock</button>
+        </div>
+      </section>
     </main>
   `,
 })
@@ -2414,7 +2677,40 @@ export class App {
   protected readonly chosen = signal(["Banana"])
   protected readonly pick = signal<string | null>(null)
   protected readonly sought = signal<string | null>(null)
+  // A combobox's items as data, in groups: the combobox filters them, and a collection draws them.
+  protected readonly pantry = [
+    {
+      value: "Fruits",
+      items: [
+        { value: "apple", label: "Apple" },
+        { value: "apricot", label: "Apricot" },
+        { value: "banana", label: "Banana", disabled: true },
+      ],
+    },
+    {
+      value: "Roots",
+      items: [
+        { value: "beet", label: "Beet" },
+        { value: "carrot", label: "Carrot" },
+      ],
+    },
+  ]
+  protected readonly berries = [
+    { value: "blackberry", label: "Blackberry" },
+    { value: "blueberry", label: "Blueberry" },
+    { value: "cherry", label: "Cherry" },
+  ]
+  protected readonly looked = signal("")
+  protected readonly sealed = signal(true)
+  /** What a status says of the pantry for what was typed: how many of its items hold the text. */
+  protected pantryLeft(text: string): string {
+    if (text === "") return ""
+    const all = this.pantry.flatMap((each) => each.items)
+    return `${all.filter((each) => each.label.toLowerCase().includes(text.toLowerCase())).length} left`
+  }
   protected readonly moved = signal(false)
+  // A gap as tall as the anchor: what a positioner asks a function for.
+  protected readonly anchorHigh: OffsetFunction = ({ anchor }) => anchor.height
   protected readonly outside = signal(0)
   protected readonly view = signal("list")
   protected readonly presses = signal(0)
@@ -2444,6 +2740,10 @@ export class App {
   protected readonly broken = "data:image/png;base64,AAAA"
   protected readonly alerts = signal<boolean | undefined>(false)
   protected readonly plans = ["free", "pro", "team", "max"]
+  protected readonly toppingValues = ["cheese", "ham", "olives"]
+  protected readonly toppings = signal<readonly string[] | undefined>(["ham"])
+  protected readonly extras = ["napkins", "straw"]
+  protected readonly lockedFruits = ["Apple", "Banana"]
   protected readonly commands = ["New", "Open", "Print"]
   protected readonly places = ["Oslo", "Osaka", "Paris"]
   protected readonly numbered = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)

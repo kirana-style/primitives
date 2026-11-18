@@ -550,6 +550,86 @@ describe("a select of several values", () => {
   })
 })
 
+describe("a read-only select", () => {
+  it("says so on its trigger and its listbox, and stays a stop for Tab", async () => {
+    const { props, trigger, popup } = picker({ readOnly: true, defaultValue: "Banana" })
+    expect(trigger.getAttribute("aria-readonly")).toBe("true")
+    expect(trigger.hasAttribute("data-readonly")).toBe(true)
+    expect(popup.getAttribute("aria-readonly")).toBe("true")
+    expect((trigger as HTMLButtonElement).disabled).toBe(false)
+    props.set({ ...props.peek(), readOnly: false })
+    expect(trigger.hasAttribute("aria-readonly")).toBe(false)
+    expect(trigger.hasAttribute("data-readonly")).toBe(false)
+    expect(popup.hasAttribute("aria-readonly")).toBe(false)
+  })
+
+  it("opens to be read and moved through, and chooses nothing", async () => {
+    const chosen: (string | null)[] = []
+    const { made, trigger, popup, option, shown } = picker({
+      readOnly: true,
+      defaultValue: "Banana",
+      onValueChange: (next) => void chosen.push(next),
+    })
+    trigger.click()
+    await settled()
+    expect(made.open.peek()).toBe(true)
+    expect(document.activeElement).toBe(option("Banana"))
+    await userEvent.keyboard("{ArrowDown}")
+    expect(document.activeElement).not.toBe(option("Banana"))
+    // A press and Enter on another item: the list stays as it is, open, with its value.
+    option("Cherry").click()
+    await userEvent.keyboard("{Enter}")
+    expect(made.value.peek()).toBe("Banana")
+    expect(made.open.peek()).toBe(true)
+    expect(chosen).toEqual([])
+    expect(shown.textContent).toBe("Banana")
+    expect(option("Cherry").getAttribute("aria-selected")).toBe("false")
+    expect(popup.getAttribute("aria-readonly")).toBe("true")
+    await userEvent.keyboard("{Escape}")
+    expect(made.open.peek()).toBe(false)
+    expect(focused()).toBe("trigger")
+  })
+
+  it("adds and takes away nothing where it holds several values", async () => {
+    const { made, heard, trigger, option } = picker({
+      readOnly: true,
+      multiple: true,
+      defaultValues: ["Banana"],
+    })
+    trigger.click()
+    await settled()
+    option("Apple").click()
+    option("Banana").click()
+    expect(made.values.peek()).toEqual(["Banana"])
+    expect(heard).toEqual([])
+  })
+
+  it("is not changed by a letter typed on its closed trigger", () => {
+    const chosen: (string | null)[] = []
+    const { made, trigger } = picker({
+      readOnly: true,
+      defaultValue: "Banana",
+      items: { Apple: "Apple", Banana: "Banana", Cherry: "Cherry" },
+      onValueChange: (next) => void chosen.push(next),
+    })
+    trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }))
+    expect(made.value.peek()).toBe("Banana")
+    expect(chosen).toEqual([])
+  })
+
+  it("is still submitted, and still goes back with its form", async () => {
+    const { made, props, form, trigger, option } = picker({ name: "fruit", defaultValue: "Banana" })
+    trigger.click()
+    await settled()
+    option("Cherry").click()
+    props.set({ ...props.peek(), readOnly: true })
+    expect(new FormData(form).get("fruit")).toBe("Cherry")
+    form.reset()
+    expect(made.value.peek()).toBe("Banana")
+    expect(new FormData(form).get("fruit")).toBe("Banana")
+  })
+})
+
 describe("a select's items given as a record", () => {
   const NAMES = { Cherry: "Sour cherry", Apple: "Green apple", Banana: "Ripe banana" }
 

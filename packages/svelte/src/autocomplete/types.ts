@@ -5,6 +5,7 @@ import type { Renderless } from "../types.ts"
 // Its parts are a combobox's.
 export type {
   ClearProps,
+  CollectionProps,
   EmptyProps,
   GroupLabelProps,
   GroupProps,
@@ -15,6 +16,7 @@ export type {
   PortalProps,
   PositionerProps,
   SeparatorProps,
+  StatusProps,
   TriggerProps,
 } from "../combobox/types.ts"
 

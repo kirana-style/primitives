@@ -1,6 +1,11 @@
+import { defined } from "@kirana-ui/core"
 import type { StateOf } from "@kirana-ui/core"
 import { createPopover } from "@kirana-ui/core/popover"
-import type { Popover as Controller, PopoverProps } from "@kirana-ui/core/popover"
+import type {
+  Popover as Controller,
+  PopoverProps,
+  PopoverTriggerOptions,
+} from "@kirana-ui/core/popover"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
@@ -56,13 +61,25 @@ function Positioner(props: PositionerProps): ReactElement {
   return usePart(controller.positioner, "div", usePositioning(controller.positioning, props))
 }
 
-export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+/** What a trigger takes of its own: whether the pointer opens the popover too, and its waits. */
+export type TriggerOptions = PopoverTriggerOptions
+
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>, TriggerOptions>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+export type ArrowProps = PartComponentProps<"div", StateOf<Parts["arrow"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
 export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
 export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
 
-const Trigger = (props: TriggerProps) => usePart(usePopover("Trigger").trigger, "button", props)
+function Trigger({ openOnHover, delay, closeDelay, ...props }: TriggerProps): ReactElement {
+  const controller = usePopover("Trigger")
+  // Written while rendering, as a positioner's are: nothing re-renders for it.
+  controller.hovering.set(defined({ openOnHover, delay, closeDelay }))
+  return usePart(controller.trigger, "button", props)
+}
+const Backdrop = (props: BackdropProps) => usePart(usePopover("Backdrop").backdrop, "div", props)
+const Arrow = (props: ArrowProps) => usePart(usePopover("Arrow").arrow, "div", props)
 const Popup = (props: PopupProps) => usePart(usePopover("Popup").popup, "div", props)
 const Title = (props: TitleProps) => usePart(usePopover("Title").title, "h2", props)
 const Description = (props: DescriptionProps) =>
@@ -73,8 +90,10 @@ export const Popover = /* @__PURE__ */ parts("Popover", {
   Root,
   Trigger,
   Portal,
+  Backdrop,
   Positioner,
   Popup,
+  Arrow,
   Title,
   Description,
   Close,

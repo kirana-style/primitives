@@ -3,6 +3,7 @@ export { Autocomplete } from "./combobox.tsx"
 export type {
   AutocompleteRootProps as RootProps,
   ClearProps,
+  CollectionProps,
   EmptyProps,
   GroupLabelProps,
   GroupProps,
@@ -13,5 +14,6 @@ export type {
   PortalProps,
   PositionerProps,
   SeparatorProps,
+  StatusProps,
   TriggerProps,
 } from "./combobox.tsx"

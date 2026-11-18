@@ -1,12 +1,16 @@
-import { within } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
-import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
-import { defineComponent, h, useId } from "vue"
+import type {
+  NumberField as Controller,
+  NumberFieldProps,
+  NumberFieldScrubOptions,
+} from "@kirana-ui/core/number-field"
+import { defineComponent, h, useId, watchEffect } from "vue"
 import type { PropType } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
-import { context, controller, fromSignal, partComponent } from "./runtime.ts"
+import { context, controller, fromSignal, partComponent, portalComponent } from "./runtime.ts"
 import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
 
 type State = StatesOf<"numberField">
@@ -95,6 +99,51 @@ const Root = defineComponent({
   },
 }) as unknown as PartComponent<"div", State["root"], RootProps, RootEmits>
 
+/** What a scrub area takes of its own: which way it is dragged, and how fast. */
+export type ScrubAreaProps = NumberFieldScrubOptions & PartComponentProps
+
+const ScrubAreaElement = partComponent(
+  "NumberFieldScrubAreaElement",
+  "span",
+  () => scope.use().scrubArea
+)
+
+/** Pressed and dragged to change the number; `direction`, `pixel-sensitivity`, `teleport-distance`. */
+const ScrubArea = defineComponent({
+  name: "NumberFieldScrubArea",
+  inheritAttrs: false,
+  props: {
+    direction: String as PropType<"horizontal" | "vertical">,
+    pixelSensitivity: Number,
+    teleportDistance: Number,
+  },
+  setup(props, { attrs, slots }) {
+    const { scrub } = scope.use()
+    watchEffect(() => scrub.set(defined({ ...props })), { flush: "sync" })
+    return () => h(ScrubAreaElement, attrs, slots)
+  },
+}) as unknown as PartComponent<"span", State["scrubArea"], ScrubAreaProps>
+
+const CursorPortal = portalComponent(
+  "NumberFieldScrubAreaCursorPortal",
+  () => scope.use().scrubAreaCursor.mounted
+)
+const CursorElement = partComponent(
+  "NumberFieldScrubAreaCursorElement",
+  "span",
+  () => scope.use().scrubAreaCursor.part
+)
+
+/** Drawn in place of the pointer while it is locked for a drag, at the end of `<body>`. */
+const ScrubAreaCursor = defineComponent({
+  name: "NumberFieldScrubAreaCursor",
+  inheritAttrs: false,
+  setup(_props, { attrs, slots }) {
+    return () => h(CursorPortal, null, { default: () => h(CursorElement, attrs, slots) })
+  },
+}) as unknown as PartComponent<"span", State["scrubAreaCursor"]>
+
+export type ScrubAreaCursorProps = PartComponentProps
 export type GroupProps = PartComponentProps
 export type InputProps = PartComponentProps
 export type IncrementProps = PartComponentProps
@@ -117,4 +166,6 @@ export const NumberField = {
     "button",
     () => scope.use().decrement
   ),
+  ScrubArea,
+  ScrubAreaCursor,
 }

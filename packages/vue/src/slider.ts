@@ -66,6 +66,7 @@ const Root = defineComponent({
     thumbAlignment: String as PropType<SliderProps["thumbAlignment"]>,
     orientation: String as PropType<"horizontal" | "vertical">,
     disabled: Boolean,
+    readOnly: Boolean,
     name: String,
     form: String,
     format: Object as PropType<Intl.NumberFormatOptions>,

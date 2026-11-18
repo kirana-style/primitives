@@ -236,6 +236,57 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "viewport": {
+          "description": "What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "nested": {
+              "attribute": "data-nested",
+              "description": "Present when the dialog opened over another dialog.",
+              "selector": "[data-nested]"
+            },
+            "nestedDialogOpen": {
+              "attribute": "data-nested-dialog-open",
+              "description": "Present when another dialog is open above this one.",
+              "selector": "[data-nested-dialog-open]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "portal"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "popup": {
           "description": "The dialog itself.",
           "states": {
@@ -279,7 +330,7 @@ export const vocabulary = {
             "--nested-dialogs": "How many dialogs are open above this one."
           },
           "inside": [
-            "portal"
+            "viewport"
           ],
           "optional": false,
           "repeated": false
@@ -407,6 +458,11 @@ export const vocabulary = {
               "attribute": "data-required",
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
+            },
+            "parent": {
+              "attribute": "data-parent",
+              "description": "Present on the checkbox that stands for every box of its group.",
+              "selector": "[data-parent]"
             }
           },
           "exclusive": [
@@ -478,6 +534,25 @@ export const vocabulary = {
           "inside": [
             "root"
           ],
+          "optional": false,
+          "repeated": false
+        }
+      }
+    },
+    "checkboxGroup": {
+      "parts": {
+        "root": {
+          "description": "The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
           "optional": false,
           "repeated": false
         }
@@ -606,6 +681,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             }
           },
           "exclusive": [],
@@ -630,6 +710,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             }
           },
           "exclusive": [],
@@ -638,6 +723,17 @@ export const vocabulary = {
             "root"
           ],
           "optional": false,
+          "repeated": false
+        },
+        "value": {
+          "description": "The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "trigger"
+          ],
+          "optional": true,
           "repeated": false
         },
         "portal": {
@@ -790,6 +886,19 @@ export const vocabulary = {
           "optional": true,
           "repeated": false
         },
+        "collection": {
+          "description": "Draws the list from the root's `items`: its content once for each item left for what was typed, or for each group that has items left; given a group, for each of that group's items left. The root then filters, and no item hides itself. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list",
+            "popup",
+            "group"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "item": {
           "description": "One choice in the list.",
           "states": {
@@ -812,7 +921,8 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {},
           "inside": [
-            "group"
+            "group",
+            "collection"
           ],
           "optional": false,
           "repeated": true
@@ -823,7 +933,8 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {},
           "inside": [
-            "list"
+            "list",
+            "collection"
           ],
           "optional": true,
           "repeated": true
@@ -870,6 +981,18 @@ export const vocabulary = {
             "popup"
           ],
           "optional": false,
+          "repeated": false
+        },
+        "status": {
+          "description": "Says how the list stands (\"3 results\", \"Loading\") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup",
+            "root"
+          ],
+          "optional": true,
           "repeated": false
         },
         "clear": {
@@ -1466,6 +1589,57 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "viewport": {
+          "description": "What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "nested": {
+              "attribute": "data-nested",
+              "description": "Present when the dialog opened over another dialog.",
+              "selector": "[data-nested]"
+            },
+            "nestedDialogOpen": {
+              "attribute": "data-nested-dialog-open",
+              "description": "Present when another dialog is open above this one.",
+              "selector": "[data-nested-dialog-open]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "portal"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "popup": {
           "description": "The dialog itself.",
           "states": {
@@ -1509,7 +1683,7 @@ export const vocabulary = {
             "--nested-dialogs": "How many dialogs are open above this one."
           },
           "inside": [
-            "portal"
+            "viewport"
           ],
           "optional": false,
           "repeated": false
@@ -3562,6 +3736,11 @@ export const vocabulary = {
               "description": "Present while the input has focus.",
               "selector": "[data-focused]"
             },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
+            },
             "valid": {
               "attribute": "data-valid",
               "description": "In a field: present once the number was checked and found right.",
@@ -3621,6 +3800,11 @@ export const vocabulary = {
               "attribute": "data-focused",
               "description": "Present while the input has focus.",
               "selector": "[data-focused]"
+            },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
             },
             "valid": {
               "attribute": "data-valid",
@@ -3684,6 +3868,11 @@ export const vocabulary = {
               "description": "Present while the input has focus.",
               "selector": "[data-focused]"
             },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
+            },
             "valid": {
               "attribute": "data-valid",
               "description": "In a field: present once the number was checked and found right.",
@@ -3745,6 +3934,11 @@ export const vocabulary = {
               "attribute": "data-focused",
               "description": "Present while the input has focus.",
               "selector": "[data-focused]"
+            },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
             },
             "valid": {
               "attribute": "data-valid",
@@ -3808,6 +4002,11 @@ export const vocabulary = {
               "description": "Present while the input has focus.",
               "selector": "[data-focused]"
             },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
+            },
             "valid": {
               "attribute": "data-valid",
               "description": "In a field: present once the number was checked and found right.",
@@ -3828,6 +4027,140 @@ export const vocabulary = {
           "variables": {},
           "inside": [
             "group"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "scrubArea": {
+          "description": "An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "scrubAreaCursor": {
+          "description": "What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the number cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a number must be given.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left the input.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present while the number is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while there is a number.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "scrubbing": {
+              "attribute": "data-scrubbing",
+              "description": "Present while the number is dragged from its scrub area.",
+              "selector": "[data-scrubbing]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the number was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the number is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "scrubArea"
           ],
           "optional": false,
           "repeated": false
@@ -3857,6 +4190,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             }
           },
           "exclusive": [],
@@ -3879,6 +4217,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             }
           },
           "exclusive": [],
@@ -4039,6 +4382,19 @@ export const vocabulary = {
           "optional": true,
           "repeated": false
         },
+        "collection": {
+          "description": "Draws the suggestions from the root's `items`: its content once for each one left for what was typed, or for each group that has some left; given a group, for each of that group's. The root then filters. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list",
+            "popup",
+            "group"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "item": {
           "description": "One suggestion: chosen, its text is written into the input.",
           "states": {
@@ -4061,7 +4417,8 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {},
           "inside": [
-            "group"
+            "group",
+            "collection"
           ],
           "optional": false,
           "repeated": true
@@ -4072,7 +4429,8 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {},
           "inside": [
-            "list"
+            "list",
+            "collection"
           ],
           "optional": true,
           "repeated": true
@@ -4108,6 +4466,18 @@ export const vocabulary = {
             "popup"
           ],
           "optional": false,
+          "repeated": false
+        },
+        "status": {
+          "description": "Says how the list stands (\"3 results\", \"Loading\") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup",
+            "root"
+          ],
+          "optional": true,
           "repeated": false
         },
         "clear": {
@@ -5529,6 +5899,47 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "backdrop": {
+          "description": "A layer over the page behind the popover.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
+        },
         "positioner": {
           "description": "Places the popup against the trigger. It carries the geometry.",
           "states": {
@@ -5670,6 +6081,44 @@ export const vocabulary = {
         "close": {
           "description": "A button that closes the popover.",
           "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "arrow": {
+          "description": "An element that points at the trigger, placed along the popup's edge.",
+          "states": {
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "uncentered": {
+              "attribute": "data-uncentered",
+              "description": "Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.",
+              "selector": "[data-uncentered]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -6220,6 +6669,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             }
           },
           "exclusive": [],
@@ -6616,6 +7070,11 @@ export const vocabulary = {
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
             },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
             "dragging": {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
@@ -6643,6 +7102,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             },
             "dragging": {
               "attribute": "data-dragging",
@@ -6674,6 +7138,11 @@ export const vocabulary = {
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
             },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
             "dragging": {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
@@ -6704,6 +7173,11 @@ export const vocabulary = {
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
             },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
             "dragging": {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
@@ -6733,6 +7207,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             },
             "dragging": {
               "attribute": "data-dragging",
@@ -6766,6 +7245,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
             },
             "dragging": {
               "attribute": "data-dragging",

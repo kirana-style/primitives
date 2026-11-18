@@ -1,6 +1,7 @@
 // Its parts are a combobox's.
 export {
   Clear,
+  Collection,
   Empty,
   Group,
   GroupLabel,
@@ -11,6 +12,7 @@ export {
   Portal,
   Positioner,
   Separator,
+  Status,
   Trigger,
 } from "../combobox/index.ts"
 export { default as Root } from "./Root.svelte"

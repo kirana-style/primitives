@@ -21,8 +21,23 @@ export const dialogVocabulary = defineComponent({
     states: TRANSITION,
     exclusive: EITHER_FRAME,
   },
-  popup: {
+  viewport: {
     inside: "portal",
+    optional: true,
+    description:
+      "What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.",
+    states: {
+      ...TRANSITION,
+      nested: state("data-nested", "Present when the dialog opened over another dialog."),
+      nestedDialogOpen: state(
+        "data-nested-dialog-open",
+        "Present when another dialog is open above this one."
+      ),
+    },
+    exclusive: EITHER_FRAME,
+  },
+  popup: {
+    inside: "viewport",
     description: "The dialog itself.",
     states: {
       ...TRANSITION,

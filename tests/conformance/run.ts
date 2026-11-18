@@ -62,6 +62,10 @@ const WEB = [
   "dates",
   "picking",
   "placing",
+  "popover-more",
+  "checkbox-group",
+  "read-only",
+  "combobox-data",
 ]
 
 /**
@@ -107,7 +111,7 @@ const jobsFor = (engine: string) =>
 // Scenarios that measure a wait or look for one frame (a tooltip's delay, a dialog's first
 // style): played with nothing else on the machine, or what is measured is the machine and not
 // the component. Firefox failed both with six pages at once.
-const TIMED = new Set(["hover", "dialog"])
+const TIMED = new Set(["hover", "dialog", "popover-more"])
 let playing = 0
 let held = false
 let asking = 0
@@ -224,7 +228,7 @@ const withoutStyles = (dom: string) =>
     .replace(/ data-filled/g, "")
     // Whether a combobox's button stands alone (its input is in the popup) is known once the
     // page shows no input beside it: a server draws the button as the one beside an input.
-    .replace(/^(\s*<button#pl3-trigger)[^\n]*$/m, "$1>")
+    .replace(/^(\s*<button#(?:pl3|cd1)-trigger)[^\n]*$/gm, "$1>")
     .replace(/\nfocus: .*$/s, "")
 
 function serve(adapter: string) {
@@ -1402,6 +1406,33 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await id("d1-close").click()
     await snapshot("closed by its close button")
     expect(!(await present("d1-popup")), "the close button closes the dialog")
+
+    // A long dialog scrolls in a viewport, which lies over the page around the popup.
+    await id("d3-trigger").click()
+    await settled(page)
+    await snapshot("a long dialog open in its viewport")
+    expect((await attribute("d3-viewport", "role")) === "presentation", "a viewport names nothing")
+    expect((await attribute("d3-viewport", "data-open")) === "", "and says the dialog is open")
+    const viewport = await id("d3-viewport").evaluate((element) => ({
+      holds: element.firstElementChild?.getAttribute("role") === "dialog",
+      scrolls: element.scrollHeight > element.clientHeight,
+      bar: (element as HTMLElement).offsetWidth - element.clientWidth,
+      right: element.getBoundingClientRect().right,
+    }))
+    expect(viewport.holds, "the popup is in its viewport")
+    expect(viewport.scrolls, "which scrolls a dialog longer than the page")
+    expect((await focused()) === "d3-close", "focus goes into the popup through the viewport")
+    // Where the browser lays a scrollbar out, a press on it scrolls; one drawn over the page
+    // takes no room, and no press is known to be on it.
+    if (viewport.bar > 0) {
+      await page.mouse.click(viewport.right - viewport.bar / 2, 200)
+      await settled(page)
+      expect(await present("d3-popup"), "a press on the viewport's scrollbar closes nothing")
+    }
+    await page.mouse.click(5, 5)
+    await snapshot("closed by a press on its viewport")
+    expect(!(await present("d3-popup")), "a press on the viewport beside the popup closes it")
+    expect(!(await present("d3-viewport")), "and the viewport leaves with it")
   },
 
   async popover({ page, snapshot, id, present, attribute, focused }) {
@@ -2074,10 +2105,16 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
             ?.style.transform.startsWith("translate"),
         testid
       )
-    await id("pl1-trigger").evaluate((element) => element.scrollIntoView({ block: "start" }))
-    // The page is now at its end, and nothing that opens here may move it. A browser holds a
-    // page still by what is at the top of the view (scroll anchoring), and moves the page when
-    // that has moved: the sections above must be at rest.
+    // The trigger a little under the top of the view, wholly in it: a page scrolls by whole
+    // pixels in WebKit while its boxes lie on parts of one, so a trigger brought to the very top
+    // is a quarter of a pixel out, and the press that follows scrolls it in, one pixel.
+    await id("pl1-trigger").evaluate((element) => {
+      element.scrollIntoView({ block: "start" })
+      window.scrollBy(0, -8)
+    })
+    // Nothing that opens here may move the page. A browser holds a page still by what is at the
+    // top of the view (scroll anchoring), and moves the page when that has moved: the sections
+    // above must be at rest.
     const scroll = () => page.evaluate(() => window.scrollY)
     const scrolled = await scroll()
 
@@ -2195,6 +2232,128 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.mouse.click(2, 2)
     await snapshot("closed by a press outside")
     expect(!(await present("pl3-popup")), "a press outside closes it")
+  },
+
+  // A popover's backdrop and arrow, what it holds of the page, the pointer opening it, and
+  // what a positioner is asked beside a side and a gap.
+  async "popover-more"({ page, snapshot, id, present, attribute, focused }) {
+    const away = () => page.mouse.move(900, 700)
+    const shown = (testid: string) => id(testid).waitFor({ state: "attached", timeout: 3000 })
+    const gone = (testid: string) => id(testid).waitFor({ state: "detached", timeout: 3000 })
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const box = (testid: string) =>
+      id(testid).evaluate((element) => {
+        const { left, right, top, bottom, width, height } = element.getBoundingClientRect()
+        return { left, right, top, bottom, width, height }
+      })
+    const placed = (testid: string) =>
+      page.waitForFunction(
+        (wanted) =>
+          document
+            .querySelector<HTMLElement>(`[data-testid="${wanted}"]`)
+            ?.style.transform.startsWith("translate"),
+        testid
+      )
+    const holding = () =>
+      page.evaluate(() => ({
+        locked: getComputedStyle(document.documentElement).overflow === "hidden",
+        inert: document.querySelector('[data-testid="pm3-trigger"]')!.closest("[inert]") !== null,
+      }))
+    await id("pm1-trigger").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    await away()
+
+    // Modal: a backdrop, an arrow, the page held.
+    await id("pm1-trigger").click()
+    await placed("pm1-positioner")
+    await snapshot("a modal popover")
+    expect((await attribute("pm1-backdrop", "data-open")) === "", "its backdrop says it is open")
+    expect((await attribute("pm1-backdrop", "role")) === "presentation", "and is presentation")
+    expect((await attribute("pm1-arrow", "data-side")) === "bottom", "its arrow says the side")
+    expect((await attribute("pm1-arrow", "data-align")) === "center", "and the alignment")
+    expect((await attribute("pm1-arrow", "aria-hidden")) === "true", "and is hidden from readers")
+    const trigger = await box("pm1-trigger")
+    const arrow = await box("pm1-arrow")
+    const off = Math.abs(arrow.left + arrow.width / 2 - (trigger.left + trigger.width / 2))
+    expect(off < 1, `the arrow points at the trigger's centre, off by ${off}`)
+    expect((await focused()) === "pm1-first", `focus moves in, got ${await focused()}`)
+    const modal = await holding()
+    expect(modal.locked, "the page does not scroll under a modal popover")
+    expect(modal.inert, "and the page behind it is inert")
+    expect(
+      (await page.evaluate(() => getComputedStyle(document.body).pointerEvents)) !== "none",
+      "modality never sets pointer-events on the page"
+    )
+    await key("Shift+Tab")
+    expect((await focused()) === "pm1-close", "Shift+Tab from the first wraps to the last")
+    await key("Tab")
+    expect((await focused()) === "pm1-first", "Tab from the last wraps to the first")
+    await id("pm1-backdrop").click({ position: { x: 5, y: 5 } })
+    await gone("pm1-popup")
+    await snapshot("closed by a press on its backdrop")
+    expect(!(await present("pm1-backdrop")), "the backdrop leaves with it")
+    const free = await holding()
+    expect(!free.locked && !free.inert, "the page is let go")
+
+    // The pointer opens one whose trigger asks: nothing is held, focus stays.
+    await id("pm1-trigger").focus()
+    await id("pm2-trigger").hover()
+    await shown("pm2-popup")
+    await placed("pm2-positioner")
+    await snapshot("a popover the pointer opened")
+    expect((await focused()) === "pm1-trigger", "focus stays where it was")
+    expect(
+      (await attribute("pm2-trigger", "aria-expanded")) === "true",
+      "the trigger says it is open"
+    )
+    await away()
+    await gone("pm2-popup")
+    // Long after the pointer opened it, a press closes it like any other.
+    await id("pm2-trigger").hover()
+    await shown("pm2-popup")
+    await page.waitForTimeout(650)
+    await id("pm2-trigger").click()
+    await gone("pm2-popup")
+    // A press still opens it, and then it is not the pointer's to close.
+    await id("pm2-trigger").click()
+    await shown("pm2-popup")
+    await placed("pm2-positioner")
+    await away()
+    await page.waitForTimeout(300)
+    await snapshot("the same popover, pressed")
+    expect(await present("pm2-popup"), "the pointer leaving does not close one that was pressed")
+    expect((await focused()) === "pm2-first", `focus moves in, got ${await focused()}`)
+    await key("Shift+Tab")
+    expect((await focused()) === "pm2-close", "it traps focus: Shift+Tab wraps to the last")
+    await key("Tab")
+    expect((await focused()) === "pm2-first", "and Tab to the first")
+    const trapped = await holding()
+    expect(!trapped.locked && !trapped.inert, "trapping focus holds nothing of the page")
+    await key("Escape")
+    await gone("pm2-popup")
+    expect((await focused()) === "pm2-trigger", "focus goes back to its trigger")
+
+    // What a positioner is asked: fixed, a gap from a function, a side it must keep.
+    await id("pm3-trigger").click()
+    await placed("pm3-positioner")
+    await snapshot("placed as its positioner asks")
+    expect(
+      (await id("pm3-positioner").evaluate((element) => getComputedStyle(element).position)) ===
+        "fixed",
+      "the positioner is fixed"
+    )
+    expect((await attribute("pm3-positioner", "data-side")) === "top", "on the side asked for")
+    const anchor = await box("pm3-trigger")
+    const above = await box("pm3-positioner")
+    expect(
+      Math.abs(anchor.top - above.bottom - anchor.height) < 1,
+      `the gap is what the function gave, the anchor's height: ${anchor.top - above.bottom} for ${anchor.height}`
+    )
+    expect(Math.abs(above.left - anchor.left) < 1, "aligned to the anchor's start")
+    await key("Escape")
+    await gone("pm3-popup")
   },
 
   async toolbar({ page, snapshot, id, attribute, focused }) {
@@ -3170,6 +3329,49 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await attribute("nf1-input", "data-touched")) === "", "left, it says so")
     await snapshot("a number field typed in and left")
 
+    // A finger's drag on the scrub area, sent as a browser sends one. No engine locks the
+    // pointer for a finger, so the same drag is played in each; a mouse's lock is the
+    // browser's to give, and no runner can press the reader's own button for it.
+    const finger = (type: string, x: number, on?: string) =>
+      page.evaluate(
+        ([kind, at, testid]) => {
+          const target = testid ? document.querySelector(`[data-testid="${testid}"]`)! : window
+          target.dispatchEvent(
+            new PointerEvent(kind, {
+              clientX: at,
+              clientY: 10,
+              button: 0,
+              pointerId: 5,
+              pointerType: "touch",
+              bubbles: true,
+              cancelable: true,
+            })
+          )
+        },
+        [type, x, on] as const
+      )
+    expect((await attribute("nf1-scrub", "role")) === "presentation", "a scrub area names nothing")
+    await finger("pointerdown", 100, "nf1-scrub")
+    await settled(page)
+    expect(
+      (await attribute("nf1", "data-scrubbing")) === "",
+      "pressed, the field says it is scrubbed"
+    )
+    expect((await attribute("nf1-input", "data-scrubbing")) === "", "on its input too")
+    await finger("pointermove", 103)
+    await finger("pointermove", 105)
+    await settled(page)
+    expect((await id("nf1-input").inputValue()) === "8", "dragged to the right, the number grows")
+    await snapshot("a number field being scrubbed")
+    await finger("pointermove", 135)
+    await finger("pointerup", 135)
+    await settled(page)
+    expect((await id("nf1-input").inputValue()) === "10", "and stops at its most")
+    expect((await id("nf1-output").textContent()) === "10", "the caller hears each step")
+    expect((await sent("qty")) === "10", "and the form's value follows")
+    expect((await attribute("nf1", "data-scrubbing")) === null, "let go, it is scrubbed no more")
+    await snapshot("a number field scrubbed and let go")
+
     expect((await attribute("ac1-input", "role")) === "combobox", "an autocomplete is a combobox")
     expect((await attribute("ac1-input", "name")) === "place", "whose input is the form's own")
     await id("ac1-input").focus()
@@ -3492,6 +3694,163 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await id("cm1-output").textContent()) === "copy", "a press chooses an item")
     await snapshot("a command list emptied again")
   },
+  async "combobox-data"({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const drawn = (popup: string) =>
+      page.evaluate(
+        (testid) =>
+          [...document.querySelectorAll<HTMLElement>(`[data-testid="${testid}"] [role="option"]`)]
+            .map((each) => `${each.id}${each.hidden ? " hidden" : ""}`)
+            .join(),
+        popup
+      )
+    const groups = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[data-testid="cd1-list"] [role="group"]')]
+          .map((each) => each.id)
+          .join()
+      )
+    const text = (testid: string) =>
+      id(testid).evaluate((element) => (element.textContent ?? "").trim())
+    const sent = () =>
+      page.evaluate(() => document.querySelector<HTMLInputElement>('input[name="berry"]')?.value)
+    await id("cd1-trigger").evaluate((element) => element.scrollIntoView({ block: "center" }))
+
+    // Items given as data, in groups, behind a button that is the combobox.
+    expect(
+      (await text("cd1-value")) === "Pick one",
+      "a value part says its placeholder while nothing is chosen"
+    )
+    expect(
+      (await attribute("cd1-status", "role")) === "status" &&
+        (await attribute("cd1-status", "aria-live")) === "polite" &&
+        (await attribute("cd1-status", "aria-atomic")) === "true",
+      "a status is one that is said politely and whole"
+    )
+    expect((await text("cd1-status")) === "", "in the page before it has anything to say")
+    await id("cd1-trigger").click()
+    await settled(page)
+    await snapshot("a list drawn from data, in its groups")
+    expect((await focused()) === "cd1-input", "opened, its input has focus")
+    expect(
+      (await drawn("cd1-popup")) === "cd1-apple,cd1-apricot,cd1-banana,cd1-beet,cd1-carrot",
+      "every item of the data is drawn"
+    )
+    expect((await groups()) === "cd1-g-Fruits,cd1-g-Roots", "in the groups it was given in")
+    expect(
+      (await attribute("cd1-g-Fruits", "aria-labelledby")) === "cd1-g-Fruits-label",
+      "each named by its label"
+    )
+    expect(
+      (await attribute("cd1-banana", "aria-disabled")) === "true",
+      "an item its data disables is disabled"
+    )
+    await id("cd1-apricot").evaluate((element) => {
+      ;(element as HTMLElement & { kept?: boolean }).kept = true
+    })
+    await page.keyboard.type("ap")
+    await settled(page)
+    await snapshot("data filtered by what is typed")
+    expect(
+      (await drawn("cd1-popup")) === "cd1-apple,cd1-apricot",
+      "typed at, only what is left is in the page: nothing is hidden"
+    )
+    expect((await groups()) === "cd1-g-Fruits", "a group with nothing left is not drawn")
+    expect(
+      await id("cd1-apricot").evaluate(
+        (element) => (element as HTMLElement & { kept?: boolean }).kept === true
+      ),
+      "an item that is left keeps its element"
+    )
+    expect(
+      (await attribute("cd1-input", "aria-activedescendant")) === "cd1-apple",
+      "the first item left is highlighted once it is in the page"
+    )
+    expect((await text("cd1-status")) === "2 left", "the status says what its caller writes")
+    await page.keyboard.type("x")
+    await settled(page)
+    await snapshot("no data left")
+    expect((await drawn("cd1-popup")) === "", "nothing holds the text")
+    expect(await present("cd1-empty"), "and the list says so")
+    expect((await text("cd1-status")) === "0 left", "as the status does")
+    await key("Backspace")
+    expect(!(await present("cd1-empty")), "until something does again")
+    await key("ArrowDown")
+    await key("Enter")
+    await snapshot("chosen from data")
+    expect(!(await present("cd1-popup")), "Enter chooses the highlighted item and closes")
+    expect((await text("cd1-value")) === "Apricot", "the value part says the chosen item's label")
+    expect((await focused()) === "cd1-trigger", "and focus is back on the button")
+    expect((await text("cd1-status")) === "", "the status is still there, with nothing to say")
+
+    // A combobox that is only to be read.
+    expect(
+      (await id("cd2-input").inputValue()) === "Cherry",
+      "a value is named from the data before the list has opened"
+    )
+    expect(
+      (await attribute("cd2-input", "readonly")) === "" &&
+        (await attribute("cd2-input", "aria-readonly")) === "true" &&
+        (await attribute("cd2-input", "data-readonly")) === "",
+      "read only, its input says so"
+    )
+    await id("cd2-input").click()
+    await settled(page)
+    await snapshot("read only, open")
+    expect(await present("cd2-popup"), "a press opens it all the same: only its value is locked")
+    expect((await focused()) === "cd2-input", "with focus in its input")
+    expect(
+      (await attribute("cd2-popup", "aria-readonly")) === "true",
+      "its list says it is to be read"
+    )
+    expect(
+      (await attribute("cd2-input", "aria-activedescendant")) === "cd2-cherry",
+      "on the chosen item"
+    )
+    await page.keyboard.type("b")
+    await key("ArrowUp")
+    expect(
+      (await id("cd2-input").inputValue()) === "Cherry" &&
+        (await drawn("cd2-popup")) === "cd2-blackberry,cd2-blueberry,cd2-cherry",
+      "nothing typed is taken, so nothing is filtered"
+    )
+    expect(
+      (await attribute("cd2-input", "aria-activedescendant")) === "cd2-blueberry",
+      "the arrows go through it"
+    )
+    await key("Enter")
+    await id("cd2-blackberry").click()
+    await settled(page)
+    expect(
+      (await present("cd2-popup")) && (await sent()) === "cherry",
+      "neither Enter nor a press chooses"
+    )
+    await key("Escape")
+    expect(!(await present("cd2-popup")), "Escape closes it")
+    await id("cd2-clear").click()
+    await settled(page)
+    expect((await id("cd2-input").inputValue()) === "Cherry", "its clear button does nothing")
+    expect((await sent()) === "cherry", "and its value is still submitted")
+    await snapshot("read only")
+    await id("cd2-unlock").click()
+    await settled(page)
+    expect((await attribute("cd2-input", "readonly")) === null, "no longer read only")
+    await id("cd2-input").focus()
+    await id("cd2-input").fill("")
+    await page.keyboard.type("bl")
+    await settled(page)
+    await snapshot("a flat list drawn from data")
+    expect(
+      (await drawn("cd2-popup")) === "cd2-blackberry,cd2-blueberry",
+      "it opens on what is left of its data"
+    )
+    await key("Enter")
+    expect((await sent()) === "blackberry", "and what is chosen is its value")
+    expect((await id("cd2-input").inputValue()) === "Blackberry", "which the input names")
+  },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
       await page.keyboard.press(name)
@@ -3555,6 +3914,137 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await present("mb1h-popup")), "a chosen item closes the menu")
     expect((await id("mb1-output").textContent()) === "mb1h-about", "and is heard")
     expect((await focused()) === "mb1-help", "focus is on its trigger")
+  },
+
+  async "checkbox-group"({ page, snapshot, id, attribute, focused }) {
+    const output = () => id("cg1-output").textContent()
+    const sent = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="cg1-form"]')!)
+          .getAll("topping")
+          .join()
+      )
+    const input = (testid: string, name: string) =>
+      id(testid).evaluate(
+        (element, wanted) => element.querySelector("input")?.getAttribute(wanted) ?? null,
+        name
+      )
+    const checked = (testid: string) => attribute(testid, "aria-checked")
+    await snapshot("at rest")
+    expect((await attribute("cg1", "role")) === "group", "the root groups the boxes")
+    expect((await checked("cg1-ham")) === "true", "a box whose value the group holds is checked")
+    expect((await checked("cg1-cheese")) === "false", "and no other")
+    expect((await checked("cg1-all")) === "mixed", "the parent is mixed while some are")
+    expect((await attribute("cg1-all", "data-indeterminate")) === "", "for a style too")
+    expect((await attribute("cg1-all", "data-parent")) === "", "and says it is the parent")
+    expect(
+      (await attribute("cg1-all", "aria-controls")) === "cg1-0 cg1-1 cg1-2",
+      "the parent names the boxes it stands for"
+    )
+    expect((await attribute("cg1-olives", "id")) === "cg1-2", "each by its place in `allValues`")
+    expect((await sent()) === "ham", "a checked box is submitted under its name, as its value")
+    expect((await input("cg1-all", "name")) === null, "the parent is not submitted")
+
+    await id("cg1-olives").click()
+    await snapshot("a box checked by a press")
+    expect((await output()) === "ham,olives", "the caller hears the group's value")
+    expect((await sent()) === "ham,olives", "and the form has both")
+    await id("cg1-cheese").focus()
+    await page.keyboard.press("Space")
+    expect((await checked("cg1-cheese")) === "true", "Space checks a box")
+    expect((await checked("cg1-all")) === "true", "every box checked: the parent is checked")
+    await page.keyboard.press("Space")
+    await snapshot("a box unchecked by Space")
+    expect((await output()) === "ham,olives", "and unchecks it")
+
+    await id("cg1-all").click()
+    await snapshot("every box set by the parent")
+    expect((await output()) === "cheese,ham,olives", "a mixed parent checks every box")
+    await id("cg1-all").click()
+    await snapshot("every box cleared by the parent")
+    expect((await output()) === "", "pressed again, it unchecks them all")
+    expect((await checked("cg1-all")) === "false", "and is unchecked")
+    expect((await sent()) === "", "nothing is submitted")
+    await id("cg1-all").click()
+    await snapshot("back to the mixed set")
+    expect((await output()) === "ham,olives", "and again, it goes back to the set it started from")
+    expect((await checked("cg1-all")) === "mixed", "which is mixed")
+
+    await id("cg1-reset").click()
+    await snapshot("after a reset")
+    expect((await output()) === "ham", "a reset puts the group back to its first value")
+    expect((await sent()) === "ham", "and its native inputs with it")
+    expect((await checked("cg1-olives")) === "false", "a box says so")
+
+    expect(
+      (await attribute("cg2-group", "id")) === "cg2-control",
+      "in a field, the field's control"
+    )
+    expect(
+      (await attribute("cg2-group", "aria-labelledby")) === "cg2-label",
+      "named by the field's label"
+    )
+    expect((await input("cg2-straw", "name")) === "extras", "its boxes take the field's name")
+    expect(
+      (await input("cg2-straw", "id")) === "cg2-straw-input",
+      "and none takes the id the label is for"
+    )
+    expect((await attribute("cg2-napkins", "aria-labelledby")) === null, "or the label")
+    expect((await attribute("cg2", "data-filled")) === "", "the field is filled by the values")
+    await id("cg2-label").click()
+    expect((await focused()) === "cg2-napkins", "a press on the label goes to the first box")
+    await id("cg2-napkins").click()
+    await snapshot("a group in a field, emptied")
+    expect((await attribute("cg2", "data-filled")) === null, "empty, the field is not filled")
+    expect((await attribute("cg2", "data-dirty")) === "", "and is dirty")
+    expect((await attribute("cg2-straw", "data-dirty")) === "", "which every box says")
+  },
+
+  async "read-only"({ page, snapshot, id, present, attribute, focused }) {
+    // Where the page stands when the list opens is the scenario's to say, not a focus's.
+    await id("ro1").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    await snapshot("at rest")
+    expect((await attribute("ro1-thumb", "aria-readonly")) === "true", "a read-only thumb says so")
+    expect((await attribute("ro1", "data-readonly")) === "", "and every part, for a style")
+    expect((await attribute("ro1-control", "data-readonly")) === "", "the control too")
+    expect((await attribute("ro1-thumb", "tabindex")) === "0", "it is still a stop for Tab")
+    expect((await attribute("ro1-thumb", "aria-disabled")) === null, "and is not disabled")
+    await id("ro1-thumb").focus()
+    // A key it does not answer is the page's: only one that scrolls nothing is pressed here.
+    await page.keyboard.press("ArrowRight")
+    await page.keyboard.press("Shift+ArrowRight")
+    expect((await attribute("ro1-thumb", "aria-valuenow")) === "40", "no key moves it")
+    const box = (await id("ro1-control").boundingBox())!
+    await page.mouse.click(box.x + box.width * 0.9, box.y + box.height / 2)
+    await snapshot("a read-only slider, pressed")
+    expect((await attribute("ro1-thumb", "aria-valuenow")) === "40", "and no press")
+    expect((await attribute("ro1", "data-dragging")) === null, "nothing is dragged")
+    expect((await focused()) === "ro1-thumb", "the press leaves focus on its thumb")
+
+    expect(
+      (await attribute("ro2-trigger", "aria-readonly")) === "true",
+      "a read-only select says so"
+    )
+    expect((await attribute("ro2-trigger", "data-readonly")) === "", "for a style too")
+    expect((await attribute("ro2-trigger", "disabled")) === null, "it is not disabled")
+    await id("ro2-trigger").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    await id("ro2-trigger").click()
+    await snapshot("a read-only select, open")
+    expect(await present("ro2-popup"), "its list still opens, to be read")
+    expect((await attribute("ro2-popup", "aria-readonly")) === "true", "and says it is read-only")
+    expect((await focused()) === "ro2-Banana", "focus is on the chosen item")
+    await page.keyboard.press("ArrowUp")
+    expect((await focused()) === "ro2-Apple", "the arrows still move through it")
+    await page.keyboard.press("Enter")
+    await id("ro2-Apple").click()
+    await snapshot("a read-only select, an item pressed")
+    expect(await present("ro2-popup"), "a press on an item chooses nothing and closes nothing")
+    expect((await id("ro2-value").textContent()) === "Banana", "the value is as it was")
+    expect((await attribute("ro2-Apple", "aria-selected")) === "false", "and the item not chosen")
+    await page.keyboard.press("Escape")
+    await snapshot("a read-only select, closed")
+    expect(!(await present("ro2-popup")), "Escape closes it")
+    expect((await focused()) === "ro2-trigger", "and focus is back on the trigger")
   },
 }
 

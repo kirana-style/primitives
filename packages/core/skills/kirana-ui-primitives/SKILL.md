@@ -33,10 +33,16 @@ from one core. The package for a framework is all a project installs.
    A popup that is placed against its trigger (a popover, a menu, a select, a combobox, a
    tooltip, a hover card) is `Portal > Positioner > Popup`: the `Positioner` takes `side`
    (also `inline-start` and `inline-end`, which turn with the reading direction, and which
-   `data-side` then says), `align`, `sideOffset`, `alignOffset`, `collisionPadding`, and
+   `data-side` then says), `align`, `sideOffset` and `alignOffset` (a number, or a function
+   of the anchor's and the positioner's sizes), `collisionPadding` (a number, or one a side),
+   `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, and
    `anchor` for another element than its trigger to be placed against (an element, the
-   framework's own ref to one, or a function that gives one). A dialog, an alert dialog and a
-   drawer have no positioner: `Portal > Backdrop` and `Popup`, placed by the design.
+   framework's own ref to one, or a function that gives one). A popup that holds an `Arrow`
+   is given `position: relative`, so the arrow is placed in it through its entrance and
+   after. A popover may have a `Backdrop` in its portal, is `modal` (`true`: the page is
+   inert and does not scroll; `"trap-focus"`: only Tab is kept inside), and its trigger's
+   `openOnHover` lets the pointer open it too. A dialog, an alert dialog and a drawer have
+   no positioner: `Portal > Backdrop` and `Popup`, placed by the design.
 3. Style by attributes and variables, never by guessing class names:
    - a boolean state is present or absent: `[data-open]`, never `[data-open="true"]`;
    - an entrance starts from `[data-starting-style]`, an exit ends at

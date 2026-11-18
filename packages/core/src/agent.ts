@@ -32,6 +32,8 @@ export interface AgentComponent {
   /** Its choices, where they are in the page. `query({ within })` reads a closed list's. */
   readonly items?: readonly AgentItem[]
   readonly disabled?: boolean
+  /** It can be read and not changed: it then has no action. */
+  readonly readOnly?: boolean
   /** The text of a `data-agent-confirm` mark on it or around it: a person must agree. */
   readonly confirm?: string
   /** What it can be asked to do now. */
@@ -190,6 +192,12 @@ const off = (element: Element) =>
   element.getAttribute("aria-disabled") === "true" ||
   element.hasAttribute("data-disabled")
 
+/** Shown and not changeable: it says so itself, as a native control or as a part of this library. */
+const locked = (element: Element) =>
+  (element as HTMLInputElement).readOnly === true ||
+  element.getAttribute("aria-readonly") === "true" ||
+  element.hasAttribute("data-readonly")
+
 /** The options of a listbox that is in the page. */
 function choicesOf(list: Element | null): AgentItem[] {
   return [...(list?.querySelectorAll('[role="option"]:not([hidden])') ?? [])].map((each) => ({
@@ -244,6 +252,8 @@ export function createAgent(given: AgentOptions = {}): Agent {
       ...(confirm === undefined ? {} : { confirm }),
     }
     const can = (...actions: string[]) => (disabled ? [] : actions)
+    // What changes its value is not offered while it is read-only: it would be refused.
+    const change = (...actions: string[]) => (locked(element) ? [] : can(...actions))
     const checked = () => {
       const state = element.getAttribute("aria-checked")
       return state === "mixed" ? ("mixed" as const) : state === "true"
@@ -251,7 +261,7 @@ export function createAgent(given: AgentOptions = {}): Agent {
     switch (component) {
       case "switch":
       case "checkbox":
-        return { ...base, checked: checked(), actions: can("setChecked", "toggle") }
+        return { ...base, checked: checked(), actions: change("setChecked", "toggle") }
       case "toggle":
         return {
           ...base,
@@ -269,7 +279,7 @@ export function createAgent(given: AgentOptions = {}): Agent {
           ...base,
           ...(chosen ? { value: nameOf(chosen) ?? "" } : {}),
           items,
-          actions: can("setValue"),
+          actions: change("setValue"),
         }
       }
       case "tabs": {
@@ -288,7 +298,7 @@ export function createAgent(given: AgentOptions = {}): Agent {
           value: Number(element.getAttribute("aria-valuenow")),
           min: Number(element.getAttribute("aria-valuemin")),
           max: Number(element.getAttribute("aria-valuemax")),
-          actions: can("setValue"),
+          actions: change("setValue"),
         }
       case "select": {
         const open = element.getAttribute("aria-expanded") === "true"
@@ -299,7 +309,8 @@ export function createAgent(given: AgentOptions = {}): Agent {
           value: textOf(element),
           open,
           ...(list ? { items: choicesOf(list) } : {}),
-          actions: can("setValue", "open", "close"),
+          // Read-only, its list still opens to be read.
+          actions: [...change("setValue"), ...can("open", "close")],
         }
       }
       case "combobox":
@@ -307,11 +318,14 @@ export function createAgent(given: AgentOptions = {}): Agent {
       case "input": {
         const control = element as HTMLInputElement
         const open = element.getAttribute("aria-expanded")
+        // Read only, it refuses what is typed and what is chosen: nothing is offered.
+        const readOnly = control.readOnly || element.getAttribute("aria-readonly") === "true"
         return {
           ...base,
           value: secret(element) && control.value !== "" ? REDACTED : control.value,
           ...(component === "combobox" && open !== null ? { open: open === "true" } : {}),
-          actions: can("setValue", "clear", ...(component === "combobox" ? ["choose"] : [])),
+          ...(readOnly ? { readOnly } : {}),
+          actions: change("setValue", "clear", ...(component === "combobox" ? ["choose"] : [])),
         }
       }
       case "dialog":
@@ -515,7 +529,9 @@ export function createAgent(given: AgentOptions = {}): Agent {
           throw new Error(
             now.disabled
               ? `${now.label ?? now.ref} is disabled`
-              : `A ${now.component} has no action "${step.action}" now: ${now.actions.join(", ")}`
+              : now.readOnly
+                ? `${now.label ?? now.ref} is read only`
+                : `A ${now.component} has no action "${step.action}" now: ${now.actions.join(", ")}`
           )
         }
         const action: AgentAction = {

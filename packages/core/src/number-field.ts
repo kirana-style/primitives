@@ -3,8 +3,9 @@ import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, signal, untracked } from "./reactivity.ts"
-import type { ReadonlySignal } from "./reactivity.ts"
+import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createFormControl } from "./services/form-control.ts"
+import { setGeometry } from "./services/geometry.ts"
 
 export interface NumberFieldProps {
   id: string
@@ -49,6 +50,22 @@ export interface NumberFieldProps {
   form?: string | undefined
 }
 
+/** What a scrub area takes of its own. */
+export interface NumberFieldScrubOptions {
+  /**
+   * The way the pointer is dragged to change the number: `"horizontal"`, where right is more, or
+   * `"vertical"`, where up is more. Default `"horizontal"`.
+   */
+  direction?: "horizontal" | "vertical" | undefined
+  /** How many pixels the pointer moves before the number changes: more is slower. Default 2. */
+  pixelSensitivity?: number | undefined
+  /**
+   * How far past the scrub area's edges the drawn cursor goes before it comes back in at the
+   * other side, in pixels, half of it at each edge. Default: the edges of the window.
+   */
+  teleportDistance?: number | undefined
+}
+
 export interface NumberField {
   readonly value: ReadonlySignal<number | null>
   /** What the input says: the number as written, or what is being typed. */
@@ -66,12 +83,35 @@ export interface NumberField {
   readonly decrement: Part
   /** The hidden input that submits the number. Rendered only when it has a name. */
   readonly hidden: Part
+  /** Whether the number is being dragged from its scrub area. */
+  readonly scrubbing: ReadonlySignal<boolean>
+  /** The scrub area's own options; its part's adapter writes them here. */
+  readonly scrub: Signal<NumberFieldScrubOptions>
+  /**
+   * An area that is pressed and dragged to change the number, a label as a rule. A mouse's
+   * pointer is locked for the drag where the browser has that, so it never meets the edge of
+   * the screen; a finger, or a browser that gives no lock, drags as it is.
+   */
+  readonly scrubArea: Part
+  /**
+   * What is drawn in place of the pointer while it is locked: in the page only then
+   * (`mounted`), at the end of `<body>`, moved by the core.
+   */
+  readonly scrubAreaCursor: { readonly mounted: ReadonlySignal<boolean>; readonly part: Part }
 }
 
 const NOTHING = () => {}
 /** How long a button is held before it repeats, and how often it then does, in milliseconds. */
 export const NUMBER_HOLD = 400
 export const NUMBER_REPEAT = 60
+
+/**
+ * WebKit says a pointer is locked with a banner that moves the page: it is not asked for one,
+ * and the drag goes on with the pointer as it is.
+ */
+const noLock = () =>
+  typeof navigator === "undefined" ||
+  (/AppleWebKit/.test(navigator.userAgent) && !/Chrom(e|ium)|Edg\//.test(navigator.userAgent))
 
 /** How a locale writes a number: what stands for a digit, a point, a sign. */
 interface Writing {
@@ -237,6 +277,148 @@ export function createNumberField(
     return event.altKey ? smallStep : event.shiftKey ? largeStep : step
   }
 
+  const scrubbing = signal(false)
+  // Whether the browser has given the pointer over for the drag: the cursor is drawn then.
+  const pointerLocked = signal(false)
+  const scrub = signal<NumberFieldScrubOptions>({})
+  let area: HTMLElement | undefined
+  let cursor: HTMLElement | undefined
+  // Where the middle of the drawn cursor is, in the window.
+  let spot = { x: 0, y: 0 }
+  /** Ends the drag that is going on. */
+  let letGo: (() => void) | undefined
+  // Whether a lock was asked for and has not been answered.
+  let asked = false
+  // Whether the browser's own click reached the area since the last press.
+  let clicked = false
+  const unlock = (document: Document) => {
+    try {
+      document.exitPointerLock()
+    } catch {
+      // Not held any more.
+    }
+  }
+
+  function drawCursor() {
+    if (!cursor) return
+    // As large as the system's pointer, which a pinch does not scale.
+    const scale = cursor.ownerDocument.defaultView?.visualViewport?.scale ?? 1
+    const x = Math.round(spot.x - cursor.offsetWidth / 2)
+    const y = Math.round(spot.y - cursor.offsetHeight / 2)
+    setGeometry(cursor, "transform", `translate3d(${x}px,${y}px,0) scale(${1 / scale})`)
+  }
+
+  /** Moves the drawn cursor, which comes back in at the other side of what it may cross. */
+  function wander(dx: number, dy: number) {
+    if (!area) return
+    const view = area.ownerDocument.defaultView!
+    const reach = scrub.peek().teleportDistance
+    const box = area.getBoundingClientRect()
+    const page = view.visualViewport
+    const edges =
+      reach === undefined
+        ? {
+            left: page?.offsetLeft ?? 0,
+            top: page?.offsetTop ?? 0,
+            right: (page?.offsetLeft ?? 0) + (page?.width ?? view.innerWidth),
+            bottom: (page?.offsetTop ?? 0) + (page?.height ?? view.innerHeight),
+          }
+        : {
+            left: box.left - reach / 2,
+            top: box.top - reach / 2,
+            right: box.right + reach / 2,
+            bottom: box.bottom + reach / 2,
+          }
+    const wrap = (at: number, low: number, high: number) => (at < low ? high : at > high ? low : at)
+    spot = {
+      x: wrap(spot.x + dx, edges.left, edges.right),
+      y: wrap(spot.y + dy, edges.top, edges.bottom),
+    }
+    drawCursor()
+  }
+
+  function startScrub(event: PointerEvent) {
+    if (event.defaultPrevented || event.button !== 0 || locked() || !area || letGo) return
+    const document = area.ownerDocument
+    const view = document.defaultView!
+    const pressed = event.target as Element | null
+    const pointer = event.pointerId
+    const touch = event.pointerType === "touch"
+    if (event.pointerType === "mouse") {
+      // No text is selected by the drag, and what is typed next goes in the input.
+      event.preventDefault()
+      input?.focus({ preventScroll: true })
+    }
+    let last = { x: event.clientX, y: event.clientY }
+    // How far the pointer has gone since the number last moved.
+    let gone = 0
+    let moved = false
+    clicked = false
+    spot = last
+    scrubbing.set(true)
+
+    const move = (now: PointerEvent) => {
+      if (now.pointerId !== pointer) return
+      now.preventDefault()
+      // A locked pointer stays where it is and says only how far it would have gone. Asked of
+      // the page at each move: where it "is" changes the moment the browser locks it, which
+      // is before anyone is told.
+      const free = document.pointerLockElement !== document.body
+      const dx = free ? now.clientX - last.x : now.movementX
+      const dy = free ? now.clientY - last.y : now.movementY
+      last = { x: now.clientX, y: now.clientY }
+      if (!free) wander(dx, dy)
+      const { direction, pixelSensitivity = 2 } = scrub.peek()
+      const vertical = direction === "vertical"
+      gone += vertical ? dy : dx
+      if (Math.abs(gone) < pixelSensitivity) return
+      gone = 0
+      moved = true
+      // By the move that crossed it, a step for each pixel: up is more, and so is right.
+      const steps = vertical ? -dy : dx
+      if (steps !== 0) stepBy(steps, details("scrub", now), amountFor(now))
+    }
+    const up = (now: PointerEvent) => {
+      if (now.pointerId !== pointer) return
+      letGo?.()
+      commit("scrub", now)
+      // A press that went nowhere is a click. A locked pointer's click goes to what holds
+      // the lock, and a finger's was prevented with its touch: the area is given one unless
+      // the browser's own reaches it, which is a task after the pointer is let go.
+      if (moved || !pressed) return
+      setTimeout(() => {
+        if (clicked || !pressed.isConnected) return
+        pressed.dispatchEvent(new view.MouseEvent("click", { bubbles: true, cancelable: true }))
+      })
+    }
+    // Heard on the page from the press on: a pointer is off the area long before it is let go.
+    view.addEventListener("pointermove", move, true)
+    view.addEventListener("pointerup", up, true)
+    view.addEventListener("pointercancel", up, true)
+    letGo = () => {
+      letGo = undefined
+      view.removeEventListener("pointermove", move, true)
+      view.removeEventListener("pointerup", up, true)
+      view.removeEventListener("pointercancel", up, true)
+      const taken = pointerLocked.peek()
+      batch(() => {
+        scrubbing.set(false)
+        pointerLocked.set(false)
+      })
+      if (taken) unlock(document)
+    }
+
+    if (touch || noLock() || typeof document.body.requestPointerLock !== "function") return
+    asked = true
+    try {
+      // Refused (no press of the reader's own behind it, a frame that may not): the drag goes
+      // on with the pointer as it is. The answer is heard as `pointerlockchange`.
+      void Promise.resolve(document.body.requestPointerLock()).catch(() => void (asked = false))
+    } catch {
+      asked = false
+    }
+  }
+
   let input: HTMLInputElement | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   const release = () => {
@@ -251,6 +433,7 @@ export function createNumberField(
       "data-dirty": flag(dirty.get()),
       "data-filled": flag(filled),
       "data-focused": flag(focused.get()),
+      "data-scrubbing": flag(scrubbing.get()),
       // In a field, what the field says of it: valid, invalid, and its own of the above.
       ...field?.state(),
       "data-disabled": flag(disabled.get()),
@@ -453,6 +636,84 @@ export function createNumberField(
     },
     increment: button(1, "Increase"),
     decrement: button(-1, "Decrease"),
+    scrubbing,
+    scrub,
+    scrubArea: {
+      props: computed(() => ({
+        role: "presentation",
+        // A finger's drag is the field's, not the page's scroll, and selects no text. Only
+        // the property every engine writes back as it was written: a prefixed twin is one
+        // style on a server and another in a page. Where it is not known, the press itself
+        // is kept from selecting (a mouse's press and a finger's touch are prevented).
+        style: { "touch-action": "none", "user-select": "none" },
+        ...state(),
+        onPointerDown: startScrub,
+      })),
+      attach(element) {
+        area = element
+        const document = element.ownerDocument
+        const onLock = () => {
+          const mine = document.pointerLockElement === document.body
+          if (!asked && !pointerLocked.peek()) return
+          asked = false
+          // Given after the pointer was let go: a short press is over before the browser answers.
+          if (mine && !scrubbing.peek()) return unlock(document)
+          // Taken back by the reader (Escape): the drag goes on with the pointer as it is.
+          pointerLocked.set(mine)
+        }
+        const onRefused = () => void (asked = false)
+        const onClick = () => void (clicked = true)
+        // Not passive: a finger that scrubs does not scroll the page too.
+        const onTouch = (event: TouchEvent) => {
+          if (event.touches.length === 1 && !locked()) event.preventDefault()
+        }
+        document.addEventListener("pointerlockchange", onLock)
+        document.addEventListener("pointerlockerror", onRefused)
+        element.addEventListener("click", onClick, true)
+        element.addEventListener("touchstart", onTouch, { passive: false })
+        return () => {
+          // Taken out in the middle of a drag: the pointer is given back, and nothing is said done.
+          letGo?.()
+          document.removeEventListener("pointerlockchange", onLock)
+          document.removeEventListener("pointerlockerror", onRefused)
+          if (asked) {
+            // Asked for and not answered yet: a lock that is given now has nobody to let it
+            // go, so it is given straight back.
+            asked = false
+            const late = () => {
+              if (document.pointerLockElement === document.body) unlock(document)
+            }
+            document.addEventListener("pointerlockchange", late, { once: true })
+            document.addEventListener(
+              "pointerlockerror",
+              () => document.removeEventListener("pointerlockchange", late),
+              { once: true }
+            )
+          }
+          element.removeEventListener("click", onClick, true)
+          element.removeEventListener("touchstart", onTouch)
+          if (area === element) area = undefined
+        }
+      },
+    },
+    scrubAreaCursor: {
+      mounted: computed(() => scrubbing.get() && pointerLocked.get()),
+      part: {
+        props: computed(() => ({
+          role: "presentation",
+          // Over the page, where the core moves it; it is no place for a press.
+          style: { position: "fixed", top: "0", left: "0", "pointer-events": "none" },
+          ...state(),
+        })),
+        attach(element) {
+          cursor = element
+          drawCursor()
+          return () => {
+            if (cursor === element) cursor = undefined
+          }
+        },
+      },
+    },
     hidden: {
       props: computed(() => {
         const now = value.get()

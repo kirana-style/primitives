@@ -134,7 +134,9 @@ export class KuiDialogPortal implements OnInit {
   }
 }
 
-function part(name: "trigger" | "backdrop" | "popup" | "title" | "description" | "close") {
+function part(
+  name: "trigger" | "backdrop" | "viewport" | "popup" | "title" | "description" | "close"
+) {
   const root = inject(KuiDialog)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -152,6 +154,19 @@ export class KuiDialogTrigger implements OnInit {
 @Directive({ selector: "[kuiDialogBackdrop]" })
 export class KuiDialogBackdrop implements OnInit {
   private readonly init = part("backdrop")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/**
+ * What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert
+ * dialog's; a drawer lies at an edge of the page and has none.
+ */
+@Directive({ selector: "[kuiDialogViewport]" })
+export class KuiDialogViewport implements OnInit {
+  private readonly init = part("viewport")
 
   ngOnInit(): void {
     this.init()

@@ -1,5 +1,6 @@
 export { Accordion } from "./accordion.ts"
 export { Checkbox } from "./checkbox.ts"
+export { CheckboxGroup } from "./checkbox-group.ts"
 export { Collapsible } from "./collapsible.ts"
 export { AlertDialog, Dialog, Drawer } from "./dialog.ts"
 export { MessageScroller } from "./message-scroller.ts"
@@ -64,10 +65,15 @@ export type {
   Bindable,
   ChangeDetails,
   ChangeSource,
+  CollisionAvoidance,
+  CollisionBoundary,
+  CollisionPadding,
   ComponentDefinition,
   Direction,
   ItemLabels,
   ListCollection,
+  OffsetData,
+  OffsetFunction,
   Orientation,
   Part,
   PartDefinition,
@@ -96,4 +102,12 @@ export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/for
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
 export type { SelectShown } from "@kirana-ui/core/select"
+export type {
+  ComboboxEntry,
+  ComboboxGroupData,
+  ComboboxGroupEntry,
+  ComboboxItemData,
+  ComboboxItemEntry,
+  ComboboxShown,
+} from "@kirana-ui/core/combobox"
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"

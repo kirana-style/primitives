@@ -9,8 +9,10 @@ const {
   positioner,
   popup,
   list,
+  collection,
   item,
   empty,
+  status,
   clear,
   group,
   groupLabel,
@@ -34,10 +36,16 @@ export const autocompleteVocabulary = defineComponent({
   positioner,
   popup,
   list,
+  collection: {
+    ...collection,
+    description:
+      "Draws the suggestions from the root's `items`: its content once for each one left for what was typed, or for each group that has some left; given a group, for each of that group's. The root then filters. It draws no element.",
+  },
   item: { ...item, description: "One suggestion: chosen, its text is written into the input." },
   group,
   groupLabel,
   separator,
   empty,
+  status,
   clear,
 })

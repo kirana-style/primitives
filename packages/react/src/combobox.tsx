@@ -3,9 +3,14 @@ import type { StateOf } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
+import type {
+  Combobox as Controller,
+  ComboboxEntry,
+  ComboboxGroup,
+  ComboboxProps,
+} from "@kirana-ui/core/combobox"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, useContext, useId, useMemo } from "react"
+import { createContext, Fragment, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
@@ -220,6 +225,71 @@ function Empty(props: EmptyProps): ReactElement | null {
   return empty ? <PartElement of={controller.emptyPart} tag="div" {...props} /> : null
 }
 
+export type StatusProps = PartComponentProps<"div", StateOf<Parts["status"]>>
+
+/**
+ * Says how the list stands ("3 results", "Loading") to software that reads the page, as its
+ * text changes. Keep it in the page and change what it holds: inside the popup, or beside the
+ * input.
+ */
+const Status = (props: StatusProps) => usePart(useCombobox("Status").status, "div", props)
+
+export type ValueProps<Chosen = unknown> = {
+  /** Shown while nothing is chosen. */
+  placeholder?: ReactNode
+  /**
+   * What to show in place of the label. A function is given the value and its label (`null`
+   * and `undefined` while nothing is chosen); with `multiple`, the values and their labels, in
+   * the order they were chosen.
+   */
+  children?:
+    | ReactNode
+    | ((
+        value: Chosen,
+        label: Chosen extends readonly unknown[] ? readonly string[] : string | undefined
+      ) => ReactNode)
+}
+
+/**
+ * The chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the
+ * chosen labels with commas between. For a button that is the combobox, its input inside the
+ * popup. It draws no element.
+ */
+function Value<Chosen = unknown>({ placeholder, children }: ValueProps<Chosen>): ReactElement {
+  const controller = useCombobox("Value")
+  const shown = useSignal(controller.shown)
+  if (typeof children !== "function") return <>{children ?? shown.label ?? placeholder}</>
+  const draw = children as (value: unknown, label: unknown) => ReactNode
+  return (
+    <>{controller.multiple ? draw(shown.values, shown.labels) : draw(shown.value, shown.label)}</>
+  )
+}
+
+export type CollectionProps<Value = unknown> = {
+  /** A group the root's `items` gave: its items left are then what is drawn. */
+  of?: ComboboxEntry<Value> | undefined
+  /** Drawn once for each item left, or for each group that has items left. */
+  children: (entry: ComboboxEntry<Value>) => ReactNode
+}
+
+/**
+ * Draws the list from the root's `items`: its child once for each item left for what was
+ * typed, or for each group that has items left; with `of`, for each of that group's. The root
+ * then filters, and no item hides itself. It draws no element.
+ */
+function Collection<Value = unknown>({ of, children }: CollectionProps<Value>): ReactElement {
+  // The same signal each time it is asked for: a group's is kept by its key.
+  const controller = useCombobox("Collection") as unknown as Controller<Value>
+  const entries = useSignal(controller.entries(of))
+  return (
+    <>
+      {entries.map((entry) => (
+        <Fragment key={entry.key}>{children(entry)}</Fragment>
+      ))}
+    </>
+  )
+}
+
 export type AutocompleteRootProps = Omit<AutocompleteProps, "id"> & {
   id?: string
   children?: ReactNode
@@ -239,6 +309,7 @@ export const Combobox = /* @__PURE__ */ parts("Combobox", {
   Root,
   Input,
   Trigger,
+  Value,
   Clear,
   Chips,
   Chip,
@@ -247,12 +318,14 @@ export const Combobox = /* @__PURE__ */ parts("Combobox", {
   Positioner,
   Popup,
   List,
+  Collection,
   Group,
   GroupLabel,
   Separator,
   Item,
   ItemIndicator,
   Empty,
+  Status,
 })
 
 export const Autocomplete = /* @__PURE__ */ parts("Autocomplete", {
@@ -264,9 +337,11 @@ export const Autocomplete = /* @__PURE__ */ parts("Autocomplete", {
   Positioner,
   Popup,
   List,
+  Collection,
   Group,
   GroupLabel,
   Separator,
   Item,
   Empty,
+  Status,
 })

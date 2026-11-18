@@ -28,8 +28,8 @@ type Props = Omit<SliderProps, "value" | "defaultValue"> & {
  * a `control` with its `track`, `indicator` and a `thumb` for each value, in the values'
  * order (or each with its `kui-index`). A thumb draws the hidden input a form reads. `value` and
  * `default-value` (a range with a comma), `min`, `max`, `step`, `large-step`,
- * `min-steps-between-values`, `thumb-alignment`, `orientation`, `disabled`, `name`, `form`,
- * `locale`; it tells `value-change` and `value-committed`.
+ * `min-steps-between-values`, `thumb-alignment`, `orientation`, `disabled`, `read-only`,
+ * `name`, `form`, `locale`; it tells `value-change` and `value-committed`.
  */
 export const tag = defineElement<Props, Slider>({
   tag: "kui-slider",
@@ -44,6 +44,7 @@ export const tag = defineElement<Props, Slider>({
     "thumb-alignment": "string",
     orientation: "string",
     disabled: "boolean",
+    "read-only": "boolean",
     name: "string",
     form: "string",
     locale: "string",

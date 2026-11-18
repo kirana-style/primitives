@@ -187,7 +187,7 @@ const ours = (element: Element) =>
   hosts.has(element.localName) || element.localName.startsWith("kui-")
 
 /** The component a part belongs to: the nearest around it, or the one that moved it to the page's end. */
-function ownerOf(element: Element): HTMLElement | null {
+export function ownerOf(element: Element): HTMLElement | null {
   for (let each: Element | null = element.parentElement; each; each = each.parentElement) {
     if (ours(each)) return each as HTMLElement
     const moved = (each as Owned)[OWNER]

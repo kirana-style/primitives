@@ -53,6 +53,7 @@ const Portal = (props: PortalProps) => (
 
 export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
 export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
@@ -60,7 +61,7 @@ export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
 
 const part =
   <Props extends Record<string, unknown>>(
-    name: "trigger" | "backdrop" | "popup" | "title" | "description" | "close",
+    name: "trigger" | "backdrop" | "viewport" | "popup" | "title" | "description" | "close",
     tag: string
   ) =>
   (props: Props): JSX.Element => <Part of={useDialog()[name]} tag={tag} {...props} />
@@ -83,6 +84,8 @@ export const Dialog = {
   Portal,
   Trigger: part<TriggerProps>("trigger", "button"),
   Backdrop: part<BackdropProps>("backdrop", "div"),
+  /** What a long dialog scrolls in, around its popup: it may be left out. */
+  Viewport: part<ViewportProps>("viewport", "div"),
   Popup: part<PopupProps>("popup", "div"),
   Title: part<TitleProps>("title", "h2"),
   Description: part<DescriptionProps>("description", "p"),
@@ -123,9 +126,12 @@ function DrawerRoot(props: DrawerRootProps): JSX.Element {
 export type DrawerBackdropProps = PartComponentProps<"div", StateOf<DrawerParts["backdrop"]>>
 export type DrawerPopupProps = PartComponentProps<"div", StateOf<DrawerParts["popup"]>>
 
+// A drawer has no viewport: it lies at an edge of the page, and what scrolls is inside it.
+const { Viewport: _, ...shared } = Dialog
+
 /** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
 export const Drawer = {
-  ...Dialog,
+  ...shared,
   Root: DrawerRoot,
   // The same components: only what `render` reads of their state is a drawer's.
   Backdrop: Dialog.Backdrop as (props: DrawerBackdropProps) => JSX.Element,

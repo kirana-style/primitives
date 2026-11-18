@@ -57,6 +57,8 @@ export { default as Toggle } from "./toggle/Toggle.svelte"
 export type { ToggleProps } from "./toggle/types.ts"
 export { default as ToggleGroup } from "./toggle-group/ToggleGroup.svelte"
 export type { ToggleGroupProps } from "./toggle-group/types.ts"
+export { default as CheckboxGroup } from "./checkbox-group/CheckboxGroup.svelte"
+export type { CheckboxGroupProps } from "./checkbox-group/types.ts"
 export * as Toolbar from "./toolbar/index.ts"
 export * as ScrollArea from "./scroll-area/index.ts"
 export * as Slider from "./slider/index.ts"
@@ -78,10 +80,15 @@ export type {
   Bindable,
   ChangeDetails,
   ChangeSource,
+  CollisionAvoidance,
+  CollisionBoundary,
+  CollisionPadding,
   ComponentDefinition,
   Direction,
   ItemLabels,
   ListCollection,
+  OffsetData,
+  OffsetFunction,
   Orientation,
   Part,
   PartDefinition,
@@ -110,4 +117,12 @@ export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/for
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
 export type { SelectShown } from "@kirana-ui/core/select"
+export type {
+  ComboboxEntry,
+  ComboboxGroupData,
+  ComboboxGroupEntry,
+  ComboboxItemData,
+  ComboboxItemEntry,
+  ComboboxShown,
+} from "@kirana-ui/core/combobox"
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"

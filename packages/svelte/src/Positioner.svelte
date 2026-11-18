@@ -14,6 +14,11 @@
     sideOffset,
     alignOffset,
     collisionPadding,
+    collisionBoundary,
+    collisionAvoidance,
+    sticky,
+    arrowPadding,
+    positionMethod,
     anchor,
     ...rest
   }: PositionerProps & {
@@ -28,6 +33,11 @@
         sideOffset,
         alignOffset,
         collisionPadding,
+        collisionBoundary,
+        collisionAvoidance,
+        sticky,
+        arrowPadding,
+        positionMethod,
         // A function is asked here, so a change of the state it reads is followed; and given
         // whole while it has nothing, to be asked again as the popup is placed.
         anchor: typeof anchor === "function" ? (anchor() ?? anchor) : anchor,

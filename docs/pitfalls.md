@@ -239,6 +239,34 @@ note. Three places hold them:
 - **One path for a change.** A press on the box presses its native input, and so does a
   `<label>`: the input's `change` is the only place the value moves, so a label around the box
   does not toggle it twice.
+- **Read-only locks the value, not the control.** A read-only control keeps its place in Tab's
+  order, is submitted with its form and goes back with the form's reset; only a change is
+  refused. A select's list still opens and is moved through, so what could be chosen can be
+  read, and no press, Enter or letter chooses; a slider's thumb takes focus from a press and
+  moves for no key and no pointer. Each says `aria-readonly` where its role may (the thumb,
+  the select's trigger and its listbox) and `data-readonly` for a style. Held by
+  `tests/core/select.test.ts` ("a read-only select"), `tests/core/slider.test.ts` ("a
+  read-only slider") and the `read-only` scenario.
+- **An agent is not offered what a read-only control refuses.** The bridge listed `setValue`
+  for a control that would do nothing with it, and the step "succeeded". What changes a value
+  is left out of a control's `actions` while it says it is read-only; a read-only select keeps
+  `open` and `close`. Held by `tests/core/agent.test.ts` ("offers nothing a read-only control
+  refuses").
+- **A group of boxes hears one reset.** Each box's native input is in the form, and each is
+  told of the reset: the group answers the first and gives the others the same answer, so its
+  caller hears one change, and each box writes its own input's `defaultChecked` from it.
+  Held by `tests/core/checkbox-group.test.ts` ("goes back to the values it began with").
+- **A parent box names its boxes before any of them is drawn.** A server writes the parent
+  first, and what it controls cannot wait for the boxes to say they are there: a box's id is
+  made from its group's id and its place in `allValues`, which both sides know. Once the
+  group is in a page, a value of `allValues` with no box drawn is left out, so nothing that
+  is not in the page is named. Held by `tests/core/checkbox-group.test.ts` ("names every box
+  before there is a page") and the `checkbox-group` scenario, where each server's page is
+  compared with the page at rest.
+- **In a group, the group is the field's control.** Its boxes share one label and one value:
+  a box that also joined the field took the id the label is `for`, on every box. The group
+  joins, is named by the label and says the checked values; its boxes take the field's name
+  and state and nothing else of it.
 
 ## Frameworks
 
@@ -671,6 +699,35 @@ note. Three places hold them:
 - **An empty state is a status.** What a combobox or a command list says when nothing
   matches has `role="status"`, so software that follows one reads it. It is in the page only
   while nothing matches: a design's padding on it takes no room otherwise.
+- **Read only locks the value, not the list.** A read-only combobox or autocomplete still
+  opens (its button, a press, the arrows) and is gone through; what is refused is whatever
+  would change the value: an item pressed, Enter on one (which is not the form's either),
+  the clear button, a chip's button, Backspace on a chip, and any text, which a read-only
+  native input does not take and a script's write is put back from. An agent is offered no
+  action on it (`combobox-data.test.ts`, "a combobox that is only to be read").
+- **A status that arrives with its text is not said.** Software that reads the page says a
+  status when its text changes, not when it comes into the page: one drawn inside a popup,
+  with "3 results" already in it, was silent the first time. `Combobox.Status` stays in the
+  page while its text changes, and where it does come in with text (inside the popup) the
+  core changes that text once by a mark that draws nothing and puts it back
+  (`combobox-data.test.ts`, "a combobox's status"). Not on iOS, where a status is said as it
+  appears.
+- **A list drawn from data is filtered once.** With `items` on the root and a `Collection`,
+  the root filters and the items left are the ones in the page: an item that also hid itself
+  by its own text disagreed with the data's label, and a list with one match said it was
+  empty. Whether a list drawn from data is empty is the data's to say, never a count of the
+  items made: a render that is thrown away (React's StrictMode) makes an item that never
+  comes into the page (`combobox-data.test.ts`, "a combobox whose items are data").
+- **A label may come after its value.** Items that are loaded, or given to a custom element
+  as a property once it is in the page, arrive after the input has been written with the
+  value itself for want of a label. A text that still says what was written for the value
+  is written again with the label; one that was typed is left
+  (`combobox-data.test.ts`, "names its value once the items that name it have come").
+- **A popup that grows the page moves what it is placed against.** A list at the page's end
+  that is filtered longer makes the page taller, the page's scrollbar comes and goes, and
+  everything is measured again inside the report of the first measure ("ResizeObserver loop
+  completed with undelivered notifications"). The fixtures' last sections keep room under
+  them (`fixtures/shared/styles.css`).
 - **An agent asks the way a person presses.** The bridge clicks, types and sends keys to
   the parts' own elements, inside `asAgent`, so a change goes through the component's
   handlers and callback like any other and only its `source` differs. Whether a change is
@@ -750,6 +807,88 @@ note. Three places hold them:
   was also the alert dialog's, so `[modal]="false"` on an alert dialog made one that is not
   modal. The alert dialog has a root of its own, with no such input; `vp run parity` compares
   each part's own props with React's and fails if it comes back.
+- **An arrow is placed in what is its offset parent when it is measured.** A popup that
+  comes in scaled is, through its entrance, what its arrow is placed in; at rest it is the
+  positioner. Measured during the entrance and never again, an arrow in a popup with a
+  border stood off its anchor's centre by half the border, on five adapters and not on the
+  sixth, which had attached a moment later. A popup that holds an arrow is positioned by
+  its design (`position: relative`), so the arrow is placed in it at every moment. Held by
+  the `popover-more` scenario, which reads the arrow's centre against its trigger's on a
+  popup with a border and an entrance.
+- **A popup kept in view must be let go when its anchor leaves.** Moved along its side to
+  stay in the viewport with no limit, a popup stayed at the edge of the page after its
+  anchor had been scrolled away, pointing at nothing. It is moved only as far as its
+  anchor reaches (less half an arrow and the padding), then leaves with it; `sticky` is
+  the wish to keep it (`position.test.ts`, "leaves with an anchor that is scrolled out of
+  view").
+- **A function or an object given as an option is new on every render.** A padding written
+  `{ left: 20 }` in a template placed the popup again each time anything was drawn. Options
+  that are lists or records are compared by what they hold; a function is the caller's to
+  keep (a constant, a memo) where being asked again matters (`position.test.ts`, "keeps a
+  padding of its own at each side").
+- **A popup the pointer opened is not yet the reader's.** A popover that opens on hover
+  takes no focus, holds no page and locks no scroll, whatever its `modal` says, or a
+  pointer crossing a trigger would take the keyboard away. Pressed, it becomes a pressed
+  popover: the popup lets go of what it held as one and takes hold as the other
+  (`mode` in `createPopup`), and the pointer leaving no longer closes it. A press within
+  half a second of the pointer's opening keeps it (the press was on its way to open it);
+  later, a press closes it. Held by `tests/core/popover.test.ts` ("a popover its trigger
+  opens on hover").
+- **A popup that was the pointer's and is someone else's now must be forgotten by the
+  pointer.** One open popup is the page's "current" one, which the next trigger closes and
+  opens after at once. A popover opened by hover and then pressed, or opened by a press
+  while its wait ran, was still "current": the next tooltip skipped its wait for ever
+  after, and the wait still running opened the popover a second time, as the pointer's
+  (`hover.forget()`; `hover.test.ts`, "forgets a popup that was taken over").
+- **A backdrop under a popup the pointer opened would take the pointer.** The trigger is
+  under it: the pointer has "left", and a press cannot reach the trigger. While the
+  pointer holds the popover its backdrop lets the pointer through (`pointer-events: none`
+  on the backdrop, never on the page).
+- **A custom element's part is out of the page while its popup is closed.** A property on
+  the positioner's element could not be set by a page that cannot find the element. What a
+  positioner takes that no attribute can say is a property of the custom element
+  (`positioning`), read as the popup comes into the page (`web.test.ts`, "a popover: what
+  its positioner, its trigger and its root are asked").
+- **A press outside moves focus by itself.** After a press on a backdrop the browser gives
+  focus to what was pressed, which is nothing: a scenario that expects the trigger to have
+  it after such a press expects what no browser does.
+- **A clock that is faked starts again with each test.** The forward clock was near zero
+  in every test, and "one closed 400 ms ago", kept in a module, was in the future of the
+  next test: its popup opened at once. Each test begins later on the faked clock than the
+  one before ended (`popover.test.ts`).
+- **What lies over the page on its way out takes no press.** A dialog's viewport covers the
+  page for as long as the popup's exit lasts, and the popup inside it is already inert: the
+  viewport is made inert with it, so a press in that moment reaches the page. The core writes
+  that itself, before the popup follows `open`: left to a framework's next render, a dialog
+  opened again during its exit asked for focus inside an element that was still inert. Held by
+  `tests/core/dialog.test.ts` ("takes no press on its way out, and is live again when the
+  dialog comes back").
+- **A press on a scrollbar is not a press outside.** A long dialog scrolls in its viewport,
+  and a press on that scrollbar lands on the viewport, beside the popup. It is told by where
+  it lands: outside what the element shows of its content, on an element that has something
+  to scroll. Test browsers are launched with their scrollbars hidden, so the test gives the
+  viewport a border where the scrollbar's room would be (`dialog.test.ts`, "scrolls by its
+  own scrollbar"); a real scrollbar was pressed by hand, in a Chromium launched with its
+  scrollbars shown.
+- **A locked pointer cannot be played by a test.** A browser gives the lock only for a press
+  of the reader's own, answers a moment later, and under a test driver reports moves that are
+  the driver's own (each one followed by its opposite). The number field's scrub area is
+  played with a finger's pointer, which no engine locks, and with a stand-in for the lock
+  that answers as a browser does (`number-field.test.ts`, "a scrub area whose pointer is
+  locked"). A lock that is given after the pointer was let go, which a short press always
+  is, is given straight back.
+- **A free pointer says where it is; a locked one, how far it would have gone.** How far a
+  drag went is read from where the pointer is while it is free, and from `movementX` and
+  `movementY` only while it is locked: nothing promises those for a finger's pointer, or
+  for an event a script dispatched. Which of the two it is, is asked of the page at each move
+  (`pointerLockElement`), not remembered from the last `pointerlockchange`: an engine may say
+  a locked pointer is at the lock's own place from the moment it locks, for every event. A
+  lock one test left held made the next tests' drags go nowhere; a test that presses with a
+  mouse gives the area a stand-in that refuses, so no real request outlives it.
+- **A prefixed property beside its plain twin is two styles.** `-webkit-user-select` and
+  `user-select` written together are one declaration once a browser has read them and two in
+  what a server sent, and the page at rest no longer matched its server's. A part writes the
+  plain property only.
 - **A probe that reads layout can hide the fault it looks for.** A scroll jump disappeared
   under a logger that read `scrollY`.
 - **A rehearsal installs from a cache of its own.** The rehearsal's registry holds a version
@@ -762,3 +901,9 @@ note. Three places hold them:
   for the next run.
 - **A dependency change is checked in a fresh clone** with a frozen lockfile: links of removed
   packages stay in `node_modules`.
+- **A trigger brought to the very top of the view is not wholly in it.** WebKit scrolls a page
+  by whole pixels while its boxes lie on parts of one: after `scrollIntoView({ block: "start"
+  })` a trigger was a quarter of a pixel above the view, and the press that followed scrolled
+  it in, one pixel, before anything had opened. A scenario that asserts the page stays still
+  leaves room over what it presses (`placing`). It showed once the section stopped being the
+  page's last, where the page could not scroll that far.

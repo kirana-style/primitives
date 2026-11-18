@@ -1,6 +1,7 @@
 import { createTooltip } from "@kirana-ui/core/tooltip"
 
 import { hoverPopup } from "./hover-popup.ts"
+import type { Placed } from "./around.ts"
 import type { ElementOf } from "./runtime.ts"
 
 /**
@@ -12,6 +13,6 @@ export const tag = hoverPopup("kui-tooltip", createTooltip)
 
 declare global {
   interface HTMLElementTagNameMap {
-    "kui-tooltip": ElementOf<typeof tag, { "open-change": ["onOpenChange", "open"] }>
+    "kui-tooltip": ElementOf<typeof tag, { "open-change": ["onOpenChange", "open"] }> & Placed
   }
 }

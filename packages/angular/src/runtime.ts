@@ -19,6 +19,10 @@ import { bind, defined, effect, sameProps, signal, write } from "@kirana-ui/core
 import type {
   Align,
   Anchor,
+  CollisionAvoidance,
+  CollisionBoundary,
+  CollisionPadding,
+  OffsetFunction,
   Part,
   PositionOptions,
   ReadonlySignal,
@@ -100,9 +104,14 @@ function anchorOf(given: PositionerAnchor): PositionOptions["anchor"] {
 export abstract class KuiPositioner implements OnInit {
   readonly side = input<Side>()
   readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+  readonly sideOffset = input<number | OffsetFunction>()
+  readonly alignOffset = input<number | OffsetFunction>()
+  readonly collisionPadding = input<CollisionPadding>()
+  readonly collisionBoundary = input<CollisionBoundary>()
+  readonly collisionAvoidance = input<CollisionAvoidance>()
+  readonly sticky = input<boolean>()
+  readonly arrowPadding = input<number>()
+  readonly positionMethod = input<"absolute" | "fixed">()
   /**
    * What the popup is placed against, when that is not its trigger. It may change while the
    * popup is open: the popup follows.
@@ -116,6 +125,11 @@ export abstract class KuiPositioner implements OnInit {
       sideOffset: this.sideOffset(),
       alignOffset: this.alignOffset(),
       collisionPadding: this.collisionPadding(),
+      collisionBoundary: this.collisionBoundary(),
+      collisionAvoidance: this.collisionAvoidance(),
+      sticky: this.sticky(),
+      arrowPadding: this.arrowPadding(),
+      positionMethod: this.positionMethod(),
       anchor: anchorOf(this.anchor()),
     })
 

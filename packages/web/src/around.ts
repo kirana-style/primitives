@@ -1,8 +1,8 @@
-import { computed } from "@kirana-ui/core"
+import { computed, effect } from "@kirana-ui/core"
 import type { Part, PositionOptions, ReadonlySignal, Signal } from "@kirana-ui/core"
 import type { Field } from "@kirana-ui/core/field"
 
-import { controllerAround } from "./runtime.ts"
+import { controllerAround, ownerOf } from "./runtime.ts"
 import type { Drawn } from "./runtime.ts"
 
 /** The field a control is in, if it is in one. */
@@ -57,33 +57,64 @@ const PLACING = [
   "kui-side-offset",
   "kui-align-offset",
   "kui-collision-padding",
+  "kui-collision-boundary",
+  "kui-sticky",
+  "kui-arrow-padding",
+  "kui-position-method",
   "kui-anchor",
 ]
 
 /**
+ * What a component with a positioner takes as a property of its custom element, for what an
+ * attribute cannot say: a function, an element, an object.
+ */
+export interface Placed {
+  /**
+   * Its positioner's options that no attribute can say (`sideOffset` as a function,
+   * `collisionBoundary` as an element or a rectangle, `collisionPadding` a side,
+   * `collisionAvoidance`, `anchor` as an element). A `kui-` attribute on the positioner comes
+   * before the same option here. Read when the popup comes into the page, and when one of the
+   * positioner's attributes changes.
+   */
+  positioning?: Partial<PositionOptions> | undefined
+}
+
+/**
  * Where a positioner goes, as its own attributes say: `kui-side`, `kui-align`,
- * `kui-side-offset`, `kui-align-offset`, `kui-collision-padding`, and `kui-anchor`, the id of
- * the element the popup is placed against when that is not its trigger. Written before the
- * part is put on, so the first placement reads them.
+ * `kui-side-offset`, `kui-align-offset`, `kui-collision-padding`, `kui-sticky`,
+ * `kui-arrow-padding`, `kui-position-method`, and two that name an element by its id:
+ * `kui-anchor`, what the popup is placed against when that is not its trigger, and
+ * `kui-collision-boundary`, what it is held inside. What no attribute can say is the
+ * `positioning` property of its custom element (`host`). Written before the part is put on,
+ * so the first placement reads them.
  */
 export function place(
   positioning: Signal<Partial<PositionOptions>>,
   element: HTMLElement,
-  more: Record<string, unknown> = {}
+  host?: (HTMLElement & Placed) | null
 ): void {
   const against = element.getAttribute("kui-anchor")
+  const within = element.getAttribute("kui-collision-boundary")
+  const sticky = element.getAttribute("kui-sticky")
   const asked: Record<string, unknown> = {
     side: element.getAttribute("kui-side") ?? undefined,
     align: element.getAttribute("kui-align") ?? undefined,
     sideOffset: number(element.getAttribute("kui-side-offset")),
     alignOffset: number(element.getAttribute("kui-align-offset")),
     collisionPadding: number(element.getAttribute("kui-collision-padding")),
+    // Found now: a boundary is what is in the page as the popup comes into it.
+    collisionBoundary:
+      within === null || within === "clipping-ancestors"
+        ? undefined
+        : (element.ownerDocument.getElementById(within) ?? undefined),
+    sticky: sticky === null ? undefined : sticky !== "false",
+    arrowPadding: number(element.getAttribute("kui-arrow-padding")),
+    positionMethod: element.getAttribute("kui-position-method") ?? undefined,
     // Looked for each time the popup is placed: the element may come into the page later.
     anchor: against === null ? undefined : () => element.ownerDocument.getElementById(against),
-    ...more,
   }
   for (const key of Object.keys(asked)) if (asked[key] === undefined) delete asked[key]
-  positioning.set(asked as Partial<PositionOptions>)
+  positioning.set({ ...host?.positioning, ...asked } as Partial<PositionOptions>)
 }
 
 /**
@@ -98,14 +129,23 @@ export function positioner(
   },
   element: HTMLElement
 ): Drawn {
-  place(controller.positioning, element)
+  // Found while the positioner is where the page wrote it: it is out of the page while closed.
+  const host = ownerOf(element)
+  place(controller.positioning, element, host)
   return {
     mounted: controller.mounted,
     part: controller.positioner,
     mount() {
-      const observer = new MutationObserver(() => place(controller.positioning, element))
+      const observer = new MutationObserver(() => place(controller.positioning, element, host))
       observer.observe(element, { attributes: true, attributeFilter: PLACING })
-      return () => observer.disconnect()
+      // Read again as the popup comes into the page: the property may have been set since.
+      const stop = effect(() => {
+        if (controller.mounted.get()) place(controller.positioning, element, host)
+      })
+      return () => {
+        stop()
+        observer.disconnect()
+      }
     },
   }
 }

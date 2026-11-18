@@ -39,7 +39,12 @@ export type RootEmits = Changes<"open", boolean>
 
 const Root = defineComponent({
   name: "PopoverRoot",
-  props: { open: optional(Boolean), defaultOpen: Boolean, id: String },
+  props: {
+    open: optional(Boolean),
+    defaultOpen: Boolean,
+    modal: { type: [Boolean, String] as PropType<PopoverProps["modal"]>, default: false },
+    id: String,
+  },
   emits: ["update:open", "openChange"],
   setup(props, { slots, emit }) {
     const generated = useId()
@@ -48,6 +53,7 @@ const Root = defineComponent({
         id: props.id ?? generated,
         open: props.open,
         defaultOpen: props.defaultOpen,
+        modal: props.modal,
         onOpenChange(open: boolean, details: ChangeDetails) {
           emit("openChange", open, details)
           if (!details.canceled) emit("update:open", open)
@@ -89,7 +95,19 @@ function anchorOf(given: unknown): PositionOptions["anchor"] {
 export interface PositionerProps
   extends
     Partial<
-      Pick<PositionOptions, "side" | "align" | "sideOffset" | "alignOffset" | "collisionPadding">
+      Pick<
+        PositionOptions,
+        | "side"
+        | "align"
+        | "sideOffset"
+        | "alignOffset"
+        | "collisionPadding"
+        | "collisionBoundary"
+        | "collisionAvoidance"
+        | "sticky"
+        | "arrowPadding"
+        | "positionMethod"
+      >
     >,
     PartComponentProps {
   /**
@@ -114,9 +132,18 @@ export function positionerComponent<Placed = PartState>(
     props: {
       side: String as PropType<PositionOptions["side"]>,
       align: String as PropType<PositionOptions["align"]>,
-      sideOffset: Number,
-      alignOffset: Number,
-      collisionPadding: Number,
+      sideOffset: [Number, Function] as PropType<PositionOptions["sideOffset"]>,
+      alignOffset: [Number, Function] as PropType<PositionOptions["alignOffset"]>,
+      collisionPadding: [Number, Object] as PropType<PositionOptions["collisionPadding"]>,
+      collisionBoundary: {
+        type: null as unknown as PropType<PositionOptions["collisionBoundary"]>,
+        default: undefined as unknown,
+      },
+      collisionAvoidance: Object as PropType<PositionOptions["collisionAvoidance"]>,
+      // Left out is nothing said, not `false`: the component's own default stands.
+      sticky: { type: Boolean, default: undefined as unknown },
+      arrowPadding: Number,
+      positionMethod: String as PropType<PositionOptions["positionMethod"]>,
       /**
        * What the popup is placed against, when that is not its trigger. It may change while
        * the popup is open: the popup follows.
@@ -137,25 +164,57 @@ export function positionerComponent<Placed = PartState>(
   }) as unknown as PartComponent<"div", Placed, PositionerProps>
 }
 
-export type TriggerProps = PartComponentProps
+export interface TriggerProps extends PartComponentProps {
+  /**
+   * Whether the pointer resting on the trigger opens the popover too. A press and the keyboard
+   * still open it, and a press on one the pointer opened keeps it open. Default `false`.
+   */
+  openOnHover?: boolean | undefined
+  /** How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300. */
+  delay?: number | undefined
+  /** How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0. */
+  closeDelay?: number | undefined
+}
+export type BackdropProps = PartComponentProps
+export type ArrowProps = PartComponentProps
 export type PopupProps = PartComponentProps
 export type TitleProps = PartComponentProps
 export type DescriptionProps = PartComponentProps
 export type CloseProps = PartComponentProps
+
+const TriggerElement = partComponent<"button">(
+  "PopoverTriggerElement",
+  "button",
+  () => scope.use().trigger
+)
+
+const Trigger = defineComponent({
+  name: "PopoverTrigger",
+  inheritAttrs: false,
+  props: { openOnHover: Boolean, delay: Number, closeDelay: Number },
+  setup(props, { attrs, slots }) {
+    const { hovering } = scope.use()
+    watchEffect(() => hovering.set(defined({ ...props })), { flush: "sync" })
+    return () => h(TriggerElement, attrs, slots)
+  },
+}) as unknown as PartComponent<"button", State["trigger"], TriggerProps>
+
 export const Popover = {
   Root,
-  Trigger: partComponent<"button", State["trigger"]>(
-    "PopoverTrigger",
-    "button",
-    () => scope.use().trigger
-  ),
+  Trigger,
   Portal: portalComponent("PopoverPortal", () => scope.use().mounted),
+  Backdrop: partComponent<"div", State["backdrop"]>(
+    "PopoverBackdrop",
+    "div",
+    () => scope.use().backdrop
+  ),
   Positioner: positionerComponent<State["positioner"]>(
     "PopoverPositioner",
     () => scope.use(),
     partComponent("PopoverPositionerElement", "div", () => scope.use().positioner)
   ),
   Popup: partComponent<"div", State["popup"]>("PopoverPopup", "div", () => scope.use().popup),
+  Arrow: partComponent<"div", State["arrow"]>("PopoverArrow", "div", () => scope.use().arrow),
   Title: partComponent<"h2", State["title"]>("PopoverTitle", "h2", () => scope.use().title),
   Description: partComponent<"p", State["description"]>(
     "PopoverDescription",

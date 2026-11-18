@@ -1,6 +1,7 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  CONTROL,
   DISABLED,
   EITHER_FRAME,
   EITHER_OPEN,
@@ -40,6 +41,7 @@ export const selectVocabulary = defineComponent({
       popupOpen: state("data-popup-open", "Present when the list is open."),
       placeholder: state("data-placeholder", "Present while nothing is chosen."),
       disabled: DISABLED,
+      readonly: CONTROL.readonly,
     },
   },
   value: {

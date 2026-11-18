@@ -50,6 +50,12 @@ export interface PopupOptions {
    * places itself another way, once placed, says when.
    */
   following?: ReadonlySignal<boolean>
+  /**
+   * What it is open as, for a popup that can change while it is open (a popover the pointer
+   * opened, once it is pressed). When it changes the popup lets go of what it holds and takes
+   * hold again: `modal` and `focus` are asked once more, and so is `hold`.
+   */
+  mode?: ReadonlySignal<unknown>
 }
 
 /** What a popup's focus is told: whether the popup is modal, and its other elements. */
@@ -162,11 +168,19 @@ export function createPopup(options: PopupOptions): Popup {
     attach(element) {
       let release: (() => void) | undefined
       let closing = false
+      let was: unknown
       const stops = [
         presence.attach(element),
         effect(() => {
           const now = open.get()
+          const as = options.mode?.get()
           untracked(() => {
+            // Open as something else than it was engaged as: let go, to take hold again.
+            if (now && release && as !== was) {
+              release()
+              release = undefined
+            }
+            was = as
             if (now && !release) {
               if (closing) element.removeAttribute("inert")
               closing = false
@@ -183,11 +197,16 @@ export function createPopup(options: PopupOptions): Popup {
       ]
       // The page's scroll is held until the popup has left, so nothing shifts under its exit.
       const hold = options.hold
-      if (hold && (options.modal?.() || options.swallow?.())) {
+      const mode = options.mode
+      if (hold && (mode || options.modal?.() || options.swallow?.())) {
         let unlock: (() => void) | undefined
         stops.push(
           effect(() => {
-            const held = presence.mounted.get()
+            mode?.get()
+            // One that changes while open is asked each time; another was asked as it attached.
+            const held =
+              presence.mounted.get() &&
+              (!mode || untracked(() => Boolean(options.modal?.() || options.swallow?.())))
             if (held && !unlock) unlock = hold(element)
             else if (!held && unlock) {
               unlock()

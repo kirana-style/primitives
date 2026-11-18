@@ -11,7 +11,15 @@ const INDETERMINATE = state(
 export const checkboxVocabulary = defineComponent({
   root: {
     description: "The box. It holds a hidden native checkbox, which a form and a label reach.",
-    states: { ...CHECKED, indeterminate: INDETERMINATE, ...CONTROL },
+    states: {
+      ...CHECKED,
+      indeterminate: INDETERMINATE,
+      ...CONTROL,
+      parent: state(
+        "data-parent",
+        "Present on the checkbox that stands for every box of its group."
+      ),
+    },
     exclusive: EITHER_CHECKED,
   },
   indicator: {

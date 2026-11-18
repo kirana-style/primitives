@@ -39,6 +39,31 @@ export interface Checked {
   state(): Record<string, "" | undefined>
 }
 
+/** What a box is given by the group it is one of the boxes of. Not for a caller. */
+export interface CheckedAround {
+  /** The group's own `disabled`, and its field's. */
+  readonly disabled: ReadonlySignal<boolean>
+  /** The name the box is submitted under when it has none of its own. */
+  name(): string | undefined
+  /** The state of the group's field, which the box carries. */
+  state(): Record<string, "" | undefined>
+  /** The id the box's element takes, when the group names its boxes. */
+  id?(): string | undefined
+  /** Whether the box is in what a form submits. */
+  readonly submitted: boolean
+  /** Where the group holds the box's state: absent for a box that holds its own. */
+  readonly held?:
+    | {
+        checked(): boolean
+        set(checked: boolean, details: ChangeDetails): void
+        /** The group's form is being reset: whether the box is then checked. */
+        reset(event: Event): boolean
+      }
+    | undefined
+  /** The box's element is in the page. Returns the leave. */
+  join?(disabled: ReadonlySignal<boolean>): () => void
+}
+
 /**
  * What a checkbox and a switch share: a box that is on or off, with a native checkbox inside it,
  * hidden. The native input is the one source of the change: a press on the box presses the input,
@@ -50,13 +75,17 @@ export function createChecked(
   /** A checkbox that is neither: shown as "mixed" until it is pressed. */
   mixed: () => boolean = () => false,
   /** The field the control is in, if it is in one: its name, its label, its state. */
-  field?: Field
+  field?: Field,
+  /** The group the control is one of the boxes of: the field is then the group's to join. */
+  group?: CheckedAround
 ): Checked {
-  const checked = bindable({
+  const held = group?.held
+  const own = bindable({
     value: () => props.get().checked,
     defaultValue: props.peek().defaultChecked ?? false,
     onChange: (value, by) => props.peek().onCheckedChange?.(value, by),
   })
+  const checked: ReadonlySignal<boolean> = held ? computed(() => held.checked()) : own
   const readOnly = computed(() => Boolean(props.get().readOnly))
   let input: HTMLInputElement | undefined
   let member: FieldMembership | undefined
@@ -66,11 +95,17 @@ export function createChecked(
   const inForm = createFormControl(
     (event) => {
       // As a native checkbox: disabled or read-only, it is reset all the same.
+      // In a group the reset is the group's, heard once for all its boxes.
+      if (held) {
+        const next = held.reset(event)
+        if (input) input.defaultChecked = next
+        return
+      }
       const by = details("form-reset", event)
-      checked.set(initial, by)
+      own.set(initial, by)
       // What was asked for, not what is read back: a caller who holds the value gives it back
       // in their framework's time.
-      const next = by.canceled ? checked.peek() : initial
+      const next = by.canceled ? own.peek() : initial
       // The browser resets the input next, to what its attribute says.
       if (input) input.defaultChecked = next
       member?.reset(submitted(next))
@@ -81,11 +116,16 @@ export function createChecked(
     }
   )
   const disabled = computed(
-    () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
+    () =>
+      Boolean(props.get().disabled) ||
+      Boolean(field?.disabled.get()) ||
+      Boolean(group?.disabled.get()) ||
+      inForm.disabled.get()
   )
 
   const state = () => ({
     ...field?.state(),
+    ...group?.state(),
     "data-checked": flag(checked.get() && !mixed()),
     "data-unchecked": flag(!checked.get() && !mixed()),
     "data-disabled": flag(disabled.get()),
@@ -95,7 +135,13 @@ export function createChecked(
 
   function setChecked(next: boolean, by: ChangeDetails) {
     if (disabled.peek() || readOnly.peek()) return
-    checked.set(next, by)
+    if (held) {
+      // The box's own caller hears it first, and may refuse before the group is asked.
+      props.peek().onCheckedChange?.(next, by)
+      if (!by.canceled) held.set(next, by)
+      return
+    }
+    own.set(next, by)
     if (!by.canceled) member?.changed(submitted(next))
   }
 
@@ -113,6 +159,7 @@ export function createChecked(
     root: {
       props: computed(() => ({
         role,
+        id: group?.id?.(),
         tabindex: disabled.get() ? "-1" : "0",
         "aria-checked": mixed() ? "mixed" : String(checked.get()),
         "aria-disabled": disabled.get() ? "true" : undefined,
@@ -148,7 +195,9 @@ export function createChecked(
           required: () => Boolean(props.peek().required),
           value: submitted(checked.peek()),
         })
+        const leave = group?.join?.(disabled)
         return () => {
+          leave?.()
           member?.leave()
           member = undefined
         }
@@ -159,7 +208,10 @@ export function createChecked(
         type: "checkbox",
         // In a field, the id its label is `for`.
         id: field?.controlId ?? props.get().id,
-        name: props.get().name ?? field?.name.get(),
+        name:
+          group && !group.submitted
+            ? undefined
+            : (props.get().name ?? (group ? group.name() : field?.name.get())),
         form: props.get().form,
         value: props.get().value,
         checked: flag(checked.get()),

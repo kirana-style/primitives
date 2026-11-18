@@ -18,6 +18,7 @@
     "./avatar": "./src/avatar.tsx",
     "./button": "./src/button.tsx",
     "./checkbox": "./src/checkbox.tsx",
+    "./checkbox-group": "./src/checkbox-group.tsx",
     "./collapsible": "./src/collapsible.tsx",
     "./combobox": "./src/combobox.tsx",
     "./context-menu": "./src/context-menu.tsx",

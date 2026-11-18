@@ -1,13 +1,17 @@
-import { within } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { StateOf } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
-import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
+import type {
+  NumberField as Controller,
+  NumberFieldProps,
+  NumberFieldScrubOptions,
+} from "@kirana-ui/core/number-field"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { parts, useController, useOwnText, usePart, useSignal } from "./runtime.tsx"
+import { Portal, parts, useController, useOwnText, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["numberField"]
@@ -104,6 +108,38 @@ export type DecrementProps = PartComponentProps<"button", StateOf<Parts["decreme
 
 const Decrement = (props: DecrementProps) =>
   usePart(useNumberField("Decrement").decrement, "button", props)
+export type ScrubAreaProps = PartComponentProps<
+  "span",
+  StateOf<Parts["scrubArea"]>,
+  NumberFieldScrubOptions
+>
+
+/** Pressed and dragged to change the number; `direction`, `pixelSensitivity`, `teleportDistance`. */
+function ScrubArea({
+  direction,
+  pixelSensitivity,
+  teleportDistance,
+  ...props
+}: ScrubAreaProps): ReactElement {
+  const controller = useNumberField("ScrubArea")
+  controller.scrub.set(defined({ direction, pixelSensitivity, teleportDistance }))
+  return usePart(controller.scrubArea, "span", props)
+}
+
+export type ScrubAreaCursorProps = PartComponentProps<"span", StateOf<Parts["scrubAreaCursor"]>>
+
+const CursorElement = (props: ScrubAreaCursorProps) =>
+  usePart(useNumberField("ScrubAreaCursor").scrubAreaCursor.part, "span", props)
+
+/** Drawn in place of the pointer while it is locked for a drag, at the end of `<body>`. */
+function ScrubAreaCursor(props: ScrubAreaCursorProps): ReactElement | null {
+  const mounted = useSignal(useNumberField("ScrubAreaCursor").scrubAreaCursor.mounted)
+  return mounted ? (
+    <Portal>
+      <CursorElement {...props} />
+    </Portal>
+  ) : null
+}
 
 export const NumberField = /* @__PURE__ */ parts("NumberField", {
   Root,
@@ -111,4 +147,6 @@ export const NumberField = /* @__PURE__ */ parts("NumberField", {
   Input,
   Increment,
   Decrement,
+  ScrubArea,
+  ScrubAreaCursor,
 })

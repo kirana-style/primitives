@@ -9,4 +9,5 @@ export type {
   PortalProps,
   TitleProps,
   TriggerProps,
+  ViewportProps,
 } from "./dialog.tsx"

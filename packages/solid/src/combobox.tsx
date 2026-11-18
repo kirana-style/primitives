@@ -3,10 +3,15 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
+import type {
+  Combobox as Controller,
+  ComboboxEntry,
+  ComboboxGroup,
+  ComboboxProps,
+} from "@kirana-ui/core/combobox"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { For, Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
+import type { Accessor, JSX } from "solid-js"
 
 import { FieldContext } from "./field-context.ts"
 import { positioned } from "./popover.tsx"
@@ -48,6 +53,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     open: props.open,
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
+    readOnly: props.readOnly,
     required: props.required,
     multiple: props.multiple,
     values: props.values,
@@ -226,9 +232,80 @@ export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
 export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
 
+export type StatusProps = PartComponentProps<"div", StateOf<Parts["status"]>>
+
+export type ValueProps<Chosen = unknown> = {
+  /** Shown while nothing is chosen. */
+  placeholder?: JSX.Element
+  /**
+   * What to show in place of the label. A function is given the value and its label, each to
+   * be called where it is read (`null` and `undefined` while nothing is chosen); with
+   * `multiple`, the values and their labels, in the order they were chosen.
+   */
+  children?:
+    | JSX.Element
+    | ((
+        value: Accessor<Chosen>,
+        label: Accessor<Chosen extends readonly unknown[] ? readonly string[] : string | undefined>
+      ) => JSX.Element)
+}
+
+/**
+ * The chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the
+ * chosen labels with commas between. For a button that is the combobox, its input inside the
+ * popup. It draws no element.
+ */
+function Value<Chosen = unknown>(props: ValueProps<Chosen>): JSX.Element {
+  const made = useCombobox()
+  const shown = fromSignal(made.shown)
+  return (
+    <>
+      {(() => {
+        const given = props.children
+        // A function that takes nothing is an element of Solid's own, drawn as it is.
+        if (typeof given !== "function" || given.length === 0) {
+          return (given as JSX.Element) ?? shown().label ?? props.placeholder
+        }
+        const draw = given as (value: Accessor<unknown>, label: Accessor<unknown>) => JSX.Element
+        return made.multiple
+          ? draw(
+              () => shown().values,
+              () => shown().labels
+            )
+          : draw(
+              () => shown().value,
+              () => shown().label
+            )
+      })()}
+    </>
+  )
+}
+
+export type CollectionProps<Value = unknown> = {
+  /** A group the root's `items` gave: its items left are then what is drawn. */
+  of?: ComboboxEntry<Value> | undefined
+  /** Drawn once for each item left, or for each group that has items left. */
+  children: (entry: ComboboxEntry<Value>) => JSX.Element
+}
+
+/**
+ * Draws the list from the root's `items`: its child once for each item left for what was
+ * typed, or for each group that has items left; with `of`, for each of that group's. The root
+ * then filters, and no item hides itself. It draws no element.
+ */
+function Collection<Value = unknown>(props: CollectionProps<Value>): JSX.Element {
+  const made = useCombobox() as unknown as Controller<Value>
+  // A group is known by its key, which is its own for as long as it is drawn.
+  const entries = fromSignal(made.entries(untrack(() => props.of)))
+  // By key: an item that is left keeps its element.
+  const keys = () => entries().map((each) => each.key)
+  const of = (key: string) => entries().find((each) => each.key === key)!
+  return <For each={keys()}>{(key) => props.children(untrack(() => of(key)))}</For>
+}
+
 const part =
   <Props extends Record<string, unknown>>(
-    name: "input" | "trigger" | "popup" | "list" | "chips" | "separator",
+    name: "input" | "trigger" | "popup" | "list" | "chips" | "separator" | "status",
     tag: string
   ) =>
   (props: Props): JSX.Element => <Part of={useCombobox()[name]} tag={tag} {...props} />
@@ -252,6 +329,8 @@ function AutocompleteRoot(props: AutocompleteRootProps): JSX.Element {
     filter: props.filter,
     openOnInputClick: props.openOnInputClick,
     disabled: props.disabled,
+    readOnly: props.readOnly,
+    items: props.items,
     required: props.required,
     name: props.name,
     form: props.form,
@@ -267,6 +346,7 @@ export const Combobox = {
   Root,
   Input: part<InputProps>("input", "input"),
   Trigger: part<TriggerProps>("trigger", "button"),
+  Value,
   Clear,
   /** With `multiple`: what holds the chips and the input. */
   Chips: part<ChipsProps>("chips", "div"),
@@ -280,6 +360,7 @@ export const Combobox = {
    * is then the listbox.
    */
   List: part<ListProps>("list", "div"),
+  Collection,
   Group,
   GroupLabel,
   /** A line between groups. */
@@ -287,6 +368,12 @@ export const Combobox = {
   Item,
   ItemIndicator,
   Empty,
+  /**
+   * Says how the list stands ("3 results", "Loading") to software that reads the page, as its
+   * text changes. Keep it in the page and change what it holds: inside the popup, or beside
+   * the input.
+   */
+  Status: part<StatusProps>("status", "div"),
 }
 
 export const Autocomplete = {
@@ -298,9 +385,11 @@ export const Autocomplete = {
   Positioner: Combobox.Positioner,
   Popup: Combobox.Popup,
   List: Combobox.List,
+  Collection: Combobox.Collection,
   Group: Combobox.Group,
   GroupLabel: Combobox.GroupLabel,
   Separator: Combobox.Separator,
   Item: Combobox.Item,
   Empty: Combobox.Empty,
+  Status: Combobox.Status,
 }

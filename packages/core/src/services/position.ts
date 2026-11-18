@@ -1,5 +1,14 @@
-import { arrow, autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom"
-import type { Placement, VirtualElement } from "@floating-ui/dom"
+import {
+  arrow,
+  autoUpdate,
+  computePosition,
+  flip,
+  limitShift,
+  offset,
+  shift,
+  size,
+} from "@floating-ui/dom"
+import type { Middleware, MiddlewareState, Placement, VirtualElement } from "@floating-ui/dom"
 
 import { carryDirection, directionOf } from "../direction.ts"
 import type { Direction } from "../direction.ts"
@@ -27,6 +36,54 @@ export type Anchor = Element | VirtualElement
  */
 export type AnchorOption = Anchor | null | undefined | (() => Anchor | null | undefined)
 
+/** What an offset given as a function is told: where the popup is, and the two sizes. */
+export interface OffsetData {
+  /** The side of the anchor the popup is on, in the words it was asked for in. */
+  side: Side
+  /** Where along that side the popup is. */
+  align: Align
+  /** The anchor's size, in pixels. */
+  anchor: { width: number; height: number }
+  /** The positioner's size, in pixels. */
+  positioner: { width: number; height: number }
+}
+
+/** A gap worked out from what was measured: `({ side, align, anchor, positioner }) => number`. */
+export type OffsetFunction = (data: OffsetData) => number
+
+/** The room kept between a popup and the edges it is held inside: one number, or one a side. */
+export type CollisionPadding = number | Partial<Record<PhysicalSide, number>>
+
+/**
+ * What a popup is held inside: the ancestors that clip it (`"clipping-ancestors"`), an element,
+ * several, or a rectangle of the viewport.
+ */
+export type CollisionBoundary =
+  | "clipping-ancestors"
+  | Element
+  | Element[]
+  | { x: number; y: number; width: number; height: number }
+
+/** What a popup does when it does not fit where it was asked to be. */
+export interface CollisionAvoidance {
+  /**
+   * Across from the anchor: `"flip"` goes to the opposite side, `"shift"` keeps the side and
+   * moves over the anchor to stay in view, `"none"` lets it overflow. Default `"flip"`.
+   */
+  side?: "flip" | "shift" | "none" | undefined
+  /**
+   * Along its side: `"flip"` swaps `start` and `end`, `"shift"` moves the popup along the side
+   * to stay in view, `"none"` lets it overflow. Default `"flip"`. With `side: "shift"` it is
+   * `"shift"` or `"none"`.
+   */
+  align?: "flip" | "shift" | "none" | undefined
+  /**
+   * Where it goes when neither the side asked for nor its opposite fits: to the other axis,
+   * its `"start"` or its `"end"` first, or nowhere (`"none"`). Default `"end"`.
+   */
+  fallbackAxisSide?: "start" | "end" | "none" | undefined
+}
+
 /** How a popup is placed against its anchor: what every positioner takes. */
 export interface PositionOptions {
   /**
@@ -36,12 +93,44 @@ export interface PositionOptions {
   side: Side
   /** Where along that side the popup is: at the anchor's start, its centre or its end. */
   align: Align
-  /** The gap between the anchor and the popup, measured without any arrow. */
-  sideOffset: number
-  /** How far the popup is moved along the side from where `align` puts it, in pixels. */
-  alignOffset: number
-  /** Kept between the popup and the viewport's edges. */
-  collisionPadding: number
+  /**
+   * The gap between the anchor and the popup, measured without any arrow: a number of pixels,
+   * or a function of what was measured (`({ side, align, anchor, positioner }) => number`).
+   */
+  sideOffset: number | OffsetFunction
+  /**
+   * How far the popup is moved along the side from where `align` puts it: a number of pixels,
+   * or a function of what was measured (`({ side, align, anchor, positioner }) => number`).
+   */
+  alignOffset: number | OffsetFunction
+  /**
+   * Kept between the popup and the edges it is held inside: one number, or one for each side
+   * (`{ top, right, bottom, left }`, a side left out is 0).
+   */
+  collisionPadding: CollisionPadding
+  /**
+   * What the popup is held inside: an element, several, or a rectangle of the viewport. Left
+   * out or `"clipping-ancestors"`: the ancestors that clip it, and the viewport.
+   */
+  collisionBoundary?: CollisionBoundary | undefined
+  /**
+   * What the popup does when it does not fit: `side` and `align` each `"flip"`, `"shift"` or
+   * `"none"`, and `fallbackAxisSide`. Left out: it flips to the opposite side and is moved
+   * along its side.
+   */
+  collisionAvoidance?: CollisionAvoidance | undefined
+  /**
+   * Keeps the popup in view once its anchor has been scrolled out of it. Otherwise the popup
+   * leaves with its anchor.
+   */
+  sticky: boolean
+  /**
+   * Kept between an arrow and the ends of the popup's edge, so the arrow does not stand on a
+   * rounded corner.
+   */
+  arrowPadding: number
+  /** The CSS `position` the positioner is given: `"absolute"` or `"fixed"`. */
+  positionMethod: "absolute" | "fixed"
   /**
    * What the popup is placed against, when that is not its trigger. It may change while the
    * popup is open: the popup then follows the new one.
@@ -55,6 +144,9 @@ export const POSITION_DEFAULTS: PositionOptions = {
   sideOffset: 0,
   alignOffset: 0,
   collisionPadding: 5,
+  sticky: false,
+  arrowPadding: 5,
+  positionMethod: "absolute",
 }
 
 /** A point of the viewport as an anchor; `from` is the element it was pressed in. */
@@ -123,6 +215,27 @@ function same(a: Anchor | undefined, b: Anchor | undefined): boolean {
   return a.contextElement === b.contextElement
 }
 
+/** Whether two options say the same: themselves, or lists or records of the same things. */
+function alike(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (typeof a !== "object" || typeof b !== "object" || !a || !b) return false
+  if (a instanceof Element || b instanceof Element) return false
+  const [mine, theirs] = [a as Record<string, unknown>, b as Record<string, unknown>]
+  const keys = Object.keys(mine)
+  return (
+    keys.length === Object.keys(theirs).length && keys.every((key) => mine[key] === theirs[key])
+  )
+}
+
+const SIDES = ["top", "right", "bottom", "left"] as const
+
+/** The room kept at each side, a side left out being none. */
+function paddingOf(given: CollisionPadding): Record<PhysicalSide, number> {
+  const each = {} as Record<PhysicalSide, number>
+  for (const side of SIDES) each[side] = typeof given === "number" ? given : (given[side] ?? 0)
+  return each
+}
+
 const ORIGIN: Record<PhysicalSide, (x: string, y: string) => string> = {
   top: (x) => `${x} 100%`,
   bottom: (x) => `${x} 0%`,
@@ -165,7 +278,7 @@ export function createPosition(
     },
     refresh: () => replace?.(),
     attach(positioner, given, following) {
-      setGeometry(positioner, "position", "absolute")
+      setGeometry(positioner, "position", options.peek().positionMethod)
       setGeometry(positioner, "left", "0px")
       setGeometry(positioner, "top", "0px")
       // The first placement resolves in a microtask, before anything is drawn: the positioner is
@@ -227,15 +340,84 @@ export function createPosition(
         // Read on the positioner, which took its anchor's direction: `start` and `end` are read
         // there too.
         const rtl = directionOf(positioner, direction) === "rtl"
+        setGeometry(positioner, "position", wanted.positionMethod)
+        const padding = paddingOf(wanted.collisionPadding)
+        const within = wanted.collisionBoundary
+        const held = {
+          padding,
+          ...(within && within !== "clipping-ancestors" ? { boundary: within } : {}),
+        }
+        /** What an offset given as a function is told. */
+        const measured = (state: MiddlewareState): OffsetData => {
+          const [onSide, along = "center"] = state.placement.split("-") as [PhysicalSide, Align?]
+          const { reference: against, floating } = state.rects
+          return {
+            side: landed(wanted.side, onSide, rtl),
+            align: along,
+            anchor: { width: against.width, height: against.height },
+            positioner: { width: floating.width, height: floating.height },
+          }
+        }
+        const gap = (wide: number | OffsetFunction, state: MiddlewareState) =>
+          typeof wide === "function" ? wide(measured(state)) : wide
+        // Kept in view only while its anchor is: past that it leaves with it, by half an
+        // arrow and the padding, so an arrow still points at something. `sticky` keeps it.
+        const limiter = wanted.sticky
+          ? {}
+          : {
+              limiter: limitShift((state) => {
+                if (!pointer) return {}
+                const box = pointer.getBoundingClientRect()
+                const upright = /^(top|bottom)/.test(state.placement)
+                return {
+                  offset: upright
+                    ? (box.width + padding.left + padding.right) / 2
+                    : (box.height + padding.top + padding.bottom) / 2,
+                }
+              }),
+            }
+        const avoid = wanted.collisionAvoidance
+        let avoiding: (Middleware | null)[]
+        if (!avoid) {
+          // Nothing said: to the opposite side, then along its own.
+          avoiding = [flip(held), shift({ ...held, crossAxis: wanted.sticky, ...limiter })]
+        } else {
+          const { side: across = "flip", align: along = "flip", fallbackAxisSide = "end" } = avoid
+          const still = along === "none" && across !== "shift"
+          const turned =
+            across === "none"
+              ? null
+              : flip({
+                  ...held,
+                  mainAxis: across === "flip",
+                  crossAxis: along === "flip" ? "alignment" : false,
+                  fallbackAxisSideDirection: fallbackAxisSide,
+                })
+          const moved = still
+            ? null
+            : shift({
+                ...held,
+                mainAxis: along !== "none",
+                crossAxis: wanted.sticky || across === "shift",
+                ...limiter,
+              })
+          // Moved first where moving is what was asked for, or there is no start or end to swap.
+          avoiding =
+            across === "shift" || along === "shift" || wanted.align === "center"
+              ? [moved, turned]
+              : [turned, moved]
+        }
         void computePosition(anchor, positioner, {
           placement: placement(physical(wanted.side, rtl), wanted.align),
-          strategy: "absolute",
+          strategy: wanted.positionMethod,
           middleware: [
-            offset({ mainAxis: wanted.sideOffset, crossAxis: wanted.alignOffset }),
-            flip({ padding: wanted.collisionPadding }),
-            shift({ padding: wanted.collisionPadding }),
+            offset((state) => ({
+              mainAxis: gap(wanted.sideOffset, state),
+              crossAxis: gap(wanted.alignOffset, state),
+            })),
+            ...avoiding,
             size({
-              padding: wanted.collisionPadding,
+              ...held,
               apply({ availableWidth, availableHeight, rects }) {
                 reference = rects.reference
                 setGeometry(positioner, "--available-width", `${Math.max(0, availableWidth)}px`)
@@ -244,7 +426,7 @@ export function createPosition(
                 setGeometry(positioner, "--anchor-height", `${rects.reference.height}px`)
               },
             }),
-            ...(pointer ? [arrow({ element: pointer, padding: 4 })] : []),
+            ...(pointer ? [arrow({ element: pointer, padding: wanted.arrowPadding })] : []),
           ],
         }).then((result) => {
           // No longer followed, or against another anchor by now: an answer that comes late
@@ -328,7 +510,12 @@ export function sameOptions(a: PositionOptions, b: PositionOptions): boolean {
     a.align === b.align &&
     a.sideOffset === b.sideOffset &&
     a.alignOffset === b.alignOffset &&
-    a.collisionPadding === b.collisionPadding &&
+    alike(a.collisionPadding, b.collisionPadding) &&
+    alike(a.collisionBoundary, b.collisionBoundary) &&
+    alike(a.collisionAvoidance, b.collisionAvoidance) &&
+    a.sticky === b.sticky &&
+    a.arrowPadding === b.arrowPadding &&
+    a.positionMethod === b.positionMethod &&
     a.anchor === b.anchor
   )
 }

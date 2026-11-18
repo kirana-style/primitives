@@ -122,3 +122,10 @@ export function layersAbove(element: HTMLElement, kind: string): number {
   if (index < 0) return 0
   return stack.slice(index + 1).filter((each) => each.kind === kind).length
 }
+
+/** How many layers of this kind are open under `element`'s own; -1 when it is not in the stack. */
+export function layersBelow(element: HTMLElement, kind: string): number {
+  const index = stack.findIndex((each) => each.element === element)
+  if (index < 0) return -1
+  return stack.slice(0, index).filter((each) => each.kind === kind).length
+}

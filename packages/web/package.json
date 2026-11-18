@@ -21,6 +21,7 @@
     "./calendar": "./src/calendar.ts",
     "./carousel": "./src/carousel.ts",
     "./checkbox": "./src/checkbox.ts",
+    "./checkbox-group": "./src/checkbox-group.ts",
     "./collapsible": "./src/collapsible.ts",
     "./combobox": "./src/combobox.ts",
     "./command": "./src/command.ts",

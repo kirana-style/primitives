@@ -98,6 +98,21 @@ export const AlertDialog = {
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
   },
+  /** What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not. */
+  Viewport: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present when the dialog opened over another dialog. */
+    nested: "[data-nested]",
+    /** Present when another dialog is open above this one. */
+    nestedDialogOpen: "[data-nested-dialog-open]",
+  },
   /** The dialog itself. */
   Popup: {
     /** Present when it is open. */
@@ -157,6 +172,8 @@ export const Checkbox = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Present on the checkbox that stands for every box of its group. */
+    parent: "[data-parent]",
   },
   /** The mark. In the page while the box is checked or indeterminate. */
   Indicator: {
@@ -176,6 +193,14 @@ export const Checkbox = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const CheckboxGroup = {
+  /** The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -219,6 +244,8 @@ export const Combobox = {
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
   },
   /** A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against. */
   Trigger: {
@@ -226,6 +253,11 @@ export const Combobox = {
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+  },
+  /** The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between. It draws no element. */
+  Value: {
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -285,6 +317,9 @@ export const Combobox = {
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
+  /** Draws the list from the root's `items`: its content once for each item left for what was typed, or for each group that has items left; given a group, for each of that group's items left. The root then filters, and no item hides itself. It draws no element. */
+  Collection: {
+  },
   /** One choice in the list. */
   Item: {
     /** Present on the chosen item. */
@@ -308,6 +343,9 @@ export const Combobox = {
   },
   /** What is shown when no item is. */
   Empty: {
+  },
+  /** Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input. */
+  Status: {
   },
   /** A button that empties the input and the value. */
   Clear: {
@@ -507,6 +545,21 @@ export const Dialog = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+  /** What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not. */
+  Viewport: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present when the dialog opened over another dialog. */
+    nested: "[data-nested]",
+    /** Present when another dialog is open above this one. */
+    nestedDialogOpen: "[data-nested-dialog-open]",
   },
   /** The dialog itself. */
   Popup: {
@@ -1256,6 +1309,8 @@ export const NumberField = {
     filled: "[data-filled]",
     /** Present while the input has focus. */
     focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
     /** In a field: present once the number was checked and found right. */
     valid: "[data-valid]",
     /** In a field: present while the number is wrong. */
@@ -1277,6 +1332,8 @@ export const NumberField = {
     filled: "[data-filled]",
     /** Present while the input has focus. */
     focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
     /** In a field: present once the number was checked and found right. */
     valid: "[data-valid]",
     /** In a field: present while the number is wrong. */
@@ -1298,6 +1355,8 @@ export const NumberField = {
     filled: "[data-filled]",
     /** Present while the input has focus. */
     focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
     /** In a field: present once the number was checked and found right. */
     valid: "[data-valid]",
     /** In a field: present while the number is wrong. */
@@ -1319,6 +1378,8 @@ export const NumberField = {
     filled: "[data-filled]",
     /** Present while the input has focus. */
     focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
     /** In a field: present once the number was checked and found right. */
     valid: "[data-valid]",
     /** In a field: present while the number is wrong. */
@@ -1340,6 +1401,54 @@ export const NumberField = {
     filled: "[data-filled]",
     /** Present while the input has focus. */
     focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is. */
+  ScrubArea: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
+    /** In a field: present once the number was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the number is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component. */
+  ScrubAreaCursor: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the number cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a number must be given. */
+    required: "[data-required]",
+    /** Present once focus has left the input. */
+    touched: "[data-touched]",
+    /** Present while the number is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present while there is a number. */
+    filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** Present while the number is dragged from its scrub area. */
+    scrubbing: "[data-scrubbing]",
     /** In a field: present once the number was checked and found right. */
     valid: "[data-valid]",
     /** In a field: present while the number is wrong. */
@@ -1357,6 +1466,8 @@ export const Autocomplete = {
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
   },
   /** A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against. */
   Trigger: {
@@ -1364,6 +1475,8 @@ export const Autocomplete = {
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -1423,6 +1536,9 @@ export const Autocomplete = {
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
+  /** Draws the suggestions from the root's `items`: its content once for each one left for what was typed, or for each group that has some left; given a group, for each of that group's. The root then filters. It draws no element. */
+  Collection: {
+  },
   /** One suggestion: chosen, its text is written into the input. */
   Item: {
     /** Present on the chosen item. */
@@ -1443,6 +1559,9 @@ export const Autocomplete = {
   },
   /** What is shown when no item is. */
   Empty: {
+  },
+  /** Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input. */
+  Status: {
   },
   /** A button that empties the input and the value. */
   Clear: {
@@ -1925,6 +2044,17 @@ export const Popover = {
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
   },
+  /** A layer over the page behind the popover. */
+  Backdrop: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
   /** Places the popup against the trigger. It carries the geometry. */
   Positioner: {
     /** Present when it is open. */
@@ -1981,6 +2111,26 @@ export const Popover = {
   },
   /** A button that closes the popover. */
   Close: {
+  },
+  /** An element that points at the trigger, placed along the popup's edge. */
+  Arrow: {
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. */
+    uncentered: "[data-uncentered]",
   },
 } as const
 
@@ -2168,6 +2318,8 @@ export const Select = {
     placeholder: "[data-placeholder]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
   },
   /** The chosen value's label, or the placeholder. With several values, their labels with commas between. */
   Value: {
@@ -2324,6 +2476,8 @@ export const Slider = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
   },
@@ -2336,6 +2490,8 @@ export const Slider = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
   },
@@ -2348,6 +2504,8 @@ export const Slider = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
   },
@@ -2360,6 +2518,8 @@ export const Slider = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
   },
@@ -2372,6 +2532,8 @@ export const Slider = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
   },
@@ -2384,6 +2546,8 @@ export const Slider = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
     /** Which thumb it is, from 0. */

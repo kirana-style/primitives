@@ -1,7 +1,7 @@
 import { defined } from "@kirana-ui/core"
 import type { Anchor, ChangeDetails, PositionOptions, Signal, StateOf } from "@kirana-ui/core"
 import { createPopover } from "@kirana-ui/core/popover"
-import type { Popover as Controller } from "@kirana-ui/core/popover"
+import type { Popover as Controller, PopoverTriggerOptions } from "@kirana-ui/core/popover"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createComputed, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
@@ -29,6 +29,13 @@ export type RootProps = {
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
+  /**
+   * What the page behind it may do while it is open. `false` (the default): everything.
+   * `true`: nothing, the page is inert and does not scroll, and Tab stays inside the popover.
+   * `"trap-focus"`: Tab stays inside the popover, and the page can still be pressed and
+   * scrolled. A popover the pointer opened holds nothing until it is pressed. Read as it opens.
+   */
+  modal?: boolean | "trap-focus"
   id?: string
   children?: JSX.Element
 }
@@ -38,6 +45,7 @@ function Root(props: RootProps): JSX.Element {
   const made = controller(createPopover, () => ({
     id: props.id ?? generated,
     open: props.open,
+    modal: props.modal,
     defaultOpen: props.defaultOpen,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
@@ -81,6 +89,11 @@ export function positioned<P extends PositionerOptions>(
     "sideOffset",
     "alignOffset",
     "collisionPadding",
+    "collisionBoundary",
+    "collisionAvoidance",
+    "sticky",
+    "arrowPadding",
+    "positionMethod",
     "anchor",
   ])
   createComputed(() => {
@@ -102,7 +115,12 @@ function Positioner(props: PositionerProps): JSX.Element {
   return <Part of={made.positioner} tag="div" {...positioned(props, made.positioning)} />
 }
 
-export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+/** What a trigger takes of its own: whether the pointer opens the popover too, and its waits. */
+export type TriggerOptions = PopoverTriggerOptions
+
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>, TriggerOptions>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+export type ArrowProps = PartComponentProps<"div", StateOf<Parts["arrow"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
 export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
@@ -110,17 +128,26 @@ export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
 
 const part =
   <Props extends Record<string, unknown>>(
-    name: "trigger" | "popup" | "title" | "description" | "close",
+    name: "backdrop" | "popup" | "arrow" | "title" | "description" | "close",
     tag: string
   ) =>
   (props: Props): JSX.Element => <Part of={usePopover()[name]} tag={tag} {...props} />
 
+function Trigger(props: TriggerProps): JSX.Element {
+  const [local, rest] = splitProps(props as TriggerOptions, ["openOnHover", "delay", "closeDelay"])
+  const made = usePopover()
+  createComputed(() => made.hovering.set(defined({ ...local })))
+  return <Part of={made.trigger} tag="button" {...rest} />
+}
+
 export const Popover = {
   Root,
   Portal,
+  Backdrop: part<BackdropProps>("backdrop", "div"),
   Positioner,
-  Trigger: part<TriggerProps>("trigger", "button"),
+  Trigger,
   Popup: part<PopupProps>("popup", "div"),
+  Arrow: part<ArrowProps>("arrow", "div"),
   Title: part<TitleProps>("title", "h2"),
   Description: part<DescriptionProps>("description", "p"),
   Close: part<CloseProps>("close", "button"),

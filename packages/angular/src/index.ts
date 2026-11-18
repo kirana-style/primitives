@@ -6,6 +6,7 @@ export {
   KuiAccordionTrigger,
 } from "./accordion"
 export { KuiCheckbox, KuiCheckboxIndicator } from "./checkbox"
+export { KuiCheckboxGroup } from "./checkbox-group"
 export { KuiCollapsible, KuiCollapsiblePanel, KuiCollapsibleTrigger } from "./collapsible"
 export {
   KuiAlertDialog,
@@ -17,6 +18,7 @@ export {
   KuiDialogPortal,
   KuiDialogTitle,
   KuiDialogTrigger,
+  KuiDialogViewport,
 } from "./dialog"
 export {
   KuiCombobox,
@@ -24,6 +26,7 @@ export {
   KuiComboboxChipRemove,
   KuiComboboxChips,
   KuiComboboxClear,
+  KuiComboboxCollection,
   KuiComboboxEmpty,
   KuiComboboxHiddenInput,
   KuiComboboxGroup,
@@ -36,7 +39,9 @@ export {
   KuiComboboxPortal,
   KuiComboboxPositioner,
   KuiComboboxSeparator,
+  KuiComboboxStatus,
   KuiComboboxTrigger,
+  KuiComboboxValue,
 } from "./combobox"
 export {
   KuiListbox,
@@ -125,6 +130,8 @@ export {
   KuiNumberFieldGroup,
   KuiNumberFieldIncrement,
   KuiNumberFieldInput,
+  KuiNumberFieldScrubArea,
+  KuiNumberFieldScrubAreaCursor,
 } from "./number-field"
 export { KuiLabel } from "./label"
 export {
@@ -168,6 +175,8 @@ export type {
 export { KuiResizableGroup, KuiResizableHandle, KuiResizablePanel } from "./resizable"
 export {
   KuiPopover,
+  KuiPopoverArrow,
+  KuiPopoverBackdrop,
   KuiPopoverClose,
   KuiPopoverDescription,
   KuiPopoverPopup,
@@ -282,10 +291,15 @@ export type {
   Bindable,
   ChangeDetails,
   ChangeSource,
+  CollisionAvoidance,
+  CollisionBoundary,
+  CollisionPadding,
   ComponentDefinition,
   Direction,
   ItemLabels,
   ListCollection,
+  OffsetData,
+  OffsetFunction,
   Orientation,
   Part,
   PartDefinition,
@@ -316,5 +330,13 @@ export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/for
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
 export type { SelectShown } from "@kirana-ui/core/select"
+export type {
+  ComboboxEntry,
+  ComboboxGroupData,
+  ComboboxGroupEntry,
+  ComboboxItemData,
+  ComboboxItemEntry,
+  ComboboxShown,
+} from "@kirana-ui/core/combobox"
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"
 export type { PositionerAnchor } from "./runtime"

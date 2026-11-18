@@ -632,10 +632,10 @@ function rules(adapter: Adapter, own: AdapterReference, react: AdapterReference)
     else unplaced.push(component.name)
   }
   out.push(
-    `A popup is drawn in a portal at the end of \`<body>\`. In ${list(placed.map(code))} it is \`Portal\` > \`Positioner\` > \`Popup\`: the \`Positioner\` places it against its trigger and carries \`--anchor-width\`, \`--available-height\`, \`--transform-origin\` and \`data-side\`. ${list(unplaced.map(code))} have no \`Positioner\`: there it is \`Portal\` > \`Backdrop\` and \`Popup\`, and the design places the popup.`
+    `A popup is drawn in a portal at the end of \`<body>\`. In ${list(placed.map(code))} it is \`Portal\` > \`Positioner\` > \`Popup\`: the \`Positioner\` places it against its trigger and carries \`--anchor-width\`, \`--available-height\`, \`--transform-origin\` and \`data-side\`. ${list(unplaced.map(code))} have no \`Positioner\`: there it is \`Portal\` > \`Backdrop\` and \`Popup\`, and the design places the popup. A dialog and an alert dialog may put the \`Popup\` in a \`Viewport\`, the box a long one scrolls in.`
   )
   out.push(
-    'Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.'
+    'Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.'
   )
   // Each framework's own: an emit and an output are what its own source declares.
   const { held, told } = reports(adapter === "vue" || adapter === "angular" ? own : react)
@@ -1276,7 +1276,7 @@ const WEB = [
   'The custom element (`<kui-dialog>`) holds the component and draws nothing: it takes no room (`display: contents`) and has no shadow root. Every part, the root among them, is an element of the page\'s own inside it, named by `kui-part`: `<button kui-part="trigger">`. So a trigger is a real button, and the page is the page the other adapters draw.',
   "A prop is an attribute in kebab case on the custom element (`default-open`), and a property in camel case (`element.defaultOpen`, `element.open = true`). A prop that is a function or an object is a property only, listed for its element.",
   "A change is an event on the custom element, named for its callback (`open-change`, `value-change`): `event.detail` holds the value under its prop's name (`detail.open`) and `detail.details` (`reason`, `event`, `source`, `cancel()`). `event.preventDefault()` keeps the value as it was. The element then holds the value: it is controlled by writing the property back.",
-  "What a part needs of its own is a `kui-` attribute on the part's element: `kui-value`, `kui-disabled`, `kui-index`, `kui-label`, a positioner's `kui-side`, `kui-align`, `kui-side-offset`, `kui-align-offset`, `kui-collision-padding` and `kui-anchor` (the id of the element the popup is placed against, when that is not its trigger). An `id` for the component is `kui-id` on the custom element.",
+  "What a part needs of its own is a `kui-` attribute on the part's element: `kui-value`, `kui-disabled`, `kui-index`, `kui-label`, a positioner's `kui-side`, `kui-align`, `kui-side-offset`, `kui-align-offset`, `kui-collision-padding`, `kui-sticky`, `kui-arrow-padding`, `kui-position-method`, `kui-anchor` (the id of the element the popup is placed against, when that is not its trigger) and `kui-collision-boundary` (the id of the element it is held inside). What an attribute cannot say of a positioner (`sideOffset` as a function, `collisionBoundary` as an element or a rectangle, `collisionPadding` a side, `collisionAvoidance`) is the `positioning` property of its custom element, an object of the positioner's options read as the popup comes into the page (`popover.positioning = { sideOffset: ({ anchor }) => anchor.height }`); an attribute on the positioner comes before the same option there. An `id` for the component is `kui-id` on the custom element.",
   'A part that is in the page only some of the time (a closed panel, a popup) is taken out of the page while it is not, and put back where it was; `kui-keep-mounted` on the part keeps it. A portal part (`kui-part="portal"`) is moved to the end of `<body>`.',
   'A list the component draws is written once, as a `<template kui-each="name">` where the list goes: it is stamped for each entry, `{field}` in its text and attributes filled from the entry, and an element with `kui-when` kept only for entries of that type.',
   "A component inside another's custom element is that one's own: a `<kui-menu>` inside a `<kui-menu>` is its submenu, a control inside a `<kui-field>` is the field's control.",
@@ -1289,7 +1289,7 @@ const WEB = [
  * autocomplete is given the combobox's whole table, and has no value to draw chips or a mark of.
  */
 const NOT_PARTS: Record<string, string[]> = {
-  autocomplete: ["chips", "chip", "chip-remove", "item-indicator"],
+  autocomplete: ["chips", "chip", "chip-remove", "item-indicator", "value"],
 }
 
 /** An element's anatomy: the custom element, then each `kui-part` and list under what it is inside. */

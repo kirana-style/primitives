@@ -35,6 +35,11 @@ export interface SelectProps<Value = unknown> {
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /**
+   * Shown as it is, focusable, not changeable: the list still opens to be read, and no item
+   * can be chosen. Its value is still submitted with the form.
+   */
+  readOnly?: boolean | undefined
   /** In a field, "none" is then wrong. */
   required?: boolean | undefined
   /** With a name, the value is submitted with the form around it. */
@@ -236,6 +241,7 @@ export function createSelect<Value = unknown>(
   const disabled = computed(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
   )
+  const readOnly = computed(() => Boolean(props.get().readOnly))
   const name = computed(() => props.get().name ?? field?.name.get())
   const placement = createPlacement({ align: "start" })
   const alignItemWithTrigger = signal(false)
@@ -395,6 +401,8 @@ export function createSelect<Value = unknown>(
   }
 
   function choose(item: Value, event: Event) {
+    // Read-only locks the value, not the list: it opens and is moved through, nothing is chosen.
+    if (readOnly.peek()) return
     if (multiple) {
       // Added, or taken away: the list stays open for the next. Its rows may have changed
       // since it opened, and the trigger names what is chosen in their order.
@@ -462,12 +470,14 @@ export function createSelect<Value = unknown>(
         // The trigger is the select's element in a form: its reset is heard through it.
         form: props.get().form,
         disabled: flag(disabled.get()),
+        "aria-readonly": readOnly.get() ? "true" : undefined,
         "aria-required": props.get().required ? "true" : undefined,
         ...field?.aria(),
         ...field?.state(),
         "data-popup-open": flag(open.get()),
         "data-placeholder": flag(none.get()),
         "data-disabled": flag(disabled.get()),
+        "data-readonly": flag(readOnly.get()),
         onFocus: () => member?.focused(true),
         onBlur(event: FocusEvent) {
           // Into its own list, focus has not left the select.
@@ -478,7 +488,7 @@ export function createSelect<Value = unknown>(
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault()
             setOpen(true, details("trigger-press", event))
-          } else if (printable(event) && !open.peek() && !multiple) {
+          } else if (printable(event) && !open.peek() && !multiple && !readOnly.peek()) {
             // Closed, a letter chooses: only the labels the caller gave are known then. With
             // several values a letter would have to add or take away: it does neither.
             const items = itemsOf(props.peek().items)
@@ -589,6 +599,7 @@ export function createSelect<Value = unknown>(
           // With a list inside, that is the listbox.
           role: listed.get() ? "presentation" : "listbox",
           "aria-multiselectable": multiple && !listed.get() ? "true" : undefined,
+          "aria-readonly": readOnly.get() && !listed.get() ? "true" : undefined,
           tabindex: "-1",
           ...layer.state(),
           ...layer.placed(),
@@ -683,6 +694,7 @@ export function createSelect<Value = unknown>(
         id: `${id}-list`,
         role: "listbox",
         "aria-multiselectable": multiple ? "true" : undefined,
+        "aria-readonly": readOnly.get() ? "true" : undefined,
       })),
       attach(element) {
         listed.set(element)

@@ -20,6 +20,7 @@
     "./avatar": "./src/avatar.ts",
     "./button": "./src/button.ts",
     "./checkbox": "./src/checkbox.ts",
+    "./checkbox-group": "./src/checkbox-group.ts",
     "./collapsible": "./src/collapsible.ts",
     "./combobox": "./src/combobox.ts",
     "./context-menu": "./src/context-menu.ts",

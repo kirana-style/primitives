@@ -5,47 +5,47 @@
 
 ### ⚠ BREAKING CHANGES
 
-* typed parts, composition, positioning and a complete llms.txt ([#49](https://github.com/kirana-style/primitives/issues/49))
+* typed parts, composition, positioning and a complete llms.txt ([#49](https://github.com/kirana-style/primitives/pull/49))
 
 ### Features
 
-* typed parts, composition, positioning and a complete llms.txt ([#49](https://github.com/kirana-style/primitives/issues/49)) ([25665bd](https://github.com/kirana-style/primitives/commit/25665bd197f0269386f15dc1231a0630475f5200))
+* typed parts, composition, positioning and a complete llms.txt ([#49](https://github.com/kirana-style/primitives/pull/49)) ([25665bd](https://github.com/kirana-style/primitives/commit/25665bd197f0269386f15dc1231a0630475f5200))
 
 ## [0.1.1](https://github.com/kirana-style/primitives/compare/v0.1.0...v0.1.1) (2026-11-16)
 
 
 ### Features
 
-* a select over its trigger, thumbs that stay inside, a toast's content part ([#40](https://github.com/kirana-style/primitives/issues/40)) ([885298b](https://github.com/kirana-style/primitives/commit/885298bff7a6ad46ffe66bb91d7b728a4d37ad53))
-* a testing kit, a skill for agents, and a status for empty lists ([#44](https://github.com/kirana-style/primitives/issues/44)) ([87f2161](https://github.com/kirana-style/primitives/commit/87f216124b6ecad021264f6d765c61055be7fa8f))
-* a typed date field, and what made each change ([#38](https://github.com/kirana-style/primitives/issues/38)) ([c9da2b2](https://github.com/kirana-style/primitives/commit/c9da2b2f6071650d3a82f2d3a2052911012cf9de))
-* add 43 of the 48 components as custom elements, each compared with react ([#47](https://github.com/kirana-style/primitives/issues/47)) ([60b24e9](https://github.com/kirana-style/primitives/commit/60b24e998a0b40440a75701d0dfa2d9b8c48a758))
-* an agent bridge, a portal container, snap lengths, and the first custom elements ([#45](https://github.com/kirana-style/primitives/issues/45)) ([9c31835](https://github.com/kirana-style/primitives/commit/9c3183524db9b5507e2709367545f1be0060ca25))
-* an authoring api, llms.txt, groups in the combobox, text a server draws ([#43](https://github.com/kirana-style/primitives/issues/43)) ([d5aa530](https://github.com/kirana-style/primitives/commit/d5aa530aae5cd424c092613886b466e5be00f6d2))
-* calendar on five adapters ([#37](https://github.com/kirana-style/primitives/issues/37)) ([ce061ba](https://github.com/kirana-style/primitives/commit/ce061ba3378667c14eb144e7efeb4f7a496540e1))
-* combobox and listbox on five adapters, and the menu's open rows ([#27](https://github.com/kirana-style/primitives/issues/27)) ([4dbf850](https://github.com/kirana-style/primitives/commit/4dbf850a36cba5a46acf41ad90c59891d428ee98))
-* context menu and menubar on five adapters ([#26](https://github.com/kirana-style/primitives/issues/26)) ([cb600d0](https://github.com/kirana-style/primitives/commit/cb600d01981b91e139251f777884da5b1eff51c0))
-* custom elements that draw the same page, released; undo for the agent bridge ([#46](https://github.com/kirana-style/primitives/issues/46)) ([e91b73e](https://github.com/kirana-style/primitives/commit/e91b73ebe0535e0eee66cf872bfcf02e1d2f70f7))
-* drawer and message scroller on five adapters ([#35](https://github.com/kirana-style/primitives/issues/35)) ([2d7915a](https://github.com/kirana-style/primitives/commit/2d7915ac436e321def8395c396cfd15aba4adbef))
-* every component as a custom element, with lists drawn from a template ([#48](https://github.com/kirana-style/primitives/issues/48)) ([4cdd653](https://github.com/kirana-style/primitives/commit/4cdd653452cb648ee8706df0f0a6c5c0d033f6dc))
-* form controls follow their form's reset, fieldset and form attribute ([#21](https://github.com/kirana-style/primitives/issues/21)) ([0b67501](https://github.com/kirana-style/primitives/commit/0b67501677c404f9dde69d8decc76e3126ff24de))
-* input, label and command; a trigger's own delays; toaster.promise ([#39](https://github.com/kirana-style/primitives/issues/39)) ([abd5bfb](https://github.com/kirana-style/primitives/commit/abd5bfbaa47b2fb58bcaa9dcbef40d3edb12e41b))
-* list navigation as a service, and the menu on five adapters ([#25](https://github.com/kirana-style/primitives/issues/25)) ([260c06b](https://github.com/kirana-style/primitives/commit/260c06b8e3cf74cf96eabe47bca24d8d5b586c48))
-* navigation menu on five adapters ([#30](https://github.com/kirana-style/primitives/issues/30)) ([715844b](https://github.com/kirana-style/primitives/commit/715844bf36dac933ac5ad80e3449208e96db2284))
-* number field, autocomplete, the select's scroll arrows, the drawer's nested names ([#41](https://github.com/kirana-style/primitives/issues/41)) ([71645d3](https://github.com/kirana-style/primitives/commit/71645d3bd89cf74b3b97e174d67576824ae2d7c6))
-* one popup layer under dialog, popover, tooltip, hover card and select ([#24](https://github.com/kirana-style/primitives/issues/24)) ([2808998](https://github.com/kirana-style/primitives/commit/2808998de1589b6f534339c5f8b3b98f956861b5))
-* one-time code input and resizable panels on five adapters ([#33](https://github.com/kirana-style/primitives/issues/33)) ([4c08657](https://github.com/kirana-style/primitives/commit/4c08657f853f523b9e95e781bb1a04ffc0069ac7))
-* pagination, date picker, and groups in the select ([#42](https://github.com/kirana-style/primitives/issues/42)) ([d6a3e21](https://github.com/kirana-style/primitives/commit/d6a3e21768f0950353134856433704fa04918fbe))
-* several values in a combobox, and a list that carries only what it uses ([#32](https://github.com/kirana-style/primitives/issues/32)) ([06c4a93](https://github.com/kirana-style/primitives/commit/06c4a9348c6e322331de7fc58b56ec3792e6ccab))
-* snap points for the drawer ([#36](https://github.com/kirana-style/primitives/issues/36)) ([2e8e3a8](https://github.com/kirana-style/primitives/commit/2e8e3a82b2a480a5158c63f19a00e9b3fbb0cee2))
-* toast, carousel, qr code and a text area that sizes itself ([#34](https://github.com/kirana-style/primitives/issues/34)) ([569f2c1](https://github.com/kirana-style/primitives/commit/569f2c1ae789228dd8756d7c6a63b918205fc2cf))
-* toggle group, toolbar and scroll area on five adapters ([#29](https://github.com/kirana-style/primitives/issues/29)) ([79ca74d](https://github.com/kirana-style/primitives/commit/79ca74d66320d1960a78fd07d7285f8858cea773))
-* virtualized lists, a command palette, and the combobox's and listbox's open rows ([#31](https://github.com/kirana-style/primitives/issues/31)) ([61c5a9a](https://github.com/kirana-style/primitives/commit/61c5a9af2b27c1957ee6ffb1627c26411bc4df48))
+* a select over its trigger, thumbs that stay inside, a toast's content part ([#40](https://github.com/kirana-style/primitives/pull/40)) ([885298b](https://github.com/kirana-style/primitives/commit/885298bff7a6ad46ffe66bb91d7b728a4d37ad53))
+* a testing kit, a skill for agents, and a status for empty lists ([#44](https://github.com/kirana-style/primitives/pull/44)) ([87f2161](https://github.com/kirana-style/primitives/commit/87f216124b6ecad021264f6d765c61055be7fa8f))
+* a typed date field, and what made each change ([#38](https://github.com/kirana-style/primitives/pull/38)) ([c9da2b2](https://github.com/kirana-style/primitives/commit/c9da2b2f6071650d3a82f2d3a2052911012cf9de))
+* add 43 of the 48 components as custom elements, each compared with react ([#47](https://github.com/kirana-style/primitives/pull/47)) ([60b24e9](https://github.com/kirana-style/primitives/commit/60b24e998a0b40440a75701d0dfa2d9b8c48a758))
+* an agent bridge, a portal container, snap lengths, and the first custom elements ([#45](https://github.com/kirana-style/primitives/pull/45)) ([9c31835](https://github.com/kirana-style/primitives/commit/9c3183524db9b5507e2709367545f1be0060ca25))
+* an authoring api, llms.txt, groups in the combobox, text a server draws ([#43](https://github.com/kirana-style/primitives/pull/43)) ([d5aa530](https://github.com/kirana-style/primitives/commit/d5aa530aae5cd424c092613886b466e5be00f6d2))
+* calendar on five adapters ([#37](https://github.com/kirana-style/primitives/pull/37)) ([ce061ba](https://github.com/kirana-style/primitives/commit/ce061ba3378667c14eb144e7efeb4f7a496540e1))
+* combobox and listbox on five adapters, and the menu's open rows ([#27](https://github.com/kirana-style/primitives/pull/27)) ([4dbf850](https://github.com/kirana-style/primitives/commit/4dbf850a36cba5a46acf41ad90c59891d428ee98))
+* context menu and menubar on five adapters ([#26](https://github.com/kirana-style/primitives/pull/26)) ([cb600d0](https://github.com/kirana-style/primitives/commit/cb600d01981b91e139251f777884da5b1eff51c0))
+* custom elements that draw the same page, released; undo for the agent bridge ([#46](https://github.com/kirana-style/primitives/pull/46)) ([e91b73e](https://github.com/kirana-style/primitives/commit/e91b73ebe0535e0eee66cf872bfcf02e1d2f70f7))
+* drawer and message scroller on five adapters ([#35](https://github.com/kirana-style/primitives/pull/35)) ([2d7915a](https://github.com/kirana-style/primitives/commit/2d7915ac436e321def8395c396cfd15aba4adbef))
+* every component as a custom element, with lists drawn from a template ([#48](https://github.com/kirana-style/primitives/pull/48)) ([4cdd653](https://github.com/kirana-style/primitives/commit/4cdd653452cb648ee8706df0f0a6c5c0d033f6dc))
+* form controls follow their form's reset, fieldset and form attribute ([#21](https://github.com/kirana-style/primitives/pull/21)) ([0b67501](https://github.com/kirana-style/primitives/commit/0b67501677c404f9dde69d8decc76e3126ff24de))
+* input, label and command; a trigger's own delays; toaster.promise ([#39](https://github.com/kirana-style/primitives/pull/39)) ([abd5bfb](https://github.com/kirana-style/primitives/commit/abd5bfbaa47b2fb58bcaa9dcbef40d3edb12e41b))
+* list navigation as a service, and the menu on five adapters ([#25](https://github.com/kirana-style/primitives/pull/25)) ([260c06b](https://github.com/kirana-style/primitives/commit/260c06b8e3cf74cf96eabe47bca24d8d5b586c48))
+* navigation menu on five adapters ([#30](https://github.com/kirana-style/primitives/pull/30)) ([715844b](https://github.com/kirana-style/primitives/commit/715844bf36dac933ac5ad80e3449208e96db2284))
+* number field, autocomplete, the select's scroll arrows, the drawer's nested names ([#41](https://github.com/kirana-style/primitives/pull/41)) ([71645d3](https://github.com/kirana-style/primitives/commit/71645d3bd89cf74b3b97e174d67576824ae2d7c6))
+* one popup layer under dialog, popover, tooltip, hover card and select ([#24](https://github.com/kirana-style/primitives/pull/24)) ([2808998](https://github.com/kirana-style/primitives/commit/2808998de1589b6f534339c5f8b3b98f956861b5))
+* one-time code input and resizable panels on five adapters ([#33](https://github.com/kirana-style/primitives/pull/33)) ([4c08657](https://github.com/kirana-style/primitives/commit/4c08657f853f523b9e95e781bb1a04ffc0069ac7))
+* pagination, date picker, and groups in the select ([#42](https://github.com/kirana-style/primitives/pull/42)) ([d6a3e21](https://github.com/kirana-style/primitives/commit/d6a3e21768f0950353134856433704fa04918fbe))
+* several values in a combobox, and a list that carries only what it uses ([#32](https://github.com/kirana-style/primitives/pull/32)) ([06c4a93](https://github.com/kirana-style/primitives/commit/06c4a9348c6e322331de7fc58b56ec3792e6ccab))
+* snap points for the drawer ([#36](https://github.com/kirana-style/primitives/pull/36)) ([2e8e3a8](https://github.com/kirana-style/primitives/commit/2e8e3a82b2a480a5158c63f19a00e9b3fbb0cee2))
+* toast, carousel, qr code and a text area that sizes itself ([#34](https://github.com/kirana-style/primitives/pull/34)) ([569f2c1](https://github.com/kirana-style/primitives/commit/569f2c1ae789228dd8756d7c6a63b918205fc2cf))
+* toggle group, toolbar and scroll area on five adapters ([#29](https://github.com/kirana-style/primitives/pull/29)) ([79ca74d](https://github.com/kirana-style/primitives/commit/79ca74d66320d1960a78fd07d7285f8858cea773))
+* virtualized lists, a command palette, and the combobox's and listbox's open rows ([#31](https://github.com/kirana-style/primitives/pull/31)) ([61c5a9a](https://github.com/kirana-style/primitives/commit/61c5a9af2b27c1957ee6ffb1627c26411bc4df48))
 
 
 ### Bug fixes
 
-* react in strict mode, layers closing in any order, a row's hidden text ([#23](https://github.com/kirana-style/primitives/issues/23)) ([2d64afc](https://github.com/kirana-style/primitives/commit/2d64afc7005b863451fcf5f127595267a5f67fd7))
+* react in strict mode, layers closing in any order, a row's hidden text ([#23](https://github.com/kirana-style/primitives/pull/23)) ([2d64afc](https://github.com/kirana-style/primitives/commit/2d64afc7005b863451fcf5f127595267a5f67fd7))
 
 ## 0.1.0 (2026-11-12)
 

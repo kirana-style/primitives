@@ -1,7 +1,9 @@
 import { createCheckbox } from "@kirana-ui/core/checkbox"
+import type { CheckboxProps } from "@kirana-ui/core/checkbox"
 
 import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-checkbox>` around a `kui-part="root"` button with an `indicator` inside, which is in
@@ -32,3 +34,12 @@ export const tag = defineElement({
     }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-checkbox": ElementOf<
+      As<typeof tag, CheckboxProps>,
+      { "checked-change": ["onCheckedChange", "checked"] }
+    >
+  }
+}

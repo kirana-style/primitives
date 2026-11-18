@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { AccordionProps } from "@kirana-ui/core/accordion"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createAccordion } from "@kirana-ui/core/accordion"
@@ -8,7 +7,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -20,10 +19,10 @@
     loop,
     id,
     ...rest
-  }: RootProps<AccordionProps> = $props()
+  }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function change(next: unknown[], by: ChangeDetails) {
+  function change(next: Value[], by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -42,4 +41,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

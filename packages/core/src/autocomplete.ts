@@ -10,10 +10,17 @@ export interface AutocompleteProps {
   id: string
   /** What the input says: the text is the value. */
   value?: string | undefined
+  /** The text it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: string | undefined
+  /**
+   * Heard as the text is about to change, typed or chosen: `details.cancel()` keeps it as it was.
+   */
   onValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
+  /** Whether the list is open, when the caller holds it. */
   open?: boolean | undefined
+  /** Whether the list starts open, when the caller does not hold `open`. Read once. */
   defaultOpen?: boolean | undefined
+  /** Heard as the list is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /**
    * `"list"` (the default): the suggestions are filtered by what is typed. `"none"`: they
@@ -24,7 +31,9 @@ export interface AutocompleteProps {
   filter?: ((label: string, query: string) => boolean) | null | undefined
   /** Whether a press on the input opens the list. Default: it opens when something is typed. */
   openOnInputClick?: boolean | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /** Needed: in a `Field`, leaving it empty is then invalid. */
   required?: boolean | undefined
   /** The input's name in the form around it. */
   name?: string | undefined
@@ -32,6 +41,12 @@ export interface AutocompleteProps {
   form?: string | undefined
   /** Every row, when only some are in the page: each item is then given its `index`. */
   virtualized?: ListCollection | undefined
+  /**
+   * The first suggestion for what was typed is highlighted as one types, so Enter takes it.
+   * Off by default: no suggestion is highlighted for having been typed at, and Enter is the
+   * form's, with the text as typed, until an arrow or the pointer has gone to one.
+   */
+  autoHighlight?: boolean | undefined
 }
 
 /** An autocomplete's parts are a combobox's: its input, its list, its items. */
@@ -40,7 +55,8 @@ export type Autocomplete = Combobox
 /**
  * A text input with suggestions under it. The text is the value: an item chosen is written
  * into the input, nothing stays chosen, and what was typed is kept when the list closes.
- * Until an arrow goes to a suggestion, Enter is the form's, with the text as typed.
+ * Until an arrow goes to a suggestion, Enter is the form's, with the text as typed; with
+ * `autoHighlight` the first suggestion is highlighted as one types, and Enter takes it.
  */
 export function createAutocomplete(
   props: ReadonlySignal<AutocompleteProps>,
@@ -64,6 +80,7 @@ export function createAutocomplete(
       required: own.required,
       form: own.form,
       virtualized: own.virtualized,
+      autoHighlight: own.autoHighlight,
     }
   })
   const combobox = createCombobox(given, {

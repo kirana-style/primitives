@@ -4,6 +4,7 @@ import type { Fieldset } from "@kirana-ui/core/fieldset"
 import type { Form } from "@kirana-ui/core/form"
 
 import { controllerAround, defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-field>` around `kui-part="root"`, a `label`, a `control` (an input, a textarea or a
@@ -47,3 +48,9 @@ export const tag = defineElement<FieldProps, Field>({
     },
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-field": ElementOf<typeof tag>
+  }
+}

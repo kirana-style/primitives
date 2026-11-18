@@ -1,5 +1,5 @@
 import { defined } from "@kirana-ui/core"
-import type { Part } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
 import type {
   Listbox as Controller,
@@ -7,11 +7,14 @@ import type {
   ListboxItemOptions,
   ListboxProps,
 } from "@kirana-ui/core/listbox"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement } from "react"
 
-import { useController, useOptions, usePart, useSignal } from "./runtime.tsx"
+import { PartElement, parts, useController, useOptions, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["listbox"]
 
 const Context = createContext<Controller | null>(null)
 const ItemContext = createContext<unknown>(undefined)
@@ -23,11 +26,14 @@ function useListbox(part: string): Controller {
   return controller
 }
 
-export type RootProps<Value> = Omit<ListboxProps<Value>, "id"> & {
-  id?: string
-} & PartComponentProps
+/** `Value` is what tells an item from the others: the type of `value`'s entries. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<ListboxProps<Value>, "id"> & { id?: string }
+>
 
-function Root<Value>({
+function Root<Value = unknown>({
   value,
   defaultValue,
   onValueChange,
@@ -40,24 +46,23 @@ function Root<Value>({
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
-  const controller = useController<ListboxProps<Value>, Controller<Value>>(createListbox, {
-    value: value as readonly Value[] | undefined,
-    defaultValue: defaultValue as readonly Value[] | undefined,
-    onValueChange,
-    multiple,
-    disabled,
-    loop,
-    name,
-    form,
-    virtualized,
-    id,
-  }) as unknown as Controller
+  const controller: Controller = useController<ListboxProps<Value>, Controller<Value>>(
+    createListbox,
+    { value, defaultValue, onValueChange, multiple, disabled, loop, name, form, virtualized, id }
+  )
   return (
     <Context.Provider value={controller}>{usePart(controller.root, "div", rest)}</Context.Provider>
   )
 }
 
-export type ItemProps = PartComponentProps & ListboxItemOptions & { value: unknown }
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  ListboxItemOptions & {
+    /** What is in the listbox's value while this item is chosen. */
+    value: unknown
+  }
+>
 
 function Item({ value, disabled, label, index, ...props }: ItemProps): ReactElement {
   const controller = useListbox("Item")
@@ -69,22 +74,26 @@ function Item({ value, disabled, label, index, ...props }: ItemProps): ReactElem
   return <ItemContext.Provider value={value}>{usePart(part, "div", props)}</ItemContext.Provider>
 }
 
-const PartElement = ({ part, tag, ...props }: PartComponentProps & { part: Part; tag: string }) =>
-  usePart(part, tag, props)
-
-export interface ItemIndicatorProps extends PartComponentProps {
-  keepMounted?: boolean
-}
+export type ItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["itemIndicator"]>,
+  {
+    /** Keeps the mark in the page while its item is not chosen. */
+    keepMounted?: boolean
+  }
+>
 
 function ItemIndicator({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | null {
   const controller = useListbox("ItemIndicator")
   const value = useContext(ItemContext)
   const selected = useSignal(controller.selected(value))
   const part = useMemo(() => controller.indicator(value), [controller, value])
-  return selected || keepMounted ? <PartElement part={part} tag="span" {...props} /> : null
+  return selected || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
 }
 
-function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
+function Group({ id, ...props }: GroupProps): ReactElement {
   const controller = useListbox("Group")
   const generated = useId()
   const group = useMemo(() => controller.group(id ?? generated), [controller, id, generated])
@@ -93,10 +102,18 @@ function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactEle
   )
 }
 
-function GroupLabel(props: PartComponentProps): ReactElement {
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
+function GroupLabel(props: GroupLabelProps): ReactElement {
   const group = useContext(GroupContext)
   if (!group) throw new Error("<Listbox.GroupLabel> must be inside <Listbox.Group>")
   return usePart(group.label, "div", props)
 }
 
-export const Listbox = { Root, Item, ItemIndicator, Group, GroupLabel }
+export const Listbox = /* @__PURE__ */ parts("Listbox", {
+  Root,
+  Item,
+  ItemIndicator,
+  Group,
+  GroupLabel,
+})

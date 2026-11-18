@@ -9,13 +9,17 @@ export interface OtpProps {
   id: string
   /** How many characters the code has. Default: 6. */
   length?: number | undefined
+  /** The characters typed so far, when the caller holds them. */
   value?: string | undefined
+  /** The characters it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: string | undefined
+  /** Heard as the characters are about to change: `details.cancel()` keeps them as they were. */
   onValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
   /** Every character is in: the moment to send the code. */
   onComplete?: ((value: string) => void) | undefined
   /** What a character may be. Default: `numeric`. */
   mode?: "numeric" | "alphanumeric" | "text" | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
   /** With a name, the code is submitted with the form around it. */
   name?: string | undefined

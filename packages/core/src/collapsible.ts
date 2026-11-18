@@ -8,10 +8,13 @@ import { createPanelPresence } from "./services/panel.ts"
 export interface CollapsibleProps {
   /** Unique in the page; the adapter passes its framework's id. */
   id: string
+  /** Whether it is open, when the caller holds it. */
   open?: boolean | undefined
   /** Read once. */
   defaultOpen?: boolean | undefined
+  /** Heard as it is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
+  /** Disabled: its trigger does not open or close it. */
   disabled?: boolean | undefined
 }
 

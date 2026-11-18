@@ -1,6 +1,7 @@
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 
+/** The reading direction: left to right, or right to left. */
 export type Direction = "ltr" | "rtl"
 
 export interface DirectionProps {

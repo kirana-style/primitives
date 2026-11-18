@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useNumberField } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { IncrementProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: IncrementProps = $props()
   const controller = useNumberField()
 </script>
 
-<Part part={controller.increment} tag="button" {...props} />
+<Part of={controller.increment} tag="button" {...props} />

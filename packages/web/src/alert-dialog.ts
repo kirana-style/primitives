@@ -1,6 +1,8 @@
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
+import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-alert-dialog>`: a dialog that asks, with the dialog's parts. A press outside does not
@@ -20,3 +22,12 @@ export const tag = defineElement({
     close: (controller) => controller.close,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-alert-dialog": ElementOf<
+      As<typeof tag, AlertDialogProps>,
+      { "open-change": ["onOpenChange", "open"] }
+    >
+  }
+}

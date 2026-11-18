@@ -5,11 +5,12 @@ import type { Combobox } from "@kirana-ui/core/combobox"
 import { fieldAround } from "./around.ts"
 import { PARTS } from "./combobox.ts"
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-autocomplete>`: a combobox whose text is the value, with a combobox's parts: the
  * list only suggests. `value`, `default-value`, `open`, `default-open`, `mode`,
- * `open-on-input-click`, `disabled`, `required`, `name`, `form`; `filter` as a property; it
+ * `open-on-input-click`, `auto-highlight`, `disabled`, `required`, `name`, `form`; `filter` as a property; it
  * tells `value-change` and `open-change`.
  */
 export const tag = defineElement<AutocompleteProps, Combobox<string>>({
@@ -21,6 +22,7 @@ export const tag = defineElement<AutocompleteProps, Combobox<string>>({
     "default-open": "boolean",
     mode: "string",
     "open-on-input-click": "boolean",
+    "auto-highlight": "boolean",
     disabled: "boolean",
     required: "boolean",
     name: "string",
@@ -35,3 +37,12 @@ export const tag = defineElement<AutocompleteProps, Combobox<string>>({
   },
   parts: PARTS,
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-autocomplete": ElementOf<
+      typeof tag,
+      { "value-change": ["onValueChange", "value"]; "open-change": ["onOpenChange", "open"] }
+    >
+  }
+}

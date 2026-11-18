@@ -1,15 +1,18 @@
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createPagination } from "@kirana-ui/core/pagination"
 import type {
   Pagination as Controller,
   PaginationEntry,
   PaginationProps,
 } from "@kirana-ui/core/pagination"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { For, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["pagination"]
 
 const Context = createContext<Controller>()
 
@@ -19,7 +22,11 @@ function usePagination(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & Omit<PaginationProps, "id"> & { id?: string }
+export type RootProps = PartComponentProps<
+  "nav",
+  StateOf<Parts["root"]>,
+  Omit<PaginationProps, "id"> & { id?: string }
+>
 
 function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, [
@@ -47,13 +54,15 @@ function Root(props: RootProps): JSX.Element {
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="nav" {...rest} />
+      <Part of={made.root} tag="nav" {...rest} />
     </Context.Provider>
   )
 }
 
+export type ItemsProps = { children: (entry: PaginationEntry) => JSX.Element }
+
 /** Draws its child once for each piece of the row: a page, or the mark for pages left out. */
-function Items(props: { children: (entry: PaginationEntry) => JSX.Element }): JSX.Element {
+function Items(props: ItemsProps): JSX.Element {
   const entries = fromSignal(usePagination().entries)
   // By key: a page that stays in the row keeps its element.
   const keys = () => entries().map((each) => each.key)
@@ -61,22 +70,27 @@ function Items(props: { children: (entry: PaginationEntry) => JSX.Element }): JS
   return <For each={keys()}>{(key) => props.children(of(key))}</For>
 }
 
-function Item(props: PartComponentProps & { page: number }): JSX.Element {
+export type ItemProps = PartComponentProps<"button", StateOf<Parts["item"]>, { page: number }>
+
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["page"])
   const made = usePagination()
-  return <Part part={made.item(local.page)} tag="button" {...rest} />
+  return <Part of={made.item(local.page)} tag="button" {...rest} />
 }
 
+export type EllipsisProps = PartComponentProps<"span", StateOf<Parts["ellipsis"]>>
+export type PreviousProps = PartComponentProps<"button", StateOf<Parts["previous"]>>
+export type NextProps = PartComponentProps<"button", StateOf<Parts["next"]>>
+
 const part =
-  (name: "ellipsis" | "previous" | "next", tag: string) => (props: PartComponentProps) => (
-    <Part part={usePagination()[name]} tag={tag} {...props} />
-  )
+  <Props extends Record<string, unknown>>(name: "ellipsis" | "previous" | "next", tag: string) =>
+  (props: Props): JSX.Element => <Part of={usePagination()[name]} tag={tag} {...props} />
 
 export const Pagination = {
   Root,
   Items,
   Item,
-  Ellipsis: part("ellipsis", "span"),
-  Previous: part("previous", "button"),
-  Next: part("next", "button"),
+  Ellipsis: part<EllipsisProps>("ellipsis", "span"),
+  Previous: part<PreviousProps>("previous", "button"),
+  Next: part<NextProps>("next", "button"),
 }

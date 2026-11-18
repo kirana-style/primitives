@@ -2,6 +2,7 @@ import { createTabs } from "@kirana-ui/core/tabs"
 import type { TabsProps } from "@kirana-ui/core/tabs"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-tabs>` around `kui-part="root"`, a `list` with a `tab` for each `value` and an
@@ -24,3 +25,9 @@ export const tag = defineElement<TabsProps<string>, ReturnType<typeof createTabs
     panel: (controller, element) => controller.panel(element.getAttribute("kui-value") ?? ""),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-tabs": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+  }
+}

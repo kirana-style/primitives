@@ -1,33 +1,24 @@
-import {
-  Directive,
-  booleanAttribute,
-  effect,
-  inject,
-  input,
-  model,
-  output,
-  untracked,
-} from "@angular/core"
+import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Orientation, Side } from "@kirana-ui/core"
+import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createNavigationMenu } from "@kirana-ui/core/navigation-menu"
 import type { NavigationMenu, NavigationMenuItem } from "@kirana-ui/core/navigation-menu"
 
 import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiNavigationMenu]", exportAs: "kuiNavigationMenu" })
-export class KuiNavigationMenu implements OnInit {
-  readonly value = model<unknown>(undefined)
-  readonly defaultValue = input<unknown>(null)
+export class KuiNavigationMenu<Value = unknown> implements OnInit {
+  readonly value = model<Value | null | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly delay = input<number>()
   readonly closeDelay = input<number>()
   readonly orientation = input<Orientation>()
   readonly kuiId = input<string>()
-  readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
 
-  controller!: NavigationMenu
+  controller!: NavigationMenu<Value>
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
@@ -39,7 +30,7 @@ export class KuiNavigationMenu implements OnInit {
     delay: this.delay(),
     closeDelay: this.closeDelay(),
     orientation: this.orientation(),
-    onValueChange: (value: unknown, details: ChangeDetails) => {
+    onValueChange: (value: Value | null, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)
@@ -70,28 +61,25 @@ export class KuiNavigationMenuList implements OnInit {
   }
 }
 
-/** On an item's `<li>`. `value` tells it from the others; an item that is only a link needs none. */
+/** On an item's `<li>`. `value` tells it from the others; an item that is given none makes its own. */
 @Directive({ selector: "[kuiNavigationMenuItem]" })
 export class KuiNavigationMenuItem implements OnInit {
   readonly value = input<unknown>()
   readonly root = inject(KuiNavigationMenu)
-  item: NavigationMenuItem | undefined
+  item!: NavigationMenuItem
+  private readonly generated = inject(KuiIds).make()
   private readonly mount = mounted()
 
   ngOnInit(): void {
     const value = this.value()
-    if (value === undefined) return
-    this.item = this.root.controller.item(value)
+    this.item = this.root.controller.item(value === undefined ? this.generated : value)
     this.mount(this.item)
   }
 }
 
 function useItem(): () => NavigationMenuItem {
   const owner = inject(KuiNavigationMenuItem)
-  return () => {
-    if (!owner.item) throw new Error("A navigation menu's trigger needs its item's `value`")
-    return owner.item
-  }
+  return () => owner.item
 }
 
 @Directive({ selector: "[kuiNavigationMenuTrigger]" })
@@ -165,33 +153,11 @@ export class KuiNavigationMenuPortal implements OnInit {
 }
 
 @Directive({ selector: "[kuiNavigationMenuPositioner]" })
-export class KuiNavigationMenuPositioner implements OnInit {
-  readonly side = input<Side>()
-  readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+export class KuiNavigationMenuPositioner extends KuiPositioner {
   private readonly root = inject(KuiNavigationMenu)
-  private readonly put = hostPart()
-  private readonly options = () =>
-    defined({
-      side: this.side(),
-      align: this.align(),
-      sideOffset: this.sideOffset(),
-      alignOffset: this.alignOffset(),
-      collisionPadding: this.collisionPadding(),
-    })
 
-  constructor() {
-    effect(() => {
-      const next = this.options()
-      untracked(() => this.root.controller?.positioning.set(next))
-    })
-  }
-
-  ngOnInit(): void {
-    this.root.controller.positioning.set(untracked(this.options))
-    this.put(this.root.controller.positioner)
+  protected placed() {
+    return this.root.controller
   }
 }
 

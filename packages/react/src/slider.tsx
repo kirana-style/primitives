@@ -1,14 +1,17 @@
 import { within } from "@kirana-ui/core"
-import type { Part } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
-import type { Slider as Controller, SliderProps } from "@kirana-ui/core/slider"
-import { createContext, useContext } from "react"
+import type { Slider as Controller, SliderProps, SliderValue } from "@kirana-ui/core/slider"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
+import { createContext, useContext, useId } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
-import { useController, usePart, useSignal } from "./runtime.tsx"
+import { PartElement, parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["slider"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -18,9 +21,18 @@ function useSlider(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<SliderProps, "id"> & { id?: string } & PartComponentProps
+/**
+ * `Value` is what the slider is given, `value` or `defaultValue`: a number for one thumb, a
+ * list for a range. What `onValueChange` and `onValueCommitted` are told is the same kind.
+ */
+export type RootProps<Value extends SliderValue = SliderValue> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<SliderProps<Value>, "id"> & { id?: string }
+>
 
-function Root({
+// Given neither `value` nor `defaultValue`, a slider has one thumb: its value is a number.
+function Root<Value extends SliderValue = number>({
   value,
   defaultValue,
   onValueChange,
@@ -40,10 +52,10 @@ function Root({
   getAriaValueText,
   id,
   ...rest
-}: RootProps): ReactElement {
+}: RootProps<Value>): ReactElement {
   const field = useContext(FieldContext) ?? undefined
   const direction = useContext(DirectionContext) ?? undefined
-  const create = within(createSlider, { field, direction })
+  const create = within(createSlider<Value>, { field, direction })
   const controller = useController(create, {
     value,
     defaultValue,
@@ -66,42 +78,56 @@ function Root({
   })
   return (
     <Context.Provider value={controller}>
-      <RootElement {...rest} />
+      <PartElement of={controller.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) => usePart(useSlider("Root").root, "div", props)
-const Control = (props: PartComponentProps) => usePart(useSlider("Control").control, "div", props)
-const Track = (props: PartComponentProps) => usePart(useSlider("Track").track, "div", props)
-const Indicator = (props: PartComponentProps) =>
-  usePart(useSlider("Indicator").indicator, "div", props)
+export type ControlProps = PartComponentProps<"div", StateOf<Parts["control"]>>
+export type TrackProps = PartComponentProps<"div", StateOf<Parts["track"]>>
+export type IndicatorProps = PartComponentProps<"div", StateOf<Parts["indicator"]>>
 
-const PartElement = ({ part, tag, ...props }: PartComponentProps & { part: Part; tag: string }) =>
-  usePart(part, tag, props)
+const Control = (props: ControlProps) => usePart(useSlider("Control").control, "div", props)
+const Track = (props: TrackProps) => usePart(useSlider("Track").track, "div", props)
+const Indicator = (props: IndicatorProps) => usePart(useSlider("Indicator").indicator, "div", props)
 
-export interface ThumbProps extends PartComponentProps {
-  /** Which value of a range the thumb is, from 0. */
-  index?: number
-}
+export type ThumbProps = PartComponentProps<
+  "div",
+  StateOf<Parts["thumb"]>,
+  {
+    /**
+     * Which value of a range the thumb is, from 0. A thumb that is given none takes its place
+     * among the slider's thumbs, in the order they are written.
+     */
+    index?: number
+  }
+>
 
-function Thumb({ index = 0, children, ...rest }: ThumbProps): ReactElement {
+function Thumb({ index, ...rest }: ThumbProps): ReactElement {
   const controller = useSlider("Thumb")
-  return (
-    <PartElement part={controller.thumb(index)} tag="div" {...rest}>
-      {children}
-      <PartElement part={controller.thumbInput(index)} tag="input" />
-    </PartElement>
-  )
+  // The same on every render of this thumb, a second one in StrictMode included.
+  const generated = useId()
+  const at = index ?? generated
+  // Its native input is the element's last child, whatever element the caller asked for.
+  return usePart(controller.thumb(at), "div", rest, undefined, (content) => (
+    <>
+      {content}
+      <PartElement of={controller.thumbInput(at)} tag="input" />
+    </>
+  ))
 }
+
+export type ValueProps = PartComponentProps<
+  "output",
+  StateOf<Parts["value"]>,
+  {
+    /** Draws something else than the written value: it is given the text, and each thumb's value. */
+    children?: (text: string, values: readonly number[]) => ReactNode
+  }
+>
 
 /** The written value, or what `children` makes of it and of the values. */
-function Value({
-  children,
-  ...props
-}: Omit<PartComponentProps, "children"> & {
-  children?: (text: string, values: readonly number[]) => ReactNode
-}): ReactElement {
+function Value({ children, ...props }: ValueProps): ReactElement {
   const controller = useSlider("Value")
   const text = useSignal(controller.text)
   const values = useSignal(controller.values)
@@ -111,4 +137,11 @@ function Value({
   })
 }
 
-export const Slider = { Root, Value, Control, Track, Indicator, Thumb }
+export const Slider = /* @__PURE__ */ parts("Slider", {
+  Root,
+  Value,
+  Control,
+  Track,
+  Indicator,
+  Thumb,
+})

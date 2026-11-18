@@ -6,11 +6,11 @@ export function state(attribute: string, description: string): StateDefinition {
 }
 
 /** A state an attribute carries as one of several values. */
-export function valued(
+export function valued<const Values extends readonly string[]>(
   attribute: string,
-  values: readonly string[],
+  values: Values,
   description: string
-): StateDefinition {
+): StateDefinition & { values: Values } {
   return { attribute, values, description }
 }
 
@@ -36,8 +36,8 @@ export const TRANSITION = {
 export const PLACEMENT = {
   side: valued(
     "data-side",
-    ["top", "right", "bottom", "left"],
-    "The side of the anchor it is on, after any flip."
+    ["top", "right", "bottom", "left", "inline-start", "inline-end"],
+    "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor."
   ),
   align: valued("data-align", ["start", "center", "end"], "How it is aligned with the anchor."),
 }

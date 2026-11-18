@@ -1,11 +1,14 @@
-import type { Part } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp as Controller, OtpProps, OtpSlot } from "@kirana-ui/core/otp"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
-import { useController, usePart, useSignal } from "./runtime.tsx"
+import { PartElement, parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["otp"]
 
 const Context = createContext<Controller | null>(null)
 const SlotContext = createContext<OtpSlot | null>(null)
@@ -16,7 +19,11 @@ function useOtp(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<OtpProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<OtpProps, "id"> & { id?: string }
+>
 
 function Root({
   length,
@@ -48,35 +55,51 @@ function Root({
   )
 }
 
-const PartElement = ({ part, tag, ...props }: PartComponentProps & { part: Part; tag: string }) =>
-  usePart(part, tag, props)
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
 
-const Input = (props: PartComponentProps) => usePart(useOtp("Input").input, "input", props)
-const Group = (props: PartComponentProps) => usePart(useOtp("Group").group, "div", props)
-const Separator = (props: PartComponentProps) =>
-  usePart(useOtp("Separator").separator, "div", props)
+const Input = (props: InputProps) => usePart(useOtp("Input").input, "input", props)
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>>
+
+const Group = (props: GroupProps) => usePart(useOtp("Group").group, "div", props)
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
+const Separator = (props: SeparatorProps) => usePart(useOtp("Separator").separator, "div", props)
+
+export type SlotProps = PartComponentProps<
+  "div",
+  StateOf<Parts["slot"]>,
+  {
+    /** Which character of the code it shows, from 0. */
+    index: number
+  }
+>
 
 /** One cell: it shows its character, then whatever it is given (a caret). */
-function Slot({ index, children, ...props }: PartComponentProps & { index: number }) {
+function Slot({ index, ...props }: SlotProps): ReactElement {
   const slot = useOtp("Slot").slot(index)
   const char = useSignal(slot.char)
   return (
     <SlotContext.Provider value={slot}>
-      <PartElement part={slot.part} tag="div" {...props}>
-        {char}
-        {children}
-      </PartElement>
+      {usePart(slot.part, "div", props, undefined, (content) => (
+        // Its character comes first, whatever element the caller asked for.
+        <>
+          {char}
+          {content}
+        </>
+      ))}
     </SlotContext.Provider>
   )
 }
 
+export type CaretProps = PartComponentProps<"div", StateOf<Parts["caret"]>>
+
 /** Drawn in its cell while the cell is the active one and empty. */
-function Caret(props: PartComponentProps): ReactElement | null {
+function Caret(props: CaretProps): ReactElement | null {
   const controller = useOtp("Caret")
   const slot = useContext(SlotContext)
   if (!slot) throw new Error("<Otp.Caret> must be inside <Otp.Slot>")
   const shown = useSignal(slot.caret)
-  return shown ? <PartElement part={controller.caretPart} tag="div" {...props} /> : null
+  return shown ? <PartElement of={controller.caretPart} tag="div" {...props} /> : null
 }
 
-export const Otp = { Root, Input, Group, Slot, Separator, Caret }
+export const Otp = /* @__PURE__ */ parts("Otp", { Root, Input, Group, Slot, Separator, Caret })

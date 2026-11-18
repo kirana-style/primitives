@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createPagination } from "@kirana-ui/core/pagination"
-  import type { PaginationProps } from "@kirana-ui/core/pagination"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   // `bind:page` is the page shown, from 1.
   let {
@@ -20,7 +19,7 @@
     disabled,
     id,
     ...rest
-  }: RootProps<PaginationProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: number, by: ChangeDetails) {
@@ -43,4 +42,4 @@
   )
 </script>
 
-<Part part={made.root} tag="nav" {...rest} />
+<Part of={made.root} tag="nav" {...rest} />

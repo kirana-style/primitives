@@ -1,7 +1,8 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createDatePicker } from "@kirana-ui/core/date-picker"
 import type { DatePicker as Controller, DatePickerProps } from "@kirana-ui/core/date-picker"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -11,6 +12,23 @@ import { DirectionContext } from "./direction-context.ts"
 import { Popover, PopoverContext } from "./popover.tsx"
 import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["datePicker"]
+
+// The parts it takes from the components it is made of.
+export type {
+  CellProps,
+  DayProps,
+  GridProps,
+  HeadCellProps,
+  HeadingProps,
+  NextProps,
+  PreviousProps,
+  WeekdaysProps,
+  WeeksProps,
+} from "./calendar.tsx"
+export type { InputProps, SegmentProps, SegmentsProps } from "./date-field.tsx"
+export type { PopupProps, PortalProps, PositionerProps, TriggerProps } from "./popover.tsx"
 
 const Context = createContext<Controller>()
 
@@ -63,12 +81,13 @@ function Root(props: RootProps): JSX.Element {
   )
 }
 
+export type FieldProps = PartComponentProps<"div", StateOf<Parts["field"]>>
+export type CalendarProps = PartComponentProps<"div", StateOf<Parts["calendar"]>>
+
 export const DatePicker = {
   Root,
   /** The typed date: what holds its segments and its hidden input. */
-  Field: (props: PartComponentProps) => (
-    <Part part={useDatePicker().field.root} tag="div" {...props} />
-  ),
+  Field: (props: FieldProps) => <Part of={useDatePicker().field.root} tag="div" {...props} />,
   Segments: DateField.Segments,
   Segment: DateField.Segment,
   Input: DateField.Input,
@@ -77,8 +96,8 @@ export const DatePicker = {
   Positioner: Popover.Positioner,
   Popup: Popover.Popup,
   /** The calendar: what holds its heading, its buttons and its grid. */
-  Calendar: (props: PartComponentProps) => (
-    <Part part={useDatePicker().calendar.root} tag="div" {...props} />
+  Calendar: (props: CalendarProps) => (
+    <Part of={useDatePicker().calendar.root} tag="div" {...props} />
   ),
   Heading: Calendar.Heading,
   Previous: Calendar.Previous,

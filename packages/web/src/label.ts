@@ -2,6 +2,7 @@ import { createLabel } from "@kirana-ui/core/label"
 
 import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /** `<kui-label>` around a `kui-part="root"` label. Inside a `<kui-field>` it is the field's. */
 export const tag = defineElement({
@@ -11,3 +12,9 @@ export const tag = defineElement({
   changes: {},
   parts: { root: (controller) => controller.label },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-label": ElementOf<typeof tag>
+  }
+}

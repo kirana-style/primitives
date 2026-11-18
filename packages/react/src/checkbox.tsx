@@ -1,12 +1,16 @@
 import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox as Controller, CheckboxProps } from "@kirana-ui/core/checkbox"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { useController, usePart, useSignal } from "./runtime.tsx"
+import { PartElement, parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["checkbox"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -16,7 +20,11 @@ function useCheckbox(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<CheckboxProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "span",
+  StateOf<Parts["root"]>,
+  Omit<CheckboxProps, "id"> & { id?: string }
+>
 
 function Root({
   checked,
@@ -30,7 +38,6 @@ function Root({
   form,
   value,
   id,
-  children,
   ...rest
 }: RootProps): ReactElement {
   const field = useContext(FieldContext) ?? undefined
@@ -45,34 +52,40 @@ function Root({
     required,
     name,
     form,
-    value: value as string | undefined,
+    value,
     id,
   })
   return (
     <Context.Provider value={controller}>
-      <RootElement {...rest}>
-        {children}
-        <Input />
-      </RootElement>
+      <PartElement of={controller.root} tag="span" hold={withInput} {...rest} />
     </Context.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) => usePart(useCheckbox("Root").root, "span", props)
+// Its native input is the element's last child, whatever element the caller asked for.
+const withInput = (content: ReactNode) => (
+  <>
+    {content}
+    <Input />
+  </>
+)
+
 const Input = () => usePart(useCheckbox("Root").input, "input", {})
 
-export interface IndicatorProps extends PartComponentProps {
-  /** Keeps the mark in the page while the box is unchecked. */
-  keepMounted?: boolean
-}
+export type IndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["indicator"]>,
+  {
+    /** Keeps the mark in the page while the box is unchecked. */
+    keepMounted?: boolean
+  }
+>
 
 function Indicator({ keepMounted, ...props }: IndicatorProps): ReactElement | null {
-  const mounted = useSignal(useCheckbox("Indicator").indicatorMounted)
+  const controller = useCheckbox("Indicator")
+  const mounted = useSignal(controller.indicatorMounted)
   if (!mounted && !keepMounted) return null
-  return <IndicatorElement {...props} />
+  return <PartElement of={controller.indicator} tag="span" {...props} />
 }
 
-const IndicatorElement = (props: PartComponentProps) =>
-  usePart(useCheckbox("Indicator").indicator, "span", props)
-
-export const Checkbox = { Root, Indicator }
+export const Checkbox = /* @__PURE__ */ parts("Checkbox", { Root, Indicator })

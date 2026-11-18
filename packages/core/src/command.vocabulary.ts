@@ -9,17 +9,26 @@ export const commandVocabulary = defineComponent({
     states: { disabled: DISABLED },
   },
   input: {
+    inside: "root",
     description: "The text input. What is typed filters the list; focus stays in it.",
     states: { disabled: DISABLED },
   },
   list: {
+    inside: "root",
     description: "The commands.",
     states: { empty: state("data-empty", "Present when no item is shown for what was typed.") },
   },
-  empty: { description: "What is shown when no item is." },
-  group: { description: "Items under a heading. Hidden while none of them is shown." },
-  groupHeading: { description: "A group's name." },
+  empty: { inside: "list", description: "What is shown when no item is." },
+  group: {
+    inside: "list",
+    optional: true,
+    repeated: true,
+    description: "Items under a heading. Hidden while none of them is shown.",
+  },
+  groupHeading: { inside: "group", description: "A group's name." },
   item: {
+    inside: "group",
+    repeated: true,
     description: "One command.",
     states: {
       highlighted: state(
@@ -29,5 +38,9 @@ export const commandVocabulary = defineComponent({
       disabled: DISABLED,
     },
   },
-  separator: { description: "A line between groups. Hidden while something is typed." },
+  separator: {
+    inside: "list",
+    repeated: true,
+    description: "A line between groups. Hidden while something is typed.",
+  },
 })

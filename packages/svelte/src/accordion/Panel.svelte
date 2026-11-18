@@ -2,14 +2,14 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { useItem } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { PanelProps } from "./types.ts"
 
   // `keepMounted` keeps the closed panel in the page, `hidden`.
-  let { keepMounted = false, ...rest }: { keepMounted?: boolean } & PartAttributes = $props()
+  let { keepMounted = false, ...rest }: PanelProps = $props()
   const item = useItem()
   const mounted = fromSignal(item.mounted)
 </script>
 
 {#if mounted.current || keepMounted}
-  <Part part={item.panel} tag="div" {...rest} />
+  <Part of={item.panel} tag="div" {...rest} />
 {/if}

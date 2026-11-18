@@ -1,6 +1,8 @@
 import { createForm } from "@kirana-ui/core/form"
+import type { FormProps } from "@kirana-ui/core/form"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-form>` around a `kui-part="root"` form. Its fields are checked when it is submitted;
@@ -18,3 +20,12 @@ export const tag = defineElement({
   },
   parts: { root: (controller) => controller.root },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-form": ElementOf<
+      As<typeof tag, FormProps>,
+      { "form-submit": ["onFormSubmit", "values"]; "clear-errors": ["onClearErrors", "errors"] }
+    >
+  }
+}

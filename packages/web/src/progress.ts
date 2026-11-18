@@ -1,7 +1,9 @@
 import { computed } from "@kirana-ui/core"
 import { createProgress } from "@kirana-ui/core/progress"
+import type { ProgressProps } from "@kirana-ui/core/progress"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-progress>` around `kui-part="root"`, a `label`, a `track` with its `indicator`, and a
@@ -28,3 +30,9 @@ export const tag = defineElement({
     value: (controller) => ({ part: controller.value, text: controller.text }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-progress": ElementOf<As<typeof tag, ProgressProps>>
+  }
+}

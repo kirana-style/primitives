@@ -1,11 +1,17 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createToggle } from "@kirana-ui/core/toggle"
+import type { ToggleProps as CoreProps } from "@kirana-ui/core/toggle"
 import { defineComponent, h, inject } from "vue"
 import type { PropType } from "vue"
 
 import { controller, optional, partComponent } from "./runtime.ts"
+import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
 import { TOGGLE_GROUP, TOOLBAR } from "./toolbar-context.ts"
+
+export type ToggleProps = Omit<CoreProps, "onPressedChange"> & PartComponentProps
+
+export type ToggleEmits = Changes<"pressed", boolean>
 
 /**
  * `v-model:pressed`, or `pressed` with `@pressed-change="(pressed, details) => …"`. Inside a
@@ -37,4 +43,4 @@ export const Toggle = defineComponent({
     const Element = partComponent("ToggleElement", "button", () => made.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"button", StatesOf<"toggle">["root"], ToggleProps, ToggleEmits>

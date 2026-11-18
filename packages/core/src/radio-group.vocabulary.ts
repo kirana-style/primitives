@@ -9,11 +9,14 @@ export const radioGroupVocabulary = defineComponent({
     states: CONTROL,
   },
   item: {
+    inside: "root",
+    repeated: true,
     description: "One choice. It holds a hidden native radio, which a form and a label reach.",
     states: { ...CHECKED, ...CONTROL },
     exclusive: EITHER_CHECKED,
   },
   indicator: {
+    inside: "item",
     description: "The mark. In the page while its item is the chosen one.",
     states: {
       ...CHECKED,

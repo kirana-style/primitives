@@ -1,6 +1,7 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createInput } from "@kirana-ui/core/input"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -8,10 +9,14 @@ import { FieldContext } from "./field-context.ts"
 import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
-export type InputProps = PartComponentProps & {
-  disabled?: boolean
-  onValueChange?: (value: string, details: ChangeDetails) => void
-}
+export type InputProps = PartComponentProps<
+  "input",
+  StateOf<Vocabulary["input"]["input"]>,
+  {
+    disabled?: boolean
+    onValueChange?: (value: string, details: ChangeDetails) => void
+  }
+>
 
 /**
  * An `<input>`; `as="textarea"` for a text area. It takes what an `<input>` takes, and inside
@@ -23,5 +28,5 @@ export function Input(props: InputProps): JSX.Element {
     disabled: local.disabled,
     onValueChange: (value: string, details: ChangeDetails) => local.onValueChange?.(value, details),
   }))
-  return <Part part={made.input} tag="input" {...rest} />
+  return <Part of={made.input} tag="input" {...rest} />
 }

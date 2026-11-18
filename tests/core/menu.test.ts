@@ -423,7 +423,11 @@ describe("a submenu", () => {
     expect(share.hasAttribute("data-highlighted")).toBe(true)
     await expect
       .poll(() => root.querySelector("#s-popup")?.parentElement?.getAttribute("data-side"))
-      .toBe("right")
+      .toBe("inline-end")
+    // To the right of its trigger, where the text runs to.
+    expect(root.querySelector("#s-popup")!.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      share.getBoundingClientRect().right - 1
+    )
     await press("ArrowLeft")
     expect(focused()).toBe("s-trigger")
     expect(drawn.share!.reasons).toEqual(["list-navigation", "list-navigation"])
@@ -444,7 +448,11 @@ describe("a submenu", () => {
     expect(focused()).toBe("mail")
     await expect
       .poll(() => root.querySelector("#s-popup")?.parentElement?.getAttribute("data-side"))
-      .toBe("left")
+      .toBe("inline-end")
+    // The same side by name, the other side of the page: to the left of its trigger.
+    expect(root.querySelector("#s-popup")!.getBoundingClientRect().right).toBeLessThanOrEqual(
+      find(root, "s-trigger").getBoundingClientRect().left + 1
+    )
     await press("ArrowRight")
     expect(focused()).toBe("s-trigger")
   })
@@ -958,7 +966,7 @@ describe("a menubar", () => {
     expect(focused()).toBe("one-a")
     await expect
       .poll(() => root.querySelector("#one-popup")?.parentElement?.getAttribute("data-side"))
-      .toBe("right")
+      .toBe("inline-end")
     // No menu across: the arrow back closes it.
     await press("ArrowRight")
     expect(menus.one!.made.open.peek()).toBe(true)

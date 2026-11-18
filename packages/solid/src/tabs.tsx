@@ -1,7 +1,8 @@
 import { defined, within } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
-import type { Tabs as Controller } from "@kirana-ui/core/tabs"
+import type { Tabs as Controller, TabsProps } from "@kirana-ui/core/tabs"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import {
   Show,
   createComputed,
@@ -19,6 +20,8 @@ import { DirectionContext } from "./direction-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
+type Parts = Vocabulary["tabs"]
+
 const Context = createContext<Controller>()
 
 function useTabs(): Controller {
@@ -27,15 +30,14 @@ function useTabs(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & {
-  value?: unknown
-  defaultValue?: unknown
-  onValueChange?: (value: unknown, details: ChangeDetails) => void
-  orientation?: Orientation
-  id?: string
-}
+/** `Value` is what a tab's `value` is: the root's `value` holds the active one's. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<TabsProps<Value>, "id"> & { id?: string }
+>
 
-function Root(props: RootProps): JSX.Element {
+function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -45,31 +47,40 @@ function Root(props: RootProps): JSX.Element {
   ])
   const generated = createUniqueId()
   const direction = useContext(DirectionContext)
-  const made = controller(within(createTabs, { direction }), () => ({
+  const made = controller(within(createTabs<Value>, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,
     orientation: local.orientation,
-    onValueChange: (value: unknown, details: ChangeDetails) =>
-      local.onValueChange?.(value, details),
+    onValueChange: (value: Value, details: ChangeDetails) => local.onValueChange?.(value, details),
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-function List(
-  props: PartComponentProps & { activateOnFocus?: boolean; loop?: boolean }
-): JSX.Element {
+export type ListProps = PartComponentProps<
+  "div",
+  StateOf<Parts["list"]>,
+  { activateOnFocus?: boolean; loop?: boolean }
+>
+
+function List(props: ListProps): JSX.Element {
   const [local, rest] = splitProps(props, ["activateOnFocus", "loop"])
   const made = useTabs()
   createComputed(() => made.listOptions.set(defined({ ...local })))
-  return <Part part={made.list} tag="div" {...rest} />
+  return <Part of={made.list} tag="div" {...rest} />
 }
 
-function Tab(props: PartComponentProps & { value: unknown; disabled?: boolean }): JSX.Element {
+export type TabProps = PartComponentProps<
+  "button",
+  StateOf<Parts["tab"]>,
+  { value: unknown; disabled?: boolean }
+>
+
+function Tab(props: TabProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "disabled"])
   const options = toSignal(() => ({ disabled: local.disabled }))
   // A tab is its value for as long as it is in the page.
@@ -77,22 +88,28 @@ function Tab(props: PartComponentProps & { value: unknown; disabled?: boolean })
     untrack(() => local.value),
     () => defined(options.get())
   )
-  return <Part part={part} tag="button" {...rest} />
+  return <Part of={part} tag="button" {...rest} />
 }
 
-const Indicator = (props: PartComponentProps) => (
-  <Part part={useTabs().indicator} tag="span" {...props} />
-)
+export type IndicatorProps = PartComponentProps<"span", StateOf<Parts["indicator"]>>
+
+const Indicator = (props: IndicatorProps) => <Part of={useTabs().indicator} tag="span" {...props} />
+
+export type PanelProps = PartComponentProps<
+  "div",
+  StateOf<Parts["panel"]>,
+  { value: unknown; keepMounted?: boolean }
+>
 
 /** `keepMounted` keeps the panel in the page, `hidden`, while its tab is not the active one. */
-function Panel(props: PartComponentProps & { value: unknown; keepMounted?: boolean }): JSX.Element {
+function Panel(props: PanelProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "keepMounted"])
   const panel = useTabs().panel(untrack(() => local.value))
   onMount(() => onCleanup(panel.mount()))
   const mounted = fromSignal(panel.mounted)
   return (
     <Show when={mounted() || local.keepMounted}>
-      <Part part={panel.part} tag="div" {...rest} />
+      <Part of={panel.part} tag="div" {...rest} />
     </Show>
   )
 }

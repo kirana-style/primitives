@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useDialog } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { CloseProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: CloseProps = $props()
   const controller = useDialog()
 </script>
 
-<Part part={controller.close} tag="button" {...props} />
+<Part of={controller.close} tag="button" {...props} />

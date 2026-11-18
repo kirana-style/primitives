@@ -13,11 +13,14 @@ export const otpVocabulary = defineComponent({
     },
   },
   input: {
+    inside: "root",
     description: "The one input the code is typed in. A design lays it over the cells, unseen.",
     states: { disabled: DISABLED },
   },
-  group: { description: "Cells that are drawn together." },
+  group: { inside: "root", repeated: true, description: "Cells that are drawn together." },
   slot: {
+    inside: "group",
+    repeated: true,
     description: "One cell of the code.",
     states: {
       // Its place, as a number: any value.
@@ -30,6 +33,6 @@ export const otpVocabulary = defineComponent({
       disabled: DISABLED,
     },
   },
-  separator: { description: "A mark between groups of cells." },
-  caret: { description: "A caret drawn in the active cell while it is empty." },
+  separator: { inside: "root", repeated: true, description: "A mark between groups of cells." },
+  caret: { inside: "slot", description: "A caret drawn in the active cell while it is empty." },
 })

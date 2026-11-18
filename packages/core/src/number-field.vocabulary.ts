@@ -19,21 +19,25 @@ const ONE_OF = [["valid", "invalid"]] as const
 export const numberFieldVocabulary = defineComponent({
   root: { description: "Groups the number field's parts.", states: STATES, exclusive: ONE_OF },
   group: {
+    inside: "root",
     description: "What holds the input and its buttons, as one control.",
     states: STATES,
     exclusive: ONE_OF,
   },
   input: {
+    inside: "group",
     description: "The text input: it takes what its locale writes a number with.",
     states: STATES,
     exclusive: ONE_OF,
   },
   increment: {
+    inside: "group",
     description: "A button that steps the number up. Held, it goes on.",
     states: STATES,
     exclusive: ONE_OF,
   },
   decrement: {
+    inside: "group",
     description: "A button that steps the number down. Held, it goes on.",
     states: STATES,
     exclusive: ONE_OF,

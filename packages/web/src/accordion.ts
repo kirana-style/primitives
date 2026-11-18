@@ -2,8 +2,9 @@ import { computed } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type { Accordion, AccordionItem, AccordionProps } from "@kirana-ui/core/accordion"
 
-import { list } from "./around.ts"
+import { list, ownValue } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 // An item's parts share the item: made when the first of them is met.
 const items = new WeakMap<HTMLElement, AccordionItem>()
@@ -13,7 +14,7 @@ function itemOf(controller: Accordion<string>, element: HTMLElement): AccordionI
   if (!around) return undefined
   let item = items.get(around)
   if (!item) {
-    item = controller.item(around.getAttribute("kui-value") ?? "", () =>
+    item = controller.item(around.getAttribute("kui-value") ?? ownValue(around), () =>
       around.hasAttribute("kui-disabled") ? { disabled: true } : {}
     )
     items.set(around, item)
@@ -27,8 +28,9 @@ type Props = Omit<AccordionProps<string>, "value" | "defaultValue"> & {
 }
 
 /**
- * `<kui-accordion>` around `kui-part="root"` and an `item` for each `value`, each with a
- * `header`, a `trigger` button and a `panel` that is in the page while its item is open.
+ * `<kui-accordion>` around `kui-part="root"` and its `item`s, each with a `header`, a
+ * `trigger` button and a `panel` that is in the page while its item is open. An item's
+ * `kui-value` tells it from the others; an item that is given none makes its own.
  * `value` and `default-value` (the open items, with commas between), `multiple`, `disabled`,
  * `orientation`, `loop`; it tells `value-change`.
  */
@@ -64,3 +66,9 @@ export const tag = defineElement<Props & { id: string }, Accordion<string>>({
     },
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-accordion": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+  }
+}

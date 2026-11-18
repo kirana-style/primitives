@@ -164,6 +164,100 @@ describe("a toaster", () => {
     expect(toaster.toasts.peek().map((each) => each.title)).toEqual(["One, again", "Two"])
   })
 
+  it("hands on what a toast says as it was given, whatever it is", () => {
+    // What a framework draws: here, elements. The toaster never reads them.
+    const toaster = createToaster<HTMLElement | string>()
+    const title = document.createElement("b")
+    const description = document.createElement("a")
+    const label = document.createElement("i")
+    const before = title.outerHTML
+    const id = toaster.add({ title, description, action: { label, onAction() {} } })
+    const [toast] = toaster.toasts.peek()
+    expect(toast!.title).toBe(title)
+    expect(toast!.description).toBe(description)
+    expect(toast!.action!.label).toBe(label)
+    expect(title.outerHTML).toBe(before)
+    // What draws it is given the same.
+    const made = createToast(signal<ToastProps<HTMLElement | string>>({ id: "region", toaster }))
+    expect(made.toast(id).record.peek()!.title).toBe(title)
+    const next = document.createElement("em")
+    toaster.update(id, { title: next })
+    expect(made.toast(id).record.peek()).toMatchObject({ title: next, description })
+    expect(made.toast(id).record.peek()!.action!.label).toBe(label)
+    // A string is still a title, in a promise's states too.
+    void toaster.promise(new Promise(() => {}), {
+      loading: "Saving",
+      success: { title: next },
+      error: "Failed",
+    })
+    expect(toaster.toasts.peek()[0]!.title).toBe("Saving")
+  })
+
+  it("changes a toast's action with the rest of it", () => {
+    const toaster = createToaster()
+    const heard: string[] = []
+    const id = toaster.add({ title: "Deleted" })
+    expect(toaster.toasts.peek()[0]!.action).toBeUndefined()
+    const undo = { label: "Undo", onAction: () => void heard.push("undo") }
+    toaster.update(id, { action: undo })
+    expect(toaster.toasts.peek()[0]).toMatchObject({ title: "Deleted", action: undo })
+    // What an update does not name stays.
+    toaster.update(id, { title: "Gone" })
+    expect(toaster.toasts.peek()[0]).toMatchObject({ title: "Gone", action: undo })
+    toaster.update(id, { action: undefined })
+    expect(toaster.toasts.peek()[0]!.action).toBeUndefined()
+  })
+
+  it("gives each state of a promise its own action, and none that it did not ask for", async () => {
+    const toaster = createToaster()
+    const heard: string[] = []
+    let done!: (value: string) => void
+    const work = new Promise<string>((resolve) => void (done = resolve))
+    void toaster.promise(work, {
+      loading: {
+        title: "Uploading",
+        description: "Three files",
+        action: { label: "Cancel", onAction: () => void heard.push("cancel") },
+      },
+      success: (name) => ({
+        title: `Uploaded ${name}`,
+        priority: "assertive",
+        action: { label: "Open", onAction: () => void heard.push("open") },
+      }),
+      error: "Failed",
+    })
+    expect(toaster.toasts.peek()[0]).toMatchObject({
+      type: "loading",
+      description: "Three files",
+      priority: "polite",
+    })
+    expect(toaster.toasts.peek()[0]!.action!.label).toBe("Cancel")
+    done("a.txt")
+    await work
+    await Promise.resolve()
+    const settled = toaster.toasts.peek()[0]!
+    expect(settled).toMatchObject({
+      title: "Uploaded a.txt",
+      type: "success",
+      priority: "assertive",
+    })
+    expect(settled.action!.label).toBe("Open")
+    // What the state before said is not this one's.
+    expect(settled.description).toBeUndefined()
+
+    const failing = Promise.reject(new Error("no"))
+    void toaster.promise(failing, {
+      loading: { title: "Sending", action: { label: "Cancel", onAction() {} } },
+      success: "Sent",
+      error: "Not sent",
+    })
+    await failing.catch(() => {})
+    await Promise.resolve()
+    expect(toaster.toasts.peek()[0]).toMatchObject({ title: "Not sent", type: "error" })
+    expect(toaster.toasts.peek()[0]!.action).toBeUndefined()
+    expect(heard).toEqual([])
+  })
+
   it("closes one, or every one, and says why", () => {
     const toaster = createToaster()
     const why: string[] = []
@@ -192,6 +286,31 @@ describe("toasts in the page", () => {
     expect(toast.querySelector(".close")!.getAttribute("type")).toBe("button")
     await userEvent.click(toast.querySelector(".close")!)
     await expect.poll(ids).toEqual([])
+  })
+
+  it("are read when the reader is idle, or at once when they say so", async () => {
+    const { region, toaster, of } = toasts()
+    const calm = toaster.add({ title: "Saved" })
+    expect(toaster.toasts.peek()[0]!.priority).toBe("polite")
+    expect(of(calm).getAttribute("role")).toBe("dialog")
+    expect(of(calm).hasAttribute("aria-live")).toBe(false)
+    expect(of(calm).hasAttribute("aria-atomic")).toBe(false)
+    const urgent = toaster.add({ title: "Connection lost", priority: "assertive" })
+    expect(toaster.toasts.peek()[0]!.priority).toBe("assertive")
+    // An alert, read whole, that interrupts: its own word, over the region's.
+    expect(of(urgent).getAttribute("role")).toBe("alertdialog")
+    expect(of(urgent).getAttribute("aria-live")).toBe("assertive")
+    expect(of(urgent).getAttribute("aria-atomic")).toBe("true")
+    expect(of(urgent).getAttribute("aria-modal")).toBe("false")
+    expect(region.getAttribute("aria-live")).toBe("polite")
+    expect(region.hasAttribute("aria-atomic")).toBe(false)
+    // One that is changed says what it now is; what an update does not name stays.
+    toaster.update(urgent, { title: "Still lost" })
+    expect(of(urgent).getAttribute("role")).toBe("alertdialog")
+    toaster.update(urgent, { priority: "polite" })
+    await expect.poll(() => of(urgent).getAttribute("role")).toBe("dialog")
+    expect(of(urgent).hasAttribute("aria-live")).toBe(false)
+    expect(of(urgent).hasAttribute("aria-atomic")).toBe(false)
   })
 
   it("say where each lies: its place, its height, and what is in front of it", async () => {
@@ -312,6 +431,54 @@ describe("toasts in the page", () => {
     expect(of(id).hasAttribute("data-swiping")).toBe(false)
     await userEvent.click(action)
     expect(why).toEqual(["action-press"])
+    await expect.poll(ids).toEqual([])
+  })
+
+  it("tell their action it was pressed, then close", async () => {
+    const { toaster, ids, of } = toasts()
+    const heard: string[] = []
+    const id = toaster.add({
+      title: "Deleted",
+      action: {
+        label: "Undo",
+        onAction: (details) =>
+          void heard.push(`action ${details.reason} ${details.event?.type} ${details.source}`),
+      },
+      onClose: (details) => void heard.push(`close ${details.reason}`),
+    })
+    await userEvent.click(of(id).querySelector(".action")!)
+    // The action first, while the toast is still whole; then it leaves, for that reason.
+    expect(heard).toEqual(["action action-press click mouse", "close action-press"])
+    expect(toaster.toasts.peek()[0]!.closing).toBe(true)
+    await expect.poll(ids).toEqual([])
+  })
+
+  it("stay when their action refuses, until it does not", async () => {
+    const { toaster, ids, of } = toasts()
+    const heard: string[] = []
+    const id = toaster.add({
+      title: "Delete everything?",
+      action: {
+        label: "Delete",
+        onAction(details) {
+          heard.push("action")
+          details.cancel()
+        },
+      },
+      onClose: (details) => void heard.push(`close ${details.reason}`),
+    })
+    const action = of(id).querySelector<HTMLElement>(".action")!
+    await userEvent.click(action)
+    await wait(120)
+    expect(heard).toEqual(["action"])
+    expect(toaster.toasts.peek()[0]!.closing).toBe(false)
+    expect(ids()).toEqual([`region-${id}`])
+    // The action it has now is the one a press tells: here, one that lets it go.
+    toaster.update(id, {
+      action: { label: "Delete", onAction: () => void heard.push("sure") },
+    })
+    await userEvent.click(action)
+    expect(heard).toEqual(["action", "sure", "close action-press"])
     await expect.poll(ids).toEqual([])
   })
 })

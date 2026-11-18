@@ -11,6 +11,8 @@ export const listboxVocabulary = defineComponent({
     states: { disabled: DISABLED },
   },
   item: {
+    inside: "group",
+    repeated: true,
     description: "One choice in the list.",
     states: {
       selected: SELECTED,
@@ -19,9 +21,15 @@ export const listboxVocabulary = defineComponent({
     },
   },
   itemIndicator: {
+    inside: "item",
     description: "A mark an item shows while it is chosen.",
     states: { selected: SELECTED },
   },
-  group: { description: "Items that belong together, named by their label." },
-  groupLabel: { description: "The name of a group." },
+  group: {
+    inside: "root",
+    optional: true,
+    repeated: true,
+    description: "Items that belong together, named by their label.",
+  },
+  groupLabel: { inside: "group", description: "The name of a group." },
 })

@@ -33,22 +33,21 @@ function Root({
     disabled,
     name,
   })
-  return (
-    <Context.Provider value={controller}>
-      <RootElement {...rest}>
-        {children}
-        {name === undefined ? null : <HiddenInput />}
-      </RootElement>
-    </Context.Provider>
-  )
+  // A part's element: the caller's props under the part's, `render` for another element, and the
+  // part's DOM work attached once the element is in the page. The last argument is for what the
+  // element holds of the part's own, whatever element the caller asked for: the hidden input.
+  const root = usePart(controller.root, "div", { ...rest, children }, undefined, (content) => (
+    <>
+      {content}
+      {name === undefined ? null : <HiddenInput />}
+    </>
+  ))
+  return <Context.Provider value={controller}>{root}</Context.Provider>
 }
 
-// A part's element: the caller's props under the part's, `render` for another element, and the
-// part's DOM work attached once the element is in the page.
-const RootElement = (props: PartComponentProps) => usePart(useRating().root, "div", props)
 const HiddenInput = () => usePart(useRating().input, "input", {})
 
-function Item({ place, ...props }: PartComponentProps & { place: number }): ReactElement {
+function Item({ place, ...props }: PartComponentProps<"button"> & { place: number }): ReactElement {
   return usePart(useRating().item(place), "button", { type: "button", ...props })
 }
 

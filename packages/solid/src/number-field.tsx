@@ -1,13 +1,16 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
 import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["numberField"]
 
 const Context = createContext<Controller>()
 
@@ -17,7 +20,11 @@ function useNumberField(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & Omit<NumberFieldProps, "id"> & { id?: string }
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<NumberFieldProps, "id"> & { id?: string }
+>
 
 function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, [
@@ -69,24 +76,32 @@ function Root(props: RootProps): JSX.Element {
   const named = fromSignal(made.named)
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest}>
-        {local.children as JSX.Element}
+      <Part of={made.root} tag="div" {...rest}>
+        {local.children}
         <Show when={named()}>
-          <Part part={made.hidden} tag="input" />
+          <Part of={made.hidden} tag="input" />
         </Show>
       </Part>
     </Context.Provider>
   )
 }
 
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>>
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+export type IncrementProps = PartComponentProps<"button", StateOf<Parts["increment"]>>
+export type DecrementProps = PartComponentProps<"button", StateOf<Parts["decrement"]>>
+
 const part =
-  (name: "group" | "input" | "increment" | "decrement", tag: string) =>
-  (props: PartComponentProps) => <Part part={useNumberField()[name]} tag={tag} {...props} />
+  <Props extends Record<string, unknown>>(
+    name: "group" | "input" | "increment" | "decrement",
+    tag: string
+  ) =>
+  (props: Props): JSX.Element => <Part of={useNumberField()[name]} tag={tag} {...props} />
 
 export const NumberField = {
   Root,
-  Group: part("group", "div"),
-  Input: part("input", "input"),
-  Increment: part("increment", "button"),
-  Decrement: part("decrement", "button"),
+  Group: part<GroupProps>("group", "div"),
+  Input: part<InputProps>("input", "input"),
+  Increment: part<IncrementProps>("increment", "button"),
+  Decrement: part<DecrementProps>("decrement", "button"),
 }

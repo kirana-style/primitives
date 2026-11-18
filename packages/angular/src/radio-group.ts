@@ -18,9 +18,9 @@ import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiRadioGroup]", exportAs: "kuiRadioGroup" })
-export class KuiRadioGroup implements OnInit {
-  readonly value = model<unknown>(undefined)
-  readonly defaultValue = input<unknown>(null)
+export class KuiRadioGroup<Value = unknown> implements OnInit {
+  readonly value = model<Value | null | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly readOnly = input(false, { transform: booleanAttribute })
   readonly required = input(false, { transform: booleanAttribute })
@@ -29,9 +29,9 @@ export class KuiRadioGroup implements OnInit {
   readonly form = input<string>()
   readonly kuiId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
-  readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
 
-  controller!: RadioGroup
+  controller!: RadioGroup<Value>
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
@@ -44,7 +44,7 @@ export class KuiRadioGroup implements OnInit {
     required: this.required(),
     name: this.name(),
     form: this.form(),
-    onValueChange: (value: unknown, details: ChangeDetails) => {
+    onValueChange: (value: Value | null, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)

@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { ListboxItemOptions } from "@kirana-ui/core/listbox"
   import { defined } from "@kirana-ui/core"
   import { setContext } from "svelte"
 
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { ITEM, useListbox } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ItemProps } from "./types.ts"
 
-  let { value, disabled, label, index, ...rest }: { value: unknown } & ListboxItemOptions & PartAttributes = $props()
+  let { value, disabled, label, index, ...rest }: ItemProps = $props()
   const options = toSignal(() => ({ disabled, label, index }))
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally
@@ -17,4 +16,4 @@
   setContext(ITEM, item)
 </script>
 
-<Part {part} tag="div" {...rest} />
+<Part of={part} tag="div" {...rest} />

@@ -16,8 +16,11 @@ import { createSafeArea } from "./services/safe-area.ts"
 
 export interface MenuProps {
   id: string
+  /** Whether it is open, when the caller holds it. */
   open?: boolean | undefined
+  /** Whether it starts open, when the caller does not hold `open`. Read once. */
   defaultOpen?: boolean | undefined
+  /** Heard as it is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /** The trigger cannot be pressed; a submenu's is passed over. */
   disabled?: boolean | undefined
@@ -31,6 +34,7 @@ export interface MenuProps {
 }
 
 export interface MenuItemOptions {
+  /** Disables this item: it cannot be pressed, and the arrows pass over it. */
   disabled?: boolean | undefined
   /** What typing matches; the item's text when left out. */
   label?: string | undefined
@@ -42,16 +46,24 @@ export interface MenuItemOptions {
 }
 
 export interface MenuCheckboxItemProps extends MenuItemOptions {
+  /** Whether the item is checked, when the caller holds it. */
   checked?: boolean | undefined
+  /** Whether the item starts checked, when the caller does not hold `checked`. Read once. */
   defaultChecked?: boolean | undefined
+  /**
+   * Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
+   */
   onCheckedChange?: ((checked: boolean, details: ChangeDetails) => void) | undefined
 }
 
 export interface MenuRadioGroupProps<Value = unknown> {
   /** The chosen value; `null` is "none". */
   value?: Value | null | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: Value | null | undefined
+  /** Told an item's own value, never `null`: a press chooses, and nothing takes the choice back. */
   onValueChange?: ((value: Value, details: ChangeDetails) => void) | undefined
+  /** Disables every item of the group. */
   disabled?: boolean | undefined
 }
 
@@ -182,11 +194,12 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
   let area: HTMLElement | undefined
   // A bar's trigger, as state: whether Tab stops on it follows which one focus was last on.
   const barTrigger = signal<HTMLElement | undefined>(undefined)
-  // A submenu opens beside its trigger, on the side the text runs to.
-  const beside = signal<"left" | "right">("right")
-  const placement = createPlacement(() =>
-    // Beside its trigger too, as a menu of a bar that is a column.
-    parent || bar?.vertical.get() ? { side: beside.get(), align: "start" } : { align: "start" }
+  const placement = createPlacement(
+    () =>
+      // A submenu opens beside its trigger, on the side the text runs to (`data-side` says
+      // `inline-end`, or `inline-start` once flipped). As does a menu of a bar that is a column.
+      parent || bar?.vertical.get() ? { side: "inline-end", align: "start" } : { align: "start" },
+    around.direction
   )
   const layer = createPopup({
     open,
@@ -454,6 +467,8 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     const value = bindable<Value | null>({
       value: () => groupProps.get().value,
       defaultValue: groupProps.peek().defaultValue ?? null,
+      // Only an item's own value is ever set (a press on it): `null` is the "none" the
+      // group may begin with, and is never told.
       onChange: (next, by) => groupProps.peek().onValueChange?.(next as Value, by),
     })
     const isChecked = keyed(value as ReadonlySignal<Value | null>)
@@ -588,9 +603,6 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           stops.push(bar.join(element, member), () => barTrigger.set(undefined))
         }
         if (triggerRow) stops.push(triggerRow.attach(element))
-        if (triggerRow || bar) {
-          beside.set(directionOf(element, around.direction) === "rtl" ? "left" : "right")
-        }
         return () => {
           for (const stop of stops.reverse()) stop()
           if (trigger === element) trigger = undefined

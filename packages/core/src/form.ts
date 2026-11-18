@@ -6,7 +6,12 @@ import type { ReadonlySignal } from "./reactivity.ts"
 /** When a field checks its value. Once it is found invalid, it checks on every change. */
 export type ValidationMode = "onSubmit" | "onBlur" | "onChange"
 
+/** A form's errors as a server sends them: each field's name with its message, or messages. */
 export type FormErrors = Record<string, string | readonly string[]>
+/**
+ * A form's values by field name, as `FormData` holds them: a list where a name is there more
+ * than once.
+ */
 export type FormValues = Record<string, FormDataEntryValue | FormDataEntryValue[]>
 
 export interface FormProps {

@@ -1,17 +1,22 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { FieldContext } from "./field-context.ts"
 import { positioned } from "./popover.tsx"
-import type { PositionerProps } from "./popover.tsx"
+import type { PortalProps, PositionerOptions } from "./popover.tsx"
 import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["combobox"]
+
+export type { PortalProps }
 
 const Context = createContext<Controller>()
 const ItemContext = createContext<unknown>()
@@ -22,36 +27,19 @@ function useCombobox(): Controller {
   return made
 }
 
-export type RootProps = {
-  value?: unknown
-  defaultValue?: unknown
-  onValueChange?: (value: unknown, details: ChangeDetails) => void
-  inputValue?: string
-  defaultInputValue?: string
-  onInputValueChange?: (value: string, details: ChangeDetails) => void
-  open?: boolean
-  defaultOpen?: boolean
-  onOpenChange?: (open: boolean, details: ChangeDetails) => void
-  disabled?: boolean
-  required?: boolean
-  multiple?: boolean
-  values?: readonly unknown[]
-  defaultValues?: readonly unknown[]
-  onValuesChange?: (values: unknown[], details: ChangeDetails) => void
-  inline?: boolean
-  virtualized?: ComboboxProps["virtualized"]
-  name?: string
-  form?: string
-  items?: readonly { value: unknown; label: string }[]
-  filter?: ((label: string, query: string) => boolean) | null
+/**
+ * `Value` is what an item's `value` is: the root's `value` and `onValueChange` hold one or
+ * `null` for none, and with `multiple` its `values` and `onValuesChange` hold several.
+ */
+export type RootProps<Value = unknown> = Omit<ComboboxProps<Value>, "id"> & {
   id?: string
   children?: JSX.Element
 }
 
-function Root(props: RootProps): JSX.Element {
+function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext)
-  const made = controller(within(createCombobox, { field }), () => ({
+  const made = controller(within(createCombobox<Value>, { field }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
@@ -64,15 +52,16 @@ function Root(props: RootProps): JSX.Element {
     multiple: props.multiple,
     values: props.values,
     defaultValues: props.defaultValues,
-    onValuesChange: (values: unknown[], details: ChangeDetails) =>
+    onValuesChange: (values: Value[], details: ChangeDetails) =>
       props.onValuesChange?.(values, details),
     inline: props.inline,
     virtualized: props.virtualized,
+    autoHighlight: props.autoHighlight,
     name: props.name,
     form: props.form,
     items: props.items,
     filter: props.filter,
-    onValueChange: (value: unknown, details: ChangeDetails) =>
+    onValueChange: (value: Value | null, details: ChangeDetails) =>
       props.onValueChange?.(value, details),
     onInputValueChange: (value: string, details: ChangeDetails) =>
       props.onInputValueChange?.(value, details),
@@ -83,31 +72,41 @@ function Root(props: RootProps): JSX.Element {
     <Context.Provider value={made}>
       {props.children}
       <Show when={named()}>
-        <Part part={made.hidden} tag="input" />
+        <Part of={made.hidden} tag="input" />
       </Show>
     </Context.Provider>
   )
 }
 
-const Portal = (props: { children?: JSX.Element }) => (
+const Portal = (props: PortalProps) => (
   <BodyPortal mounted={useCombobox().mounted}>{props.children}</BodyPortal>
 )
 
+export type PositionerProps = PartComponentProps<
+  "div",
+  StateOf<Parts["positioner"]>,
+  PositionerOptions
+>
+
 function Positioner(props: PositionerProps): JSX.Element {
   const made = useCombobox()
-  return <Part part={made.positioner} tag="div" {...positioned(props, made.positioning)} />
+  return <Part of={made.positioner} tag="div" {...positioned(props, made.positioning)} />
 }
 
-/** `label` is what is filtered and what the input shows; the item's text when left out. */
-function Item(
-  props: PartComponentProps & {
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
     value: unknown
     disabled?: boolean
     label?: string
     id?: string
     index?: number
   }
-): JSX.Element {
+>
+
+/** `label` is what is filtered and what the input shows; the item's text when left out. */
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "disabled", "label", "id", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
@@ -121,86 +120,118 @@ function Item(
   const part = useCombobox().item(value, () => options.get(), useContext(GroupContext))
   return (
     <ItemContext.Provider value={value}>
-      <Part part={part} tag="div" {...rest} />
+      <Part of={part} tag="div" {...rest} />
     </ItemContext.Provider>
   )
 }
 
-function ItemIndicator(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+export type ItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["itemIndicator"]>,
+  { keepMounted?: boolean }
+>
+
+function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const made = useCombobox()
   const value = useContext(ItemContext)
   const selected = fromSignal(made.selected(value))
   return (
     <Show when={selected() || local.keepMounted}>
-      <Part part={made.itemIndicator(value)} tag="span" {...rest} />
+      <Part of={made.itemIndicator(value)} tag="span" {...rest} />
     </Show>
   )
 }
 
+export type ClearProps = PartComponentProps<
+  "button",
+  StateOf<Parts["clear"]>,
+  { keepMounted?: boolean }
+>
+
 /** A button that empties the input and the value. Drawn while there is something to clear. */
-function Clear(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+function Clear(props: ClearProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const made = useCombobox()
   const clearable = fromSignal(made.clearable)
   return (
     <Show when={clearable() || local.keepMounted}>
-      <Part part={made.clear} tag="button" {...rest} />
+      <Part of={made.clear} tag="button" {...rest} />
     </Show>
   )
 }
 
 const ChipContext = createContext<unknown>()
 
+export type ChipProps = PartComponentProps<"span", StateOf<Parts["chip"]>, { value: unknown }>
+
 /** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
-function Chip(props: PartComponentProps & { value: unknown }): JSX.Element {
+function Chip(props: ChipProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value"])
   // A chip is its value for as long as it is in the page.
   const value = untrack(() => local.value)
   return (
     <ChipContext.Provider value={value}>
-      <Part part={useCombobox().chip(value)} tag="span" {...rest} />
+      <Part of={useCombobox().chip(value)} tag="span" {...rest} />
     </ChipContext.Provider>
   )
 }
 
-const ChipRemove = (props: PartComponentProps) => (
-  <Part part={useCombobox().chipRemove(useContext(ChipContext))} tag="button" {...props} />
+export type ChipRemoveProps = PartComponentProps<"button", StateOf<Parts["chipRemove"]>>
+
+const ChipRemove = (props: ChipRemoveProps) => (
+  <Part of={useCombobox().chipRemove(useContext(ChipContext))} tag="button" {...props} />
 )
 
+export type EmptyProps = PartComponentProps<"div", StateOf<Parts["empty"]>>
+
 /** Drawn while no item is shown for what was typed. */
-function Empty(props: PartComponentProps): JSX.Element {
+function Empty(props: EmptyProps): JSX.Element {
   const made = useCombobox()
   const empty = fromSignal(made.empty)
   return (
     <Show when={empty()}>
-      <Part part={made.emptyPart} tag="div" {...props} />
+      <Part of={made.emptyPart} tag="div" {...props} />
     </Show>
   )
 }
 
 const GroupContext = createContext<ComboboxGroup>()
 
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
 /** Items that belong together, named by their `GroupLabel`. Hidden while none is shown. */
-function Group(props: PartComponentProps & { id?: string }): JSX.Element {
+function Group(props: GroupProps): JSX.Element {
   const [local, rest] = splitProps(props, ["id"])
   const generated = createUniqueId()
   const group = useCombobox().group(untrack(() => local.id) ?? generated)
   return (
     <GroupContext.Provider value={group}>
-      <Part part={group.root} tag="div" {...rest} />
+      <Part of={group.root} tag="div" {...rest} />
     </GroupContext.Provider>
   )
 }
 
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
 /** Names the group it is in. With no group around it, it is plain text. */
-const GroupLabel = (props: PartComponentProps) => (
-  <Part part={useContext(GroupContext)?.label ?? useCombobox().groupLabel} tag="div" {...props} />
+const GroupLabel = (props: GroupLabelProps) => (
+  <Part of={useContext(GroupContext)?.label ?? useCombobox().groupLabel} tag="div" {...props} />
 )
 
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type ChipsProps = PartComponentProps<"div", StateOf<Parts["chips"]>>
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
 const part =
-  (name: "input" | "trigger" | "popup" | "chips" | "separator", tag: string) =>
-  (props: PartComponentProps) => <Part part={useCombobox()[name]} tag={tag} {...props} />
+  <Props extends Record<string, unknown>>(
+    name: "input" | "trigger" | "popup" | "list" | "chips" | "separator",
+    tag: string
+  ) =>
+  (props: Props): JSX.Element => <Part of={useCombobox()[name]} tag={tag} {...props} />
 
 export type AutocompleteRootProps = Omit<AutocompleteProps, "id"> & {
   id?: string
@@ -225,6 +256,7 @@ function AutocompleteRoot(props: AutocompleteRootProps): JSX.Element {
     name: props.name,
     form: props.form,
     virtualized: props.virtualized,
+    autoHighlight: props.autoHighlight,
     onValueChange: (value: string, details: ChangeDetails) => props.onValueChange?.(value, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
@@ -233,20 +265,25 @@ function AutocompleteRoot(props: AutocompleteRootProps): JSX.Element {
 
 export const Combobox = {
   Root,
-  Input: part("input", "input"),
-  Trigger: part("trigger", "button"),
+  Input: part<InputProps>("input", "input"),
+  Trigger: part<TriggerProps>("trigger", "button"),
   Clear,
   /** With `multiple`: what holds the chips and the input. */
-  Chips: part("chips", "div"),
+  Chips: part<ChipsProps>("chips", "div"),
   Chip,
   ChipRemove,
   Portal,
   Positioner,
-  Popup: part("popup", "div"),
+  Popup: part<PopupProps>("popup", "div"),
+  /**
+   * The items' own box inside the popup, when the popup holds more than items (an input): it
+   * is then the listbox.
+   */
+  List: part<ListProps>("list", "div"),
   Group,
   GroupLabel,
   /** A line between groups. */
-  Separator: part("separator", "div"),
+  Separator: part<SeparatorProps>("separator", "div"),
   Item,
   ItemIndicator,
   Empty,
@@ -260,6 +297,7 @@ export const Autocomplete = {
   Portal: Combobox.Portal,
   Positioner: Combobox.Positioner,
   Popup: Combobox.Popup,
+  List: Combobox.List,
   Group: Combobox.Group,
   GroupLabel: Combobox.GroupLabel,
   Separator: Combobox.Separator,

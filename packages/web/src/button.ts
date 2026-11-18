@@ -1,6 +1,8 @@
 import { createButton } from "@kirana-ui/core/button"
+import type { ButtonProps } from "@kirana-ui/core/button"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-button>` around a `kui-part="root"` button, or with `native-button="false"` another
@@ -13,3 +15,9 @@ export const tag = defineElement({
   changes: {},
   parts: { root: (controller) => controller.root },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-button": ElementOf<As<typeof tag, ButtonProps>>
+  }
+}

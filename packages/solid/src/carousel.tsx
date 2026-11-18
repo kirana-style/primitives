@@ -1,13 +1,16 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation } from "@kirana-ui/core"
+import type { ChangeDetails, Orientation, StateOf } from "@kirana-ui/core"
 import { createCarousel } from "@kirana-ui/core/carousel"
 import type { Carousel as Controller } from "@kirana-ui/core/carousel"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { DirectionContext } from "./direction-context.ts"
 import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["carousel"]
 
 const Context = createContext<Controller>()
 
@@ -17,8 +20,10 @@ function useCarousel(): Controller {
   return made
 }
 
-function Root(
-  props: PartComponentProps & {
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  {
     index?: number
     defaultIndex?: number
     onIndexChange?: (index: number, details: ChangeDetails) => void
@@ -26,7 +31,9 @@ function Root(
     loop?: boolean
     id?: string
   }
-): JSX.Element {
+>
+
+function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, [
     "index",
     "defaultIndex",
@@ -47,32 +54,38 @@ function Root(
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-const Viewport = (props: PartComponentProps) => (
-  <Part part={useCarousel().viewport} tag="div" {...props} />
-)
-function Item(props: PartComponentProps & { index: number }): JSX.Element {
+export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
+export type ItemProps = PartComponentProps<"div", StateOf<Parts["item"]>, { index: number }>
+export type PreviousProps = PartComponentProps<"button", StateOf<Parts["previous"]>>
+export type NextProps = PartComponentProps<"button", StateOf<Parts["next"]>>
+export type IndicatorProps = PartComponentProps<
+  "button",
+  StateOf<Parts["indicator"]>,
+  { index: number }
+>
+
+const Viewport = (props: ViewportProps) => <Part of={useCarousel().viewport} tag="div" {...props} />
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["index"])
   // A slide is its place for as long as it is in the page.
   const part = useCarousel().item(local.index)
-  return <Part part={part} tag="div" {...rest} />
+  return <Part of={part} tag="div" {...rest} />
 }
-const Previous = (props: PartComponentProps) => (
-  <Part part={useCarousel().previous} tag="button" {...props} />
+const Previous = (props: PreviousProps) => (
+  <Part of={useCarousel().previous} tag="button" {...props} />
 )
-const Next = (props: PartComponentProps) => (
-  <Part part={useCarousel().next} tag="button" {...props} />
-)
+const Next = (props: NextProps) => <Part of={useCarousel().next} tag="button" {...props} />
 
-function Indicator(props: PartComponentProps & { index: number }): JSX.Element {
+function Indicator(props: IndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["index"])
   // A button is its slide for as long as it is in the page.
   const part = useCarousel().indicator(local.index)
-  return <Part part={part} tag="button" {...rest} />
+  return <Part of={part} tag="button" {...rest} />
 }
 
 export const Carousel = { Root, Viewport, Item, Previous, Next, Indicator }

@@ -8,9 +8,9 @@ import type { Listbox, ListboxGroup } from "@kirana-ui/core/listbox"
 import { KuiIds, hostPart, inputsSignal, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiListbox]", exportAs: "kuiListbox" })
-export class KuiListbox implements OnInit {
-  readonly value = model<readonly unknown[] | undefined>(undefined)
-  readonly defaultValue = input<readonly unknown[]>()
+export class KuiListbox<Value = unknown> implements OnInit {
+  readonly value = model<readonly Value[] | undefined>(undefined)
+  readonly defaultValue = input<readonly Value[]>()
   readonly multiple = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
@@ -21,9 +21,9 @@ export class KuiListbox implements OnInit {
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
   readonly kuiId = input<string>()
-  readonly valueChanged = output<{ value: unknown[]; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value[]; details: ChangeDetails }>()
 
-  controller!: Listbox
+  controller!: Listbox<Value>
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(() => ({
@@ -36,7 +36,7 @@ export class KuiListbox implements OnInit {
     name: this.name(),
     form: this.form(),
     virtualized: this.virtualized(),
-    onValueChange: (value: unknown[], details: ChangeDetails) => {
+    onValueChange: (value: Value[], details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)

@@ -17,7 +17,7 @@ import { createDateField } from "@kirana-ui/core/date-field"
 import type { DateField, DateFieldProps, DateFieldSegment } from "@kirana-ui/core/date-field"
 
 import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal, mounted, onServer } from "./runtime"
+import { KuiIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
 
 @Directive({ selector: "[kuiDateField]", exportAs: "kuiDateField" })
 export class KuiDateField implements OnInit {
@@ -94,7 +94,19 @@ export class KuiDateFieldSegments implements OnInit {
       })
     }
     if (this.server) return draw(this.root.controller.segments.peek())
-    this.destroy.onDestroy(effect(() => draw(this.root.controller.segments.get())))
+    this.destroy.onDestroy(
+      effect(() => {
+        const segments = this.root.controller.segments.get()
+        drawing(() => draw(segments))
+      })
+    )
+  }
+
+  static ngTemplateContextGuard(
+    _directive: KuiDateFieldSegments,
+    _context: unknown
+  ): _context is { $implicit: DateFieldSegment } {
+    return true
   }
 }
 

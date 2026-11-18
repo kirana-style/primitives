@@ -1,11 +1,10 @@
-<script lang="ts">
-  import type { MenuRadioGroupProps } from "@kirana-ui/core/menu"
+<script lang="ts" generics="Value">
   import type { ChangeDetails } from "@kirana-ui/core"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provideRadioGroup, useMenu } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RadioGroupProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -13,15 +12,15 @@
     onValueChange,
     disabled,
     ...rest
-  }: MenuRadioGroupProps & PartAttributes = $props()
+  }: RadioGroupProps<Value> = $props()
 
-  function change(next: unknown, by: ChangeDetails) {
+  function change(next: Value, by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
 
   const group = provideRadioGroup(
-    controller(useMenu().radioGroup<unknown>, () => ({
+    controller(useMenu().radioGroup<Value>, () => ({
       value,
       defaultValue,
       disabled,
@@ -30,4 +29,4 @@
   )
 </script>
 
-<Part part={group.root} tag="div" {...rest} />
+<Part of={group.root} tag="div" {...rest} />

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
-  import type { CarouselProps } from "@kirana-ui/core/carousel"
   import { within } from "@kirana-ui/core"
   import { createCarousel } from "@kirana-ui/core/carousel"
 
@@ -8,7 +7,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     index = $bindable(),
@@ -18,7 +17,7 @@
     loop,
     id,
     ...rest
-  }: RootProps<CarouselProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
   const made = provide(
     controller(within(createCarousel, { direction: useDirectionAround() }), () => ({
@@ -36,4 +35,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

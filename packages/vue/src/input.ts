@@ -5,6 +5,18 @@ import { defineComponent, h } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
 import { controller, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+export interface InputProps extends PartComponentProps {
+  /** The text: `v-model`. */
+  modelValue?: string | undefined
+  disabled?: boolean | undefined
+}
+
+export type InputEmits = {
+  "update:modelValue": (value: string) => void
+  valueChange: (value: string, details: ChangeDetails) => void
+}
 
 /**
  * An `<input>`; `as="textarea"` for a text area. It takes what an `<input>` takes, and
@@ -31,4 +43,4 @@ export const Input = defineComponent({
         slots
       )
   },
-})
+}) as unknown as PartComponent<"input", StatesOf<"input">["input"], InputProps, InputEmits>

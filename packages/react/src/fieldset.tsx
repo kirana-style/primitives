@@ -1,10 +1,14 @@
+import type { StateOf } from "@kirana-ui/core"
 import { createFieldset } from "@kirana-ui/core/fieldset"
 import type { Fieldset as Controller, FieldsetProps } from "@kirana-ui/core/fieldset"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
-import { useController, usePart } from "./runtime.tsx"
+import { parts, useController, usePart } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["fieldset"]
 
 /** The fieldset a field is in, if it is in one. */
 export const FieldsetContext = createContext<Controller | null>(null)
@@ -15,21 +19,23 @@ function useFieldset(part: string): Controller {
   return controller
 }
 
-function Root({
-  disabled,
-  id,
-  ...rest
-}: Omit<FieldsetProps, "id"> & { id?: string } & PartComponentProps): ReactElement {
+export type RootProps = PartComponentProps<
+  "fieldset",
+  StateOf<Parts["root"]>,
+  Omit<FieldsetProps, "id"> & { id?: string }
+>
+
+function Root({ disabled, id, ...rest }: RootProps): ReactElement {
   const controller = useController(createFieldset, { disabled, id })
   return (
     <FieldsetContext.Provider value={controller}>
-      <RootElement {...rest} />
+      {usePart(controller.root, "fieldset", rest)}
     </FieldsetContext.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) =>
-  usePart(useFieldset("Root").root, "fieldset", props)
-const Legend = (props: PartComponentProps) => usePart(useFieldset("Legend").legend, "div", props)
+export type LegendProps = PartComponentProps<"div", StateOf<Parts["legend"]>>
 
-export const Fieldset = { Root, Legend }
+const Legend = (props: LegendProps) => usePart(useFieldset("Legend").legend, "div", props)
+
+export const Fieldset = /* @__PURE__ */ parts("Fieldset", { Root, Legend })

@@ -51,7 +51,8 @@ import {
   Toolbar,
   Tooltip,
 } from "@kirana-ui/solid"
-import { For, createSignal } from "solid-js"
+import { For, Show, createSignal } from "solid-js"
+import type { Accessor } from "solid-js"
 
 // A picture of one pixel, and an address that is not a picture.
 // A page's toasts are made once, apart from any component: a long time, so a test reads them.
@@ -88,6 +89,9 @@ const LINES = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)
 const LOAD = ["load"]
 
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
+// Labels by value: what a select names its values with before its list has been opened.
+const SIZES = { s: "Small", m: "Medium", l: "Large" }
+const SIZE_KEYS = ["s", "m", "l"] as const
 
 /**
  * The page every adapter draws, element for element: the conformance run walks it and compares
@@ -96,11 +100,13 @@ const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 export function App() {
   const [controlled, setControlled] = createSignal(false)
   const [fruit, setFruit] = createSignal<string | null>("Banana")
+  const [basket, setBasket] = createSignal<string[]>(["Banana"])
   const [action, setAction] = createSignal("none")
   const [picked, setPicked] = createSignal("none")
   const [code, setCode] = createSignal("none")
   const [shares, setShares] = createSignal("25,75")
   const [slide, setSlide] = createSignal("0")
+  const [toastAction, setToastAction] = createSignal("")
   const [drawn, setDrawn] = createSignal("closed")
   const [born, setBorn] = createSignal("none")
   const [box, setBox] = createSignal<HTMLElement>()
@@ -124,6 +130,8 @@ export function App() {
   const [view, setView] = createSignal("list")
   const [presses, setPresses] = createSignal(0)
   const [locked, setLocked] = createSignal(false)
+  const [handed, setHanded] = createSignal(0)
+  const [asked, setAsked] = createSignal(0)
   const [alerts, setAlerts] = createSignal(false)
   const [count, setCount] = createSignal(0)
   const [done, setDone] = createSignal<number | null>(40)
@@ -133,6 +141,11 @@ export function App() {
   const [reading, setReading] = createSignal<"ltr" | "rtl">("rtl")
   const [rejected, setRejected] = createSignal<Record<string, string> | undefined>(undefined)
   const [span, setSpan] = createSignal<number[]>([20, 80])
+  const [low, setLow] = createSignal(true)
+  const [moved, setMoved] = createSignal(false)
+  const [sought, setSought] = createSignal<string | null>(null)
+  const [firstAnchor, setFirstAnchor] = createSignal<HTMLElement>()
+  const [secondAnchor, setSecondAnchor] = createSignal<HTMLElement>()
   return (
     <main>
       <section data-fixture="collapsible">
@@ -183,9 +196,9 @@ export function App() {
             class="mine"
             type="submit"
             aria-expanded="true"
-            onClick={(event: Event & { preventKiranaHandler?: () => void }) => {
+            onClick={(event) => {
               setPresses((value) => value + 1)
-              if (locked()) event.preventKiranaHandler?.()
+              if (locked()) event.preventKiranaHandler()
             }}
             render={(props) => (
               <button {...props()} data-testid="k1-trigger">
@@ -201,6 +214,46 @@ export function App() {
             <p>Composed content</p>
           </Collapsible.Panel>
         </Collapsible.Root>
+        <Collapsible.Root id="k2">
+          <Collapsible.Trigger
+            class="handed"
+            title="handed"
+            lang="en"
+            onClick={(event) => {
+              setHanded((value) => value + 1)
+              setAsked((value) => value + 1)
+              if (locked()) event.preventKiranaHandler()
+            }}
+            render={(props) => (
+              <button
+                {...props()}
+                class={`${String(props().class)} asked`}
+                title="asked"
+                data-testid="k2-trigger"
+              >
+                Layered {handed()}/{asked()}
+              </button>
+            )}
+          />
+          <Collapsible.Trigger
+            render={(props, state) => (
+              <button {...props()} data-testid="k2-state">
+                {state().panelOpen ? "Open" : "Closed"}
+              </button>
+            )}
+          />
+          <Collapsible.Panel class="panel" data-testid="k2-panel">
+            <p>Layered content</p>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+        <div class="item">
+          <a class="tag asked" title="handed" href="#k2" data-testid="k3-tag">
+            Tag
+          </a>
+          <span class="tag" data-testid="k3-plain">
+            Plain
+          </span>
+        </div>
       </section>
 
       <section data-fixture="controls">
@@ -521,6 +574,90 @@ export function App() {
         </form>
         <output data-testid="s1-output">{fruit() ?? "none"}</output>
       </section>
+      <section data-fixture="select-multiple">
+        <form class="bar" data-testid="sm1-form">
+          <Select.Root
+            id="sm1"
+            name="basket"
+            multiple
+            values={basket()}
+            onValuesChange={(next) => setBasket(next as string[])}
+          >
+            <Select.Trigger data-testid="sm1-trigger">
+              <Select.Value placeholder="Pick fruits" data-testid="sm1-value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner sideOffset={4} data-testid="sm1-positioner">
+                <Select.Popup class="popup" data-testid="sm1-popup">
+                  <For each={FRUITS}>
+                    {(each) => (
+                      <Select.Item
+                        value={each}
+                        disabled={each === "Blueberry"}
+                        class="item"
+                        data-testid={`sm1-${each}`}
+                      >
+                        <Select.ItemText>{each}</Select.ItemText>
+                        <Select.ItemIndicator>✓</Select.ItemIndicator>
+                      </Select.Item>
+                    )}
+                  </For>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <button type="reset" data-testid="sm1-reset">
+            Reset
+          </button>
+        </form>
+        <output data-testid="sm1-output">{basket().join(",") || "none"}</output>
+        <Select.Root id="sm2" items={SIZES} defaultValue="m">
+          <Select.Trigger data-testid="sm2-trigger">
+            <Select.Value data-testid="sm2-value">
+              {(value, label) => (
+                <>
+                  {label()} ({String(value())})
+                </>
+              )}
+            </Select.Value>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner sideOffset={4} data-testid="sm2-positioner">
+              <Select.Popup class="popup" data-testid="sm2-popup">
+                <For each={SIZE_KEYS}>
+                  {(each) => (
+                    <Select.Item value={each} class="item" data-testid={`sm2-${each}`}>
+                      <Select.ItemText>{SIZES[each]}</Select.ItemText>
+                    </Select.Item>
+                  )}
+                </For>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+        <Select.Root id="sm3" items={SIZES} multiple defaultValues={["l", "s"]}>
+          <Select.Trigger data-testid="sm3-trigger">
+            <Select.Value class="bar" data-testid="sm3-value">
+              {(_values: Accessor<readonly string[]>, labels) => (
+                <For each={labels()}>{(label) => <b>{label}</b>}</For>
+              )}
+            </Select.Value>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner sideOffset={4} data-testid="sm3-positioner">
+              <Select.Popup class="popup" data-testid="sm3-popup">
+                <For each={SIZE_KEYS}>
+                  {(each) => (
+                    <Select.Item value={each} class="item" data-testid={`sm3-${each}`}>
+                      <Select.ItemText>{SIZES[each]}</Select.ItemText>
+                    </Select.Item>
+                  )}
+                </For>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </section>
       <section data-fixture="menu">
         <Menu.Root id="mn1">
           <Menu.Trigger data-testid="mn1-trigger">File</Menu.Trigger>
@@ -755,6 +892,7 @@ export function App() {
           <Combobox.Root
             id="cb1"
             name="pick"
+            autoHighlight
             value={pick()}
             onValueChange={(next) => setPick(next as string | null)}
           >
@@ -919,7 +1057,7 @@ export function App() {
                 </NavigationMenu.Link>
               </NavigationMenu.Content>
             </NavigationMenu.Item>
-            <NavigationMenu.Item value="docs">
+            <NavigationMenu.Item>
               <NavigationMenu.Trigger class="nav-trigger" data-testid="nm1-docs">
                 <span>Docs</span>
                 <NavigationMenu.Icon>▾</NavigationMenu.Icon>
@@ -972,7 +1110,12 @@ export function App() {
             </For>
           </div>
         </Listbox.Root>
-        <Combobox.Root id="cp1" inline onValueChange={(next) => setRan(next as string)}>
+        <Combobox.Root
+          id="cp1"
+          inline
+          autoHighlight
+          onValueChange={(next) => setRan(next as string)}
+        >
           <Combobox.Input aria-label="Command" data-testid="cp1-input" />
           <Combobox.Popup class="palette" aria-label="Commands" data-testid="cp1-list">
             <For each={COMMANDS}>
@@ -993,7 +1136,7 @@ export function App() {
         <output data-testid="cp1-output">{ran()}</output>
         <Field.Root id="fcb" name="city" data-testid="fcb">
           <Field.Label data-testid="fcb-label">City</Field.Label>
-          <Combobox.Root id="fcbc" required>
+          <Combobox.Root id="fcbc" required autoHighlight>
             <Combobox.Input data-testid="fcb-input" />
             <Combobox.Clear aria-label="Clear" data-testid="fcb-clear">
               ×
@@ -1015,6 +1158,7 @@ export function App() {
         <form data-testid="cbm-form">
           <Combobox.Root
             id="cbm"
+            autoHighlight
             name="tags"
             multiple
             values={tags()}
@@ -1154,14 +1298,37 @@ export function App() {
         >
           Add a brief toast
         </button>
+        <button
+          type="button"
+          data-testid="ts1-undo"
+          onClick={() =>
+            toaster.add({
+              title: "Deleted",
+              action: { label: "Undo", onAction: () => setToastAction("undone") },
+            })
+          }
+        >
+          Add a toast with an action
+        </button>
+        <button
+          type="button"
+          data-testid="ts1-alert"
+          onClick={() =>
+            toaster.add({ title: "Connection lost", type: "error", priority: "assertive" })
+          }
+        >
+          Add an urgent toast
+        </button>
+        <output data-testid="ts1-output">{toastAction()}</output>
         <Toast.Viewport id="ts1" toaster={toaster} class="toasts" data-testid="ts1">
           <Toast.List>
             {(toast) => (
               <Toast.Root toast={toast()} class="toast" data-testid={`ts1-${toast().id}`}>
                 <Toast.Content class="toast-content" data-testid={`ts1-${toast().id}-content`}>
                   <Toast.Title class="toast-title">{toast().title}</Toast.Title>
-                  <Toast.Description>{toast().description}</Toast.Description>
+                  <Toast.Description />
                 </Toast.Content>
+                <Toast.Action data-testid={`ts1-${toast().id}-action`} />
                 <Toast.Close aria-label="Close" data-testid={`ts1-${toast().id}-close`}>
                   Close
                 </Toast.Close>
@@ -1378,6 +1545,20 @@ export function App() {
             </Slider.Track>
           </Slider.Control>
         </Slider.Root>
+        <Slider.Root id="sl5" defaultValue={[20, 50, 80]} data-testid="sl5">
+          <Slider.Control class="slider" data-testid="sl5-control">
+            <Slider.Track class="slider-track">
+              <Show when={low()}>
+                <Slider.Thumb class="thumb" aria-label="Low" data-testid="sl5-low" />
+              </Show>
+              <Slider.Thumb class="thumb" aria-label="Middle" data-testid="sl5-middle" />
+              <Slider.Thumb class="thumb" aria-label="High" data-testid="sl5-high" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
+        <button data-testid="sl5-toggle" onClick={() => setLow((now) => !now)}>
+          Low
+        </button>
       </section>
       <section data-fixture="measures">
         <Slider.Root id="sl4" defaultValue={0} thumbAlignment="edge" data-testid="sl4">
@@ -1779,6 +1960,86 @@ export function App() {
               </Popover.Portal>
             </Popover.Root>
           </DirectionProvider>
+        </div>
+      </section>
+
+      <section data-fixture="placing">
+        <div dir="rtl" data-testid="pl1-box">
+          <Popover.Root id="pl1">
+            <Popover.Trigger data-testid="pl1-trigger">Beside</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner side="inline-end" sideOffset={8} data-testid="pl1-positioner">
+                <Popover.Popup class="popup" data-testid="pl1-popup">
+                  <Popover.Title>Beside</Popover.Title>
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+        <div class="bar">
+          <Popover.Root id="pl2">
+            <Popover.Trigger data-testid="pl2-trigger">Anchored</Popover.Trigger>
+            <span ref={setFirstAnchor} id="pl2-first" class="anchor" data-testid="pl2-first">
+              First
+            </span>
+            <span ref={setSecondAnchor} id="pl2-second" class="anchor" data-testid="pl2-second">
+              Second
+            </span>
+            <Popover.Portal>
+              <Popover.Positioner
+                anchor={() => (moved() ? secondAnchor() : firstAnchor())}
+                align="start"
+                sideOffset={4}
+                data-testid="pl2-positioner"
+              >
+                <Popover.Popup class="popup" data-testid="pl2-popup">
+                  <Popover.Title>Anchored</Popover.Title>
+                  <button
+                    type="button"
+                    data-testid="pl2-move"
+                    onClick={() => setMoved((now) => !now)}
+                  >
+                    Move
+                  </button>
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+        <div class="bar">
+          <Combobox.Root
+            id="pl3"
+            value={sought()}
+            onValueChange={(next) => setSought(next as string | null)}
+          >
+            <Combobox.Trigger data-testid="pl3-trigger">Pick a fruit</Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner sideOffset={4} data-testid="pl3-positioner">
+                <Combobox.Popup class="popup" aria-label="Pick a fruit" data-testid="pl3-popup">
+                  <Combobox.Input
+                    class="search"
+                    aria-label="Search fruits"
+                    data-testid="pl3-input"
+                  />
+                  <Combobox.List aria-label="Fruits" data-testid="pl3-list">
+                    <For each={FRUITS}>
+                      {(each) => (
+                        <Combobox.Item
+                          value={each}
+                          id={`pl3-${each}`}
+                          class="item"
+                          data-testid={`pl3-${each}`}
+                        >
+                          {each}
+                        </Combobox.Item>
+                      )}
+                    </For>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+          <output data-testid="pl3-output">{sought() ?? "none"}</output>
         </div>
       </section>
     </main>

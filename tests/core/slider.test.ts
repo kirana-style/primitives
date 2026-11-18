@@ -69,6 +69,17 @@ describe("a slider whose thumbs stay inside", () => {
     expect(box(fill).width).toBe(190)
   })
 
+  it("keeps to the edge when its control changes length", async () => {
+    const { control, a, box } = slider({ defaultValue: 10, thumbAlignment: "edge" })
+    const share = () => Math.round(parseFloat(a.style.getPropertyValue("--position")) * 100) / 100
+    // Half a thumb in, and a tenth of the way the centre travels: 10 + 18 of 200.
+    expect(share()).toBe(14)
+    control.style.width = "100px"
+    // 10 + 8 of 100: the share is another one, and the thumb is still where its value is.
+    await expect.poll(share).toBe(18)
+    expect(box(a).left).toBeCloseTo(8, 3)
+  })
+
   it("is in the same place before it is measured", () => {
     const made = createSlider(signal<SliderProps>({ id: "s", value: 25, thumbAlignment: "edge" }))
     // What a server writes: the value's share, moved back by that share of the thumb itself.
@@ -104,5 +115,128 @@ describe("a slider whose thumbs stay inside", () => {
   it("stays inside when the track runs up", () => {
     const { a, box } = slider({ defaultValue: 0, thumbAlignment: "edge", orientation: "vertical" })
     expect(box(a).bottom).toBe(200)
+  })
+})
+
+/** A control 200 wide with a thumb for each name, each asked for by its name and no index. */
+function unnumbered(given: Partial<SliderProps>, names: string[]) {
+  style(`
+    .control { position: fixed; left: 0; top: 0; width: 200px; height: 20px; }
+    .thumb { width: 20px; height: 20px; }`)
+  const root = mount(`<div class="control"></div>`)
+  const heard: (number | number[])[] = []
+  const made = createSlider(
+    signal<SliderProps>({ id: "s", onValueChange: (value) => void heard.push(value), ...given })
+  )
+  const control = root.querySelector<HTMLElement>(".control")!
+  onTestFinished(bind(control, made.control))
+  const undo = new Map<string, () => void>()
+  /** Draws a thumb, before the thumb named `before` or last. */
+  const add = (name: string, before?: string) => {
+    const element = document.createElement("div")
+    element.className = "thumb"
+    element.id = name
+    control.insertBefore(element, before ? control.querySelector(`#${before}`) : null)
+    undo.set(name, bind(element, made.thumb(name)))
+    return element
+  }
+  const remove = (name: string) => {
+    undo.get(name)?.()
+    undo.delete(name)
+    control.querySelector(`#${name}`)?.remove()
+  }
+  for (const name of names) add(name)
+  onTestFinished(() => {
+    for (const stop of undo.values()) stop()
+  })
+  const said = () =>
+    [...control.querySelectorAll<HTMLElement>(".thumb")].map(
+      (each) => `${each.id}:${each.dataset.index}=${each.getAttribute("aria-valuenow")}`
+    )
+  return { made, control, add, remove, said, heard }
+}
+
+describe("a slider's thumbs that are given no index", () => {
+  it("take their places in the order they are asked for, before there is a page", () => {
+    // What a server writes. Every thumb was the first value's: two thumbs of a range were
+    // drawn on top of each other.
+    const made = createSlider(signal<SliderProps>({ id: "s", defaultValue: [25, 50, 75] }))
+    const places = ["a", "b", "c"].map((name) => made.thumb(name).props.peek())
+    expect(places.map((each) => each["data-index"])).toEqual(["0", "1", "2"])
+    expect(
+      places.map((each) => (each.style as Record<string, string>)["inset-inline-start"])
+    ).toEqual(["25%", "50%", "75%"])
+    expect(["a", "b", "c"].map((name) => made.thumbInput(name).props.peek().value)).toEqual([
+      "25",
+      "50",
+      "75",
+    ])
+    // Asked for again (a second render of the same thumb), it is the same thumb in the same
+    // place: nothing is counted twice.
+    expect(made.thumb("a")).toBe(made.thumb("a"))
+    expect(made.thumb("b").props.peek()["data-index"]).toBe("1")
+    expect(made.thumb("c").props.peek()["data-index"]).toBe("2")
+  })
+
+  it("take the page's order once they are in it", () => {
+    const made = createSlider(signal<SliderProps>({ id: "s", defaultValue: [25, 50] }))
+    // Asked for in another order than they are written in (a render that was thrown away).
+    const second = made.thumb("second")
+    const first = made.thumb("first")
+    expect(second.props.peek()["data-index"]).toBe("0")
+    const root = mount(`<div><div id="first"></div><div id="second"></div></div>`)
+    onTestFinished(bind(root.querySelector<HTMLElement>("#second")!, second))
+    onTestFinished(bind(root.querySelector<HTMLElement>("#first")!, first))
+    expect(root.querySelector("#first")!.getAttribute("aria-valuenow")).toBe("25")
+    expect(root.querySelector("#second")!.getAttribute("aria-valuenow")).toBe("50")
+  })
+
+  it("move up when a thumb before them leaves, and make room for one that is added", () => {
+    const { add, remove, said } = unnumbered({ defaultValue: [10, 20, 70] }, ["a", "b", "c"])
+    expect(said()).toEqual(["a:0=10", "b:1=20", "c:2=70"])
+    remove("a")
+    expect(said()).toEqual(["b:0=10", "c:1=20"])
+    add("d", "c")
+    expect(said()).toEqual(["b:0=10", "d:1=20", "c:2=70"])
+    add("e", "b")
+    remove("d")
+    expect(said()).toEqual(["e:0=10", "b:1=20", "c:2=70"])
+  })
+
+  it("are each moved by their own keys and their own pointer", () => {
+    const { control, said, heard } = unnumbered({ defaultValue: [20, 80] }, ["a", "b"])
+    const b = control.querySelector<HTMLElement>("#b")!
+    b.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }))
+    expect(heard).toEqual([[20, 79]])
+    // A press on the second thumb takes hold of the second thumb.
+    const box = b.getBoundingClientRect()
+    b.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        clientX: box.left + box.width / 2,
+        clientY: 10,
+        button: 0,
+        bubbles: true,
+      })
+    )
+    expect(document.activeElement).toBe(b)
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 120, clientY: 10 }))
+    document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }))
+    expect(said()).toEqual(["a:0=20", "b:1=60"])
+  })
+
+  it("leave a thumb that was given an index where it was put", () => {
+    const made = createSlider(signal<SliderProps>({ id: "s", defaultValue: [25, 50] }))
+    const root = mount(`<div><div id="first"></div><div id="second"></div></div>`)
+    onTestFinished(bind(root.querySelector<HTMLElement>("#first")!, made.thumb("one")))
+    onTestFinished(bind(root.querySelector<HTMLElement>("#second")!, made.thumb(0)))
+    // The second thumb is the first value's because it says so; the first has no say in it.
+    expect(root.querySelector("#second")!.getAttribute("aria-valuenow")).toBe("25")
+    expect(root.querySelector("#first")!.getAttribute("data-index")).toBe("0")
+  })
+
+  it("are all the one value's where the slider holds one value", () => {
+    // As Base UI draws it: a second thumb has no value of its own to be.
+    const { said } = unnumbered({ defaultValue: 30 }, ["a", "b"])
+    expect(said()).toEqual(["a:0=30", "b:0=30"])
   })
 })

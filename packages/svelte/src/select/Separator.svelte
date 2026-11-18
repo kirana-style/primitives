@@ -1,11 +1,11 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useSelect } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { SeparatorProps } from "./types.ts"
 
   // A line between groups.
-  let props: PartAttributes = $props()
+  let props: SeparatorProps = $props()
   const controller = useSelect()
 </script>
 
-<Part part={controller.separator} tag="div" {...props} />
+<Part of={controller.separator} tag="div" {...props} />

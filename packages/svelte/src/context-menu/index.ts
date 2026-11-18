@@ -19,3 +19,4 @@ export {
 } from "../menu/index.ts"
 export { default as Root } from "./Root.svelte"
 export { default as Trigger } from "./Trigger.svelte"
+export type * from "./types.ts"

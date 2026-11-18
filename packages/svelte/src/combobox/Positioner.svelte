@@ -1,17 +1,10 @@
 <script lang="ts">
-  import type { PositionOptions } from "@kirana-ui/core"
-  import { defined } from "@kirana-ui/core"
-
-  import Part from "../Part.svelte"
+  import Placed from "../Positioner.svelte"
   import { useCombobox } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { PositionerProps } from "./types.ts"
 
-  let { side, align, sideOffset, alignOffset, collisionPadding, ...rest }: Partial<PositionOptions> & PartAttributes = $props()
+  let props: PositionerProps = $props()
   const controller = useCombobox()
-  // Before the element attaches: the first placement reads these.
-  $effect.pre(() => {
-    controller.positioning.set(defined({ side, align, sideOffset, alignOffset, collisionPadding }))
-  })
 </script>
 
-<Part part={controller.positioner} tag="div" {...rest} />
+<Placed placed={controller} {...props} />

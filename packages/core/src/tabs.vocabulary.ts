@@ -21,10 +21,13 @@ export const tabsVocabulary = defineComponent({
     states: { orientation: ORIENTATION, activationDirection: DIRECTION },
   },
   list: {
+    inside: "root",
     description: "The row of tabs. The arrows move between them.",
     states: { orientation: ORIENTATION, activationDirection: DIRECTION },
   },
   tab: {
+    inside: "list",
+    repeated: true,
     description: "A button that shows its panel.",
     states: {
       active: state("data-active", "Present on the tab whose panel is shown."),
@@ -33,6 +36,7 @@ export const tabsVocabulary = defineComponent({
     },
   },
   indicator: {
+    inside: "list",
     description: "A mark for the active tab: it carries that tab's position and size.",
     states: { orientation: ORIENTATION, activationDirection: DIRECTION },
     variables: {
@@ -45,6 +49,8 @@ export const tabsVocabulary = defineComponent({
     },
   },
   panel: {
+    inside: "root",
+    repeated: true,
     description: "A tab's content. In the page while its tab is active, and through its exit.",
     states: {
       hidden: state("data-hidden", "Present while its tab is not the active one."),

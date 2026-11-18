@@ -1,6 +1,8 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createToggleGroup } from "@kirana-ui/core/toggle-group"
+import type { ToggleGroupProps as CoreProps } from "@kirana-ui/core/toggle-group"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -9,18 +11,15 @@ import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 import { ToggleGroupContext, ToolbarContext } from "./toolbar-context.ts"
 
-export type ToggleGroupProps = PartComponentProps & {
-  value?: readonly unknown[]
-  defaultValue?: readonly unknown[]
-  onValueChange?: (value: unknown[], details: ChangeDetails) => void
-  multiple?: boolean
-  disabled?: boolean
-  orientation?: Orientation
-  loop?: boolean
-}
+/** `Value` is what a toggle's `value` is: the group's `value` holds the pressed ones. */
+export type ToggleGroupProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Vocabulary["toggleGroup"]["root"]>,
+  CoreProps<Value>
+>
 
 /** Toggles that are one control. Each `<Toggle value>` inside it is one of its toggles. */
-export function ToggleGroup(props: ToggleGroupProps): JSX.Element {
+export function ToggleGroup<Value = unknown>(props: ToggleGroupProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -32,19 +31,19 @@ export function ToggleGroup(props: ToggleGroupProps): JSX.Element {
   ])
   const direction = useContext(DirectionContext)
   const toolbar = useContext(ToolbarContext) ?? undefined
-  const made = controller(within(createToggleGroup, { direction, toolbar }), () => ({
+  const made = controller(within(createToggleGroup<Value>, { direction, toolbar }), () => ({
     value: local.value,
     defaultValue: local.defaultValue,
     multiple: local.multiple,
     disabled: local.disabled,
     orientation: local.orientation,
     loop: local.loop,
-    onValueChange: (value: unknown[], details: ChangeDetails) =>
+    onValueChange: (value: Value[], details: ChangeDetails) =>
       local.onValueChange?.(value, details),
   }))
   return (
     <ToggleGroupContext.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </ToggleGroupContext.Provider>
   )
 }

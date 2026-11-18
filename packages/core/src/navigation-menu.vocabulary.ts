@@ -21,17 +21,25 @@ const POPUP_OPEN = state("data-popup-open", "Present while the item's content is
 // not carry these descriptions.
 export const navigationMenuVocabulary = defineComponent({
   root: { description: "The navigation.", states: { orientation: ORIENTATION } },
-  list: { description: "The row of items.", states: { orientation: ORIENTATION } },
-  item: { description: "One item of the list: a link, or a trigger with its content." },
+  list: { inside: "root", description: "The row of items.", states: { orientation: ORIENTATION } },
+  item: {
+    inside: "list",
+    repeated: true,
+    description:
+      "One item of the list: a link, or a trigger with its content. Its `value` tells it from the others; an item that is given none makes its own.",
+  },
   trigger: {
+    inside: "item",
     description: "The button that shows an item's content.",
     states: { popupOpen: POPUP_OPEN },
   },
   icon: {
+    inside: "trigger",
     description: "A mark on a trigger that shows whether its content is open.",
     states: { popupOpen: POPUP_OPEN },
   },
   content: {
+    inside: "item",
     description: "What an item shows. It is drawn in the viewport every item shares.",
     states: {
       ...TRANSITION,
@@ -44,10 +52,18 @@ export const navigationMenuVocabulary = defineComponent({
     exclusive: EITHER_FRAME,
   },
   link: {
+    inside: ["content", "item", "list"],
+    repeated: true,
     description: "A link, in the list or in an item's content.",
     states: { active: state("data-active", "Present on the link of the page the reader is on.") },
   },
+  portal: {
+    description:
+      "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+    inside: "root",
+  },
   positioner: {
+    inside: "portal",
     description: "Places the popup against the open item's trigger. It carries the geometry.",
     states: { ...OPEN, ...PLACEMENT },
     exclusive: EITHER_OPEN,
@@ -58,6 +74,7 @@ export const navigationMenuVocabulary = defineComponent({
     },
   },
   popup: {
+    inside: "positioner",
     description: "The panel every item's content is shown in.",
     states: { ...TRANSITION, ...PLACEMENT },
     exclusive: EITHER_FRAME,
@@ -66,8 +83,9 @@ export const navigationMenuVocabulary = defineComponent({
       "--popup-height": "The open content's height.",
     },
   },
-  viewport: { description: "Where the contents are drawn, inside the popup." },
+  viewport: { inside: "popup", description: "Where the contents are drawn, inside the popup." },
   arrow: {
+    inside: "popup",
     description: "An element that points at the open item's trigger.",
     states: {
       ...PLACEMENT,
@@ -78,6 +96,7 @@ export const navigationMenuVocabulary = defineComponent({
     },
   },
   backdrop: {
+    inside: "portal",
     description: "An element behind the popup, for a design that dims the page.",
     states: TRANSITION,
     exclusive: EITHER_FRAME,

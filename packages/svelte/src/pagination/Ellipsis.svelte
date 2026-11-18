@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { usePagination } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { EllipsisProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: EllipsisProps = $props()
   const controller = usePagination()
 </script>
 
-<Part part={controller.ellipsis} tag="span" {...props} />
+<Part of={controller.ellipsis} tag="span" {...props} />

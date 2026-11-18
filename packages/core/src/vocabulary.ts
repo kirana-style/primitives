@@ -66,6 +66,7 @@ export const vocabulary = {
     trigger: {
       description:
         "The area a secondary press, or a long press on a touch screen, opens the menu in.",
+      inside: "root",
       states: { popupOpen: state("data-popup-open", "Present when the menu is open.") },
     },
   },

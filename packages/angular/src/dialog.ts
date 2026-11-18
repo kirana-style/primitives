@@ -2,6 +2,7 @@ import {
   Directive,
   HostAttributeToken,
   booleanAttribute,
+  forwardRef,
   inject,
   input,
   model,
@@ -9,6 +10,7 @@ import {
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
+import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
@@ -16,17 +18,18 @@ import type { Dialog } from "@kirana-ui/core/dialog"
 
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-/** On any element, or on `<ng-container>` to draw none. */
 /**
- * `kuiAlertDialog` in place of `kuiDialog` is a dialog that asks for an answer: a press outside
- * it does not close it. `kuiDrawer` is a dialog that comes from an edge and is dragged back to
- * it (`swipeDirection`). Either way its parts are a dialog's (`kuiDialogPopup` …).
+ * On any element, or on `<ng-container>` to draw none. `kuiDrawer` in place of `kuiDialog` is a
+ * dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a
+ * dialog's (`kuiDialogPopup` …). An alert dialog has a root of its own, `kuiAlertDialog`.
  */
-@Directive({ selector: "[kuiDialog],[kuiAlertDialog],[kuiDrawer]", exportAs: "kuiDialog" })
+@Directive({ selector: "[kuiDialog],[kuiDrawer]", exportAs: "kuiDialog" })
 export class KuiDialog implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
+  /** Blocks the page behind it and traps focus. Default `true`. */
   readonly modal = input(true, { transform: booleanAttribute })
+  /** Whether a press outside closes it. Default `true`. */
   readonly dismissible = input(true, { transform: booleanAttribute })
   /** With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`. */
   readonly swipeDirection = input<DrawerSide>()
@@ -34,14 +37,17 @@ export class KuiDialog implements OnInit {
   readonly snapPoints = input<readonly DrawerSnapPoint[]>()
   /** With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`. */
   readonly snapPoint = model<DrawerSnapPoint | undefined>(undefined)
+  /** With `kuiDrawer`: where it opens. Default: the smallest. */
   readonly defaultSnapPoint = input<DrawerSnapPoint>()
+  /**
+   * With `kuiDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps
+   * it where it was.
+   */
   readonly snapPointChanged = output<{ snapPoint: DrawerSnapPoint; details: ChangeDetails }>()
   readonly kuiId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Dialog
-  private readonly alert =
-    inject(new HostAttributeToken("kuiAlertDialog"), { optional: true }) !== null
   private readonly drawer = inject(new HostAttributeToken("kuiDrawer"), { optional: true }) !== null
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
@@ -73,9 +79,46 @@ export class KuiDialog implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = this.drawer
-      ? createDrawer(this.props())
-      : createDialog(this.props(), { alert: this.alert })
+    this.controller = this.drawer ? createDrawer(this.props()) : createDialog(this.props())
+    this.mount(this.controller)
+  }
+}
+
+/**
+ * `kuiAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer.
+ * It is always modal and a press outside it never closes it, so it takes neither `[modal]`
+ * nor `[dismissible]`. Its parts are a dialog's (`kuiDialogTrigger`, `kuiDialogPopup` …), which
+ * find it as their root.
+ */
+@Directive({
+  selector: "[kuiAlertDialog]",
+  exportAs: "kuiDialog",
+  providers: [{ provide: KuiDialog, useExisting: forwardRef(() => KuiAlertDialog) }],
+})
+export class KuiAlertDialog implements OnInit {
+  readonly open = model<boolean | undefined>(undefined)
+  readonly defaultOpen = input(false, { transform: booleanAttribute })
+  readonly kuiId = input<string>()
+  readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
+
+  controller!: Dialog
+  private readonly generated = inject(KuiIds).make()
+  private readonly props = inputsSignal(() => ({
+    id: this.kuiId() ?? this.generated,
+    open: this.open(),
+    defaultOpen: this.defaultOpen(),
+    onOpenChange: (open: boolean, details: ChangeDetails) => {
+      this.openChanged.emit({ open, details })
+      if (!details.canceled) {
+        this.open.set(open)
+        this.props.sync()
+      }
+    },
+  }))
+  private readonly mount = mounted()
+
+  ngOnInit(): void {
+    this.controller = createAlertDialog(this.props())
     this.mount(this.controller)
   }
 }

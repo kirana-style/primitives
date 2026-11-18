@@ -20,13 +20,18 @@ export interface ScrollAreaScrollbar {
 
 export interface ScrollArea {
   mount(): () => void
+  /** The area: what its scrollbars and its corner are placed against. */
   readonly root: Part
   /** The element that scrolls. Its own scrollbars are hidden; it still scrolls as any does. */
   readonly viewport: Part
   /** What is scrolled: watched, so content that lays out late is measured again. */
   readonly content: Part
+  /**
+   * A scrollbar and its thumb. The scrollbar is placed along its edge of the area, short of
+   * the corner; the thumb is given its length, and moved as the viewport scrolls.
+   */
   scrollbar(orientation: Orientation): ScrollAreaScrollbar
-  /** The square where the two scrollbars meet, in the page while both are. */
+  /** The square where the two scrollbars meet, placed there, in the page while both are. */
   readonly corner: { readonly shown: ReadonlySignal<boolean>; readonly part: Part }
 }
 
@@ -34,18 +39,44 @@ export interface ScrollArea {
 export const SCROLLING_FOR = 500
 /** The shortest a thumb is drawn, in pixels: a long page's would be too small to take. */
 const THUMB_MIN = 16
-const NOTHING = () => {}
 
 interface Bar {
   readonly vertical: boolean
   element: HTMLElement | undefined
   thumb: HTMLElement | undefined
+  /** As last measured: how far the thumb can go, how far it has gone, how far there is to scroll. */
+  travel: number
+  offset: number
+  range: number
+}
+
+/**
+ * The room an element keeps along a scrollbar's way: the scrollbar's padding, which its thumb
+ * stays inside, or the thumb's own margin.
+ */
+function room(element: HTMLElement | undefined, name: "padding" | "margin", vertical: boolean) {
+  if (!element) return 0
+  const style = getComputedStyle(element)
+  const key = `${name}${vertical ? "Block" : "Inline"}` as "paddingBlock"
+  const start = parseFloat(style[`${key}Start`]) || 0
+  // A margin across is read from its start alone: an engine misreports its end in a
+  // right-to-left row, and the two are the same in every design that centres a thumb.
+  if (!vertical && name === "margin") return start * 2
+  return start + (parseFloat(style[`${key}End`]) || 0)
 }
 
 /**
  * A scrolling area with scrollbars the design draws. The viewport scrolls natively (wheel,
  * touch, keys, find-in-page all work as in any scroller); the thumbs follow it and can be
  * dragged, and a press on a track jumps there.
+ *
+ * The library places the parts, as Base UI does, in each part's `style`, which a server
+ * writes too: the root is what the others are placed against (`position: relative`), each
+ * scrollbar lies along its edge of it (the end of a line, the bottom) and stops short of the
+ * corner, the corner sits where they meet, and a thumb is as long as its scrollbar's
+ * `--scroll-area-thumb-height` or `-width` says. A design gives a scrollbar its thickness
+ * (and any padding, which the thumb stays inside), lays the thumb out inside it, and draws
+ * them; it places nothing.
  */
 export function createScrollArea(
   _props: ReadonlySignal<ScrollAreaProps>,
@@ -56,54 +87,91 @@ export function createScrollArea(
   const hovering = signal(false)
   const scrollingX = signal(false)
   const scrollingY = signal(false)
+  // What is measured and written in a part's `style`, where a server writes its nothing.
+  const measured = signal(false)
+  const cornerWidth = signal(0)
+  const cornerHeight = signal(0)
+  const thumbWidth = signal(0)
+  const thumbHeight = signal(0)
   const bars: Record<Orientation, Bar> = {
-    horizontal: { vertical: false, element: undefined, thumb: undefined },
-    vertical: { vertical: true, element: undefined, thumb: undefined },
+    horizontal: {
+      vertical: false,
+      element: undefined,
+      thumb: undefined,
+      travel: 0,
+      offset: 0,
+      range: 0,
+    },
+    vertical: {
+      vertical: true,
+      element: undefined,
+      thumb: undefined,
+      travel: 0,
+      offset: 0,
+      range: 0,
+    },
   }
   let root: HTMLElement | undefined
   let viewport: HTMLElement | undefined
+  let corner: HTMLElement | undefined
   let observer: ResizeObserver | undefined
   let last = { left: 0, top: 0 }
   let settle: ReturnType<typeof setTimeout> | undefined
 
   const rtl = () => (viewport ? directionOf(viewport, around.direction) === "rtl" : false)
 
-  /** A bar's numbers: how long its track and thumb are, and how far the thumb can travel. */
-  function sizes(bar: Bar) {
-    if (!viewport || !bar.element) return undefined
-    const seen = bar.vertical ? viewport.clientHeight : viewport.clientWidth
-    const whole = bar.vertical ? viewport.scrollHeight : viewport.scrollWidth
-    const track = bar.vertical ? bar.element.clientHeight : bar.element.clientWidth
-    const thumb = Math.min(track, Math.max(THUMB_MIN, (track * seen) / Math.max(whole, 1)))
-    return { track, thumb, travel: track - thumb, range: whole - seen }
-  }
-
-  /** Reads the viewport and writes what follows from it: overflow, and each thumb's place. */
+  /** Reads the viewport and writes what follows from it: overflow, and each thumb's size and place. */
   function measure() {
     if (!viewport) return
+    const view = viewport
     batch(() => {
       // A pixel of slack: a fractional size is rounded both ways.
-      overflowX.set(viewport!.scrollWidth - viewport!.clientWidth > 1)
-      overflowY.set(viewport!.scrollHeight - viewport!.clientHeight > 1)
+      overflowX.set(view.scrollWidth - view.clientWidth > 1)
+      overflowY.set(view.scrollHeight - view.clientHeight > 1)
+      measured.set(true)
+    })
+    // Not laid out (inside something hidden): there is nothing to size by.
+    if (view.scrollWidth === 0 || view.scrollHeight === 0) return
+    // The corner is as wide as the scrollbar down the side and as tall as the one along the
+    // bottom, while both are in the page.
+    const both = overflowX.peek() && overflowY.peek()
+    const across = both ? (bars.vertical.element?.offsetWidth ?? 0) : 0
+    const along = both ? (bars.horizontal.element?.offsetHeight ?? 0) : 0
+    batch(() => {
+      cornerWidth.set(corner ? across : 0)
+      cornerHeight.set(corner ? along : 0)
     })
     for (const bar of Object.values(bars)) {
-      const size = sizes(bar)
-      if (!size || !bar.thumb) continue
-      const at = bar.vertical ? viewport.scrollTop : Math.abs(viewport.scrollLeft)
-      const offset = size.range > 0 ? (at / size.range) * size.travel : 0
-      const name = bar.vertical ? "height" : "width"
-      setGeometry(bar.thumb, `--scroll-area-thumb-${name}`, `${size.thumb}px`)
-      setGeometry(bar.thumb, name, `${size.thumb}px`)
+      const { vertical } = bar
+      const seen = vertical ? view.clientHeight : view.clientWidth
+      const whole = vertical ? view.scrollHeight : view.scrollWidth
+      const shown = (vertical ? overflowY : overflowX).peek()
+      const kept = room(bar.element, "padding", vertical) + room(bar.thumb, "margin", vertical)
+      // As Base UI sizes it: the share that is seen, of what the viewport shows less the
+      // room the scrollbar keeps, and of no more than the scrollbar's own length.
+      let longest = (shown ? seen : 0) - kept
+      const track = bar.element && (vertical ? bar.element.offsetHeight : bar.element.offsetWidth)
+      if (track !== undefined) {
+        // A scrollbar stops short of the corner once the corner's size is written on the
+        // root. Until a framework has written it, the scrollbar is still laid out whole.
+        const taken = vertical ? along : across
+        const name = vertical ? "height" : "width"
+        const written = root?.style.getPropertyValue(`--scroll-area-corner-${name}`)
+        longest = Math.min(track - (written === `${taken}px` ? 0 : taken), longest)
+      }
+      const size = Math.max(THUMB_MIN, longest * (seen / whole))
+      ;(vertical ? thumbHeight : thumbWidth).set(size)
+      bar.range = Math.max(0, whole - seen)
+      bar.travel = track === undefined ? 0 : Math.max(0, track - size - kept)
+      const at = Math.min(bar.range, vertical ? view.scrollTop : Math.abs(view.scrollLeft))
+      bar.offset = bar.range > 0 ? (at / bar.range) * bar.travel : 0
+      if (!bar.thumb) continue
       // From where the thumb lies by itself: the start of its track, which is the right in
       // a right-to-left row.
-      const move = bar.vertical ? `0px, ${offset}px` : `${rtl() ? -offset : offset}px, 0px`
-      setGeometry(bar.thumb, "transform", `translate(${move})`)
-    }
-    if (root) {
-      const across = bars.vertical.element?.offsetWidth ?? 0
-      const along = bars.horizontal.element?.offsetHeight ?? 0
-      setGeometry(root, "--scroll-area-corner-width", `${across}px`)
-      setGeometry(root, "--scroll-area-corner-height", `${along}px`)
+      const move = vertical
+        ? `0px, ${bar.offset}px, 0px`
+        : `${rtl() ? -bar.offset : bar.offset}px, 0px, 0px`
+      setGeometry(bar.thumb, "transform", `translate3d(${move})`)
     }
   }
 
@@ -146,14 +214,13 @@ export function createScrollArea(
   function scrollbar(orientation: Orientation): ScrollAreaScrollbar {
     const bar = bars[orientation]
     const scrolling = bar.vertical ? scrollingY : scrollingX
-    let drag: { from: number; scroll: number } | undefined
+    let drag: { from: number; offset: number } | undefined
     const along = (event: PointerEvent) => (bar.vertical ? event.clientY : event.clientX)
 
     /** Scrolls to where a thumb `offset` pixels along its track shows. */
     function scrollToOffset(offset: number) {
-      const size = sizes(bar)
-      if (!size || !viewport || size.travel <= 0) return
-      const to = (Math.min(size.travel, Math.max(0, offset)) / size.travel) * size.range
+      if (!viewport || bar.travel <= 0) return
+      const to = (Math.min(bar.travel, Math.max(0, offset)) / bar.travel) * bar.range
       if (bar.vertical) viewport.scrollTop = to
       else viewport.scrollLeft = rtl() ? -to : to
     }
@@ -165,16 +232,40 @@ export function createScrollArea(
           "data-orientation": orientation,
           "data-hovering": flag(hovering.get()),
           "data-scrolling": flag(scrolling.get()),
+          // Along its edge of the area, short of the corner; a finger on it scrolls the area
+          // and not the page, and a drag selects no text.
+          style: {
+            position: "absolute",
+            "touch-action": "none",
+            "-webkit-user-select": "none",
+            "user-select": "none",
+            ...(bar.vertical
+              ? {
+                  top: "0px",
+                  bottom: "var(--scroll-area-corner-height)",
+                  "inset-inline-end": "0px",
+                  "--scroll-area-thumb-height": `${thumbHeight.get()}px`,
+                }
+              : {
+                  "inset-inline-start": "0px",
+                  "inset-inline-end": "var(--scroll-area-corner-width)",
+                  bottom: "0px",
+                  "--scroll-area-thumb-width": `${thumbWidth.get()}px`,
+                }),
+          },
           onPointerDown(event: PointerEvent) {
             // A press on the track, not on the thumb: the thumb's middle goes there.
-            if (event.button !== 0 || event.target !== event.currentTarget) return
-            const size = sizes(bar)
-            if (!size) return
-            const box = (event.currentTarget as HTMLElement).getBoundingClientRect()
-            const from = bar.vertical ? box.top : rtl() ? box.right : box.left
-            const pressed = Math.abs(along(event) - from)
+            if (event.button !== 0 || event.target !== event.currentTarget || !bar.thumb) return
+            const box = bar.thumb.getBoundingClientRect()
+            const size = bar.vertical ? box.height : box.width
+            // Where the thumb starts when nothing is scrolled, wherever the design laid it.
+            const pressed = bar.vertical
+              ? along(event) - (box.top - bar.offset)
+              : rtl()
+                ? box.right + bar.offset - along(event)
+                : along(event) - (box.left - bar.offset)
             event.preventDefault()
-            scrollToOffset(pressed - size.thumb / 2)
+            scrollToOffset(pressed - size / 2)
           },
         })),
         attach(element) {
@@ -189,6 +280,13 @@ export function createScrollArea(
       thumb: {
         props: computed(() => ({
           "data-orientation": orientation,
+          // As long as its scrollbar says, and out of sight until that has been measured.
+          style: {
+            ...(measured.get() ? {} : { visibility: "hidden" }),
+            ...(bar.vertical
+              ? { height: "var(--scroll-area-thumb-height)" }
+              : { width: "var(--scroll-area-thumb-width)" }),
+          },
           onPointerDown(event: PointerEvent) {
             if (event.button !== 0 || !viewport) return
             // Not a text selection, and the pointer stays the thumb's wherever it goes.
@@ -199,16 +297,13 @@ export function createScrollArea(
               // A pointer the browser no longer has (it was let go already): the drag goes on
               // for as long as its moves reach the thumb.
             }
-            const at = bar.vertical ? viewport.scrollTop : Math.abs(viewport.scrollLeft)
-            drag = { from: along(event), scroll: at }
+            drag = { from: along(event), offset: bar.offset }
           },
           onPointerMove(event: PointerEvent) {
-            const size = sizes(bar)
-            if (!drag || !size || size.travel <= 0) return
+            if (!drag || bar.travel <= 0) return
             let moved = along(event) - drag.from
             if (!bar.vertical && rtl()) moved = -moved
-            const offset = (drag.scroll / Math.max(size.range, 1)) * size.travel + moved
-            scrollToOffset(offset)
+            scrollToOffset(drag.offset + moved)
           },
           onPointerUp: () => void (drag = undefined),
           onPointerCancel: () => void (drag = undefined),
@@ -238,6 +333,13 @@ export function createScrollArea(
       props: computed(() => ({
         ...states(),
         "data-hovering": flag(hovering.get()),
+        // What the scrollbars and the corner are placed against, and how much of each
+        // scrollbar's edge the corner takes.
+        style: {
+          position: "relative",
+          "--scroll-area-corner-height": `${cornerHeight.get()}px`,
+          "--scroll-area-corner-width": `${cornerWidth.get()}px`,
+        },
         onPointerEnter: () => hovering.set(true),
         onPointerLeave: () => hovering.set(false),
       })),
@@ -284,13 +386,35 @@ export function createScrollArea(
       },
     },
     content: {
-      props: computed(() => ({})),
+      // As wide as what it holds, so what is wider than the viewport is measured, and seen
+      // when it changes.
+      props: computed(() => ({ style: { "min-width": "fit-content" } })),
       // Its size is what there is to scroll: content that arrives or lays out late is seen.
       attach: (element) => watch(element),
     },
     corner: {
       shown: computed(() => overflowX.get() && overflowY.get()),
-      part: { props: computed(() => ({})), attach: () => NOTHING },
+      part: {
+        props: computed(() => ({
+          style: {
+            position: "absolute",
+            bottom: "0px",
+            "inset-inline-end": "0px",
+            width: `${cornerWidth.get()}px`,
+            height: `${cornerHeight.get()}px`,
+          },
+        })),
+        // Only with a corner in the page do the scrollbars stop short of it.
+        attach(element) {
+          corner = element
+          measure()
+          return () => {
+            if (corner !== element) return
+            corner = undefined
+            measure()
+          }
+        },
+      },
     },
   }
 }

@@ -1,7 +1,13 @@
 import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select as Controller, SelectGroup, SelectProps } from "@kirana-ui/core/select"
+import type {
+  Select as Controller,
+  SelectGroup,
+  SelectItemOptions,
+  SelectProps,
+  SelectShown,
+} from "@kirana-ui/core/select"
 import {
   defineComponent,
   h,
@@ -12,10 +18,12 @@ import {
   useId,
   watchEffect,
 } from "vue"
-import type { InjectionKey, PropType } from "vue"
+import type { InjectionKey, PropType, PublicProps } from "vue"
 
 import { positionerComponent } from "./popover.ts"
+import type { PositionerProps as PlacedProps } from "./popover.ts"
 import { useFieldAround } from "./field-context.ts"
+import { written } from "./element.ts"
 import {
   context,
   controller,
@@ -25,13 +33,40 @@ import {
   portalComponent,
   toSignal,
 } from "./runtime.ts"
+import type {
+  Changes,
+  Listeners,
+  PartComponent,
+  PartComponentProps,
+  PartGiven,
+  PartInstance,
+  PlainInstance,
+  StatesOf,
+} from "./runtime.ts"
+
+export type { PortalProps } from "./runtime.ts"
+
+type State = StatesOf<"select">
 
 const scope = context<Controller>("Select")
 const ITEM: InjectionKey<unknown> = Symbol("SelectItem")
 
 const HiddenInput = partComponent("SelectHiddenInput", "input", () => scope.use().input)
 
-/** `v-model:value`, `v-model:open`; `@value-change` and `@open-change` carry the details. */
+export type RootProps<Value = unknown> = Omit<
+  SelectProps<Value>,
+  "id" | "onValueChange" | "onValuesChange" | "onOpenChange"
+> & { id?: string | undefined }
+
+/** The value is `null` when the select is put back to none chosen. */
+export type RootEmits<Value = unknown> = Changes<"value", Value | null> &
+  Changes<"values", Value[]> &
+  Changes<"open", boolean>
+
+/**
+ * `v-model:value`, `v-model:open`; `@value-change` and `@open-change` carry the details. With
+ * `multiple`: `v-model:values` and `@values-change`.
+ */
 const Root = defineComponent({
   name: "SelectRoot",
   props: {
@@ -43,11 +78,21 @@ const Root = defineComponent({
     required: Boolean,
     name: String,
     form: String,
-    items: Array as PropType<readonly { value: unknown; label: string }[]>,
+    items: [Array, Object] as PropType<SelectProps["items"]>,
+    multiple: Boolean,
+    values: optional(Array as PropType<readonly unknown[]>),
+    defaultValues: Array as PropType<readonly unknown[]>,
     virtualized: Object as PropType<SelectProps["virtualized"]>,
     id: String,
   },
-  emits: ["update:value", "valueChange", "update:open", "openChange"],
+  emits: [
+    "update:value",
+    "valueChange",
+    "update:values",
+    "valuesChange",
+    "update:open",
+    "openChange",
+  ],
   setup(props, { slots, emit }) {
     const generated = useId()
     const field = useFieldAround()
@@ -63,10 +108,17 @@ const Root = defineComponent({
         name: props.name,
         form: props.form,
         items: props.items,
+        multiple: props.multiple,
+        values: props.values,
+        defaultValues: props.defaultValues,
         virtualized: props.virtualized,
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
+        },
+        onValuesChange(values: unknown[], details: ChangeDetails) {
+          emit("valuesChange", values, details)
+          if (!details.canceled) emit("update:values", values)
         },
         onOpenChange(open: boolean, details: ChangeDetails) {
           emit("openChange", open, details)
@@ -77,20 +129,49 @@ const Root = defineComponent({
     const named = fromSignal(made.named)
     return () => [slots.default?.(), named.value ? h(HiddenInput) : null]
   },
-})
+}) as unknown as new <Value = unknown>(
+  props: RootProps<Value> & Listeners<RootEmits<Value>> & PublicProps
+) => PlainInstance<RootProps<Value>, RootEmits<Value>, {}>
 
-const ValueElement = partComponent("SelectValueElement", "span", () => scope.use().valuePart)
+export interface ValueProps extends PartComponentProps {
+  /** What it shows while nothing is chosen. */
+  placeholder?: string | undefined
+}
 
-/** Shows the chosen value's label, or `placeholder` while nothing is chosen. */
+/**
+ * Shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`,
+ * the chosen labels with commas between. Or what its slot makes of them
+ * (`v-slot="{ value, label }"`, with `multiple` `v-slot="{ values, labels }"`, in the items'
+ * order), which is given the part's `state` too.
+ */
 const Value = defineComponent({
   name: "SelectValue",
   inheritAttrs: false,
   props: { placeholder: { type: String, default: "" } },
   setup(props, { attrs, slots }) {
-    const label = fromSignal(scope.use().label)
-    return () => h(ValueElement, attrs, slots.default ?? (() => label.value ?? props.placeholder))
+    const shown = fromSignal(scope.use().shown)
+    const label = () => shown.value.label ?? props.placeholder
+    // With `as-child` the caller's element holds the label, unless it writes its own.
+    const ValueElement = partComponent(
+      "SelectValueElement",
+      "span",
+      () => scope.use().valuePart,
+      written(label)
+    )
+    return () =>
+      h(ValueElement, attrs, {
+        default: (given: object) =>
+          slots.default ? slots.default({ ...given, ...shown.value }) : label(),
+      })
   },
-})
+}) as unknown as new <As extends string = "span">(
+  props: PartGiven<As, ValueProps> & PublicProps
+) => PartInstance<As, ValueProps, {}, { state: State["value"] } & SelectShown>
+
+export interface ItemProps extends SelectItemOptions, PartComponentProps {
+  /** What the select's value is while this item is the chosen one. */
+  value: unknown
+}
 
 /** `label` is what typeahead matches and the trigger shows; the item's text when left out. */
 const Item = defineComponent({
@@ -115,9 +196,16 @@ const Item = defineComponent({
     const Element = partComponent("SelectItemElement", "div", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["item"], ItemProps>
 
-const ItemText = partComponent("SelectItemText", "span", () => scope.use().itemText(inject(ITEM)))
+const ItemText = partComponent<"span", State["itemText"]>("SelectItemText", "span", () =>
+  scope.use().itemText(inject(ITEM))
+)
+
+export interface ItemIndicatorProps extends PartComponentProps {
+  /** Keeps the mark in the page while its item is not chosen. */
+  keepMounted?: boolean | undefined
+}
 
 const ItemIndicator = defineComponent({
   name: "SelectItemIndicator",
@@ -132,13 +220,18 @@ const ItemIndicator = defineComponent({
     )
     return () => (selected.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"span", State["itemIndicator"], ItemIndicatorProps>
 
-const PlacedPositioner = positionerComponent(
+const PlacedPositioner = positionerComponent<State["positioner"]>(
   "SelectPlacedPositioner",
   () => scope.use(),
   partComponent("SelectPositionerElement", "div", () => scope.use().positioner)
 )
+
+export interface PositionerProps extends PlacedProps {
+  /** Opens the list over its trigger, the chosen item's text on the trigger's own. */
+  alignItemWithTrigger?: boolean | undefined
+}
 
 /**
  * `align-item-with-trigger`: the list opens over its trigger, the chosen item's text on the
@@ -155,9 +248,13 @@ const Positioner = defineComponent({
     })
     return () => h(PlacedPositioner, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["positioner"], PositionerProps>
 
 const GROUP: InjectionKey<SelectGroup | null> = Symbol("SelectGroup")
+
+export interface GroupProps extends PartComponentProps {
+  id?: string | undefined
+}
 
 /** Items that belong together, named by their `<Select.GroupLabel>`. */
 const Group = defineComponent({
@@ -171,16 +268,19 @@ const Group = defineComponent({
     const Element = partComponent("SelectGroupElement", "div", () => group.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["group"], GroupProps>
 
 /** Names the group it is in. With no group around it, it is plain text. */
-const GroupLabel = partComponent(
+const GroupLabel = partComponent<"div", State["groupLabel"]>(
   "SelectGroupLabel",
   "div",
   () => inject(GROUP, null)?.label ?? scope.use().groupLabel
 )
 
-function scrollArrow(name: string, direction: "up" | "down") {
+function scrollArrow<Arrow extends "scrollUpArrow" | "scrollDownArrow">(
+  name: string,
+  direction: "up" | "down"
+) {
   return defineComponent({
     name,
     inheritAttrs: false,
@@ -195,26 +295,42 @@ function scrollArrow(name: string, direction: "up" | "down") {
       const Element = partComponent(`${name}Element`, "div", () => arrow.part)
       return () => (mounted.value ? h(Element, attrs, slots) : null)
     },
-  })
+  }) as unknown as PartComponent<"div", State[Arrow]>
 }
 
+export type TriggerProps = PartComponentProps
+export type PopupProps = PartComponentProps
+export type ListProps = PartComponentProps
+export type ScrollUpArrowProps = PartComponentProps
+export type ScrollDownArrowProps = PartComponentProps
+export type GroupLabelProps = PartComponentProps
+export type SeparatorProps = PartComponentProps
+export type ItemTextProps = PartComponentProps
 export const Select = {
   Root,
-  Trigger: partComponent("SelectTrigger", "button", () => scope.use().trigger),
+  Trigger: partComponent<"button", State["trigger"]>(
+    "SelectTrigger",
+    "button",
+    () => scope.use().trigger
+  ),
   Value,
   Portal: portalComponent("SelectPortal", () => scope.use().mounted),
   Positioner,
-  Popup: partComponent("SelectPopup", "div", () => scope.use().popup),
+  Popup: partComponent<"div", State["popup"]>("SelectPopup", "div", () => scope.use().popup),
   /** The items' own box inside the popup, when the popup also holds scroll arrows. */
-  List: partComponent("SelectList", "div", () => scope.use().list),
+  List: partComponent<"div", State["list"]>("SelectList", "div", () => scope.use().list),
   /** In the page while there is more of the list above: it scrolls it under a moving pointer. */
-  ScrollUpArrow: scrollArrow("SelectScrollUpArrow", "up"),
+  ScrollUpArrow: scrollArrow<"scrollUpArrow">("SelectScrollUpArrow", "up"),
   /** In the page while there is more of the list below. */
-  ScrollDownArrow: scrollArrow("SelectScrollDownArrow", "down"),
+  ScrollDownArrow: scrollArrow<"scrollDownArrow">("SelectScrollDownArrow", "down"),
   Group,
   GroupLabel,
   /** A line between groups. */
-  Separator: partComponent("SelectSeparator", "div", () => scope.use().separator),
+  Separator: partComponent<"div", State["separator"]>(
+    "SelectSeparator",
+    "div",
+    () => scope.use().separator
+  ),
   Item,
   ItemText,
   ItemIndicator,

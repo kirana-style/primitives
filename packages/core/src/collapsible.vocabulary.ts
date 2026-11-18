@@ -10,6 +10,8 @@ export const collapsibleVocabulary = defineComponent({
     exclusive: EITHER_OPEN,
   },
   trigger: {
+    inside: "root",
+    repeated: true,
     description: "The button that opens and closes the panel.",
     states: {
       panelOpen: state("data-panel-open", "Present when the panel is open."),
@@ -17,6 +19,7 @@ export const collapsibleVocabulary = defineComponent({
     },
   },
   panel: {
+    inside: "root",
     description: "The content. In the page while open, and through its exit's motion.",
     states: TRANSITION,
     exclusive: EITHER_FRAME,

@@ -1,21 +1,27 @@
 import { defined, within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createMenu } from "@kirana-ui/core/menu"
 import type {
   Menu as Controller,
   MenuCheckboxItem,
   MenuGroup,
   MenuRadioGroup,
+  MenuRadioGroupProps,
 } from "@kirana-ui/core/menu"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { DirectionContext } from "./direction-context.ts"
 import { MenubarContext } from "./menubar-context.ts"
 import { positioned } from "./popover.tsx"
-import type { PositionerProps } from "./popover.tsx"
+import type { PortalProps, PositionerOptions } from "./popover.tsx"
 import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["menu"]
+
+export type { PortalProps }
 
 const Context = createContext<Controller>()
 const GroupContext = createContext<MenuGroup | null>(null)
@@ -71,63 +77,83 @@ function make(props: RootProps, kind: "menu" | "submenu" | "context"): JSX.Eleme
   )
 }
 
+export type ContextRootProps = RootProps
+export type SubmenuRootProps = RootProps
+
 const Root = (props: RootProps) => make(props, "menu")
 /** A menu for an area of the page, opened at the pointer. Its trigger is the area. */
-const ContextRoot = (props: RootProps) => make(props, "context")
+const ContextRoot = (props: ContextRootProps) => make(props, "context")
 /** A menu that one of this menu's items opens. Its trigger is `<Menu.SubmenuTrigger>`. */
-const SubmenuRoot = (props: RootProps) => make(props, "submenu")
+const SubmenuRoot = (props: SubmenuRootProps) => make(props, "submenu")
 
-const Portal = (props: { children?: JSX.Element }) => (
+const Portal = (props: PortalProps) => (
   <BodyPortal mounted={useMenu().mounted}>{props.children}</BodyPortal>
 )
 
+export type PositionerProps = PartComponentProps<
+  "div",
+  StateOf<Parts["positioner"]>,
+  PositionerOptions
+>
+
 function Positioner(props: PositionerProps): JSX.Element {
   const made = useMenu()
-  return <Part part={made.positioner} tag="div" {...positioned(props, made.positioning)} />
+  return <Part of={made.positioner} tag="div" {...positioned(props, made.positioning)} />
 }
 
 type ItemOptions = { disabled?: boolean; label?: string; closeOnClick?: boolean }
 const ITEM = ["disabled", "label", "closeOnClick"] as const
 
-function Item(props: PartComponentProps & ItemOptions): JSX.Element {
+export type ItemProps = PartComponentProps<"div", StateOf<Parts["item"]>, ItemOptions>
+
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ITEM)
   const options = toSignal(() => ({ ...local }))
   const part = useMenu().item(() => defined(options.get()))
-  return <Part part={part} tag="div" {...rest} />
+  return <Part of={part} tag="div" {...rest} />
 }
+
+export type LinkItemProps = PartComponentProps<"a", StateOf<Parts["linkItem"]>, ItemOptions>
 
 /** An item that is a link: `href` and the rest go to its `<a>`. */
-function LinkItem(props: PartComponentProps & ItemOptions): JSX.Element {
+function LinkItem(props: LinkItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ITEM)
   const options = toSignal(() => ({ ...local }))
   const part = useMenu().item(() => defined(options.get()))
-  return <Part part={part} tag="a" {...rest} />
+  return <Part of={part} tag="a" {...rest} />
 }
 
-function Group(props: PartComponentProps & { id?: string }): JSX.Element {
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
+function Group(props: GroupProps): JSX.Element {
   const [local, rest] = splitProps(props, ["id"])
   const generated = createUniqueId()
   const group = useMenu().group(untrack(() => local.id) ?? generated)
   return (
     <GroupContext.Provider value={group}>
-      <Part part={group.root} tag="div" {...rest} />
+      <Part of={group.root} tag="div" {...rest} />
     </GroupContext.Provider>
   )
 }
 
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
 /** Names the group it is in. With no group around it, it is plain text. */
-const GroupLabel = (props: PartComponentProps) => (
-  <Part part={useContext(GroupContext)?.label ?? useMenu().label} tag="div" {...props} />
+const GroupLabel = (props: GroupLabelProps) => (
+  <Part of={useContext(GroupContext)?.label ?? useMenu().label} tag="div" {...props} />
 )
 
-function CheckboxItem(
-  props: PartComponentProps &
-    ItemOptions & {
-      checked?: boolean
-      defaultChecked?: boolean
-      onCheckedChange?: (checked: boolean, details: ChangeDetails) => void
-    }
-): JSX.Element {
+export type CheckboxItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["checkboxItem"]>,
+  ItemOptions & {
+    checked?: boolean
+    defaultChecked?: boolean
+    onCheckedChange?: (checked: boolean, details: ChangeDetails) => void
+  }
+>
+
+function CheckboxItem(props: CheckboxItemProps): JSX.Element {
   const [local, rest] = splitProps(props, [...ITEM, "checked", "defaultChecked", "onCheckedChange"])
   const item = controller(useMenu().checkboxItem, () => ({
     checked: local.checked,
@@ -140,48 +166,57 @@ function CheckboxItem(
   }))
   return (
     <CheckboxContext.Provider value={item}>
-      <Part part={item.part} tag="div" {...rest} />
+      <Part of={item.part} tag="div" {...rest} />
     </CheckboxContext.Provider>
   )
 }
 
-type IndicatorProps = PartComponentProps & { keepMounted?: boolean }
+export type CheckboxItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["checkboxItemIndicator"]>,
+  { keepMounted?: boolean }
+>
 
-function CheckboxItemIndicator(props: IndicatorProps): JSX.Element {
+function CheckboxItemIndicator(props: CheckboxItemIndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const item = inside(useContext(CheckboxContext), "CheckboxItem")
   const checked = fromSignal(item.checked)
   return (
     <Show when={checked() || local.keepMounted}>
-      <Part part={item.indicator} tag="span" {...rest} />
+      <Part of={item.indicator} tag="span" {...rest} />
     </Show>
   )
 }
 
-function RadioGroup(
-  props: PartComponentProps & {
-    value?: unknown
-    defaultValue?: unknown
-    onValueChange?: (value: unknown, details: ChangeDetails) => void
-    disabled?: boolean
-  }
-): JSX.Element {
+/** `Value` is what a radio item's `value` is: the group's `value` holds the chosen one. */
+export type RadioGroupProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["radioGroup"]>,
+  MenuRadioGroupProps<Value>
+>
+
+function RadioGroup<Value = unknown>(props: RadioGroupProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "defaultValue", "onValueChange", "disabled"])
-  const group = controller(useMenu().radioGroup<unknown>, () => ({
+  const group = controller(useMenu().radioGroup<Value>, () => ({
     value: local.value,
     defaultValue: local.defaultValue,
     disabled: local.disabled,
-    onValueChange: (value: unknown, details: ChangeDetails) =>
-      local.onValueChange?.(value, details),
+    onValueChange: (value: Value, details: ChangeDetails) => local.onValueChange?.(value, details),
   }))
   return (
     <RadioGroupContext.Provider value={group}>
-      <Part part={group.root} tag="div" {...rest} />
+      <Part of={group.root} tag="div" {...rest} />
     </RadioGroupContext.Provider>
   )
 }
 
-function RadioItem(props: PartComponentProps & ItemOptions & { value: unknown }): JSX.Element {
+export type RadioItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["radioItem"]>,
+  ItemOptions & { value: unknown }
+>
+
+function RadioItem(props: RadioItemProps): JSX.Element {
   const [local, rest] = splitProps(props, [...ITEM, "value"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
@@ -195,51 +230,70 @@ function RadioItem(props: PartComponentProps & ItemOptions & { value: unknown })
   )
   return (
     <RadioItemContext.Provider value={value}>
-      <Part part={part} tag="div" {...rest} />
+      <Part of={part} tag="div" {...rest} />
     </RadioItemContext.Provider>
   )
 }
 
-function RadioItemIndicator(props: IndicatorProps): JSX.Element {
+export type RadioItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["radioItemIndicator"]>,
+  { keepMounted?: boolean }
+>
+
+function RadioItemIndicator(props: RadioItemIndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const group = inside(useContext(RadioGroupContext), "RadioGroup")
   const value = useContext(RadioItemContext)
   const checked = fromSignal(group.checked(value))
   return (
     <Show when={checked() || local.keepMounted}>
-      <Part part={group.indicator(value)} tag="span" {...rest} />
+      <Part of={group.indicator(value)} tag="span" {...rest} />
     </Show>
   )
 }
 
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type ArrowProps = PartComponentProps<"div", StateOf<Parts["arrow"]>>
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+export type SubmenuTriggerProps = PartComponentProps<"div", StateOf<Parts["submenuTrigger"]>>
+export type ContextTriggerProps = PartComponentProps<
+  "div",
+  StateOf<Vocabulary["contextMenu"]["trigger"]>
+>
+
 const part =
-  (name: "trigger" | "popup" | "arrow" | "separator" | "area", tag: string) =>
-  (props: PartComponentProps) => <Part part={useMenu()[name]} tag={tag} {...props} />
+  <Props extends Record<string, unknown>>(
+    name: "trigger" | "popup" | "arrow" | "separator" | "area",
+    tag: string
+  ) =>
+  (props: Props): JSX.Element => <Part of={useMenu()[name]} tag={tag} {...props} />
 
 export const Menu = {
   Root,
   Portal,
   Positioner,
-  Trigger: part("trigger", "button"),
-  Popup: part("popup", "div"),
-  Arrow: part("arrow", "div"),
+  Trigger: part<TriggerProps>("trigger", "button"),
+  Popup: part<PopupProps>("popup", "div"),
+  Arrow: part<ArrowProps>("arrow", "div"),
   Item,
   LinkItem,
   Group,
   GroupLabel,
-  Separator: part("separator", "div"),
+  Separator: part<SeparatorProps>("separator", "div"),
   CheckboxItem,
   CheckboxItemIndicator,
   RadioGroup,
   RadioItem,
   RadioItemIndicator,
   SubmenuRoot,
-  SubmenuTrigger: part("trigger", "div"),
+  SubmenuTrigger: part<SubmenuTriggerProps>("trigger", "div"),
 }
 
 export const ContextMenu = {
   ...Menu,
   Root: ContextRoot,
   /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
-  Trigger: part("area", "div"),
+  Trigger: part<ContextTriggerProps>("area", "div"),
 }

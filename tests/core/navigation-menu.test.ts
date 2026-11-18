@@ -245,4 +245,33 @@ describe("a navigation menu", () => {
     expect(find(root, "here").getAttribute("aria-current")).toBe("page")
     expect(find(root, "here").hasAttribute("data-active")).toBe(true)
   })
+
+  it("makes nothing for an item that is only a link", () => {
+    const made = createNavigationMenu(signal<NavigationMenuProps<string>>({ id: "n" }))
+    // Asked for, as an adapter asks for every item, and none of its parts is ever read.
+    const link = made.item("link-only")
+    const stop = link.mount()
+    // The first item with a trigger is the first item made: its content takes the first id.
+    const first = made.item("first")
+    expect(first.content.props.peek().id).toBe("n-content-0")
+    expect(made.item("first")).toBe(first)
+    stop()
+  })
+
+  it("runs an item whose parts are first drawn once it is in the page", async () => {
+    const root = mount(`<button id="late">Late</button>`)
+    const made = createNavigationMenu(signal<NavigationMenuProps<string>>({ id: "n" }))
+    const item = made.item("late")
+    // In the page with nothing but a link in it; a trigger is drawn in it afterwards.
+    onTestFinished(item.mount())
+    onTestFinished(bind(find(root, "late"), item.trigger))
+    expect(item.mounted.peek()).toBe(false)
+    find(root, "late").click()
+    expect(find(root, "late").getAttribute("aria-expanded")).toBe("true")
+    // Its presence follows the value: it was started when the trigger made the item.
+    expect(item.mounted.peek()).toBe(true)
+    find(root, "late").click()
+    await settled()
+    expect(item.mounted.peek()).toBe(false)
+  })
 })

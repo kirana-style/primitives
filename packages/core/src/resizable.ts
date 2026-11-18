@@ -14,6 +14,7 @@ export interface ResizableProps {
   onSizesChange?: ((sizes: number[], details: ChangeDetails) => void) | undefined
   /** How far an arrow key moves a handle, in hundredths of the group. Default: 10. */
   keyboardStep?: number | undefined
+  /** Disabled: the handles cannot be dragged or moved with the keyboard. */
   disabled?: boolean | undefined
 }
 

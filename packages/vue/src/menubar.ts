@@ -1,5 +1,6 @@
 import { within } from "@kirana-ui/core"
 import { createMenubar } from "@kirana-ui/core/menubar"
+import type { MenubarProps as CoreProps } from "@kirana-ui/core/menubar"
 import type { Orientation } from "@kirana-ui/core"
 import { defineComponent, h, provide, useId } from "vue"
 import type { PropType } from "vue"
@@ -7,6 +8,9 @@ import type { PropType } from "vue"
 import { useDirectionAround } from "./direction-context.ts"
 import { MENUBAR } from "./menubar-context.ts"
 import { controller, optional, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+export type MenubarProps = Omit<CoreProps, "id"> & { id?: string | undefined } & PartComponentProps
 
 /** A row of menus that work as one. Each `Menu.Root` inside it is one of its items. */
 export const Menubar = defineComponent({
@@ -31,4 +35,4 @@ export const Menubar = defineComponent({
     const Element = partComponent("MenubarElement", "div", () => made.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", StatesOf<"menubar">["root"], MenubarProps>

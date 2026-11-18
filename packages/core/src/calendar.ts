@@ -24,17 +24,21 @@ import type { ReadonlySignal } from "./reactivity.ts"
 
 /** A day as `YYYY-MM-DD`, in the calendar the world's data is kept in (ISO 8601). */
 export type IsoDate = string
+/** A range of days, its first and its last, both in it. */
 export interface DateRange {
   start: IsoDate
   end: IsoDate
 }
+/** What a calendar holds: a day, a range of days in `mode: "range"`, or `null` for none. */
 export type CalendarValue = IsoDate | DateRange | null
 
 export interface CalendarProps {
   id: string
   /** One day, or with `mode: "range"` a first and a last day; `null` for none. */
   value?: CalendarValue | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: CalendarValue | undefined
+  /** Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was. */
   onValueChange?: ((value: CalendarValue, details: ChangeDetails) => void) | undefined
   /** Whether one day is chosen (the default) or a first and a last. */
   mode?: "single" | "range" | undefined
@@ -55,15 +59,19 @@ export interface CalendarProps {
   calendarSystem?: CalendarSystem | undefined
   /** The first and the last day that can be chosen. */
   min?: IsoDate | undefined
+  /** The last day that can be chosen. */
   max?: IsoDate | undefined
   /** Days that cannot be chosen, though they can be reached: a day off, a day taken. */
   isDateUnavailable?: ((date: IsoDate) => boolean) | undefined
+  /** Disabled: no day can be chosen. */
   disabled?: boolean | undefined
+  /** Shown as it is: the days can be moved through, and none can be chosen. */
   readOnly?: boolean | undefined
   /** Always six rows, so the calendar is one height in every month. */
   fixedWeeks?: boolean | undefined
 }
 
+/** A day of the week, as a column's heading names it. */
 export interface CalendarWeekday {
   /** Its place in the week as the locale orders it, from 0. */
   readonly index: number
@@ -73,6 +81,7 @@ export interface CalendarWeekday {
   readonly long: string
 }
 
+/** A day in the grid of the month shown. */
 export interface CalendarDay {
   readonly date: IsoDate
   /** The day of the month as the locale writes it. */

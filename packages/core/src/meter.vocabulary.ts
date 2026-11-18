@@ -4,8 +4,11 @@ import { defineComponent } from "./part.ts"
 // not carry these descriptions.
 export const meterVocabulary = defineComponent({
   root: { description: "The meter: it says the value to assistive technology." },
-  track: { description: "The whole range." },
-  indicator: { description: "The filled part: its width is the value's share of the range." },
-  value: { description: "The value, written." },
-  label: { description: "The meter's name." },
+  track: { inside: "root", description: "The whole range." },
+  indicator: {
+    inside: "track",
+    description: "The filled part: its width is the value's share of the range.",
+  },
+  value: { inside: "root", description: "The value, written." },
+  label: { inside: "root", description: "The meter's name." },
 })

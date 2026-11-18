@@ -403,6 +403,97 @@
           </form>
           <output data-testid="s1-output">Banana</output>
         </section>
+        <section data-fixture="select-multiple">
+          <form class="bar" data-testid="sm1-form">
+            <kui-select kui-id="sm1" name="basket" multiple values="Banana">
+              <button kui-part="trigger" data-testid="sm1-trigger">
+                <span kui-part="value" kui-placeholder="Pick fruits" data-testid="sm1-value"></span>
+              </button>
+              <div kui-part="portal">
+                <div kui-part="positioner" kui-side-offset="4" data-testid="sm1-positioner">
+                  <div kui-part="popup" class="popup" data-testid="sm1-popup">
+                    <div kui-part="item" kui-value="Apple" class="item" data-testid="sm1-Apple">
+                      <span kui-part="item-text">Apple</span>
+                      <span kui-part="item-indicator">✓</span>
+                    </div>
+                    <div kui-part="item" kui-value="Apricot" class="item" data-testid="sm1-Apricot">
+                      <span kui-part="item-text">Apricot</span>
+                      <span kui-part="item-indicator">✓</span>
+                    </div>
+                    <div kui-part="item" kui-value="Banana" class="item" data-testid="sm1-Banana">
+                      <span kui-part="item-text">Banana</span>
+                      <span kui-part="item-indicator">✓</span>
+                    </div>
+                    <div
+                      kui-part="item"
+                      kui-value="Blueberry"
+                      kui-disabled
+                      class="item"
+                      data-testid="sm1-Blueberry"
+                    >
+                      <span kui-part="item-text">Blueberry</span>
+                      <span kui-part="item-indicator">✓</span>
+                    </div>
+                    <div kui-part="item" kui-value="Cherry" class="item" data-testid="sm1-Cherry">
+                      <span kui-part="item-text">Cherry</span>
+                      <span kui-part="item-indicator">✓</span>
+                    </div>
+                    <div kui-part="item" kui-value="Grape" class="item" data-testid="sm1-Grape">
+                      <span kui-part="item-text">Grape</span>
+                      <span kui-part="item-indicator">✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </kui-select>
+            <button type="reset" data-testid="sm1-reset">Reset</button>
+          </form>
+          <output data-testid="sm1-output">Banana</output>
+          <kui-select kui-id="sm2" default-value="m">
+            <button kui-part="trigger" data-testid="sm2-trigger">
+              <span kui-part="value" data-testid="sm2-value"
+                ><template kui-each="values">{label} ({value})</template></span
+              >
+            </button>
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="4" data-testid="sm2-positioner">
+                <div kui-part="popup" class="popup" data-testid="sm2-popup">
+                  <div kui-part="item" kui-value="s" class="item" data-testid="sm2-s">
+                    <span kui-part="item-text">Small</span>
+                  </div>
+                  <div kui-part="item" kui-value="m" class="item" data-testid="sm2-m">
+                    <span kui-part="item-text">Medium</span>
+                  </div>
+                  <div kui-part="item" kui-value="l" class="item" data-testid="sm2-l">
+                    <span kui-part="item-text">Large</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </kui-select>
+          <kui-select kui-id="sm3" multiple default-values="l,s">
+            <button kui-part="trigger" data-testid="sm3-trigger">
+              <span kui-part="value" class="bar" data-testid="sm3-value">
+                <template kui-each="values"><b>{label}</b></template>
+              </span>
+            </button>
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="4" data-testid="sm3-positioner">
+                <div kui-part="popup" class="popup" data-testid="sm3-popup">
+                  <div kui-part="item" kui-value="s" class="item" data-testid="sm3-s">
+                    <span kui-part="item-text">Small</span>
+                  </div>
+                  <div kui-part="item" kui-value="m" class="item" data-testid="sm3-m">
+                    <span kui-part="item-text">Medium</span>
+                  </div>
+                  <div kui-part="item" kui-value="l" class="item" data-testid="sm3-l">
+                    <span kui-part="item-text">Large</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </kui-select>
+        </section>
         <section data-fixture="menu">
           <kui-menu kui-id="mn1">
             <button kui-part="trigger" data-testid="mn1-trigger">File</button>
@@ -595,7 +686,7 @@
         </section>
         <section data-fixture="combobox">
           <form data-testid="cb1-form">
-            <kui-combobox kui-id="cb1" name="pick">
+            <kui-combobox kui-id="cb1" name="pick" auto-highlight>
               <input kui-part="input" aria-label="Fruit" data-testid="cb1-input" />
               <button kui-part="trigger" aria-label="Show fruits" data-testid="cb1-trigger">
                 ▾
@@ -796,7 +887,7 @@
                     <a kui-part="link" href="#tools" data-testid="nm1-tools">tools</a>
                   </div>
                 </li>
-                <li kui-part="item" kui-value="docs">
+                <li kui-part="item">
                   <button kui-part="trigger" class="nav-trigger" data-testid="nm1-docs">
                     <span>Docs</span>
                     <span kui-part="icon">▾</span>
@@ -937,14 +1028,18 @@
         <section data-fixture="toast">
           <button type="button" data-testid="ts1-add">Add a toast</button>
           <button type="button" data-testid="ts1-brief">Add a brief toast</button>
+          <button type="button" data-testid="ts1-undo">Add a toast with an action</button>
+          <button type="button" data-testid="ts1-alert">Add an urgent toast</button>
+          <output data-testid="ts1-output"></output>
           <kui-toast kui-id="ts1" duration="600000">
             <div kui-part="viewport" class="toasts" data-testid="ts1">
               <template kui-each="toasts">
                 <div kui-part="toast" class="toast" data-testid="ts1-{id}">
                   <div kui-part="content" class="toast-content" data-testid="ts1-{id}-content">
                     <div kui-part="title" class="toast-title">{title}</div>
-                    <div kui-part="description">{description}</div>
+                    <div kui-part="description"></div>
                   </div>
+                  <button kui-part="action" data-testid="ts1-{id}-action"></button>
                   <button kui-part="close" aria-label="Close" data-testid="ts1-{id}-close">
                     Close
                   </button>
@@ -1167,6 +1262,28 @@
               </div>
             </div>
           </kui-slider>
+          <kui-slider kui-id="sl5" default-value="20,50,80">
+            <div kui-part="root" data-testid="sl5">
+              <div kui-part="control" class="slider" data-testid="sl5-control">
+                <div kui-part="track" class="slider-track">
+                  <div kui-part="thumb" class="thumb" aria-label="Low" data-testid="sl5-low"></div>
+                  <div
+                    kui-part="thumb"
+                    class="thumb"
+                    aria-label="Middle"
+                    data-testid="sl5-middle"
+                  ></div>
+                  <div
+                    kui-part="thumb"
+                    class="thumb"
+                    aria-label="High"
+                    data-testid="sl5-high"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </kui-slider>
+          <button data-testid="sl5-toggle">Low</button>
         </section>
         <section data-fixture="measures">
           <kui-slider kui-id="sl4" default-value="0" thumb-alignment="edge">
@@ -1596,6 +1713,125 @@
             </form>
           </kui-form>
           <span data-testid="f2-sent"></span>
+        </section>
+        <section data-fixture="placing">
+          <div dir="rtl" data-testid="pl1-box">
+            <kui-popover kui-id="pl1">
+              <button kui-part="trigger" data-testid="pl1-trigger">Beside</button>
+              <div kui-part="portal">
+                <div
+                  kui-part="positioner"
+                  kui-side="inline-end"
+                  kui-side-offset="8"
+                  data-testid="pl1-positioner"
+                >
+                  <div kui-part="popup" class="popup" data-testid="pl1-popup">
+                    <h2 kui-part="title">Beside</h2>
+                  </div>
+                </div>
+              </div>
+            </kui-popover>
+          </div>
+          <div class="bar">
+            <kui-popover kui-id="pl2">
+              <button kui-part="trigger" data-testid="pl2-trigger">Anchored</button>
+              <span id="pl2-first" class="anchor" data-testid="pl2-first">First</span>
+              <span id="pl2-second" class="anchor" data-testid="pl2-second">Second</span>
+              <div kui-part="portal">
+                <div
+                  kui-part="positioner"
+                  kui-anchor="pl2-first"
+                  kui-align="start"
+                  kui-side-offset="4"
+                  data-testid="pl2-positioner"
+                >
+                  <div kui-part="popup" class="popup" data-testid="pl2-popup">
+                    <h2 kui-part="title">Anchored</h2>
+                    <button type="button" data-testid="pl2-move">Move</button>
+                  </div>
+                </div>
+              </div>
+            </kui-popover>
+          </div>
+          <div class="bar">
+            <kui-combobox kui-id="pl3">
+              <button kui-part="trigger" data-testid="pl3-trigger">Pick a fruit</button>
+              <div kui-part="portal">
+                <div kui-part="positioner" kui-side-offset="4" data-testid="pl3-positioner">
+                  <div
+                    kui-part="popup"
+                    class="popup"
+                    aria-label="Pick a fruit"
+                    data-testid="pl3-popup"
+                  >
+                    <input
+                      kui-part="input"
+                      class="search"
+                      aria-label="Search fruits"
+                      data-testid="pl3-input"
+                    />
+                    <div kui-part="list" aria-label="Fruits" data-testid="pl3-list">
+                      <div
+                        kui-part="item"
+                        kui-value="Apple"
+                        kui-id="pl3-Apple"
+                        class="item"
+                        data-testid="pl3-Apple"
+                      >
+                        Apple
+                      </div>
+                      <div
+                        kui-part="item"
+                        kui-value="Apricot"
+                        kui-id="pl3-Apricot"
+                        class="item"
+                        data-testid="pl3-Apricot"
+                      >
+                        Apricot
+                      </div>
+                      <div
+                        kui-part="item"
+                        kui-value="Banana"
+                        kui-id="pl3-Banana"
+                        class="item"
+                        data-testid="pl3-Banana"
+                      >
+                        Banana
+                      </div>
+                      <div
+                        kui-part="item"
+                        kui-value="Blueberry"
+                        kui-id="pl3-Blueberry"
+                        class="item"
+                        data-testid="pl3-Blueberry"
+                      >
+                        Blueberry
+                      </div>
+                      <div
+                        kui-part="item"
+                        kui-value="Cherry"
+                        kui-id="pl3-Cherry"
+                        class="item"
+                        data-testid="pl3-Cherry"
+                      >
+                        Cherry
+                      </div>
+                      <div
+                        kui-part="item"
+                        kui-value="Grape"
+                        kui-id="pl3-Grape"
+                        class="item"
+                        data-testid="pl3-Grape"
+                      >
+                        Grape
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </kui-combobox>
+            <output data-testid="pl3-output">none</output>
+          </div>
         </section>
       </main>
     </div>

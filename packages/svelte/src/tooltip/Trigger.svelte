@@ -3,14 +3,14 @@
 
   import Part from "../Part.svelte"
   import { useTooltip } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { TriggerProps } from "./types.ts"
 
   // `delay` and `closeDelay` here come before the root's.
-  let { delay, closeDelay, ...rest }: { delay?: number; closeDelay?: number } & PartAttributes = $props()
+  let { delay, closeDelay, ...rest }: TriggerProps = $props()
   const controller = useTooltip()
   $effect.pre(() => {
     controller.timing.set(defined({ delay, closeDelay }))
   })
 </script>
 
-<Part part={controller.trigger} tag="button" {...rest} />
+<Part of={controller.trigger} tag="button" {...rest} />

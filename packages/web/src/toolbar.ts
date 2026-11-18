@@ -1,7 +1,9 @@
 import { createToolbar } from "@kirana-ui/core/toolbar"
+import type { ToolbarProps } from "@kirana-ui/core/toolbar"
 
 import { options } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-toolbar>` around `kui-part="root"` and its items: a `button`, a `link`, an `input`, a
@@ -23,3 +25,9 @@ export const tag = defineElement({
     separator: (controller) => controller.separator,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-toolbar": ElementOf<As<typeof tag, ToolbarProps>>
+  }
+}

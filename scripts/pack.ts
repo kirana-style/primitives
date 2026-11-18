@@ -35,6 +35,15 @@ const root = path.resolve(import.meta.dirname, "..")
 const out = path.join(root, "dist-packages")
 const PLAIN = ["core", "vocabulary", "react", "vue", "web"]
 const INSTALL_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"]
+const ADAPTERS = ["react", "vue", "svelte", "solid", "angular", "web"]
+
+/**
+ * The skill as an adapter ships it: `<framework>` is the adapter, in every path and import.
+ * A line that is about the six packages together (it names `<framework>` with no path) is kept.
+ */
+function skillFor(adapter: string, text: string): string {
+  return text.replaceAll("@kirana-ui/<framework>", `@kirana-ui/${adapter}`)
+}
 
 interface Manifest {
   name: string
@@ -127,9 +136,20 @@ function finish(
     const from = path.join(root, "packages", name, file)
     if (existsSync(from)) cpSync(from, path.join(stage, file))
   }
-  // What an agent is given to work with the package: a skill, where the package has one.
-  const skills = path.join(root, "packages", name, "skills")
-  if (existsSync(skills)) cpSync(skills, path.join(stage, "skills"), { recursive: true })
+  // What an agent is given to work with the package: the skill. It is written once, in the
+  // core, for `<framework>`; an adapter ships it too, with its own name in the paths, so the
+  // one package a project installs has it and names only its own entries.
+  const skills = path.join(root, "packages/core/skills")
+  if (name === "core") cpSync(skills, path.join(stage, "skills"), { recursive: true })
+  else if (ADAPTERS.includes(name)) {
+    for (const file of files(skills)) {
+      const text = readFileSync(path.join(skills, file), "utf8")
+      if (!text.includes("<framework>")) throw new Error(`${file} names no <framework>`)
+      const to = path.join(stage, "skills", file)
+      mkdirSync(path.dirname(to), { recursive: true })
+      writeFileSync(to, skillFor(name, text))
+    }
+  }
   cpSync(path.join(root, "LICENSE"), path.join(stage, "LICENSE"))
   const { private: _private, devDependencies: _dev, scripts: _scripts, ...kept } = manifest
   const published: Manifest = {
@@ -350,6 +370,12 @@ function angular(): string {
       2
     )}\n`
   )
+  // The agent bridge and the testing kit are secondary entry points, as Angular's own
+  // libraries have them (`@angular/core/testing`): a folder each, which the packager finds by
+  // its `ng-package.json` and writes into the manifest's `exports`.
+  const secondary = ["agent", "testing"].map((each) => path.join(source, each, "ng-package.json"))
+  for (const file of secondary)
+    writeFileSync(file, `${JSON.stringify({ lib: { entryFile: "index.ts" } }, null, 2)}\n`)
   try {
     run(
       path.join(source, "node_modules/.bin/ng-packagr"),
@@ -358,12 +384,17 @@ function angular(): string {
     )
   } finally {
     rmSync(path.join(source, "ng-package.json"))
+    for (const file of secondary) rmSync(file)
   }
   const written = read(path.join(build, "package.json"))
   for (const directory of ["fesm2022", "types"])
     cpSync(path.join(build, directory), path.join(stage, directory), { recursive: true })
   rmSync(build, { recursive: true, force: true })
   const { "./package.json": _own, ...exports } = written.exports
+  for (const entry of ["./agent", "./testing"]) {
+    if (!exports[entry])
+      throw new Error(`@kirana-ui/angular has no ${entry}: the packager wrote none`)
+  }
   return finish("angular", stage, manifest, exports, ["fesm2022", "types"], {
     module: written.module,
     typings: written.typings,

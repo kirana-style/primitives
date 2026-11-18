@@ -1,12 +1,15 @@
 import { defined } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
 import type { Listbox as Controller, ListboxGroup, ListboxProps } from "@kirana-ui/core/listbox"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["listbox"]
 
 const Context = createContext<Controller>()
 const ItemContext = createContext<unknown>()
@@ -18,20 +21,14 @@ function useListbox(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & {
-  value?: readonly unknown[]
-  defaultValue?: readonly unknown[]
-  onValueChange?: (value: unknown[], details: ChangeDetails) => void
-  multiple?: boolean
-  disabled?: boolean
-  loop?: boolean
-  name?: string
-  form?: string
-  virtualized?: ListboxProps["virtualized"]
-  id?: string
-}
+/** `Value` is what an item's `value` is: the root's `value` holds the chosen ones. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<ListboxProps<Value>, "id"> & { id?: string }
+>
 
-function Root(props: RootProps): JSX.Element {
+function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -45,7 +42,7 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const made = controller(createListbox, () => ({
+  const made = controller(createListbox<Value>, () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,
@@ -55,24 +52,28 @@ function Root(props: RootProps): JSX.Element {
     name: local.name,
     form: local.form,
     virtualized: local.virtualized,
-    onValueChange: (value: unknown[], details: ChangeDetails) =>
+    onValueChange: (value: Value[], details: ChangeDetails) =>
       local.onValueChange?.(value, details),
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-function Item(
-  props: PartComponentProps & {
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
     value: unknown
     disabled?: boolean
     label?: string
     index?: number
   }
-): JSX.Element {
+>
+
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "disabled", "label", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
@@ -84,38 +85,48 @@ function Item(
   const part = useListbox().item(value, () => defined(options.get()))
   return (
     <ItemContext.Provider value={value}>
-      <Part part={part} tag="div" {...rest} />
+      <Part of={part} tag="div" {...rest} />
     </ItemContext.Provider>
   )
 }
 
-function ItemIndicator(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+export type ItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["itemIndicator"]>,
+  { keepMounted?: boolean }
+>
+
+function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const made = useListbox()
   const value = useContext(ItemContext)
   const selected = fromSignal(made.selected(value))
   return (
     <Show when={selected() || local.keepMounted}>
-      <Part part={made.indicator(value)} tag="span" {...rest} />
+      <Part of={made.indicator(value)} tag="span" {...rest} />
     </Show>
   )
 }
 
-function Group(props: PartComponentProps & { id?: string }): JSX.Element {
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
+function Group(props: GroupProps): JSX.Element {
   const [local, rest] = splitProps(props, ["id"])
   const generated = createUniqueId()
   const group = useListbox().group(untrack(() => local.id) ?? generated)
   return (
     <GroupContext.Provider value={group}>
-      <Part part={group.root} tag="div" {...rest} />
+      <Part of={group.root} tag="div" {...rest} />
     </GroupContext.Provider>
   )
 }
 
-function GroupLabel(props: PartComponentProps): JSX.Element {
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
+function GroupLabel(props: GroupLabelProps): JSX.Element {
   const group = useContext(GroupContext)
   if (!group) throw new Error("A Listbox.GroupLabel must be inside <Listbox.Group>")
-  return <Part part={group.label} tag="div" {...props} />
+  return <Part of={group.label} tag="div" {...props} />
 }
 
 export const Listbox = { Root, Item, ItemIndicator, Group, GroupLabel }

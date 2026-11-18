@@ -3,24 +3,22 @@ import {
   HostAttributeToken,
   InjectionToken,
   booleanAttribute,
-  effect,
   forwardRef,
   inject,
   input,
   model,
   output,
-  untracked,
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Orientation, Side } from "@kirana-ui/core"
+import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createMenu } from "@kirana-ui/core/menu"
 import type { Menu, MenuCheckboxItem, MenuGroup, MenuRadioGroup } from "@kirana-ui/core/menu"
 import { createMenubar } from "@kirana-ui/core/menubar"
 import type { Menubar } from "@kirana-ui/core/menubar"
 
 import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** The menu a part is in: the root's, or a submenu's. */
 const KUI_MENU = new InjectionToken<{ controller: Menu }>("KuiMenu")
@@ -146,34 +144,11 @@ export class KuiMenuPortal implements OnInit {
 }
 
 @Directive({ selector: "[kuiMenuPositioner]" })
-export class KuiMenuPositioner implements OnInit {
-  readonly side = input<Side>()
-  readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+export class KuiMenuPositioner extends KuiPositioner {
   private readonly root = inject(KUI_MENU)
-  private readonly put = hostPart()
-  private readonly options = () =>
-    defined({
-      side: this.side(),
-      align: this.align(),
-      sideOffset: this.sideOffset(),
-      alignOffset: this.alignOffset(),
-      collisionPadding: this.collisionPadding(),
-    })
 
-  constructor() {
-    effect(() => {
-      const next = this.options()
-      untracked(() => this.root.controller?.positioning.set(next))
-    })
-  }
-
-  ngOnInit(): void {
-    // Before the element attaches: the first placement reads these.
-    this.root.controller.positioning.set(untracked(this.options))
-    this.put(this.root.controller.positioner)
+  protected placed() {
+    return this.root.controller
   }
 }
 
@@ -361,13 +336,13 @@ export class KuiMenuCheckboxItemIndicator implements OnInit {
 }
 
 @Directive({ selector: "[kuiMenuRadioGroup]", exportAs: "kuiMenuRadioGroup" })
-export class KuiMenuRadioGroup implements OnInit {
-  readonly value = model<unknown>(undefined)
-  readonly defaultValue = input<unknown>(null)
+export class KuiMenuRadioGroup<Value = unknown> implements OnInit {
+  readonly value = model<Value | null | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value; details: ChangeDetails }>()
 
-  group!: MenuRadioGroup
+  group!: MenuRadioGroup<Value>
   private readonly root = inject(KUI_MENU)
   private readonly put = hostPart()
   private readonly mount = mounted()
@@ -375,7 +350,7 @@ export class KuiMenuRadioGroup implements OnInit {
     value: this.value(),
     defaultValue: this.defaultValue(),
     disabled: this.disabled(),
-    onValueChange: (value: unknown, details: ChangeDetails) => {
+    onValueChange: (value: Value, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)

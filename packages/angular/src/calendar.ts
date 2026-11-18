@@ -23,7 +23,7 @@ import type {
 } from "@kirana-ui/core/calendar"
 
 import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal, onServer } from "./runtime"
+import { KuiIds, drawing, hostPart, inputsSignal, onServer } from "./runtime"
 
 @Directive({ selector: "[kuiCalendar]", exportAs: "kuiCalendar" })
 export class KuiCalendar implements OnInit {
@@ -175,7 +175,12 @@ function each<T>(key: (item: T) => string | number): (items: ReadonlySignal<read
   }
   return (items) => {
     if (server) return draw(items.peek())
-    destroy.onDestroy(effect(() => draw(items.get())))
+    destroy.onDestroy(
+      effect(() => {
+        const now = items.get()
+        drawing(() => draw(now))
+      })
+    )
   }
 }
 
@@ -188,6 +193,13 @@ export class KuiCalendarWeekdays implements OnInit {
   ngOnInit(): void {
     this.draw(this.root.controller.weekdays)
   }
+
+  static ngTemplateContextGuard(
+    _directive: KuiCalendarWeekdays,
+    _context: unknown
+  ): _context is { $implicit: CalendarWeekday } {
+    return true
+  }
 }
 
 /** `<tr *kuiCalendarWeeks="let week">`: once for each week of the month shown. */
@@ -198,6 +210,13 @@ export class KuiCalendarWeeks implements OnInit {
 
   ngOnInit(): void {
     this.draw(this.root.controller.weeks)
+  }
+
+  static ngTemplateContextGuard(
+    _directive: KuiCalendarWeeks,
+    _context: unknown
+  ): _context is { $implicit: readonly CalendarDay[] } {
+    return true
   }
 }
 

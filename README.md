@@ -30,18 +30,24 @@ every behaviour, and a thin adapter per framework that renders it in that framew
   (`@kirana-ui/core/authoring`, and each adapter's `runtime`): presence, popups, placement,
   lists, roving focus, forms. [docs/authoring.md](docs/authoring.md) builds a component with
   them end to end, and its example is one of the tests.
-- **Written down for models too.** Each package ships an `llms.txt`: every component, part,
-  prop, attribute and CSS variable, generated from the library's own definitions.
-  The core ships a skill for an agent (`skills/kirana-ui-primitives`).
-- **An agent can use what you build.** `@kirana-ui/core/agent` is a bridge: it lists a
+- **Written down for models too.** Each adapter ships an `llms.txt`: every component, each
+  part with the element it draws and its own props, every attribute and CSS variable, the
+  types the props name, and everything else the package exports, generated from the adapter's
+  own source and checked against it (every import it writes resolves in the package's
+  `exports`). Each adapter also ships a skill for an agent (`skills/kirana-ui-primitives`).
+- **One package is enough.** An adapter's `./agent` and `./testing` entries are the core's, so
+  an application imports nothing from a package it did not install. The vocabulary's data
+  and typed selectors are their own package (`@kirana-ui/vocabulary`).
+- **An agent can use what you build.** `@kirana-ui/<framework>/agent` is a bridge: it lists a
   page's components (what each is, is called, holds and can be asked to do) and asks through
   each component's own handlers, so its change callback runs with `details.source ===
   "agent"` and may refuse. It reads what every part writes on its element, so one bridge
-  serves every adapter. `allow`, `data-agent-confirm`, `data-agent-hidden` and
+  serves every adapter. `allow` (a policy), `data-agent-confirm` with `confirm` (a person's
+  answer, which no policy stands in for), `data-agent-hidden` and
   `data-agent-secret` say what an agent may do and see; `registerTools` gives it to a
   browser's own agent (WebMCP) where there is one. `history()`, `undo()` and `redo()` keep
   what an agent changed, and take it back through the same handlers.
-- **Its checks are yours.** `@kirana-ui/core/testing` reads a page for the faults every
+- **Its checks are yours.** `@kirana-ui/<framework>/testing` reads a page for the faults every
   component here is held out of, writes it as text two frameworks can be compared by, and
   waits for motion to end: for a design system built on these, or a component of your own.
 - **Right to left without setup.** Arrow keys and a slider follow the `dir` the element is laid
@@ -66,12 +72,12 @@ every behaviour, and a thin adapter per framework that renders it in that framew
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/core`                                       | `@kirana-ui/core`: reactivity, services (presence, the popup layer over layers, focus, scroll lock and position, hover, roving focus, list navigation, typeahead, form control), a controller per component, the vocabulary, a plain-DOM binder |
 | `packages/react`, `vue`, `svelte`, `solid`, `angular` | the adapters: a signal bridge, the framework's composition, a few lines per part                                                                                                                                                                |
-| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))                                                                   |
+| `packages/vocabulary`                                 | `@kirana-ui/vocabulary`: every part's place, states and CSS variables as data and as typed selector keys, generated from the core ([REFERENCE.md](packages/vocabulary/REFERENCE.md))                                                            |
 | `fixtures/<adapter>`                                  | the page every adapter draws, element for element, the same page rendered on a server and hydrated, and a bench page; `fixtures/shared/styles.css` styles them all with plain CSS                                                               |
 | `tests/conformance`                                   | the scenarios and the cross-adapter comparison                                                                                                                                                                                                  |
 | `docs/pitfalls.md`                                    | what cost debugging time, and the check that now holds each one out                                                                                                                                                                             |
 | `docs/authoring.md`                                   | how a component is built, with one built end to end from the public services                                                                                                                                                                    |
-| `packages/*/llms.txt`                                 | each package for a model to read: generated (`bun scripts/llms.ts`), and held current by `vp run llms`                                                                                                                                          |
+| `packages/*/llms.txt`                                 | each adapter for a model to read: generated from the adapter's own source (`bun scripts/llms.ts`, `scripts/reference.ts`), and held current and to its rules by `vp run llms`                                                                   |
 | `tests/core`                                          | the core's services on their own, with no framework, in a browser                                                                                                                                                                               |
 | `bench`, `scripts/budgets.ts`, `budgets.json`         | mount time, memory and interaction; gzip per component                                                                                                                                                                                          |
 
@@ -125,6 +131,30 @@ win: `render` on React and Solid, `as-child` on Vue, a `child` snippet on Svelte
 the directive simply sits on the caller's element. A caller's handler runs first and can call
 `event.preventKiranaHandler()` to keep the part's own out of that event.
 
+Where the part draws the caller's element itself (React's `render` element, Vue's `as-child`)
+there are three layers of props, lowest first: what was handed to the part, the element's own,
+the part's. A higher layer wins an attribute, classes join, styles are merged property by
+property, and every handler runs, lowest first. Where the caller draws it (Solid's `render`,
+Svelte's `child`) it spreads the part's props on its element and decides the rest. Either way
+the caller can read the part's state, taken from its `data-*` attributes (`state.open`,
+`state.side`): the second argument of `render`, `{ props, state }` in a `child` snippet,
+`v-slot="{ state }"` in Vue. A design system's own element gets the same composition from
+`@kirana-ui/react/use-render` (`useRender`, `mergeProps`) and `@kirana-ui/vue/primitive`
+(`Primitive`); each adapter's `llms.txt` states the rule in full.
+
+What a part keeps in its element goes with it to the caller's: a control's hidden input,
+and the text a part writes (a meter's value, a select's chosen label). React's and Vue's
+parts put both in the element asked for; Solid hands them as `props().children`; a Svelte
+`child` snippet is given them to render inside its element (`{ props, state, input }`,
+`{ props, state, text }`).
+
+Every part is typed: its element's attributes and events (a handler's event is a
+`PartEvent`, with `preventKiranaHandler()`), its own props, the type of its value from what
+the caller passed (`useState("bottom")` with `onValueChange={setPosition}`; a slider tells a
+number where it was given a number and a list for a range), and its state where the caller
+is handed it. Each part's props are a named export of its entry
+(`import type { TriggerProps } from "@kirana-ui/react/dialog"`).
+
 ```css
 .panel {
   overflow: hidden;
@@ -153,7 +183,7 @@ vp run conformance    # the scenarios on every adapter (Chromium), the DOM compa
 bun tests/conformance/run.ts --browser firefox   # or chromium,firefox,webkit: once in each
 vp run bench          # mount, memory, interaction against Base UI, Ark UI and ng-primitives
 vp run budgets        # gzip per component, against the limits in budgets.json
-vp run parity         # every adapter exports the same components, parts and entries
+vp run parity         # every adapter exports the same components, parts, part props and entries
 vp run rehearse       # the release path against a registry of its own; nothing reaches npm
 vp run pack           # the packages as published (dist-packages/), then used from an empty project
 ```

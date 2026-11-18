@@ -11,9 +11,9 @@ import type {
   MenuRadioGroupProps,
 } from "@kirana-ui/core/menu"
 
-import { once, place, valueOf } from "./around.ts"
+import { once, positioner, valueOf } from "./around.ts"
 import { defineElement, hostAround, partAround, partProps } from "./runtime.ts"
-import type { Drawn } from "./runtime.ts"
+import type { Drawn, ElementOf, Told } from "./runtime.ts"
 
 const MENUS = ["kui-menu", "kui-context-menu"]
 
@@ -71,10 +71,7 @@ type Parts = Record<
 
 /** A menu's parts but for its trigger, which a context menu has as an area. */
 const PARTS: Parts = {
-  positioner(controller, element) {
-    place(controller.positioning, element)
-    return { mounted: controller.mounted, part: controller.positioner }
-  },
+  positioner,
   popup: (controller) => controller.popup,
   arrow: (controller) => controller.arrow,
   separator: (controller) => controller.separator,
@@ -155,3 +152,13 @@ export const tag = menu(
 )
 
 export { menu as defineMenu }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-menu": ElementOf<
+      typeof tag,
+      { "open-change": ["onOpenChange", "open"] },
+      { "checked-change": Told<"checked", boolean>; "value-change": Told<"value", string> }
+    >
+  }
+}

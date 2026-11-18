@@ -7,7 +7,7 @@ import { faults, settled } from "../../packages/core/src/testing.ts"
 import "../../packages/web/src/index.ts"
 import { controllerAround, defineElement } from "../../packages/web/src/runtime.ts"
 import { toasterOf } from "../../packages/web/src/toast.ts"
-import { mount } from "./page.ts"
+import { mount, style } from "./page.ts"
 
 type Told = CustomEvent<Record<string, unknown> & { details: ChangeDetails }>
 
@@ -510,6 +510,62 @@ describe("the components as custom elements", () => {
     await expect.poll(() => root.querySelector('[kui-part="toast"]')).toBe(null)
   })
 
+  it("a toast: a part written empty says what the toast was added with, and is there only for one that has it", async () => {
+    const root = mount(`
+      <kui-toast kui-id="ts">
+        <div kui-part="viewport">
+          <template kui-each="toasts">
+            <div kui-part="toast" data-testid="{id}">
+              <div kui-part="title"></div>
+              <div kui-part="description"></div>
+              <button kui-part="action"></button>
+              <button kui-part="close">Close {title}</button>
+            </div>
+          </template>
+        </div>
+      </kui-toast>`)
+    await settled()
+    const toaster = toasterOf(root.querySelector("kui-toast")!)
+    const part = (id: string, name: string) =>
+      root.querySelector(`[data-testid="${id}"] [kui-part="${name}"]`)
+    const heard: string[] = []
+    const plain = toaster.add({ title: "Saved", duration: Infinity })
+    const whole = toaster.add({
+      title: "Deleted",
+      description: "One file",
+      priority: "assertive",
+      duration: Infinity,
+      action: { label: "Undo", onAction: (details) => void heard.push(details.reason) },
+    })
+    await expect.poll(() => part(whole, "action")?.textContent).toBe("Undo")
+    expect(part(whole, "title")!.textContent).toBe("Deleted")
+    expect(part(whole, "description")!.textContent).toBe("One file")
+    expect(part(whole, "action")!.getAttribute("type")).toBe("button")
+    const toast = root.querySelector<HTMLElement>(`[data-testid="${whole}"]`)!
+    expect(toast.getAttribute("role")).toBe("alertdialog")
+    expect(toast.getAttribute("aria-live")).toBe("assertive")
+    expect(toast.getAttribute("aria-describedby")).toBe(`ts-${whole}-description`)
+    // One with a title only: no description, no button, and nothing names one.
+    expect(part(plain, "title")!.textContent).toBe("Saved")
+    expect(part(plain, "description")).toBe(null)
+    expect(part(plain, "action")).toBe(null)
+    expect(root.querySelector(`[data-testid="${plain}"]`)!.hasAttribute("aria-describedby")).toBe(
+      false
+    )
+    // What the page wrote in a part stays the page's.
+    expect(part(plain, "close")!.textContent).toBe("Close Saved")
+    // It comes when the toast is given one, and says what it now is.
+    toaster.update(plain, { description: "All of it", action: { label: "Open", onAction() {} } })
+    await expect.poll(() => part(plain, "action")?.textContent).toBe("Open")
+    expect(part(plain, "description")!.textContent).toBe("All of it")
+    toaster.update(plain, { action: undefined })
+    await expect.poll(() => part(plain, "action")).toBe(null)
+    await userEvent.click(part(whole, "action")!)
+    expect(heard).toEqual(["action-press"])
+    await expect.poll(() => root.querySelector(`[data-testid="${whole}"]`)).toBe(null)
+    expect(faults(root)).toEqual([])
+  })
+
   it("a combobox of several: a chip for each chosen value", async () => {
     const root = mount(`
       <kui-combobox multiple default-values="a,b">
@@ -544,5 +600,134 @@ describe("the components as custom elements", () => {
     const result = await agent.act({ steps: [{ ref: "Wi-Fi", action: "toggle" }] })
     expect(result.steps[0]!.now?.checked).toBe(true)
     expect(sources).toEqual(["agent"])
+  })
+
+  it("an accordion's items with no value are each their own", async () => {
+    // With no `kui-value` every item was the same one: a press opened them all.
+    const root = mount(
+      `<kui-accordion>
+         <div kui-part="root">
+           ${["a", "b"]
+             .map(
+               (each) => `<div kui-part="item">
+                 <h3 kui-part="header"><button kui-part="trigger">${each}</button></h3>
+                 <div kui-part="panel">Content ${each}</div>
+               </div>`
+             )
+             .join("")}
+         </div>
+       </kui-accordion>`
+    )
+    const [a, b] = [...root.querySelectorAll("button")]
+    const shown = () =>
+      [...root.querySelectorAll('[kui-part="panel"]')].map((each) => each.textContent).join()
+    await settled()
+    expect(shown()).toBe("")
+    expect(a!.id).not.toBe(b!.id)
+    a!.click()
+    await settled()
+    expect(shown()).toBe("Content a")
+    b!.click()
+    await settled()
+    expect(shown()).toBe("Content b")
+    expect(faults(root)).toEqual([])
+  })
+
+  it("a navigation menu's item with no value has a trigger and a content all the same", async () => {
+    const root = mount(`
+      <kui-navigation-menu kui-id="n">
+        <nav kui-part="root">
+          <ul kui-part="list">
+            <li kui-part="item">
+              <button kui-part="trigger" data-testid="own">A</button>
+              <div kui-part="content" data-testid="own-content"><a kui-part="link" href="#x">x</a></div>
+            </li>
+            <li kui-part="item" kui-value="b">
+              <button kui-part="trigger" data-testid="given">B</button>
+              <div kui-part="content" data-testid="given-content">b</div>
+            </li>
+          </ul>
+          <div kui-part="portal">
+            <div kui-part="positioner">
+              <div kui-part="popup"><div kui-part="viewport"></div></div>
+            </div>
+          </div>
+        </nav>
+      </kui-navigation-menu>`)
+    await settled()
+    const own = root.querySelector<HTMLElement>('[data-testid="own"]')!
+    expect(own.getAttribute("aria-expanded")).toBe("false")
+    own.click()
+    await expect.poll(() => document.querySelector('[data-testid="own-content"]')).not.toBe(null)
+    expect(own.getAttribute("aria-expanded")).toBe("true")
+    expect(document.querySelector('[data-testid="given-content"]')).toBe(null)
+    root.querySelector<HTMLElement>('[data-testid="given"]')!.click()
+    await expect.poll(() => document.querySelector('[data-testid="own-content"]')).toBe(null)
+    expect(own.getAttribute("aria-expanded")).toBe("false")
+  })
+
+  it("a slider's thumbs with no index are the values in the order of the elements", async () => {
+    const root = mount(`
+      <kui-slider default-value="20,50,80">
+        <div kui-part="root">
+          <div kui-part="control" style="position: relative; width: 200px; height: 20px">
+            <div kui-part="thumb" id="low"></div>
+            <div kui-part="thumb" id="middle"></div>
+            <div kui-part="thumb" id="high"></div>
+          </div>
+        </div>
+      </kui-slider>`)
+    await settled()
+    const said = () =>
+      [...root.querySelectorAll<HTMLElement>('[kui-part="thumb"]')].map(
+        (each) => `${each.id}:${each.dataset.index}=${each.getAttribute("aria-valuenow")}`
+      )
+    expect(said()).toEqual(["low:0=20", "middle:1=50", "high:2=80"])
+    const low = root.querySelector<HTMLElement>("#low")!
+    low.remove()
+    await settled()
+    expect(said()).toEqual(["middle:0=20", "high:1=50"])
+    root.querySelector("#middle")!.before(low)
+    await settled()
+    expect(said()).toEqual(["low:0=20", "middle:1=50", "high:2=80"])
+    // Thumbs that say which they are keep to it, wherever they are written.
+    const told = mount(`
+      <kui-slider default-value="20,80">
+        <div kui-part="root">
+          <div kui-part="control">
+            <div kui-part="thumb" kui-index="1"></div>
+            <div kui-part="thumb" kui-index="0"></div>
+          </div>
+        </div>
+      </kui-slider>`)
+    await settled()
+    expect(
+      [...told.querySelectorAll('[kui-part="thumb"]')].map((each) =>
+        each.getAttribute("aria-valuenow")
+      )
+    ).toEqual(["80", "20"])
+  })
+
+  it("a part's first style starts no transition on markup the page had drawn", async () => {
+    style(".glides { transition: translate 20s linear }")
+    // The slider waits for the element around it, as a page's markup waits for its script.
+    const root = mount(`
+      <kui-test-drawn>
+        <kui-slider default-value="40">
+          <div kui-part="root">
+            <div kui-part="control">
+              <div kui-part="track"><div kui-part="indicator"></div></div>
+              <div kui-part="thumb" class="glides"></div>
+            </div>
+          </div>
+        </kui-slider>
+      </kui-test-drawn>`)
+    const thumb = root.querySelector<HTMLElement>(".glides")!
+    // The browser has styled the thumb before it is a part.
+    expect(getComputedStyle(thumb).translate).toBe("none")
+    defineElement({ tag: "kui-test-drawn", props: {}, create: () => ({}), changes: {}, parts: {} })
+    await settled()
+    expect(thumb.style.translate).toBe("-50% -50%")
+    expect(thumb.getAnimations()).toEqual([])
   })
 })

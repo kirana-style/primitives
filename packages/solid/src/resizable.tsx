@@ -1,13 +1,16 @@
 import { defined, within } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation } from "@kirana-ui/core"
+import type { ChangeDetails, Orientation, StateOf } from "@kirana-ui/core"
 import { createResizable } from "@kirana-ui/core/resizable"
 import type { Resizable as Controller } from "@kirana-ui/core/resizable"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { DirectionContext } from "./direction-context.ts"
 import { Part, controller, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["resizable"]
 
 const Context = createContext<Controller>()
 
@@ -17,15 +20,19 @@ function useResizable(): Controller {
   return made
 }
 
-function Group(
-  props: PartComponentProps & {
+export type GroupProps = PartComponentProps<
+  "div",
+  StateOf<Parts["group"]>,
+  {
     orientation?: Orientation
     onSizesChange?: (sizes: number[], details: ChangeDetails) => void
     keyboardStep?: number
     disabled?: boolean
     id?: string
   }
-): JSX.Element {
+>
+
+function Group(props: GroupProps): JSX.Element {
   const [local, rest] = splitProps(props, [
     "orientation",
     "onSizesChange",
@@ -45,25 +52,35 @@ function Group(
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.group} tag="div" {...rest} />
+      <Part of={made.group} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-function Panel(
-  props: PartComponentProps & { defaultSize?: number; minSize?: number; maxSize?: number }
-): JSX.Element {
+export type PanelProps = PartComponentProps<
+  "div",
+  StateOf<Parts["panel"]>,
+  { defaultSize?: number; minSize?: number; maxSize?: number }
+>
+
+function Panel(props: PanelProps): JSX.Element {
   const [local, rest] = splitProps(props, ["defaultSize", "minSize", "maxSize"])
   const options = toSignal(() => ({ ...local }))
   const part = useResizable().panel(() => defined(options.get()))
-  return <Part part={part} tag="div" {...rest} />
+  return <Part of={part} tag="div" {...rest} />
 }
 
-function Handle(props: PartComponentProps & { disabled?: boolean }): JSX.Element {
+export type HandleProps = PartComponentProps<
+  "div",
+  StateOf<Parts["handle"]>,
+  { disabled?: boolean }
+>
+
+function Handle(props: HandleProps): JSX.Element {
   const [local, rest] = splitProps(props, ["disabled"])
   const options = toSignal(() => ({ disabled: local.disabled }))
   const part = useResizable().handle(() => defined(options.get()))
-  return <Part part={part} tag="div" {...rest} />
+  return <Part of={part} tag="div" {...rest} />
 }
 
 export const Resizable = { Group, Panel, Handle }

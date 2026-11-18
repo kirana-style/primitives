@@ -1,14 +1,25 @@
 import { defined, within } from "@kirana-ui/core"
-import type { Part } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup as Controller, RadioGroupProps } from "@kirana-ui/core/radio-group"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
-import { useController, useMount, useOptions, usePart, useSignal } from "./runtime.tsx"
+import {
+  PartElement,
+  parts,
+  useController,
+  useMount,
+  useOptions,
+  usePart,
+  useSignal,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["radioGroup"]
 
 const Context = createContext<Controller | null>(null)
 const ItemContext = createContext<unknown>(undefined)
@@ -19,11 +30,14 @@ function useRadioGroup(part: string): Controller {
   return controller
 }
 
-export type RootProps<Value> = Omit<RadioGroupProps<Value>, "id"> & {
-  id?: string
-} & PartComponentProps
+/** `Value` is what tells an item from the others: the type of `value`. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<RadioGroupProps<Value>, "id"> & { id?: string }
+>
 
-function Root<Value>({
+function Root<Value = unknown>({
   value,
   defaultValue,
   onValueChange,
@@ -38,9 +52,9 @@ function Root<Value>({
   const field = useContext(FieldContext) ?? undefined
   const direction = useContext(DirectionContext) ?? undefined
   const create = within(createRadioGroup<Value>, { field, direction })
-  const controller = useController(create, {
-    value: value as Value | null | undefined,
-    defaultValue: defaultValue as Value | null | undefined,
+  const controller: Controller = useController(create, {
+    value,
+    defaultValue,
     onValueChange,
     disabled,
     readOnly,
@@ -48,45 +62,53 @@ function Root<Value>({
     name,
     form,
     id,
-  }) as unknown as Controller
+  })
   return (
     <Context.Provider value={controller}>
-      <RootElement {...rest} />
+      <PartElement of={controller.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) => usePart(useRadioGroup("Root").root, "div", props)
+export type ItemProps = PartComponentProps<
+  "span",
+  StateOf<Parts["item"]>,
+  {
+    /** What the group's value is while this item is the chosen one. */
+    value: unknown
+    /** Disables this item: it cannot be chosen. */
+    disabled?: boolean
+  }
+>
 
-export interface ItemProps extends PartComponentProps {
-  value: unknown
-  disabled?: boolean
-}
-
-function Item({ value, disabled, children, ...rest }: ItemProps): ReactElement {
+function Item({ value, disabled, ...rest }: ItemProps): ReactElement {
   const controller = useRadioGroup("Item")
   const options = useOptions({ disabled })
-  const parts = useMemo(() => {
+  const made = useMemo(() => {
     const read = () => defined(options.get())
     return { item: controller.item(value, read), input: controller.itemInput(value, read) }
   }, [controller, value, options])
   return (
     <ItemContext.Provider value={value}>
-      <PartElement part={parts.item} tag="span" {...rest}>
-        {children}
-        <PartElement part={parts.input} tag="input" />
-      </PartElement>
+      {usePart(made.item, "span", rest, undefined, (content) => (
+        // Its native input is the element's last child, whatever element the caller asked for.
+        <>
+          {content}
+          <PartElement of={made.input} tag="input" />
+        </>
+      ))}
     </ItemContext.Provider>
   )
 }
 
-const PartElement = ({ part, tag, ...props }: PartComponentProps & { part: Part; tag: string }) =>
-  usePart(part, tag, props)
-
-export interface IndicatorProps extends PartComponentProps {
-  /** Keeps the mark in the page while its item is not the chosen one. */
-  keepMounted?: boolean
-}
+export type IndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["indicator"]>,
+  {
+    /** Keeps the mark in the page while its item is not the chosen one. */
+    keepMounted?: boolean
+  }
+>
 
 function Indicator({ keepMounted, ...props }: IndicatorProps): ReactElement | null {
   const controller = useRadioGroup("Indicator")
@@ -95,7 +117,7 @@ function Indicator({ keepMounted, ...props }: IndicatorProps): ReactElement | nu
   useMount(indicator)
   const mounted = useSignal(indicator.mounted)
   if (!mounted && !keepMounted) return null
-  return <PartElement part={indicator.part} tag="span" {...props} />
+  return <PartElement of={indicator.part} tag="span" {...props} />
 }
 
-export const RadioGroup = { Root, Item, Indicator }
+export const RadioGroup = /* @__PURE__ */ parts("RadioGroup", { Root, Item, Indicator })

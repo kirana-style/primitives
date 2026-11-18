@@ -16,7 +16,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createPagination } from "@kirana-ui/core/pagination"
 import type { Pagination, PaginationEntry } from "@kirana-ui/core/pagination"
 
-import { KuiIds, hostPart, inputsSignal, mounted, onServer } from "./runtime"
+import { KuiIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
@@ -99,7 +99,19 @@ export class KuiPaginationItems implements OnInit {
       })
     }
     if (this.server) return draw(this.root.controller.entries.peek())
-    this.destroy.onDestroy(effect(() => draw(this.root.controller.entries.get())))
+    this.destroy.onDestroy(
+      effect(() => {
+        const entries = this.root.controller.entries.get()
+        drawing(() => draw(entries))
+      })
+    )
+  }
+
+  static ngTemplateContextGuard(
+    _directive: KuiPaginationItems,
+    _context: unknown
+  ): _context is { $implicit: PaginationEntry } {
+    return true
   }
 }
 

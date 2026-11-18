@@ -10,11 +10,18 @@ export interface NumberFieldProps {
   id: string
   /** The number; `null` is "none". */
   value?: number | null | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: number | null | undefined
+  /**
+   * Heard as the number is about to change, typed or stepped: `details.cancel()` keeps it as it
+   * was.
+   */
   onValueChange?: ((value: number | null, details: ChangeDetails) => void) | undefined
   /** Heard once a change is done: focus left the input, a key or a button stepped it. */
   onValueCommitted?: ((value: number | null, details: ChangeDetails) => void) | undefined
+  /** The least the number may be. */
   min?: number | undefined
+  /** The most the number may be. */
   max?: number | undefined
   /** What the buttons and the arrows move by. Default 1. */
   step?: number | undefined
@@ -30,8 +37,11 @@ export interface NumberFieldProps {
   format?: Intl.NumberFormatOptions | undefined
   /** The language it is written in; the page's by default. */
   locale?: string | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
+  /** Needed: in a `Field`, leaving it empty is then invalid. */
   required?: boolean | undefined
   /** With a name, the number is submitted with the form around it. */
   name?: string | undefined

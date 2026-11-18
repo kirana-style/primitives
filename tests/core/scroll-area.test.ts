@@ -10,49 +10,76 @@ const PAGE = `
     <div id="view"><div id="content"></div></div>
   </div>`
 
-/** An area 100 square, drawn as an adapter draws one: a scrollbar is in the page while shown. */
-function area(width: number, height: number, dir?: "rtl") {
+/**
+ * An area 100 square, drawn as an adapter draws one: a scrollbar is in the page while shown,
+ * and so is the corner. The stylesheet gives each scrollbar its thickness and nothing else:
+ * where they lie is the library's.
+ */
+function area(
+  width: number,
+  height: number,
+  { dir, corner = true, padded = false }: { dir?: "rtl"; corner?: boolean; padded?: boolean } = {}
+) {
   style(`
-    #area { position: relative; width: 100px; height: 100px; }
+    #area { width: 100px; height: 100px; }
     #view { width: 100px; height: 100px; }
-    .bar { position: absolute; background: #eee; }
-    .bar[data-orientation="vertical"] { top: 0; right: 0; width: 10px; height: 100px; }
-    .bar[data-orientation="horizontal"] { left: 0; bottom: 0; height: 10px; width: 100px; display: flex; }
+    .bar { background: #eee; box-sizing: border-box; }
+    .bar[data-orientation="vertical"] { width: 10px; }
+    .bar[data-orientation="horizontal"] { height: 10px; display: flex; }
+    .bar.padded[data-orientation="vertical"] { padding: 4px 0; }
+    .bar.padded[data-orientation="horizontal"] { padding: 0 4px; }
     .thumb { background: #888; }
-    .thumb[data-orientation="vertical"] { width: 10px; }
-    .thumb[data-orientation="horizontal"] { height: 10px; }`)
+    .thumb[data-orientation="horizontal"] { height: 10px; }
+    .corner { background: #ccc; }`)
   const root = mount(PAGE)
   if (dir) root.setAttribute("dir", dir)
   const content = find(root, "content")
   content.style.cssText = `width: ${width}px; height: ${height}px`
   const made = createScrollArea(signal({}))
   const stops = [bind(find(root, "area"), made.root)]
-  for (const orientation of ["vertical", "horizontal"] as const) {
-    const bar = made.scrollbar(orientation)
-    let element: HTMLElement | undefined
-    let undo: (() => void)[] = []
+  /** Draws an element while `shown` holds, and puts its parts on. */
+  const draw = (
+    shown: { get(): boolean },
+    make: () => { element: HTMLElement; undo: (() => void)[] }
+  ) => {
+    let now: ReturnType<typeof make> | undefined
     stops.push(
       effect(() => {
-        const shown = bar.shown.get()
+        const wanted = shown.get()
         untracked(() => {
-          if (shown && !element) {
-            element = document.createElement("div")
-            element.id = orientation
-            element.className = "bar"
-            const thumb = document.createElement("div")
-            thumb.id = `${orientation}-thumb`
-            thumb.className = "thumb"
-            element.append(thumb)
-            find(root, "area").append(element)
-            undo = [bind(element, bar.part), bind(thumb, bar.thumb)]
-          } else if (!shown && element) {
-            for (const each of undo) each()
-            element.remove()
-            element = undefined
+          if (wanted && !now) {
+            now = make()
+          } else if (!wanted && now) {
+            for (const each of now.undo) each()
+            now.element.remove()
+            now = undefined
           }
         })
       })
     )
+  }
+  for (const orientation of ["vertical", "horizontal"] as const) {
+    const bar = made.scrollbar(orientation)
+    draw(bar.shown, () => {
+      const element = document.createElement("div")
+      element.id = orientation
+      element.className = padded ? "bar padded" : "bar"
+      const thumb = document.createElement("div")
+      thumb.id = `${orientation}-thumb`
+      thumb.className = "thumb"
+      element.append(thumb)
+      find(root, "area").append(element)
+      return { element, undo: [bind(element, bar.part), bind(thumb, bar.thumb)] }
+    })
+  }
+  if (corner) {
+    draw(made.corner.shown, () => {
+      const element = document.createElement("div")
+      element.id = "corner"
+      element.className = "corner"
+      find(root, "area").append(element)
+      return { element, undo: [bind(element, made.corner.part)] }
+    })
   }
   stops.push(bind(find(root, "view"), made.viewport), bind(content, made.content), made.mount())
   onTestFinished(() => {
@@ -84,7 +111,9 @@ describe("a scroll area", () => {
     const thumb = find(root, "vertical-thumb")
     // A quarter is seen: a quarter of the track.
     expect(Math.round(box(thumb).height)).toBe(25)
-    expect(thumb.style.getPropertyValue("--scroll-area-thumb-height")).toBe("25px")
+    // Its length is its scrollbar's to say, as Base UI says it.
+    expect(find(root, "vertical").style.getPropertyValue("--scroll-area-thumb-height")).toBe("25px")
+    expect(thumb.style.height).toBe("var(--scroll-area-thumb-height)")
     const top = box(thumb).top
     // A browser says a box scrolled when it next draws, which is not always the next frame.
     view.scrollTop = 300
@@ -154,7 +183,7 @@ describe("a scroll area", () => {
   })
 
   it("sideways, the thumb follows the reading direction", async () => {
-    const { root, view } = area(400, 100, "rtl")
+    const { root, view } = area(400, 100, { dir: "rtl" })
     await drawn()
     const thumb = find(root, "horizontal-thumb")
     const bar = find(root, "horizontal")
@@ -171,5 +200,121 @@ describe("a scroll area", () => {
     expect(made.corner.shown.peek()).toBe(true)
     expect(find(root, "area").style.getPropertyValue("--scroll-area-corner-width")).toBe("10px")
     expect(find(root, "area").style.getPropertyValue("--scroll-area-corner-height")).toBe("10px")
+  })
+
+  it("places its scrollbars and its corner itself", async () => {
+    // Nothing in the stylesheet says where a scrollbar lies: a scrollbar left in the flow sat
+    // under the viewport, outside the area.
+    const { root } = area(400, 400)
+    await drawn()
+    const whole = box(find(root, "area"))
+    expect(getComputedStyle(find(root, "area")).position).toBe("relative")
+    const down = box(find(root, "vertical"))
+    expect(getComputedStyle(find(root, "vertical")).position).toBe("absolute")
+    expect([down.top, down.right, down.width]).toEqual([whole.top, whole.right, 10])
+    // Short of the corner, which is as tall as the scrollbar along the bottom.
+    expect(down.bottom).toBe(whole.bottom - 10)
+    const across = box(find(root, "horizontal"))
+    expect([across.left, across.bottom, across.height]).toEqual([whole.left, whole.bottom, 10])
+    expect(across.right).toBe(whole.right - 10)
+    const meet = box(find(root, "corner"))
+    expect([meet.right, meet.bottom, meet.width, meet.height]).toEqual([
+      whole.right,
+      whole.bottom,
+      10,
+      10,
+    ])
+    // The thumbs are sized by the scrollbars as they lie: a quarter of 90.
+    expect(box(find(root, "vertical-thumb")).height).toBeCloseTo(22.5, 1)
+    expect(box(find(root, "horizontal-thumb")).width).toBeCloseTo(22.5, 1)
+  })
+
+  it("places them at the other side where lines run right to left", async () => {
+    const { root } = area(400, 400, { dir: "rtl" })
+    await drawn()
+    const whole = box(find(root, "area"))
+    const down = box(find(root, "vertical"))
+    expect([down.top, down.left, down.bottom]).toEqual([whole.top, whole.left, whole.bottom - 10])
+    const across = box(find(root, "horizontal"))
+    expect([across.right, across.left]).toEqual([whole.right, whole.left + 10])
+    const meet = box(find(root, "corner"))
+    expect([meet.left, meet.bottom]).toEqual([whole.left, whole.bottom])
+  })
+
+  it("runs its scrollbars the whole edge where no corner is drawn", async () => {
+    const { root } = area(400, 400, { corner: false })
+    await drawn()
+    const whole = box(find(root, "area"))
+    expect(find(root, "area").style.getPropertyValue("--scroll-area-corner-height")).toBe("0px")
+    expect(box(find(root, "vertical")).bottom).toBe(whole.bottom)
+    expect(box(find(root, "horizontal")).right).toBe(whole.right)
+    // A thumb is still sized as if its scrollbar stopped at the other, as Base UI sizes it.
+    expect(box(find(root, "vertical-thumb")).height).toBeCloseTo(22.5, 1)
+  })
+
+  it("keeps its thumb inside its scrollbar's padding", async () => {
+    // Sized from the track with its padding in, a thumb at the end of its travel stood
+    // outside the padding by as much.
+    const { root, view } = area(100, 400, { padded: true })
+    await drawn()
+    const thumb = find(root, "vertical-thumb")
+    const bar = find(root, "vertical")
+    // A quarter is seen: a quarter of the 92 pixels between the padding.
+    expect(box(thumb).height).toBeCloseTo(23, 1)
+    expect(box(thumb).top - box(bar).top).toBeCloseTo(4, 1)
+    view.scrollTop = 300
+    await expect.poll(() => Math.round((box(bar).bottom - box(thumb).bottom) * 10) / 10).toBe(4)
+    // And a press on the track still puts the thumb's middle there.
+    bar.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        clientY: box(bar).top + 4 + 11.5 + 23,
+        button: 0,
+        pointerId: 1,
+        bubbles: true,
+        cancelable: true,
+      })
+    )
+    expect(Math.round(view.scrollTop)).toBe(100)
+  })
+
+  it("says where its parts lie before there is a page", () => {
+    // What a server writes: every part's place, and nothing measured.
+    const made = createScrollArea(signal({}))
+    expect(made.root.props.peek().style).toEqual({
+      position: "relative",
+      "--scroll-area-corner-height": "0px",
+      "--scroll-area-corner-width": "0px",
+    })
+    expect(made.scrollbar("vertical").part.props.peek().style).toEqual({
+      position: "absolute",
+      "touch-action": "none",
+      "-webkit-user-select": "none",
+      "user-select": "none",
+      top: "0px",
+      bottom: "var(--scroll-area-corner-height)",
+      "inset-inline-end": "0px",
+      "--scroll-area-thumb-height": "0px",
+    })
+    expect(made.scrollbar("horizontal").part.props.peek().style).toEqual({
+      position: "absolute",
+      "touch-action": "none",
+      "-webkit-user-select": "none",
+      "user-select": "none",
+      "inset-inline-start": "0px",
+      "inset-inline-end": "var(--scroll-area-corner-width)",
+      bottom: "0px",
+      "--scroll-area-thumb-width": "0px",
+    })
+    expect(made.scrollbar("vertical").thumb.props.peek().style).toEqual({
+      visibility: "hidden",
+      height: "var(--scroll-area-thumb-height)",
+    })
+    expect(made.corner.part.props.peek().style).toEqual({
+      position: "absolute",
+      bottom: "0px",
+      "inset-inline-end": "0px",
+      width: "0px",
+      height: "0px",
+    })
   })
 })

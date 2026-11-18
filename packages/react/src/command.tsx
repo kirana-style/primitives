@@ -1,10 +1,22 @@
+import type { StateOf } from "@kirana-ui/core"
 import { createCommand } from "@kirana-ui/core/command"
 import type { CommandGroup, CommandProps, Command as Controller } from "@kirana-ui/core/command"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement } from "react"
 
-import { useController, useOptions, useOwnText, usePart, useSignal } from "./runtime.tsx"
+import {
+  PartElement,
+  parts,
+  useController,
+  useOptions,
+  useOwnText,
+  usePart,
+  useSignal,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["command"]
 
 const Context = createContext<Controller | null>(null)
 const GroupContext = createContext<CommandGroup | undefined>(undefined)
@@ -15,7 +27,11 @@ function useCommand(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<CommandProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<CommandProps, "id"> & { id?: string }
+>
 
 function Root({
   inputValue,
@@ -40,27 +56,31 @@ function Root({
   })
   return (
     <Context.Provider value={controller}>
-      <RootElement {...rest} />
+      <PartElement of={controller.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) => usePart(useCommand("Root").root, "div", props)
-const Input = (props: PartComponentProps) =>
-  usePart(useOwnText(useCommand("Input").input), "input", props)
-const List = (props: PartComponentProps) => usePart(useCommand("List").list, "div", props)
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
 
-const EmptyElement = (props: PartComponentProps) =>
-  usePart(useCommand("Empty").emptyPart, "div", props)
+const Input = (props: InputProps) => usePart(useOwnText(useCommand("Input").input), "input", props)
+export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
+
+const List = (props: ListProps) => usePart(useCommand("List").list, "div", props)
+
+export type EmptyProps = PartComponentProps<"div", StateOf<Parts["empty"]>>
 
 /** Drawn while no item is shown for what was typed. */
-function Empty(props: PartComponentProps): ReactElement | null {
-  const empty = useSignal(useCommand("Empty").empty)
-  return empty ? <EmptyElement {...props} /> : null
+function Empty(props: EmptyProps): ReactElement | null {
+  const controller = useCommand("Empty")
+  const empty = useSignal(controller.empty)
+  return empty ? <PartElement of={controller.emptyPart} tag="div" {...props} /> : null
 }
 
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
 /** Items under a `<Command.GroupHeading>`. Hidden while none of them is shown. */
-function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
+function Group({ id, ...props }: GroupProps): ReactElement {
   const controller = useCommand("Group")
   const generated = useId()
   const name = id ?? generated
@@ -70,21 +90,28 @@ function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactEle
   )
 }
 
-function GroupHeading(props: PartComponentProps): ReactElement {
+export type GroupHeadingProps = PartComponentProps<"div", StateOf<Parts["groupHeading"]>>
+
+function GroupHeading(props: GroupHeadingProps): ReactElement {
   const lone = useCommand("GroupHeading").heading
   return usePart(useContext(GroupContext)?.heading ?? lone, "div", props)
 }
 
-export interface ItemProps extends PartComponentProps {
-  /** What `onSelect` is told. */
-  value: string
-  disabled?: boolean
-  /** What is filtered; the item's text when left out. */
-  label?: string
-  /** Other words the item answers to. */
-  keywords?: readonly string[]
-  id?: string
-}
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
+    /** What `onSelect` is told. */
+    value: string
+    /** Disables this item: it cannot be chosen, and the arrows pass over it. */
+    disabled?: boolean
+    /** What is filtered; the item's text when left out. */
+    label?: string
+    /** Other words the item answers to. */
+    keywords?: readonly string[]
+    id?: string
+  }
+>
 
 function Item({ value, disabled, label, keywords, id, ...props }: ItemProps): ReactElement {
   const controller = useCommand("Item")
@@ -98,10 +125,14 @@ function Item({ value, disabled, label, keywords, id, ...props }: ItemProps): Re
   return usePart(part, "div", props)
 }
 
-export interface SeparatorProps extends PartComponentProps {
-  /** Stays while something is typed. */
-  alwaysRender?: boolean
-}
+export type SeparatorProps = PartComponentProps<
+  "div",
+  StateOf<Parts["separator"]>,
+  {
+    /** Stays while something is typed. */
+    alwaysRender?: boolean
+  }
+>
 
 function Separator({ alwaysRender, ...props }: SeparatorProps): ReactElement {
   const controller = useCommand("Separator")
@@ -113,4 +144,13 @@ function Separator({ alwaysRender, ...props }: SeparatorProps): ReactElement {
   return usePart(part, "div", props)
 }
 
-export const Command = { Root, Input, List, Empty, Group, GroupHeading, Item, Separator }
+export const Command = /* @__PURE__ */ parts("Command", {
+  Root,
+  Input,
+  List,
+  Empty,
+  Group,
+  GroupHeading,
+  Item,
+  Separator,
+})

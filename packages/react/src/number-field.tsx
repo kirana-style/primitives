@@ -1,12 +1,16 @@
 import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
 import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { useController, useOwnText, usePart, useSignal } from "./runtime.tsx"
+import { parts, useController, useOwnText, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["numberField"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -16,7 +20,11 @@ function useNumberField(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<NumberFieldProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<NumberFieldProps, "id"> & { id?: string }
+>
 
 function Root({
   value,
@@ -38,7 +46,6 @@ function Root({
   name,
   form,
   id,
-  children,
   ...rest
 }: RootProps): ReactElement {
   const field = useContext(FieldContext) ?? undefined
@@ -69,24 +76,39 @@ function Root({
   const named = useSignal(controller.named)
   return (
     <Context.Provider value={controller}>
-      <RootElement {...rest}>
-        {children}
-        {named ? <HiddenInput /> : null}
-      </RootElement>
+      {usePart(controller.root, "div", rest, undefined, (content) => (
+        // Its hidden input is in the element, whatever element the caller asked for.
+        <>
+          {content}
+          {named ? <HiddenInput /> : null}
+        </>
+      ))}
     </Context.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) =>
-  usePart(useNumberField("Root").root, "div", props)
 const HiddenInput = () => usePart(useNumberField("Root").hidden, "input", {})
-const Group = (props: PartComponentProps) => usePart(useNumberField("Group").group, "div", props)
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>>
+
+const Group = (props: GroupProps) => usePart(useNumberField("Group").group, "div", props)
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+
 /** The text input. Its text is the field's own. */
-const Input = (props: PartComponentProps) =>
+const Input = (props: InputProps) =>
   usePart(useOwnText(useNumberField("Input").input), "input", props)
-const Increment = (props: PartComponentProps) =>
+export type IncrementProps = PartComponentProps<"button", StateOf<Parts["increment"]>>
+
+const Increment = (props: IncrementProps) =>
   usePart(useNumberField("Increment").increment, "button", props)
-const Decrement = (props: PartComponentProps) =>
+export type DecrementProps = PartComponentProps<"button", StateOf<Parts["decrement"]>>
+
+const Decrement = (props: DecrementProps) =>
   usePart(useNumberField("Decrement").decrement, "button", props)
 
-export const NumberField = { Root, Group, Input, Increment, Decrement }
+export const NumberField = /* @__PURE__ */ parts("NumberField", {
+  Root,
+  Group,
+  Input,
+  Increment,
+  Decrement,
+})

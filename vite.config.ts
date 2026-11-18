@@ -132,8 +132,10 @@ export default defineConfig({
       budgets: { command: "bun scripts/budgets.ts --check", cache: false },
       // Every adapter exports the same components and parts, and the same entry per component.
       parity: { command: "bun scripts/parity.ts", cache: false },
-      // Each adapter's `llms.txt`, from its exports, the core's props and the vocabulary:
-      // `bun scripts/llms.ts` writes them, and this fails when one is out of date.
+      // Each adapter's `llms.txt`, from its own source (every part's props), the core's
+      // comments and the vocabulary: `bun scripts/llms.ts` writes them, and this fails when one
+      // is out of date or breaks a rule (an import that does not resolve, a prop with no
+      // comment, a named type unexplained, an export unlisted).
       llms: { command: "bun scripts/llms.ts --check", cache: false },
       // The packages as they would be published (dist-packages/), then used from an empty
       // project: installed, every export loaded, rendered on a server, type-checked.

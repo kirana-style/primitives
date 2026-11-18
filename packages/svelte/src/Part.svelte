@@ -1,32 +1,44 @@
+<!--
+  @component
+  The element of a part (`of`, drawn as `tag`), or the caller's own through `child`: for a
+  component of one's own, made on the core's services.
+-->
 <script lang="ts">
-  import type { Part, PartProps } from "@kirana-ui/core"
+  import type { Part } from "@kirana-ui/core"
   import type { Snippet } from "svelte"
 
   import { partProps } from "./runtime.svelte.ts"
 
-  // A part's element, or the caller's own through `child`, which spreads the part's props.
+  // The element of a part (`of`), or the caller's own through `child`, which spreads the
+  // part's props and is given the part's state. `held` is what the part keeps in its element
+  // beside its content (a control's native input, the text it writes, each as a snippet): the
+  // caller's element is the caller's to draw, so `child` is given it too, to put inside.
   let {
-    part,
+    of,
     tag,
     child,
+    held,
     children,
     ...rest
   }: {
-    part: Part
+    of: Part
     tag: string
-    child?: Snippet<[{ props: PartProps }]>
-    children?: Snippet
+    // Each part's own file says what its snippet is given: here it is any part's.
+    // oxlint-disable-next-line typescript/no-explicit-any
+    child?: Snippet<[any]> | undefined
+    held?: Record<string, unknown> | undefined
+    children?: Snippet | undefined
     [attribute: string]: unknown
   } = $props()
 
   const merged = partProps(
-    () => part,
+    () => of,
     () => rest
   )
 </script>
 
 {#if child}
-  {@render child({ props: merged.current })}
+  {@render child({ ...held, props: merged.current, state: merged.state })}
 {:else}
   <svelte:element this={tag} {...merged.current}>{@render children?.()}</svelte:element>
 {/if}

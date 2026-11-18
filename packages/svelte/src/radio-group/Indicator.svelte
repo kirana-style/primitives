@@ -4,15 +4,15 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { ITEM, useRadioGroup } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { IndicatorProps } from "./types.ts"
 
   // `keepMounted` keeps the mark in the page while its item is not the chosen one.
-  let { keepMounted = false, ...rest }: { keepMounted?: boolean } & PartAttributes = $props()
+  let { keepMounted = false, ...rest }: IndicatorProps = $props()
   const indicator = useRadioGroup().indicator(getContext(ITEM))
   $effect(() => untrack(() => indicator.mount()))
   const mounted = fromSignal(indicator.mounted)
 </script>
 
 {#if mounted.current || keepMounted}
-  <Part part={indicator.part} tag="span" {...rest} />
+  <Part of={indicator.part} tag="span" {...rest} />
 {/if}

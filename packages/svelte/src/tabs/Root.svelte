@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { TabsProps } from "@kirana-ui/core/tabs"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createTabs } from "@kirana-ui/core/tabs"
@@ -8,12 +7,12 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
-  let { value = $bindable(), defaultValue, onValueChange, orientation, id, ...rest }: RootProps<TabsProps> = $props()
+  let { value = $bindable(), defaultValue, onValueChange, orientation, id, ...rest }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function change(next: unknown, by: ChangeDetails) {
+  function change(next: Value, by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -29,4 +28,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

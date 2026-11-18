@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useCombobox } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { TriggerProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: TriggerProps = $props()
   const controller = useCombobox()
 </script>
 
-<Part part={controller.trigger} tag="button" {...props} />
+<Part of={controller.trigger} tag="button" {...props} />

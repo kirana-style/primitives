@@ -1,6 +1,8 @@
 import { createCollapsible } from "@kirana-ui/core/collapsible"
+import type { CollapsibleProps } from "@kirana-ui/core/collapsible"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-collapsible>` around `kui-part="root"`, a `trigger` button and a `panel`, which is in
@@ -18,3 +20,12 @@ export const tag = defineElement({
     panel: (controller) => ({ mounted: controller.mounted, part: controller.panel }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-collapsible": ElementOf<
+      As<typeof tag, CollapsibleProps>,
+      { "open-change": ["onOpenChange", "open"] }
+    >
+  }
+}

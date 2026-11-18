@@ -13,6 +13,7 @@ const DIRTY = 2
 
 type Equals<T> = (a: T, b: T) => boolean
 
+/** A value that is read, and that tells when it changes. */
 export interface ReadonlySignal<T> {
   /** The value, tracked by the computed or effect that reads it. */
   get(): T
@@ -22,6 +23,7 @@ export interface ReadonlySignal<T> {
   subscribe(listener: () => void): () => void
 }
 
+/** A value that is read and written, and that tells when it changes. */
 export interface Signal<T> extends ReadonlySignal<T> {
   set(value: T): void
 }

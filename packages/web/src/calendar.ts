@@ -4,6 +4,7 @@ import type { Calendar, CalendarProps } from "@kirana-ui/core/calendar"
 
 import { calendarParts, days } from "./dates.ts"
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const { parts, lists } = calendarParts<Calendar>((controller) => controller)
 
@@ -51,3 +52,12 @@ export const tag = defineElement<CalendarProps, Calendar>({
   lists,
   parts: { root: (controller) => controller.root, ...parts },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-calendar": ElementOf<
+      typeof tag,
+      { "value-change": ["onValueChange", "value"]; "month-change": ["onMonthChange", "month"] }
+    >
+  }
+}

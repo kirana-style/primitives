@@ -8,7 +8,9 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./agent": "./agent/index.ts",
+    "./testing": "./testing/index.ts"
   },
   "dependencies": {
     "@kirana-ui/core": "workspace:*",

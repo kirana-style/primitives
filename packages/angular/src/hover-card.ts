@@ -11,11 +11,11 @@ import {
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
+import type { ChangeDetails } from "@kirana-ui/core"
 import { createHoverCard } from "@kirana-ui/core/hover-card"
 import type { HoverPopup } from "@kirana-ui/core/hover-card"
 
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** On any element, or on `<ng-container>` to draw none. */
 @Directive({ selector: "[kuiHoverCard]", exportAs: "kuiHoverCard" })
@@ -67,34 +67,11 @@ export class KuiHoverCardPortal implements OnInit {
 }
 
 @Directive({ selector: "[kuiHoverCardPositioner]" })
-export class KuiHoverCardPositioner implements OnInit {
-  readonly side = input<Side>()
-  readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+export class KuiHoverCardPositioner extends KuiPositioner {
   private readonly root = inject(KuiHoverCard)
-  private readonly put = hostPart()
-  private readonly options = () =>
-    defined({
-      side: this.side(),
-      align: this.align(),
-      sideOffset: this.sideOffset(),
-      alignOffset: this.alignOffset(),
-      collisionPadding: this.collisionPadding(),
-    })
 
-  constructor() {
-    effect(() => {
-      const next = this.options()
-      untracked(() => this.root.controller?.positioning.set(next))
-    })
-  }
-
-  ngOnInit(): void {
-    // Before the element attaches: the first placement reads these.
-    this.root.controller.positioning.set(untracked(this.options))
-    this.put(this.root.controller.positioner)
+  protected placed() {
+    return this.root.controller
   }
 }
 

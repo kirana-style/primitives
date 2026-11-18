@@ -2,6 +2,7 @@ import { createMessageScroller } from "@kirana-ui/core/message-scroller"
 import type { MessageScroller, MessageScrollerProps } from "@kirana-ui/core/message-scroller"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-message-scroller>` around `kui-part="root"`, a `viewport` with its `content`, and a
@@ -20,3 +21,12 @@ export const tag = defineElement<MessageScrollerProps, MessageScroller>({
     button: (controller) => controller.button,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-message-scroller": ElementOf<
+      typeof tag,
+      { "at-bottom-change": ["onAtBottomChange", "atBottom"] }
+    >
+  }
+}

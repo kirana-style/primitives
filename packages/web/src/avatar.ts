@@ -3,6 +3,7 @@ import { createAvatar } from "@kirana-ui/core/avatar"
 import type { Avatar } from "@kirana-ui/core/avatar"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-avatar>` around `kui-part="root"`, an `image` (an `<img>`, in the page once the
@@ -35,3 +36,9 @@ export const tag = defineElement<{ id: string; src?: string }, Avatar & { mount(
     }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-avatar": ElementOf<typeof tag>
+  }
+}

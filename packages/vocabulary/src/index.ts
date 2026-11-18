@@ -26,10 +26,13 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "item": {
-          "description": "One section: a header with its trigger, and a panel.",
+          "description": "One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -43,7 +46,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "header": {
           "description": "The heading that holds the trigger.",
@@ -60,7 +68,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "trigger": {
           "description": "The button that opens and closes the item's panel.",
@@ -77,7 +90,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "header"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "panel": {
           "description": "The item's content. In the page while open, and through its exit's motion.",
@@ -129,12 +147,26 @@ export const vocabulary = {
           "variables": {
             "--accordion-panel-height": "The panel's content height while it opens or closes, `auto` once it is open.",
             "--accordion-panel-width": "The panel's content width while it opens or closes, `auto` once it is open."
-          }
+          },
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "alertDialog": {
       "parts": {
+        "root": {
+          "description": "Holds the dialog: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The button that opens the dialog.",
           "states": {
@@ -145,7 +177,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "backdrop": {
           "description": "The layer over the page behind the dialog.",
@@ -181,7 +229,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The dialog itself.",
@@ -224,25 +277,45 @@ export const vocabulary = {
           ],
           "variables": {
             "--nested-dialogs": "How many dialogs are open above this one."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "title": {
           "description": "The heading that names the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "description": {
           "description": "The text that describes the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "close": {
           "description": "A button that closes the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -252,19 +325,32 @@ export const vocabulary = {
           "description": "The frame the image and its stand-in share.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "image": {
           "description": "The picture. In the page once it has loaded.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "fallback": {
           "description": "What shows until the picture has loaded, or when it cannot.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -280,7 +366,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -326,7 +415,10 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "indicator": {
           "description": "The mark. In the page while the box is checked or indeterminate.",
@@ -382,7 +474,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -413,7 +510,10 @@ export const vocabulary = {
               "closed"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "trigger": {
           "description": "The button that opens and closes the panel.",
@@ -430,7 +530,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "panel": {
           "description": "The content. In the page while open, and through its exit's motion.",
@@ -469,14 +574,28 @@ export const vocabulary = {
           "variables": {
             "--collapsible-panel-height": "The panel's content height while it opens or closes, `auto` once it is open.",
             "--collapsible-panel-width": "The panel's content width while it opens or closes, `auto` once it is open."
-          }
+          },
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "combobox": {
       "parts": {
+        "root": {
+          "description": "Holds the combobox: its value, what is typed and whether the list is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "input": {
-          "description": "The text input. What is typed filters the list, which is placed against it.",
+          "description": "The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.",
           "states": {
             "popupOpen": {
               "attribute": "data-popup-open",
@@ -490,10 +609,17 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root",
+            "chips",
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "trigger": {
-          "description": "A button that opens and closes the list.",
+          "description": "A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.",
           "states": {
             "popupOpen": {
               "attribute": "data-popup-open",
@@ -507,10 +633,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
-          "description": "Places the list against the input. It carries the geometry.",
+          "description": "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -524,12 +666,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -554,10 +698,15 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
-          "description": "The list of items.",
+          "description": "The list of items. With a `list` inside, what holds it: a dialog around an input and the list.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -581,12 +730,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -614,7 +765,30 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner",
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "list": {
+          "description": "The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.",
+          "states": {
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": true,
+          "repeated": false
         },
         "item": {
           "description": "One choice in the list.",
@@ -636,37 +810,67 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "group": {
           "description": "Items that belong together, named by their label. Hidden while none is shown.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "groupLabel": {
           "description": "The name of a group. Outside a group it is plain text, and names nothing.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "separator": {
           "description": "A line between groups.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "itemIndicator": {
           "description": "A mark an item shows while it is the chosen one.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "empty": {
           "description": "What is shown when no item is.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "clear": {
           "description": "A button that empties the input and the value.",
@@ -678,19 +882,34 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "chips": {
-          "description": "With several values: what holds the chips and the input.",
+          "description": "With several values: what holds the chips and the input, and what the list is placed against.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "chip": {
           "description": "One chosen value.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "chips"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "chipRemove": {
           "description": "A chip's button that takes its value away.",
@@ -702,12 +921,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "chip"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "contextMenu": {
       "parts": {
+        "root": {
+          "description": "Holds the menu: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The area a secondary press, or a long press on a touch screen, opens the menu in.",
           "states": {
@@ -718,7 +951,24 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root",
+            "submenuRoot"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the menu against its trigger. It carries the geometry.",
@@ -735,12 +985,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -765,7 +1017,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The menu itself: the list of items.",
@@ -792,12 +1049,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -820,19 +1079,26 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "arrow": {
           "description": "An element that points at the trigger.",
           "states": {
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -851,7 +1117,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "An action. Choosing it closes the menu.",
@@ -868,7 +1139,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "linkItem": {
           "description": "An item that is a link. Choosing it follows the link and closes the menu.",
@@ -885,25 +1161,45 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "group": {
           "description": "Items that belong together, named by their label.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "groupLabel": {
           "description": "The name of a group. Outside a group it is plain text, and names nothing.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "separator": {
           "description": "A line between items.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "checkboxItem": {
           "description": "An item that is checked or not. Choosing it leaves the menu open.",
@@ -935,7 +1231,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "checkboxItemIndicator": {
           "description": "A mark a checkbox item shows while it is checked.",
@@ -957,7 +1258,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "checkboxItem"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "radioGroup": {
           "description": "Radio items of which one is chosen.",
@@ -969,7 +1275,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "radioItem": {
           "description": "One choice of a radio group. Choosing it leaves the menu open.",
@@ -1001,7 +1312,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "radioGroup"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "radioItemIndicator": {
           "description": "A mark a radio item shows while it is the chosen one.",
@@ -1023,7 +1339,23 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "radioItem"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "submenuRoot": {
+          "description": "A submenu: it holds the item that opens it and a portal, positioner and popup of its own. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "submenuTrigger": {
           "description": "An item that opens a menu beside it.",
@@ -1045,12 +1377,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "submenuRoot"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "dialog": {
       "parts": {
+        "root": {
+          "description": "Holds the dialog: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The button that opens the dialog.",
           "states": {
@@ -1061,7 +1407,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "backdrop": {
           "description": "The layer over the page behind the dialog.",
@@ -1097,7 +1459,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The dialog itself.",
@@ -1140,25 +1507,45 @@ export const vocabulary = {
           ],
           "variables": {
             "--nested-dialogs": "How many dialogs are open above this one."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "title": {
           "description": "The heading that names the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "description": {
           "description": "The text that describes the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "close": {
           "description": "A button that closes the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -1209,7 +1596,10 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "label": {
           "description": "The control's name: a press on it reaches the control.",
@@ -1256,7 +1646,12 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "control": {
           "description": "The control: an input, a textarea or a select.",
@@ -1303,7 +1698,12 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "description": {
           "description": "More about the control, said after its name.",
@@ -1350,7 +1750,12 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "error": {
           "description": "What is wrong with the value. In the page while it applies.",
@@ -1411,7 +1816,23 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "validity": {
+          "description": "Gives the control's validity to what it holds, to draw from. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -1427,7 +1848,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "legend": {
           "description": "The group's name.",
@@ -1439,7 +1863,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -1449,12 +1878,24 @@ export const vocabulary = {
           "description": "The form. A submit checks every field in it and stops, with focus on the first that is invalid.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "hoverCard": {
       "parts": {
+        "root": {
+          "description": "Holds the card: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The link the card previews.",
           "states": {
@@ -1465,7 +1906,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the popup against the trigger. It carries the geometry.",
@@ -1482,12 +1939,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -1512,7 +1971,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The card itself.",
@@ -1539,12 +2003,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -1576,19 +2042,26 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "arrow": {
           "description": "An element that points at the trigger, placed along the popup's edge.",
           "states": {
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -1607,7 +2080,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -1623,7 +2101,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "One choice in the list.",
@@ -1645,7 +2126,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "itemIndicator": {
           "description": "A mark an item shows while it is chosen.",
@@ -1657,24 +2143,48 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "group": {
           "description": "Items that belong together, named by their label.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "groupLabel": {
           "description": "The name of a group.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "menu": {
       "parts": {
+        "root": {
+          "description": "Holds the menu: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The button that opens the menu, and what it is placed against.",
           "states": {
@@ -1690,7 +2200,24 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root",
+            "submenuRoot"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the menu against its trigger. It carries the geometry.",
@@ -1707,12 +2234,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -1737,7 +2266,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The menu itself: the list of items.",
@@ -1764,12 +2298,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -1792,19 +2328,26 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "arrow": {
           "description": "An element that points at the trigger.",
           "states": {
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -1823,7 +2366,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "An action. Choosing it closes the menu.",
@@ -1840,7 +2388,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "linkItem": {
           "description": "An item that is a link. Choosing it follows the link and closes the menu.",
@@ -1857,25 +2410,45 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "group": {
           "description": "Items that belong together, named by their label.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "groupLabel": {
           "description": "The name of a group. Outside a group it is plain text, and names nothing.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "separator": {
           "description": "A line between items.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "checkboxItem": {
           "description": "An item that is checked or not. Choosing it leaves the menu open.",
@@ -1907,7 +2480,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "checkboxItemIndicator": {
           "description": "A mark a checkbox item shows while it is checked.",
@@ -1929,7 +2507,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "checkboxItem"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "radioGroup": {
           "description": "Radio items of which one is chosen.",
@@ -1941,7 +2524,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "radioItem": {
           "description": "One choice of a radio group. Choosing it leaves the menu open.",
@@ -1973,7 +2561,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "radioGroup"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "radioItemIndicator": {
           "description": "A mark a radio item shows while it is the chosen one.",
@@ -1995,7 +2588,23 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "radioItem"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "submenuRoot": {
+          "description": "A submenu: it holds the item that opens it and a portal, positioner and popup of its own. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "submenuTrigger": {
           "description": "An item that opens a menu beside it.",
@@ -2017,7 +2626,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "submenuRoot"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2041,7 +2655,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2051,31 +2668,54 @@ export const vocabulary = {
           "description": "The meter: it says the value to assistive technology.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "track": {
           "description": "The whole range.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "indicator": {
           "description": "The filled part: its width is the value's share of the range.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "track"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "value": {
           "description": "The value, written.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "label": {
           "description": "The meter's name.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2094,7 +2734,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "list": {
           "description": "The row of items.",
@@ -2109,13 +2752,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
-          "description": "One item of the list: a link, or a trigger with its content.",
+          "description": "One item of the list: a link, or a trigger with its content. Its `value` tells it from the others; an item that is given none makes its own.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "trigger": {
           "description": "The button that shows an item's content.",
@@ -2127,7 +2780,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "icon": {
           "description": "A mark on a trigger that shows whether its content is open.",
@@ -2139,7 +2797,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "trigger"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "content": {
           "description": "What an item shows. It is drawn in the viewport every item shares.",
@@ -2183,7 +2846,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "link": {
           "description": "A link, in the list or in an item's content.",
@@ -2195,7 +2863,25 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "content",
+            "item",
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the popup against the open item's trigger. It carries the geometry.",
@@ -2212,12 +2898,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -2244,7 +2932,12 @@ export const vocabulary = {
             "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
             "--positioner-width": "The open content's width.",
             "--positioner-height": "The open content's height."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The panel every item's content is shown in.",
@@ -2271,12 +2964,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -2302,25 +2997,37 @@ export const vocabulary = {
           "variables": {
             "--popup-width": "The open content's width.",
             "--popup-height": "The open content's height."
-          }
+          },
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "viewport": {
           "description": "Where the contents are drawn, inside the popup.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "arrow": {
           "description": "An element that points at the open item's trigger.",
           "states": {
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -2339,7 +3046,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "backdrop": {
           "description": "An element behind the popup, for a design that dims the page.",
@@ -2375,7 +3087,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2401,7 +3118,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "input": {
           "description": "The one input the code is typed in. A design lays it over the cells, unseen.",
@@ -2413,13 +3133,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "group": {
           "description": "Cells that are drawn together.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "slot": {
           "description": "One cell of the code.",
@@ -2446,19 +3176,34 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "separator": {
           "description": "A mark between groups of cells.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "caret": {
           "description": "A caret drawn in the active cell while it is empty.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "slot"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2484,7 +3229,21 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "segments": {
+          "description": "The date's segments, in the locale's order: each is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "segment": {
           "description": "One piece of the date: a part that is typed, or what stands between two.",
@@ -2516,13 +3275,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "segments"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "input": {
           "description": "The hidden input it is submitted by.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2573,7 +3342,10 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2624,7 +3396,10 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -2640,7 +3415,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "input": {
           "description": "The text input. What is typed filters the list; focus stays in it.",
@@ -2652,7 +3430,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "list": {
           "description": "The commands.",
@@ -2664,25 +3447,45 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "empty": {
           "description": "What is shown when no item is.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "group": {
           "description": "Items under a heading. Hidden while none of them is shown.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "groupHeading": {
           "description": "A group's name.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "One command.",
@@ -2699,13 +3502,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "separator": {
           "description": "A line between groups. Hidden while something is typed.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
         }
       }
     },
@@ -2766,7 +3579,10 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "group": {
           "description": "What holds the input and its buttons, as one control.",
@@ -2823,7 +3639,12 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "input": {
           "description": "The text input: it takes what its locale writes a number with.",
@@ -2880,7 +3701,12 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "increment": {
           "description": "A button that steps the number up. Held, it goes on.",
@@ -2937,7 +3763,12 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "decrement": {
           "description": "A button that steps the number down. Held, it goes on.",
@@ -2994,12 +3825,26 @@ export const vocabulary = {
               "invalid"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "autocomplete": {
       "parts": {
+        "root": {
+          "description": "Holds the autocomplete: the text, and whether the suggestions are open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "input": {
           "description": "The text input: its text is the value, and what is typed asks for suggestions.",
           "states": {
@@ -3015,10 +3860,15 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "trigger": {
-          "description": "A button that opens and closes the list.",
+          "description": "A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.",
           "states": {
             "popupOpen": {
               "attribute": "data-popup-open",
@@ -3032,10 +3882,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
-          "description": "Places the list against the input. It carries the geometry.",
+          "description": "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -3049,12 +3915,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -3079,10 +3947,15 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
-          "description": "The list of items.",
+          "description": "The list of items. With a `list` inside, what holds it: a dialog around an input and the list.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -3106,12 +3979,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -3139,7 +4014,30 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner",
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "list": {
+          "description": "The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.",
+          "states": {
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": true,
+          "repeated": false
         },
         "item": {
           "description": "One suggestion: chosen, its text is written into the input.",
@@ -3161,31 +4059,56 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "group": {
           "description": "Items that belong together, named by their label. Hidden while none is shown.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "groupLabel": {
           "description": "The name of a group. Outside a group it is plain text, and names nothing.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "separator": {
           "description": "A line between groups.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "empty": {
           "description": "What is shown when no item is.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "clear": {
           "description": "A button that empties the input and the value.",
@@ -3197,7 +4120,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -3213,7 +4141,21 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "items": {
+          "description": "The row's entries, pages and the gaps between them: each is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "A page: pressed, it is the one shown.",
@@ -3230,13 +4172,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "items"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "ellipsis": {
           "description": "The mark for pages that are left out of the row.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "items"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "previous": {
           "description": "Goes to the page before.",
@@ -3248,7 +4200,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "next": {
           "description": "Goes to the page after.",
@@ -3260,12 +4217,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "datePicker": {
       "parts": {
+        "root": {
+          "description": "Holds the date picker: its value, the month shown and whether the calendar is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "field": {
           "description": "The field: a group of the date's parts.",
           "states": {
@@ -3286,7 +4257,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "segments": {
+          "description": "The date's segments, in the locale's order: each is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "field"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "segment": {
           "description": "One piece of the date: a part that is typed, or what stands between two.",
@@ -3318,7 +4305,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "segments"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "input": {
+          "description": "The hidden input it is submitted by.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "field"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "trigger": {
           "description": "The button that opens the popover, and what it is placed against.",
@@ -3330,7 +4333,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the popup against the trigger. It carries the geometry.",
@@ -3347,12 +4366,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -3377,7 +4398,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The popover itself.",
@@ -3404,12 +4430,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -3432,7 +4460,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "calendar": {
           "description": "The calendar.",
@@ -3449,13 +4482,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "heading": {
           "description": "Names the month shown. Read out when it changes.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "calendar"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "previous": {
           "description": "Shows the month before.",
@@ -3467,7 +4510,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "calendar"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "next": {
           "description": "Shows the month after.",
@@ -3479,19 +4527,56 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "calendar"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "grid": {
           "description": "The table of days: a grid the arrows move in.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "calendar"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "weekdays": {
+          "description": "The days of the week: each is given to draw its head cell. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "grid"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "headCell": {
           "description": "A column's heading: a day of the week.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "weekdays"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "weeks": {
+          "description": "The weeks of the month shown: each is given to draw its row of days. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "grid"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "cell": {
           "description": "A day's cell.",
@@ -3533,7 +4618,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "weeks"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "day": {
           "description": "The button for a day.",
@@ -3575,7 +4665,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "cell"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -3596,13 +4691,21 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "heading": {
           "description": "Names the month shown. Read out when it changes.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "previous": {
           "description": "Shows the month before.",
@@ -3614,7 +4717,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "next": {
           "description": "Shows the month after.",
@@ -3626,19 +4734,56 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "grid": {
           "description": "The table of days: a grid the arrows move in.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "weekdays": {
+          "description": "The days of the week: each is given to draw its head cell. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "grid"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "headCell": {
           "description": "A column's heading: a day of the week.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "weekdays"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "weeks": {
+          "description": "The weeks of the month shown: each is given to draw its row of days. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "grid"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "cell": {
           "description": "A day's cell.",
@@ -3680,7 +4825,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "weeks"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "day": {
           "description": "The button for a day.",
@@ -3722,12 +4872,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "cell"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "drawer": {
       "parts": {
+        "root": {
+          "description": "Holds the dialog: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The button that opens the dialog.",
           "states": {
@@ -3738,7 +4902,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "backdrop": {
           "description": "The layer over the page behind the dialog.",
@@ -3784,7 +4964,12 @@ export const vocabulary = {
             "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
             "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
             "--drawer-snap-point-offset": "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
@@ -3871,25 +5056,45 @@ export const vocabulary = {
             "--drawer-frontmost-height": "The height of the drawer in front of every other, while this one is open.",
             "--drawer-swipe-strength": "Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner.",
             "--drawer-width": "Its width."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "title": {
           "description": "The heading that names the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "description": {
           "description": "The text that describes the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "close": {
           "description": "A button that closes the dialog.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -3905,7 +5110,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "viewport": {
           "description": "What scrolls: a log, reached by the keyboard.",
@@ -3917,13 +5125,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "content": {
           "description": "The messages: what grows as one is written.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "viewport"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "button": {
           "description": "Goes to the newest message. Inert while that is in view.",
@@ -3935,7 +5153,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -3951,19 +5174,32 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "frame": {
           "description": "The drawing: an `<svg>` a module to the unit.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "pattern": {
           "description": "The dark modules: one `<path>`, filled by the design.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "frame"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -3973,7 +5209,10 @@ export const vocabulary = {
           "description": "A `<textarea>` as tall as its text. Its `height` is written; `min-height` and `max-height` are the design's.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -3992,7 +5231,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "viewport": {
           "description": "What scrolls. The slides are its children; the design snaps them (`scroll-snap-type`) and says whether a step glides (`scroll-behavior`).",
@@ -4007,7 +5249,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "One slide.",
@@ -4027,7 +5274,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "viewport"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "previous": {
           "description": "Goes back a slide.",
@@ -4039,7 +5291,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "next": {
           "description": "Goes on a slide.",
@@ -4051,7 +5308,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "indicator": {
           "description": "A button for one slide.",
@@ -4063,7 +5325,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         }
       }
     },
@@ -4081,7 +5348,21 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {
             "--toast-frontmost-height": "The height of the newest toast."
-          }
+          },
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "list": {
+          "description": "The toasts in the page: each is given to draw its root. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "viewport"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "root": {
           "description": "One toast.",
@@ -4134,7 +5415,12 @@ export const vocabulary = {
             "--toast-offset-y": "The height of the toasts in front of it.",
             "--toast-swipe-movement-x": "How far it has been dragged across.",
             "--toast-swipe-movement-y": "How far it has been dragged up or down."
-          }
+          },
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "content": {
           "description": "What holds a toast's contents, when the design sizes the toast itself.",
@@ -4151,36 +5437,70 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
         },
         "title": {
-          "description": "What the toast is called.",
+          "description": "What the toast is called: the title it was added with, when nothing else is written in it.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "content"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "description": {
-          "description": "What the toast says.",
+          "description": "What the toast says: the description it was added with, when nothing else is written in it.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "content"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "close": {
           "description": "Closes the toast.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "action": {
-          "description": "A button of the toast's own; pressing it closes the toast too.",
+          "description": "A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "popover": {
       "parts": {
+        "root": {
+          "description": "Holds the popover: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The button that opens the popover, and what it is placed against.",
           "states": {
@@ -4191,7 +5511,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the popup against the trigger. It carries the geometry.",
@@ -4208,12 +5544,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -4238,7 +5576,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The popover itself.",
@@ -4265,12 +5608,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -4293,25 +5638,45 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "title": {
           "description": "The heading that names the popover.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "description": {
           "description": "The text that describes the popover.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "close": {
           "description": "A button that closes the popover.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -4343,7 +5708,10 @@ export const vocabulary = {
               "indeterminate"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "track": {
           "description": "The whole range.",
@@ -4371,7 +5739,12 @@ export const vocabulary = {
               "indeterminate"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "indicator": {
           "description": "The filled part: its width is the value's share of the range.",
@@ -4399,7 +5772,12 @@ export const vocabulary = {
               "indeterminate"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "track"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "value": {
           "description": "The value, written.",
@@ -4427,7 +5805,12 @@ export const vocabulary = {
               "indeterminate"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "label": {
           "description": "The bar's name.",
@@ -4455,7 +5838,12 @@ export const vocabulary = {
               "indeterminate"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -4481,7 +5869,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "One choice. It holds a hidden native radio, which a form and a label reach.",
@@ -4518,7 +5909,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "indicator": {
           "description": "The mark. In the page while its item is the chosen one.",
@@ -4569,7 +5965,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -4593,7 +5994,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "panel": {
           "description": "One panel. It carries its share of the group.",
@@ -4610,7 +6014,12 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {
             "--panel-size": "The panel's share, in hundredths of the group."
-          }
+          },
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "handle": {
           "description": "The bar between two panels: dragged, or moved with the arrows.",
@@ -4635,14 +6044,19 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         }
       }
     },
     "scrollArea": {
       "parts": {
         "root": {
-          "description": "The area. It holds the viewport and the scrollbars.",
+          "description": "The area. It holds the viewport and the scrollbars, which the library places against it: a design gives a scrollbar its thickness and draws it, and places nothing.",
           "states": {
             "hasOverflowX": {
               "attribute": "data-has-overflow-x",
@@ -4667,9 +6081,12 @@ export const vocabulary = {
           },
           "exclusive": [],
           "variables": {
-            "--scroll-area-corner-width": "The width of the corner: the vertical scrollbar's.",
-            "--scroll-area-corner-height": "The height of the corner: the horizontal scrollbar's."
-          }
+            "--scroll-area-corner-width": "The width of the corner: the vertical scrollbar's, while both scrollbars and the corner are in the page.",
+            "--scroll-area-corner-height": "The height of the corner: the horizontal scrollbar's, while both scrollbars and the corner are in the page."
+          },
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "viewport": {
           "description": "The element that scrolls.",
@@ -4691,16 +6108,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "content": {
           "description": "What is scrolled.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "viewport"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "scrollbar": {
-          "description": "A scrollbar's track. In the page while there is something to scroll its way.",
+          "description": "A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -4722,10 +6149,18 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {
+            "--scroll-area-thumb-height": "A vertical thumb's height.",
+            "--scroll-area-thumb-width": "A horizontal thumb's width."
+          },
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "thumb": {
-          "description": "The part of a scrollbar that shows where the view is, and can be dragged.",
+          "description": "The part of a scrollbar that shows where the view is, and can be dragged. As long as its scrollbar's variable says.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -4737,21 +6172,37 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {
-            "--scroll-area-thumb-height": "A vertical thumb's height.",
-            "--scroll-area-thumb-width": "A horizontal thumb's width."
-          }
+          "variables": {},
+          "inside": [
+            "scrollbar"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "corner": {
-          "description": "The square where the two scrollbars meet.",
+          "description": "The square where the two scrollbars meet, placed there.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
     "select": {
       "parts": {
+        "root": {
+          "description": "Holds the select: its value and whether the list is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The button that shows the value and opens the list.",
           "states": {
@@ -4772,10 +6223,15 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "value": {
-          "description": "The chosen value's label, or the placeholder.",
+          "description": "The chosen value's label, or the placeholder. With several values, their labels with commas between.",
           "states": {
             "placeholder": {
               "attribute": "data-placeholder",
@@ -4784,7 +6240,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "trigger"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the list against the trigger. It carries the geometry.",
@@ -4807,6 +6279,8 @@ export const vocabulary = {
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
                 "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]",
                 "none": "[data-side=\"none\"]"
               }
             },
@@ -4832,31 +6306,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
-        },
-        "group": {
-          "description": "Items that belong together, named by their label.",
-          "states": {},
-          "exclusive": [],
-          "variables": {}
-        },
-        "groupLabel": {
-          "description": "The name of a group. Outside a group it is plain text, and names nothing.",
-          "states": {},
-          "exclusive": [],
-          "variables": {}
-        },
-        "separator": {
-          "description": "A line between groups.",
-          "states": {},
-          "exclusive": [],
-          "variables": {}
-        },
-        "list": {
-          "description": "The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.",
-          "states": {},
-          "exclusive": [],
-          "variables": {}
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "scrollUpArrow": {
           "description": "In the page while there is more of the list above: it scrolls the list while the pointer moves over it.",
@@ -4882,6 +6337,8 @@ export const vocabulary = {
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
                 "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]",
                 "none": "[data-side=\"none\"]"
               }
             },
@@ -4902,7 +6359,56 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "group": {
+          "description": "Items that belong together, named by their label.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": true,
+          "repeated": true
+        },
+        "groupLabel": {
+          "description": "The name of a group. Outside a group it is plain text, and names nothing.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "separator": {
+          "description": "A line between groups.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "list": {
+          "description": "The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": true,
+          "repeated": false
         },
         "scrollDownArrow": {
           "description": "In the page while there is more of the list below: it scrolls the list while the pointer moves over it.",
@@ -4928,6 +6434,8 @@ export const vocabulary = {
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
                 "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]",
                 "none": "[data-side=\"none\"]"
               }
             },
@@ -4948,7 +6456,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The list of items.",
@@ -4975,12 +6488,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -5003,14 +6518,19 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "item": {
           "description": "One choice in the list.",
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on the chosen item.",
+              "description": "Present on the chosen item, or on each of several.",
               "selector": "[data-selected]"
             },
             "highlighted": {
@@ -5025,19 +6545,34 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "itemText": {
           "description": "The item's name: what the trigger shows once it is chosen.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "itemIndicator": {
-          "description": "A mark an item shows while it is the chosen one.",
+          "description": "A mark an item shows while it is chosen.",
           "states": {},
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -5056,7 +6591,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -5085,7 +6623,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "value": {
           "description": "The value, written.",
@@ -5110,7 +6651,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "control": {
           "description": "What a pointer presses and drags on. It holds the track and the thumbs.",
@@ -5135,7 +6681,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "track": {
           "description": "The whole range.",
@@ -5160,7 +6711,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "control"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "indicator": {
           "description": "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
@@ -5188,10 +6744,15 @@ export const vocabulary = {
           "variables": {
             "--start-position": "With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.",
             "--relative-size": "With thumbs that stay inside the control and a range: the filled part's length."
-          }
+          },
+          "inside": [
+            "track"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "thumb": {
-          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.",
+          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -5220,7 +6781,12 @@ export const vocabulary = {
           "exclusive": [],
           "variables": {
             "--position": "With thumbs that stay inside the control: where the thumb's centre is."
-          }
+          },
+          "inside": [
+            "track"
+          ],
+          "optional": false,
+          "repeated": true
         }
       }
     },
@@ -5261,7 +6827,10 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "thumb": {
           "description": "The knob that moves along the track.",
@@ -5298,7 +6867,12 @@ export const vocabulary = {
               "unchecked"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -5328,7 +6902,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "list": {
           "description": "The row of tabs. The arrows move between them.",
@@ -5354,7 +6931,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "tab": {
           "description": "A button that shows its panel.",
@@ -5379,7 +6961,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "indicator": {
           "description": "A mark for the active tab: it carries that tab's position and size.",
@@ -5412,7 +6999,12 @@ export const vocabulary = {
             "--active-tab-bottom": "The active tab's distance from the list's bottom edge.",
             "--active-tab-width": "The active tab's width.",
             "--active-tab-height": "The active tab's height."
-          }
+          },
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "panel": {
           "description": "A tab's content. In the page while its tab is active, and through its exit.",
@@ -5458,7 +7050,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         }
       }
     },
@@ -5479,7 +7076,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -5508,7 +7108,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         }
       }
     },
@@ -5532,7 +7135,10 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
         },
         "button": {
           "description": "A button of the toolbar.",
@@ -5552,7 +7158,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "link": {
           "description": "A link of the toolbar.",
@@ -5572,7 +7183,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "input": {
           "description": "A text input of the toolbar. The arrows are its own until the caret is at an end.",
@@ -5592,7 +7208,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
         },
         "group": {
           "description": "Items that belong together.",
@@ -5612,7 +7233,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": true
         },
         "separator": {
           "description": "A line between items, across the toolbar.",
@@ -5627,12 +7253,26 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
         }
       }
     },
     "tooltip": {
       "parts": {
+        "root": {
+          "description": "Holds the tooltip: whether it is open. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
         "trigger": {
           "description": "The element the tooltip describes.",
           "states": {
@@ -5643,7 +7283,23 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "positioner": {
           "description": "Places the popup against the trigger. It carries the geometry.",
@@ -5660,12 +7316,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -5690,7 +7348,12 @@ export const vocabulary = {
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
             "--transform-origin": "The point of the popup nearest its anchor, to scale from."
-          }
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "popup": {
           "description": "The tooltip itself.",
@@ -5717,12 +7380,14 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -5754,19 +7419,26 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
         },
         "arrow": {
           "description": "An element that points at the trigger, placed along the popup's edge.",
           "states": {
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip.",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
-                "left": "[data-side=\"left\"]"
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
               }
             },
             "align": {
@@ -5785,7 +7457,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {}
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
         }
       }
     }

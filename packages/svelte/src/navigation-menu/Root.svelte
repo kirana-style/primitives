@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { NavigationMenuProps } from "@kirana-ui/core/navigation-menu"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createNavigationMenu } from "@kirana-ui/core/navigation-menu"
@@ -8,7 +7,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -19,10 +18,10 @@
     orientation,
     id,
     ...rest
-  }: RootProps<NavigationMenuProps> = $props()
+  }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function change(next: unknown, by: ChangeDetails) {
+  function change(next: Value | null, by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -40,4 +39,4 @@
   )
 </script>
 
-<Part part={made.root} tag="nav" {...rest} />
+<Part of={made.root} tag="nav" {...rest} />

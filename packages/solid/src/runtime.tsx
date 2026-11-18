@@ -1,5 +1,11 @@
-import { mergeProps, sameProps, signal } from "@kirana-ui/core"
-import type { Part as CorePart, PartProps, ReadonlySignal } from "@kirana-ui/core"
+import { mergeProps, sameProps, signal, stateOf } from "@kirana-ui/core"
+import type {
+  Part as CorePart,
+  PartEvent,
+  PartProps,
+  PartState,
+  ReadonlySignal,
+} from "@kirana-ui/core"
 import {
   Show,
   children,
@@ -67,22 +73,69 @@ function toSolid(props: PartProps): PartProps {
   return out
 }
 
-export type PartComponentProps = {
-  /** Renders the part as the caller's own element, which spreads the props it is given. */
-  render?: (props: () => PartProps) => JSX.Element
+/** The elements a part can be drawn as: every tag Solid's JSX knows. */
+export type PartTag = keyof JSX.IntrinsicElements
+
+/** What every part takes besides its element's own props. */
+type Composition<State> = {
+  /**
+   * Renders the part as the caller's own element, which spreads the props it is given: what
+   * the element writes after the spread wins, so the caller decides. The props carry the
+   * part's `ref` and, as `children`, what the part holds: the children it was given, then
+   * anything of its own (a control's hidden input), so an element that writes no children of
+   * its own holds them, and one that does draws `props().children` among them. `state` reads
+   * the part's state (`open`, `side` …, from its `data-*` attributes).
+   */
+  render?: (props: () => PartProps, state: () => State) => JSX.Element
   /** Another tag for the part's element. */
+  as?: PartTag | (string & {})
+}
+
+export type { PartEvent }
+
+// A handler takes the event with its `preventKiranaHandler()`; anything else is as it was.
+type Hearing<Prop> = Prop extends (event: infer Heard) => infer Answer
+  ? Heard extends Event
+    ? (event: PartEvent<Heard>) => Answer
+    : Prop
+  : Prop
+
+/**
+ * A part's props: its element's own (`Tag`'s attributes, its events with the element as their
+ * `currentTarget` and `preventKiranaHandler()` to keep the part's own handler out, a `ref` to
+ * that element), `render` and `as`, and the part's `Own` props, which come before the
+ * element's of the same name. `State` is what `render` reads: the part's state as the
+ * vocabulary defines it.
+ */
+export type PartComponentProps<Tag extends PartTag = "div", State = PartState, Own = {}> = Own & {
+  [
+    Name in keyof JSX.IntrinsicElements[Tag] as Name extends keyof Own | keyof Composition<State>
+      ? never
+      : Name
+  ]: Hearing<JSX.IntrinsicElements[Tag][Name]>
+} & Omit<Composition<State>, keyof Own>
+
+/** What `<Part>` reads of the props it is given; the rest is the element's. */
+type Drawn = {
+  of: CorePart
+  tag: string
   as?: string
+  // Whatever state a part's `render` is typed to read, it is given the part's own.
+  render?: (props: () => PartProps, state: () => never) => JSX.Element
   children?: JSX.Element
   [attribute: string]: unknown
 }
 
 /**
- * A part's element (or the caller's, through `render`), with the caller's props merged under the
- * part's and the part's DOM work attached once the element is in the page.
+ * The element of a part (`of`), or the caller's through `render`, with the caller's props merged under the
+ * part's and the part's DOM work attached once the element is in the page. What the part holds
+ * is its children here: with `as` they are the element's, and with `render` they are handed to
+ * the caller's function as the `children` of its props, so a control drawn as another element
+ * keeps the native input a form and a label reach.
  */
-export function Part(props: PartComponentProps & { part: CorePart; tag: string }): JSX.Element {
-  const [local, caller] = splitProps(props, ["part", "tag", "as", "render", "children"])
-  const own = fromSignal(untrack(() => local.part).props)
+export function Part(props: { of: CorePart; tag: string } & Record<string, unknown>): JSX.Element {
+  const [local, caller] = splitProps(props as Drawn, ["of", "tag", "as", "render", "children"])
+  const own = fromSignal(untrack(() => local.of).props)
   // Solid hands over an element before it is in the page: the part's DOM work (focus, measures,
   // the starting style) waits for the mount that follows. It belongs to this component, not to
   // the effect that spreads the props (which hands the ref over again, and is torn down, each time
@@ -92,14 +145,18 @@ export function Part(props: PartComponentProps & { part: CorePart; tag: string }
   const attach = (element: HTMLElement) => {
     if (element === attached) return
     attached = element
-    const part = untrack(() => local.part)
+    const part = untrack(() => local.of)
     runWithOwner(owner, () => onMount(() => onCleanup(part.attach(element))))
+    // The caller's own `ref` (Solid hands a component a function, whatever was written).
+    const theirs = untrack(() => caller.ref)
+    if (typeof theirs === "function") (theirs as (element: HTMLElement) => void)(element)
   }
   const merged = createMemo(() => {
     const theirs: PartProps = {}
     for (const key of Object.keys(caller)) theirs[key] = caller[key]
     return { ...mergeProps(theirs, toSolid(own())), ref: attach }
   })
+  const state = () => stateOf(own())
   return (
     <Show
       when={local.render}
@@ -109,7 +166,13 @@ export function Part(props: PartComponentProps & { part: CorePart; tag: string }
         </Dynamic>
       }
     >
-      {(render) => render()(merged)}
+      {(render) => {
+        // Resolved once: a change of the part's props hands the same nodes over again, and
+        // the element keeps them.
+        const held = children(() => local.children)
+        const handed = createMemo(() => ({ ...merged(), children: held() }))
+        return render()(handed, state as () => never)
+      }}
     </Show>
   )
 }
@@ -134,6 +197,7 @@ export function Into(props: { target: HTMLElement; children?: JSX.Element }): JS
 
 const PortalContainer = createContext<() => HTMLElement | null | undefined>()
 
+/** What `PortalProvider` takes. */
 export interface PortalProviderProps {
   /** Where the popups inside are drawn; the end of `<body>` while it is not given. */
   container?: HTMLElement | null | undefined

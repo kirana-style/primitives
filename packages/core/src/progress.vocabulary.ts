@@ -19,12 +19,13 @@ export const progressVocabulary = defineComponent({
     states: STATES,
     exclusive: ONE_OF,
   },
-  track: { description: "The whole range.", states: STATES, exclusive: ONE_OF },
+  track: { inside: "root", description: "The whole range.", states: STATES, exclusive: ONE_OF },
   indicator: {
+    inside: "track",
     description: "The filled part: its width is the value's share of the range.",
     states: STATES,
     exclusive: ONE_OF,
   },
-  value: { description: "The value, written.", states: STATES, exclusive: ONE_OF },
-  label: { description: "The bar's name.", states: STATES, exclusive: ONE_OF },
+  value: { inside: "root", description: "The value, written.", states: STATES, exclusive: ONE_OF },
+  label: { inside: "root", description: "The bar's name.", states: STATES, exclusive: ONE_OF },
 })

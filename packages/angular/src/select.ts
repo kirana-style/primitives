@@ -2,6 +2,8 @@ import {
   DestroyRef,
   Directive,
   ElementRef,
+  TemplateRef,
+  ViewContainerRef,
   booleanAttribute,
   effect,
   inject,
@@ -10,19 +12,28 @@ import {
   output,
   untracked,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit } from "@angular/core"
 import { defined, effect as coreEffect } from "@kirana-ui/core"
-import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core"
+import type { ChangeDetails, ItemLabels, ListCollection } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select, SelectGroup } from "@kirana-ui/core/select"
+import type { Select, SelectGroup, SelectShown } from "@kirana-ui/core/select"
 
 import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import {
+  KuiIds,
+  KuiPositioner,
+  binder,
+  drawing,
+  hostPart,
+  inputsSignal,
+  mounted,
+  presentWhile,
+} from "./runtime"
 
 @Directive({ selector: "[kuiSelect]", exportAs: "kuiSelect" })
-export class KuiSelect implements OnInit {
-  readonly value = model<unknown>(undefined)
-  readonly defaultValue = input<unknown>(null)
+export class KuiSelect<Value = unknown> implements OnInit {
+  readonly value = model<Value | null | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
@@ -30,14 +41,20 @@ export class KuiSelect implements OnInit {
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly items = input<readonly { value: unknown; label: string }[]>()
+  /** The values' labels: a list of values with their labels, or the labels by value. */
+  readonly items = input<ItemLabels<Value>>()
+  /** Several values: they are `values`, not `value`. */
+  readonly multiple = input(false, { transform: booleanAttribute })
+  readonly values = model<readonly Value[] | undefined>(undefined)
+  readonly defaultValues = input<readonly Value[]>()
+  readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
   readonly kuiId = input<string>()
-  readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
-  controller!: Select
+  controller!: Select<Value>
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
@@ -51,8 +68,18 @@ export class KuiSelect implements OnInit {
     name: this.name(),
     form: this.form(),
     items: this.items(),
+    multiple: this.multiple(),
+    values: this.values(),
+    defaultValues: this.defaultValues(),
+    onValuesChange: (values: Value[], details: ChangeDetails) => {
+      this.valuesChanged.emit({ values, details })
+      if (!details.canceled) {
+        this.values.set(values)
+        this.props.sync()
+      }
+    },
     virtualized: this.virtualized(),
-    onValueChange: (value: unknown, details: ChangeDetails) => {
+    onValueChange: (value: Value | null, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)
@@ -86,43 +113,29 @@ export class KuiSelectPortal implements OnInit {
 }
 
 @Directive({ selector: "[kuiSelectPositioner]" })
-export class KuiSelectPositioner implements OnInit {
-  readonly side = input<Side>()
-  readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+export class KuiSelectPositioner extends KuiPositioner {
   /**
    * The list opens over its trigger, the chosen item's text on the trigger's own, where
    * there is room and unless a finger opened it.
    */
   readonly alignItemWithTrigger = input(false, { transform: booleanAttribute })
   private readonly root = inject(KuiSelect)
-  private readonly put = hostPart()
-  private readonly options = () =>
-    defined({
-      side: this.side(),
-      align: this.align(),
-      sideOffset: this.sideOffset(),
-      alignOffset: this.alignOffset(),
-      collisionPadding: this.collisionPadding(),
-    })
+
+  protected placed() {
+    return this.root.controller
+  }
 
   constructor() {
+    super()
     effect(() => {
-      const next = this.options()
       const over = this.alignItemWithTrigger()
-      untracked(() => {
-        this.root.controller?.positioning.set(next)
-        this.root.controller?.alignItemWithTrigger.set(over)
-      })
+      untracked(() => this.root.controller?.alignItemWithTrigger.set(over))
     })
   }
 
-  ngOnInit(): void {
-    this.root.controller.positioning.set(untracked(this.options))
+  override ngOnInit(): void {
     this.root.controller.alignItemWithTrigger.set(untracked(this.alignItemWithTrigger))
-    this.put(this.root.controller.positioner)
+    super.ngOnInit()
   }
 }
 
@@ -160,14 +173,24 @@ export class KuiSelectInput implements OnInit {
   }
 }
 
-/** Shows the chosen value's label, or `placeholder` while nothing is chosen. */
+/**
+ * `<span kuiSelectValue>` shows the chosen value's label, or `placeholder` while nothing is
+ * chosen; with `multiple`, the chosen labels with commas between.
+ * `<span *kuiSelectValue="let shown">` draws its own content instead, with what is chosen:
+ * `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the
+ * items' order.
+ */
 @Directive({ selector: "[kuiSelectValue]" })
 export class KuiSelectValue implements OnInit {
   readonly placeholder = input("")
   private readonly root = inject(KuiSelect)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
+  private readonly template = inject<TemplateRef<{ $implicit: SelectShown }>>(TemplateRef, {
+    optional: true,
+  })
+  private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
-  private readonly put = hostPart()
+  private readonly put = binder()
 
   constructor() {
     effect(() => {
@@ -177,18 +200,54 @@ export class KuiSelectValue implements OnInit {
   }
 
   private write(): void {
-    if (!this.root.controller) return
+    // With a template, the content is the caller's.
+    if (!this.root.controller || this.template) return
     this.element.textContent = this.root.controller.label.peek() ?? untracked(this.placeholder)
   }
 
   ngOnInit(): void {
-    this.put(this.root.controller.valuePart)
+    const { controller } = this.root
+    if (!this.template) {
+      this.destroy.onDestroy(this.put(this.element, controller.valuePart))
+      this.destroy.onDestroy(
+        coreEffect(() => {
+          controller.label.get()
+          this.write()
+        })
+      )
+      return
+    }
+    let view: EmbeddedViewRef<{ $implicit: SelectShown }> | undefined
+    let unbind: (() => void) | undefined
+    this.destroy.onDestroy(() => unbind?.())
     this.destroy.onDestroy(
       coreEffect(() => {
-        this.root.controller.label.get()
-        this.write()
+        const shown = controller.shown.get()
+        if (view) {
+          view.context.$implicit = shown
+          const kept = view
+          drawing(() => kept.detectChanges())
+          return
+        }
+        drawing(() => {
+          const made = this.container.createEmbeddedView(this.template!, { $implicit: shown })
+          view = made
+          // The content first, then the part, as every part a template draws.
+          made.detectChanges()
+          const element = (made.rootNodes as Node[]).find(
+            (each): each is HTMLElement => each.nodeType === 1
+          )
+          if (element) unbind = this.put(element, controller.valuePart)
+        })
       })
     )
+  }
+
+  static ngTemplateContextGuard(
+    _directive: KuiSelectValue,
+    _context: unknown
+  ): _context is { $implicit: SelectShown } {
+    return true
   }
 }
 

@@ -12,20 +12,31 @@ import type { Orientation } from "./services/roving.ts"
 /** One number for a slider with one thumb, a list for a range: what comes back is what was given. */
 export type SliderValue = number | readonly number[]
 
+/** A slider's change details: the details of any change, and which thumb moved. */
 export interface SliderChangeDetails extends ChangeDetails {
   /** The thumb that moved. */
   readonly index: number
 }
 
-export interface SliderProps {
+/**
+ * What a slider tells of a value it was given as `Value`: a number for one thumb, a list for a
+ * range, and either where the caller's own type says either.
+ */
+export type SliderTold<Value extends SliderValue = SliderValue> = Value extends number
+  ? number
+  : number[]
+
+/** `Value` is what the slider is given, `value` or `defaultValue`: a number, or a range's list. */
+export interface SliderProps<Value extends SliderValue = SliderValue> {
   id: string
-  value?: SliderValue | undefined
+  /** The value, when the caller holds it: a number, or a list of numbers for a range. */
+  value?: Value | undefined
   /** Read once. Default `min`. */
-  defaultValue?: SliderValue | undefined
+  defaultValue?: Value | undefined
   /** Each step of a drag and each key. */
-  onValueChange?: ((value: number | number[], details: SliderChangeDetails) => void) | undefined
+  onValueChange?: ((value: SliderTold<Value>, details: SliderChangeDetails) => void) | undefined
   /** When the pointer lets go, and after each key: the value to save. */
-  onValueCommitted?: ((value: number | number[], details: SliderChangeDetails) => void) | undefined
+  onValueCommitted?: ((value: SliderTold<Value>, details: SliderChangeDetails) => void) | undefined
   /** Default 0. */
   min?: number | undefined
   /** Default 100. */
@@ -36,6 +47,10 @@ export interface SliderProps {
   largeStep?: number | undefined
   /** How many steps two thumbs of a range stay apart. Default 0. */
   minStepsBetweenValues?: number | undefined
+  /**
+   * Whether the track lies across (the default) or stands upright: the arrows that move a thumb
+   * follow.
+   */
   orientation?: Orientation | undefined
   /**
    * Where a thumb is at the ends of its range. `"center"` (the default): its centre on the
@@ -43,6 +58,7 @@ export interface SliderProps {
    * it stays inside. `"edge-client-only"` is the same here: nothing waits for the browser.
    */
   thumbAlignment?: "center" | "edge" | "edge-client-only" | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
   /** With a name, each thumb's value is submitted with the form around the slider. */
   name?: string | undefined
@@ -74,9 +90,15 @@ export interface Slider {
   readonly track: Part
   /** The filled part of the track: up to the thumb, or between the first and the last. */
   readonly indicator: Part
-  thumb(index: number): Part
+  /**
+   * A thumb, by the index of its value. A thumb that was given none is asked for by a key (an
+   * id its framework made) and takes its place among the slider's thumbs, in the order they
+   * are written: the order they are first asked for until they are in the page, the page's
+   * order from then on. Where the slider holds one value, such a thumb is that value's.
+   */
+  thumb(at: number | string): Part
   /** The input inside a thumb, hidden: it is what a form reads. */
-  thumbInput(index: number): Part
+  thumbInput(at: number | string): Part
 }
 
 const NOTHING = () => {}
@@ -99,10 +121,12 @@ function decimals(step: number): number {
  * A value chosen along a track by dragging a thumb, pressing the track or with the keyboard. One
  * thumb, or several for a range: each is a `role="slider"` of its own, and none passes another.
  */
-export function createSlider(
-  props: ReadonlySignal<SliderProps>,
+export function createSlider<Value extends SliderValue = SliderValue>(
+  typed: ReadonlySignal<SliderProps<Value>>,
   around: { field?: Field | undefined } & DirectionAround = {}
 ): Slider {
+  // Whatever the caller's type, what is told is shaped as what was given (`shaped`).
+  const props = typed as unknown as ReadonlySignal<SliderProps>
   const { field } = around
   let member: FieldMembership | undefined
   const value = bindable<SliderValue>({
@@ -150,8 +174,36 @@ export function createSlider(
   const measured = signal(false)
   const rtl = computed(() => (around.direction ? around.direction.get() === "rtl" : measured.get()))
 
-  const thumbs = new Map<number, HTMLElement>()
+  // Each thumb's element, by what the thumb was asked for with: its index, or its key.
+  const thumbs = new Map<number | string, HTMLElement>()
+  // The thumbs in the order they were first asked for, which is the order a server writes
+  // them in. Never a signal: a thumb is added while its framework renders.
+  const asked: (number | string)[] = []
+  // Bumped when a thumb's element comes or goes: the thumbs' places are read again.
+  const drawn = signal(0)
   let stopDrag: (() => void) | undefined
+
+  /**
+   * How many thumbs are written before this one. In the page, the thumbs whose elements come
+   * before its own; until it is, the thumbs in the page and those asked for before it.
+   */
+  function place(at: number | string): number {
+    drawn.get()
+    const own = thumbs.get(at)
+    let before = 0
+    let passed = false
+    for (const each of asked) {
+      if (each === at) {
+        passed = true
+        continue
+      }
+      const other = thumbs.get(each)
+      if (own) {
+        if (other && own.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_PRECEDING) before++
+      } else if (other || !passed) before++
+    }
+    return before
+  }
 
   // With thumbs that stay inside the control, a thumb's centre travels less than the
   // control's length: by its own size. Both are measured, along the way the track runs.
@@ -176,7 +228,7 @@ export function createSlider(
     // the page is scrolled, and the share written from it would change with it.
     const length = (element: HTMLElement) =>
       Math.round(element.getBoundingClientRect()[side] * 1000) / 1000
-    for (const [index, element] of thumbs) list[index] = length(element)
+    for (const [at, element] of thumbs) list[indexOf(at)] = length(element)
     sizes.set({ control: length(controlElement), thumbs: list })
   }
 
@@ -299,15 +351,17 @@ export function createSlider(
     if (disabled.peek() || event.button !== 0 || values.peek().length === 0) return
     const control = event.currentTarget as HTMLElement
     const target = event.target as Node
-    let index = [...thumbs].find(([, element]) => element.contains(target))?.[0]
+    const pressed = [...thumbs].find(([, element]) => element.contains(target))
+    let index: number
     let offset = 0
-    if (index === undefined) {
+    if (!pressed) {
       const at = valueAt(event, control, 0)
       index = nearest(at)
       setValue(index, at, by("track-press", index, event))
     } else {
+      index = indexOf(pressed[0])
       // Held by its edge, a thumb keeps that edge under the pointer.
-      const box = thumbs.get(index)!.getBoundingClientRect()
+      const box = pressed[1].getBoundingClientRect()
       offset =
         orientation.peek() === "vertical"
           ? event.clientY - (box.top + box.height / 2)
@@ -315,7 +369,7 @@ export function createSlider(
     }
     // No text is selected by the drag, and focus goes where it is put.
     event.preventDefault()
-    thumbs.get(index)?.focus({ preventScroll: true })
+    ;(pressed?.[1] ?? elementAt(index))?.focus({ preventScroll: true })
 
     const held = index
     const page = control.ownerDocument
@@ -362,8 +416,105 @@ export function createSlider(
     else latest = undefined
   }
 
-  const made = new Map<number, Part>()
-  const inputs = new Map<number, Part>()
+  interface Thumb {
+    readonly index: ReadonlySignal<number>
+    readonly part: Part
+    readonly input: Part
+  }
+  const made = new Map<number | string, Thumb>()
+  const indexOf = (at: number | string) => one(at).index.peek()
+  const elementAt = (index: number) => {
+    for (const [at, element] of thumbs) if (indexOf(at) === index) return element
+    return undefined
+  }
+
+  /** A thumb and its input: asked for again by the same index or key, the same. */
+  function one(at: number | string): Thumb {
+    const found = made.get(at)
+    if (found) return found
+    asked.push(at)
+    // A thumb given an index keeps it. Where there is one value, a thumb with none is its.
+    const index = computed(() =>
+      typeof at === "number" ? at : values.get().length > 1 ? place(at) : 0
+    )
+    const thumb: Thumb = {
+      index,
+      part: {
+        props: computed(() => {
+          const { min, max } = range.get()
+          const nth = index.get()
+          const current = values.get()[nth] ?? min
+          const vertical = orientation.get() === "vertical"
+          const { format, getAriaValueText } = props.get()
+          const written = getAriaValueText || format ? write(current) : undefined
+          const percent = share(current)
+          const inside = inset.get()
+          const centred = inside ? centre(percent, nth) : undefined
+          // Its centre at its value's share of the control. A thumb that stays inside is
+          // moved back by that share of its own size, which CSS knows without measuring;
+          // once it is measured, its centre is written as Base UI writes it.
+          const back = inside && centred === undefined ? percent : 50
+          const where = centred === undefined ? `${percent}%` : "var(--position)"
+          const style: PartStyle = vertical
+            ? { position: "absolute", bottom: where, left: "50%", translate: `-50% ${back}%` }
+            : {
+                position: "absolute",
+                "inset-inline-start": where,
+                top: "50%",
+                translate: `${rtl.get() ? back : -back}% -50%`,
+              }
+          if (centred !== undefined) style["--position"] = `${centred}%`
+          return {
+            role: "slider",
+            tabindex: disabled.get() ? "-1" : "0",
+            "aria-valuemin": String(min),
+            "aria-valuemax": String(max),
+            "aria-valuenow": String(current),
+            "aria-valuetext": getAriaValueText?.(written!, current, nth) ?? written,
+            "aria-orientation": orientation.get(),
+            "aria-disabled": disabled.get() ? "true" : undefined,
+            ...field?.aria(),
+            "data-index": String(nth),
+            ...state(),
+            style,
+            onKeyDown: (event: KeyboardEvent) => key(index.peek(), event),
+          }
+        }),
+        attach(element) {
+          // Asked for again once it had left: it is one of the thumbs again.
+          if (!asked.includes(at)) asked.push(at)
+          made.set(at, thumb)
+          thumbs.set(at, element)
+          drawn.set(drawn.peek() + 1)
+          const unwatch = watch(element)
+          measure()
+          return () => {
+            unwatch()
+            if (thumbs.get(at) !== element) return
+            // Gone: the thumbs written after it each move up a place.
+            thumbs.delete(at)
+            const asAsked = asked.indexOf(at)
+            if (asAsked >= 0) asked.splice(asAsked, 1)
+            if (made.get(at) === thumb) made.delete(at)
+            drawn.set(drawn.peek() + 1)
+            measure()
+          }
+        },
+      },
+      input: {
+        props: computed(() => ({
+          type: "hidden",
+          name: props.get().name ?? field?.name.get(),
+          form: props.get().form,
+          value: String(values.get()[index.get()] ?? range.get().min),
+          disabled: flag(disabled.get()),
+        })),
+        attach: (element) => inForm.attach(element),
+      },
+    }
+    made.set(at, thumb)
+    return thumb
+  }
 
   return {
     values,
@@ -387,7 +538,7 @@ export function createSlider(
       attach(element) {
         member = field?.join({
           element,
-          focus: () => thumbs.get(0)?.focus(),
+          focus: () => elementAt(0)?.focus(),
           kind: "range",
           // A slider always has a value.
           required: () => false,
@@ -460,77 +611,7 @@ export function createSlider(
       }),
       attach: () => NOTHING,
     },
-    thumb(index) {
-      let part = made.get(index)
-      if (part) return part
-      part = {
-        props: computed(() => {
-          const { min, max } = range.get()
-          const current = values.get()[index] ?? min
-          const vertical = orientation.get() === "vertical"
-          const { format, getAriaValueText } = props.get()
-          const written = getAriaValueText || format ? write(current) : undefined
-          const percent = share(current)
-          const inside = inset.get()
-          const at = inside ? centre(percent, index) : undefined
-          // Its centre at its value's share of the control. A thumb that stays inside is
-          // moved back by that share of its own size, which CSS knows without measuring;
-          // once it is measured, its centre is written as Base UI writes it.
-          const back = inside && at === undefined ? percent : 50
-          const place = at === undefined ? `${percent}%` : "var(--position)"
-          const style: PartStyle = vertical
-            ? { position: "absolute", bottom: place, left: "50%", translate: `-50% ${back}%` }
-            : {
-                position: "absolute",
-                "inset-inline-start": place,
-                top: "50%",
-                translate: `${rtl.get() ? back : -back}% -50%`,
-              }
-          if (at !== undefined) style["--position"] = `${at}%`
-          return {
-            role: "slider",
-            tabindex: disabled.get() ? "-1" : "0",
-            "aria-valuemin": String(min),
-            "aria-valuemax": String(max),
-            "aria-valuenow": String(current),
-            "aria-valuetext": getAriaValueText?.(written!, current, index) ?? written,
-            "aria-orientation": orientation.get(),
-            "aria-disabled": disabled.get() ? "true" : undefined,
-            ...field?.aria(),
-            "data-index": String(index),
-            ...state(),
-            style,
-            onKeyDown: (event: KeyboardEvent) => key(index, event),
-          }
-        }),
-        attach(element) {
-          thumbs.set(index, element)
-          const unwatch = watch(element)
-          measure()
-          return () => {
-            unwatch()
-            if (thumbs.get(index) === element) thumbs.delete(index)
-          }
-        },
-      }
-      made.set(index, part)
-      return part
-    },
-    thumbInput(index) {
-      let part = inputs.get(index)
-      if (part) return part
-      part = {
-        props: computed(() => ({
-          type: "hidden",
-          name: props.get().name ?? field?.name.get(),
-          form: props.get().form,
-          value: String(values.get()[index] ?? range.get().min),
-          disabled: flag(disabled.get()),
-        })),
-        attach: (element) => inForm.attach(element),
-      }
-      inputs.set(index, part)
-      return part
-    },
+    thumb: (at) => one(at).part,
+    thumbInput: (at) => one(at).input,
   }
 }

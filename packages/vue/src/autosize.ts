@@ -2,6 +2,14 @@ import { createAutosize } from "@kirana-ui/core/autosize"
 import { defineComponent, h } from "vue"
 
 import { controller, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+export interface TextareaProps extends PartComponentProps {
+  /** The text: `v-model`. */
+  modelValue?: string | undefined
+}
+
+export type TextareaEmits = { "update:modelValue": (value: string) => void }
 
 /**
  * A `<textarea>` as tall as its text. It takes what a `<textarea>` takes, and `v-model`.
@@ -28,6 +36,11 @@ const Textarea = defineComponent({
         slots
       )
   },
-})
+}) as unknown as PartComponent<
+  "textarea",
+  StatesOf<"autosize">["textarea"],
+  TextareaProps,
+  TextareaEmits
+>
 
 export const Autosize = { Textarea }

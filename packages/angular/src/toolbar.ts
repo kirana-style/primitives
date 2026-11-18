@@ -127,16 +127,16 @@ export class KuiToolbarSeparator implements OnInit {
   exportAs: "kuiToggleGroup",
   providers: [{ provide: KUI_TOGGLE_GROUP, useExisting: forwardRef(() => KuiToggleGroup) }],
 })
-export class KuiToggleGroup implements OnInit {
-  readonly value = model<readonly unknown[] | undefined>(undefined)
-  readonly defaultValue = input<readonly unknown[]>()
+export class KuiToggleGroup<Value = unknown> implements OnInit {
+  readonly value = model<readonly Value[] | undefined>(undefined)
+  readonly defaultValue = input<readonly Value[]>()
   readonly multiple = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
-  readonly valueChanged = output<{ value: unknown[]; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value[]; details: ChangeDetails }>()
 
-  controller!: ToggleGroup
+  controller!: ToggleGroup<Value>
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly toolbar = inject(KUI_TOOLBAR, { optional: true })
   private readonly put = hostPart()
@@ -147,7 +147,7 @@ export class KuiToggleGroup implements OnInit {
     disabled: this.disabled(),
     orientation: this.orientation(),
     loop: this.loop(),
-    onValueChange: (value: unknown[], details: ChangeDetails) => {
+    onValueChange: (value: Value[], details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)

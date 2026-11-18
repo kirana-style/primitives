@@ -5,11 +5,23 @@ import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
+import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"otp">
 
 const scope = context<Controller>("Otp")
 const SLOT: InjectionKey<OtpSlot> = Symbol("OtpSlot")
 
 const RootElement = partComponent("OtpRootElement", "div", () => scope.use().root)
+
+export type RootProps = Omit<OtpProps, "id" | "onValueChange" | "onComplete"> & {
+  id?: string | undefined
+} & PartComponentProps
+
+export type RootEmits = Changes<"value", string> & {
+  /** The finished code, once every cell is filled. */
+  complete: (value: string) => void
+}
 
 /** `v-model:value`; `@value-change` carries the details, `@complete` the finished code. */
 const Root = defineComponent({
@@ -47,7 +59,12 @@ const Root = defineComponent({
     )
     return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["root"], RootProps, RootEmits>
+
+export interface SlotProps extends PartComponentProps {
+  /** Which character of the code the cell shows, from 0. */
+  index: number
+}
 
 /** One cell: it shows its character, then whatever it is given (a caret). */
 const Slot = defineComponent({
@@ -58,10 +75,18 @@ const Slot = defineComponent({
     const slot = scope.use().slot(props.index)
     provide(SLOT, slot)
     const char = fromSignal(slot.char)
-    const Element = partComponent("OtpSlotElement", "div", () => slot.part)
-    return () => h(Element, attrs, () => [char.value, slots.default?.()])
+    // Its character comes first, whatever element the caller asked for.
+    const Element = partComponent(
+      "OtpSlotElement",
+      "div",
+      () => slot.part,
+      (content) => [char.value, content]
+    )
+    return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["slot"], SlotProps>
+
+export type CaretProps = PartComponentProps
 
 /** Drawn in its cell while the cell is the active one and empty. */
 const Caret = defineComponent({
@@ -75,13 +100,20 @@ const Caret = defineComponent({
     const Element = partComponent("OtpCaretElement", "div", () => made.caretPart)
     return () => (shown.value ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"div", State["caret"], CaretProps>
 
+export type InputProps = PartComponentProps
+export type GroupProps = PartComponentProps
+export type SeparatorProps = PartComponentProps
 export const Otp = {
   Root,
-  Input: partComponent("OtpInput", "input", () => scope.use().input),
-  Group: partComponent("OtpGroup", "div", () => scope.use().group),
+  Input: partComponent<"input", State["input"]>("OtpInput", "input", () => scope.use().input),
+  Group: partComponent<"div", State["group"]>("OtpGroup", "div", () => scope.use().group),
   Slot,
-  Separator: partComponent("OtpSeparator", "div", () => scope.use().separator),
+  Separator: partComponent<"div", State["separator"]>(
+    "OtpSeparator",
+    "div",
+    () => scope.use().separator
+  ),
   Caret,
 }

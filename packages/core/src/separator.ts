@@ -4,6 +4,7 @@ import type { ReadonlySignal } from "./reactivity.ts"
 import type { Orientation } from "./services/roving.ts"
 
 export interface SeparatorProps {
+  /** Whether the line lies across (the default) or stands upright: what a screen reader is told. */
   orientation?: Orientation | undefined
 }
 

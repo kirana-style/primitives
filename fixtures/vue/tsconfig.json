@@ -12,5 +12,8 @@
     "noEmit": true,
     "skipLibCheck": true
   },
+  // Unknown props, events and components are refused, and `v-model` is checked both ways. A
+  // plain element's `data-*` attributes are not props to check.
+  "vueCompilerOptions": { "strictTemplates": true, "dataAttributes": ["data-*"] },
   "include": ["src", "vite.config.ts"]
 }

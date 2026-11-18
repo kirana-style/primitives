@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useNumberField } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { GroupProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: GroupProps = $props()
   const controller = useNumberField()
 </script>
 
-<Part part={controller.group} tag="div" {...props} />
+<Part of={controller.group} tag="div" {...props} />

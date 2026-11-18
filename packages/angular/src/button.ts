@@ -5,7 +5,7 @@ import { createButton } from "@kirana-ui/core/button"
 import { hostPart, inputsSignal } from "./runtime"
 
 /** On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one. */
-@Directive({ selector: "[kuiButton]" })
+@Directive({ selector: "[kuiButton]", exportAs: "kuiButton" })
 export class KuiButton implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly focusableWhenDisabled = input(false, { transform: booleanAttribute })

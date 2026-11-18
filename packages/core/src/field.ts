@@ -23,6 +23,7 @@ const KEYS: ValidityKey[] = [
   "valueMissing",
 ]
 
+/** What a field knows of its control's value once it has been checked. */
 export interface FieldValidity {
   /** `null` until the value has been checked. */
   readonly valid: boolean | null
@@ -40,6 +41,7 @@ export interface FieldProps {
   id: string
   /** The control's name in the form. */
   name?: string | undefined
+  /** Disables the field: its control cannot be changed, and its parts say so (`data-disabled`). */
   disabled?: boolean | undefined
   /** Invalid whatever the value: an error known from elsewhere. */
   invalid?: boolean | undefined

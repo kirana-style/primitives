@@ -1,11 +1,11 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useMenu } from "../menu/context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { TriggerProps } from "./types.ts"
 
   // The area a secondary press, or a long press on a touch screen, opens the menu in.
-  let props: PartAttributes = $props()
+  let props: TriggerProps = $props()
   const controller = useMenu()
 </script>
 
-<Part part={controller.area} tag="div" {...props} />
+<Part of={controller.area} tag="div" {...props} />

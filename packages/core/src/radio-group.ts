@@ -13,11 +13,15 @@ export interface RadioGroupProps<Value = unknown> {
   id: string
   /** The chosen value; `null` is "none". */
   value?: Value | null | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: Value | null | undefined
   /** `null` only when a form's reset takes the group back to "none". */
   onValueChange?: ((value: Value | null, details: ChangeDetails) => void) | undefined
+  /** Disables every item of the group. */
   disabled?: boolean | undefined
+  /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
+  /** Needed: in a `Field`, choosing none is then invalid. */
   required?: boolean | undefined
   /** With a name, the chosen value is submitted with the form around the group. */
   name?: string | undefined
@@ -26,6 +30,7 @@ export interface RadioGroupProps<Value = unknown> {
 }
 
 export interface RadioItemOptions {
+  /** Disables this item: it cannot be chosen. */
   disabled?: boolean
 }
 

@@ -1,22 +1,30 @@
-import { defined, within } from "@kirana-ui/core"
-import type { PositionOptions } from "@kirana-ui/core"
+import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
 import {
   Portal as BodyPortal,
+  PartElement,
+  parts,
   useController,
   useOptions,
   useOwnText,
   usePart,
+  usePositioning,
   useSignal,
 } from "./runtime.tsx"
-import type { PartComponentProps } from "./runtime.tsx"
+import type { PartComponentProps, PortalProps, PositionerOptions } from "./runtime.tsx"
+
+export type { PortalProps }
+
+type Parts = Vocabulary["combobox"]
 
 const Context = createContext<Controller | null>(null)
 const ItemContext = createContext<unknown>(undefined)
@@ -27,17 +35,18 @@ function useCombobox(part: string): Controller {
   return controller
 }
 
-export type RootProps<Value> = Omit<ComboboxProps<Value>, "id"> & {
+/** `Value` is what tells an item from the others: the type of `value`, and of `values`' entries. */
+export type RootProps<Value = unknown> = Omit<ComboboxProps<Value>, "id"> & {
   id?: string
   children?: ReactNode
 }
 
-function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
+function Root<Value = unknown>({ children, ...props }: RootProps<Value>): ReactElement {
   const field = useContext(FieldContext) ?? undefined
-  const controller = useController<ComboboxProps<Value>, Controller<Value>>(
+  const controller: Controller = useController<ComboboxProps<Value>, Controller<Value>>(
     within(createCombobox<Value>, { field }),
     props
-  ) as unknown as Controller
+  )
   const named = useSignal(controller.named)
   return (
     <Context.Provider value={controller}>
@@ -47,37 +56,43 @@ function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
   )
 }
 
-const HiddenInput = () => usePart(useCombobox("Root").hidden, "input", {})
-const Input = (props: PartComponentProps) =>
-  usePart(useOwnText(useCombobox("Input").input), "input", props)
-const Trigger = (props: PartComponentProps) =>
-  usePart(useCombobox("Trigger").trigger, "button", props)
-const Popup = (props: PartComponentProps) => usePart(useCombobox("Popup").popup, "div", props)
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
 
-function Portal({ children }: { children?: ReactNode }): ReactElement | null {
+const HiddenInput = () => usePart(useCombobox("Root").hidden, "input", {})
+const Input = (props: InputProps) => usePart(useOwnText(useCombobox("Input").input), "input", props)
+const Trigger = (props: TriggerProps) => usePart(useCombobox("Trigger").trigger, "button", props)
+const Popup = (props: PopupProps) => usePart(useCombobox("Popup").popup, "div", props)
+/**
+ * The items' own box inside the popup, when the popup holds more than items (an input): it
+ * is then the listbox.
+ */
+const List = (props: ListProps) => usePart(useCombobox("List").list, "div", props)
+
+function Portal({ children }: PortalProps): ReactElement | null {
   const mounted = useSignal(useCombobox("Portal").mounted)
   return mounted ? <BodyPortal>{children}</BodyPortal> : null
 }
 
-export type PositionerProps = PartComponentProps & Partial<PositionOptions>
+export type PositionerProps = PartComponentProps<
+  "div",
+  StateOf<Parts["positioner"]>,
+  PositionerOptions
+>
 
-function Positioner({
-  side,
-  align,
-  sideOffset,
-  alignOffset,
-  collisionPadding,
-  ...props
-}: PositionerProps) {
+function Positioner(props: PositionerProps): ReactElement {
   const controller = useCombobox("Positioner")
-  controller.positioning.set(defined({ side, align, sideOffset, alignOffset, collisionPadding }))
-  return usePart(controller.positioner, "div", props)
+  return usePart(controller.positioner, "div", usePositioning(controller.positioning, props))
 }
 
 const GroupContext = createContext<ComboboxGroup | null>(null)
 
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
 /** Items that belong together, named by their `GroupLabel`. Hidden while none is shown. */
-function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
+function Group({ id, ...props }: GroupProps): ReactElement {
   const controller = useCombobox("Group")
   const generated = useId()
   const group = useMemo(() => controller.group(id ?? generated), [controller, id, generated])
@@ -86,25 +101,35 @@ function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactEle
   )
 }
 
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
 /** A group's name. Outside a group it is plain text, and names nothing. */
-function GroupLabel(props: PartComponentProps): ReactElement {
+function GroupLabel(props: GroupLabelProps): ReactElement {
   const lone = useCombobox("GroupLabel").groupLabel
   return usePart(useContext(GroupContext)?.label ?? lone, "div", props)
 }
 
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
 /** A line between groups. */
-const Separator = (props: PartComponentProps) =>
+const Separator = (props: SeparatorProps) =>
   usePart(useCombobox("Separator").separator, "div", props)
 
-export interface ItemProps extends PartComponentProps {
-  value: unknown
-  disabled?: boolean
-  /** What is filtered and what the input shows; the item's text when left out. */
-  label?: string
-  id?: string
-  /** Its place among all the rows, in a virtualized list. */
-  index?: number
-}
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
+    /** What the combobox's value is while this item is chosen. */
+    value: unknown
+    /** Disables this item: it cannot be chosen, and the arrows pass over it. */
+    disabled?: boolean
+    /** What is filtered and what the input shows; the item's text when left out. */
+    label?: string
+    id?: string
+    /** Its place among all the rows, in a virtualized list. */
+    index?: number
+  }
+>
 
 function Item({ value, disabled, label, id, index, ...props }: ItemProps): ReactElement {
   const controller = useCombobox("Item")
@@ -118,51 +143,81 @@ function Item({ value, disabled, label, id, index, ...props }: ItemProps): React
   return <ItemContext.Provider value={value}>{usePart(part, "div", props)}</ItemContext.Provider>
 }
 
-export interface ItemIndicatorProps extends PartComponentProps {
-  keepMounted?: boolean
+export type ItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["itemIndicator"]>,
+  {
+    /** Keeps the mark in the page while its item is not chosen. */
+    keepMounted?: boolean
+  }
+>
+
+/** In the page while its item is a chosen one. */
+function ItemIndicator({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | null {
+  const controller = useCombobox("ItemIndicator")
+  const value = useContext(ItemContext)
+  const selected = useSignal(controller.selected(value))
+  const part = useMemo(() => controller.itemIndicator(value), [controller, value])
+  return selected || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
 }
 
-function ItemIndicator({ keepMounted, render: _render, ref: _ref, ...rest }: ItemIndicatorProps) {
-  const selected = useSignal(useCombobox("ItemIndicator").selected(useContext(ItemContext)))
-  if (!selected && !keepMounted) return null
-  return <span aria-hidden="true" {...(rest as object)} />
-}
-
-const ClearElement = (props: PartComponentProps) =>
-  usePart(useCombobox("Clear").clear, "button", props)
+export type ClearProps = PartComponentProps<
+  "button",
+  StateOf<Parts["clear"]>,
+  {
+    /** Keeps the button in the page while there is nothing to clear. */
+    keepMounted?: boolean
+  }
+>
 
 /** A button that empties the input and the value. Drawn while there is something to clear. */
-function Clear({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | null {
-  const clearable = useSignal(useCombobox("Clear").clearable)
-  return clearable || keepMounted ? <ClearElement {...props} /> : null
+function Clear({ keepMounted, ...props }: ClearProps): ReactElement | null {
+  const controller = useCombobox("Clear")
+  const clearable = useSignal(controller.clearable)
+  return clearable || keepMounted ? (
+    <PartElement of={controller.clear} tag="button" {...props} />
+  ) : null
 }
 
+export type ChipsProps = PartComponentProps<"div", StateOf<Parts["chips"]>>
+
 /** With `multiple`: what holds the chips and the input. */
-const Chips = (props: PartComponentProps) => usePart(useCombobox("Chips").chips, "div", props)
+const Chips = (props: ChipsProps) => usePart(useCombobox("Chips").chips, "div", props)
 
 const ChipContext = createContext<unknown>(undefined)
 
+export type ChipProps = PartComponentProps<
+  "span",
+  StateOf<Parts["chip"]>,
+  {
+    /** The chosen value this chip stands for. */
+    value: unknown
+  }
+>
+
 /** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
-function Chip({ value, ...props }: PartComponentProps & { value: unknown }): ReactElement {
+function Chip({ value, ...props }: ChipProps): ReactElement {
   const controller = useCombobox("Chip")
   const part = useMemo(() => controller.chip(value), [controller, value])
   return <ChipContext.Provider value={value}>{usePart(part, "span", props)}</ChipContext.Provider>
 }
 
-function ChipRemove(props: PartComponentProps): ReactElement {
+export type ChipRemoveProps = PartComponentProps<"button", StateOf<Parts["chipRemove"]>>
+
+function ChipRemove(props: ChipRemoveProps): ReactElement {
   const controller = useCombobox("ChipRemove")
   const value = useContext(ChipContext)
   const part = useMemo(() => controller.chipRemove(value), [controller, value])
   return usePart(part, "button", props)
 }
 
-const EmptyElement = (props: PartComponentProps) =>
-  usePart(useCombobox("Empty").emptyPart, "div", props)
+export type EmptyProps = PartComponentProps<"div", StateOf<Parts["empty"]>>
 
 /** Drawn while no item is shown for what was typed. */
-function Empty(props: PartComponentProps): ReactElement | null {
-  const empty = useSignal(useCombobox("Empty").empty)
-  return empty ? <EmptyElement {...props} /> : null
+function Empty(props: EmptyProps): ReactElement | null {
+  const controller = useCombobox("Empty")
+  const empty = useSignal(controller.empty)
+  return empty ? <PartElement of={controller.emptyPart} tag="div" {...props} /> : null
 }
 
 export type AutocompleteRootProps = Omit<AutocompleteProps, "id"> & {
@@ -180,22 +235,7 @@ function AutocompleteRoot({ children, ...props }: AutocompleteRootProps): ReactE
   return <Context.Provider value={controller}>{children}</Context.Provider>
 }
 
-export const Autocomplete = {
-  Root: AutocompleteRoot,
-  Input,
-  Trigger,
-  Clear,
-  Portal,
-  Positioner,
-  Popup,
-  Group,
-  GroupLabel,
-  Separator,
-  Item,
-  Empty,
-}
-
-export const Combobox = {
+export const Combobox = /* @__PURE__ */ parts("Combobox", {
   Root,
   Input,
   Trigger,
@@ -206,10 +246,27 @@ export const Combobox = {
   Portal,
   Positioner,
   Popup,
+  List,
   Group,
   GroupLabel,
   Separator,
   Item,
   ItemIndicator,
   Empty,
-}
+})
+
+export const Autocomplete = /* @__PURE__ */ parts("Autocomplete", {
+  Root: AutocompleteRoot,
+  Input,
+  Trigger,
+  Clear,
+  Portal,
+  Positioner,
+  Popup,
+  List,
+  Group,
+  GroupLabel,
+  Separator,
+  Item,
+  Empty,
+})

@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { ComboboxProps } from "@kirana-ui/core/combobox"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCombobox } from "@kirana-ui/core/combobox"
@@ -9,7 +8,7 @@
   import Part from "../Part.svelte"
   import { controller, fromSignal } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -33,12 +32,13 @@
     onValuesChange,
     inline,
     virtualized,
+    autoHighlight,
     id,
     children,
-  }: RootProps<ComboboxProps> = $props()
+  }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function changeValue(next: unknown, by: ChangeDetails) {
+  function changeValue(next: Value | null, by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -48,7 +48,7 @@
     if (!by.canceled) inputValue = next
   }
 
-  function changeValues(next: unknown[], by: ChangeDetails) {
+  function changeValues(next: Value[], by: ChangeDetails) {
     onValuesChange?.(next, by)
     if (!by.canceled) values = next
   }
@@ -79,6 +79,7 @@
       onValuesChange: changeValues,
       inline,
       virtualized,
+      autoHighlight,
       onValueChange: changeValue,
       onInputValueChange: changeInput,
       onOpenChange: changeOpen,
@@ -89,5 +90,5 @@
 
 {@render children?.()}
 {#if named.current}
-  <Part part={made.hidden} tag="input" />
+  <Part of={made.hidden} tag="input" />
 {/if}

@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { SelectProps } from "@kirana-ui/core/select"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createSelect } from "@kirana-ui/core/select"
@@ -8,7 +7,7 @@
   import { useFieldAround } from "../field/context.ts"
   import { controller, fromSignal } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -22,15 +21,24 @@
     name,
     form,
     items,
+    multiple,
+    values = $bindable(),
+    defaultValues,
+    onValuesChange,
     virtualized,
     id,
     children,
-  }: RootProps<SelectProps> = $props()
+  }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function changeValue(next: unknown, by: ChangeDetails) {
+  function changeValue(next: Value | null, by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
+  }
+
+  function changeValues(next: Value[], by: ChangeDetails) {
+    onValuesChange?.(next, by)
+    if (!by.canceled) values = next
   }
 
   function changeOpen(next: boolean, by: ChangeDetails) {
@@ -50,6 +58,10 @@
       name,
       form,
       items,
+      multiple,
+      values,
+      defaultValues,
+      onValuesChange: changeValues,
       virtualized,
       onValueChange: changeValue,
       onOpenChange: changeOpen,
@@ -60,5 +72,5 @@
 
 {@render children?.()}
 {#if named.current}
-  <Part part={made.input} tag="input" />
+  <Part of={made.input} tag="input" />
 {/if}

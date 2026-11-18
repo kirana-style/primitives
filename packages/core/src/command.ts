@@ -11,7 +11,9 @@ export interface CommandProps {
   id: string
   /** What the input says. */
   inputValue?: string | undefined
+  /** The text the input starts with, when the caller does not hold `inputValue`. Read once. */
   defaultInputValue?: string | undefined
+  /** Heard as the input's text is about to change: `details.cancel()` keeps it as it was. */
   onInputValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
   /** An item was chosen: pressed, or Enter while it was highlighted. */
   onSelect?: ((value: string, details: ChangeDetails) => void) | undefined
@@ -23,12 +25,14 @@ export interface CommandProps {
   filter?: ((label: string, query: string, keywords: readonly string[]) => boolean) | null
   /** Whether a step past an end of the list goes round to the other. */
   loop?: boolean | undefined
+  /** Disabled: nothing can be typed or chosen. */
   disabled?: boolean | undefined
 }
 
 export interface CommandItemOptions {
   /** The item's id: the input names the highlighted item by it. */
   id: string
+  /** Disables this item: it cannot be chosen, and the arrows pass over it. */
   disabled?: boolean | undefined
   /** What is filtered; the item's text when left out. */
   label?: string | undefined

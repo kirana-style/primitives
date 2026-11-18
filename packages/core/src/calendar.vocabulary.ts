@@ -22,11 +22,28 @@ export const calendarVocabulary = defineComponent({
       readonly: state("data-readonly", "Present when its value cannot be changed."),
     },
   },
-  heading: { description: "Names the month shown. Read out when it changes." },
-  previous: { description: "Shows the month before.", states: { disabled: DISABLED } },
-  next: { description: "Shows the month after.", states: { disabled: DISABLED } },
-  grid: { description: "The table of days: a grid the arrows move in." },
-  headCell: { description: "A column's heading: a day of the week." },
-  cell: { description: "A day's cell.", states: DAY },
-  day: { description: "The button for a day.", states: DAY },
+  heading: { inside: "root", description: "Names the month shown. Read out when it changes." },
+  previous: {
+    inside: "root",
+    description: "Shows the month before.",
+    states: { disabled: DISABLED },
+  },
+  next: { inside: "root", description: "Shows the month after.", states: { disabled: DISABLED } },
+  grid: { inside: "root", description: "The table of days: a grid the arrows move in." },
+  weekdays: {
+    description: "The days of the week: each is given to draw its head cell. It draws no element.",
+    inside: "grid",
+  },
+  headCell: {
+    inside: "weekdays",
+    repeated: true,
+    description: "A column's heading: a day of the week.",
+  },
+  weeks: {
+    description:
+      "The weeks of the month shown: each is given to draw its row of days. It draws no element.",
+    inside: "grid",
+  },
+  cell: { inside: "weeks", repeated: true, description: "A day's cell.", states: DAY },
+  day: { inside: "cell", description: "The button for a day.", states: DAY },
 })

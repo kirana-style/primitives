@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useCommand } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ListProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ListProps = $props()
   const controller = useCommand()
 </script>
 
-<Part part={controller.list} tag="div" {...props} />
+<Part of={controller.list} tag="div" {...props} />

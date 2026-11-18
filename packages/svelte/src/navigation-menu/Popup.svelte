@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useNavigation } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { PopupProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: PopupProps = $props()
   const made = useNavigation()
 </script>
 
-<Part part={made.popup} tag="div" {...props} />
+<Part of={made.popup} tag="div" {...props} />

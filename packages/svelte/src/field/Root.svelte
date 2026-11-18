@@ -8,7 +8,7 @@
   import { useForm } from "../form/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     name,
@@ -19,7 +19,7 @@
     validationDebounceTime,
     id,
     ...rest
-  }: RootProps<FieldProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
   const around = { form: useForm(), fieldset: useFieldset() }
   const made = provide(
@@ -38,4 +38,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

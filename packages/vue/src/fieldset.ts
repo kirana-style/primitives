@@ -1,9 +1,12 @@
 import { createFieldset } from "@kirana-ui/core/fieldset"
-import type { Fieldset as Controller } from "@kirana-ui/core/fieldset"
+import type { Fieldset as Controller, FieldsetProps } from "@kirana-ui/core/fieldset"
 import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey } from "vue"
 
 import { controller, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"fieldset">
 
 const KEY: InjectionKey<Controller> = Symbol("Fieldset")
 
@@ -18,6 +21,10 @@ function use(): Controller {
 
 const RootElement = partComponent("FieldsetRootElement", "fieldset", () => use().root)
 
+export type RootProps = Omit<FieldsetProps, "id"> & {
+  id?: string | undefined
+} & PartComponentProps
+
 const Root = defineComponent({
   name: "FieldsetRoot",
   inheritAttrs: false,
@@ -30,9 +37,10 @@ const Root = defineComponent({
     )
     return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"fieldset", State["root"], RootProps>
 
+export type LegendProps = PartComponentProps
 export const Fieldset = {
   Root,
-  Legend: partComponent("FieldsetLegend", "div", () => use().legend),
+  Legend: partComponent<"div", State["legend"]>("FieldsetLegend", "div", () => use().legend),
 }

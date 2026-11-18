@@ -5,56 +5,128 @@ import type { ReadonlySignal } from "./reactivity.ts"
 import { clearGeometry, setGeometry } from "./services/geometry.ts"
 import { whenSettled, whenWritten } from "./services/presence.ts"
 
-export interface ToastOptions {
-  title?: string | undefined
-  description?: string | undefined
-  /** What kind it is, for the design: `"success"`, `"error"`, anything. */
+/** A button a toast offers: what it says, and what pressing it does. */
+export interface ToastActionOptions<Content = string> {
+  /** What the button says: `Toast.Action` draws it when it is given nothing else. Needed. */
+  label: Content
+  /**
+   * Heard when the button is pressed, before the toast closes with the reason
+   * `"action-press"`: `details.cancel()` keeps the toast open. Needed.
+   */
+  onAction(details: ChangeDetails): void
+}
+
+/**
+ * What a toast is added with. `Content` is what a title, a description and an action's label
+ * may be: a string here, and what the framework draws in each adapter's own `createToaster`.
+ * The toaster hands it on as it was given, and never reads it.
+ */
+export interface ToastOptions<Content = string> {
+  /**
+   * What the toast is called: `Toast.Title` draws it when it is given nothing else.
+   * Default: none.
+   */
+  title?: Content | undefined
+  /**
+   * What the toast says: `Toast.Description` draws it when it is given nothing else.
+   * Default: none.
+   */
+  description?: Content | undefined
+  /**
+   * What kind it is, for the design (`"success"`, `"error"`, anything): the toast's
+   * `data-type`. Default: none.
+   */
   type?: string | undefined
-  /** How long it stays, in milliseconds; `Infinity` until it is closed. */
+  /**
+   * How long it stays, in milliseconds; `Infinity` until it is closed. Default: the toaster's
+   * `duration`.
+   */
   duration?: number | undefined
-  /** Anything else the caller draws it with. */
+  /**
+   * How it is announced: `"polite"` when assistive technology is next idle, `"assertive"` as
+   * an alert that interrupts what is being read. Default: `"polite"`.
+   */
+  priority?: "polite" | "assertive" | undefined
+  /** A button of the toast's own, which `Toast.Action` draws and presses. Default: none. */
+  action?: ToastActionOptions<Content> | undefined
+  /** Anything else the caller draws it with; the toaster never reads it. Default: none. */
   data?: unknown
-  /** Heard when it starts to leave, with why. */
+  /** Heard when it starts to leave, with why (`details.reason`). Default: none. */
   onClose?: ((details: ChangeDetails) => void) | undefined
 }
 
-export interface ToastRecord extends ToastOptions {
+/** A toast as its toaster holds it: what it was added with, and where it stands. */
+export interface ToastRecord<Content = string> extends ToastOptions<Content> {
+  /** What it is known by: the one it was added with, or one the toaster made. */
   readonly id: string
+  /** How long it stays, in milliseconds: its own, or the toaster's when it gave none. */
   readonly duration: number
-  /** It has been closed and is on its way out. */
+  /** How it is announced: its own, or `"polite"` when it gave none. */
+  readonly priority: "polite" | "assertive"
+  /** It has been closed and is on its way out. `false` until then. */
   readonly closing: boolean
 }
 
-export interface Toaster {
-  /** Every toast that is in the page, the newest first. */
-  readonly toasts: ReadonlySignal<readonly ToastRecord[]>
-  /** How many are shown at once; the rest wait behind. */
+/**
+ * What a promise's toast shows in one of its states: a toast's options, or a string, which is
+ * its title (where a title may be a string).
+ */
+export type ToastState<Content = string> =
+  | ToastOptions<Content>
+  | (string extends Content ? string : never)
+
+/** What a toaster is made with. */
+export interface ToasterOptions {
+  /** How long a toast stays when it does not say, in milliseconds. Default: `5000`. */
+  duration?: number | undefined
+  /** How many toasts are shown at once; the rest wait behind, `data-limited`. Default: `3`. */
+  limit?: number | undefined
+}
+
+/** The toasts of a page and what changes them: what `createToaster()` gives. */
+export interface Toaster<Content = string> {
+  /** Every toast that is in the page, the newest first. Empty to begin with. */
+  readonly toasts: ReadonlySignal<readonly ToastRecord<Content>[]>
+  /** How many are shown at once; the rest wait behind. Default: `3`. */
   readonly limit: number
-  /** Shows a toast, and gives the id it is known by. */
-  add(options: ToastOptions & { id?: string }): string
-  /** Changes one that is showing; its time starts again. */
-  update(id: string, options: ToastOptions): void
-  /** Closes one, or every one: it leaves once its motion has ended. */
+  /**
+   * Shows a toast, and gives the id it is known by: `id` when one is given (the same id again
+   * is the same toast, changed), `toast-1`, `toast-2` … otherwise.
+   */
+  add(options: ToastOptions<Content> & { id?: string }): string
+  /**
+   * Changes one that is showing: what is given replaces what it had, the rest stays, and its
+   * time starts again.
+   */
+  update(id: string, options: ToastOptions<Content>): void
+  /**
+   * Closes one, or every one when no id is given: it leaves once its motion has ended.
+   * `details` is what `onClose` hears. Default: the reason `"dismiss"`.
+   */
   dismiss(id?: string, details?: ChangeDetails): void
-  /** Takes one out at once. What draws the toasts calls it when the motion has ended. */
+  /**
+   * Takes one out at once, with no exit: what draws the toasts calls it when the motion has
+   * ended.
+   */
   remove(id: string): void
   /**
-   * One toast for something that takes time: `loading` (type `"loading"`) until the promise
-   * settles, then `success` or `error` in its place, each as a title, as options, or as a
-   * function of what the promise gave. Answers the promise itself.
+   * One toast for something that takes time: `loading` (type `"loading"`, staying until the
+   * promise settles), then `success` or `error` in its place, each a title, a toast's options,
+   * or a function of what the promise gave. Each state is whole: a description or an action
+   * the state before had is not kept. Answers the promise itself.
    */
   promise<Value>(
     promise: Promise<Value>,
     states: {
-      loading: string | ToastOptions
-      success: string | ToastOptions | ((value: Value) => string | ToastOptions)
-      error: string | ToastOptions | ((error: unknown) => string | ToastOptions)
+      loading: ToastState<Content>
+      success: ToastState<Content> | ((value: Value) => ToastState<Content>)
+      error: ToastState<Content> | ((error: unknown) => ToastState<Content>)
     }
   ): Promise<Value>
 }
 
-const said = (given: string | ToastOptions): ToastOptions =>
-  typeof given === "string" ? { title: given } : given
+const said = <Content>(given: ToastState<Content>): ToastOptions<Content> =>
+  (typeof given === "string" ? { title: given } : given) as ToastOptions<Content>
 
 /** How long a toast stays when it does not say. */
 export const TOAST_DURATION = 5000
@@ -63,22 +135,24 @@ export const TOAST_SWIPE = 40
 
 /**
  * The toasts of a page, apart from any framework and from what draws them: made once, in a
- * module, and called from anywhere (`toaster.add({ title })`), a component or not.
+ * module, and called from anywhere (`toaster.add({ title })`), a component or not. `Content`
+ * is what a title, a description and an action's label may be; it is handed on untouched.
  */
-export function createToaster(options: { duration?: number; limit?: number } = {}): Toaster {
-  const toasts = signal<readonly ToastRecord[]>([])
+export function createToaster<Content = string>(options: ToasterOptions = {}): Toaster<Content> {
+  const toasts = signal<readonly ToastRecord<Content>[]>([])
   let made = 0
-  const change = (id: string, to: (toast: ToastRecord) => ToastRecord) =>
+  const change = (id: string, to: (toast: ToastRecord<Content>) => ToastRecord<Content>) =>
     toasts.set(toasts.peek().map((each) => (each.id === id ? to(each) : each)))
 
-  const toaster: Toaster = {
+  const toaster: Toaster<Content> = {
     toasts,
     limit: options.limit ?? 3,
     add({ id = `toast-${++made}`, ...given }) {
-      const toast: ToastRecord = {
+      const toast: ToastRecord<Content> = {
         ...given,
         id,
         duration: given.duration ?? options.duration ?? TOAST_DURATION,
+        priority: given.priority ?? "polite",
         closing: false,
       }
       // The same id again is the same toast, changed.
@@ -91,6 +165,7 @@ export function createToaster(options: { duration?: number; limit?: number } = {
         ...toast,
         ...given,
         duration: given.duration ?? toast.duration,
+        priority: given.priority ?? toast.priority,
         closing: false,
       }))
     },
@@ -109,7 +184,7 @@ export function createToaster(options: { duration?: number; limit?: number } = {
       const id = toaster.add({ type: "loading", ...said(states.loading), duration: Infinity })
       const settle = <Given>(
         type: string,
-        state: string | ToastOptions | ((given: Given) => string | ToastOptions),
+        state: ToastState<Content> | ((given: Given) => ToastState<Content>),
         given: Given
       ) => {
         // Closed while it waited: what came of it is not shown.
@@ -117,6 +192,9 @@ export function createToaster(options: { duration?: number; limit?: number } = {
         if (!waiting || waiting.closing) return
         const next = said(typeof state === "function" ? state(given) : state)
         toaster.update(id, {
+          // A state is whole: what the one before it said and offered is not this one's.
+          description: undefined,
+          action: undefined,
           type,
           ...next,
           duration: next.duration ?? options.duration ?? TOAST_DURATION,
@@ -132,10 +210,11 @@ export function createToaster(options: { duration?: number; limit?: number } = {
   return toaster
 }
 
-export interface ToastProps {
+export interface ToastProps<Content = string> {
   id: string
-  toaster: Toaster
-  /** What the region of toasts is called, for assistive technology. */
+  /** The toaster whose toasts are drawn: one made with `createToaster()`. Needed. */
+  toaster: Toaster<Content>
+  /** What the region of toasts is called, for assistive technology. Default: `"Notifications"`. */
   label?: string | undefined
   /** The key that takes focus to the toasts. Default: `"F6"`. */
   hotkey?: string | undefined
@@ -143,7 +222,9 @@ export interface ToastProps {
   swipeDirection?: "left" | "right" | "up" | "down" | undefined
 }
 
-export interface ToastParts {
+export interface ToastParts<Content = string> {
+  /** The toast as its toaster holds it now: what a part with nothing of its own to say draws. */
+  readonly record: ReadonlySignal<ToastRecord<Content> | undefined>
   readonly root: Part
   /**
    * What holds the toast's contents, when a design sizes the toast itself (one behind the
@@ -151,23 +232,28 @@ export interface ToastParts {
    * measured again when what it holds changes.
    */
   readonly content: Part
+  /** What the toast is called: the record's `title`, unless the caller draws another. */
   readonly title: Part
+  /** What the toast says: the record's `description`, unless the caller draws another. */
   readonly description: Part
   /** Closes the toast. */
   readonly close: Part
-  /** A button of the toast's own; pressing it closes the toast too. */
+  /**
+   * A button of the toast's own: the record's `action`, unless the caller draws another.
+   * A press tells the action, and closes the toast unless the action refused.
+   */
   readonly action: Part
 }
 
-export interface Toast {
-  readonly toasts: ReadonlySignal<readonly ToastRecord[]>
+export interface Toast<Content = string> {
+  readonly toasts: ReadonlySignal<readonly ToastRecord<Content>[]>
   /** Whether the stack is spread out: the pointer or focus is on it. */
   readonly expanded: ReadonlySignal<boolean>
   mount(): () => void
   /** Where the toasts are drawn: a region that is always in the page. */
   readonly viewport: Part
   /** The parts of one toast. */
-  toast(id: string): ToastParts
+  toast(id: string): ToastParts<Content>
 }
 
 const NOTHING = () => {}
@@ -181,7 +267,9 @@ const NONE = () => NOTHING
  * Where each toast lies is the design's, from what the parts say: its place in the stack, its
  * height, and the height of what is in front of it.
  */
-export function createToast(props: ReadonlySignal<ToastProps>): Toast {
+export function createToast<Content = string>(
+  props: ReadonlySignal<ToastProps<Content>>
+): Toast<Content> {
   const { id, toaster } = props.peek()
   const toasts = toaster.toasts
   const hovered = signal(false)
@@ -189,7 +277,7 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
   const hidden = signal(false)
   const expanded = computed(() => hovered.get() || focused.get())
   const elements = new Map<string, HTMLElement>()
-  const parts = new Map<string, ToastParts>()
+  const parts = new Map<string, ToastParts<Content>>()
   let region: HTMLElement | undefined
 
   /** Each toast's height, and the height of the toasts in front of it. */
@@ -215,7 +303,7 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
     else setGeometry(region, "--toast-frontmost-height", `${frontmost}px`)
   }
 
-  function make(toastId: string): ToastParts {
+  function make(toastId: string): ToastParts<Content> {
     const record = computed(() => toasts.get().find((each) => each.id === toastId))
     const index = computed(() => {
       const open = toasts.get().filter((each) => !each.closing || each.id === toastId)
@@ -238,14 +326,20 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
       }
 
     return {
+      record,
       root: {
         props: computed(() => {
           const toast = record.get()
           const way = props.get().swipeDirection ?? "right"
+          // One that interrupts is an alert, read whole and at once, whatever the region around
+          // it says of the rest.
+          const alert = toast?.priority === "assertive"
           return {
             id: `${id}-${toastId}`,
-            role: "dialog",
+            role: alert ? "alertdialog" : "dialog",
             "aria-modal": "false",
+            "aria-live": alert ? "assertive" : undefined,
+            "aria-atomic": alert ? "true" : undefined,
             "aria-labelledby": titled.get() ? `${id}-${toastId}-title` : undefined,
             "aria-describedby": described.get() ? `${id}-${toastId}-description` : undefined,
             tabindex: "0",
@@ -369,7 +463,12 @@ export function createToast(props: ReadonlySignal<ToastProps>): Toast {
       action: {
         props: computed(() => ({
           type: "button",
-          onClick: (event: Event) => close("action-press", event),
+          onClick(event: Event) {
+            const by = details("action-press", event)
+            record.peek()?.action?.onAction(by)
+            // What the action refused stays: it has more to do, or asked and was told no.
+            if (!by.canceled) toaster.dismiss(toastId, by)
+          },
         })),
         attach: NONE,
       },

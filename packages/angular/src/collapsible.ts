@@ -54,6 +54,9 @@ export class KuiCollapsibleTrigger implements OnInit {
 /** `<div *kuiCollapsiblePanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden. */
 @Directive({ selector: "[kuiCollapsiblePanel]" })
 export class KuiCollapsiblePanel implements OnInit {
+  /**
+   * Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while it is closed.
+   */
   readonly kuiCollapsiblePanel = input<{ keepMounted?: boolean } | "">("")
   private readonly root = inject(KuiCollapsible)
   private readonly present = presentWhile()

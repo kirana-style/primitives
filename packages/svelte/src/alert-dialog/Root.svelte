@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 
   import { provide } from "../dialog/context.ts"
   import { controller } from "../runtime.svelte.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   // A dialog that asks for an answer: a press outside it does not close it.
-  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: RootProps<AlertDialogProps> = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {

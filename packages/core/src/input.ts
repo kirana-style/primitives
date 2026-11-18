@@ -6,6 +6,7 @@ import type { ReadonlySignal } from "./reactivity.ts"
 import { onFormReset } from "./services/form-control.ts"
 
 export interface InputProps {
+  /** Disabled: nothing can be typed in it. */
   disabled?: boolean | undefined
   /** What was typed, as text, each time it changes. */
   onValueChange?: ((value: string, details: ChangeDetails) => void) | undefined

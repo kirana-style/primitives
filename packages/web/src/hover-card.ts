@@ -1,6 +1,7 @@
 import { createHoverCard } from "@kirana-ui/core/hover-card"
 
 import { hoverPopup } from "./hover-popup.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-hover-card>` around a `kui-part="trigger"` link and a `portal` with a `positioner`
@@ -8,3 +9,9 @@ import { hoverPopup } from "./hover-popup.ts"
  * `close-delay`, `disabled`; it tells `open-change`.
  */
 export const tag = hoverPopup("kui-hover-card", createHoverCard)
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-hover-card": ElementOf<typeof tag, { "open-change": ["onOpenChange", "open"] }>
+  }
+}

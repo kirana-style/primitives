@@ -2,14 +2,13 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { useCollapsible } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { PanelProps } from "./types.ts"
 
-  // `keepMounted` keeps the closed panel in the page, `hidden`.
-  let { keepMounted = false, ...rest }: { keepMounted?: boolean } & PartAttributes = $props()
+  let { keepMounted = false, ...rest }: PanelProps = $props()
   const controller = useCollapsible()
   const mounted = fromSignal(controller.mounted)
 </script>
 
 {#if mounted.current || keepMounted}
-  <Part part={controller.panel} tag="div" {...rest} />
+  <Part of={controller.panel} tag="div" {...rest} />
 {/if}

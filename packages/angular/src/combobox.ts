@@ -2,33 +2,33 @@ import {
   Directive,
   HostAttributeToken,
   booleanAttribute,
-  effect,
   inject,
   input,
   model,
   output,
-  untracked,
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
-import { computed, defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, ListCollection, Side } from "@kirana-ui/core"
+import { computed } from "@kirana-ui/core"
+import type { ChangeDetails, ItemLabels, ListCollection } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type { Combobox, ComboboxGroup } from "@kirana-ui/core/combobox"
 
 import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /**
  * `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the
  * list only suggests. Its parts are the combobox's directives.
  */
 @Directive({ selector: "[kuiCombobox],[kuiAutocomplete]", exportAs: "kuiCombobox" })
-export class KuiCombobox implements OnInit {
-  readonly value = model<unknown>(undefined)
-  readonly defaultValue = input<unknown>(null)
+export class KuiCombobox<Value = unknown> implements OnInit {
+  readonly value = model<Value | null | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<Value> | null>(null)
+  /** What the input says, `[(inputValue)]`. With `kuiAutocomplete` the text is `[(value)]`. */
   readonly inputValue = model<string | undefined>(undefined)
+  /** The text the input starts with, when the caller does not hold `inputValue`. Read once. */
   readonly defaultInputValue = input<string>()
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
@@ -36,30 +36,45 @@ export class KuiCombobox implements OnInit {
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly items = input<readonly { value: unknown; label: string }[]>()
+  /** The values' labels: a list of values with their labels, or the labels by value. */
+  readonly items = input<ItemLabels<Value>>()
   /** Whether an item is shown for what was typed; `null` shows every item. */
   readonly filter = input<((label: string, query: string) => boolean) | null>()
   /** In a field, "none" is then wrong. */
   readonly required = input(false, { transform: booleanAttribute })
   /** Several values, each shown as a chip: they are `values`, not `value`. */
   readonly multiple = input(false, { transform: booleanAttribute })
-  readonly values = model<readonly unknown[] | undefined>(undefined)
-  readonly defaultValues = input<readonly unknown[]>()
-  readonly valuesChanged = output<{ values: unknown[]; details: ChangeDetails }>()
+  /** With `multiple`: the chosen values, in the order they were chosen, `[(values)]`. */
+  readonly values = model<readonly Value[] | undefined>(undefined)
+  /**
+   * With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+   */
+  readonly defaultValues = input<readonly Value[]>()
+  /**
+   * With `multiple`: heard as a value is about to be added or taken away; `details.cancel()` keeps
+   * the values as they were.
+   */
+  readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** The list is always in the page, with no popup: a command palette. */
   readonly inline = input(false, { transform: booleanAttribute })
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
+  /**
+   * The first item shown for what was typed is highlighted as one types, so Enter chooses it.
+   * Off by default.
+   */
+  readonly autoHighlight = input(false, { transform: booleanAttribute })
   /** With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them. */
   readonly mode = input<AutocompleteProps["mode"]>()
   /** With `kuiAutocomplete`: a press on the input opens the list. */
   readonly openOnInputClick = input(false, { transform: booleanAttribute })
   readonly kuiId = input<string>()
-  readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
+  /** Heard as the input's text is about to change; `details.cancel()` keeps it as it was. */
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
-  controller!: Combobox
+  controller!: Combobox<Value>
   private readonly autocomplete =
     inject(new HostAttributeToken("kuiAutocomplete"), { optional: true }) !== null
   private readonly field = inject(KUI_FIELD, { optional: true })
@@ -81,7 +96,7 @@ export class KuiCombobox implements OnInit {
     multiple: this.multiple(),
     values: this.values(),
     defaultValues: this.defaultValues(),
-    onValuesChange: (values: unknown[], details: ChangeDetails) => {
+    onValuesChange: (values: Value[], details: ChangeDetails) => {
       this.valuesChanged.emit({ values, details })
       if (!details.canceled) {
         this.values.set(values)
@@ -92,7 +107,8 @@ export class KuiCombobox implements OnInit {
     mode: this.mode(),
     openOnInputClick: this.openOnInputClick(),
     virtualized: this.virtualized(),
-    onValueChange: (value: unknown, details: ChangeDetails) => {
+    autoHighlight: this.autoHighlight(),
+    onValueChange: (value: Value | null, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)
@@ -120,14 +136,15 @@ export class KuiCombobox implements OnInit {
     const around = { field: this.field?.controller }
     const props = this.props()
     this.controller = this.autocomplete
-      ? createAutocomplete(
+      ? // An autocomplete's value is its text: `Value` is a string there.
+        (createAutocomplete(
           computed<AutocompleteProps>(() => {
             const own = props.get()
             return {
               id: own.id,
               value: own.value as string | undefined,
               defaultValue: (own.defaultValue as string | null) ?? undefined,
-              onValueChange: own.onValueChange,
+              onValueChange: own.onValueChange as AutocompleteProps["onValueChange"],
               open: own.open,
               defaultOpen: own.defaultOpen,
               onOpenChange: own.onOpenChange,
@@ -139,10 +156,11 @@ export class KuiCombobox implements OnInit {
               name: own.name,
               form: own.form,
               virtualized: own.virtualized,
+              autoHighlight: own.autoHighlight,
             }
           }),
           around
-        )
+        ) as Combobox<Value>)
       : createCombobox(props, around)
     this.mount(this.controller)
   }
@@ -159,37 +177,15 @@ export class KuiComboboxPortal implements OnInit {
 }
 
 @Directive({ selector: "[kuiComboboxPositioner]" })
-export class KuiComboboxPositioner implements OnInit {
-  readonly side = input<Side>()
-  readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+export class KuiComboboxPositioner extends KuiPositioner {
   private readonly root = inject(KuiCombobox)
-  private readonly put = hostPart()
-  private readonly options = () =>
-    defined({
-      side: this.side(),
-      align: this.align(),
-      sideOffset: this.sideOffset(),
-      alignOffset: this.alignOffset(),
-      collisionPadding: this.collisionPadding(),
-    })
 
-  constructor() {
-    effect(() => {
-      const next = this.options()
-      untracked(() => this.root.controller?.positioning.set(next))
-    })
-  }
-
-  ngOnInit(): void {
-    this.root.controller.positioning.set(untracked(this.options))
-    this.put(this.root.controller.positioner)
+  protected placed() {
+    return this.root.controller
   }
 }
 
-function part(name: "input" | "trigger" | "popup" | "hidden" | "chips") {
+function part(name: "input" | "trigger" | "popup" | "list" | "hidden" | "chips") {
   const root = inject(KuiCombobox)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -217,6 +213,19 @@ export class KuiComboboxTrigger implements OnInit {
 @Directive({ selector: "[kuiComboboxPopup]" })
 export class KuiComboboxPopup implements OnInit {
   private readonly init = part("popup")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/**
+ * The items' own box inside the popup, when the popup holds more than items (an input): it is
+ * then the listbox.
+ */
+@Directive({ selector: "[kuiComboboxList]" })
+export class KuiComboboxList implements OnInit {
+  private readonly init = part("list")
 
   ngOnInit(): void {
     this.init()

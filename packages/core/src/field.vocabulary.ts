@@ -21,21 +21,25 @@ export const fieldVocabulary = defineComponent({
     exclusive: ONE_OF,
   },
   label: {
+    inside: "root",
     description: "The control's name: a press on it reaches the control.",
     states: STATES,
     exclusive: ONE_OF,
   },
   control: {
+    inside: "root",
     description: "The control: an input, a textarea or a select.",
     states: STATES,
     exclusive: ONE_OF,
   },
   description: {
+    inside: "root",
     description: "More about the control, said after its name.",
     states: STATES,
     exclusive: ONE_OF,
   },
   error: {
+    inside: "root",
     description: "What is wrong with the value. In the page while it applies.",
     states: {
       ...STATES,
@@ -43,5 +47,10 @@ export const fieldVocabulary = defineComponent({
       endingStyle: TRANSITION.endingStyle,
     },
     exclusive: [...ONE_OF, ["startingStyle", "endingStyle"]],
+  },
+  validity: {
+    description:
+      "Gives the control's validity to what it holds, to draw from. It draws no element.",
+    inside: "root",
   },
 })

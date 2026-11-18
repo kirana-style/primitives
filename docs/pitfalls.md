@@ -88,6 +88,17 @@ note. Three places hold them:
   narrow. An item chosen is added and the list stays open; chosen again, taken away; what was
   typed is used up. Backspace in the empty input takes the last value away. A chip's remove
   button is not a stop: the input is, and keeps focus.
+- **A select of several values is the combobox's, without the input.** The same props
+  (`multiple`, `values`, `onValuesChange`); a press adds or takes away and the list stays
+  open; one hidden input for each value, the first its adapter's and the rest the core's
+  (`services/hidden-inputs.ts`, which both use). Its trigger names what is chosen in the
+  items' order, not the order chosen: the order of `items` where they are given, else the
+  rows' as the page has them, read while the list is in it. Closed, a letter chooses nothing:
+  it would have to add or take away. Held by `tests/core/select.test.ts` ("a select of
+  several values") and the `select-multiple` scenario.
+- **Labels by value are looked up by own keys of a text.** `items` given as a record names
+  only values that are text and its own: `toString` is not a label, and `1` is not `"1"`
+  (`services/items.ts`; "a select's items given as a record").
 - **Moving by place is given to a list, not built into it.** A menu is never virtualized and
   does not carry the code (`byPlace` from `list-places.ts`, passed as `places`).
 - **A filtered item is `hidden`, and a row's own `display` shows it again.** `.item { display:
@@ -146,10 +157,33 @@ note. Three places hold them:
   ("ResizeObserver loop completed with undelivered notifications"). What asks to be watched
   during a report is watched a task later. Held by `tests/core/scroll-area.test.ts`.
 - **A scroll area's viewport scrolls natively.** Only its own scrollbars are hidden
-  (`scrollbar-width: none`, written inline with `overflow: scroll`: the one style that is
-  not geometry, since the component is nothing without it). Wheel, touch, keys and
-  find-in-page work as in any scroller, and the viewport is a stop for Tab while there is
-  something to scroll.
+  (`scrollbar-width: none`, written inline with `overflow: scroll`, since the component is
+  nothing without it). Wheel, touch, keys and find-in-page work as in any scroller, and the
+  viewport is a stop for Tab while there is something to scroll.
+- **Where a scroll area's parts lie is the library's to write, not the design's to know.**
+  A scrollbar with nothing said of its place is in the flow: it sat under the viewport,
+  outside the area, and no part's description said the design had to place it with the
+  corner's variables. Each part's `style` now says it, as Base UI's does, so a server writes
+  it too: the root is what the others are placed against, a scrollbar lies along its edge
+  (the end of a line, the bottom) and stops short of the corner, the corner sits where they
+  meet, a thumb is as long as its scrollbar's `--scroll-area-thumb-height` or `-width`. A
+  design gives a scrollbar its thickness and draws it. Held by
+  `tests/core/scroll-area.test.ts` ("places its scrollbars and its corner itself", "places
+  them at the other side where lines run right to left", "says where its parts lie before
+  there is a page"), `packages/react/src/server.test.tsx` ("places a scroll area's
+  scrollbars and corner in what it writes"), and the conformance run, whose stylesheet
+  places none of them.
+- **A thumb is sized by what its scrollbar leaves it, not by the scrollbar.** Sized as a
+  share of the track with its padding in, a thumb at the end of its travel stood outside
+  the padding by as much, and was longer than Base UI's for the same page. It is the share
+  that is seen, of what the viewport shows less the scrollbar's padding and the thumb's own
+  margin, and of no more than the scrollbar's length; it travels what is left. Held by
+  `tests/core/scroll-area.test.ts` ("keeps its thumb inside its scrollbar's padding").
+- **What is written on one part and laid out on another arrives a render later.** The
+  corner's size is the root's to say and the scrollbars' to be shortened by: measured in
+  the moment between, a scrollbar is still whole. It is taken off by hand until the root
+  says it, read from the root's own style, and the scrollbars are measured again when they
+  change length.
 - **Pointer capture is best effort.** `setPointerCapture` throws for a pointer the browser
   no longer has; a drag goes on without it.
 
@@ -173,6 +207,19 @@ note. Three places hold them:
   a trigger opens it; the click that comes a moment after is the same intent.
 - **Content is not in what a server sends**: it is drawn while shown. A site that needs its
   links read without scripts also writes them in the page.
+- **What a type calls optional must work when it is left out.** An item's `value` was
+  optional "for an item that is only a link", and an item with a trigger and no value gave
+  its parts nothing to stand in: the trigger threw as it rendered, on a server and in a
+  page. An item that is given no value makes its own, from the id its framework gave it
+  (an accordion's item too). Nothing is made for an item until one of its parts is read, so
+  an item that is only a link still costs nothing. Held by
+  `packages/react/src/server.test.tsx` ("renders a navigation item that was given no value,
+  with its trigger", "renders accordion items that were given no value, each with a value of its own"),
+  `tests/core/navigation-menu.test.ts` ("makes nothing for an item that is only a link",
+  "runs an item whose parts are first drawn once it is in the page"),
+  `tests/core/web.test.ts`, the navigation menu's scenario, whose second item has no value
+  on every adapter, and the second page's accordion, whose items have none (their ids must
+  be the same before and after hydration).
 
 ## Forms
 
@@ -227,6 +274,54 @@ note. Three places hold them:
   compiler does not follow a constant (`NG1010`), and only the fixture's build says so.
 - **Solid and Svelte** attach children around their parent in an order of their own: a list
   reads its rows in the page's order at use time, never the order they registered in.
+
+## Composition
+
+- **The element a caller asks for is the caller's last word.** A part drawn as another element
+  (`render`, `as-child`) has three layers of props, lowest first: what was handed to the
+  part, the element's own, the part's. Merged the other way round, a design system's wrapper
+  that names its slot on the part overwrote the slot its own caller wrote on the element.
+  Classes join, styles are merged property by property, every handler runs lowest first, and
+  `preventKiranaHandler()` in a caller's stops only the part's (`composeProps` under
+  `mergeProps`, in the core). Held by `packages/core/src/part.test.ts`, the adapters'
+  `server.test` files and the conformance run's `composition` scenario.
+- **A part with nothing to say about an attribute leaves it.** React is given every boolean
+  attribute as a boolean, so "not disabled by the part" was written as `disabled={false}`
+  over the `disabled` of the element the part was drawn as. The layers are merged before the
+  props are turned into a framework's form, where `undefined` still means "nothing to say".
+- **A cloned element already has its props.** Vue lays the props given to a clone over the
+  element's own: handed the merged props, it joined the element's class to itself and ran its
+  listener twice. The clone is made with the element's props taken off. Several listeners of
+  one event are a list in Vue, which is not a function: they are made one before a merge, or
+  the part's listener replaced them.
+- **Every part goes through the adapter's one way of drawing a part**, a part with nothing
+  of its own included (a list item, an indicator). One drawn as a plain element took none of
+  `render`, `ref`, `as`, `as-child` or `child`, and in two adapters no attribute at all.
+- **What a part keeps in its element is not its content.** A control's native input and a
+  code cell's character are the part's own: in React they are given apart from the children
+  (`usePart`'s last argument), so the children of the element a caller asked for do not
+  replace them.
+- **The text a part writes goes with it to the caller's element.** A meter's value, a
+  select's chosen label, a calendar's heading, a date field's piece, a field's error and a
+  toast's title, description and action write their own text. Drawn as the caller's element
+  they wrote nothing on two adapters: Svelte's `child` snippet was given only the props, and
+  Vue's `as-child` took the slot for the element and had no place for the text. Each adapter
+  now hands it over the way it hands a hidden input: the children of the props in React and
+  Solid (drawn unless the caller's element has its own), the slotted element's content in Vue
+  while it has none of its own, and a `text` snippet beside `props` and `state` in Svelte,
+  which the caller renders inside its element. Held by each adapter's `server.test`.
+- **`part` is the element's attribute.** Solid's and Svelte's component for a part's element
+  read the core's part from a prop named `part`, so a caller's `part="thumb"`, written for
+  `::part()`, would have replaced the part. The prop is `of`, as in React, and `part`
+  reaches the element on every adapter. Held by each adapter's `server.test`.
+- **React 18 does not know `inert` as a boolean.** Given `inert={true}` it warns and writes
+  nothing, so a popup on its way out stayed live; React 19 takes `""` for false, with a
+  warning. The adapter writes `""` or nothing before 19 and a boolean from 19 on
+  (`packages/react/src/refs-forwarded.test.tsx`).
+- **A part's state is its attributes.** What a caller is given to read (`state.open`,
+  `state.side`) is taken from the part's own `data-*` attributes, so no part can say one
+  thing to a stylesheet and another to a function. A test holds every state's name in the
+  vocabulary to the name its attribute reads as.
 
 ## Browsers
 
@@ -452,11 +547,53 @@ note. Three places hold them:
   as tall as the newest: it is measured with its height let go for the read, and what holds
   its contents is watched, so `--toast-height` is still true (`toast.test.ts`, "is measured
   as tall as it is").
+- **What a toast says is its framework's to draw, and the core never reads it.** A title that
+  may be an element cannot be told from a toast's options by looking at it: in a promise's
+  states only a string is a title, and anything else is written as options (`{ title }`)
+  (`toast.test.ts`, "hands on what a toast says as it was given").
+- **Each state of a promise's toast is whole.** A "Cancel" kept from `loading` on a toast
+  that now says "Saved" cancels nothing: the description and the action a state does not
+  give are not kept from the state before (`toast.test.ts`, "gives each state of a promise
+  its own action").
+- **A part with nothing to say is not in the page.** One template draws every toast, and
+  most have no action and many no description: an empty button has no name, and an empty
+  description is still what its toast is described by. A title, a description and an action
+  with no content of their own draw what the toast was added with, or no element at all.
+  Angular's are the caller's own elements: its template leaves one out (`@if`). Held by the
+  toast scenario on six adapters.
+- **A toast that interrupts says so itself.** The region stays polite, for the toasts that
+  are; an urgent one is an `alertdialog` with its own `aria-live="assertive"` and
+  `aria-atomic`, so nothing is drawn twice and no hidden copy is needed (`toast.test.ts`,
+  "are read when the reader is idle, or at once when they say so").
 - **A thumb that stays inside its track needs no measuring to be in the right place**: its
   value's share from the start, moved back by that share of itself, which CSS knows. So a
   server draws it where it will be, and it is never hidden for a measure. Once measured, its
   centre is written as `--position`, as Base UI writes it; a design that animates a thumb's
   `translate` would see that change.
+- **A part's place among its like is the page's order; before there is a page, the order it
+  was asked for in.** A thumb with no `index` was the first value's, so the two thumbs of a
+  range were drawn on top of each other. It is now the value at its place among the
+  slider's thumbs. The place is kept under an id the framework gives the thumb, which is
+  the same on every render (a counter bumped while rendering counts a thumb twice in
+  React's StrictMode, and again on every later render); a thumb asked for a second time is
+  the same thumb. Once the thumbs are in the page their order is read from it, so one that
+  leaves moves the others up and one that is added takes its place where it is written.
+  Where the slider holds one value, every such thumb is that value's, as in Base UI. Held
+  by `tests/core/slider.test.ts` ("a slider's thumbs that are given no index"),
+  `packages/react/src/server.test.tsx` ("places each thumb of a range that was given no
+  index at its own value"), `tests/core/web.test.ts`, and the slider's scenario, which
+  takes a thumb away and puts it back on every adapter and reads what each server wrote.
+- **Angular makes what is inside an `@if` after what is written beside it.** On a server,
+  where a part is written once, the order parts are made in is then not the order they are
+  written in: a thumb inside an `@if` before two others was placed last. The slider's
+  thumbs wait there until all are made, and are asked for in their elements' order. Held by
+  the conformance run's check of what each server wrote ("the server placed each thumb of
+  a range").
+- **A thumb that stays inside is measured again when its control changes length.** Its
+  centre is a share of the control that depends on both lengths; kept from the first
+  measure, it drifts from the edge as the page is resized (0.5px at a tenth of the way,
+  1.2px on a narrow page, for a thumb of 12px). Held by `tests/core/slider.test.ts` ("keeps
+  to the edge when its control changes length").
 - **A number is typed as text and held as a number.** While it is typed the input says what
   was typed (`1234.50` is not rewritten to `1,234.5` under the caret); the number follows
   where the text is one, and is written out whole when focus leaves. A step from two
@@ -464,9 +601,40 @@ note. Three places hold them:
 - **A form's reset writes an input's default after the event.** A control that writes its
   own text on reset sets the input's `defaultValue` first, or the browser blanks it a moment
   later (`number-field.test.ts`, "goes back to the number it began with").
-- **In an autocomplete, Enter is the typed text's** until an arrow has gone to a suggestion:
-  no suggestion is highlighted for having been typed at, and the form is submitted with
-  what the input says. A combobox, where an item must be chosen, highlights the first.
+- **Typing highlights nothing unless asked to** (`autoHighlight`, off by default, on a
+  combobox and an autocomplete alike). In an autocomplete, Enter is then the typed text's
+  until an arrow has gone to a suggestion, and the form is submitted with what the input
+  says; in a combobox Enter chooses nothing until an arrow or the pointer has gone to an
+  item. Asked to, the first item shown is highlighted as the text changes, and Enter takes
+  it (`combobox.test.ts`, "what a combobox highlights as one types").
+- **A side asked for in the text's own words is said in them.** `inline-end` is the right
+  where the text runs to the right and the left where it runs to the left, read from the
+  provider when there is one and from the positioner otherwise (which took its anchor's
+  direction); `data-side` then says `inline-end`, or `inline-start` once flipped, never
+  `left` or `right`. A design that keys on `data-side` writes both words, or asks for the
+  side by the word it styles (`position.test.ts`, "says the other logical side once
+  flipped").
+- **What a popup is placed against may not be there yet when the popup is.** Each framework
+  fills a ref in its own time, and a popup that is open when the page is first drawn can be
+  in the page a moment before the element it was told to be placed against. An anchor given
+  as a function (or a ref, which an adapter reads through one) that has nothing yet is
+  asked once more a moment later, and the popup's own anchor is used until then
+  (`position.test.ts`, "asks a function that gave nothing once more").
+- **A place in the viewport is a new object each time it is asked for.** Following "another
+  anchor" by identity started over on every placement. Two places read from the same
+  element are followed the same way; only an answer for an anchor that is no longer the
+  one followed is dropped.
+- **A popup cannot be placed against what it holds.** A combobox whose input is inside its
+  popup was placed against that input: the popup's `min-width: var(--anchor-width)`
+  followed the input, which was as wide as the popup, and the popup grew to thousands of
+  pixels. With the input inside, the popup is placed against the button, the input has
+  focus while the popup is open and the button after, and the input's text is only what is
+  looked for (`combobox.test.ts`, "a combobox whose input is inside its popup").
+- **Where a combobox's input is, is known once the page has mounted.** A server draws the
+  button as the one beside an input (`tabindex="-1"`); a page that shows no input beside
+  it makes the button the combobox, a stop for Tab that says it opens a dialog. With the
+  input in the popup the items go in `Combobox.List`, which is then the listbox: a listbox
+  may hold only options.
 - **Scroll arrows need the list to be its own box.** An element placed in what scrolls goes
   with what scrolls: with arrows, the items are in `Select.List`, which is then the listbox
   and what scrolls, and the popup holds the list and the arrows.
@@ -545,8 +713,51 @@ note. Three places hold them:
   (`sudo env "PATH=$PATH" bunx playwright install-deps webkit`): `--browser webkit`.
 - **CI's fonts and speed are not this machine's.** `bun tests/conformance/run.ts react
   --only menu --slow 6` plays one scenario with the processor slowed.
+- **A design's transition goes to the one part it is for.** The fixtures' rule for a switch's
+  thumb (`transition: translate`) also matched every slider's thumb, which the library puts in
+  its place with `translate`. Where a part's style is written on an element that is already in
+  the page (Angular's directives, the custom elements), each thumb slid to its place for 120 ms
+  as the page mounted. Firefox holds a page still by what is at the top of the view (scroll
+  anchoring): asked for the end of the page in that moment, it took a sliding thumb for its
+  mark, and at the next layout moved the page by what was left of the slide. A popup opened
+  there had a pixel or two less room than on the other adapters, seven runs in eight. Held by
+  the `placing` scenario, which reads the page's scroll around each opening.
+- **A part's first style lands on an element the page already styled.** Where the page's
+  markup is drawn before its components begin (the custom elements; a framework's element has
+  its style before it is first drawn), a slider thumb's place is a change of style to the
+  browser, and a design's `transition` on it runs as the page begins: each thumb glides to
+  where it was all along. The custom elements end what a part's first style started before
+  the page is drawn again, once for all the parts of a pass; Angular writes every part's
+  props in the directives' turn and attaches after, and a slider's thumbs with no index wait
+  for all of them, so none is first written at another's place. Held by
+  `tests/core/web.test.ts` ("a part's first style starts no transition on markup the page
+  had drawn") and the `placing` scenario.
+- **A list of parts is not where they go.** The reference named every part and said of none
+  what it is written inside: a reader with that file alone could not tell that a tab goes in
+  the tab list, or that a select's item is five parts deep. Where a part goes is data now
+  (`inside`, `optional`, `repeated` on each part of the vocabulary), drawn as a tree in every
+  `llms.txt`, and held against the six fixture pages' own source, each read with its
+  framework's parser: `packages/vocabulary/src/anatomy.test.ts` fails on a part written
+  outside what the data says, and `bun scripts/llms.ts --check` (`anatomy`) on a part with no
+  place.
+- **A type a prop names must be the package's own to give.** `ChangeDetails`, `Side` and
+  `IsoDate` were exported by the core only, which a strict installer keeps out of a
+  project's reach: the one package a project installed could not type its own callbacks.
+  Each adapter's root exports them, as types. Held by `bun scripts/llms.ts --check` (`types`),
+  `vp run parity`, and `scripts/consume.ts`, which type-checks them in a project that has
+  only the adapters, installed isolated.
+- **One directive for several components takes all of their inputs.** Angular's dialog root
+  was also the alert dialog's, so `[modal]="false"` on an alert dialog made one that is not
+  modal. The alert dialog has a root of its own, with no such input; `vp run parity` compares
+  each part's own props with React's and fails if it comes back.
 - **A probe that reads layout can hide the fault it looks for.** A scroll jump disappeared
   under a logger that read `scrollY`.
+- **A rehearsal installs from a cache of its own.** The rehearsal's registry holds a version
+  for one run, and the next run publishes the same version with other files. Installed
+  through the machine's package cache, the project was handed the files of an earlier run,
+  and "the release installs and works" passed on packages nobody had just published: a new
+  type-checked line found declarations that were days old. `scripts/consume.ts` gives an
+  install from a registry that is not npm's its own cache.
 - **Stop what you start, by its process id.** A server left running holds a port and memory
   for the next run.
 - **A dependency change is checked in a fresh clone** with a frozen lockfile: links of removed

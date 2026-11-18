@@ -1,6 +1,8 @@
 import { createDialog } from "@kirana-ui/core/dialog"
+import type { DialogProps } from "@kirana-ui/core/dialog"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-dialog>` around a `kui-part="trigger"` button and a `portal`, which is drawn at the
@@ -27,3 +29,12 @@ export const tag = defineElement({
     close: (controller) => controller.close,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-dialog": ElementOf<
+      As<typeof tag, DialogProps>,
+      { "open-change": ["onOpenChange", "open"] }
+    >
+  }
+}

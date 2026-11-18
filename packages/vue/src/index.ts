@@ -23,6 +23,15 @@ export { QrCode } from "./qr-code.ts"
 export { Autosize } from "./autosize.ts"
 export { Carousel } from "./carousel.ts"
 export { Toast, createToaster } from "./toast.ts"
+export type {
+  ToastActionOptions,
+  ToastContent,
+  ToastOptions,
+  ToastRecord,
+  ToastState,
+  Toaster,
+  ToasterOptions,
+} from "./toast.ts"
 export { Resizable } from "./resizable.ts"
 export { Popover } from "./popover.ts"
 export { RadioGroup } from "./radio-group.ts"
@@ -45,3 +54,46 @@ export { Fieldset } from "./fieldset.ts"
 export { Form } from "./form.ts"
 export { DirectionProvider, useDirection } from "./direction.ts"
 export { PortalProvider } from "./runtime.ts"
+export type { PartEvent } from "./runtime.ts"
+// The core's types a prop names: imported from this package, the one a project installs.
+// Types only: nothing of the core's is drawn in by them.
+export type {
+  Align,
+  Anchor,
+  AnchorOption,
+  Bindable,
+  ChangeDetails,
+  ChangeSource,
+  ComponentDefinition,
+  Direction,
+  ItemLabels,
+  ListCollection,
+  Orientation,
+  Part,
+  PartDefinition,
+  PartProps,
+  PartState,
+  PartStyle,
+  PhysicalSide,
+  PositionOptions,
+  ReadonlySignal,
+  Side,
+  Signal,
+  StateDefinition,
+  StateOf,
+} from "@kirana-ui/core"
+export type {
+  CalendarDay,
+  CalendarValue,
+  CalendarWeekday,
+  DateRange,
+  IsoDate,
+} from "@kirana-ui/core/calendar"
+export type { DateFieldSegment, DateUnit } from "@kirana-ui/core/date-field"
+export type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
+export type { FieldValidity, ValidityKey } from "@kirana-ui/core/field"
+export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"
+export type { PaginationEntry } from "@kirana-ui/core/pagination"
+export type { QrCorrection } from "@kirana-ui/core/qr-code"
+export type { SelectShown } from "@kirana-ui/core/select"
+export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"

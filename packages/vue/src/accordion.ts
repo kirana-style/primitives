@@ -1,12 +1,27 @@
 import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
-import type { AccordionItem, Accordion as Controller } from "@kirana-ui/core/accordion"
+import type {
+  AccordionItem,
+  AccordionItemOptions,
+  AccordionProps,
+  Accordion as Controller,
+} from "@kirana-ui/core/accordion"
 import { defineComponent, h, inject, onBeforeUnmount, onMounted, provide, useId } from "vue"
-import type { InjectionKey, PropType } from "vue"
+import type { InjectionKey, PropType, PublicProps } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
+import type {
+  Changes,
+  PartComponent,
+  PartComponentProps,
+  PartGiven,
+  PartInstance,
+  StatesOf,
+} from "./runtime.ts"
+
+type State = StatesOf<"accordion">
 
 const scope = context<Controller>("Accordion")
 const ITEM: InjectionKey<AccordionItem> = Symbol("AccordionItem")
@@ -19,6 +34,12 @@ function useItem(): AccordionItem {
 }
 
 const RootElement = partComponent("AccordionRootElement", "div", () => scope.use().root)
+
+export type RootProps<Value = unknown> = Omit<AccordionProps<Value>, "id" | "onValueChange"> & {
+  id?: string | undefined
+} & PartComponentProps
+
+export type RootEmits<Value = unknown> = Changes<"value", Value[]>
 
 /** `v-model:value` (a list), or `value` with `@value-change="(value, details) => …"`. */
 const Root = defineComponent({
@@ -54,16 +75,27 @@ const Root = defineComponent({
     )
     return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as new <Value = unknown, As extends string = "div">(
+  props: PartGiven<As, RootProps<Value>, RootEmits<Value>> & PublicProps
+) => PartInstance<As, RootProps<Value>, RootEmits<Value>, { state: State["root"] }>
 
+export interface ItemProps extends AccordionItemOptions, PartComponentProps {
+  /** What tells this item from the others; an item that is given none makes its own. */
+  value?: unknown
+}
+
+/** `value` tells this item from the others; an item that is given none makes its own. */
 const Item = defineComponent({
   name: "AccordionItem",
   inheritAttrs: false,
-  props: { value: { type: ANY, required: true }, disabled: optional(Boolean) },
+  props: { value: { type: ANY, default: undefined as unknown }, disabled: optional(Boolean) },
   setup(props, { attrs, slots }) {
     const options = toSignal(() => ({ disabled: props.disabled }))
+    const generated = useId()
     // An item is its value for as long as it is in the page.
-    const item = scope.use().item(props.value, () => defined(options.get()))
+    const item = scope
+      .use()
+      .item(props.value === undefined ? generated : props.value, () => defined(options.get()))
     provide(ITEM, item)
     let stop: (() => void) | undefined
     onMounted(() => {
@@ -73,9 +105,14 @@ const Item = defineComponent({
     const Element = partComponent("AccordionItemElement", "div", () => item.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["item"], ItemProps>
 
 const PanelElement = partComponent("AccordionPanelElement", "div", () => useItem().panel)
+
+export interface PanelProps extends PartComponentProps {
+  /** Keeps the closed panel in the page, `hidden`. */
+  keepMounted?: boolean | undefined
+}
 
 /** `keep-mounted` keeps the closed panel in the page, `hidden`. */
 const Panel = defineComponent({
@@ -86,12 +123,18 @@ const Panel = defineComponent({
     const mounted = fromSignal(useItem().mounted)
     return () => (mounted.value || props.keepMounted ? h(PanelElement, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"div", State["panel"], PanelProps>
 
+export type HeaderProps = PartComponentProps
+export type TriggerProps = PartComponentProps
 export const Accordion = {
   Root,
   Item,
-  Header: partComponent("AccordionHeader", "h3", () => useItem().header),
-  Trigger: partComponent("AccordionTrigger", "button", () => useItem().trigger),
+  Header: partComponent<"h3", State["header"]>("AccordionHeader", "h3", () => useItem().header),
+  Trigger: partComponent<"button", State["trigger"]>(
+    "AccordionTrigger",
+    "button",
+    () => useItem().trigger
+  ),
   Panel,
 }

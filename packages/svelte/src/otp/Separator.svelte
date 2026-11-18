@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useOtp } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { SeparatorProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: SeparatorProps = $props()
   const controller = useOtp()
 </script>
 
-<Part part={controller.separator} tag="div" {...props} />
+<Part of={controller.separator} tag="div" {...props} />

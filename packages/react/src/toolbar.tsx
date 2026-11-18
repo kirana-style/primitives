@@ -1,13 +1,17 @@
 import { defined, within } from "@kirana-ui/core"
+import type { Part, StateOf } from "@kirana-ui/core"
 import { createToolbar } from "@kirana-ui/core/toolbar"
 import type { Toolbar as Controller, ToolbarProps } from "@kirana-ui/core/toolbar"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
-import { useController, useOptions, usePart } from "./runtime.tsx"
+import { parts, useController, useOptions, usePart } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 import { ToggleGroupContext, ToolbarContext } from "./toolbar-context.ts"
+
+type Parts = Vocabulary["toolbar"]
 
 function useToolbar(part: string): Controller {
   const controller = useContext(ToolbarContext)
@@ -15,7 +19,7 @@ function useToolbar(part: string): Controller {
   return controller
 }
 
-export type RootProps = ToolbarProps & PartComponentProps
+export type RootProps = PartComponentProps<"div", StateOf<Parts["root"]>, ToolbarProps>
 
 function Root({ orientation, loop, disabled, ...rest }: RootProps): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
@@ -34,34 +38,54 @@ function Root({ orientation, loop, disabled, ...rest }: RootProps): ReactElement
   )
 }
 
-export type ItemProps = PartComponentProps & { disabled?: boolean }
-
-function item(name: "button" | "input" | "group", tag: string) {
-  return function Item({ disabled, ...props }: ItemProps): ReactElement {
-    const controller = useToolbar(name)
-    const options = useOptions({ disabled })
-    const part = useMemo(
-      () => controller[name](() => defined(options.get())),
-      [controller, options]
-    )
-    return usePart(part, tag, props)
-  }
+/** What an item of the toolbar takes of its own. */
+export interface ItemOptions {
+  /** Disables this control. */
+  disabled?: boolean
 }
 
-function Link(props: PartComponentProps): ReactElement {
+export type ButtonProps = PartComponentProps<"button", StateOf<Parts["button"]>, ItemOptions>
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>, ItemOptions>
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, ItemOptions>
+/** @deprecated The item's own: `ButtonProps`, `InputProps` or `GroupProps`. */
+export type ItemProps = PartComponentProps<"div", StateOf<Parts["group"]>, ItemOptions>
+
+function useItem(name: "button" | "input" | "group", disabled: boolean | undefined): Part {
+  const controller = useToolbar(name)
+  const options = useOptions({ disabled })
+  return useMemo(() => controller[name](() => defined(options.get())), [controller, name, options])
+}
+
+function Button({ disabled, ...props }: ButtonProps): ReactElement {
+  return usePart(useItem("button", disabled), "button", props)
+}
+
+function Input({ disabled, ...props }: InputProps): ReactElement {
+  return usePart(useItem("input", disabled), "input", props)
+}
+
+function Group({ disabled, ...props }: GroupProps): ReactElement {
+  return usePart(useItem("group", disabled), "div", props)
+}
+
+export type LinkProps = PartComponentProps<"a", StateOf<Parts["link"]>>
+
+function Link(props: LinkProps): ReactElement {
   const controller = useToolbar("Link")
   const part = useMemo(() => controller.link(), [controller])
   return usePart(part, "a", props)
 }
 
-const Separator = (props: PartComponentProps) =>
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
+const Separator = (props: SeparatorProps) =>
   usePart(useToolbar("Separator").separator, "div", props)
 
-export const Toolbar = {
+export const Toolbar = /* @__PURE__ */ parts("Toolbar", {
   Root,
-  Button: item("button", "button"),
+  Button,
   Link,
-  Input: item("input", "input"),
-  Group: item("group", "div"),
+  Input,
+  Group,
   Separator,
-}
+})

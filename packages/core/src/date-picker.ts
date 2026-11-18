@@ -15,15 +15,24 @@ export interface DatePickerProps {
   id: string
   /** The day, typed or picked; `null` for none. */
   value?: IsoDate | null | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: IsoDate | null | undefined
+  /**
+   * Heard as the day is about to change, typed or picked: `details.cancel()` keeps the value as it
+   * was.
+   */
   onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void) | undefined
+  /** Whether the calendar is open, when the caller holds it. */
   open?: boolean | undefined
+  /** Whether the calendar starts open, when the caller does not hold `open`. Read once. */
   defaultOpen?: boolean | undefined
+  /** Heard as the calendar is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /** The language and region of the field and the calendar. Give it: a server does not know. */
   locale?: string | undefined
   /** The first and the last day that can be typed or picked. */
   min?: IsoDate | undefined
+  /** The last day that can be typed or picked. */
   max?: IsoDate | undefined
   /** Days that cannot be picked in the calendar. */
   isDateUnavailable?: CalendarProps["isDateUnavailable"]
@@ -33,8 +42,11 @@ export interface DatePickerProps {
   fixedWeeks?: boolean | undefined
   /** What an empty part of the field shows. */
   placeholders?: DateFieldProps["placeholders"]
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
+  /** Needed: in a `Field`, leaving it empty is then invalid. */
   required?: boolean | undefined
   /** The name it is submitted under. */
   name?: string | undefined

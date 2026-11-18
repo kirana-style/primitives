@@ -1,8 +1,9 @@
 import type { ReadonlySignal } from "@kirana-ui/core"
 import type { HoverPopup, HoverPopupProps } from "@kirana-ui/core/tooltip"
 
-import { place } from "./around.ts"
+import { positioner } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { Tag } from "./runtime.ts"
 
 const number = (text: string | null) => (text === null ? undefined : Number(text))
 
@@ -10,7 +11,7 @@ const number = (text: string | null) => (text === null ? undefined : Number(text
 export const hoverPopup = (
   tag: string,
   create: (props: ReadonlySignal<HoverPopupProps>) => HoverPopup
-): string =>
+): Tag<HoverPopupProps, HoverPopup> =>
   defineElement<HoverPopupProps, HoverPopup>({
     tag,
     props: {
@@ -32,10 +33,7 @@ export const hoverPopup = (
         })
         return controller.trigger
       },
-      positioner(controller, element) {
-        place(controller.positioning, element)
-        return { mounted: controller.mounted, part: controller.positioner }
-      },
+      positioner,
       popup: (controller) => controller.popup,
       arrow: (controller) => controller.arrow,
     },

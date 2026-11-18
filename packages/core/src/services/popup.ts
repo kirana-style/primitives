@@ -39,7 +39,11 @@ export interface PopupOptions {
    * placed, a dialog, does not carry the positioning code.
    */
   placement?: PopupPlacement
-  /** What it is placed against, when that is not its trigger: a point, for a context menu. */
+  /**
+   * What it is placed against, when that is not its trigger: a point, for a context menu. Asked
+   * each time the popup is placed; with nothing given back, the trigger. A positioner's own
+   * `anchor` comes before both.
+   */
   anchor?: () => Anchor | undefined
   /**
    * While its place is kept up with its trigger: while it is open, when left out. A popup that
@@ -222,8 +226,9 @@ export function createPopup(options: PopupOptions): Popup {
         ...placed(),
       })),
       attach(element) {
-        const anchor = options.anchor ? options.anchor() : trigger
-        if (!position || !anchor) return NOTHING
+        if (!position) return NOTHING
+        // Asked each time it is placed: its own anchor, or its trigger.
+        const anchor = () => options.anchor?.() ?? trigger
         return position.attach(element, anchor, options.following ?? open)
       },
     },

@@ -1,17 +1,34 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
-import type { NumberField as Controller } from "@kirana-ui/core/number-field"
+import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
 import { defineComponent, h, useId } from "vue"
 import type { PropType } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"numberField">
 
 const scope = context<Controller>("NumberField")
 
-const RootElement = partComponent("NumberFieldRootElement", "div", () => scope.use().root)
 const HiddenInput = partComponent("NumberFieldHiddenInput", "input", () => scope.use().hidden)
+
+export type RootProps = Omit<
+  NumberFieldProps,
+  "id" | "value" | "onValueChange" | "onValueCommitted"
+> & {
+  /** The number, `null` for none: `v-model`. */
+  modelValue?: number | null | undefined
+  id?: string | undefined
+} & PartComponentProps
+
+export type RootEmits = {
+  "update:modelValue": (value: number | null) => void
+  valueChange: (value: number | null, details: ChangeDetails) => void
+  valueCommitted: (value: number | null, details: ChangeDetails) => void
+}
 
 /** `v-model` is the number, `null` for none; `@value-committed` hears a change that is done. */
 const Root = defineComponent({
@@ -67,15 +84,37 @@ const Root = defineComponent({
       }))
     )
     const named = fromSignal(made.named)
-    return () =>
-      h(RootElement, attrs, () => [slots.default?.(), named.value ? h(HiddenInput) : null])
+    // Its hidden input is the element's last child, whatever element the caller asked for.
+    const RootElement = partComponent(
+      "NumberFieldRootElement",
+      "div",
+      () => made.root,
+      (content) => [content, named.value ? h(HiddenInput) : null]
+    )
+    return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["root"], RootProps, RootEmits>
 
+export type GroupProps = PartComponentProps
+export type InputProps = PartComponentProps
+export type IncrementProps = PartComponentProps
+export type DecrementProps = PartComponentProps
 export const NumberField = {
   Root,
-  Group: partComponent("NumberFieldGroup", "div", () => scope.use().group),
-  Input: partComponent("NumberFieldInput", "input", () => scope.use().input),
-  Increment: partComponent("NumberFieldIncrement", "button", () => scope.use().increment),
-  Decrement: partComponent("NumberFieldDecrement", "button", () => scope.use().decrement),
+  Group: partComponent<"div", State["group"]>("NumberFieldGroup", "div", () => scope.use().group),
+  Input: partComponent<"input", State["input"]>(
+    "NumberFieldInput",
+    "input",
+    () => scope.use().input
+  ),
+  Increment: partComponent<"button", State["increment"]>(
+    "NumberFieldIncrement",
+    "button",
+    () => scope.use().increment
+  ),
+  Decrement: partComponent<"button", State["decrement"]>(
+    "NumberFieldDecrement",
+    "button",
+    () => scope.use().decrement
+  ),
 }

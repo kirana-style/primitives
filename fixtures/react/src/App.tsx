@@ -51,13 +51,30 @@ import {
   Toolbar,
   Tooltip,
 } from "@kirana-ui/react"
-import { Fragment, useState } from "react"
+import { mergeProps, useRender } from "@kirana-ui/react/use-render"
+import type { RenderProp } from "@kirana-ui/react/use-render"
+import { Fragment, useRef, useState } from "react"
 
 // A page's toasts are made once, apart from any component: a long time, so a test reads them.
 const toaster = createToaster({ duration: 600_000 })
 
 interface Preventable {
   preventKiranaHandler(): void
+}
+
+// An element of the page's own with the `render` prop a part takes.
+function Tag({
+  render,
+  ...props
+}: {
+  render?: RenderProp<Record<string, never>>
+  [attribute: string]: unknown
+}) {
+  return useRender({
+    render,
+    defaultTagName: "span",
+    props: mergeProps({ className: "tag" }, props),
+  })
 }
 
 // A picture of one pixel, and an address that is not a picture.
@@ -93,6 +110,9 @@ const LINES = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)
 const LOAD = ["load"]
 
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
+// Labels by value: what a select names its values with before its list has been opened.
+const SIZES = { s: "Small", m: "Medium", l: "Large" }
+const SIZE_KEYS = ["s", "m", "l"] as const
 
 /**
  * The page every adapter draws, element for element: the conformance run walks it and compares
@@ -101,11 +121,13 @@ const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 export function App() {
   const [controlled, setControlled] = useState(false)
   const [fruit, setFruit] = useState<string | null>("Banana")
+  const [basket, setBasket] = useState<string[]>(["Banana"])
   const [action, setAction] = useState("none")
   const [picked, setPicked] = useState("none")
   const [code, setCode] = useState("none")
   const [shares, setShares] = useState("25,75")
   const [slide, setSlide] = useState("0")
+  const [toastAction, setToastAction] = useState("")
   const [drawn, setDrawn] = useState("closed")
   const [born, setBorn] = useState("none")
   const [box, setBox] = useState<HTMLElement | null>(null)
@@ -129,6 +151,8 @@ export function App() {
   const [view, setView] = useState("list")
   const [presses, setPresses] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [handed, setHanded] = useState(0)
+  const [asked, setAsked] = useState(0)
   const [alerts, setAlerts] = useState(false)
   const [count, setCount] = useState(0)
   const [done, setDone] = useState(40)
@@ -138,6 +162,11 @@ export function App() {
   const [reading, setReading] = useState<"ltr" | "rtl">("rtl")
   const [rejected, setRejected] = useState<Record<string, string> | undefined>(undefined)
   const [span, setSpan] = useState<number[]>([20, 80])
+  const [low, setLow] = useState(true)
+  const [moved, setMoved] = useState(false)
+  const [sought, setSought] = useState<string | null>(null)
+  const firstAnchor = useRef<HTMLSpanElement>(null)
+  const secondAnchor = useRef<HTMLSpanElement>(null)
   return (
     <main>
       <section data-fixture="collapsible">
@@ -208,6 +237,48 @@ export function App() {
             <p>Composed content</p>
           </Collapsible.Panel>
         </Collapsible.Root>
+        <Collapsible.Root id="k2">
+          <Collapsible.Trigger
+            className="handed"
+            title="handed"
+            lang="en"
+            onClick={() => setHanded((value) => value + 1)}
+            render={
+              <button
+                className="asked"
+                title="asked"
+                data-testid="k2-trigger"
+                onClick={(event) => {
+                  setAsked((value) => value + 1)
+                  if (locked) (event as unknown as Preventable).preventKiranaHandler()
+                }}
+              >
+                Layered {handed}/{asked}
+              </button>
+            }
+          />
+          <Collapsible.Trigger
+            render={(props, state) => (
+              <button {...props} data-testid="k2-state">
+                {state.panelOpen ? "Open" : "Closed"}
+              </button>
+            )}
+          />
+          <Collapsible.Panel className="panel" data-testid="k2-panel">
+            <p>Layered content</p>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+        <div className="item">
+          <Tag
+            title="handed"
+            render={
+              <a className="asked" href="#k2" data-testid="k3-tag">
+                Tag
+              </a>
+            }
+          />
+          <Tag data-testid="k3-plain">Plain</Tag>
+        </div>
       </section>
 
       <section data-fixture="controls">
@@ -517,6 +588,81 @@ export function App() {
         </form>
         <output data-testid="s1-output">{fruit ?? "none"}</output>
       </section>
+      <section data-fixture="select-multiple">
+        <form className="bar" data-testid="sm1-form">
+          <Select.Root
+            id="sm1"
+            name="basket"
+            multiple
+            values={basket}
+            onValuesChange={(next) => setBasket(next)}
+          >
+            <Select.Trigger data-testid="sm1-trigger">
+              <Select.Value placeholder="Pick fruits" data-testid="sm1-value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner sideOffset={4} data-testid="sm1-positioner">
+                <Select.Popup className="popup" data-testid="sm1-popup">
+                  {FRUITS.map((each) => (
+                    <Select.Item
+                      key={each}
+                      value={each}
+                      disabled={each === "Blueberry"}
+                      className="item"
+                      data-testid={`sm1-${each}`}
+                    >
+                      <Select.ItemText>{each}</Select.ItemText>
+                      <Select.ItemIndicator>✓</Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <button type="reset" data-testid="sm1-reset">
+            Reset
+          </button>
+        </form>
+        <output data-testid="sm1-output">{basket.join(",") || "none"}</output>
+        <Select.Root id="sm2" items={SIZES} defaultValue="m">
+          <Select.Trigger data-testid="sm2-trigger">
+            <Select.Value data-testid="sm2-value">
+              {(value, label) => `${label} (${String(value)})`}
+            </Select.Value>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner sideOffset={4} data-testid="sm2-positioner">
+              <Select.Popup className="popup" data-testid="sm2-popup">
+                {SIZE_KEYS.map((each) => (
+                  <Select.Item key={each} value={each} className="item" data-testid={`sm2-${each}`}>
+                    <Select.ItemText>{SIZES[each]}</Select.ItemText>
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+        <Select.Root id="sm3" items={SIZES} multiple defaultValues={["l", "s"]}>
+          <Select.Trigger data-testid="sm3-trigger">
+            <Select.Value className="bar" data-testid="sm3-value">
+              {(values: readonly string[], labels) =>
+                labels.map((label, at) => <b key={values[at]}>{label}</b>)
+              }
+            </Select.Value>
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner sideOffset={4} data-testid="sm3-positioner">
+              <Select.Popup className="popup" data-testid="sm3-popup">
+                {SIZE_KEYS.map((each) => (
+                  <Select.Item key={each} value={each} className="item" data-testid={`sm3-${each}`}>
+                    <Select.ItemText>{SIZES[each]}</Select.ItemText>
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </section>
       <section data-fixture="menu">
         <Menu.Root id="mn1">
           <Menu.Trigger data-testid="mn1-trigger">File</Menu.Trigger>
@@ -752,6 +898,7 @@ export function App() {
           <Combobox.Root
             id="cb1"
             name="pick"
+            autoHighlight
             value={pick}
             onValueChange={(next) => setPick(next as string | null)}
           >
@@ -915,7 +1062,7 @@ export function App() {
                 </NavigationMenu.Link>
               </NavigationMenu.Content>
             </NavigationMenu.Item>
-            <NavigationMenu.Item value="docs">
+            <NavigationMenu.Item>
               <NavigationMenu.Trigger className="nav-trigger" data-testid="nm1-docs">
                 <span>Docs</span>
                 <NavigationMenu.Icon>▾</NavigationMenu.Icon>
@@ -970,7 +1117,12 @@ export function App() {
             ))}
           </div>
         </Listbox.Root>
-        <Combobox.Root id="cp1" inline onValueChange={(next) => setRan(next as string)}>
+        <Combobox.Root
+          id="cp1"
+          inline
+          autoHighlight
+          onValueChange={(next) => setRan(next as string)}
+        >
           <Combobox.Input aria-label="Command" data-testid="cp1-input" />
           <Combobox.Popup className="palette" aria-label="Commands" data-testid="cp1-list">
             {COMMANDS.map((each) => (
@@ -990,7 +1142,7 @@ export function App() {
         <output data-testid="cp1-output">{ran}</output>
         <Field.Root id="fcb" name="city" data-testid="fcb">
           <Field.Label data-testid="fcb-label">City</Field.Label>
-          <Combobox.Root id="fcbc" required>
+          <Combobox.Root id="fcbc" required autoHighlight>
             <Combobox.Input data-testid="fcb-input" />
             <Combobox.Clear aria-label="Clear" data-testid="fcb-clear">
               ×
@@ -1012,6 +1164,7 @@ export function App() {
         <form data-testid="cbm-form">
           <Combobox.Root
             id="cbm"
+            autoHighlight
             name="tags"
             multiple
             values={tags}
@@ -1158,14 +1311,37 @@ export function App() {
         >
           Add a brief toast
         </button>
+        <button
+          type="button"
+          data-testid="ts1-undo"
+          onClick={() =>
+            toaster.add({
+              title: "Deleted",
+              action: { label: "Undo", onAction: () => setToastAction("undone") },
+            })
+          }
+        >
+          Add a toast with an action
+        </button>
+        <button
+          type="button"
+          data-testid="ts1-alert"
+          onClick={() =>
+            toaster.add({ title: "Connection lost", type: "error", priority: "assertive" })
+          }
+        >
+          Add an urgent toast
+        </button>
+        <output data-testid="ts1-output">{toastAction}</output>
         <Toast.Viewport id="ts1" toaster={toaster} className="toasts" data-testid="ts1">
           <Toast.List>
             {(toast) => (
               <Toast.Root toast={toast} className="toast" data-testid={`ts1-${toast.id}`}>
                 <Toast.Content className="toast-content" data-testid={`ts1-${toast.id}-content`}>
                   <Toast.Title className="toast-title">{toast.title}</Toast.Title>
-                  <Toast.Description>{toast.description}</Toast.Description>
+                  <Toast.Description />
                 </Toast.Content>
+                <Toast.Action data-testid={`ts1-${toast.id}-action`} />
                 <Toast.Close aria-label="Close" data-testid={`ts1-${toast.id}-close`}>
                   Close
                 </Toast.Close>
@@ -1382,6 +1558,18 @@ export function App() {
             </Slider.Track>
           </Slider.Control>
         </Slider.Root>
+        <Slider.Root id="sl5" defaultValue={[20, 50, 80]} data-testid="sl5">
+          <Slider.Control className="slider" data-testid="sl5-control">
+            <Slider.Track className="slider-track">
+              {low && <Slider.Thumb className="thumb" aria-label="Low" data-testid="sl5-low" />}
+              <Slider.Thumb className="thumb" aria-label="Middle" data-testid="sl5-middle" />
+              <Slider.Thumb className="thumb" aria-label="High" data-testid="sl5-high" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>
+        <button data-testid="sl5-toggle" onClick={() => setLow((now) => !now)}>
+          Low
+        </button>
       </section>
       <section data-fixture="measures">
         <Slider.Root id="sl4" defaultValue={0} thumbAlignment="edge" data-testid="sl4">
@@ -1784,6 +1972,85 @@ export function App() {
               </Popover.Portal>
             </Popover.Root>
           </DirectionProvider>
+        </div>
+      </section>
+
+      <section data-fixture="placing">
+        <div dir="rtl" data-testid="pl1-box">
+          <Popover.Root id="pl1">
+            <Popover.Trigger data-testid="pl1-trigger">Beside</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner side="inline-end" sideOffset={8} data-testid="pl1-positioner">
+                <Popover.Popup className="popup" data-testid="pl1-popup">
+                  <Popover.Title>Beside</Popover.Title>
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+        <div className="bar">
+          <Popover.Root id="pl2">
+            <Popover.Trigger data-testid="pl2-trigger">Anchored</Popover.Trigger>
+            <span ref={firstAnchor} id="pl2-first" className="anchor" data-testid="pl2-first">
+              First
+            </span>
+            <span ref={secondAnchor} id="pl2-second" className="anchor" data-testid="pl2-second">
+              Second
+            </span>
+            <Popover.Portal>
+              <Popover.Positioner
+                anchor={moved ? secondAnchor : firstAnchor}
+                align="start"
+                sideOffset={4}
+                data-testid="pl2-positioner"
+              >
+                <Popover.Popup className="popup" data-testid="pl2-popup">
+                  <Popover.Title>Anchored</Popover.Title>
+                  <button
+                    type="button"
+                    data-testid="pl2-move"
+                    onClick={() => setMoved((now) => !now)}
+                  >
+                    Move
+                  </button>
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+        <div className="bar">
+          <Combobox.Root
+            id="pl3"
+            value={sought}
+            onValueChange={(next) => setSought(next as string | null)}
+          >
+            <Combobox.Trigger data-testid="pl3-trigger">Pick a fruit</Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner sideOffset={4} data-testid="pl3-positioner">
+                <Combobox.Popup className="popup" aria-label="Pick a fruit" data-testid="pl3-popup">
+                  <Combobox.Input
+                    className="search"
+                    aria-label="Search fruits"
+                    data-testid="pl3-input"
+                  />
+                  <Combobox.List aria-label="Fruits" data-testid="pl3-list">
+                    {FRUITS.map((each) => (
+                      <Combobox.Item
+                        key={each}
+                        value={each}
+                        id={`pl3-${each}`}
+                        className="item"
+                        data-testid={`pl3-${each}`}
+                      >
+                        {each}
+                      </Combobox.Item>
+                    ))}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+          <output data-testid="pl3-output">{sought ?? "none"}</output>
         </div>
       </section>
     </main>

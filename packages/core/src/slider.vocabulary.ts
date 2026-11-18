@@ -11,13 +11,15 @@ const STATES = {
 // not carry these descriptions.
 export const sliderVocabulary = defineComponent({
   root: { description: "Groups the slider's parts.", states: STATES },
-  value: { description: "The value, written.", states: STATES },
+  value: { inside: "root", description: "The value, written.", states: STATES },
   control: {
+    inside: "root",
     description: "What a pointer presses and drags on. It holds the track and the thumbs.",
     states: STATES,
   },
-  track: { description: "The whole range.", states: STATES },
+  track: { inside: "control", description: "The whole range.", states: STATES },
   indicator: {
+    inside: "track",
     description:
       "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
     states: STATES,
@@ -29,8 +31,10 @@ export const sliderVocabulary = defineComponent({
     },
   },
   thumb: {
+    inside: "track",
+    repeated: true,
     description:
-      "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.",
+      "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.",
     states: {
       ...STATES,
       index: {

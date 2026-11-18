@@ -1,7 +1,8 @@
 import { defined, within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller, SelectGroup, SelectProps } from "@kirana-ui/core/select"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import {
   Show,
   createComputed,
@@ -13,13 +14,17 @@ import {
   untrack,
   useContext,
 } from "solid-js"
-import type { JSX } from "solid-js"
+import type { Accessor, JSX } from "solid-js"
 
 import { positioned } from "./popover.tsx"
-import type { PositionerProps } from "./popover.tsx"
+import type { PortalProps, PositionerOptions } from "./popover.tsx"
 import { FieldContext } from "./field-context.ts"
 import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["select"]
+
+export type { PortalProps }
 
 const Context = createContext<Controller>()
 const ItemContext = createContext<unknown>()
@@ -30,27 +35,19 @@ function useSelect(): Controller {
   return made
 }
 
-export type RootProps = {
-  value?: unknown
-  defaultValue?: unknown
-  onValueChange?: (value: unknown, details: ChangeDetails) => void
-  open?: boolean
-  defaultOpen?: boolean
-  onOpenChange?: (open: boolean, details: ChangeDetails) => void
-  disabled?: boolean
-  required?: boolean
-  name?: string
-  form?: string
-  items?: readonly { value: unknown; label: string }[]
-  virtualized?: SelectProps["virtualized"]
+/**
+ * `Value` is what an item's `value` is: the root's `value` and `onValueChange` hold one or
+ * `null` for none, and with `multiple` its `values` and `onValuesChange` hold several.
+ */
+export type RootProps<Value = unknown> = Omit<SelectProps<Value>, "id"> & {
   id?: string
   children?: JSX.Element
 }
 
-function Root(props: RootProps): JSX.Element {
+function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext)
-  const made = controller(within(createSelect, { field }), () => ({
+  const made = controller(within(createSelect<Value>, { field }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
@@ -61,9 +58,14 @@ function Root(props: RootProps): JSX.Element {
     name: props.name,
     form: props.form,
     items: props.items,
+    multiple: props.multiple,
+    values: props.values,
+    defaultValues: props.defaultValues,
     virtualized: props.virtualized,
-    onValueChange: (value: unknown, details: ChangeDetails) =>
+    onValueChange: (value: Value | null, details: ChangeDetails) =>
       props.onValueChange?.(value, details),
+    onValuesChange: (values: Value[], details: ChangeDetails) =>
+      props.onValuesChange?.(values, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
   const named = fromSignal(made.named)
@@ -71,54 +73,97 @@ function Root(props: RootProps): JSX.Element {
     <Context.Provider value={made}>
       {props.children}
       <Show when={named()}>
-        <Part part={made.input} tag="input" />
+        <Part of={made.input} tag="input" />
       </Show>
     </Context.Provider>
   )
 }
 
-const Portal = (props: { children?: JSX.Element }) => (
+const Portal = (props: PortalProps) => (
   <BodyPortal mounted={useSelect().mounted}>{props.children}</BodyPortal>
 )
+
+export type PositionerProps = PartComponentProps<
+  "div",
+  StateOf<Parts["positioner"]>,
+  PositionerOptions & { alignItemWithTrigger?: boolean }
+>
 
 /**
  * `alignItemWithTrigger`: the list opens over its trigger, the chosen item's text on the
  * trigger's own, where there is room and unless a finger opened it.
  */
-function Positioner(props: PositionerProps & { alignItemWithTrigger?: boolean }): JSX.Element {
+function Positioner(props: PositionerProps): JSX.Element {
   const made = useSelect()
   const [local, rest] = splitProps(props, ["alignItemWithTrigger"])
   createComputed(() => made.alignItemWithTrigger.set(Boolean(local.alignItemWithTrigger)))
-  return (
-    <Part
-      part={made.positioner}
-      tag="div"
-      {...positioned(rest as PositionerProps, made.positioning)}
-    />
-  )
+  return <Part of={made.positioner} tag="div" {...positioned(rest, made.positioning)} />
 }
 
-/** Shows the chosen value's label, or `placeholder` while nothing is chosen. */
-function Value(props: PartComponentProps & { placeholder?: string }): JSX.Element {
+/**
+ * Shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`,
+ * the chosen labels with commas between. A function child draws something else: it is given
+ * the value and its label, or with `multiple` the values and their labels in the items'
+ * order, each as an accessor. Its first parameter's type says which:
+ * `(values: Accessor<string[]>, labels) => …`.
+ */
+export type ValueProps<Chosen = unknown> = PartComponentProps<
+  "span",
+  StateOf<Parts["value"]>,
+  {
+    placeholder?: string
+    children?:
+      | JSX.Element
+      | ((
+          value: Accessor<Chosen>,
+          label: Accessor<
+            Chosen extends readonly unknown[] ? readonly string[] : string | undefined
+          >
+        ) => JSX.Element)
+  }
+>
+
+function Value<Chosen = unknown>(props: ValueProps<Chosen>): JSX.Element {
   const [local, rest] = splitProps(props, ["placeholder", "children"])
   const made = useSelect()
-  const label = fromSignal(made.label)
+  const shown = fromSignal(made.shown)
+  const drawn = () => {
+    const given = local.children
+    // A function that takes nothing is an element of Solid's own, drawn as it is.
+    if (typeof given !== "function" || given.length === 0) {
+      return (given as JSX.Element) ?? shown().label ?? local.placeholder
+    }
+    const draw = given as (value: Accessor<unknown>, label: Accessor<unknown>) => JSX.Element
+    return made.multiple
+      ? draw(
+          () => shown().values,
+          () => shown().labels
+        )
+      : draw(
+          () => shown().value,
+          () => shown().label
+        )
+  }
   return (
-    <Part part={made.valuePart} tag="span" {...rest}>
-      {local.children ?? label() ?? local.placeholder}
+    <Part of={made.valuePart} tag="span" {...rest}>
+      {drawn()}
     </Part>
   )
 }
 
-/** `label` is what typeahead matches and the trigger shows; the item's text when left out. */
-function Item(
-  props: PartComponentProps & {
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
     value: unknown
     disabled?: boolean
     label?: string
     index?: number
   }
-): JSX.Element {
+>
+
+/** `label` is what typeahead matches and the trigger shows; the item's text when left out. */
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "disabled", "label", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
@@ -130,62 +175,85 @@ function Item(
   const part = useSelect().item(value, () => defined(options.get()))
   return (
     <ItemContext.Provider value={value}>
-      <Part part={part} tag="div" {...rest} />
+      <Part of={part} tag="div" {...rest} />
     </ItemContext.Provider>
   )
 }
 
-const ItemText = (props: PartComponentProps) => (
-  <Part part={useSelect().itemText(useContext(ItemContext))} tag="span" {...props} />
+export type ItemTextProps = PartComponentProps<"span", StateOf<Parts["itemText"]>>
+
+const ItemText = (props: ItemTextProps) => (
+  <Part of={useSelect().itemText(useContext(ItemContext))} tag="span" {...props} />
 )
 
-function ItemIndicator(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+export type ItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["itemIndicator"]>,
+  { keepMounted?: boolean }
+>
+
+function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const made = useSelect()
   const value = useContext(ItemContext)
   const selected = fromSignal(made.selected(value))
   return (
     <Show when={selected() || local.keepMounted}>
-      <Part part={made.itemIndicator(value)} tag="span" {...rest} />
+      <Part of={made.itemIndicator(value)} tag="span" {...rest} />
     </Show>
   )
 }
 
 const GroupContext = createContext<SelectGroup>()
 
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
 /** Items that belong together, named by their `<Select.GroupLabel>`. */
-function Group(props: PartComponentProps & { id?: string }): JSX.Element {
+function Group(props: GroupProps): JSX.Element {
   const [local, rest] = splitProps(props, ["id"])
   const generated = createUniqueId()
   const group = useSelect().group(untrack(() => local.id) ?? generated)
   return (
     <GroupContext.Provider value={group}>
-      <Part part={group.root} tag="div" {...rest} />
+      <Part of={group.root} tag="div" {...rest} />
     </GroupContext.Provider>
   )
 }
 
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
 /** Names the group it is in. With no group around it, it is plain text. */
-const GroupLabel = (props: PartComponentProps) => (
-  <Part part={useContext(GroupContext)?.label ?? useSelect().groupLabel} tag="div" {...props} />
+const GroupLabel = (props: GroupLabelProps) => (
+  <Part of={useContext(GroupContext)?.label ?? useSelect().groupLabel} tag="div" {...props} />
 )
 
-function scrollArrow(direction: "up" | "down") {
-  return (props: PartComponentProps): JSX.Element => {
+export type ScrollUpArrowProps = PartComponentProps<"div", StateOf<Parts["scrollUpArrow"]>>
+export type ScrollDownArrowProps = PartComponentProps<"div", StateOf<Parts["scrollDownArrow"]>>
+
+function scrollArrow<Props extends Record<string, unknown>>(direction: "up" | "down") {
+  return (props: Props): JSX.Element => {
     const arrow = useSelect().scrollArrow(direction)
     onMount(() => onCleanup(arrow.mount()))
     const mounted = fromSignal(arrow.mounted)
     return (
       <Show when={mounted()}>
-        <Part part={arrow.part} tag="div" {...props} />
+        <Part of={arrow.part} tag="div" {...props} />
       </Show>
     )
   }
 }
 
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
 const part =
-  (name: "trigger" | "popup" | "list" | "separator", tag: string) =>
-  (props: PartComponentProps) => <Part part={useSelect()[name]} tag={tag} {...props} />
+  <Props extends Record<string, unknown>>(
+    name: "trigger" | "popup" | "list" | "separator",
+    tag: string
+  ) =>
+  (props: Props): JSX.Element => <Part of={useSelect()[name]} tag={tag} {...props} />
 
 export const Select = {
   Root,
@@ -195,16 +263,16 @@ export const Select = {
   Item,
   ItemText,
   ItemIndicator,
-  Trigger: part("trigger", "button"),
-  Popup: part("popup", "div"),
+  Trigger: part<TriggerProps>("trigger", "button"),
+  Popup: part<PopupProps>("popup", "div"),
   /** The items' own box inside the popup, when the popup also holds scroll arrows. */
-  List: part("list", "div"),
+  List: part<ListProps>("list", "div"),
   /** In the page while there is more of the list above: it scrolls it under a moving pointer. */
-  ScrollUpArrow: scrollArrow("up"),
+  ScrollUpArrow: scrollArrow<ScrollUpArrowProps>("up"),
   /** In the page while there is more of the list below. */
-  ScrollDownArrow: scrollArrow("down"),
+  ScrollDownArrow: scrollArrow<ScrollDownArrowProps>("down"),
   Group,
   GroupLabel,
   /** A line between groups. */
-  Separator: part("separator", "div"),
+  Separator: part<SeparatorProps>("separator", "div"),
 }

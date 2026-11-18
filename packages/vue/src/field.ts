@@ -1,17 +1,25 @@
 import type { ReadonlySignal } from "@kirana-ui/core"
 import { createField } from "@kirana-ui/core/field"
-import type { FieldProps, ValidityKey } from "@kirana-ui/core/field"
+import type { FieldProps, FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 import { defineComponent, h, onBeforeUnmount, onMounted, useId } from "vue"
 import type { PropType } from "vue"
 
 import { provideField, useField } from "./field-context.ts"
 import { useFieldset } from "./fieldset.ts"
 import { useForm } from "./form.ts"
+import { written } from "./element.ts"
 import { controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, PlainComponent, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"field">
 
 const scope = { provide: provideField, use: useField }
 
 const RootElement = partComponent("FieldRootElement", "div", () => scope.use().root)
+
+export type RootProps = Omit<FieldProps, "id"> & {
+  id?: string | undefined
+} & PartComponentProps
 
 const Root = defineComponent({
   name: "FieldRoot",
@@ -36,7 +44,12 @@ const Root = defineComponent({
     )
     return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["root"], RootProps>
+
+export interface ErrorProps extends PartComponentProps {
+  /** One of the browser's findings (`"valueMissing"`) to show for only that; `true` to show always. */
+  match?: ValidityKey | boolean | undefined
+}
 
 /**
  * What is wrong, or its slot in its place. In the page while it applies. `match` is one of the
@@ -56,10 +69,21 @@ const FieldError = defineComponent({
     onBeforeUnmount(() => stop?.())
     const mounted = fromSignal(error.mounted)
     const text = fromSignal(error.text)
-    const Element = partComponent("FieldErrorElement", "div", () => error.part)
-    return () => (mounted.value ? h(Element, attrs, () => slots.default?.() ?? text.value) : null)
+    // With `as-child` the caller's element holds the text, unless it writes its own.
+    const Element = partComponent(
+      "FieldErrorElement",
+      "div",
+      () => error.part,
+      written(() => text.value)
+    )
+    return () =>
+      mounted.value
+        ? h(Element, attrs, { default: (given: object) => slots.default?.(given) ?? text.value })
+        : null
   },
-})
+}) as unknown as PartComponent<"div", State["error"], ErrorProps>
+
+export type ValidityProps = Record<never, never>
 
 /** Draws nothing itself: its slot is given the field's validity (`v-slot="{ validity }"`). */
 const Validity = defineComponent({
@@ -68,14 +92,25 @@ const Validity = defineComponent({
     const validity = fromSignal(scope.use().validity)
     return () => slots.default?.({ validity: validity.value })
   },
-})
+}) as unknown as PlainComponent<ValidityProps, {}, { validity: FieldValidity }>
 
+export type LabelProps = PartComponentProps
+export type ControlProps = PartComponentProps
+export type DescriptionProps = PartComponentProps
 export const Field = {
   Root,
-  Label: partComponent("FieldLabel", "label", () => scope.use().label),
+  Label: partComponent<"label", State["label"]>("FieldLabel", "label", () => scope.use().label),
   /** An `<input>`; `as="textarea"` or `as="select"` for another. */
-  Control: partComponent("FieldControl", "input", () => scope.use().control),
-  Description: partComponent("FieldDescription", "p", () => scope.use().description),
+  Control: partComponent<"input", State["control"]>(
+    "FieldControl",
+    "input",
+    () => scope.use().control
+  ),
+  Description: partComponent<"p", State["description"]>(
+    "FieldDescription",
+    "p",
+    () => scope.use().description
+  ),
   Error: FieldError,
   Validity,
 }

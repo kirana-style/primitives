@@ -1,9 +1,10 @@
 import { createDatePicker } from "@kirana-ui/core/date-picker"
 import type { DatePicker, DatePickerProps } from "@kirana-ui/core/date-picker"
 
-import { place } from "./around.ts"
+import { positioner } from "./around.ts"
 import { calendarParts, fieldParts } from "./dates.ts"
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const field = fieldParts<DatePicker>((controller) => controller.field)
 const calendar = calendarParts<DatePicker>((controller) => controller.calendar)
@@ -50,12 +51,18 @@ export const tag = defineElement<DatePickerProps, DatePicker & { mounted: unknow
     field: (controller) => controller.field.root,
     ...field.parts,
     trigger: (controller) => controller.popover.trigger,
-    positioner(controller, element) {
-      place(controller.popover.positioning, element)
-      return { mounted: controller.popover.mounted, part: controller.popover.positioner }
-    },
+    positioner: (controller, element) => positioner(controller.popover, element),
     popup: (controller) => controller.popover.popup,
     calendar: (controller) => controller.calendar.root,
     ...calendar.parts,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-date-picker": ElementOf<
+      typeof tag,
+      { "value-change": ["onValueChange", "value"]; "open-change": ["onOpenChange", "open"] }
+    >
+  }
+}

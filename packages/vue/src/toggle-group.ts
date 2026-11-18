@@ -1,12 +1,19 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createToggleGroup } from "@kirana-ui/core/toggle-group"
+import type { ToggleGroupProps as CoreProps } from "@kirana-ui/core/toggle-group"
 import { defineComponent, h, inject, provide } from "vue"
-import type { PropType } from "vue"
+import type { PropType, PublicProps } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
 import { controller, optional, partComponent } from "./runtime.ts"
+import type { Changes, PartComponentProps, PartGiven, PartInstance, StatesOf } from "./runtime.ts"
 import { TOGGLE_GROUP, TOOLBAR } from "./toolbar-context.ts"
+
+export type ToggleGroupProps<Value = unknown> = Omit<CoreProps<Value>, "onValueChange"> &
+  PartComponentProps
+
+export type ToggleGroupEmits<Value = unknown> = Changes<"value", Value[]>
 
 /** `v-model:value` (a list). Each `Toggle` with a `value` inside it is one of its toggles. */
 export const ToggleGroup = defineComponent({
@@ -40,4 +47,11 @@ export const ToggleGroup = defineComponent({
     const Element = partComponent("ToggleGroupElement", "div", () => made.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as new <Value = unknown, As extends string = "div">(
+  props: PartGiven<As, ToggleGroupProps<Value>, ToggleGroupEmits<Value>> & PublicProps
+) => PartInstance<
+  As,
+  ToggleGroupProps<Value>,
+  ToggleGroupEmits<Value>,
+  { state: StatesOf<"toggleGroup">["root"] }
+>

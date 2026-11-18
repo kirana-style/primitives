@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { SwitchProps } from "@kirana-ui/core/switch"
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createSwitch } from "@kirana-ui/core/switch"
@@ -8,7 +7,7 @@
   import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     checked = $bindable(),
@@ -23,7 +22,7 @@
     id,
     children,
     ...rest
-  }: RootProps<SwitchProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -47,6 +46,11 @@
   )
 </script>
 
-<Part part={made.root} tag="span" {...rest}>
-  {@render children?.()}<Part part={made.input} tag="input" />
+<!-- The native input is the part's own, not its content: with `child` the caller's element is
+     the caller's to draw, so the snippet is given `input` to render inside it, last, where
+     every other adapter keeps it. A snippet that leaves it out draws a control no form reads. -->
+{#snippet input()}<Part of={made.input} tag="input" />{/snippet}
+
+<Part of={made.root} tag="span" {...rest} held={{ input: input }}>
+  {@render children?.()}<Part of={made.input} tag="input" />
 </Part>

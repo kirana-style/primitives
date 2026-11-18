@@ -1,8 +1,9 @@
-import { Checkbox, Collapsible, Field, Popover, Tabs } from "@kirana-ui/solid"
-import { createSignal, onMount } from "solid-js"
+import { Accordion, Checkbox, Collapsible, Field, Popover, Tabs } from "@kirana-ui/solid"
+import { For, createSignal, onMount } from "solid-js"
 
 // The second page: no part is given an id, and a popover is open when the page is first drawn.
-// What a server and a client must agree on without help. The same in all five fixtures.
+// What a server and a client must agree on without help: an accordion's items are given no
+// value either, and each makes its own. The same in all five fixtures.
 // Then what only shows once the page is in a browser: a panel its caller opens as the page
 // mounts, a box in a `<fieldset disabled>`, an input whose caller rewrites what is typed.
 export function Open() {
@@ -40,6 +41,22 @@ export function Open() {
           <Field.Control type="email" data-testid="o-f-control" />
           <Field.Description data-testid="o-f-description">Your work address</Field.Description>
         </Field.Root>
+        <Accordion.Root>
+          <For each={["first", "second"]}>
+            {(each) => (
+              <Accordion.Item data-testid={`o-a-${each}`}>
+                <Accordion.Header>
+                  <Accordion.Trigger data-testid={`o-a-${each}-trigger`}>
+                    Item {each}
+                  </Accordion.Trigger>
+                </Accordion.Header>
+                <Accordion.Panel class="fold" data-testid={`o-a-${each}-panel`}>
+                  <p>Content {each}</p>
+                </Accordion.Panel>
+              </Accordion.Item>
+            )}
+          </For>
+        </Accordion.Root>
       </section>
       <section data-fixture="open-popup">
         <Popover.Root defaultOpen>

@@ -10,6 +10,7 @@
  */
 import { asAgent } from "./part.ts"
 
+/** One choice of a list: the value it is chosen by, and what it says. */
 export interface AgentItem {
   readonly value: string
   readonly label: string
@@ -37,6 +38,7 @@ export interface AgentComponent {
   readonly actions: readonly string[]
 }
 
+/** One thing an agent asks of one component. */
 export interface AgentStep {
   /** A component's `ref`, or its label. */
   ref: string
@@ -44,13 +46,14 @@ export interface AgentStep {
   args?: readonly unknown[]
 }
 
-/** A step once its component is found: what `allow` decides on. */
+/** A step once its component is found: what `allow` and `confirm` decide on. */
 export interface AgentAction extends Required<AgentStep> {
   readonly component: string
   readonly label: string | undefined
   readonly confirm: string | undefined
 }
 
+/** What one step did. */
 export interface AgentStepResult {
   readonly ref: string
   readonly action: string
@@ -58,6 +61,7 @@ export interface AgentStepResult {
   readonly now?: AgentComponent
 }
 
+/** What `act`, `undo` and `redo` resolve with: whether every step ran, and what each did. */
 export interface AgentResult {
   readonly ok: boolean
   readonly steps: readonly AgentStepResult[]
@@ -77,16 +81,27 @@ export interface AgentChange {
   readonly undone: boolean
 }
 
+/** What a bridge is made with. */
 export interface AgentOptions {
   /** The part of the page the agent may read and use. Default: the document. */
   root?: ParentNode | undefined
   /**
-   * Decides whether a step may run. Without it every step runs but one on a component
-   * marked `data-agent-confirm`, which fails with "Needs a person".
+   * The policy: whether a step may run at all (which components, which actions). Asked for
+   * every step, before `confirm`. Without it every step may. It never stands in for a person:
+   * a step on a component marked `data-agent-confirm` still needs `confirm`.
    */
   allow?: ((action: AgentAction) => boolean | Promise<boolean>) | undefined
+  /**
+   * A person's answer for a step on a component marked `data-agent-confirm` (or inside
+   * something marked): show `action.confirm`, the mark's text, and resolve with what they
+   * chose. Without it such a step fails with "Needs a person", whatever `allow` says.
+   */
+  confirm?:
+    | ((action: AgentAction & { readonly confirm: string }) => boolean | Promise<boolean>)
+    | undefined
 }
 
+/** The bridge: what an agent reads the page with, and asks it through. */
 export interface Agent {
   /** The components in the page now. */
   snapshot(): AgentComponent[]
@@ -103,7 +118,7 @@ export interface Agent {
   history(): AgentChange[]
   /**
    * Takes the agent's last change back: the component is asked for what it held before, the
-   * way any step asks (its callback hears an agent, and `allow` is asked). A press cannot be
+   * way any step asks (its callback hears an agent, `allow` and `confirm` are asked). A press cannot be
    * taken back.
    */
   undo(): Promise<AgentResult>
@@ -183,6 +198,10 @@ function choicesOf(list: Element | null): AgentItem[] {
   }))
 }
 
+/**
+ * A bridge for the part of the page under `root`. `allow` is the policy and `confirm` a
+ * person's answer: see `AgentOptions`.
+ */
 export function createAgent(given: AgentOptions = {}): Agent {
   const root = given.root ?? document
   const page = root instanceof Document ? root : (root.ownerDocument ?? document)
@@ -507,8 +526,12 @@ export function createAgent(given: AgentOptions = {}): Agent {
           label: now.label,
           confirm: now.confirm,
         }
-        if (given.allow ? !(await given.allow(action)) : now.confirm !== undefined) {
-          throw new Error(given.allow ? "Refused" : `Needs a person: ${now.confirm}`)
+        if (given.allow && !(await given.allow(action))) throw new Error("Refused")
+        if (action.confirm !== undefined) {
+          // A policy that says yes to everything must not answer for a person.
+          if (!given.confirm) throw new Error(`Needs a person: ${action.confirm}`)
+          const marked = action as AgentAction & { readonly confirm: string }
+          if (!(await given.confirm(marked))) throw new Error(`Declined: ${action.confirm}`)
         }
         await perform(element, now.component, step.action, action.args)
         // A framework has its turn, and a popup its first frame.
@@ -666,7 +689,8 @@ interface ModelContext {
 /**
  * Gives the bridge's tools to the browser's own agent, where the browser has one
  * (`document.modelContext`, WebMCP); elsewhere it does nothing. `allow` decides each step
- * that agent asks for: it is not yours, so it is asked for here. Returns the removal.
+ * that agent asks for, before the bridge's own `allow` and `confirm` do: it is not your agent,
+ * so a policy for it is asked for here, by the step as it was sent. Returns the removal.
  */
 export function registerTools(
   agent: Agent,

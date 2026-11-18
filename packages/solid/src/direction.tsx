@@ -7,6 +7,7 @@ import type { JSX } from "solid-js"
 import { DirectionContext } from "./direction-context.ts"
 import { controller, fromSignal } from "./runtime.tsx"
 
+/** What `DirectionProvider` takes. */
 export interface DirectionProviderProps {
   /** The reading direction of what is inside. `ltr` when left out. */
   direction?: Direction

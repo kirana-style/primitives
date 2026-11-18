@@ -1,5 +1,10 @@
 import { Component, afterNextRender, signal } from "@angular/core"
 import {
+  KuiAccordion,
+  KuiAccordionHeader,
+  KuiAccordionItem,
+  KuiAccordionPanel,
+  KuiAccordionTrigger,
   KuiCheckbox,
   KuiCheckboxIndicator,
   KuiCollapsible,
@@ -24,12 +29,18 @@ import {
 } from "@kirana-ui/angular"
 
 // The second page: no part is given an id, and a popover is open when the page is first drawn.
-// What a server and a client must agree on without help. The same in all five fixtures.
+// What a server and a client must agree on without help: an accordion's items are given no
+// value either, and each makes its own. The same in all five fixtures.
 // Then what only shows once the page is in a browser: a panel its caller opens as the page
 // mounts, a box in a `<fieldset disabled>`, an input whose caller rewrites what is typed.
 @Component({
   selector: "app-root",
   imports: [
+    KuiAccordion,
+    KuiAccordionHeader,
+    KuiAccordionItem,
+    KuiAccordionPanel,
+    KuiAccordionTrigger,
     KuiCheckbox,
     KuiCheckboxIndicator,
     KuiCollapsible,
@@ -73,6 +84,20 @@ import {
           <label kuiFieldLabel data-testid="o-f-label">Email</label>
           <input kuiFieldControl type="email" data-testid="o-f-control" />
           <p kuiFieldDescription data-testid="o-f-description">Your work address</p>
+        </div>
+        <div kuiAccordion>
+          @for (each of ["first", "second"]; track each) {
+            <div kuiAccordionItem [attr.data-testid]="'o-a-' + each">
+              <h3 kuiAccordionHeader>
+                <button kuiAccordionTrigger [attr.data-testid]="'o-a-' + each + '-trigger'">
+                  Item {{ each }}
+                </button>
+              </h3>
+              <div *kuiAccordionPanel class="fold" [attr.data-testid]="'o-a-' + each + '-panel'">
+                <p>Content {{ each }}</p>
+              </div>
+            </div>
+          }
         </div>
       </section>
       <section data-fixture="open-popup">

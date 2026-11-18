@@ -91,6 +91,8 @@ if (mode === "--check" || mode === "--write") {
     measured[`core/${component}`] = await size(`packages/core/src/${component}.ts`)
     measured[`react/${component}`] = await size(`packages/react/src/${component}.tsx`)
   }
+  // What a design system's own element costs for the `render` prop a part takes.
+  measured["react/use-render"] = await size("packages/react/src/use-render.tsx")
   measured["react"] = await size("packages/react/src/index.ts")
   if (mode === "--write") {
     const limits = Object.fromEntries(

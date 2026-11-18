@@ -1,11 +1,12 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createDateField } from "@kirana-ui/core/date-field"
 import type {
   DateField as Controller,
   DateFieldProps,
   DateFieldSegment,
 } from "@kirana-ui/core/date-field"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { For, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -13,6 +14,12 @@ import { DirectionContext } from "./direction-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
+type Parts = Vocabulary["dateField"]
+
+/**
+ * The date field its parts are inside. Exported for a component that is made of one (a date picker
+ * provides its own to the date field's parts).
+ */
 const Context = createContext<Controller>()
 /** For a component made of this one's parts: a date picker. */
 export { Context as DateFieldContext }
@@ -23,9 +30,13 @@ function useDateField(): Controller {
   return made
 }
 
-function Root(
-  props: PartComponentProps & Omit<DateFieldProps, "id"> & { id?: string }
-): JSX.Element {
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<DateFieldProps, "id"> & { id?: string }
+>
+
+function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -61,31 +72,39 @@ function Root(
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
+export type SegmentsProps = { children: (segment: DateFieldSegment) => JSX.Element }
+
 /** Draws its child once for each piece of the date, in the locale's order. */
-function Segments(props: { children: (segment: DateFieldSegment) => JSX.Element }): JSX.Element {
+function Segments(props: SegmentsProps): JSX.Element {
   const segments = fromSignal(useDateField().segments)
   return <For each={segments()}>{(segment) => props.children(segment)}</For>
 }
 
+export type SegmentProps = PartComponentProps<
+  "span",
+  StateOf<Parts["segment"]>,
+  { segment: DateFieldSegment }
+>
+
 /** One piece: a part that is typed, or what stands between two. It writes its own text. */
-function Segment(props: PartComponentProps & { segment: DateFieldSegment }): JSX.Element {
+function Segment(props: SegmentProps): JSX.Element {
   const [local, rest] = splitProps(props, ["segment"])
   const made = useDateField().segment(local.segment)
   const shown = fromSignal(made.text)
   return (
-    <Part part={made.part} tag="span" {...rest}>
+    <Part of={made.part} tag="span" {...rest}>
       {shown()}
     </Part>
   )
 }
 
-const Input = (props: PartComponentProps) => (
-  <Part part={useDateField().input} tag="input" {...props} />
-)
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+
+const Input = (props: InputProps) => <Part of={useDateField().input} tag="input" {...props} />
 
 export const DateField = { Root, Segments, Segment, Input }

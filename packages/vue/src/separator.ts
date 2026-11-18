@@ -1,9 +1,13 @@
 import type { Orientation } from "@kirana-ui/core"
 import { createSeparator } from "@kirana-ui/core/separator"
+import type { SeparatorProps as CoreProps } from "@kirana-ui/core/separator"
 import { defineComponent, h } from "vue"
 import type { PropType } from "vue"
 
 import { controller, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+export interface SeparatorProps extends CoreProps, PartComponentProps {}
 
 export const Separator = defineComponent({
   name: "Separator",
@@ -14,4 +18,4 @@ export const Separator = defineComponent({
     const Element = partComponent("SeparatorElement", "div", () => made.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", StatesOf<"separator">["root"], SeparatorProps>

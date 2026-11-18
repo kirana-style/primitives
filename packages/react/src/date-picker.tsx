@@ -1,6 +1,8 @@
 import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createDatePicker } from "@kirana-ui/core/date-picker"
 import type { DatePicker as Controller, DatePickerProps } from "@kirana-ui/core/date-picker"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
@@ -8,8 +10,24 @@ import { Calendar, CalendarContext } from "./calendar.tsx"
 import { DateField, DateFieldContext } from "./date-field.tsx"
 import { DirectionContext } from "./direction-context.ts"
 import { Popover, PopoverContext } from "./popover.tsx"
-import { useController, usePart } from "./runtime.tsx"
+import { parts, useController, usePart } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+export type {
+  CellProps,
+  DayProps,
+  GridProps,
+  HeadCellProps,
+  HeadingProps,
+  NextProps,
+  PreviousProps,
+  WeekdaysProps,
+  WeeksProps,
+} from "./calendar.tsx"
+export type { InputProps, SegmentProps, SegmentsProps } from "./date-field.tsx"
+export type { PopupProps, PortalProps, PositionerProps, TriggerProps } from "./popover.tsx"
+
+type Parts = Vocabulary["datePicker"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -41,14 +59,16 @@ function Root({ children, ...props }: RootProps): ReactElement {
   )
 }
 
+export type FieldProps = PartComponentProps<"div", StateOf<Parts["field"]>>
+export type CalendarProps = PartComponentProps<"div", StateOf<Parts["calendar"]>>
+
 /** The typed date: what holds its segments and its hidden input. */
-const Field = (props: PartComponentProps) =>
-  usePart(useDatePicker("Field").field.root, "div", props)
+const Field = (props: FieldProps) => usePart(useDatePicker("Field").field.root, "div", props)
 /** The calendar: what holds its heading, its buttons and its grid. */
-const CalendarRoot = (props: PartComponentProps) =>
+const CalendarRoot = (props: CalendarProps) =>
   usePart(useDatePicker("Calendar").calendar.root, "div", props)
 
-export const DatePicker = {
+export const DatePicker = /* @__PURE__ */ parts("DatePicker", {
   Root,
   Field,
   Segments: DateField.Segments,
@@ -68,4 +88,4 @@ export const DatePicker = {
   Weeks: Calendar.Weeks,
   Cell: Calendar.Cell,
   Day: Calendar.Day,
-}
+})

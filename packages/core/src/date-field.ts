@@ -8,13 +8,19 @@ import type { ReadonlySignal, Signal } from "./reactivity.ts"
 
 /** A day as `YYYY-MM-DD` (ISO 8601). */
 export type IsoDate = string
+/** A part of a date that is typed on its own. */
 export type DateUnit = "day" | "month" | "year"
 
 export interface DateFieldProps {
   id: string
   /** The day typed, once all of it is; `null` until then. */
   value?: IsoDate | null | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: IsoDate | null | undefined
+  /**
+   * Heard as the day is about to change, once all of it is typed or as it is cleared:
+   * `details.cancel()` keeps the value as it was.
+   */
   onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void) | undefined
   /**
    * The language and region that order the day, the month and the year and put what stands
@@ -23,11 +29,15 @@ export interface DateFieldProps {
   locale?: string | undefined
   /** The first and the last day it takes: outside them it says it is invalid. */
   min?: IsoDate | undefined
+  /** The last day it takes. */
   max?: IsoDate | undefined
   /** What an empty part shows. Default: `dd`, `mm`, `yyyy`. */
   placeholders?: Partial<Record<DateUnit, string>> | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
+  /** Needed: in a `Field`, leaving it empty is then invalid. */
   required?: boolean | undefined
   /** The name it is submitted under, by its hidden input. */
   name?: string | undefined

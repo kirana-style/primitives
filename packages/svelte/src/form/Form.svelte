@@ -1,15 +1,15 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createForm } from "@kirana-ui/core/form"
-  import type { FormErrors, FormProps, FormValues } from "@kirana-ui/core/form"
+  import type { FormErrors, FormValues } from "@kirana-ui/core/form"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { FormProps } from "./types.ts"
 
   // A `<form>` whose fields say what is wrong; `onFormSubmit` takes the values once all are valid.
-  let { errors, onClearErrors, onFormSubmit, validationMode, ...rest }: RootProps<FormProps> = $props()
+  let { errors, onClearErrors, onFormSubmit, validationMode, ...rest }: FormProps = $props()
 
   const made = provide(
     controller(createForm, () => ({
@@ -24,4 +24,4 @@
   )
 </script>
 
-<Part part={made.root} tag="form" {...rest} />
+<Part of={made.root} tag="form" {...rest} />

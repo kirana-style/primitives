@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { MenuItemOptions } from "@kirana-ui/core/menu"
   import { defined } from "@kirana-ui/core"
   import { setContext } from "svelte"
 
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { RADIO_ITEM, useRadioGroup } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RadioItemProps } from "./types.ts"
 
-  let { value, disabled, label, closeOnClick, ...rest }: { value: unknown } & MenuItemOptions & PartAttributes = $props()
+  let { value, disabled, label, closeOnClick, ...rest }: RadioItemProps = $props()
   const options = toSignal(() => ({ disabled, label, closeOnClick }))
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally
@@ -17,4 +16,4 @@
   setContext(RADIO_ITEM, item)
 </script>
 
-<Part {part} tag="div" {...rest} />
+<Part of={part} tag="div" {...rest} />

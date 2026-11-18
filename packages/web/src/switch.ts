@@ -1,7 +1,9 @@
 import { createSwitch } from "@kirana-ui/core/switch"
+import type { SwitchProps } from "@kirana-ui/core/switch"
 
 import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-switch>` around a `kui-part="root"` button with a `thumb` inside. The root draws the
@@ -27,3 +29,12 @@ export const tag = defineElement({
     thumb: (controller) => controller.thumb,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-switch": ElementOf<
+      As<typeof tag, SwitchProps>,
+      { "checked-change": ["onCheckedChange", "checked"] }
+    >
+  }
+}

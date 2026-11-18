@@ -2,9 +2,14 @@ import { computed } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select, SelectGroup, SelectProps, SelectScrollArrow } from "@kirana-ui/core/select"
 
-import { fieldAround, itemOptions, MARK, once, place, valueOf } from "./around.ts"
+import { fieldAround, itemOptions, list, MARK, once, positioner, valueOf } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
-import type { Drawn } from "./runtime.ts"
+import type { Drawn, Each, ElementOf } from "./runtime.ts"
+
+type Props = Omit<SelectProps<string>, "values" | "defaultValues"> & {
+  values?: string | readonly string[]
+  defaultValues?: string | readonly string[]
+}
 
 const groups = new WeakMap<HTMLElement, SelectGroup>()
 let made = 0
@@ -17,16 +22,20 @@ const arrow = (drawn: SelectScrollArrow): Drawn => ({
 
 /**
  * `<kui-select>` around a `kui-part="trigger"` button holding a `value` (it says the chosen
- * item's text, or its `kui-placeholder`), and a `portal` with a `positioner` (its `kui-side`
+ * item's text, or its `kui-placeholder`; with `multiple`, the chosen items' texts with commas
+ * between), and a `portal` with a `positioner` (its `kui-side`
  * and the like, and `kui-align-item-with-trigger`) around the `popup`. The popup holds an
  * `item` for each `kui-value` (`kui-disabled`, `kui-label`), each with an `item-text` and an
  * `item-indicator`; items may be in a `group` with a `group-label`, with `separator`s
  * between, and in a `list` between a `scroll-up-arrow` and a `scroll-down-arrow`. With a name
- * it draws the hidden input a form reads. `value`, `default-value`, `open`, `default-open`,
- * `disabled`, `required`, `name`, `form`; `items` as a property; it tells `value-change` and
- * `open-change`.
+ * it draws the hidden input a form reads. A `value` part that holds something says what the
+ * page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value
+ * (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`,
+ * `default-open`, `disabled`, `required`, `multiple`, `values` and `default-values` (with
+ * commas between), `name`, `form`; `items` as a property; it tells `value-change`,
+ * `values-change` and `open-change`.
  */
-export const tag = defineElement<SelectProps<string>, Select<string>>({
+export const tag = defineElement<Props, Select<string>>({
   tag: "kui-select",
   props: {
     value: "string",
@@ -35,14 +44,34 @@ export const tag = defineElement<SelectProps<string>, Select<string>>({
     "default-open": "boolean",
     disabled: "boolean",
     required: "boolean",
+    multiple: "boolean",
+    values: "string",
+    "default-values": "string",
     name: "string",
     form: "string",
   },
   properties: ["items"],
-  create: (props, host) => createSelect<string>(props, { field: fieldAround(host) }),
+  create: (props, host) =>
+    createSelect<string>(
+      computed(() => {
+        const own = props.get()
+        return { ...own, values: list(own.values), defaultValues: list(own.defaultValues) }
+      }),
+      { field: fieldAround(host) }
+    ),
+  lists: {
+    values: (controller): Each<{ value: string; label: string }> => ({
+      entries: computed(() => {
+        const { values, labels } = controller.shown.get()
+        return values.map((value, at) => ({ value, label: labels[at] ?? value }))
+      }),
+      key: (chosen) => chosen.value,
+    }),
+  },
   inner: (controller) => ({ part: controller.input, mounted: controller.named }),
   changes: {
     onValueChange: { event: "value-change", prop: "value" },
+    onValuesChange: { event: "values-change", prop: "values" },
     onOpenChange: { event: "open-change", prop: "open" },
   },
   parts: {
@@ -55,8 +84,7 @@ export const tag = defineElement<SelectProps<string>, Select<string>>({
     }),
     positioner(controller, element) {
       controller.alignItemWithTrigger.set(element.hasAttribute("kui-align-item-with-trigger"))
-      place(controller.positioning, element)
-      return { mounted: controller.mounted, part: controller.positioner }
+      return positioner(controller, element)
     },
     popup: (controller) => controller.popup,
     list: (controller) => controller.list,
@@ -78,3 +106,16 @@ export const tag = defineElement<SelectProps<string>, Select<string>>({
     }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-select": ElementOf<
+      typeof tag,
+      {
+        "value-change": ["onValueChange", "value"]
+        "values-change": ["onValuesChange", "values"]
+        "open-change": ["onOpenChange", "open"]
+      }
+    >
+  }
+}

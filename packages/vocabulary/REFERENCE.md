@@ -6,7 +6,20 @@ Every part's states and CSS variables. A state is an attribute on the part's ele
 it with an attribute selector (`.panel[data-open]`). A variable is a custom property on the
 element: read it with `var()`. The names follow Base UI's.
 
+Each component opens with its anatomy: every part under the part it is written inside.
+`(optional)` is a wrapper that may be left out, what it holds then written where it would
+have been; `(repeated)` is written once for each entry, or any number of times; `(as above)`
+is a part drawn whole where it first appears.
+
 ## Accordion
+
+```
+Root
+  Item (repeated)
+    Header
+      Trigger
+    Panel
+```
 
 ### Accordion.Root
 
@@ -19,7 +32,7 @@ Groups the items.
 
 ### Accordion.Item
 
-One section: a header with its trigger, and a panel.
+One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own.
 
 | Attribute | When |
 | --- | --- |
@@ -64,6 +77,21 @@ The item's content. In the page while open, and through its exit's motion.
 
 ## AlertDialog
 
+```
+Root
+  Trigger
+  Portal
+    Backdrop
+    Popup
+      Title
+      Description
+      Close
+```
+
+### AlertDialog.Root
+
+Holds the dialog: whether it is open. It draws no element.
+
 ### AlertDialog.Trigger
 
 The button that opens the dialog.
@@ -71,6 +99,10 @@ The button that opens the dialog.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the dialog is open. |
+
+### AlertDialog.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### AlertDialog.Backdrop
 
@@ -113,6 +145,12 @@ A button that closes the dialog.
 
 ## Avatar
 
+```
+Root
+  Image
+  Fallback
+```
+
 ### Avatar.Root
 
 The frame the image and its stand-in share.
@@ -136,6 +174,11 @@ The button.
 | `data-disabled` | Present when it is disabled. |
 
 ## Checkbox
+
+```
+Root
+  Indicator
+```
 
 ### Checkbox.Root
 
@@ -166,6 +209,12 @@ The mark. In the page while the box is checked or indeterminate.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ## Collapsible
+
+```
+Root
+  Trigger (repeated)
+  Panel
+```
 
 ### Collapsible.Root
 
@@ -204,9 +253,36 @@ The content. In the page while open, and through its exit's motion.
 
 ## Combobox
 
+```
+Root
+  Input
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Input (as above)
+        List (optional)
+          Group (optional, repeated)
+            Item (repeated)
+              ItemIndicator
+            GroupLabel
+          Separator (repeated)
+        Empty
+  Popup (as above)
+  Clear
+  Chips
+    Input (as above)
+    Chip (repeated)
+      ChipRemove
+```
+
+### Combobox.Root
+
+Holds the combobox: its value, what is typed and whether the list is open. It draws no element.
+
 ### Combobox.Input
 
-The text input. What is typed filters the list, which is placed against it.
+The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.
 
 | Attribute | When |
 | --- | --- |
@@ -215,22 +291,26 @@ The text input. What is typed filters the list, which is placed against it.
 
 ### Combobox.Trigger
 
-A button that opens and closes the list.
+A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
 
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
 | `data-disabled` | Present when it is disabled. |
 
+### Combobox.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
 ### Combobox.Positioner
 
-Places the list against the input. It carries the geometry.
+Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
 
 | Attribute | When |
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -243,7 +323,7 @@ Places the list against the input. It carries the geometry.
 
 ### Combobox.Popup
 
-The list of items.
+The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
 
 | Attribute | When |
 | --- | --- |
@@ -251,8 +331,16 @@ The list of items.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-empty` | Present when no item is shown for what was typed. |
+
+### Combobox.List
+
+The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+
+| Attribute | When |
+| --- | --- |
 | `data-empty` | Present when no item is shown for what was typed. |
 
 ### Combobox.Item
@@ -295,7 +383,7 @@ A button that empties the input and the value.
 
 ### Combobox.Chips
 
-With several values: what holds the chips and the input.
+With several values: what holds the chips and the input, and what the list is placed against.
 
 ### Combobox.Chip
 
@@ -311,6 +399,32 @@ A chip's button that takes its value away.
 
 ## ContextMenu
 
+```
+Root
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Arrow
+        Group (optional, repeated)
+          Item (repeated)
+          LinkItem (repeated)
+          GroupLabel
+          CheckboxItem (repeated)
+            CheckboxItemIndicator
+          RadioGroup (repeated)
+            RadioItem (repeated)
+              RadioItemIndicator
+          SubmenuRoot (repeated)
+            Portal (as above)
+            SubmenuTrigger
+        Separator (repeated)
+```
+
+### ContextMenu.Root
+
+Holds the menu: whether it is open. It draws no element.
+
 ### ContextMenu.Trigger
 
 The area a secondary press, or a long press on a touch screen, opens the menu in.
@@ -318,6 +432,10 @@ The area a secondary press, or a long press on a touch screen, opens the menu in
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the menu is open. |
+
+### ContextMenu.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### ContextMenu.Positioner
 
@@ -327,7 +445,7 @@ Places the menu against its trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -348,7 +466,7 @@ The menu itself: the list of items.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 ### ContextMenu.Arrow
@@ -357,7 +475,7 @@ An element that points at the trigger.
 
 | Attribute | When |
 | --- | --- |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
 
@@ -439,6 +557,10 @@ A mark a radio item shows while it is the chosen one.
 | `data-checked` | Present when it is checked. |
 | `data-unchecked` | Present when it is not checked. |
 
+### ContextMenu.SubmenuRoot
+
+A submenu: it holds the item that opens it and a portal, positioner and popup of its own. It draws no element.
+
 ### ContextMenu.SubmenuTrigger
 
 An item that opens a menu beside it.
@@ -451,6 +573,21 @@ An item that opens a menu beside it.
 
 ## Dialog
 
+```
+Root
+  Trigger
+  Portal
+    Backdrop
+    Popup
+      Title
+      Description
+      Close
+```
+
+### Dialog.Root
+
+Holds the dialog: whether it is open. It draws no element.
+
 ### Dialog.Trigger
 
 The button that opens the dialog.
@@ -458,6 +595,10 @@ The button that opens the dialog.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the dialog is open. |
+
+### Dialog.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### Dialog.Backdrop
 
@@ -499,6 +640,15 @@ The text that describes the dialog.
 A button that closes the dialog.
 
 ## Field
+
+```
+Root
+  Label
+  Control
+  Description
+  Error
+  Validity
+```
 
 ### Field.Root
 
@@ -572,7 +722,16 @@ What is wrong with the value. In the page while it applies.
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
+### Field.Validity
+
+Gives the control's validity to what it holds, to draw from. It draws no element.
+
 ## Fieldset
+
+```
+Root
+  Legend
+```
 
 ### Fieldset.Root
 
@@ -598,6 +757,19 @@ The form. A submit checks every field in it and stops, with focus on the first t
 
 ## HoverCard
 
+```
+Root
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Arrow
+```
+
+### HoverCard.Root
+
+Holds the card: whether it is open. It draws no element.
+
 ### HoverCard.Trigger
 
 The link the card previews.
@@ -605,6 +777,10 @@ The link the card previews.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the card is open. |
+
+### HoverCard.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### HoverCard.Positioner
 
@@ -614,7 +790,7 @@ Places the popup against the trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -635,7 +811,7 @@ The card itself.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-instant` (delay, focus, dismiss) | Present when it opened or closed without its usual wait, for a design that skips the motion then. |
 
@@ -645,11 +821,19 @@ An element that points at the trigger, placed along the popup's edge.
 
 | Attribute | When |
 | --- | --- |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
 
 ## Listbox
+
+```
+Root
+  Group (optional, repeated)
+    Item (repeated)
+      ItemIndicator
+    GroupLabel
+```
 
 ### Listbox.Root
 
@@ -687,6 +871,32 @@ The name of a group.
 
 ## Menu
 
+```
+Root
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Arrow
+        Group (optional, repeated)
+          Item (repeated)
+          LinkItem (repeated)
+          GroupLabel
+          CheckboxItem (repeated)
+            CheckboxItemIndicator
+          RadioGroup (repeated)
+            RadioItem (repeated)
+              RadioItemIndicator
+          SubmenuRoot (repeated)
+            Portal (as above)
+            SubmenuTrigger
+        Separator (repeated)
+```
+
+### Menu.Root
+
+Holds the menu: whether it is open. It draws no element.
+
 ### Menu.Trigger
 
 The button that opens the menu, and what it is placed against.
@@ -696,6 +906,10 @@ The button that opens the menu, and what it is placed against.
 | `data-popup-open` | Present when the menu is open. |
 | `data-disabled` | Present when it is disabled. |
 
+### Menu.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
 ### Menu.Positioner
 
 Places the menu against its trigger. It carries the geometry.
@@ -704,7 +918,7 @@ Places the menu against its trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -725,7 +939,7 @@ The menu itself: the list of items.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 ### Menu.Arrow
@@ -734,7 +948,7 @@ An element that points at the trigger.
 
 | Attribute | When |
 | --- | --- |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
 
@@ -816,6 +1030,10 @@ A mark a radio item shows while it is the chosen one.
 | `data-checked` | Present when it is checked. |
 | `data-unchecked` | Present when it is not checked. |
 
+### Menu.SubmenuRoot
+
+A submenu: it holds the item that opens it and a portal, positioner and popup of its own. It draws no element.
+
 ### Menu.SubmenuTrigger
 
 An item that opens a menu beside it.
@@ -839,6 +1057,14 @@ The row of menus. A menu inside it is one of its items.
 
 ## Meter
 
+```
+Root
+  Track
+    Indicator
+  Value
+  Label
+```
+
 ### Meter.Root
 
 The meter: it says the value to assistive technology.
@@ -861,6 +1087,24 @@ The meter's name.
 
 ## NavigationMenu
 
+```
+Root
+  List
+    Item (repeated)
+      Trigger
+        Icon
+      Content
+        Link (repeated)
+      Link (as above)
+    Link (as above)
+  Portal
+    Positioner
+      Popup
+        Viewport
+        Arrow
+    Backdrop
+```
+
 ### NavigationMenu.Root
 
 The navigation.
@@ -879,7 +1123,7 @@ The row of items.
 
 ### NavigationMenu.Item
 
-One item of the list: a link, or a trigger with its content.
+One item of the list: a link, or a trigger with its content. Its `value` tells it from the others; an item that is given none makes its own.
 
 ### NavigationMenu.Trigger
 
@@ -917,6 +1161,10 @@ A link, in the list or in an item's content.
 | --- | --- |
 | `data-active` | Present on the link of the page the reader is on. |
 
+### NavigationMenu.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
 ### NavigationMenu.Positioner
 
 Places the popup against the open item's trigger. It carries the geometry.
@@ -925,7 +1173,7 @@ Places the popup against the open item's trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -948,7 +1196,7 @@ The panel every item's content is shown in.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -966,7 +1214,7 @@ An element that points at the open item's trigger.
 
 | Attribute | When |
 | --- | --- |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
 
@@ -982,6 +1230,15 @@ An element behind the popup, for a design that dims the page.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ## Otp
+
+```
+Root
+  Input
+  Group (repeated)
+    Slot (repeated)
+      Caret
+  Separator (repeated)
+```
 
 ### Otp.Root
 
@@ -1026,6 +1283,13 @@ A caret drawn in the active cell while it is empty.
 
 ## DateField
 
+```
+Root
+  Segments
+    Segment (repeated)
+  Input
+```
+
 ### DateField.Root
 
 The field: a group of the date's parts.
@@ -1035,6 +1299,10 @@ The field: a group of the date's parts.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when its value cannot be changed. |
 | `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
+
+### DateField.Segments
+
+The date's segments, in the locale's order: each is given to draw. It draws no element.
 
 ### DateField.Segment
 
@@ -1084,6 +1352,17 @@ A control's name. Inside a field it is the field's label, with its states.
 | `data-invalid` | Present while the value is wrong. |
 
 ## Command
+
+```
+Root
+  Input
+  List
+    Empty
+    Group (optional, repeated)
+      GroupHeading
+      Item (repeated)
+    Separator (repeated)
+```
 
 ### Command.Root
 
@@ -1135,6 +1414,14 @@ One command.
 A line between groups. Hidden while something is typed.
 
 ## NumberField
+
+```
+Root
+  Group
+    Input
+    Increment
+    Decrement
+```
 
 ### NumberField.Root
 
@@ -1218,6 +1505,27 @@ A button that steps the number down. Held, it goes on.
 
 ## Autocomplete
 
+```
+Root
+  Input
+  Trigger
+  Portal
+    Positioner
+      Popup
+        List (optional)
+          Group (optional, repeated)
+            Item (repeated)
+            GroupLabel
+          Separator (repeated)
+        Empty
+  Popup (as above)
+  Clear
+```
+
+### Autocomplete.Root
+
+Holds the autocomplete: the text, and whether the suggestions are open. It draws no element.
+
 ### Autocomplete.Input
 
 The text input: its text is the value, and what is typed asks for suggestions.
@@ -1229,22 +1537,26 @@ The text input: its text is the value, and what is typed asks for suggestions.
 
 ### Autocomplete.Trigger
 
-A button that opens and closes the list.
+A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
 
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
 | `data-disabled` | Present when it is disabled. |
 
+### Autocomplete.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
 ### Autocomplete.Positioner
 
-Places the list against the input. It carries the geometry.
+Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
 
 | Attribute | When |
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -1257,7 +1569,7 @@ Places the list against the input. It carries the geometry.
 
 ### Autocomplete.Popup
 
-The list of items.
+The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
 
 | Attribute | When |
 | --- | --- |
@@ -1265,8 +1577,16 @@ The list of items.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-empty` | Present when no item is shown for what was typed. |
+
+### Autocomplete.List
+
+The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+
+| Attribute | When |
+| --- | --- |
 | `data-empty` | Present when no item is shown for what was typed. |
 
 ### Autocomplete.Item
@@ -1305,6 +1625,15 @@ A button that empties the input and the value.
 
 ## Pagination
 
+```
+Root
+  Items
+    Item (repeated)
+    Ellipsis (repeated)
+  Previous
+  Next
+```
+
 ### Pagination.Root
 
 The pages of a list, as a navigation.
@@ -1312,6 +1641,10 @@ The pages of a list, as a navigation.
 | Attribute | When |
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
+
+### Pagination.Items
+
+The row's entries, pages and the gaps between them: each is given to draw. It draws no element.
 
 ### Pagination.Item
 
@@ -1344,6 +1677,32 @@ Goes to the page after.
 
 ## DatePicker
 
+```
+Root
+  Field
+    Segments
+      Segment (repeated)
+    Input
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Calendar
+          Heading
+          Previous
+          Next
+          Grid
+            Weekdays
+              HeadCell (repeated)
+            Weeks
+              Cell (repeated)
+                Day
+```
+
+### DatePicker.Root
+
+Holds the date picker: its value, the month shown and whether the calendar is open. It draws no element.
+
 ### DatePicker.Field
 
 The field: a group of the date's parts.
@@ -1353,6 +1712,10 @@ The field: a group of the date's parts.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when its value cannot be changed. |
 | `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
+
+### DatePicker.Segments
+
+The date's segments, in the locale's order: each is given to draw. It draws no element.
 
 ### DatePicker.Segment
 
@@ -1365,6 +1728,10 @@ One piece of the date: a part that is typed, or what stands between two.
 | `data-disabled` | Present when it is disabled. |
 | `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
 
+### DatePicker.Input
+
+The hidden input it is submitted by.
+
 ### DatePicker.Trigger
 
 The button that opens the popover, and what it is placed against.
@@ -1372,6 +1739,10 @@ The button that opens the popover, and what it is placed against.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the popover is open. |
+
+### DatePicker.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### DatePicker.Positioner
 
@@ -1381,7 +1752,7 @@ Places the popup against the trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -1402,7 +1773,7 @@ The popover itself.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 ### DatePicker.Calendar
@@ -1438,9 +1809,17 @@ Shows the month after.
 
 The table of days: a grid the arrows move in.
 
+### DatePicker.Weekdays
+
+The days of the week: each is given to draw its head cell. It draws no element.
+
 ### DatePicker.HeadCell
 
 A column's heading: a day of the week.
+
+### DatePicker.Weeks
+
+The weeks of the month shown: each is given to draw its row of days. It draws no element.
 
 ### DatePicker.Cell
 
@@ -1471,6 +1850,19 @@ The button for a day.
 | `data-range-end` | Present on the last day of a range. |
 
 ## Calendar
+
+```
+Root
+  Heading
+  Previous
+  Next
+  Grid
+    Weekdays
+      HeadCell (repeated)
+    Weeks
+      Cell (repeated)
+        Day
+```
 
 ### Calendar.Root
 
@@ -1505,9 +1897,17 @@ Shows the month after.
 
 The table of days: a grid the arrows move in.
 
+### Calendar.Weekdays
+
+The days of the week: each is given to draw its head cell. It draws no element.
+
 ### Calendar.HeadCell
 
 A column's heading: a day of the week.
+
+### Calendar.Weeks
+
+The weeks of the month shown: each is given to draw its row of days. It draws no element.
 
 ### Calendar.Cell
 
@@ -1539,6 +1939,21 @@ The button for a day.
 
 ## Drawer
 
+```
+Root
+  Trigger
+  Portal
+    Backdrop
+    Popup
+      Title
+      Description
+      Close
+```
+
+### Drawer.Root
+
+Holds the dialog: whether it is open. It draws no element.
+
 ### Drawer.Trigger
 
 The button that opens the dialog.
@@ -1546,6 +1961,10 @@ The button that opens the dialog.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the dialog is open. |
+
+### Drawer.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### Drawer.Backdrop
 
@@ -1611,6 +2030,13 @@ A button that closes the dialog.
 
 ## MessageScroller
 
+```
+Root
+  Viewport
+    Content
+  Button
+```
+
 ### MessageScroller.Root
 
 What holds the conversation and its button.
@@ -1641,6 +2067,12 @@ Goes to the newest message. Inert while that is in view.
 
 ## QrCode
 
+```
+Root
+  Frame
+    Pattern
+```
+
 ### QrCode.Root
 
 What holds the code.
@@ -1664,6 +2096,15 @@ The dark modules: one `<path>`, filled by the design.
 A `<textarea>` as tall as its text. Its `height` is written; `min-height` and `max-height` are the design's.
 
 ## Carousel
+
+```
+Root
+  Viewport
+    Item (repeated)
+  Previous
+  Next
+  Indicator (repeated)
+```
 
 ### Carousel.Root
 
@@ -1716,6 +2157,17 @@ A button for one slide.
 
 ## Toast
 
+```
+Viewport
+  List
+    Root (repeated)
+      Content (optional)
+        Title
+        Description
+      Close
+      Action
+```
+
 ### Toast.Viewport
 
 Where the toasts are drawn: a region that is always in the page.
@@ -1727,6 +2179,10 @@ Where the toasts are drawn: a region that is always in the page.
 | Variable | Holds |
 | --- | --- |
 | `--toast-frontmost-height` | The height of the newest toast. |
+
+### Toast.List
+
+The toasts in the page: each is given to draw its root. It draws no element.
 
 ### Toast.Root
 
@@ -1761,11 +2217,11 @@ What holds a toast's contents, when the design sizes the toast itself.
 
 ### Toast.Title
 
-What the toast is called.
+What the toast is called: the title it was added with, when nothing else is written in it.
 
 ### Toast.Description
 
-What the toast says.
+What the toast says: the description it was added with, when nothing else is written in it.
 
 ### Toast.Close
 
@@ -1773,9 +2229,24 @@ Closes the toast.
 
 ### Toast.Action
 
-A button of the toast's own; pressing it closes the toast too.
+A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.
 
 ## Popover
+
+```
+Root
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Title
+        Description
+        Close
+```
+
+### Popover.Root
+
+Holds the popover: whether it is open. It draws no element.
 
 ### Popover.Trigger
 
@@ -1785,6 +2256,10 @@ The button that opens the popover, and what it is placed against.
 | --- | --- |
 | `data-popup-open` | Present when the popover is open. |
 
+### Popover.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
 ### Popover.Positioner
 
 Places the popup against the trigger. It carries the geometry.
@@ -1793,7 +2268,7 @@ Places the popup against the trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -1814,7 +2289,7 @@ The popover itself.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 ### Popover.Title
@@ -1830,6 +2305,14 @@ The text that describes the popover.
 A button that closes the popover.
 
 ## Progress
+
+```
+Root
+  Track
+    Indicator
+  Value
+  Label
+```
 
 ### Progress.Root
 
@@ -1883,6 +2366,12 @@ The bar's name.
 
 ## RadioGroup
 
+```
+Root
+  Item (repeated)
+    Indicator
+```
+
 ### RadioGroup.Root
 
 Groups the items: one of them is chosen at most.
@@ -1921,6 +2410,12 @@ The mark. In the page while its item is the chosen one.
 
 ## Resizable
 
+```
+Group
+  Panel (repeated)
+  Handle (repeated)
+```
+
 ### Resizable.Group
 
 The panels and the bars between them. A design lays it out as a flex box.
@@ -1954,9 +2449,18 @@ The bar between two panels: dragged, or moved with the arrows.
 
 ## ScrollArea
 
+```
+Root
+  Viewport
+    Content
+  Scrollbar (repeated)
+    Thumb
+  Corner
+```
+
 ### ScrollArea.Root
 
-The area. It holds the viewport and the scrollbars.
+The area. It holds the viewport and the scrollbars, which the library places against it: a design gives a scrollbar its thickness and draws it, and places nothing.
 
 | Attribute | When |
 | --- | --- |
@@ -1967,8 +2471,8 @@ The area. It holds the viewport and the scrollbars.
 
 | Variable | Holds |
 | --- | --- |
-| `--scroll-area-corner-width` | The width of the corner: the vertical scrollbar's. |
-| `--scroll-area-corner-height` | The height of the corner: the horizontal scrollbar's. |
+| `--scroll-area-corner-width` | The width of the corner: the vertical scrollbar's, while both scrollbars and the corner are in the page. |
+| `--scroll-area-corner-height` | The height of the corner: the horizontal scrollbar's, while both scrollbars and the corner are in the page. |
 
 ### ScrollArea.Viewport
 
@@ -1986,7 +2490,7 @@ What is scrolled.
 
 ### ScrollArea.Scrollbar
 
-A scrollbar's track. In the page while there is something to scroll its way.
+A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way.
 
 | Attribute | When |
 | --- | --- |
@@ -1994,24 +2498,46 @@ A scrollbar's track. In the page while there is something to scroll its way.
 | `data-hovering` | Present while the pointer is over the area. |
 | `data-scrolling` | Present while the area is scrolled its way. |
 
-### ScrollArea.Thumb
-
-The part of a scrollbar that shows where the view is, and can be dragged.
-
-| Attribute | When |
-| --- | --- |
-| `data-orientation` (horizontal, vertical) | Which way the scrollbar scrolls. |
-
 | Variable | Holds |
 | --- | --- |
 | `--scroll-area-thumb-height` | A vertical thumb's height. |
 | `--scroll-area-thumb-width` | A horizontal thumb's width. |
 
+### ScrollArea.Thumb
+
+The part of a scrollbar that shows where the view is, and can be dragged. As long as its scrollbar's variable says.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Which way the scrollbar scrolls. |
+
 ### ScrollArea.Corner
 
-The square where the two scrollbars meet.
+The square where the two scrollbars meet, placed there.
 
 ## Select
+
+```
+Root
+  Trigger
+    Value
+  Portal
+    Positioner
+      Popup
+        ScrollUpArrow
+        List (optional)
+          Group (optional, repeated)
+            GroupLabel
+            Item (repeated)
+              ItemText
+              ItemIndicator
+          Separator (repeated)
+        ScrollDownArrow
+```
+
+### Select.Root
+
+Holds the select: its value and whether the list is open. It draws no element.
 
 ### Select.Trigger
 
@@ -2025,11 +2551,15 @@ The button that shows the value and opens the list.
 
 ### Select.Value
 
-The chosen value's label, or the placeholder.
+The chosen value's label, or the placeholder. With several values, their labels with commas between.
 
 | Attribute | When |
 | --- | --- |
 | `data-placeholder` | Present while nothing is chosen. |
+
+### Select.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### Select.Positioner
 
@@ -2039,7 +2569,7 @@ Places the list against the trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left, none) | The side of the trigger it is on, after any flip; `none` when it lies over the trigger. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end, none) | The side of the trigger it is on, after any flip; `none` when it lies over the trigger. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -2049,6 +2579,18 @@ Places the list against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Select.ScrollUpArrow
+
+In the page while there is more of the list above: it scrolls the list while the pointer moves over it.
+
+| Attribute | When |
+| --- | --- |
+| `data-direction` (up, down) | The way it scrolls the list. |
+| `data-visible` | Present while there is more of the list its way. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end, none) | The side of the trigger the list is on; `none` when it lies over the trigger. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ### Select.Group
 
@@ -2066,18 +2608,6 @@ A line between groups.
 
 The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.
 
-### Select.ScrollUpArrow
-
-In the page while there is more of the list above: it scrolls the list while the pointer moves over it.
-
-| Attribute | When |
-| --- | --- |
-| `data-direction` (up, down) | The way it scrolls the list. |
-| `data-visible` | Present while there is more of the list its way. |
-| `data-side` (top, right, bottom, left, none) | The side of the trigger the list is on; `none` when it lies over the trigger. |
-| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
-| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-
 ### Select.ScrollDownArrow
 
 In the page while there is more of the list below: it scrolls the list while the pointer moves over it.
@@ -2086,7 +2616,7 @@ In the page while there is more of the list below: it scrolls the list while the
 | --- | --- |
 | `data-direction` (up, down) | The way it scrolls the list. |
 | `data-visible` | Present while there is more of the list its way. |
-| `data-side` (top, right, bottom, left, none) | The side of the trigger the list is on; `none` when it lies over the trigger. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end, none) | The side of the trigger the list is on; `none` when it lies over the trigger. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
@@ -2100,7 +2630,7 @@ The list of items.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 ### Select.Item
@@ -2109,7 +2639,7 @@ One choice in the list.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on the chosen item. |
+| `data-selected` | Present on the chosen item, or on each of several. |
 | `data-highlighted` | Present on the item the pointer or the keyboard is on. |
 | `data-disabled` | Present when it is disabled. |
 
@@ -2119,7 +2649,7 @@ The item's name: what the trigger shows once it is chosen.
 
 ### Select.ItemIndicator
 
-A mark an item shows while it is the chosen one.
+A mark an item shows while it is chosen.
 
 ## Separator
 
@@ -2132,6 +2662,15 @@ The line.
 | `data-orientation` (horizontal, vertical) | The way the line runs. |
 
 ## Slider
+
+```
+Root
+  Value
+  Control
+    Track
+      Indicator
+      Thumb (repeated)
+```
 
 ### Slider.Root
 
@@ -2190,7 +2729,7 @@ The filled part: up to the thumb, or from the first thumb to the last. Its place
 
 ### Slider.Thumb
 
-What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.
+What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
 
 | Attribute | When |
 | --- | --- |
@@ -2204,6 +2743,11 @@ What is dragged, and what the keyboard moves: a slider to assistive technology. 
 | `--position` | With thumbs that stay inside the control: where the thumb's centre is. |
 
 ## Switch
+
+```
+Root
+  Thumb
+```
 
 ### Switch.Root
 
@@ -2230,6 +2774,14 @@ The knob that moves along the track.
 | `data-required` | Present when the form needs it. |
 
 ## Tabs
+
+```
+Root
+  List
+    Tab (repeated)
+    Indicator
+  Panel (repeated)
+```
 
 ### Tabs.Root
 
@@ -2314,6 +2866,15 @@ The group. A toggle inside it with a `value` is one of its toggles.
 
 ## Toolbar
 
+```
+Root
+  Group (optional, repeated)
+    Button (repeated)
+    Link (repeated)
+    Input (repeated)
+  Separator (repeated)
+```
+
 ### Toolbar.Root
 
 The toolbar. It is one stop for Tab.
@@ -2369,6 +2930,19 @@ A line between items, across the toolbar.
 
 ## Tooltip
 
+```
+Root
+  Trigger
+  Portal
+    Positioner
+      Popup
+        Arrow
+```
+
+### Tooltip.Root
+
+Holds the tooltip: whether it is open. It draws no element.
+
 ### Tooltip.Trigger
 
 The element the tooltip describes.
@@ -2376,6 +2950,10 @@ The element the tooltip describes.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the tooltip is open. |
+
+### Tooltip.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
 ### Tooltip.Positioner
 
@@ -2385,7 +2963,7 @@ Places the popup against the trigger. It carries the geometry.
 | --- | --- |
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 
 | Variable | Holds |
@@ -2406,7 +2984,7 @@ The tooltip itself.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-instant` (delay, focus, dismiss) | Present when it opened or closed without its usual wait, for a design that skips the motion then. |
 
@@ -2416,6 +2994,6 @@ An element that points at the trigger, placed along the popup's edge.
 
 | Attribute | When |
 | --- | --- |
-| `data-side` (top, right, bottom, left) | The side of the anchor it is on, after any flip. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |

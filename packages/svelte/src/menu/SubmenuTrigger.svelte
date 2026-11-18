@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useMenu } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { SubmenuTriggerProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: SubmenuTriggerProps = $props()
   const controller = useMenu()
 </script>
 
-<Part part={controller.trigger} tag="div" {...props} />
+<Part of={controller.trigger} tag="div" {...props} />

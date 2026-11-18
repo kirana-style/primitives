@@ -14,15 +14,30 @@ const ITEM = {
 // not carry these descriptions.
 export const toolbarVocabulary = defineComponent({
   root: { description: "The toolbar. It is one stop for Tab.", states: ITEM },
-  button: { description: "A button of the toolbar.", states: ITEM },
-  link: { description: "A link of the toolbar.", states: ITEM },
+  button: {
+    inside: "group",
+    repeated: true,
+    description: "A button of the toolbar.",
+    states: ITEM,
+  },
+  link: { inside: "group", repeated: true, description: "A link of the toolbar.", states: ITEM },
   input: {
+    inside: "group",
+    repeated: true,
     description:
       "A text input of the toolbar. The arrows are its own until the caret is at an end.",
     states: ITEM,
   },
-  group: { description: "Items that belong together.", states: ITEM },
+  group: {
+    inside: "root",
+    optional: true,
+    repeated: true,
+    description: "Items that belong together.",
+    states: ITEM,
+  },
   separator: {
+    inside: "root",
+    repeated: true,
     description: "A line between items, across the toolbar.",
     states: { orientation: ITEM.orientation },
   },

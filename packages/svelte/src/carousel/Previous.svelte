@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useCarousel } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { PreviousProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: PreviousProps = $props()
   const controller = useCarousel()
 </script>
 
-<Part part={controller.previous} tag="button" {...props} />
+<Part of={controller.previous} tag="button" {...props} />

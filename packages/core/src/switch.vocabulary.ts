@@ -10,6 +10,7 @@ export const switchVocabulary = defineComponent({
     exclusive: EITHER_CHECKED,
   },
   thumb: {
+    inside: "root",
     description: "The knob that moves along the track.",
     states: { ...CHECKED, ...CONTROL },
     exclusive: EITHER_CHECKED,

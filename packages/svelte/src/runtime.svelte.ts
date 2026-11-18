@@ -1,5 +1,5 @@
-import { mergeProps, sameProps, signal, styleText } from "@kirana-ui/core"
-import type { Part, PartProps, PartStyle, ReadonlySignal } from "@kirana-ui/core"
+import { mergeProps, sameProps, signal, stateOf, styleText } from "@kirana-ui/core"
+import type { Part, PartProps, PartState, PartStyle, ReadonlySignal } from "@kirana-ui/core"
 import { untrack } from "svelte"
 import { createAttachmentKey } from "svelte/attachments"
 import { createSubscriber } from "svelte/reactivity"
@@ -69,12 +69,14 @@ function toSvelte(props: PartProps): PartProps {
 
 /**
  * What a part's element spreads: the caller's props merged under the part's, and an attachment
- * that runs the part's DOM work. A `child` snippet spreads the same object on its own element.
+ * that runs the part's DOM work. A `child` snippet spreads the same object on its own element,
+ * where what the element writes after the spread wins, and is given `state` beside it: the
+ * part's state (`open`, `side` …), read from its `data-*` attributes.
  */
 export function partProps(
   part: () => Part,
   caller: () => PartProps
-): { readonly current: PartProps } {
+): { readonly current: PartProps; readonly state: PartState } {
   const key = createAttachmentKey()
   const own = $derived(fromSignal(part().props))
   // One function for the element's life: Svelte runs an attachment again when it is another.
@@ -83,9 +85,13 @@ export function partProps(
     ...mergeProps(caller(), toSvelte(own.current)),
     [key]: attachment,
   })
+  const state = $derived(stateOf(own.current))
   return {
     get current() {
       return current
+    },
+    get state() {
+      return state
     },
   }
 }

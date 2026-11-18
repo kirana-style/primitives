@@ -3,6 +3,7 @@ import type { DateField, DateFieldProps } from "@kirana-ui/core/date-field"
 
 import { fieldParts } from "./dates.ts"
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const { parts, lists } = fieldParts<DateField>((controller) => controller)
 
@@ -33,3 +34,9 @@ export const tag = defineElement<DateFieldProps, DateField>({
   lists,
   parts: { root: (controller) => controller.root, ...parts },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-date-field": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+  }
+}

@@ -19,15 +19,15 @@ import { KUI_DIRECTION } from "./direction-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiTabs]", exportAs: "kuiTabs" })
-export class KuiTabs implements OnInit {
-  readonly value = model<unknown>(undefined)
-  readonly defaultValue = input<unknown>(null)
+export class KuiTabs<Value = unknown> implements OnInit {
+  readonly value = model<Value | null | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly orientation = input<Orientation>()
   readonly kuiId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
-  readonly valueChanged = output<{ value: unknown; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value; details: ChangeDetails }>()
 
-  controller!: Tabs
+  controller!: Tabs<Value>
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
@@ -35,7 +35,7 @@ export class KuiTabs implements OnInit {
     value: this.value(),
     defaultValue: this.defaultValue(),
     orientation: this.orientation(),
-    onValueChange: (value: unknown, details: ChangeDetails) => {
+    onValueChange: (value: Value, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)
@@ -107,6 +107,7 @@ export class KuiTabsIndicator implements OnInit {
  */
 @Directive({ selector: "[kuiTabsPanel]" })
 export class KuiTabsPanel implements OnInit {
+  /** The value of the tab this is the panel of. */
   readonly kuiTabsPanel = input.required<unknown>()
   readonly kuiTabsPanelKeepMounted = input(false, { transform: booleanAttribute })
   private readonly root = inject(KuiTabs)

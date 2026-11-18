@@ -12,7 +12,13 @@ export const toastVocabulary = defineComponent({
     states: { expanded: EXPANDED },
     variables: { "--toast-frontmost-height": "The height of the newest toast." },
   },
+  list: {
+    description: "The toasts in the page: each is given to draw its root. It draws no element.",
+    inside: "viewport",
+  },
   root: {
+    inside: "list",
+    repeated: true,
     description: "One toast.",
     states: {
       startingStyle: TRANSITION.startingStyle,
@@ -36,14 +42,28 @@ export const toastVocabulary = defineComponent({
     },
   },
   content: {
+    inside: "root",
+    optional: true,
     description: "What holds a toast's contents, when the design sizes the toast itself.",
     states: {
       behind: state("data-behind", "Present on a toast that is behind the newest."),
       expanded: EXPANDED,
     },
   },
-  title: { description: "What the toast is called." },
-  description: { description: "What the toast says." },
-  close: { description: "Closes the toast." },
-  action: { description: "A button of the toast's own; pressing it closes the toast too." },
+  title: {
+    inside: "content",
+    description:
+      "What the toast is called: the title it was added with, when nothing else is written in it.",
+  },
+  description: {
+    inside: "content",
+    description:
+      "What the toast says: the description it was added with, when nothing else is written in it.",
+  },
+  close: { inside: "root", description: "Closes the toast." },
+  action: {
+    inside: "root",
+    description:
+      "A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.",
+  },
 })

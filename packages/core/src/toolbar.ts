@@ -7,13 +7,19 @@ import { createTabStop } from "./services/roving.ts"
 import type { Orientation, TabStop } from "./services/roving.ts"
 
 export interface ToolbarProps {
+  /**
+   * Whether the controls are laid out across (the default) or down: the arrows that move between
+   * them follow.
+   */
   orientation?: Orientation | undefined
   /** Whether the arrows go round from the last item to the first. Default: they do. */
   loop?: boolean | undefined
+  /** Disables every control of the toolbar. */
   disabled?: boolean | undefined
 }
 
 export interface ToolbarItemOptions {
+  /** Disables this control. */
   disabled?: boolean | undefined
 }
 

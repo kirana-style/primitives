@@ -46,6 +46,7 @@ const WEB = [
   "context-menu",
   "menubar",
   "select",
+  "select-multiple",
   "combobox",
   "measures",
   "entry",
@@ -60,6 +61,7 @@ const WEB = [
   "toast",
   "dates",
   "picking",
+  "placing",
 ]
 
 /**
@@ -220,6 +222,9 @@ const withoutStyles = (dom: string) =>
     .replace(/ aria-describedby="[^"]*-description"/g, "")
     // Whether a field has a value is its control's to say, once the control is in the page.
     .replace(/ data-filled/g, "")
+    // Whether a combobox's button stands alone (its input is in the popup) is known once the
+    // page shows no input beside it: a server draws the button as the one beside an input.
+    .replace(/^(\s*<button#pl3-trigger)[^\n]*$/m, "$1>")
     .replace(/\nfocus: .*$/s, "")
 
 function serve(adapter: string) {
@@ -938,6 +943,42 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await inline("sl3-fill", "height")) === "30%", "filled from the bottom")
     await id("sl3-control").click({ position: { x: 10, y: 10 }, force: true })
     expect((await attribute("sl3-thumb", "aria-valuenow")) === "30", "a disabled slider stays")
+
+    // Thumbs that are given no index: each is the value at its place among them.
+    const places = async () => {
+      const said: string[] = []
+      for (const name of ["low", "middle", "high"]) {
+        if (!(await id(`sl5-${name}`).count())) continue
+        said.push(
+          `${name}:${await attribute(`sl5-${name}`, "data-index")}=${await attribute(`sl5-${name}`, "aria-valuenow")}`
+        )
+      }
+      return said.join(" ")
+    }
+    expect(
+      (await places()) === "low:0=20 middle:1=50 high:2=80",
+      `thumbs with no index take their places in the order they are written (${await places()})`
+    )
+    expect((await inline("sl5-high", "inset-inline-start")) === "80%", "and lie at their values")
+    await id("sl5-toggle").click()
+    await id("sl5-low").waitFor({ state: "detached" })
+    await settled(page)
+    await snapshot("a thumb taken away")
+    expect(
+      (await places()) === "middle:0=20 high:1=50",
+      `the thumbs after one that leaves move up a place (${await places()})`
+    )
+    await id("sl5-high").focus()
+    await page.keyboard.press("ArrowRight")
+    expect((await places()) === "middle:0=20 high:1=51", "and each moves the value it now is")
+    await id("sl5-toggle").click()
+    await id("sl5-low").waitFor()
+    await settled(page)
+    await snapshot("and put back")
+    expect(
+      (await places()) === "low:0=20 middle:1=51 high:2=80",
+      `one that is added before them takes its place there (${await places()})`
+    )
   },
 
   async field({ page, snapshot, id, present, attribute, focused }) {
@@ -1238,6 +1279,47 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("closed through the caller's element")
     expect(!(await present("k1-panel")), "unlocked, the part's handler runs again")
     await settled(page)
+
+    // Three layers, lowest first: what the part was handed, the element its caller asked
+    // for, the part's own. Where the caller draws the element itself (Svelte, Solid, Angular)
+    // the page says the same, written by hand.
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    const classes = async (testid: string) =>
+      (await attribute(testid, "class"))?.trim().replace(/\s+/g, " ")
+    expect(
+      (await attribute("k2-trigger", "title")) === "asked",
+      "the element's own attribute wins over the one handed to the part"
+    )
+    expect((await attribute("k2-trigger", "lang")) === "en", "what only the part was handed stays")
+    expect((await classes("k2-trigger")) === "handed asked", "the classes of both are joined")
+    expect((await attribute("k2-trigger", "type")) === "button", "the part's own is over both")
+    expect((await text("k2-state")) === "Closed", "the caller reads the part's state")
+
+    await id("k2-trigger").click()
+    await snapshot("opened through three layers")
+    expect((await text("k2-trigger")) === "Layered 1/1", "both callers' handlers ran")
+    expect(await present("k2-panel"), "and the part's after them")
+    expect((await text("k2-state")) === "Open", "the state the caller reads follows the part")
+
+    await id("k1-lock").check()
+    await id("k2-trigger").click()
+    await snapshot("the element's handler prevented the part's")
+    expect((await text("k2-trigger")) === "Layered 2/2", "both callers' handlers ran again")
+    expect(await present("k2-panel"), "preventKiranaHandler() in the element's kept the panel open")
+
+    await id("k1-lock").uncheck()
+    await id("k2-state").click()
+    await snapshot("closed through the element that reads the state")
+    expect(!(await present("k2-panel")), "a part drawn by a function closes it")
+    expect((await text("k2-state")) === "Closed", "and reads that it closed")
+    await settled(page)
+
+    // A plain element of the page's own, composed as a part is.
+    const tag = (testid: string) => id(testid).evaluate((element) => element.tagName.toLowerCase())
+    expect((await tag("k3-tag")) === "a", "a plain element is drawn as the element asked for")
+    expect((await classes("k3-tag")) === "tag asked", "with the classes of both")
+    expect((await attribute("k3-tag", "title")) === "handed", "and what it was handed")
+    expect((await tag("k3-plain")) === "span", "or as its own element")
   },
 
   async dialog({ page, snapshot, id, present, attribute, focused }) {
@@ -1446,6 +1528,115 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("closed by Escape")
     expect((await output()) === "Cherry", "Escape keeps the value")
     expect((await focused()) === "s1-trigger", "focus returns to the trigger")
+  },
+
+  async "select-multiple"({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const press = async (testid: string) => {
+      await id(testid).click()
+      await settled(page)
+    }
+    const text = (testid: string) => id(testid).textContent()
+    const sent = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="sm1-form"]')!)
+          .getAll("basket")
+          .join()
+      )
+    expect((await text("sm1-value")) === "Banana", "the trigger shows what is chosen")
+    expect((await sent()) === "Banana", "and it is sent with the form")
+    expect(
+      (await text("sm2-value"))?.trim() === "Medium (m)",
+      `a value is drawn as its caller makes it, named from a record of items (${await text("sm2-value")})`
+    )
+    expect(
+      (await id("sm3-value").locator("b").allTextContents()).join() === "Small,Large",
+      "several values are drawn as their caller makes them, in the items' order"
+    )
+
+    await id("sm1-trigger").scrollIntoViewIfNeeded()
+    await press("sm1-trigger")
+    await snapshot("open")
+    expect(
+      (await attribute("sm1-popup", "aria-multiselectable")) === "true",
+      "the list says several can be chosen"
+    )
+    expect((await attribute("sm1-Banana", "aria-selected")) === "true", "the value is selected")
+    expect((await focused()) === "sm1-Banana", "opening goes to the first chosen item")
+
+    await press("sm1-Cherry")
+    await snapshot("a second chosen")
+    expect(await present("sm1-popup"), "a press adds an item and the list stays open")
+    expect((await text("sm1-output")) === "Banana,Cherry", "the caller hears both")
+    expect((await attribute("sm1-Cherry", "data-selected")) === "", "each chosen item says so")
+    expect((await attribute("sm1-Banana", "data-selected")) === "", "the first still does")
+    expect((await text("sm1-value")) === "Banana, Cherry", "the trigger names both")
+    expect((await sent()) === "Banana,Cherry", "and both are sent")
+
+    await key("Home")
+    expect((await focused()) === "sm1-Apple", "Home goes to the first item")
+    await key("Enter")
+    await snapshot("a third chosen by Enter")
+    expect(await present("sm1-popup"), "Enter adds the highlighted item and the list stays open")
+    expect((await text("sm1-output")) === "Banana,Cherry,Apple", "in the order they were chosen")
+    expect(
+      (await text("sm1-value")) === "Apple, Banana, Cherry",
+      "and the trigger names them in the items' order"
+    )
+    expect((await focused()) === "sm1-Apple", "focus stays on the item")
+    await key("Space")
+    expect((await text("sm1-output")) === "Banana,Cherry", "Space takes it away again")
+    await id("sm1-Blueberry").click({ force: true })
+    await settled(page)
+    expect((await text("sm1-output")) === "Banana,Cherry", "a disabled item is not chosen")
+
+    await press("sm1-Banana")
+    await press("sm1-Cherry")
+    await snapshot("none chosen")
+    expect((await text("sm1-output")) === "none", "pressed again, an item is taken away")
+    expect((await text("sm1-value")) === "Pick fruits", "with none, the placeholder shows")
+    expect((await attribute("sm1-trigger", "data-placeholder")) === "", "and the trigger says so")
+    expect((await sent()) === "", "and nothing is sent")
+    await key("Escape")
+    await snapshot("closed by Escape")
+    expect(!(await present("sm1-popup")), "Escape closes the list")
+    expect((await focused()) === "sm1-trigger", "focus returns to the trigger")
+
+    await key("ArrowDown")
+    expect(await present("sm1-popup"), "ArrowDown on the trigger opens the list")
+    await page.keyboard.type("gr")
+    await settled(page)
+    expect((await focused()) === "sm1-Grape", "typing finds an item by its label")
+    await key("Enter")
+    expect((await text("sm1-output")) === "Grape", "and Enter chooses it")
+    await key("Tab")
+    expect(!(await present("sm1-popup")), "Tab closes the list")
+    await press("sm1-reset")
+    await snapshot("reset")
+    expect((await text("sm1-output")) === "Banana", "a form's reset puts back what it began with")
+    expect((await text("sm1-value")) === "Banana", "and the trigger shows it")
+    expect((await sent()) === "Banana", "and it is sent again")
+
+    await press("sm2-trigger")
+    expect((await focused()) === "sm2-m", "a select named from a record opens on its value")
+    await press("sm2-l")
+    await snapshot("one value drawn by its caller")
+    expect(!(await present("sm2-popup")), "with one value, choosing closes the list")
+    expect((await text("sm2-value"))?.trim() === "Large (l)", "and what its caller draws follows")
+
+    await press("sm3-trigger")
+    expect((await focused()) === "sm3-s", "several values open on the first in the items' order")
+    await press("sm3-m")
+    await snapshot("several values drawn by their caller")
+    expect(
+      (await id("sm3-value").locator("b").allTextContents()).join() === "Small,Medium,Large",
+      "what its caller draws follows, in the items' order"
+    )
+    await key("Escape")
+    expect(!(await present("sm3-popup")), "Escape closes it")
   },
 
   async menu({ page, snapshot, id, present, attribute, focused }) {
@@ -1852,9 +2043,158 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await key("ArrowRight")
     await snapshot("a column's menu open")
     expect((await focused()) === "vb1b-x", "ArrowRight opens the menu")
-    expect((await attribute("vb1b-positioner", "data-side")) === "right", "beside its trigger")
+    expect(
+      (await attribute("vb1b-positioner", "data-side")) === "inline-end",
+      "beside its trigger, on the side the text runs to"
+    )
     await key("ArrowLeft")
     expect((await focused()) === "vb1-two", "ArrowLeft closes it")
+  },
+
+  async placing({ page, snapshot, id, present, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const box = (testid: string) =>
+      id(testid).evaluate((element) => {
+        const { left, right, top, bottom, width } = element.getBoundingClientRect()
+        return { left, right, top, bottom, width }
+      })
+    const variable = (testid: string, name: string) =>
+      id(testid).evaluate(
+        (element, wanted) => (element as HTMLElement).style.getPropertyValue(wanted),
+        name
+      )
+    const placed = (testid: string) =>
+      page.waitForFunction(
+        (wanted) =>
+          document
+            .querySelector<HTMLElement>(`[data-testid="${wanted}"]`)
+            ?.style.transform.startsWith("translate"),
+        testid
+      )
+    await id("pl1-trigger").evaluate((element) => element.scrollIntoView({ block: "start" }))
+    // The page is now at its end, and nothing that opens here may move it. A browser holds a
+    // page still by what is at the top of the view (scroll anchoring), and moves the page when
+    // that has moved: the sections above must be at rest.
+    const scroll = () => page.evaluate(() => window.scrollY)
+    const scrolled = await scroll()
+
+    // A logical side, where the page reads right to left.
+    await id("pl1-trigger").click()
+    await placed("pl1-positioner")
+    await snapshot("a logical side, right to left")
+    expect(
+      (await scroll()) === scrolled,
+      `the page does not move as a popup opens at its end, got ${(await scroll()) - scrolled}`
+    )
+    expect(
+      (await attribute("pl1-positioner", "data-side")) === "inline-end",
+      "asked for by a logical side, it says a logical side"
+    )
+    expect((await attribute("pl1-popup", "data-side")) === "inline-end", "on its popup too")
+    const beside = await box("pl1-trigger")
+    const logical = await box("pl1-positioner")
+    expect(
+      Math.round(beside.left - logical.right) === 8,
+      `the end of a line is its left there, got ${beside.left - logical.right}`
+    )
+    await key("Escape")
+    expect(!(await present("pl1-popup")), "it closes")
+
+    // Against another element than its trigger, and another one while it is open.
+    await id("pl2-trigger").click()
+    await placed("pl2-positioner")
+    await snapshot("placed against another element")
+    expect((await scroll()) === scrolled, "nor as the next one opens")
+    const first = await box("pl2-first")
+    const against = await box("pl2-positioner")
+    expect(
+      Math.round(against.left - first.left) === 0 && Math.round(against.top - first.bottom) === 4,
+      `the popup is under the element its positioner names, got ${against.left - first.left} across and ${against.top - first.bottom} down`
+    )
+    expect(
+      (await variable("pl2-positioner", "--anchor-width")) === `${first.width}px`,
+      "and the geometry is that element's"
+    )
+    await id("pl2-move").click()
+    await page.waitForFunction(() => {
+      const left = (testid: string) =>
+        document.querySelector(`[data-testid="${testid}"]`)!.getBoundingClientRect().left
+      return Math.round(left("pl2-positioner") - left("pl2-second")) === 0
+    })
+    await snapshot("following another anchor")
+    expect(await present("pl2-popup"), "open still, it went to the other element")
+    const second = await box("pl2-second")
+    expect(
+      (await variable("pl2-positioner", "--anchor-width")) === `${second.width}px`,
+      "whose geometry it has now"
+    )
+    await key("Escape")
+    expect((await focused()) === "pl2-trigger", "focus goes back to its trigger all the same")
+
+    // A combobox whose input is inside its popup: the button is the combobox.
+    expect((await attribute("pl3-trigger", "role")) === "combobox", "the button is the combobox")
+    expect((await attribute("pl3-trigger", "tabindex")) === null, "and a stop for Tab")
+    expect((await attribute("pl3-trigger", "aria-haspopup")) === "dialog", "that opens a dialog")
+    expect((await attribute("pl3-trigger", "aria-expanded")) === "false", "which is closed")
+    await id("pl3-trigger").click()
+    await placed("pl3-positioner")
+    await snapshot("a combobox open on its input")
+    expect((await focused()) === "pl3-input", "opened, its input has focus")
+    const button = await box("pl3-trigger")
+    const list = await box("pl3-positioner")
+    expect(
+      Math.round(list.left - button.left) === 0 && Math.round(list.top - button.bottom) === 4,
+      "the popup is placed against the button, not against the input it holds"
+    )
+    expect(
+      (await variable("pl3-positioner", "--anchor-width")) === `${button.width}px`,
+      "--anchor-width is the button's"
+    )
+    expect((await box("pl3-popup")).width < 400, "and the popup is no wider than what it holds")
+    expect((await attribute("pl3-popup", "role")) === "dialog", "the popup is a dialog")
+    expect((await attribute("pl3-list", "role")) === "listbox", "around the list")
+    expect(
+      (await attribute("pl3-input", "aria-controls")) === (await attribute("pl3-list", "id")),
+      "which the input names"
+    )
+    expect(
+      (await attribute("pl3-trigger", "aria-controls")) === (await attribute("pl3-popup", "id")),
+      "as the button names the popup"
+    )
+    expect((await attribute("pl3-trigger", "aria-expanded")) === "true", "which is open")
+    await page.keyboard.type("ch")
+    await settled(page)
+    await snapshot("typed at, nothing highlighted")
+    expect((await attribute("pl3-Apple", "hidden")) !== null, "typing filters the list")
+    expect(
+      (await attribute("pl3-input", "aria-activedescendant")) === null,
+      "and highlights nothing, unless asked to"
+    )
+    await key("ArrowDown")
+    expect(
+      (await attribute("pl3-input", "aria-activedescendant")) === "pl3-Cherry",
+      "an arrow goes to the first shown"
+    )
+    await key("Enter")
+    await snapshot("chosen from inside its popup")
+    expect(!(await present("pl3-popup")), "Enter chooses it and closes")
+    expect((await id("pl3-output").textContent()) === "Cherry", "the caller hears the value")
+    expect((await focused()) === "pl3-trigger", "and focus goes back to the button")
+    await key("ArrowDown")
+    expect(await present("pl3-popup"), "an arrow on the button opens it")
+    expect((await focused()) === "pl3-input", "with focus in the input")
+    expect((await id("pl3-input").inputValue()) === "", "which is empty: it is only what is sought")
+    await key("Escape")
+    expect(!(await present("pl3-popup")), "Escape closes")
+    expect((await focused()) === "pl3-trigger", "and gives focus back to the button")
+    await id("pl3-trigger").click()
+    await settled(page)
+    await page.mouse.click(2, 2)
+    await snapshot("closed by a press outside")
+    expect(!(await present("pl3-popup")), "a press outside closes it")
   },
 
   async toolbar({ page, snapshot, id, attribute, focused }) {
@@ -1930,8 +2270,38 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("content that grew")
     expect(await present("sa1-x"), "content that grows late brings its scrollbars")
     expect(await present("sa1-corner"), "and the corner where they meet")
-    expect((await attribute("sa1-view", "tabindex")) === "0", "the viewport is a stop for the keys")
-    expect((await attribute("sa1", "data-has-overflow-y")) === "", "the area says there is more")
+    // Where they lie is the library's: the page's stylesheet says how thick and what colour.
+    const whole = await box("sa1")
+    const side = await box("sa1-y")
+    const foot = await box("sa1-x")
+    const meet = await box("sa1-corner")
+    const near = (a: number, b: number) => Math.abs(a - b) < 0.5
+    // The area has a border of one pixel.
+    const inner = {
+      top: whole.top + 1,
+      left: whole.left + 1,
+      right: whole.left + whole.width - 1,
+      bottom: whole.top + whole.height - 1,
+    }
+    expect(
+      near(side.top, inner.top) && near(side.left + side.width, inner.right),
+      "a scrollbar is placed along the area's far edge"
+    )
+    expect(
+      near(foot.left, inner.left) && near(foot.top + foot.height, inner.bottom),
+      "the other along its bottom"
+    )
+    expect(
+      near(meet.left + meet.width, inner.right) &&
+        near(meet.top + meet.height, inner.bottom) &&
+        meet.width === 10 &&
+        meet.height === 10,
+      `the corner where they meet, as big as they are thick (${meet.width}x${meet.height})`
+    )
+    expect(
+      near(side.top + side.height, meet.top) && near(foot.left + foot.width, meet.left),
+      "and each stops short of it"
+    )
     const thumb = await box("sa1-y-thumb")
     // 120 of 480 pixels are seen: a quarter of a track of 108 (the corner taken off).
     expect(
@@ -2412,6 +2782,40 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await until(() => present("ts1-toast-1"), false, "and Escape closes the one focus is on")
     expect((await focused()) === "ts1", "focus stays with the toasts")
     await snapshot("no toast left")
+    await id("ts1-undo").click()
+    await settled(page)
+    expect(await present("ts1-toast-4"), "a toast with an action is drawn")
+    expect(
+      (await id("ts1-toast-4-action").textContent())?.trim() === "Undo",
+      "its button says what the action is called"
+    )
+    expect((await attribute("ts1-toast-4-action", "type")) === "button", "and is a button")
+    expect(
+      (await attribute("ts1-toast-4", "aria-describedby")) === null,
+      "a toast that says nothing more has no description"
+    )
+    expect(!(await present("ts1-toast-1-action")), "and no toast without an action drew a button")
+    await snapshot("a toast with an action")
+    await id("ts1-toast-4-action").click()
+    await until(() => id("ts1-output").textContent(), "undone", "a press tells the action")
+    await until(() => present("ts1-toast-4"), false, "and closes the toast")
+    await id("ts1-alert").click()
+    await settled(page)
+    expect(
+      (await attribute("ts1-toast-5", "role")) === "alertdialog",
+      "an urgent toast is an alert"
+    )
+    expect(
+      (await attribute("ts1-toast-5", "aria-live")) === "assertive",
+      "that interrupts what is being read"
+    )
+    expect((await attribute("ts1-toast-5", "aria-atomic")) === "true", "and is read whole")
+    expect((await attribute("ts1", "aria-live")) === "polite", "in a region that stays polite")
+    expect(!(await present("ts1-toast-5-action")), "with no button for an action it has not")
+    await snapshot("an urgent toast")
+    await id("ts1-toast-5-close").click()
+    await until(() => present("ts1-toast-5"), false, "and it closes like any other")
+    await snapshot("no toast left again")
   },
   async sheets({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
@@ -3156,7 +3560,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
 
 /** The second page's scenarios: generated ids, and a popover open when the page is first drawn. */
 const second: Record<string, (run: Run) => Promise<void>> = {
-  async ids({ page, snapshot, id, attribute }) {
+  async ids({ page, snapshot, id, present, attribute }) {
     await id("o-p-popup").waitFor()
     await snapshot("at rest")
     const named = (testid: string) => attribute(testid, "id")
@@ -3191,6 +3595,26 @@ const second: Record<string, (run: Run) => Promise<void>> = {
       (await attribute("o-t-two", "aria-controls")) === (await named("o-t-panel-two")),
       "a panel drawn later is named the same way"
     )
+
+    // An accordion's items that were given no value: each has made its own.
+    const first = await named("o-a-first-trigger")
+    expect(
+      first && first !== (await named("o-a-second-trigger")),
+      "items with no value are told apart"
+    )
+    expect(!(await present("o-a-first-panel")), "and begin closed")
+    await id("o-a-first-trigger").click()
+    await snapshot("an item with a value of its own, open")
+    expect(await present("o-a-first-panel"), "its trigger opens it")
+    expect(!(await present("o-a-second-panel")), "and only it")
+    expect(
+      (await attribute("o-a-first-panel", "aria-labelledby")) === first,
+      "its panel is named by its trigger"
+    )
+    await id("o-a-second-trigger").click()
+    await snapshot("the other one open")
+    expect(await present("o-a-second-panel"), "the other opens")
+    expect(!(await present("o-a-first-panel")), "which closes the first: two values, not one")
   },
 
   async "open-popup"({ page, snapshot, id, present, attribute }) {
@@ -3369,6 +3793,28 @@ for (const engine of engines) {
         if (!subject.second && place !== "40%") {
           failed++
           log(`FAIL  ${label}  the server wrote the slider thumb's place, got "${place}"`)
+        }
+        // Thumbs that are given no index are placed by the order a server writes them in.
+        const unnumbered = await page.evaluate(() =>
+          ["low", "middle", "high"]
+            .map((name) =>
+              document
+                .querySelector<HTMLElement>(`[data-testid="sl5-${name}"]`)
+                ?.style.getPropertyValue("inset-inline-start")
+            )
+            .join(" ")
+        )
+        if (!subject.second && unnumbered !== "20% 50% 80%") {
+          failed++
+          log(`FAIL  ${label}  the server placed each thumb of a range, got "${unnumbered}"`)
+        }
+        // And what a scroll area's scrollbars are placed against is said before any script.
+        const against = await page.evaluate(
+          () => document.querySelector<HTMLElement>('[data-testid="sa1"]')?.style.position
+        )
+        if (!subject.second && against !== "relative") {
+          failed++
+          log(`FAIL  ${label}  the server placed the scroll area's root, got "${against}"`)
         }
         // What a provider states is known on a server, which has no layout to read it from.
         const centred = await page.evaluate(() =>

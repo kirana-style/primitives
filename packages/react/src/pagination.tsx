@@ -1,14 +1,18 @@
+import type { StateOf } from "@kirana-ui/core"
 import { createPagination } from "@kirana-ui/core/pagination"
 import type {
   Pagination as Controller,
   PaginationEntry,
   PaginationProps,
 } from "@kirana-ui/core/pagination"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Fragment, createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
-import { useController, usePart, useSignal } from "./runtime.tsx"
+import { parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["pagination"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -18,7 +22,11 @@ function usePagination(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<PaginationProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "nav",
+  StateOf<Parts["root"]>,
+  Omit<PaginationProps, "id"> & { id?: string }
+>
 
 function Root({
   page,
@@ -48,8 +56,13 @@ function Root({
   )
 }
 
+export interface ItemsProps {
+  /** Draws one entry, once for each: a page, or the mark for pages left out. */
+  children: (entry: PaginationEntry) => ReactNode
+}
+
 /** Draws its child once for each piece of the row: a page, or the mark for pages left out. */
-function Items({ children }: { children: (entry: PaginationEntry) => ReactNode }): ReactElement {
+function Items({ children }: ItemsProps): ReactElement {
   const entries = useSignal(usePagination("Items").entries)
   return (
     <>
@@ -60,14 +73,36 @@ function Items({ children }: { children: (entry: PaginationEntry) => ReactNode }
   )
 }
 
-function Item({ page, ...props }: PartComponentProps & { page: number }): ReactElement {
+export type ItemProps = PartComponentProps<
+  "button",
+  StateOf<Parts["item"]>,
+  {
+    /** The page it goes to, from 1. */
+    page: number
+  }
+>
+
+function Item({ page, ...props }: ItemProps): ReactElement {
   return usePart(usePagination("Item").item(page), "button", props)
 }
 
-const Ellipsis = (props: PartComponentProps) =>
-  usePart(usePagination("Ellipsis").ellipsis, "span", props)
-const Previous = (props: PartComponentProps) =>
-  usePart(usePagination("Previous").previous, "button", props)
-const Next = (props: PartComponentProps) => usePart(usePagination("Next").next, "button", props)
+export type EllipsisProps = PartComponentProps<"span", StateOf<Parts["ellipsis"]>>
 
-export const Pagination = { Root, Items, Item, Ellipsis, Previous, Next }
+const Ellipsis = (props: EllipsisProps) =>
+  usePart(usePagination("Ellipsis").ellipsis, "span", props)
+export type PreviousProps = PartComponentProps<"button", StateOf<Parts["previous"]>>
+
+const Previous = (props: PreviousProps) =>
+  usePart(usePagination("Previous").previous, "button", props)
+export type NextProps = PartComponentProps<"button", StateOf<Parts["next"]>>
+
+const Next = (props: NextProps) => usePart(usePagination("Next").next, "button", props)
+
+export const Pagination = /* @__PURE__ */ parts("Pagination", {
+  Root,
+  Items,
+  Item,
+  Ellipsis,
+  Previous,
+  Next,
+})

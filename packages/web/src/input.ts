@@ -1,7 +1,9 @@
 import { createInput } from "@kirana-ui/core/input"
+import type { InputProps } from "@kirana-ui/core/input"
 
 import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-input>` around a `kui-part="root"` input or textarea: it says its state, and inside a
@@ -14,3 +16,12 @@ export const tag = defineElement({
   changes: { onValueChange: { event: "value-change", prop: "value", hold: false } },
   parts: { root: (controller) => controller.input },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-input": ElementOf<
+      As<typeof tag, InputProps>,
+      { "value-change": ["onValueChange", "value"] }
+    >
+  }
+}

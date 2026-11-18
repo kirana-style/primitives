@@ -1,16 +1,31 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
-import type { Checkbox as Controller } from "@kirana-ui/core/checkbox"
+import type { CheckboxProps, Checkbox as Controller } from "@kirana-ui/core/checkbox"
 import { defineComponent, h, useId } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
+import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"checkbox">
 
 const scope = context<Controller>("Checkbox")
 
-const RootElement = partComponent("CheckboxRootElement", "span", () => scope.use().root)
 const Input = partComponent("CheckboxInput", "input", () => scope.use().input)
+// Its native input is the element's last child, whatever element the caller asked for.
+const RootElement = partComponent(
+  "CheckboxRootElement",
+  "span",
+  () => scope.use().root,
+  (content) => [content, h(Input)]
+)
+
+export type RootProps = Omit<CheckboxProps, "id" | "onCheckedChange"> & {
+  id?: string | undefined
+} & PartComponentProps
+
+export type RootEmits = Changes<"checked", boolean>
 
 /** `v-model:checked`, or `checked` with `@checked-change="(checked, details) => …"`. */
 const Root = defineComponent({
@@ -50,15 +65,20 @@ const Root = defineComponent({
         },
       }))
     )
-    return () => h(RootElement, attrs, () => [slots.default?.(), h(Input)])
+    return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"span", State["root"], RootProps, RootEmits>
 
 const IndicatorElement = partComponent(
   "CheckboxIndicatorElement",
   "span",
   () => scope.use().indicator
 )
+
+export interface IndicatorProps extends PartComponentProps {
+  /** Keeps the mark in the page while the box is unchecked. */
+  keepMounted?: boolean | undefined
+}
 
 /** `keep-mounted` keeps the mark in the page while the box is unchecked. */
 const Indicator = defineComponent({
@@ -69,6 +89,6 @@ const Indicator = defineComponent({
     const mounted = fromSignal(scope.use().indicatorMounted)
     return () => (mounted.value || props.keepMounted ? h(IndicatorElement, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"span", State["indicator"], IndicatorProps>
 
 export const Checkbox = { Root, Indicator }

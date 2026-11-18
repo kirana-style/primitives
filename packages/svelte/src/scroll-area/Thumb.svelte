@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useScrollbar } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ThumbProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ThumbProps = $props()
   const bar = useScrollbar()
 </script>
 
-<Part part={bar.thumb} tag="div" {...props} />
+<Part of={bar.thumb} tag="div" {...props} />

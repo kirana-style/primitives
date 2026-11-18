@@ -9,7 +9,7 @@ export const exclusive: string[][] = [
   ["[data-open]","[data-closed]"],
   ["[data-starting-style]","[data-ending-style]"],
   ["[data-checked]","[data-unchecked]"],
-  ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]"],
+  ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"inline-start\"]","[data-side=\"inline-end\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
   ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
@@ -18,7 +18,7 @@ export const exclusive: string[][] = [
   ["[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]","[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]"],
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
-  ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"none\"]"],
+  ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"inline-start\"]","[data-side=\"inline-end\"]","[data-side=\"none\"]"],
   ["[data-direction=\"up\"]","[data-direction=\"down\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]","[data-activation-direction=\"none\"]"],
 ]
@@ -34,7 +34,7 @@ export const Accordion = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** One section: a header with its trigger, and a panel. */
+  /** One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own. */
   Item: {
     /** Present when the item is open. */
     open: "[data-open]",
@@ -76,10 +76,16 @@ export const Accordion = {
 } as const
 
 export const AlertDialog = {
+  /** Holds the dialog: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The button that opens the dialog. */
   Trigger: {
     /** Present when the dialog is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** The layer over the page behind the dialog. */
   Backdrop: {
@@ -204,32 +210,40 @@ export const Collapsible = {
 } as const
 
 export const Combobox = {
-  /** The text input. What is typed filters the list, which is placed against it. */
+  /** Holds the combobox: its value, what is typed and whether the list is open. It draws no element. */
+  Root: {
+  },
+  /** The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open. */
   Input: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** A button that opens and closes the list. */
+  /** A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against. */
   Trigger: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** Places the list against the input. It carries the geometry. */
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
+  },
+  /** Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -238,7 +252,7 @@ export const Combobox = {
       end: "[data-align=\"end\"]",
     },
   },
-  /** The list of items. */
+  /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. */
   Popup: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -248,12 +262,14 @@ export const Combobox = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -261,6 +277,11 @@ export const Combobox = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
+  },
+  /** The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox. */
+  List: {
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
@@ -293,7 +314,7 @@ export const Combobox = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** With several values: what holds the chips and the input. */
+  /** With several values: what holds the chips and the input, and what the list is placed against. */
   Chips: {
   },
   /** One chosen value. */
@@ -307,10 +328,16 @@ export const Combobox = {
 } as const
 
 export const ContextMenu = {
+  /** Holds the menu: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
   Trigger: {
     /** Present when the menu is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** Places the menu against its trigger. It carries the geometry. */
   Positioner: {
@@ -318,12 +345,14 @@ export const ContextMenu = {
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -342,12 +371,14 @@ export const ContextMenu = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -358,12 +389,14 @@ export const ContextMenu = {
   },
   /** An element that points at the trigger. */
   Arrow: {
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -438,6 +471,9 @@ export const ContextMenu = {
     /** Present when it is not checked. */
     unchecked: "[data-unchecked]",
   },
+  /** A submenu: it holds the item that opens it and a portal, positioner and popup of its own. It draws no element. */
+  SubmenuRoot: {
+  },
   /** An item that opens a menu beside it. */
   SubmenuTrigger: {
     /** Present when its menu is open. */
@@ -450,10 +486,16 @@ export const ContextMenu = {
 } as const
 
 export const Dialog = {
+  /** Holds the dialog: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The button that opens the dialog. */
   Trigger: {
     /** Present when the dialog is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** The layer over the page behind the dialog. */
   Backdrop: {
@@ -580,6 +622,9 @@ export const Field = {
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
   },
+  /** Gives the control's validity to what it holds, to draw from. It draws no element. */
+  Validity: {
+  },
 } as const
 
 export const Fieldset = {
@@ -602,10 +647,16 @@ export const Form = {
 } as const
 
 export const HoverCard = {
+  /** Holds the card: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The link the card previews. */
   Trigger: {
     /** Present when the card is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** Places the popup against the trigger. It carries the geometry. */
   Positioner: {
@@ -613,12 +664,14 @@ export const HoverCard = {
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -637,12 +690,14 @@ export const HoverCard = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -659,12 +714,14 @@ export const HoverCard = {
   },
   /** An element that points at the trigger, placed along the popup's edge. */
   Arrow: {
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -706,6 +763,9 @@ export const Listbox = {
 } as const
 
 export const Menu = {
+  /** Holds the menu: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The button that opens the menu, and what it is placed against. */
   Trigger: {
     /** Present when the menu is open. */
@@ -713,18 +773,23 @@ export const Menu = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
+  },
   /** Places the menu against its trigger. It carries the geometry. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -743,12 +808,14 @@ export const Menu = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -759,12 +826,14 @@ export const Menu = {
   },
   /** An element that points at the trigger. */
   Arrow: {
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -839,6 +908,9 @@ export const Menu = {
     /** Present when it is not checked. */
     unchecked: "[data-unchecked]",
   },
+  /** A submenu: it holds the item that opens it and a portal, positioner and popup of its own. It draws no element. */
+  SubmenuRoot: {
+  },
   /** An item that opens a menu beside it. */
   SubmenuTrigger: {
     /** Present when its menu is open. */
@@ -898,7 +970,7 @@ export const NavigationMenu = {
       vertical: "[data-orientation=\"vertical\"]",
     },
   },
-  /** One item of the list: a link, or a trigger with its content. */
+  /** One item of the list: a link, or a trigger with its content. Its `value` tells it from the others; an item that is given none makes its own. */
   Item: {
   },
   /** The button that shows an item's content. */
@@ -932,18 +1004,23 @@ export const NavigationMenu = {
     /** Present on the link of the page the reader is on. */
     active: "[data-active]",
   },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
+  },
   /** Places the popup against the open item's trigger. It carries the geometry. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -962,12 +1039,14 @@ export const NavigationMenu = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -981,12 +1060,14 @@ export const NavigationMenu = {
   },
   /** An element that points at the open item's trigger. */
   Arrow: {
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1056,6 +1137,9 @@ export const DateField = {
     readonly: "[data-readonly]",
     /** Present when the date is outside what it takes, or is asked for and half typed. */
     invalid: "[data-invalid]",
+  },
+  /** The date's segments, in the locale's order: each is given to draw. It draws no element. */
+  Segments: {
   },
   /** One piece of the date: a part that is typed, or what stands between two. */
   Segment: {
@@ -1264,6 +1348,9 @@ export const NumberField = {
 } as const
 
 export const Autocomplete = {
+  /** Holds the autocomplete: the text, and whether the suggestions are open. It draws no element. */
+  Root: {
+  },
   /** The text input: its text is the value, and what is typed asks for suggestions. */
   Input: {
     /** Present when the list is open. */
@@ -1271,25 +1358,30 @@ export const Autocomplete = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** A button that opens and closes the list. */
+  /** A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against. */
   Trigger: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** Places the list against the input. It carries the geometry. */
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
+  },
+  /** Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1298,7 +1390,7 @@ export const Autocomplete = {
       end: "[data-align=\"end\"]",
     },
   },
-  /** The list of items. */
+  /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. */
   Popup: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -1308,12 +1400,14 @@ export const Autocomplete = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1321,6 +1415,11 @@ export const Autocomplete = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
+  },
+  /** The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox. */
+  List: {
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
@@ -1358,6 +1457,9 @@ export const Pagination = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
+  /** The row's entries, pages and the gaps between them: each is given to draw. It draws no element. */
+  Items: {
+  },
   /** A page: pressed, it is the one shown. */
   Item: {
     /** Present on the page that is shown. */
@@ -1381,6 +1483,9 @@ export const Pagination = {
 } as const
 
 export const DatePicker = {
+  /** Holds the date picker: its value, the month shown and whether the calendar is open. It draws no element. */
+  Root: {
+  },
   /** The field: a group of the date's parts. */
   Field: {
     /** Present when it is disabled. */
@@ -1389,6 +1494,9 @@ export const DatePicker = {
     readonly: "[data-readonly]",
     /** Present when the date is outside what it takes, or is asked for and half typed. */
     invalid: "[data-invalid]",
+  },
+  /** The date's segments, in the locale's order: each is given to draw. It draws no element. */
+  Segments: {
   },
   /** One piece of the date: a part that is typed, or what stands between two. */
   Segment: {
@@ -1406,10 +1514,16 @@ export const DatePicker = {
     /** Present when the date is outside what it takes, or is asked for and half typed. */
     invalid: "[data-invalid]",
   },
+  /** The hidden input it is submitted by. */
+  Input: {
+  },
   /** The button that opens the popover, and what it is placed against. */
   Trigger: {
     /** Present when the popover is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** Places the popup against the trigger. It carries the geometry. */
   Positioner: {
@@ -1417,12 +1531,14 @@ export const DatePicker = {
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1441,12 +1557,14 @@ export const DatePicker = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1478,8 +1596,14 @@ export const DatePicker = {
   /** The table of days: a grid the arrows move in. */
   Grid: {
   },
+  /** The days of the week: each is given to draw its head cell. It draws no element. */
+  Weekdays: {
+  },
   /** A column's heading: a day of the week. */
   HeadCell: {
+  },
+  /** The weeks of the month shown: each is given to draw its row of days. It draws no element. */
+  Weeks: {
   },
   /** A day's cell. */
   Cell: {
@@ -1541,8 +1665,14 @@ export const Calendar = {
   /** The table of days: a grid the arrows move in. */
   Grid: {
   },
+  /** The days of the week: each is given to draw its head cell. It draws no element. */
+  Weekdays: {
+  },
   /** A column's heading: a day of the week. */
   HeadCell: {
+  },
+  /** The weeks of the month shown: each is given to draw its row of days. It draws no element. */
+  Weeks: {
   },
   /** A day's cell. */
   Cell: {
@@ -1581,10 +1711,16 @@ export const Calendar = {
 } as const
 
 export const Drawer = {
+  /** Holds the dialog: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The button that opens the dialog. */
   Trigger: {
     /** Present when the dialog is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** The layer over the page behind the dialog. */
   Backdrop: {
@@ -1731,6 +1867,9 @@ export const Toast = {
     /** Present while the pointer or focus is on the stack: the toasts are spread out, and wait. */
     expanded: "[data-expanded]",
   },
+  /** The toasts in the page: each is given to draw its root. It draws no element. */
+  List: {
+  },
   /** One toast. */
   Root: {
     /** Present for the first style of its entrance: what it animates in from. */
@@ -1760,25 +1899,31 @@ export const Toast = {
     /** Present while the pointer or focus is on the stack: the toasts are spread out, and wait. */
     expanded: "[data-expanded]",
   },
-  /** What the toast is called. */
+  /** What the toast is called: the title it was added with, when nothing else is written in it. */
   Title: {
   },
-  /** What the toast says. */
+  /** What the toast says: the description it was added with, when nothing else is written in it. */
   Description: {
   },
   /** Closes the toast. */
   Close: {
   },
-  /** A button of the toast's own; pressing it closes the toast too. */
+  /** A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses. */
   Action: {
   },
 } as const
 
 export const Popover = {
+  /** Holds the popover: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The button that opens the popover, and what it is placed against. */
   Trigger: {
     /** Present when the popover is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** Places the popup against the trigger. It carries the geometry. */
   Positioner: {
@@ -1786,12 +1931,14 @@ export const Popover = {
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1810,12 +1957,14 @@ export const Popover = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -1959,7 +2108,7 @@ export const Resizable = {
 } as const
 
 export const ScrollArea = {
-  /** The area. It holds the viewport and the scrollbars. */
+  /** The area. It holds the viewport and the scrollbars, which the library places against it: a design gives a scrollbar its thickness and draws it, and places nothing. */
   Root: {
     /** Present when there is more to see sideways. */
     hasOverflowX: "[data-has-overflow-x]",
@@ -1982,7 +2131,7 @@ export const ScrollArea = {
   /** What is scrolled. */
   Content: {
   },
-  /** A scrollbar's track. In the page while there is something to scroll its way. */
+  /** A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way. */
   Scrollbar: {
     /** Which way the scrollbar scrolls. */
     orientation: {
@@ -1994,7 +2143,7 @@ export const ScrollArea = {
     /** Present while the area is scrolled its way. */
     scrolling: "[data-scrolling]",
   },
-  /** The part of a scrollbar that shows where the view is, and can be dragged. */
+  /** The part of a scrollbar that shows where the view is, and can be dragged. As long as its scrollbar's variable says. */
   Thumb: {
     /** Which way the scrollbar scrolls. */
     orientation: {
@@ -2002,12 +2151,15 @@ export const ScrollArea = {
       vertical: "[data-orientation=\"vertical\"]",
     },
   },
-  /** The square where the two scrollbars meet. */
+  /** The square where the two scrollbars meet, placed there. */
   Corner: {
   },
 } as const
 
 export const Select = {
+  /** Holds the select: its value and whether the list is open. It draws no element. */
+  Root: {
+  },
   /** The button that shows the value and opens the list. */
   Trigger: {
     /** Present when the list is open. */
@@ -2017,10 +2169,13 @@ export const Select = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** The chosen value's label, or the placeholder. */
+  /** The chosen value's label, or the placeholder. With several values, their labels with commas between. */
   Value: {
     /** Present while nothing is chosen. */
     placeholder: "[data-placeholder]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** Places the list against the trigger. It carries the geometry. */
   Positioner: {
@@ -2034,6 +2189,8 @@ export const Select = {
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
       none: "[data-side=\"none\"]",
     },
     /** How it is aligned with the anchor. */
@@ -2042,18 +2199,6 @@ export const Select = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
-  },
-  /** Items that belong together, named by their label. */
-  Group: {
-  },
-  /** The name of a group. Outside a group it is plain text, and names nothing. */
-  GroupLabel: {
-  },
-  /** A line between groups. */
-  Separator: {
-  },
-  /** The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls. */
-  List: {
   },
   /** In the page while there is more of the list above: it scrolls the list while the pointer moves over it. */
   ScrollUpArrow: {
@@ -2070,12 +2215,26 @@ export const Select = {
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
       none: "[data-side=\"none\"]",
     },
     /** Present for the first style of its entrance: what it animates in from. */
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+  },
+  /** Items that belong together, named by their label. */
+  Group: {
+  },
+  /** The name of a group. Outside a group it is plain text, and names nothing. */
+  GroupLabel: {
+  },
+  /** A line between groups. */
+  Separator: {
+  },
+  /** The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls. */
+  List: {
   },
   /** In the page while there is more of the list below: it scrolls the list while the pointer moves over it. */
   ScrollDownArrow: {
@@ -2092,6 +2251,8 @@ export const Select = {
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
       none: "[data-side=\"none\"]",
     },
     /** Present for the first style of its entrance: what it animates in from. */
@@ -2109,12 +2270,14 @@ export const Select = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -2125,7 +2288,7 @@ export const Select = {
   },
   /** One choice in the list. */
   Item: {
-    /** Present on the chosen item. */
+    /** Present on the chosen item, or on each of several. */
     selected: "[data-selected]",
     /** Present on the item the pointer or the keyboard is on. */
     highlighted: "[data-highlighted]",
@@ -2135,7 +2298,7 @@ export const Select = {
   /** The item's name: what the trigger shows once it is chosen. */
   ItemText: {
   },
-  /** A mark an item shows while it is the chosen one. */
+  /** A mark an item shows while it is chosen. */
   ItemIndicator: {
   },
 } as const
@@ -2212,7 +2375,7 @@ export const Slider = {
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
   },
-  /** What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. */
+  /** What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written. */
   Thumb: {
     /** The way the track runs. */
     orientation: {
@@ -2429,10 +2592,16 @@ export const Toolbar = {
 } as const
 
 export const Tooltip = {
+  /** Holds the tooltip: whether it is open. It draws no element. */
+  Root: {
+  },
   /** The element the tooltip describes. */
   Trigger: {
     /** Present when the tooltip is open. */
     popupOpen: "[data-popup-open]",
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
   },
   /** Places the popup against the trigger. It carries the geometry. */
   Positioner: {
@@ -2440,12 +2609,14 @@ export const Tooltip = {
     open: "[data-open]",
     /** Present when it is closed. */
     closed: "[data-closed]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -2464,12 +2635,14 @@ export const Tooltip = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -2486,12 +2659,14 @@ export const Tooltip = {
   },
   /** An element that points at the trigger, placed along the popup's edge. */
   Arrow: {
-    /** The side of the anchor it is on, after any flip. */
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
       bottom: "[data-side=\"bottom\"]",
       left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
     },
     /** How it is aligned with the anchor. */
     align: {

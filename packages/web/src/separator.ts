@@ -1,6 +1,8 @@
 import { createSeparator } from "@kirana-ui/core/separator"
+import type { SeparatorProps } from "@kirana-ui/core/separator"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /** `<kui-separator>` around `kui-part="root"`. `orientation`. */
 export const tag = defineElement({
@@ -10,3 +12,9 @@ export const tag = defineElement({
   changes: {},
   parts: { root: (controller) => controller.root },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-separator": ElementOf<As<typeof tag, SeparatorProps>>
+  }
+}

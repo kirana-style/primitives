@@ -2,12 +2,11 @@
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createAutocomplete } from "@kirana-ui/core/autocomplete"
-  import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
-  import type { Snippet } from "svelte"
 
   import { provide } from "../combobox/context.ts"
   import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
+  import type { RootProps } from "./types.ts"
 
   // A combobox whose text is the value: `bind:value` is the text. The list only suggests.
   let {
@@ -25,9 +24,10 @@
     name,
     form,
     virtualized,
+    autoHighlight,
     id,
     children,
-  }: Omit<AutocompleteProps, "id"> & { id?: string; children?: Snippet } = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function changeValue(next: string, by: ChangeDetails) {
@@ -55,6 +55,7 @@
       name,
       form,
       virtualized,
+      autoHighlight,
       onValueChange: changeValue,
       onOpenChange: changeOpen,
     }))

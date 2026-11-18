@@ -7,6 +7,8 @@ import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { byPlace } from "./services/list-places.ts"
 import { createList, pointerMoved } from "./services/list.ts"
 import { createFormControl } from "./services/form-control.ts"
+import { restInputs } from "./services/hidden-inputs.ts"
+import { labelIn } from "./services/items.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
@@ -17,15 +19,23 @@ export interface ComboboxProps<Value = unknown> {
   id: string
   /** The chosen value; `null` is "none". */
   value?: Value | null | undefined
+  /** The value it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: Value | null | undefined
+  /** Heard as a value is about to be chosen or cleared: `details.cancel()` keeps it as it was. */
   onValueChange?: ((value: Value | null, details: ChangeDetails) => void) | undefined
   /** What the input says. */
   inputValue?: string | undefined
+  /** The text the input starts with, when the caller does not hold `inputValue`. Read once. */
   defaultInputValue?: string | undefined
+  /** Heard as the input's text is about to change: `details.cancel()` keeps it as it was. */
   onInputValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
+  /** Whether the list is open, when the caller holds it. */
   open?: boolean | undefined
+  /** Whether the list starts open, when the caller does not hold `open`. Read once. */
   defaultOpen?: boolean | undefined
+  /** Heard as the list is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
   /** With a name, the value is submitted with the form around it. */
   name?: string | undefined
@@ -33,9 +43,11 @@ export interface ComboboxProps<Value = unknown> {
   form?: string | undefined
   /**
    * The labels of the values, for the input to show a value before the list has ever been
-   * opened. Not needed for the list itself: its items are read from the markup.
+   * opened: a list of values with their labels, or, for values that are text, the labels by
+   * value (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the
+   * markup.
    */
-  items?: readonly { value: Value; label: string }[] | undefined
+  items?: readonly { value: Value; label: string }[] | Readonly<Record<string, string>> | undefined
   /**
    * Whether an item is shown for what was typed. Default: its label holds the text, without
    * regard to case. `null`: every item is shown, and the caller draws the ones it wants.
@@ -46,8 +58,16 @@ export interface ComboboxProps<Value = unknown> {
    * again taken away, and the list stays open. The values are `values`, not `value`.
    */
   multiple?: boolean | undefined
+  /** With `multiple`: the chosen values, in the order they were chosen. */
   values?: readonly Value[] | undefined
+  /**
+   * With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+   */
   defaultValues?: readonly Value[] | undefined
+  /**
+   * With `multiple`: heard as a value is about to be added or taken away, with the values there
+   * would then be: `details.cancel()` keeps them as they were.
+   */
   onValuesChange?: ((values: Value[], details: ChangeDetails) => void) | undefined
   /** In a field, "none" is then wrong. */
   required?: boolean | undefined
@@ -61,11 +81,19 @@ export interface ComboboxProps<Value = unknown> {
    * caller then filters: the collection is what is left, and each item is given its `index`.
    */
   virtualized?: ListCollection | undefined
+  /**
+   * The first item shown for what was typed is highlighted as one types, so Enter chooses it.
+   * Off by default: typing then highlights nothing, and Enter chooses once an arrow or the
+   * pointer has gone to an item. Either way a list opened with nothing typed is on its chosen
+   * item, if it has one.
+   */
+  autoHighlight?: boolean | undefined
 }
 
 export interface ComboboxItemOptions {
   /** The item's id: the input names the highlighted item by it. */
   id: string
+  /** Disables this item: it cannot be chosen, and the arrows pass over it. */
   disabled?: boolean | undefined
   /** What is filtered and what the input shows; the item's text when left out. */
   label?: string | undefined
@@ -94,9 +122,17 @@ export interface Combobox<Value = unknown> {
   setValue(value: Value | null, details: ChangeDetails): void
   readonly positioning: Signal<Partial<PositionOptions>>
   mount(): () => void
-  /** The text input: what is typed filters the list, and the list is placed against it. */
+  /**
+   * The text input: what is typed filters the list. The list is placed against it, or against
+   * the chips' box when it is in one. It may be inside the popup instead: the popup is then
+   * placed against the button, and the input takes focus while the popup is open.
+   */
   readonly input: Part
-  /** A button that opens and closes the list. */
+  /**
+   * A button that opens and closes the list. With the input inside the popup it is the
+   * combobox itself: a stop for Tab, what the popup is placed against, and where focus goes
+   * back as the popup closes.
+   */
   readonly trigger: Part
   /** A button that empties the input and the value. */
   readonly clear: Part
@@ -109,7 +145,13 @@ export interface Combobox<Value = unknown> {
   /** With `multiple`: a chip's button that takes its value away. */
   chipRemove(value: Value): Part
   readonly positioner: Part
+  /** The list of items, or with a `list` inside what holds it: a dialog around an input and a list. */
   readonly popup: Part
+  /**
+   * The items' own box inside the popup, when the popup holds more than items: an input, a
+   * heading. It is then the listbox, and the popup is not.
+   */
+  readonly list: Part
   /** What is shown when no item is. */
   readonly emptyPart: Part
   /** The hidden input that submits the value. Rendered only when the combobox has a name. */
@@ -173,13 +215,13 @@ export function createCombobox<Value = unknown>(
   const inline = Boolean(props.peek().inline)
   const id = props.peek().id
   const popupId = `${id}-popup`
+  const listId = `${id}-list`
   // The labels learned from the markup, so the input still names a value once the list is gone.
   const labels = new Map<Value, string>()
 
   function labelOf(item: Value | null): string {
     if (item === null) return ""
-    const given = props.peek().items?.find((each) => Object.is(each.value, item))
-    return given?.label ?? labels.get(item) ?? String(item)
+    return labelIn(props.peek().items, item) ?? labels.get(item) ?? String(item)
   }
 
   const open = bindable({
@@ -285,12 +327,55 @@ export function createCombobox<Value = unknown>(
   let told = inputValue.peek()
   let trigger: HTMLElement | undefined
   let popup: HTMLElement | undefined
+  let positioner: HTMLElement | undefined
+  // With several values: the box the chips and the input are in.
+  let chips: HTMLElement | undefined
   // The text the list was last filtered by.
   let asked = ""
+  // The items' own box, when the popup holds more than items.
+  const boxed = signal<HTMLElement | undefined>(undefined)
+  // Where the input is: in the popup, or in the page beside it. Neither while it is in
+  // neither, which is a popup with its input inside that has not opened yet.
+  const inside = signal(false)
+  const beside = signal(false)
+  // Whether the page has mounted: until then (on a server, before hydration) nothing says
+  // where the input is, and the button is drawn as the one beside an input.
+  const settled = signal(false)
+  /** The button is the combobox: its input is in the popup, or is not in the page yet. */
+  const alone = computed(() => !inline && (inside.get() || (settled.get() && !beside.get())))
+  // Whether focus goes back to the button as the popup closes: not when it left by itself.
+  let back = true
+  const auto = () => Boolean(props.peek().autoHighlight)
+
+  /** Reads where the input is, once it or what it may be in is in the page or has left. */
+  function sort() {
+    if (inline) return
+    const within = Boolean(input && (positioner?.contains(input) || popup?.contains(input)))
+    const entered = within && !inside.peek()
+    batch(() => {
+      inside.set(within)
+      beside.set(Boolean(input) && !within)
+    })
+    // In the popup the text is only what is looked for: it starts empty, unless it was given.
+    const own = props.peek()
+    if (
+      entered &&
+      !free &&
+      own.inputValue === undefined &&
+      own.defaultInputValue === undefined &&
+      inputValue.peek() !== ""
+    ) {
+      inputValue.set("", details("input-reset"))
+    }
+    // What the popup is placed against may be another element now.
+    placement.position.refresh()
+  }
 
   /** Closes, and puts the input back to what is chosen: `text` when that was only just asked for. */
   function shut(by: ChangeDetails, text?: string) {
     if (inline) return
+    // Focus that left by itself is where the person put it.
+    back = by.reason !== "focus-out"
     open.set(false, by)
     if (by.canceled) return
     typed.set(false)
@@ -299,9 +384,10 @@ export function createCombobox<Value = unknown>(
       if (text !== undefined) inputValue.set(text, details("item-press", by.event))
       return
     }
-    // With several, the text is not a value: it goes.
-    const back = multiple ? "" : (text ?? labelOf(value.peek()))
-    inputValue.set(back, details("input-reset", by.event))
+    // With several, the text is not a value: it goes. As it does from an input in the popup,
+    // which is only what was looked for.
+    const next = multiple || inside.peek() ? "" : (text ?? labelOf(value.peek()))
+    inputValue.set(next, details("input-reset", by.event))
   }
 
   function setOpen(next: boolean, by: ChangeDetails) {
@@ -321,8 +407,11 @@ export function createCombobox<Value = unknown>(
     setOpen,
     kind: "combobox",
     placement,
+    // Under the chips' box when the input is in one, and as wide; against the button when the
+    // input is inside the popup, which cannot be placed against what it holds.
+    anchor: () => (beside.peek() ? (chips ?? input) : trigger),
     // Focus is the input's throughout. Its button opens the list too.
-    branches: () => [trigger],
+    branches: () => [trigger, input],
   })
 
   function choose(item: Value, text: string, event: Event) {
@@ -344,29 +433,34 @@ export function createCombobox<Value = unknown>(
     })
   }
 
-  /** The highlight a list opens on: the chosen item, or with something typed the first shown. */
+  /**
+   * The highlight a list opens on: the chosen item; or, opened by typing and asked to
+   * (`autoHighlight`), the first shown.
+   */
   function land() {
-    // Suggestions wait to be asked: Enter is the typed text's until an arrow goes to one.
-    if (free) return
-    if (multiple) {
-      // No one value to open on: the first shown, once something is typed.
-      if (!typed.peek()) return
+    const first = typed.peek() && auto()
+    if (free || multiple) {
+      // No one value to open on. Without `autoHighlight` Enter is the typed text's until an
+      // arrow goes to an item.
+      if (!first) return
       if (list.collection()) list.move("first")
       else list.highlight(list.rows()[0], true)
       return
     }
+    // Typed at, and not asked to highlight: nothing is.
+    if (typed.peek() && !first) return list.highlight(undefined)
     const every = list.collection()
     if (every) {
       const one = value.peek()
       const at = one === null ? -1 : (every.indexOf?.(one) ?? -1)
       if (at >= 0) list.goto(at)
-      else if (typed.peek()) list.move("first")
+      else if (first) list.move("first")
       return
     }
     const all = list.rows()
     const current = value.peek()
     const own = current === null ? undefined : rows.get(current)
-    const row = own && all.includes(own) ? own : typed.peek() ? all[0] : undefined
+    const row = own && all.includes(own) ? own : first ? all[0] : undefined
     list.highlight(row, true)
   }
 
@@ -381,7 +475,16 @@ export function createCombobox<Value = unknown>(
       () => value.get() !== null || values.get().length > 0 || inputValue.get() !== ""
     ),
     values,
-    chips: { props: EMPTY, attach: () => NOTHING },
+    chips: {
+      props: EMPTY,
+      attach(element) {
+        chips = element
+        placement.position.refresh()
+        return () => {
+          if (chips === element) chips = undefined
+        }
+      },
+    },
     chip: () => ({ props: EMPTY, attach: () => NOTHING }),
     chipRemove(item) {
       return {
@@ -404,7 +507,41 @@ export function createCombobox<Value = unknown>(
     setOpen,
     setValue,
     positioning: placement.positioning,
-    mount: () => (inline ? NOTHING : layer.start()),
+    mount() {
+      if (inline) return NOTHING
+      // An input in the popup has focus while the popup is open, and the button after.
+      let within = false
+      const stops = [
+        layer.start(),
+        effect(() => {
+          const on = open.get() && inside.get()
+          untracked(() => {
+            if (on) {
+              within = true
+              back = true
+              return input?.focus({ preventScroll: true })
+            }
+            if (!within) return
+            within = false
+            const page = trigger?.ownerDocument
+            const active = page?.activeElement
+            // Only when focus is still in the popup, or lost to the page: a person who moved
+            // it keeps it.
+            const lost =
+              !active ||
+              active === page?.body ||
+              Boolean(positioner?.contains(active)) ||
+              Boolean(popup?.contains(active))
+            if (back && lost) trigger?.focus({ preventScroll: true })
+          })
+        }),
+      ]
+      // After the parts that are in the page have attached.
+      queueMicrotask(() => settled.set(true))
+      return () => {
+        for (const stop of stops.reverse()) stop()
+      }
+    },
     selected: chosen,
     input: {
       props: computed(() => ({
@@ -417,8 +554,8 @@ export function createCombobox<Value = unknown>(
         "aria-autocomplete": "list",
         "aria-haspopup": "listbox",
         ...(inline
-          ? { "aria-expanded": "true", "aria-controls": popupId }
-          : layer.expanded(popupId)),
+          ? { "aria-expanded": "true", "aria-controls": boxed.get() ? listId : popupId }
+          : layer.expanded(boxed.get() ? listId : popupId)),
         "aria-activedescendant":
           inline || open.get() ? list.highlighted.get()?.element()?.id : undefined,
         form: props.get().form,
@@ -433,8 +570,8 @@ export function createCombobox<Value = unknown>(
           const by = details("input-change", event)
           typed.set(true)
           inputValue.set(text, by)
-          // Emptied, nothing is chosen any more.
-          if (text === "" && value.peek() !== null && !inline && !multiple) {
+          // Emptied, nothing is chosen any more. In the popup it is only what is looked for.
+          if (text === "" && value.peek() !== null && !inline && !multiple && !inside.peek()) {
             setValue(null, details("input-clear", event))
           }
           if (!inline && !open.peek()) setOpen(true, details("input-change", event))
@@ -471,7 +608,7 @@ export function createCombobox<Value = unknown>(
         },
         onBlur(event: FocusEvent) {
           const to = event.relatedTarget as Node | null
-          if (popup?.contains(to) || trigger?.contains(to)) return
+          if (popup?.contains(to) || positioner?.contains(to) || trigger?.contains(to)) return
           member?.focused(false)
           if (open.peek()) setOpen(false, details("focus-out", event))
         },
@@ -492,13 +629,13 @@ export function createCombobox<Value = unknown>(
                 ? ""
                 : String(one),
         })
+        sort()
         const stops = [
           () => {
             member?.leave()
             member = undefined
           },
           inForm.attach(element),
-          layer.attachTrigger(element),
           // The input's text is the core's to write: a framework that held it would write it
           // in its own time, after what was typed since.
           effect(() => {
@@ -511,28 +648,43 @@ export function createCombobox<Value = unknown>(
         return () => {
           for (const stop of stops.reverse()) stop()
           if (input === element) input = undefined
+          sort()
         }
       },
     },
     trigger: {
-      props: computed(() => ({
-        type: "button",
-        // The input is the stop; the button is for a pointer.
-        tabindex: "-1",
-        "aria-haspopup": "listbox",
-        "aria-controls": layer.mounted.get() ? popupId : undefined,
-        "data-popup-open": flag(open.get()),
-        disabled: flag(disabled.get()),
-        "data-disabled": flag(disabled.get()),
-        // Focus stays in the input.
-        onMouseDown: (event: Event) => event.preventDefault(),
-        onClick(event: Event) {
-          setOpen(!open.peek(), details("trigger-press", event))
-          input?.focus({ preventScroll: true })
-        },
-      })),
+      props: computed(() => {
+        const own = alone.get()
+        return {
+          type: "button",
+          // Beside an input, that is the stop and the button is for a pointer. With its input
+          // in the popup the button is the combobox: a stop, and what opens a dialog.
+          tabindex: own ? undefined : "-1",
+          role: own ? "combobox" : undefined,
+          "aria-haspopup": own ? "dialog" : "listbox",
+          "aria-expanded": own ? String(open.get()) : undefined,
+          "aria-controls": layer.mounted.get() ? popupId : undefined,
+          "data-popup-open": flag(open.get()),
+          disabled: flag(disabled.get()),
+          "data-disabled": flag(disabled.get()),
+          // Focus stays in an input beside it.
+          onMouseDown(event: Event) {
+            if (!alone.peek()) event.preventDefault()
+          },
+          onClick(event: Event) {
+            setOpen(!open.peek(), details("trigger-press", event))
+            if (!alone.peek()) input?.focus({ preventScroll: true })
+          },
+          onKeyDown(event: KeyboardEvent) {
+            if (!alone.peek() || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return
+            event.preventDefault()
+            setOpen(true, details("list-navigation", event))
+          },
+        }
+      }),
       attach(element) {
         trigger = element
+        placement.position.refresh()
         return () => {
           if (trigger === element) trigger = undefined
         }
@@ -556,20 +708,37 @@ export function createCombobox<Value = unknown>(
       })),
       attach: () => NOTHING,
     },
-    positioner: layer.positioner,
+    positioner: {
+      props: layer.positioner.props,
+      attach(element) {
+        positioner = element
+        sort()
+        const detach = layer.positioner.attach(element)
+        return () => {
+          detach()
+          if (positioner === element) positioner = undefined
+          sort()
+        }
+      },
+    },
     popup: {
       props: computed(() => ({
         id: popupId,
-        role: "listbox",
+        // With a list inside, that is the listbox: around an input and a list, this is a dialog.
+        role: boxed.get() ? (inside.get() ? "dialog" : "presentation") : "listbox",
         // Always in the page, it is neither open nor closed, and is placed by the page.
         ...(inline ? {} : { ...layer.state(), ...layer.placed() }),
         "data-empty": flag(empty.get()),
-        // A press in the list does not take focus from the input.
-        onMouseDown: (event: Event) => event.preventDefault(),
+        // A press in the list does not take focus from the input. A press on an input in the
+        // popup is the input's own.
+        onMouseDown(event: Event) {
+          if (!input?.contains(event.target as Node | null)) event.preventDefault()
+        },
       })),
       attach(element) {
         popup = element
         listed.set(true)
+        sort()
         const stops = [
           () => listed.set(false),
           list.attach(element),
@@ -590,7 +759,8 @@ export function createCombobox<Value = unknown>(
             untracked(() => {
               if (text === asked || !(inline || open.peek())) return void (asked = text)
               asked = text
-              if (free) return list.highlight(undefined)
+              // Typed at, nothing is highlighted unless asked to; a suggestion, only for text.
+              if (!auto() || (free && text.trim() === "")) return list.highlight(undefined)
               if (list.collection()) list.move("first")
               else list.highlight(list.rows()[0], true)
             })
@@ -599,6 +769,20 @@ export function createCombobox<Value = unknown>(
         return () => {
           for (const stop of stops.reverse()) stop()
           if (popup === element) popup = undefined
+          sort()
+        }
+      },
+    },
+    list: {
+      props: computed(() => ({
+        id: listId,
+        role: "listbox",
+        "data-empty": flag(empty.get()),
+      })),
+      attach(element) {
+        boxed.set(element)
+        return () => {
+          if (boxed.peek() === element) boxed.set(undefined)
         }
       },
     },
@@ -627,32 +811,12 @@ export function createCombobox<Value = unknown>(
         if (!multiple) return NOTHING
         // One input for each value: the first is this one, the rest the core's own to draw,
         // after it.
-        const more: HTMLInputElement[] = []
-        const stop = effect(() => {
-          const rest = values.get().slice(1)
-          const { form } = props.get()
-          const called = name.get()
-          const off = disabled.get()
-          while (more.length > rest.length) more.pop()!.remove()
-          rest.forEach((each, at) => {
-            let extra = more[at]
-            if (!extra) {
-              extra = element.ownerDocument.createElement("input")
-              ;(more[at - 1] ?? element).after(extra)
-              more[at] = extra
-            }
-            extra.type = "hidden"
-            extra.name = called ?? ""
-            extra.value = String(each)
-            extra.disabled = off
-            if (form === undefined) extra.removeAttribute("form")
-            else extra.setAttribute("form", form)
-          })
-        })
-        return () => {
-          stop()
-          for (const each of more.splice(0)) each.remove()
-        }
+        return restInputs(element, () => ({
+          rest: values.get().slice(1),
+          name: name.get(),
+          form: props.get().form,
+          disabled: disabled.get(),
+        }))
       },
     },
     itemIndicator: () => ({ props: INDICATOR, attach: () => NOTHING }),

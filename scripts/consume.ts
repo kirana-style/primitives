@@ -14,7 +14,7 @@
  * as long as the registry's own `max-age` says. The wait is bounded by that age.
  */
 import { spawnSync } from "node:child_process"
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
@@ -26,6 +26,8 @@ const option = (name: string) => {
 }
 const released = option("version")
 const registry = (option("registry") ?? "https://registry.npmjs.org").replace(/\/$/, "")
+const rehearsed = registry !== "https://registry.npmjs.org"
+const ADAPTERS = ["react", "vue", "svelte", "solid", "angular", "web"]
 const tarballs = released ? [] : readdirSync(packed).filter((file) => file.endsWith(".tgz"))
 if (!released && tarballs.length === 0)
   throw new Error("nothing is packed: run `bun scripts/pack.ts` first")
@@ -123,13 +125,16 @@ try {
       2
     )
   )
-  if (registry !== "https://registry.npmjs.org") {
+  if (rehearsed) {
     writeFileSync(
       path.join(project, "bunfig.toml"),
       `[install.scopes]\n"@kirana-ui" = "${registry}"\n`
     )
   }
-  run("bun", ["install"])
+  // A registry of a rehearsal's own holds a version for one run, and the next run's holds
+  // the same version with other files: the machine's cache would hand this project the
+  // earlier ones, and the check would pass on packages nobody published. Its cache is its own.
+  run("bun", rehearsed ? ["install", "--cache-dir", path.join(project, ".cache")] : ["install"])
 
   // Every export loads, in Node, by the name a project imports.
   const entries = names.flatMap((each) => {
@@ -316,8 +321,13 @@ console.log(${JSON.stringify(svelte.length)} + " Svelte exports compile and load
     `
 import { Slider, useDirection } from "@kirana-ui/solid"
 import { Dialog } from "@kirana-ui/solid/dialog"
+import type { TriggerProps } from "@kirana-ui/solid/dialog"
 
 export const direction: "ltr" | "rtl" = useDirection()()
+// A part's props by name: its element's, with a handler that can keep the part's own out.
+export const trigger: TriggerProps = { onClick: (event) => event.preventKiranaHandler() }
+// @ts-expect-error a class is text
+export const mistyped: TriggerProps = { class: 42 }
 export const page = () => (
   <Dialog.Root>
     <Dialog.Trigger>Open</Dialog.Trigger>
@@ -332,12 +342,17 @@ export const page = () => (
     path.join(project, "use-svelte.ts"),
     `
 import { Collapsible, useDirection } from "@kirana-ui/svelte"
+import type { TriggerProps } from "@kirana-ui/svelte/dialog"
 import { Slider } from "@kirana-ui/svelte/slider"
 import type { ComponentProps } from "svelte"
 
 export const direction: "ltr" | "rtl" = useDirection().current
 export const root: typeof Collapsible.Root = Collapsible.Root
 export const props: ComponentProps<typeof Slider.Root> = { defaultValue: 40 }
+// A part's props by name: its element's, with a handler that can keep the part's own out.
+export const trigger: TriggerProps = { onclick: (event) => event.preventKiranaHandler() }
+// @ts-expect-error a class is text, a list or an object of conditions, never a number
+export const mistyped: TriggerProps = { class: 42 }
 // @ts-expect-error a value is a number, or several
 export const wrong: ComponentProps<typeof Slider.Root> = { defaultValue: "forty" }
 `
@@ -350,6 +365,10 @@ import type { Signal } from "@angular/core"
 
 export const direction: () => Signal<"ltr" | "rtl"> = injectDirection
 export const minimum = (slider: KuiSlider): number | undefined => slider.min()
+// A directive's value is the caller's: a slider given a number holds a number.
+export const level = (slider: KuiSlider<number>): number | undefined => slider.value()
+// @ts-expect-error a range's list is not a number
+export const range = (slider: KuiSlider<number[]>): number | undefined => slider.value()
 // @ts-expect-error a slider has no such input
 export const nothing = (slider: KuiSlider) => slider.nonsense
 `
@@ -358,9 +377,10 @@ export const nothing = (slider: KuiSlider) => slider.nonsense
     path.join(project, "use.tsx"),
     `
 import { signal } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails } from "@kirana-ui/react"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { Dialog } from "@kirana-ui/react/dialog"
+import type { TriggerProps } from "@kirana-ui/react/dialog"
 import { Slider, useDirection } from "@kirana-ui/react"
 import { Dialog as states } from "@kirana-ui/vocabulary/keys"
 
@@ -368,6 +388,10 @@ const dialog = createDialog(signal({ id: "d" }))
 export const open: boolean = dialog.open.get()
 export const selector: string = states.Popup.open
 export const direction: "ltr" | "rtl" = useDirection()
+// A part's props by name: its element's, with a handler that can keep the part's own out.
+export const trigger: TriggerProps = { onClick: (event) => event.preventKiranaHandler() }
+// @ts-expect-error a class is text
+export const mistyped: TriggerProps = { className: 42 }
 
 export const page = (
   <Dialog.Root onOpenChange={(next: boolean, details: ChangeDetails) => details.cancel()}>
@@ -382,16 +406,163 @@ export const page = (
   writeFileSync(
     path.join(project, "use-vue.ts"),
     `
-import { Tabs, useDirection } from "@kirana-ui/vue"
+import { Collapsible, Tabs, useDirection } from "@kirana-ui/vue"
+import type { PanelProps } from "@kirana-ui/vue/collapsible"
 import { h } from "vue"
 
 export const direction: "ltr" | "rtl" = useDirection().value
 export const tabs = h(Tabs.Root, { defaultValue: "one" })
+// A part's props by name, and its element's attributes with them.
+export const panel: PanelProps = { keepMounted: true }
+export const trigger = new Collapsible.Trigger({
+  type: "submit",
+  onClick: (event) => event.preventKiranaHandler(),
+})
+// @ts-expect-error a \`<button>\` has no \`href\`
+export const mistyped = new Collapsible.Trigger({ href: "/more" })
 `
   )
   run(path.join(project, "node_modules/.bin/tsc"), ["-p", "."])
   run(path.join(project, "node_modules/.bin/tsc"), ["-p", "tsconfig.solid.json"])
   console.log("the declarations type-check in a project, their own files included")
+
+  // The skill is in every adapter, with the adapter's own name in its paths.
+  for (const adapter of ADAPTERS) {
+    const skill = readFileSync(
+      path.join(
+        project,
+        "node_modules/@kirana-ui",
+        adapter,
+        "skills/kirana-ui-primitives/SKILL.md"
+      ),
+      "utf8"
+    )
+    for (const entry of ["llms.txt", "agent", "testing"]) {
+      if (!skill.includes(`@kirana-ui/${adapter}/${entry}`))
+        throw new Error(`@kirana-ui/${adapter}'s skill does not name its own ${entry}`)
+    }
+    if (skill.includes("<framework>"))
+      throw new Error(`@kirana-ui/${adapter}'s skill names <framework>, not ${adapter}`)
+  }
+  console.log(`the skill is in each of the ${ADAPTERS.length} adapters, naming its own entries`)
 } finally {
   rmSync(project, { recursive: true, force: true })
+}
+
+// One package is enough: the adapters alone, installed the strict way (each package sees only
+// what it depends on, as pnpm and Bun's isolated linker lay a project out), load the agent
+// bridge and the testing kit from their own entries. The core is not the project's to import.
+const alone = mkdtempSync(path.join(tmpdir(), "kirana-ui-alone-"))
+try {
+  const adapters = names.filter((each) => ADAPTERS.includes(each.name.replace("@kirana-ui/", "")))
+  writeFileSync(
+    path.join(alone, "package.json"),
+    JSON.stringify(
+      {
+        name: "alone",
+        private: true,
+        type: "module",
+        dependencies: Object.fromEntries(adapters.map((each) => [each.name, each.spec])),
+        devDependencies: { typescript: catalog.typescript },
+        ...(released
+          ? {}
+          : { overrides: Object.fromEntries(names.map((each) => [each.name, each.spec])) }),
+      },
+      null,
+      2
+    )
+  )
+  if (rehearsed) {
+    writeFileSync(
+      path.join(alone, "bunfig.toml"),
+      `[install.scopes]\n"@kirana-ui" = "${registry}"\n`
+    )
+  }
+  const install = spawnSync(
+    "bun",
+    [
+      "install",
+      "--linker",
+      "isolated",
+      ...(rehearsed ? ["--cache-dir", path.join(alone, ".cache")] : []),
+    ],
+    { cwd: alone, encoding: "utf8" }
+  )
+  if (install.status !== 0)
+    throw new Error(`bun install --linker isolated failed\n${install.stderr}`)
+  if (existsSync(path.join(alone, "node_modules/@kirana-ui/core")))
+    throw new Error("the isolated project can import @kirana-ui/core: the check proves nothing")
+  writeFileSync(
+    path.join(alone, "load.mjs"),
+    `
+import assert from "node:assert/strict"
+for (const adapter of ${JSON.stringify(ADAPTERS)}) {
+  const agent = await import("@kirana-ui/" + adapter + "/agent")
+  assert.equal(typeof agent.createAgent, "function", adapter + "/agent has no createAgent")
+  const testing = await import("@kirana-ui/" + adapter + "/testing")
+  assert.equal(typeof testing.faults, "function", adapter + "/testing has no faults")
+  assert.equal(typeof testing.known, "function", adapter + "/testing has no known")
+}
+await assert.rejects(import("@kirana-ui/core"), "the core is not the project's to import")
+console.log(${JSON.stringify(ADAPTERS.length)} + " adapters alone, installed isolated, load their own agent and testing entries")
+`
+  )
+  const loaded = spawnSync("node", ["load.mjs"], { cwd: alone, encoding: "utf8" })
+  if (loaded.status !== 0)
+    throw new Error(`the adapters alone do not load\n${loaded.stdout}\n${loaded.stderr}`)
+  process.stdout.write(loaded.stdout)
+
+  // And the types a prop names are each adapter's own to give: `ChangeDetails`, `Side` and
+  // `IsoDate` are the core's, re-exported by the adapter's root as types. A wrong value is
+  // refused, which a type that did not resolve (and so was anything) would not do.
+  writeFileSync(
+    path.join(alone, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        module: "ESNext",
+        moduleResolution: "bundler",
+        lib: ["ES2023", "DOM", "DOM.Iterable"],
+        strict: true,
+        noEmit: true,
+        // The frameworks are not this project's: only the adapters' own types are asked for.
+        skipLibCheck: true,
+        types: [],
+      },
+      include: ["types.ts"],
+    })
+  )
+  writeFileSync(
+    path.join(alone, "types.ts"),
+    ADAPTERS.map(
+      (adapter, at) => `
+import type { ChangeDetails as Details${at}, IsoDate as Day${at}, Side as Side${at} } from "@kirana-ui/${adapter}"
+export const side${at}: Side${at} = "inline-end"
+// @ts-expect-error a side is one of six
+export const noSide${at}: Side${at} = "middle"
+export const day${at}: Day${at} = "2026-03-01"
+// @ts-expect-error a day is text
+export const noDay${at}: Day${at} = 20260301
+export const refuse${at} = (details: Details${at}): string => {
+  details.cancel()
+  return details.reason
+}
+// @ts-expect-error the details have no such field
+export const none${at} = (details: Details${at}) => details.nothing
+`
+    ).join("")
+  )
+  const typed = spawnSync(path.join(alone, "node_modules/.bin/tsc"), ["-p", "."], {
+    cwd: alone,
+    encoding: "utf8",
+  })
+  if (typed.status !== 0)
+    throw new Error(
+      `the adapters alone do not give the core's types\n${typed.stdout}\n${typed.stderr}`
+    )
+  console.log(
+    `${ADAPTERS.length} adapters alone give the types their props name (ChangeDetails, Side, IsoDate)`
+  )
+} finally {
+  rmSync(alone, { recursive: true, force: true })
 }

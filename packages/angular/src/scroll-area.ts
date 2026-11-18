@@ -48,6 +48,7 @@ export class KuiScrollAreaContent implements OnInit {
  */
 @Directive({ selector: "[kuiScrollAreaScrollbar]" })
 export class KuiScrollAreaScrollbar implements OnInit {
+  /** Which way it scrolls: `'horizontal'`, or `'vertical'` when none is given. */
   readonly kuiScrollAreaScrollbar = input<Orientation | "">("")
   readonly keepMounted = input(false, {
     alias: "kuiScrollAreaScrollbarKeepMounted",

@@ -2,9 +2,9 @@ import { computed } from "@kirana-ui/core"
 import type { Combobox, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
 import { createCombobox } from "@kirana-ui/core/combobox"
 
-import { fieldAround, itemOptions, list, MARK, once, place, valueOf } from "./around.ts"
+import { fieldAround, itemOptions, list, MARK, once, positioner, valueOf } from "./around.ts"
 import { defineElement, entryAround, partAround } from "./runtime.ts"
-import type { Drawn, Each } from "./runtime.ts"
+import type { Drawn, Each, ElementOf } from "./runtime.ts"
 
 type Props = Omit<ComboboxProps<string>, "values" | "defaultValues"> & {
   values?: string | readonly string[]
@@ -29,11 +29,9 @@ export const PARTS: Parts = {
   input: (controller) => controller.input,
   trigger: (controller) => controller.trigger,
   clear: (controller) => ({ part: controller.clear, mounted: controller.clearable }),
-  positioner(controller, element) {
-    place(controller.positioning, element)
-    return { mounted: controller.mounted, part: controller.positioner }
-  },
+  positioner,
   popup: (controller) => controller.popup,
+  list: (controller) => controller.list,
   empty: (controller) => ({ part: controller.emptyPart, mounted: controller.empty }),
   group: (controller, element) => groupOf(controller, element)?.root,
   // Outside a group it is plain text, and names nothing.
@@ -73,14 +71,17 @@ export const LISTS = {
 
 /**
  * `<kui-combobox>` around an `input`, with a `trigger` and a `clear` button if it has them,
- * and a `portal` with a `positioner` around the `popup`, which holds an `item` for each
+ * and a `portal` with a `positioner` (`kui-side` … and `kui-anchor`, an element's id) around
+ * the `popup`, which holds an `item` for each
  * `kui-value` (`kui-disabled`, `kui-label`, `kui-id`) with an `item-indicator`, in `group`s
  * with a `group-label` and `separator`s if it has them, and an `empty` part drawn while
- * nothing matches. With `multiple`, the input is in a `chips` part with a
+ * nothing matches. The `input` may be inside the `popup`, the items then in a `list` part: the
+ * popup is placed against the `trigger`, and the input has focus while it is open. With `multiple`, the input is in a `chips` part with a
  * `<template kui-each="chips">` holding a `chip` (`{value}`) and its `chip-remove` button.
  * With a name it draws the hidden input a form reads. `value`,
  * `default-value`, `input-value`, `default-input-value`, `open`, `default-open`, `disabled`,
- * `required`, `inline`, `multiple`, `values` and `default-values` (with commas between),
+ * `required`, `inline`, `auto-highlight`, `multiple`, `values` and `default-values` (with
+ * commas between),
  * `name`, `form`; `items` and `filter` as properties; it tells `value-change`,
  * `values-change`, `input-value-change` and `open-change`.
  */
@@ -96,6 +97,7 @@ export const tag = defineElement<Props, Combobox<string>>({
     disabled: "boolean",
     required: "boolean",
     inline: "boolean",
+    "auto-highlight": "boolean",
     multiple: "boolean",
     values: "string",
     "default-values": "string",
@@ -121,3 +123,17 @@ export const tag = defineElement<Props, Combobox<string>>({
   },
   parts: PARTS,
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-combobox": ElementOf<
+      typeof tag,
+      {
+        "value-change": ["onValueChange", "value"]
+        "values-change": ["onValuesChange", "values"]
+        "input-value-change": ["onInputValueChange", "inputValue"]
+        "open-change": ["onOpenChange", "open"]
+      }
+    >
+  }
+}

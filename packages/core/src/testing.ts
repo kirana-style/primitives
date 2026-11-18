@@ -39,6 +39,7 @@ export function known(...own: ComponentDefinition[]): KnownVocabulary {
   return { attributes, variables }
 }
 
+/** What `faults` lets pass: a page's own attributes, and states whose value is free. */
 export interface FaultOptions {
   /** `data-*` attributes of the page's own, which no part wrote: `["data-testid"]`. */
   allow?: readonly string[] | undefined
@@ -115,6 +116,7 @@ export function faults(
   return found
 }
 
+/** What `serialize` is told to leave out. */
 export interface SerializeOptions {
   /** Attributes left out: a framework's own marks. Test ids are written as `#name`. */
   skip?: readonly string[] | undefined
@@ -227,6 +229,7 @@ export interface Heard<Value> {
   readonly source: ChangeDetails["source"]
 }
 
+/** What `recorder()` gives: a callback to hand a component, and what it heard. */
 export interface Recorder<Value> {
   /** Give this as the callback: `onValueChange: heard.listen`. */
   listen(value: Value, details: ChangeDetails): void

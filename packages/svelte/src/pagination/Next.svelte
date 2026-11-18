@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { usePagination } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { NextProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: NextProps = $props()
   const controller = usePagination()
 </script>
 
-<Part part={controller.next} tag="button" {...props} />
+<Part of={controller.next} tag="button" {...props} />

@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useCalendar } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { GridProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: GridProps = $props()
   const controller = useCalendar()
 </script>
 
-<Part part={controller.grid} tag="table" {...props} />
+<Part of={controller.grid} tag="table" {...props} />

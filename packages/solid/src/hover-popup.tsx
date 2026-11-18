@@ -5,9 +5,8 @@ import { createComputed, createContext, createUniqueId, splitProps, useContext }
 import type { JSX } from "solid-js"
 
 import { positioned } from "./popover.tsx"
-import type { PositionerProps } from "./popover.tsx"
+import type { PositionerOptions } from "./popover.tsx"
 import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
-import type { PartComponentProps } from "./runtime.tsx"
 
 export type RootProps = {
   open?: boolean
@@ -20,8 +19,21 @@ export type RootProps = {
   children?: JSX.Element
 }
 
+export type PortalProps = { children?: JSX.Element }
+
+/** A trigger's own props: `delay` and `closeDelay` here come before the root's. */
+export type TriggerOptions = { delay?: number; closeDelay?: number }
+
+/** The props of each part that draws an element, as the component's entry names them. */
+type PartsProps = {
+  Trigger: TriggerOptions
+  Positioner: PositionerOptions
+  Popup: Record<string, unknown>
+  Arrow: Record<string, unknown>
+}
+
 /** The parts of a popup the pointer opens: a tooltip's, a hover card's. */
-export function hoverPopup(
+export function hoverPopup<Props extends PartsProps>(
   name: string,
   create: (props: ReadonlySignal<HoverPopupProps>) => HoverPopup,
   triggerTag: string
@@ -48,27 +60,25 @@ export function hoverPopup(
     return <Context.Provider value={made}>{props.children}</Context.Provider>
   }
 
-  const Portal = (props: { children?: JSX.Element }) => (
+  const Portal = (props: PortalProps) => (
     <BodyPortal mounted={use().mounted}>{props.children}</BodyPortal>
   )
 
-  function Positioner(props: PositionerProps): JSX.Element {
+  function Positioner(props: Props["Positioner"]): JSX.Element {
     const made = use()
-    return <Part part={made.positioner} tag="div" {...positioned(props, made.positioning)} />
+    return <Part of={made.positioner} tag="div" {...positioned(props, made.positioning)} />
   }
 
-  const part = (key: "popup" | "arrow", tag: string) => (props: PartComponentProps) => (
-    <Part part={use()[key]} tag={tag} {...props} />
-  )
+  const part =
+    <Own extends Record<string, unknown>>(key: "popup" | "arrow", tag: string) =>
+    (props: Own): JSX.Element => <Part of={use()[key]} tag={tag} {...props} />
 
   /** `delay` and `closeDelay` here come before the root's. */
-  function Trigger(
-    props: PartComponentProps & { delay?: number; closeDelay?: number }
-  ): JSX.Element {
-    const [local, rest] = splitProps(props, ["delay", "closeDelay"])
+  function Trigger(props: Props["Trigger"]): JSX.Element {
+    const [local, rest] = splitProps(props as TriggerOptions, ["delay", "closeDelay"])
     const made = use()
     createComputed(() => made.timing.set(defined({ ...local })))
-    return <Part part={made.trigger} tag={triggerTag} {...rest} />
+    return <Part of={made.trigger} tag={triggerTag} {...rest} />
   }
 
   return {
@@ -76,7 +86,7 @@ export function hoverPopup(
     Portal,
     Positioner,
     Trigger,
-    Popup: part("popup", "div"),
-    Arrow: part("arrow", "div"),
+    Popup: part<Props["Popup"]>("popup", "div"),
+    Arrow: part<Props["Arrow"]>("arrow", "div"),
   }
 }

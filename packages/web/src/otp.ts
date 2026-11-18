@@ -3,6 +3,7 @@ import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp, OtpProps } from "@kirana-ui/core/otp"
 
 import { defineElement, partAround } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const indexOf = (element: HTMLElement | null) => Number(element?.getAttribute("kui-index") ?? 0)
 
@@ -56,3 +57,12 @@ export const tag = defineElement<OtpProps, Otp>({
     }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-otp": ElementOf<
+      typeof tag,
+      { "value-change": ["onValueChange", "value"]; complete: ["onComplete", "value"] }
+    >
+  }
+}

@@ -7,6 +7,7 @@ import type { ReactElement, ReactNode } from "react"
 import { DirectionContext } from "./direction-context.ts"
 import { useController, useSignal } from "./runtime.tsx"
 
+/** What `DirectionProvider` takes. */
 export interface DirectionProviderProps {
   /** The reading direction of what is inside. `ltr` when left out. */
   direction?: Direction

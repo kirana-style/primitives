@@ -10,8 +10,18 @@ import { DateField, dateFieldScope } from "./date-field.ts"
 import { useDirectionAround } from "./direction-context.ts"
 import { Popover, popoverScope } from "./popover.ts"
 import { context, controller, optional, partComponent } from "./runtime.ts"
+import type { Changes, PartComponentProps, PlainComponent, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"datePicker">
 
 const scope = context<Controller>("DatePicker")
+
+export type RootProps = Omit<DatePickerProps, "id" | "onValueChange" | "onOpenChange"> & {
+  id?: string | undefined
+}
+
+/** The value is `null` while the date is not whole. */
+export type RootEmits = Changes<"value", string | null> & Changes<"open", boolean>
 
 /**
  * A date field, and a calendar in a popover, with one value between them. It draws nothing.
@@ -60,12 +70,31 @@ const Root = defineComponent({
     calendarScope.provide(made.calendar)
     return () => slots.default?.()
   },
-})
+}) as unknown as PlainComponent<RootProps, RootEmits>
 
+export type FieldProps = PartComponentProps
+export type CalendarProps = PartComponentProps
+export type { SegmentProps, SegmentsProps, InputProps } from "./date-field.ts"
+export type { PopupProps, PortalProps, PositionerProps, TriggerProps } from "./popover.ts"
+export type {
+  CellProps,
+  DayProps,
+  GridProps,
+  HeadCellProps,
+  HeadingProps,
+  NextProps,
+  PreviousProps,
+  WeekdaysProps,
+  WeeksProps,
+} from "./calendar.ts"
 export const DatePicker = {
   Root,
   /** The typed date: what holds its segments and its hidden input. */
-  Field: partComponent("DatePickerField", "div", () => scope.use().field.root),
+  Field: partComponent<"div", State["field"]>(
+    "DatePickerField",
+    "div",
+    () => scope.use().field.root
+  ),
   Segments: DateField.Segments,
   Segment: DateField.Segment,
   Input: DateField.Input,
@@ -74,7 +103,11 @@ export const DatePicker = {
   Positioner: Popover.Positioner,
   Popup: Popover.Popup,
   /** The calendar: what holds its heading, its buttons and its grid. */
-  Calendar: partComponent("DatePickerCalendar", "div", () => scope.use().calendar.root),
+  Calendar: partComponent<"div", State["calendar"]>(
+    "DatePickerCalendar",
+    "div",
+    () => scope.use().calendar.root
+  ),
   Heading: Calendar.Heading,
   Previous: Calendar.Previous,
   Next: Calendar.Next,

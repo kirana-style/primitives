@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { ResizableProps } from "@kirana-ui/core/resizable"
   import { within } from "@kirana-ui/core"
   import { createResizable } from "@kirana-ui/core/resizable"
 
@@ -7,9 +6,9 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { GroupProps } from "./types.ts"
 
-  let { orientation, onSizesChange, keyboardStep, disabled, id, ...rest }: RootProps<ResizableProps> = $props()
+  let { orientation, onSizesChange, keyboardStep, disabled, id, ...rest }: GroupProps = $props()
   const generated = $props.id()
   const made = provide(
     controller(within(createResizable, { direction: useDirectionAround() }), () => ({
@@ -22,4 +21,4 @@
   )
 </script>
 
-<Part part={made.group} tag="div" {...rest} />
+<Part of={made.group} tag="div" {...rest} />

@@ -6,6 +6,7 @@ export {
   GroupLabel,
   Input,
   Item,
+  List,
   Popup,
   Portal,
   Positioner,
@@ -13,3 +14,4 @@ export {
   Trigger,
 } from "../combobox/index.ts"
 export { default as Root } from "./Root.svelte"
+export type * from "./types.ts"

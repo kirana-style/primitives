@@ -1,4 +1,5 @@
 import { defineMenu } from "./menu.ts"
+import type { ElementOf, Told } from "./runtime.ts"
 
 /**
  * `<kui-context-menu>`: a menu for an area of the page, opened at the pointer by a secondary
@@ -10,3 +11,13 @@ export const tag = defineMenu(
   () => ({ context: true }),
   (controller) => controller.area
 )
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-context-menu": ElementOf<
+      typeof tag,
+      { "open-change": ["onOpenChange", "open"] },
+      { "checked-change": Told<"checked", boolean>; "value-change": Told<"value", string> }
+    >
+  }
+}

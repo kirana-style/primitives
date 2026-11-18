@@ -9,13 +9,17 @@ import { createFormControl } from "./services/form-control.ts"
 export interface CheckedProps {
   /** Unique in the page, and the hidden input's id: a `<label for>` names it. */
   id: string
+  /** Whether it is checked, when the caller holds it. */
   checked?: boolean | undefined
   /** Read once. */
   defaultChecked?: boolean | undefined
+  /** Heard as it is about to be checked or unchecked: `details.cancel()` keeps it as it was. */
   onCheckedChange?: ((checked: boolean, details: ChangeDetails) => void) | undefined
+  /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
   /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
+  /** Needed: in a `Field`, leaving it unchecked is then invalid. */
   required?: boolean | undefined
   /** With a name, the control is submitted with the form around it when it is checked. */
   name?: string | undefined

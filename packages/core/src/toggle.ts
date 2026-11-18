@@ -6,10 +6,13 @@ import type { ReadonlySignal } from "./reactivity.ts"
 import type { TabStop } from "./services/roving.ts"
 
 export interface ToggleProps {
+  /** Whether it is pressed, when the caller holds it. */
   pressed?: boolean | undefined
   /** Read once. */
   defaultPressed?: boolean | undefined
+  /** Heard as it is about to be pressed or released: `details.cancel()` keeps it as it was. */
   onPressedChange?: ((pressed: boolean, details: ChangeDetails) => void) | undefined
+  /** Disabled: a press does nothing. */
   disabled?: boolean | undefined
   /** In a toggle group: what the group's value holds while this one is pressed. */
   value?: unknown

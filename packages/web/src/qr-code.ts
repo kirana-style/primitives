@@ -2,6 +2,7 @@ import { createQrCode } from "@kirana-ui/core/qr-code"
 import type { QrCode, QrCodeProps } from "@kirana-ui/core/qr-code"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-qr-code>` around `kui-part="root"`, a `frame` (an `<svg>`) and its `pattern` (a
@@ -18,3 +19,9 @@ export const tag = defineElement<QrCodeProps, QrCode>({
     pattern: (controller) => controller.pattern,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-qr-code": ElementOf<typeof tag>
+  }
+}

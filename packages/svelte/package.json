@@ -17,6 +17,14 @@
       "svelte": "./src/runtime.ts",
       "default": "./src/runtime.ts"
     },
+    "./agent": {
+      "svelte": "./src/agent.ts",
+      "default": "./src/agent.ts"
+    },
+    "./testing": {
+      "svelte": "./src/testing.ts",
+      "default": "./src/testing.ts"
+    },
     "./accordion": {
       "svelte": "./src/accordion.ts",
       "default": "./src/accordion.ts"

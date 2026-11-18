@@ -17,18 +17,18 @@ import { KUI_DIRECTION } from "./direction-token"
 import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiAccordion]", exportAs: "kuiAccordion" })
-export class KuiAccordion implements OnInit {
-  readonly value = model<readonly unknown[] | undefined>(undefined)
-  readonly defaultValue = input<readonly unknown[]>()
+export class KuiAccordion<Value = unknown> implements OnInit {
+  readonly value = model<readonly Value[] | undefined>(undefined)
+  readonly defaultValue = input<readonly Value[]>()
   readonly multiple = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly kuiId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
-  readonly valueChanged = output<{ value: unknown[]; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: Value[]; details: ChangeDetails }>()
 
-  controller!: Accordion
+  controller!: Accordion<Value>
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
@@ -39,7 +39,7 @@ export class KuiAccordion implements OnInit {
     disabled: this.disabled(),
     orientation: this.orientation(),
     loop: this.loop(),
-    onValueChange: (value: unknown[], details: ChangeDetails) => {
+    onValueChange: (value: Value[], details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)
@@ -57,19 +57,24 @@ export class KuiAccordion implements OnInit {
   }
 }
 
+/** `value` tells this item from the others; an item that is given none makes its own. */
 @Directive({ selector: "[kuiAccordionItem]" })
 export class KuiAccordionItem implements OnInit {
-  readonly value = input.required<unknown>()
+  readonly value = input<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
   item!: AccordionItem
   private readonly root = inject(KuiAccordion)
   private readonly destroy = inject(DestroyRef)
+  private readonly generated = inject(KuiIds).make()
   private readonly part = hostPart()
   private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
 
   ngOnInit(): void {
     const options = this.options()
-    this.item = this.root.controller.item(this.value(), () => defined(options.get()))
+    const value = this.value()
+    this.item = this.root.controller.item(value === undefined ? this.generated : value, () =>
+      defined(options.get())
+    )
     this.destroy.onDestroy(this.item.mount())
     this.part(this.item.root)
   }
@@ -98,6 +103,10 @@ export class KuiAccordionTrigger implements OnInit {
 /** `<div *kuiAccordionPanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden. */
 @Directive({ selector: "[kuiAccordionPanel]" })
 export class KuiAccordionPanel implements OnInit {
+  /**
+   * Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while its item is
+   * closed.
+   */
   readonly kuiAccordionPanel = input<{ keepMounted?: boolean } | "">("")
   private readonly owner = inject(KuiAccordionItem)
   private readonly present = presentWhile()

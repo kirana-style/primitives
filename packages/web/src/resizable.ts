@@ -2,6 +2,7 @@ import { createResizable } from "@kirana-ui/core/resizable"
 import type { Resizable, ResizableProps } from "@kirana-ui/core/resizable"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const number = (element: HTMLElement, name: string) => {
   const text = element.getAttribute(name)
@@ -32,3 +33,9 @@ export const tag = defineElement<ResizableProps, Resizable>({
       controller.handle(() => (element.hasAttribute("kui-disabled") ? { disabled: true } : {})),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-resizable": ElementOf<typeof tag, { "sizes-change": ["onSizesChange", "sizes"] }>
+  }
+}

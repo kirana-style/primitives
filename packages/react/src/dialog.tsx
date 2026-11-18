@@ -1,14 +1,20 @@
+import type { StateOf } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerProps } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
-import { Portal as BodyPortal, useController, usePart, useSignal } from "./runtime.tsx"
-import type { PartComponentProps } from "./runtime.tsx"
+import { Portal as BodyPortal, parts, useController, usePart, useSignal } from "./runtime.tsx"
+import type { PartComponentProps, PortalProps } from "./runtime.tsx"
+
+export type { PortalProps }
+
+type Parts = Vocabulary["dialog"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -25,22 +31,36 @@ function Root({ children, ...props }: RootProps): ReactElement {
   return <Context.Provider value={controller}>{children}</Context.Provider>
 }
 
-function Portal({ children }: { children?: ReactNode }): ReactElement | null {
+function Portal({ children }: PortalProps): ReactElement | null {
   const mounted = useSignal(useDialog("Portal").mounted)
   return mounted ? <BodyPortal>{children}</BodyPortal> : null
 }
 
-const Trigger = (props: PartComponentProps) =>
-  usePart(useDialog("Trigger").trigger, "button", props)
-const Backdrop = (props: PartComponentProps) =>
-  usePart(useDialog("Backdrop").backdrop, "div", props)
-const Popup = (props: PartComponentProps) => usePart(useDialog("Popup").popup, "div", props)
-const Title = (props: PartComponentProps) => usePart(useDialog("Title").title, "h2", props)
-const Description = (props: PartComponentProps) =>
-  usePart(useDialog("Description").description, "p", props)
-const Close = (props: PartComponentProps) => usePart(useDialog("Close").close, "button", props)
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
+export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
+export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
 
-export const Dialog = { Root, Trigger, Portal, Backdrop, Popup, Title, Description, Close }
+const Trigger = (props: TriggerProps) => usePart(useDialog("Trigger").trigger, "button", props)
+const Backdrop = (props: BackdropProps) => usePart(useDialog("Backdrop").backdrop, "div", props)
+const Popup = (props: PopupProps) => usePart(useDialog("Popup").popup, "div", props)
+const Title = (props: TitleProps) => usePart(useDialog("Title").title, "h2", props)
+const Description = (props: DescriptionProps) =>
+  usePart(useDialog("Description").description, "p", props)
+const Close = (props: CloseProps) => usePart(useDialog("Close").close, "button", props)
+
+export const Dialog = /* @__PURE__ */ parts("Dialog", {
+  Root,
+  Trigger,
+  Portal,
+  Backdrop,
+  Popup,
+  Title,
+  Description,
+  Close,
+})
 
 export type AlertRootProps = Omit<AlertDialogProps, "id"> & { id?: string; children?: ReactNode }
 
@@ -50,7 +70,7 @@ function AlertRoot({ children, ...props }: AlertRootProps): ReactElement {
 }
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
-export const AlertDialog = { ...Dialog, Root: AlertRoot }
+export const AlertDialog = /* @__PURE__ */ parts("AlertDialog", { ...Dialog, Root: AlertRoot })
 
 export type DrawerRootProps = Omit<DrawerProps, "id"> & { id?: string; children?: ReactNode }
 
@@ -59,5 +79,19 @@ function DrawerRoot({ children, ...props }: DrawerRootProps): ReactElement {
   return <Context.Provider value={controller}>{children}</Context.Provider>
 }
 
+type DrawerParts = Vocabulary["drawer"]
+
+export type DrawerBackdropProps = PartComponentProps<"div", StateOf<DrawerParts["backdrop"]>>
+export type DrawerPopupProps = PartComponentProps<"div", StateOf<DrawerParts["popup"]>>
+
+// A dialog's, which a drawer's controller gives more to say: how far it has been dragged.
+const DrawerBackdrop: (props: DrawerBackdropProps) => ReactElement = Dialog.Backdrop
+const DrawerPopup: (props: DrawerPopupProps) => ReactElement = Dialog.Popup
+
 /** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
-export const Drawer = { ...Dialog, Root: DrawerRoot }
+export const Drawer = /* @__PURE__ */ parts("Drawer", {
+  ...Dialog,
+  Root: DrawerRoot,
+  Backdrop: DrawerBackdrop,
+  Popup: DrawerPopup,
+})

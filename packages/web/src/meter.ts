@@ -1,7 +1,9 @@
 import { computed } from "@kirana-ui/core"
 import { createMeter } from "@kirana-ui/core/meter"
+import type { MeterProps } from "@kirana-ui/core/meter"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-meter>` around `kui-part="root"`, a `label`, a `track` with its `indicator`, and a
@@ -28,3 +30,9 @@ export const tag = defineElement({
     value: (controller) => ({ part: controller.value, text: controller.text }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-meter": ElementOf<As<typeof tag, MeterProps>>
+  }
+}

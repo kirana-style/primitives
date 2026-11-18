@@ -1,14 +1,18 @@
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["dialog"]
+type DrawerParts = Vocabulary["drawer"]
 
 const Context = createContext<Controller>()
 
@@ -41,15 +45,29 @@ function Root(props: RootProps): JSX.Element {
   return <Context.Provider value={made}>{props.children}</Context.Provider>
 }
 
-const Portal = (props: { children?: JSX.Element }) => (
+export type PortalProps = { children?: JSX.Element }
+
+const Portal = (props: PortalProps) => (
   <BodyPortal mounted={useDialog().mounted}>{props.children}</BodyPortal>
 )
 
-const part =
-  (name: "trigger" | "backdrop" | "popup" | "title" | "description" | "close", tag: string) =>
-  (props: PartComponentProps) => <Part part={useDialog()[name]} tag={tag} {...props} />
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
+export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
+export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
 
-function AlertRoot(props: Omit<RootProps, "modal" | "dismissible">): JSX.Element {
+const part =
+  <Props extends Record<string, unknown>>(
+    name: "trigger" | "backdrop" | "popup" | "title" | "description" | "close",
+    tag: string
+  ) =>
+  (props: Props): JSX.Element => <Part of={useDialog()[name]} tag={tag} {...props} />
+
+export type AlertRootProps = Omit<RootProps, "modal" | "dismissible">
+
+function AlertRoot(props: AlertRootProps): JSX.Element {
   const generated = createUniqueId()
   const made = controller(createAlertDialog, () => ({
     id: props.id ?? generated,
@@ -63,26 +81,26 @@ function AlertRoot(props: Omit<RootProps, "modal" | "dismissible">): JSX.Element
 export const Dialog = {
   Root,
   Portal,
-  Trigger: part("trigger", "button"),
-  Backdrop: part("backdrop", "div"),
-  Popup: part("popup", "div"),
-  Title: part("title", "h2"),
-  Description: part("description", "p"),
-  Close: part("close", "button"),
+  Trigger: part<TriggerProps>("trigger", "button"),
+  Backdrop: part<BackdropProps>("backdrop", "div"),
+  Popup: part<PopupProps>("popup", "div"),
+  Title: part<TitleProps>("title", "h2"),
+  Description: part<DescriptionProps>("description", "p"),
+  Close: part<CloseProps>("close", "button"),
 }
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
 export const AlertDialog = { ...Dialog, Root: AlertRoot }
 
-function DrawerRoot(
-  props: RootProps & {
-    swipeDirection?: DrawerSide
-    snapPoints?: readonly DrawerSnapPoint[]
-    snapPoint?: DrawerSnapPoint
-    defaultSnapPoint?: DrawerSnapPoint
-    onSnapPointChange?: (snapPoint: DrawerSnapPoint, details: ChangeDetails) => void
-  }
-): JSX.Element {
+export type DrawerRootProps = RootProps & {
+  swipeDirection?: DrawerSide
+  snapPoints?: readonly DrawerSnapPoint[]
+  snapPoint?: DrawerSnapPoint
+  defaultSnapPoint?: DrawerSnapPoint
+  onSnapPointChange?: (snapPoint: DrawerSnapPoint, details: ChangeDetails) => void
+}
+
+function DrawerRoot(props: DrawerRootProps): JSX.Element {
   const generated = createUniqueId()
   const made = controller(createDrawer, () => ({
     id: props.id ?? generated,
@@ -101,5 +119,15 @@ function DrawerRoot(
   return <Context.Provider value={made}>{props.children}</Context.Provider>
 }
 
+/** A drawer's backdrop and popup say more than a dialog's: how they are being dragged. */
+export type DrawerBackdropProps = PartComponentProps<"div", StateOf<DrawerParts["backdrop"]>>
+export type DrawerPopupProps = PartComponentProps<"div", StateOf<DrawerParts["popup"]>>
+
 /** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
-export const Drawer = { ...Dialog, Root: DrawerRoot }
+export const Drawer = {
+  ...Dialog,
+  Root: DrawerRoot,
+  // The same components: only what `render` reads of their state is a drawer's.
+  Backdrop: Dialog.Backdrop as (props: DrawerBackdropProps) => JSX.Element,
+  Popup: Dialog.Popup as (props: DrawerPopupProps) => JSX.Element,
+}

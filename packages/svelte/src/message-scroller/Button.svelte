@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useScroller } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ButtonProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ButtonProps = $props()
   const controller = useScroller()
 </script>
 
-<Part part={controller.button} tag="button" {...props} />
+<Part of={controller.button} tag="button" {...props} />

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { ToolbarProps } from "@kirana-ui/core/toolbar"
   import { within } from "@kirana-ui/core"
   import { createToolbar } from "@kirana-ui/core/toolbar"
 
@@ -7,9 +6,9 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
-  let { orientation, loop, disabled, ...rest }: RootProps<ToolbarProps> = $props()
+  let { orientation, loop, disabled, ...rest }: RootProps = $props()
   const made = provide(
     controller(within(createToolbar, { direction: useDirectionAround() }), () => ({
       orientation,
@@ -19,4 +18,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

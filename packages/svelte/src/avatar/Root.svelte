@@ -4,10 +4,10 @@
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: RootProps = $props()
   const made = provide(controller(createAvatar, () => ({})))
 </script>
 
-<Part part={made.root} tag="span" {...props} />
+<Part of={made.root} tag="span" {...props} />

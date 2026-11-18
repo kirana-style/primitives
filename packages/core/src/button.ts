@@ -4,6 +4,7 @@ import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 
 export interface ButtonProps {
+  /** Disabled: a press does nothing. */
   disabled?: boolean | undefined
   /** Keeps a disabled button in the tab order, so what it would do can still be read. */
   focusableWhenDisabled?: boolean | undefined

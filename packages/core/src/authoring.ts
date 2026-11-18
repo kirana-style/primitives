@@ -52,6 +52,8 @@ export {
 export type {
   Align,
   Anchor,
+  AnchorOption,
+  PhysicalSide,
   PopupPlacement,
   Position,
   PositionOptions,
@@ -85,6 +87,11 @@ export {
   onFormReset,
 } from "./services/form-control.ts"
 export type { FormControl } from "./services/form-control.ts"
+// A control of several values: a hidden input for each value after the first.
+export { restInputs } from "./services/hidden-inputs.ts"
+// The labels a caller gives for a control's values: a list, or labels by value.
+export { itemsOf, labelIn } from "./services/items.ts"
+export type { ItemLabels } from "./services/items.ts"
 
 // The reading direction: a provider's where there is one, the element's own otherwise.
 export { carryDirection, directionOf } from "./direction.ts"

@@ -10,6 +10,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./runtime": "./src/runtime.tsx",
+    "./agent": "./src/agent.ts",
+    "./testing": "./src/testing.ts",
+    "./use-render": "./src/use-render.tsx",
     "./accordion": "./src/accordion.tsx",
     "./alert-dialog": "./src/alert-dialog.ts",
     "./avatar": "./src/avatar.tsx",

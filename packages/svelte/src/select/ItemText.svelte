@@ -3,10 +3,10 @@
 
   import Part from "../Part.svelte"
   import { ITEM, useSelect } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ItemTextProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ItemTextProps = $props()
   const part = useSelect().itemText(getContext(ITEM))
 </script>
 
-<Part {part} tag="span" {...props} />
+<Part of={part} tag="span" {...props} />

@@ -11,7 +11,12 @@ export interface CarouselProps {
   id: string
   /** Which slide is at the start of the view, from 0. */
   index?: number | undefined
+  /** The slide it starts at, when the caller does not hold `index`. Read once. */
   defaultIndex?: number | undefined
+  /**
+   * Heard as another slide is about to be at the start of the view: `details.cancel()` keeps the
+   * index as it was.
+   */
   onIndexChange?: ((index: number, details: ChangeDetails) => void) | undefined
   /** Whether the slides go across (the default) or down. */
   orientation?: Orientation | undefined

@@ -1,7 +1,8 @@
 import { defined, within } from "@kirana-ui/core"
-import type { Orientation } from "@kirana-ui/core"
+import type { Orientation, StateOf } from "@kirana-ui/core"
 import { createToolbar } from "@kirana-ui/core/toolbar"
 import type { Toolbar as Controller } from "@kirana-ui/core/toolbar"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -10,15 +11,21 @@ import { Part, controller, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 import { ToggleGroupContext, ToolbarContext } from "./toolbar-context.ts"
 
+type Parts = Vocabulary["toolbar"]
+
 function useToolbar(): Controller {
   const made = useContext(ToolbarContext)
   if (!made) throw new Error("A Toolbar part must be inside <Toolbar.Root>")
   return made
 }
 
-function Root(
-  props: PartComponentProps & { orientation?: Orientation; loop?: boolean; disabled?: boolean }
-): JSX.Element {
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  { orientation?: Orientation; loop?: boolean; disabled?: boolean }
+>
+
+function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, ["orientation", "loop", "disabled"])
   const direction = useContext(DirectionContext)
   const made = controller(within(createToolbar, { direction }), () => ({
@@ -30,31 +37,39 @@ function Root(
     <ToolbarContext.Provider value={made}>
       {/* A toggle group around the toolbar is not the group of the toolbar's toggles. */}
       <ToggleGroupContext.Provider value={null}>
-        <Part part={made.root} tag="div" {...rest} />
+        <Part of={made.root} tag="div" {...rest} />
       </ToggleGroupContext.Provider>
     </ToolbarContext.Provider>
   )
 }
 
+type ItemOptions = { disabled?: boolean }
+
+export type ButtonProps = PartComponentProps<"button", StateOf<Parts["button"]>, ItemOptions>
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>, ItemOptions>
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, ItemOptions>
+export type LinkProps = PartComponentProps<"a", StateOf<Parts["link"]>>
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
 const item =
-  (name: "button" | "input" | "group", tag: string) =>
-  (props: PartComponentProps & { disabled?: boolean }): JSX.Element => {
-    const [local, rest] = splitProps(props, ["disabled"])
+  <Props extends ItemOptions>(name: "button" | "input" | "group", tag: string) =>
+  (props: Props): JSX.Element => {
+    const [local, rest] = splitProps(props as ItemOptions, ["disabled"])
     const options = toSignal(() => ({ disabled: local.disabled }))
     const part = useToolbar()[name](() => defined(options.get()))
-    return <Part part={part} tag={tag} {...rest} />
+    return <Part of={part} tag={tag} {...rest} />
   }
 
-const Link = (props: PartComponentProps) => <Part part={useToolbar().link()} tag="a" {...props} />
-const Separator = (props: PartComponentProps) => (
-  <Part part={useToolbar().separator} tag="div" {...props} />
+const Link = (props: LinkProps) => <Part of={useToolbar().link()} tag="a" {...props} />
+const Separator = (props: SeparatorProps) => (
+  <Part of={useToolbar().separator} tag="div" {...props} />
 )
 
 export const Toolbar = {
   Root,
-  Button: item("button", "button"),
+  Button: item<ButtonProps>("button", "button"),
   Link,
-  Input: item("input", "input"),
-  Group: item("group", "div"),
+  Input: item<InputProps>("input", "input"),
+  Group: item<GroupProps>("group", "div"),
   Separator,
 }

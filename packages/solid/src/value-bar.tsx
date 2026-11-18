@@ -4,12 +4,26 @@ import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { Part, controller, fromSignal } from "./runtime.tsx"
-import type { PartComponentProps } from "./runtime.tsx"
 
-export type RootProps = PartComponentProps & Omit<ValueBarProps, "id"> & { id?: string }
+/** A value bar's own props: its value, its range and how the value is written. */
+export type RootOptions = Omit<ValueBarProps, "id"> & { id?: string }
+/** A written value's own props: a function child draws something else of the text. */
+export type ValueOptions = { children?: (text: () => string | undefined) => JSX.Element }
+
+/** The props of each part, as the component's entry names them. */
+type PartsProps = {
+  Root: RootOptions
+  Value: ValueOptions
+  Track: Record<string, unknown>
+  Indicator: Record<string, unknown>
+  Label: Record<string, unknown>
+}
 
 /** The parts of a value drawn as a filled track: a progress bar's, a meter's. */
-export function valueBar(name: string, create: (props: ReadonlySignal<ValueBarProps>) => ValueBar) {
+export function valueBar<Props extends PartsProps>(
+  name: string,
+  create: (props: ReadonlySignal<ValueBarProps>) => ValueBar
+) {
   const Context = createContext<ValueBar>()
 
   function use(): ValueBar {
@@ -18,8 +32,8 @@ export function valueBar(name: string, create: (props: ReadonlySignal<ValueBarPr
     return made
   }
 
-  function Root(props: RootProps): JSX.Element {
-    const [local, rest] = splitProps(props, [
+  function Root(props: Props["Root"]): JSX.Element {
+    const [local, rest] = splitProps(props as RootOptions, [
       "value",
       "min",
       "max",
@@ -32,37 +46,32 @@ export function valueBar(name: string, create: (props: ReadonlySignal<ValueBarPr
     const made = controller(create, () => ({ ...local, id: local.id ?? generated }))
     return (
       <Context.Provider value={made}>
-        <Part part={made.root} tag="div" {...rest} />
+        <Part of={made.root} tag="div" {...rest} />
       </Context.Provider>
     )
   }
 
   /** The written value, or what its child, a function, makes of it. */
-  function Value(
-    props: Omit<PartComponentProps, "children"> & {
-      children?: (text: () => string | undefined) => JSX.Element
-    }
-  ): JSX.Element {
-    const [local, rest] = splitProps(props, ["children"])
+  function Value(props: Props["Value"]): JSX.Element {
+    const [local, rest] = splitProps(props as ValueOptions, ["children"])
     const made = use()
     const text = fromSignal(made.text)
     return (
-      <Part part={made.value} tag="span" {...rest}>
+      <Part of={made.value} tag="span" {...rest}>
         {local.children ? local.children(text) : text()}
       </Part>
     )
   }
 
   const part =
-    (key: "track" | "indicator" | "label", tag: string) => (props: PartComponentProps) => (
-      <Part part={use()[key]} tag={tag} {...props} />
-    )
+    <Own extends Record<string, unknown>>(key: "track" | "indicator" | "label", tag: string) =>
+    (props: Own): JSX.Element => <Part of={use()[key]} tag={tag} {...props} />
 
   return {
     Root,
     Value,
-    Track: part("track", "div"),
-    Indicator: part("indicator", "div"),
-    Label: part("label", "span"),
+    Track: part<Props["Track"]>("track", "div"),
+    Indicator: part<Props["Indicator"]>("indicator", "div"),
+    Label: part<Props["Label"]>("label", "span"),
   }
 }

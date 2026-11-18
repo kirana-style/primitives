@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
-  import type { CalendarProps, CalendarValue } from "@kirana-ui/core/calendar"
+  import type { CalendarValue } from "@kirana-ui/core/calendar"
   import { within } from "@kirana-ui/core"
   import { createCalendar } from "@kirana-ui/core/calendar"
 
@@ -8,7 +8,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -27,7 +27,7 @@
     fixedWeeks,
     id,
     ...rest
-  }: RootProps<CalendarProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: CalendarValue, by: ChangeDetails) {
@@ -57,4 +57,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

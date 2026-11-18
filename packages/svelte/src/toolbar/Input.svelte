@@ -4,11 +4,11 @@
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { useToolbar } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { InputProps } from "./types.ts"
 
-  let { disabled, ...rest }: { disabled?: boolean } & PartAttributes = $props()
+  let { disabled, ...rest }: InputProps = $props()
   const options = toSignal(() => ({ disabled }))
   const part = useToolbar().input(() => defined(options.get()))
 </script>
 
-<Part {part} tag="input" {...rest} />
+<Part of={part} tag="input" {...rest} />

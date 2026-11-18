@@ -7,9 +7,14 @@ import type { InjectionKey, PropType } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, fromSignal, partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+type State = StatesOf<"scrollArea">
 
 const scope = context<Controller>("ScrollArea")
 const SCROLLBAR: InjectionKey<ScrollAreaScrollbar> = Symbol("ScrollAreaScrollbar")
+
+export type RootProps = PartComponentProps
 
 const Root = defineComponent({
   name: "ScrollAreaRoot",
@@ -20,7 +25,14 @@ const Root = defineComponent({
     const Element = partComponent("ScrollAreaRootElement", "div", () => made.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["root"], RootProps>
+
+export interface ScrollbarProps extends PartComponentProps {
+  /** Which way it scrolls; `vertical` when left out. */
+  orientation?: Orientation | undefined
+  /** Keeps the bar in the page while there is nothing to scroll that way. */
+  keepMounted?: boolean | undefined
+}
 
 /** `orientation` is which way it scrolls (`vertical` by default). */
 const Scrollbar = defineComponent({
@@ -37,13 +49,16 @@ const Scrollbar = defineComponent({
     const Element = partComponent("ScrollAreaScrollbarElement", "div", () => bar.part)
     return () => (shown.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"div", State["scrollbar"], ScrollbarProps>
 
-const Thumb = partComponent("ScrollAreaThumb", "div", () => {
+export type ThumbProps = PartComponentProps
+const Thumb = partComponent<"div", State["thumb"]>("ScrollAreaThumb", "div", () => {
   const bar = inject(SCROLLBAR, undefined)
   if (!bar) throw new Error("A ScrollArea.Thumb must be inside <ScrollArea.Scrollbar>")
   return bar.thumb
 })
+
+export type CornerProps = PartComponentProps
 
 const Corner = defineComponent({
   name: "ScrollAreaCorner",
@@ -54,12 +69,22 @@ const Corner = defineComponent({
     const Element = partComponent("ScrollAreaCornerElement", "div", () => corner.part)
     return () => (shown.value ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"div", State["corner"], CornerProps>
 
+export type ViewportProps = PartComponentProps
+export type ContentProps = PartComponentProps
 export const ScrollArea = {
   Root,
-  Viewport: partComponent("ScrollAreaViewport", "div", () => scope.use().viewport),
-  Content: partComponent("ScrollAreaContent", "div", () => scope.use().content),
+  Viewport: partComponent<"div", State["viewport"]>(
+    "ScrollAreaViewport",
+    "div",
+    () => scope.use().viewport
+  ),
+  Content: partComponent<"div", State["content"]>(
+    "ScrollAreaContent",
+    "div",
+    () => scope.use().content
+  ),
   Scrollbar,
   Thumb,
   Corner,

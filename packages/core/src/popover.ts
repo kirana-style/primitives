@@ -10,8 +10,11 @@ import type { PositionOptions } from "./services/position.ts"
 
 export interface PopoverProps {
   id: string
+  /** Whether it is open, when the caller holds it. */
   open?: boolean | undefined
+  /** Whether it starts open, when the caller does not hold `open`. Read once. */
   defaultOpen?: boolean | undefined
+  /** Heard as it is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
 }
 

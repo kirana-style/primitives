@@ -2,10 +2,15 @@
   import { createAutosize } from "@kirana-ui/core/autosize"
 
   import { controller, partProps } from "../runtime.svelte.ts"
-  import type { Attributes } from "../types.ts"
+  import type { TextareaProps } from "./types.ts"
 
   // A `<textarea>` as tall as its text. It takes what a `<textarea>` takes, and `bind:value`.
-  let { value = $bindable(), oninput, ...rest }: Attributes & { value?: string } = $props()
+  let {
+    value = $bindable(),
+    oninput,
+    child,
+    ...rest
+  }: TextareaProps = $props()
   const made = controller(createAutosize, () => ({ value }))
   const typed = (event: Event) => {
     value = (event.currentTarget as HTMLTextAreaElement).value
@@ -19,4 +24,8 @@
   )
 </script>
 
-<textarea {...merged.current}></textarea>
+{#if child}
+  {@render child({ props: merged.current, state: merged.state })}
+{:else}
+  <textarea {...merged.current}></textarea>
+{/if}

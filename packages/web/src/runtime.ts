@@ -105,6 +105,71 @@ export interface ElementSpec<Props extends { id: string }, Controller> {
   parts: Record<string, (controller: Controller, element: HTMLElement) => Part | Drawn | undefined>
 }
 
+declare const DEFINED: unique symbol
+
+/**
+ * A custom element's name as `defineElement` gives it. For TypeScript it also says what the
+ * element was defined from, which `ElementOf` reads back; in the page it is the name alone.
+ */
+export type Tag<Props = unknown, Controller = unknown> = string & {
+  readonly [DEFINED]?: readonly [Props, Controller]
+}
+
+/**
+ * What a component tells: an event whose `detail` holds the value under its prop's name
+ * (`detail.open`, `detail.values`) and why it changed (`detail.details.reason`).
+ * `preventDefault()` keeps the value as it was.
+ */
+export type Told<Prop extends string, Value> = CustomEvent<
+  { readonly [Name in Prop]: Value } & { readonly details: ChangeDetails }
+>
+
+/** A tag with its props said, where `defineElement` was left to work them out. */
+export type As<Defined, Props> =
+  Defined extends Tag<unknown, infer Controller> ? Tag<Props, Controller> : never
+
+type Callback<Props, Name> = Name extends keyof Props
+  ? Extract<Props[Name], (...given: never[]) => unknown>
+  : never
+
+interface Listens<Events> {
+  addEventListener<Type extends keyof Events>(
+    type: Type,
+    listener: (this: HTMLElement, event: Events[Type]) => void,
+    options?: boolean | AddEventListenerOptions
+  ): void
+  removeEventListener<Type extends keyof Events>(
+    type: Type,
+    listener: (this: HTMLElement, event: Events[Type]) => void,
+    options?: boolean | EventListenerOptions
+  ): void
+}
+
+/**
+ * A component's custom element as TypeScript knows it, from its `tag`: its props as properties
+ * (`element.open = true`), its controller once it has begun, and its events with their
+ * `detail`. `Changes` names each event with the callback it tells and the prop it holds
+ * (`{ "open-change": ["onOpenChange", "open"] }`), as the element's `changes` do; `More` is
+ * for events its parts tell from their own elements, which reach it too.
+ */
+export type ElementOf<Defined, Changes = {}, More = {}> =
+  Defined extends Tag<infer Props, infer Controller>
+    ? Listens<
+        {
+          readonly [Event in keyof Changes]: Changes[Event] extends readonly [
+            infer Name,
+            infer Prop extends string,
+          ]
+            ? Told<Prop, Parameters<Callback<Props, Name>>[0]>
+            : never
+        } & More
+      > & {
+        -readonly [
+          Name in keyof Props as Name extends "id" | `on${Capitalize<string>}` ? never : Name
+        ]?: Props[Name]
+      } & { controller?: Controller } & HTMLElement
+    : never
+
 const camel = (name: string) =>
   name.replace(/-([a-z])/g, (_all, letter: string) => letter.toUpperCase())
 const hosts = new Set<string>()
@@ -157,14 +222,41 @@ export function partAround(element: Element, name: string): HTMLElement | null {
   return element.closest<HTMLElement>(`[kui-part="${name}"]`)
 }
 
+// Elements the page had drawn before their part gave them a style of its own.
+let settling: HTMLElement[] | undefined
+
+/**
+ * A page's markup is drawn before its components begin, so a part's style (a slider thumb's
+ * place) reaches an element the browser has already styled, and a design's `transition` on it
+ * would run as the page begins: each thumb gliding to where it was all along. A framework's
+ * element has its style before it is first drawn; here what the first style started is ended
+ * before the page is drawn again, once for all the parts of a pass.
+ */
+function settle(element: HTMLElement): void {
+  if (typeof element.getAnimations !== "function") return
+  if (!settling) {
+    const written: HTMLElement[] = (settling = [])
+    queueMicrotask(() => {
+      settling = undefined
+      for (const each of written) {
+        for (const animation of each.getAnimations()) {
+          if (animation instanceof CSSTransition) animation.cancel()
+        }
+      }
+    })
+  }
+  settling.push(element)
+}
+
 /**
  * Puts a part on an element, and takes it off whole: what the part wrote is gone with it. A
  * framework draws a new element each time a part comes back; here the same element is the
  * part again, and must not still say what it said before (`data-closed`, `aria-controls`).
  */
-function put(element: HTMLElement, part: Part): () => void {
+function put(element: HTMLElement, part: Part, drawn = false): () => void {
   const before = new Map(Array.from(element.attributes, (each) => [each.name, each.value]))
   const unbind = bind(element, part)
+  if (drawn && part.props.peek().style) settle(element)
   return () => {
     unbind()
     for (const { name } of Array.from(element.attributes)) {
@@ -264,7 +356,7 @@ interface Held {
  */
 export function defineElement<Props extends { id: string }, Controller extends object>(
   spec: ElementSpec<Props, Controller>
-): string {
+): Tag<Props, Controller> {
   if (typeof customElements === "undefined" || customElements.get(spec.tag)) return spec.tag
   hosts.add(spec.tag)
   const names = Object.keys(spec.props)
@@ -278,6 +370,8 @@ export function defineElement<Props extends { id: string }, Controller extends o
     #held = new Map<HTMLElement, Held>()
     #stops: (() => void)[] = []
     #leaving = false
+    // While the parts the page wrote are first taken: they were drawn before they were parts.
+    #first = false
     #watch: (element: HTMLElement) => void = () => {}
 
     connectedCallback() {
@@ -331,7 +425,9 @@ export function defineElement<Props extends { id: string }, Controller extends o
       this.#watch = (element) => observer.observe(element, { childList: true, subtree: true })
       this.#stops.push(() => observer.disconnect())
       // A copy: a part that is not in the page yet is taken out as it is met.
+      this.#first = true
       for (const each of Array.from(this.children)) if (drawable(each)) this.#scan(each)
+      this.#first = false
       const inner = spec.inner?.(this.controller)
       if (inner) {
         const input = this.ownerDocument.createElement("input")
@@ -531,13 +627,16 @@ export function defineElement<Props extends { id: string }, Controller extends o
         )
       }
       const mounted = element.hasAttribute("kui-keep-mounted") ? undefined : drawn.mounted
-      if (!mounted) return void stops.push(put(element, drawn.part))
+      const first = this.#first
+      if (!mounted) return void stops.push(put(element, drawn.part, first))
       // In the page only while it is mounted: out of it otherwise, its place kept by a mark.
       const home = this.ownerDocument.createComment("")
       let unbind: (() => void) | undefined
       stops.push(
         effect(() => {
           const elsewhere = drawn.into?.get()
+          // Still where the page drew it: not moved, and never yet taken out.
+          const own = first && !elsewhere && !held.parked && !unbind
           if (mounted.get() && (!drawn.into || elsewhere)) {
             if (elsewhere) {
               // Its place where it was written is kept by the mark all the while.
@@ -548,7 +647,7 @@ export function defineElement<Props extends { id: string }, Controller extends o
               held.parked = false
               home.replaceWith(element)
             }
-            unbind ??= put(element, drawn.part)
+            unbind ??= put(element, drawn.part, own)
           } else {
             unbind?.()
             unbind = undefined

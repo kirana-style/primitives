@@ -14,9 +14,14 @@ export interface AccordionProps<Value = unknown> {
   value?: readonly Value[] | undefined
   /** Read once. */
   defaultValue?: readonly Value[] | undefined
+  /**
+   * Heard as an item is about to open or close, with the values that would be open:
+   * `details.cancel()` keeps them as they were.
+   */
   onValueChange?: ((value: Value[], details: ChangeDetails) => void) | undefined
   /** Whether several items can be open at once. Default `false`: opening one closes the others. */
   multiple?: boolean | undefined
+  /** Disables every item: none can be opened or closed. */
   disabled?: boolean | undefined
   /** The way the arrows move between triggers. Default `vertical`. */
   orientation?: Orientation | undefined
@@ -25,6 +30,7 @@ export interface AccordionProps<Value = unknown> {
 }
 
 export interface AccordionItemOptions {
+  /** Disables this item: it cannot be opened or closed. */
   disabled?: boolean
 }
 
@@ -44,6 +50,7 @@ export interface Accordion<Value = unknown> {
   readonly value: ReadonlySignal<readonly Value[]>
   mount(): () => void
   readonly root: Part
+  /** An item, by its value. One that was given none is asked for by an id its framework made. */
   item(value: Value, options?: () => AccordionItemOptions): AccordionItem
 }
 

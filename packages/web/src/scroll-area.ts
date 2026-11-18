@@ -1,7 +1,9 @@
 import type { Orientation } from "@kirana-ui/core"
 import { createScrollArea } from "@kirana-ui/core/scroll-area"
+import type { ScrollAreaProps } from "@kirana-ui/core/scroll-area"
 
 import { defineElement, partAround } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 const way = (element: HTMLElement | null): Orientation =>
   element?.getAttribute("kui-orientation") === "horizontal" ? "horizontal" : "vertical"
@@ -9,7 +11,9 @@ const way = (element: HTMLElement | null): Orientation =>
 /**
  * `<kui-scroll-area>` around `kui-part="root"`, a `viewport` with its `content`, a `scrollbar`
  * for each way (`kui-orientation="horizontal"` for the one across) with its `thumb`, and a
- * `corner`. A scrollbar is in the page while there is something to scroll its way.
+ * `corner`. A scrollbar is in the page while there is something to scroll its way. The
+ * library places the scrollbars and the corner against the root; the page gives a scrollbar
+ * its thickness and draws it.
  */
 export const tag = defineElement({
   tag: "kui-scroll-area",
@@ -29,3 +33,9 @@ export const tag = defineElement({
     corner: (controller) => ({ part: controller.corner.part, mounted: controller.corner.shown }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-scroll-area": ElementOf<As<typeof tag, ScrollAreaProps>>
+  }
+}

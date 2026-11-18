@@ -2,8 +2,9 @@ import { computed } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
 import type { Slider, SliderProps } from "@kirana-ui/core/slider"
 
-import { fieldAround } from "./around.ts"
+import { fieldAround, ownValue } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /** A value as an attribute writes it: `"40"`, or for a range `"20,80"`. */
 const read = (given: unknown): number | number[] | undefined =>
@@ -13,7 +14,9 @@ const read = (given: unknown): number | number[] | undefined =>
       : Number(given)
     : (given as number | number[] | undefined)
 
-const indexOf = (element: HTMLElement) => Number(element.getAttribute("kui-index") ?? 0)
+// A thumb with no `kui-index` takes its place among the slider's thumbs, in the page's order.
+const at = (element: HTMLElement) =>
+  element.hasAttribute("kui-index") ? Number(element.getAttribute("kui-index")) : ownValue(element)
 
 type Props = Omit<SliderProps, "value" | "defaultValue"> & {
   value?: string | number | number[]
@@ -22,8 +25,8 @@ type Props = Omit<SliderProps, "value" | "defaultValue"> & {
 
 /**
  * `<kui-slider>` around `kui-part="root"`, a `value` (which says the value as it is written),
- * a `control` with its `track`, `indicator` and a `thumb` for each value (`kui-index` for the
- * second of a range). A thumb draws the hidden input a form reads. `value` and
+ * a `control` with its `track`, `indicator` and a `thumb` for each value, in the values'
+ * order (or each with its `kui-index`). A thumb draws the hidden input a form reads. `value` and
  * `default-value` (a range with a comma), `min`, `max`, `step`, `large-step`,
  * `min-steps-between-values`, `thumb-alignment`, `orientation`, `disabled`, `name`, `form`,
  * `locale`; it tells `value-change` and `value-committed`.
@@ -65,8 +68,20 @@ export const tag = defineElement<Props, Slider>({
     track: (controller) => controller.track,
     indicator: (controller) => controller.indicator,
     thumb: (controller, element) => ({
-      part: controller.thumb(indexOf(element)),
-      inner: controller.thumbInput(indexOf(element)),
+      part: controller.thumb(at(element)),
+      inner: controller.thumbInput(at(element)),
     }),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-slider": ElementOf<
+      typeof tag,
+      {
+        "value-change": ["onValueChange", "value"]
+        "value-committed": ["onValueCommitted", "value"]
+      }
+    >
+  }
+}

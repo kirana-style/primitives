@@ -12,10 +12,16 @@ export interface ListboxProps<Value = unknown> {
   id: string
   /** The chosen values: none, one, or with `multiple` several. */
   value?: readonly Value[] | undefined
+  /** The values it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: readonly Value[] | undefined
+  /**
+   * Heard as an item is about to be chosen or taken away, with the values there would then be:
+   * `details.cancel()` keeps them as they were.
+   */
   onValueChange?: ((value: Value[], details: ChangeDetails) => void) | undefined
   /** Whether more than one can be chosen: a press then adds or takes away. */
   multiple?: boolean | undefined
+  /** Disabled: no item can be chosen. */
   disabled?: boolean | undefined
   /** Whether the arrows go round from the last item to the first. Default: they do not. */
   loop?: boolean | undefined
@@ -32,6 +38,7 @@ export interface ListboxProps<Value = unknown> {
 }
 
 export interface ListboxItemOptions {
+  /** Disables this item: it cannot be chosen, and the arrows pass over it. */
   disabled?: boolean | undefined
   /** What typing matches; the item's text when left out. */
   label?: string | undefined

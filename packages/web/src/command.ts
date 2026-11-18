@@ -3,6 +3,7 @@ import type { Command, CommandGroup, CommandProps } from "@kirana-ui/core/comman
 
 import { list, once, valueOf } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const groups = new WeakMap<HTMLElement, CommandGroup>()
 let made = 0
@@ -62,3 +63,12 @@ export const tag = defineElement<CommandProps, Command>({
       controller.separator(() => element.hasAttribute("kui-always-render")),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-command": ElementOf<
+      typeof tag,
+      { "input-value-change": ["onInputValueChange", "inputValue"]; select: ["onSelect", "value"] }
+    >
+  }
+}

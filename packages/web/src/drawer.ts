@@ -3,6 +3,7 @@ import { createDrawer } from "@kirana-ui/core/drawer"
 import type { Drawer, DrawerProps, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /** A place to rest, as an attribute writes it: a share (`0.5`) or a length (`200px`). */
 const point = (text: unknown): DrawerSnapPoint | undefined =>
@@ -59,3 +60,15 @@ export const tag = defineElement<Props, Drawer>({
     close: (controller) => controller.close,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-drawer": ElementOf<
+      typeof tag,
+      {
+        "open-change": ["onOpenChange", "open"]
+        "snap-point-change": ["onSnapPointChange", "snapPoint"]
+      }
+    >
+  }
+}

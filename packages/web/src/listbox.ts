@@ -4,6 +4,7 @@ import type { Listbox, ListboxGroup, ListboxProps } from "@kirana-ui/core/listbo
 
 import { list, once, options, valueOf } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const groups = new WeakMap<HTMLElement, ListboxGroup>()
 let made = 0
@@ -53,3 +54,9 @@ export const tag = defineElement<Props, Listbox<string>>({
     "group-label": (controller, element) => groupOf(controller, element)?.label,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-listbox": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+  }
+}

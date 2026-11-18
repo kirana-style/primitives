@@ -3,9 +3,14 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox as Controller, ComboboxGroup, ComboboxProps } from "@kirana-ui/core/combobox"
+import type {
+  Combobox as Controller,
+  ComboboxGroup,
+  ComboboxItemOptions,
+  ComboboxProps,
+} from "@kirana-ui/core/combobox"
 import { defineComponent, h, inject, provide, useId } from "vue"
-import type { InjectionKey, PropType } from "vue"
+import type { InjectionKey, PropType, PublicProps } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
 import { positionerComponent } from "./popover.ts"
@@ -18,12 +23,30 @@ import {
   portalComponent,
   toSignal,
 } from "./runtime.ts"
+import type {
+  Changes,
+  Listeners,
+  PartComponent,
+  PartComponentProps,
+  PlainComponent,
+  PlainInstance,
+  StatesOf,
+} from "./runtime.ts"
+
+export type { PositionerProps } from "./popover.ts"
+export type { PortalProps } from "./runtime.ts"
+
+type State = StatesOf<"combobox">
 
 const scope = context<Controller>("Combobox")
 const ITEM: InjectionKey<unknown> = Symbol("ComboboxItem")
 const ANY = null as unknown as PropType<unknown>
 
 const GROUP: InjectionKey<ComboboxGroup | null> = Symbol("ComboboxGroup")
+
+export interface GroupProps extends PartComponentProps {
+  id?: string | undefined
+}
 
 /** Items that belong together, named by their `GroupLabel`. Hidden while none is shown. */
 const Group = defineComponent({
@@ -37,16 +60,27 @@ const Group = defineComponent({
     const Element = partComponent("ComboboxGroupElement", "div", () => group.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["group"], GroupProps>
 
 /** Names the group it is in. With no group around it, it is plain text. */
-const GroupLabel = partComponent(
+const GroupLabel = partComponent<"div", State["groupLabel"]>(
   "ComboboxGroupLabel",
   "div",
   () => inject(GROUP, null)?.label ?? scope.use().groupLabel
 )
 
 const HiddenInput = partComponent("ComboboxHiddenInput", "input", () => scope.use().hidden)
+
+export type RootProps<Value = unknown> = Omit<
+  ComboboxProps<Value>,
+  "id" | "onValueChange" | "onValuesChange" | "onInputValueChange" | "onOpenChange"
+> & { id?: string | undefined }
+
+/** The value is `null` when the combobox is cleared. */
+export type RootEmits<Value = unknown> = Changes<"value", Value | null> &
+  Changes<"values", Value[]> &
+  Changes<"inputValue", string> &
+  Changes<"open", boolean>
 
 /** `v-model:value`, `v-model:inputValue`, `v-model:open`; the `-change` events carry the details. */
 const Root = defineComponent({
@@ -65,9 +99,10 @@ const Root = defineComponent({
     defaultValues: Array as PropType<readonly unknown[]>,
     inline: Boolean,
     virtualized: Object as PropType<ComboboxProps["virtualized"]>,
+    autoHighlight: Boolean,
     name: String,
     form: String,
-    items: Array as PropType<readonly { value: unknown; label: string }[]>,
+    items: [Array, Object] as PropType<ComboboxProps["items"]>,
     filter: {
       type: null as unknown as PropType<((label: string, query: string) => boolean) | null>,
       default: undefined,
@@ -107,6 +142,7 @@ const Root = defineComponent({
         },
         inline: props.inline,
         virtualized: props.virtualized,
+        autoHighlight: props.autoHighlight,
         name: props.name,
         form: props.form,
         items: props.items,
@@ -128,7 +164,15 @@ const Root = defineComponent({
     const named = fromSignal(made.named)
     return () => [slots.default?.(), named.value ? h(HiddenInput) : null]
   },
-})
+}) as unknown as new <Value = unknown>(
+  props: RootProps<Value> & Listeners<RootEmits<Value>> & PublicProps
+) => PlainInstance<RootProps<Value>, RootEmits<Value>, {}>
+
+export interface ItemProps extends Omit<ComboboxItemOptions, "id">, PartComponentProps {
+  /** What the combobox's value is while this item is the chosen one. */
+  value: unknown
+  id?: string | undefined
+}
 
 /** `label` is what is filtered and what the input shows; the item's text when left out. */
 const Item = defineComponent({
@@ -156,7 +200,12 @@ const Item = defineComponent({
     const Element = partComponent("ComboboxItemElement", "div", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["item"], ItemProps>
+
+export interface ItemIndicatorProps extends PartComponentProps {
+  /** Keeps the mark in the page while its item is not chosen. */
+  keepMounted?: boolean | undefined
+}
 
 const ItemIndicator = defineComponent({
   name: "ComboboxItemIndicator",
@@ -171,7 +220,12 @@ const ItemIndicator = defineComponent({
     )
     return () => (selected.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"span", State["itemIndicator"], ItemIndicatorProps>
+
+export interface ClearProps extends PartComponentProps {
+  /** Keeps the button in the page while there is nothing to clear. */
+  keepMounted?: boolean | undefined
+}
 
 /** A button that empties the input and the value. Drawn while there is something to clear. */
 const Clear = defineComponent({
@@ -184,9 +238,14 @@ const Clear = defineComponent({
     const Element = partComponent("ComboboxClearElement", "button", () => made.clear)
     return () => (clearable.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"button", State["clear"], ClearProps>
 
 const CHIP: InjectionKey<unknown> = Symbol("ComboboxChip")
+
+export interface ChipProps extends PartComponentProps {
+  /** The chosen value it stands for: what its remove button takes away. */
+  value: unknown
+}
 
 /** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
 const Chip = defineComponent({
@@ -201,7 +260,9 @@ const Chip = defineComponent({
     const Element = partComponent("ComboboxChipElement", "span", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"span", State["chip"], ChipProps>
+
+export type EmptyProps = PartComponentProps
 
 /** Drawn while no item is shown for what was typed. */
 const Empty = defineComponent({
@@ -213,7 +274,21 @@ const Empty = defineComponent({
     const Element = partComponent("ComboboxEmptyElement", "div", () => made.emptyPart)
     return () => (empty.value ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"div", State["empty"], EmptyProps>
+
+export type AutocompleteRootProps = Omit<
+  AutocompleteProps,
+  "id" | "value" | "onValueChange" | "onOpenChange"
+> & {
+  /** The text, which is the value: `v-model`. */
+  modelValue?: string | undefined
+  id?: string | undefined
+}
+
+export type AutocompleteRootEmits = {
+  "update:modelValue": (value: string) => void
+  valueChange: (value: string, details: ChangeDetails) => void
+} & Changes<"open", boolean>
 
 /** A combobox whose text is the value: `v-model` is the text. The list only suggests. */
 const AutocompleteRoot = defineComponent({
@@ -234,6 +309,7 @@ const AutocompleteRoot = defineComponent({
     name: String,
     form: String,
     virtualized: Object as PropType<AutocompleteProps["virtualized"]>,
+    autoHighlight: Boolean,
     id: String,
   },
   emits: ["update:modelValue", "valueChange", "update:open", "openChange"],
@@ -254,6 +330,7 @@ const AutocompleteRoot = defineComponent({
         name: props.name,
         form: props.form,
         virtualized: props.virtualized,
+        autoHighlight: props.autoHighlight,
         onValueChange(value: string, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:modelValue", value)
@@ -266,30 +343,51 @@ const AutocompleteRoot = defineComponent({
     )
     return () => slots.default?.()
   },
-})
+}) as unknown as PlainComponent<AutocompleteRootProps, AutocompleteRootEmits>
 
+export type InputProps = PartComponentProps
+export type TriggerProps = PartComponentProps
+export type ChipsProps = PartComponentProps
+export type ChipRemoveProps = PartComponentProps
+export type PopupProps = PartComponentProps
+export type ListProps = PartComponentProps
+export type GroupLabelProps = PartComponentProps
+export type SeparatorProps = PartComponentProps
 export const Combobox = {
   Root,
-  Input: partComponent("ComboboxInput", "input", () => scope.use().input),
-  Trigger: partComponent("ComboboxTrigger", "button", () => scope.use().trigger),
+  Input: partComponent<"input", State["input"]>("ComboboxInput", "input", () => scope.use().input),
+  Trigger: partComponent<"button", State["trigger"]>(
+    "ComboboxTrigger",
+    "button",
+    () => scope.use().trigger
+  ),
   Clear,
   /** With `multiple`: what holds the chips and the input. */
-  Chips: partComponent("ComboboxChips", "div", () => scope.use().chips),
+  Chips: partComponent<"div", State["chips"]>("ComboboxChips", "div", () => scope.use().chips),
   Chip,
-  ChipRemove: partComponent("ComboboxChipRemove", "button", () =>
+  ChipRemove: partComponent<"button", State["chipRemove"]>("ComboboxChipRemove", "button", () =>
     scope.use().chipRemove(inject(CHIP))
   ),
   Portal: portalComponent("ComboboxPortal", () => scope.use().mounted),
-  Positioner: positionerComponent(
+  Positioner: positionerComponent<State["positioner"]>(
     "ComboboxPositioner",
     () => scope.use(),
     partComponent("ComboboxPositionerElement", "div", () => scope.use().positioner)
   ),
-  Popup: partComponent("ComboboxPopup", "div", () => scope.use().popup),
+  Popup: partComponent<"div", State["popup"]>("ComboboxPopup", "div", () => scope.use().popup),
+  /**
+   * The items' own box inside the popup, when the popup holds more than items (an input): it
+   * is then the listbox.
+   */
+  List: partComponent<"div", State["list"]>("ComboboxList", "div", () => scope.use().list),
   Group,
   GroupLabel,
   /** A line between groups. */
-  Separator: partComponent("ComboboxSeparator", "div", () => scope.use().separator),
+  Separator: partComponent<"div", State["separator"]>(
+    "ComboboxSeparator",
+    "div",
+    () => scope.use().separator
+  ),
   Item,
   ItemIndicator,
   Empty,
@@ -303,6 +401,7 @@ export const Autocomplete = {
   Portal: Combobox.Portal,
   Positioner: Combobox.Positioner,
   Popup: Combobox.Popup,
+  List: Combobox.List,
   Group: Combobox.Group,
   GroupLabel: Combobox.GroupLabel,
   Separator: Combobox.Separator,

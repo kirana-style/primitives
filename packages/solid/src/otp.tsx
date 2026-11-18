@@ -1,11 +1,14 @@
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp as Controller, OtpProps, OtpSlot } from "@kirana-ui/core/otp"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["otp"]
 
 const Context = createContext<Controller>()
 const SlotContext = createContext<OtpSlot>()
@@ -16,18 +19,22 @@ function useOtp(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & {
-  length?: number
-  value?: string
-  defaultValue?: string
-  onValueChange?: (value: string, details: ChangeDetails) => void
-  onComplete?: (value: string) => void
-  mode?: OtpProps["mode"]
-  disabled?: boolean
-  name?: string
-  form?: string
-  id?: string
-}
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  {
+    length?: number
+    value?: string
+    defaultValue?: string
+    onValueChange?: (value: string, details: ChangeDetails) => void
+    onComplete?: (value: string) => void
+    mode?: OtpProps["mode"]
+    disabled?: boolean
+    name?: string
+    form?: string
+    id?: string
+  }
+>
 
 function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, [
@@ -57,19 +64,21 @@ function Root(props: RootProps): JSX.Element {
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
+export type SlotProps = PartComponentProps<"div", StateOf<Parts["slot"]>, { index: number }>
+
 /** One cell: it shows its character, then whatever it is given (a caret). */
-function Slot(props: PartComponentProps & { index: number }): JSX.Element {
+function Slot(props: SlotProps): JSX.Element {
   const [local, rest] = splitProps(props, ["index", "children"])
   const slot = useOtp().slot(untrack(() => local.index))
   const char = fromSignal(slot.char)
   return (
     <SlotContext.Provider value={slot}>
-      <Part part={slot.part} tag="div" {...rest}>
+      <Part of={slot.part} tag="div" {...rest}>
         {char()}
         {local.children}
       </Part>
@@ -77,29 +86,34 @@ function Slot(props: PartComponentProps & { index: number }): JSX.Element {
   )
 }
 
+export type CaretProps = PartComponentProps<"div", StateOf<Parts["caret"]>>
+
 /** Drawn in its cell while the cell is the active one and empty. */
-function Caret(props: PartComponentProps): JSX.Element {
+function Caret(props: CaretProps): JSX.Element {
   const made = useOtp()
   const slot = useContext(SlotContext)
   if (!slot) throw new Error("An Otp.Caret must be inside <Otp.Slot>")
   const shown = fromSignal(slot.caret)
   return (
     <Show when={shown()}>
-      <Part part={made.caretPart} tag="div" {...props} />
+      <Part of={made.caretPart} tag="div" {...props} />
     </Show>
   )
 }
 
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>>
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
 const part =
-  (name: "input" | "group" | "separator", tag: string) => (props: PartComponentProps) => (
-    <Part part={useOtp()[name]} tag={tag} {...props} />
-  )
+  <Props extends Record<string, unknown>>(name: "input" | "group" | "separator", tag: string) =>
+  (props: Props): JSX.Element => <Part of={useOtp()[name]} tag={tag} {...props} />
 
 export const Otp = {
   Root,
-  Input: part("input", "input"),
-  Group: part("group", "div"),
+  Input: part<InputProps>("input", "input"),
+  Group: part<GroupProps>("group", "div"),
   Slot,
-  Separator: part("separator", "div"),
+  Separator: part<SeparatorProps>("separator", "div"),
   Caret,
 }

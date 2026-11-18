@@ -1,12 +1,16 @@
 import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createCarousel } from "@kirana-ui/core/carousel"
 import type { Carousel as Controller, CarouselProps } from "@kirana-ui/core/carousel"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
-import { useController, usePart } from "./runtime.tsx"
+import { parts, useController, usePart } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["carousel"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -16,7 +20,11 @@ function useCarousel(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<CarouselProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<CarouselProps, "id"> & { id?: string }
+>
 
 function Root({
   index,
@@ -37,23 +45,53 @@ function Root({
   )
 }
 
-const Viewport = (props: PartComponentProps) =>
-  usePart(useCarousel("Viewport").viewport, "div", props)
+export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
 
-function Item({ index, ...props }: PartComponentProps & { index: number }): ReactElement {
+const Viewport = (props: ViewportProps) => usePart(useCarousel("Viewport").viewport, "div", props)
+
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
+    /** Its place among the slides, from 0. */
+    index: number
+  }
+>
+
+function Item({ index, ...props }: ItemProps): ReactElement {
   const controller = useCarousel("Item")
   const part = useMemo(() => controller.item(index), [controller, index])
   return usePart(part, "div", props)
 }
 
-const Previous = (props: PartComponentProps) =>
-  usePart(useCarousel("Previous").previous, "button", props)
-const Next = (props: PartComponentProps) => usePart(useCarousel("Next").next, "button", props)
+export type PreviousProps = PartComponentProps<"button", StateOf<Parts["previous"]>>
 
-function Indicator({ index, ...props }: PartComponentProps & { index: number }): ReactElement {
+const Previous = (props: PreviousProps) =>
+  usePart(useCarousel("Previous").previous, "button", props)
+export type NextProps = PartComponentProps<"button", StateOf<Parts["next"]>>
+
+const Next = (props: NextProps) => usePart(useCarousel("Next").next, "button", props)
+
+export type IndicatorProps = PartComponentProps<
+  "button",
+  StateOf<Parts["indicator"]>,
+  {
+    /** The slide it goes to, from 0. */
+    index: number
+  }
+>
+
+function Indicator({ index, ...props }: IndicatorProps): ReactElement {
   const controller = useCarousel("Indicator")
   const part = useMemo(() => controller.indicator(index), [controller, index])
   return usePart(part, "button", props)
 }
 
-export const Carousel = { Root, Viewport, Item, Previous, Next, Indicator }
+export const Carousel = /* @__PURE__ */ parts("Carousel", {
+  Root,
+  Viewport,
+  Item,
+  Previous,
+  Next,
+  Indicator,
+})

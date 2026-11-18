@@ -3,10 +3,10 @@
 
   import Part from "../Part.svelte"
   import { CHIP, useCombobox } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ChipProps } from "./types.ts"
 
   // With `multiple`: one chosen value. Its `value` is what its remove button takes away.
-  let { value, ...rest }: { value: unknown } & PartAttributes = $props()
+  let { value, ...rest }: ChipProps = $props()
   // A chip is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally
   const held = value
@@ -14,4 +14,4 @@
   const part = useCombobox().chip(held)
 </script>
 
-<Part {part} tag="span" {...rest} />
+<Part of={part} tag="span" {...rest} />

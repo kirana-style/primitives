@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useDialog } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { BackdropProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: BackdropProps = $props()
   const controller = useDialog()
 </script>
 
-<Part part={controller.backdrop} tag="div" {...props} />
+<Part of={controller.backdrop} tag="div" {...props} />

@@ -1,7 +1,12 @@
 import { defined, within } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
-import type { AccordionItem, Accordion as Controller } from "@kirana-ui/core/accordion"
+import type {
+  AccordionItem,
+  AccordionProps,
+  Accordion as Controller,
+} from "@kirana-ui/core/accordion"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import {
   Show,
   createContext,
@@ -18,6 +23,8 @@ import { DirectionContext } from "./direction-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
+type Parts = Vocabulary["accordion"]
+
 const Context = createContext<Controller>()
 const ItemContext = createContext<AccordionItem>()
 
@@ -33,18 +40,14 @@ function useItem(): AccordionItem {
   return item
 }
 
-export type RootProps = PartComponentProps & {
-  value?: readonly unknown[]
-  defaultValue?: readonly unknown[]
-  onValueChange?: (value: unknown[], details: ChangeDetails) => void
-  multiple?: boolean
-  disabled?: boolean
-  orientation?: Orientation
-  loop?: boolean
-  id?: string
-}
+/** `Value` is what tells an item from the others: what the items' `value` and the root's hold. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<AccordionProps<Value>, "id"> & { id?: string }
+>
 
-function Root(props: RootProps): JSX.Element {
+function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -57,7 +60,7 @@ function Root(props: RootProps): JSX.Element {
   ])
   const generated = createUniqueId()
   const direction = useContext(DirectionContext)
-  const made = controller(within(createAccordion, { direction }), () => ({
+  const made = controller(within(createAccordion<Value>, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,
@@ -65,45 +68,60 @@ function Root(props: RootProps): JSX.Element {
     disabled: local.disabled,
     orientation: local.orientation,
     loop: local.loop,
-    onValueChange: (value: unknown[], details: ChangeDetails) =>
+    onValueChange: (value: Value[], details: ChangeDetails) =>
       local.onValueChange?.(value, details),
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-function Item(props: PartComponentProps & { value: unknown; disabled?: boolean }): JSX.Element {
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  { value?: unknown; disabled?: boolean }
+>
+
+/** `value` tells this item from the others; an item that is given none makes its own. */
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "disabled"])
   const options = toSignal(() => ({ disabled: local.disabled }))
+  const generated = createUniqueId()
   // An item is its value for as long as it is in the page.
-  const item = useAccordion().item(
-    untrack(() => local.value),
-    () => defined(options.get())
+  const value = untrack(() => local.value)
+  const item = useAccordion().item(value === undefined ? generated : value, () =>
+    defined(options.get())
   )
   onMount(() => onCleanup(item.mount()))
   return (
     <ItemContext.Provider value={item}>
-      <Part part={item.root} tag="div" {...rest} />
+      <Part of={item.root} tag="div" {...rest} />
     </ItemContext.Provider>
   )
 }
 
-const Header = (props: PartComponentProps) => <Part part={useItem().header} tag="h3" {...props} />
-const Trigger = (props: PartComponentProps) => (
-  <Part part={useItem().trigger} tag="button" {...props} />
-)
+export type HeaderProps = PartComponentProps<"h3", StateOf<Parts["header"]>>
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+
+const Header = (props: HeaderProps) => <Part of={useItem().header} tag="h3" {...props} />
+const Trigger = (props: TriggerProps) => <Part of={useItem().trigger} tag="button" {...props} />
+
+export type PanelProps = PartComponentProps<
+  "div",
+  StateOf<Parts["panel"]>,
+  { keepMounted?: boolean }
+>
 
 /** `keepMounted` keeps the closed panel in the page, `hidden`. */
-function Panel(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+function Panel(props: PanelProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const item = useItem()
   const mounted = fromSignal(item.mounted)
   return (
     <Show when={mounted() || local.keepMounted}>
-      <Part part={item.panel} tag="div" {...rest} />
+      <Part of={item.panel} tag="div" {...rest} />
     </Show>
   )
 }

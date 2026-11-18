@@ -1,15 +1,31 @@
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
+import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
-import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
-import type { Dialog as Controller } from "@kirana-ui/core/dialog"
+import type { DrawerProps, DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
+import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
 import { defineComponent, useId } from "vue"
 import type { PropType } from "vue"
 
 import { context, controller, optional, partComponent, portalComponent } from "./runtime.ts"
+import type {
+  Changes,
+  PartComponent,
+  PartComponentProps,
+  PlainComponent,
+  StatesOf,
+} from "./runtime.ts"
+
+export type { PortalProps } from "./runtime.ts"
+
+type State = StatesOf<"dialog">
 
 const scope = context<Controller>("Dialog")
+
+export type RootProps = Omit<DialogProps, "id" | "onOpenChange"> & { id?: string | undefined }
+
+export type RootEmits = Changes<"open", boolean>
 
 const Root = defineComponent({
   name: "DialogRoot",
@@ -38,7 +54,11 @@ const Root = defineComponent({
     )
     return () => slots.default?.()
   },
-})
+}) as unknown as PlainComponent<RootProps, RootEmits>
+
+export type AlertRootProps = Omit<AlertDialogProps, "id" | "onOpenChange"> & {
+  id?: string | undefined
+}
 
 const AlertRoot = defineComponent({
   name: "AlertDialogRoot",
@@ -59,21 +79,45 @@ const AlertRoot = defineComponent({
     )
     return () => slots.default?.()
   },
-})
+}) as unknown as PlainComponent<AlertRootProps, RootEmits>
 
+export type TriggerProps = PartComponentProps
+export type BackdropProps = PartComponentProps
+export type PopupProps = PartComponentProps
+export type TitleProps = PartComponentProps
+export type DescriptionProps = PartComponentProps
+export type CloseProps = PartComponentProps
 export const Dialog = {
   Root,
-  Trigger: partComponent("DialogTrigger", "button", () => scope.use().trigger),
+  Trigger: partComponent<"button", State["trigger"]>(
+    "DialogTrigger",
+    "button",
+    () => scope.use().trigger
+  ),
   Portal: portalComponent("DialogPortal", () => scope.use().mounted),
-  Backdrop: partComponent("DialogBackdrop", "div", () => scope.use().backdrop),
-  Popup: partComponent("DialogPopup", "div", () => scope.use().popup),
-  Title: partComponent("DialogTitle", "h2", () => scope.use().title),
-  Description: partComponent("DialogDescription", "p", () => scope.use().description),
-  Close: partComponent("DialogClose", "button", () => scope.use().close),
+  Backdrop: partComponent<"div", State["backdrop"]>(
+    "DialogBackdrop",
+    "div",
+    () => scope.use().backdrop
+  ),
+  Popup: partComponent<"div", State["popup"]>("DialogPopup", "div", () => scope.use().popup),
+  Title: partComponent<"h2", State["title"]>("DialogTitle", "h2", () => scope.use().title),
+  Description: partComponent<"p", State["description"]>(
+    "DialogDescription",
+    "p",
+    () => scope.use().description
+  ),
+  Close: partComponent<"button", State["close"]>("DialogClose", "button", () => scope.use().close),
 }
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
 export const AlertDialog = { ...Dialog, Root: AlertRoot }
+
+export type DrawerRootProps = Omit<DrawerProps, "id" | "onOpenChange" | "onSnapPointChange"> & {
+  id?: string | undefined
+}
+
+export type DrawerRootEmits = Changes<"open", boolean> & Changes<"snapPoint", DrawerSnapPoint>
 
 const DrawerRoot = defineComponent({
   name: "DrawerRoot",
@@ -114,7 +158,13 @@ const DrawerRoot = defineComponent({
     )
     return () => slots.default?.()
   },
-})
+}) as unknown as PlainComponent<DrawerRootProps, DrawerRootEmits>
 
 /** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
-export const Drawer = { ...Dialog, Root: DrawerRoot }
+export const Drawer = {
+  ...Dialog,
+  Root: DrawerRoot,
+  // The same two parts, with what they also say of a drag.
+  Backdrop: Dialog.Backdrop as unknown as PartComponent<"div", StatesOf<"drawer">["backdrop"]>,
+  Popup: Dialog.Popup as unknown as PartComponent<"div", StatesOf<"drawer">["popup"]>,
+}

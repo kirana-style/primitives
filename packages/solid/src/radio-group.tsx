@@ -1,7 +1,8 @@
 import { defined, within } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
-import type { RadioGroup as Controller } from "@kirana-ui/core/radio-group"
+import type { RadioGroup as Controller, RadioGroupProps } from "@kirana-ui/core/radio-group"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import {
   Show,
   createContext,
@@ -19,6 +20,8 @@ import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
+type Parts = Vocabulary["radioGroup"]
+
 const Context = createContext<Controller>()
 const ItemContext = createContext<unknown>()
 
@@ -28,19 +31,14 @@ function useRadioGroup(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & {
-  value?: unknown
-  defaultValue?: unknown
-  onValueChange?: (value: unknown, details: ChangeDetails) => void
-  disabled?: boolean
-  readOnly?: boolean
-  required?: boolean
-  name?: string
-  form?: string
-  id?: string
-}
+/** `Value` is what an item's `value` is: the root's `value` holds the chosen one, or `null`. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<RadioGroupProps<Value>, "id"> & { id?: string }
+>
 
-function Root(props: RootProps): JSX.Element {
+function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -55,7 +53,7 @@ function Root(props: RootProps): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext)
   const made = controller(
-    within(createRadioGroup, { field, direction: useContext(DirectionContext) }),
+    within(createRadioGroup<Value>, { field, direction: useContext(DirectionContext) }),
     () => ({
       id: local.id ?? generated,
       value: local.value,
@@ -65,18 +63,24 @@ function Root(props: RootProps): JSX.Element {
       required: local.required,
       name: local.name,
       form: local.form,
-      onValueChange: (value: unknown, details: ChangeDetails) =>
+      onValueChange: (value: Value | null, details: ChangeDetails) =>
         local.onValueChange?.(value, details),
     })
   )
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-function Item(props: PartComponentProps & { value: unknown; disabled?: boolean }): JSX.Element {
+export type ItemProps = PartComponentProps<
+  "span",
+  StateOf<Parts["item"]>,
+  { value: unknown; disabled?: boolean }
+>
+
+function Item(props: ItemProps): JSX.Element {
   const [local, rest] = splitProps(props, ["value", "disabled", "children"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
@@ -85,23 +89,29 @@ function Item(props: PartComponentProps & { value: unknown; disabled?: boolean }
   const group = useRadioGroup()
   return (
     <ItemContext.Provider value={value}>
-      <Part part={group.item(value, read)} tag="span" {...rest}>
+      <Part of={group.item(value, read)} tag="span" {...rest}>
         {local.children}
-        <Part part={group.itemInput(value, read)} tag="input" />
+        <Part of={group.itemInput(value, read)} tag="input" />
       </Part>
     </ItemContext.Provider>
   )
 }
 
+export type IndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["indicator"]>,
+  { keepMounted?: boolean }
+>
+
 /** `keepMounted` keeps the mark in the page while its item is not the chosen one. */
-function Indicator(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+function Indicator(props: IndicatorProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const indicator = useRadioGroup().indicator(useContext(ItemContext))
   onMount(() => onCleanup(indicator.mount()))
   const mounted = fromSignal(indicator.mounted)
   return (
     <Show when={mounted() || local.keepMounted}>
-      <Part part={indicator.part} tag="span" {...rest} />
+      <Part of={indicator.part} tag="span" {...rest} />
     </Show>
   )
 }

@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useField } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { DescriptionProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: DescriptionProps = $props()
   const controller = useField()
 </script>
 
-<Part part={controller.description} tag="p" {...props} />
+<Part of={controller.description} tag="p" {...props} />

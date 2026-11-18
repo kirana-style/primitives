@@ -165,26 +165,42 @@ describe("the agent bridge", () => {
     expect(far.steps[0]!.now?.value).toBe(100)
   })
 
-  it("needs a person where the page says so, and asks `allow` when there is one", async () => {
+  it("needs a person where the page says so, whatever the policy allows", async () => {
     const { agent, root, pressed } = page()
     const alone = await agent.act({ steps: [{ ref: "Delete", action: "press" }] })
     expect(alone.error).toBe("Step 1 (Delete): Needs a person: Deletes the project")
+    // A policy that allows everything is not a person's answer.
+    const open = createAgent({ root, allow: () => true })
+    const still = await open.act({ steps: [{ ref: "Delete", action: "press" }] })
+    expect(still.error).toBe("Step 1 (Delete): Needs a person: Deletes the project")
     expect(pressed).toEqual([])
     const asked: string[] = []
+    const answers = [false, true]
     const guarded = createAgent({
       root,
       allow(action) {
-        asked.push(`${action.component} ${action.label} ${action.action} ${action.confirm}`)
+        asked.push(`allow ${action.component} ${action.label} ${action.action}`)
         return action.label === "Delete"
       },
+      confirm(action) {
+        asked.push(`confirm ${action.label}: ${action.confirm}`)
+        return answers.shift()!
+      },
     })
+    const declined = await guarded.act({ steps: [{ ref: "Delete", action: "press" }] })
+    expect(declined.error).toBe("Step 1 (Delete): Declined: Deletes the project")
+    expect(pressed).toEqual([])
     expect((await guarded.act({ steps: [{ ref: "Delete", action: "press" }] })).ok).toBe(true)
     expect(pressed).toEqual(["delete"])
+    // The policy is asked first, and what it refuses never reaches a person.
     const refused = await guarded.act({ steps: [{ ref: "Details", action: "open" }] })
     expect(refused.error).toBe("Step 1 (Details): Refused")
     expect(asked).toEqual([
-      "button Delete press Deletes the project",
-      "disclosure Details open undefined",
+      "allow button Delete press",
+      "confirm Delete: Deletes the project",
+      "allow button Delete press",
+      "confirm Delete: Deletes the project",
+      "allow disclosure Details open",
     ])
   })
 
@@ -233,7 +249,7 @@ describe("the agent bridge", () => {
     expect(agent.history().map((each) => each.before.label)).toEqual(["Notifications", "Volume"])
     expect((await agent.redo()).error).toBe("Nothing to do again")
     // A press is not a state to go back to.
-    const guarded = createAgent({ root, allow: () => true })
+    const guarded = createAgent({ root, confirm: () => true })
     await guarded.act({ steps: [{ ref: "Delete", action: "press" }] })
     expect(pressed).toEqual(["delete"])
     expect(guarded.history()).toEqual([])

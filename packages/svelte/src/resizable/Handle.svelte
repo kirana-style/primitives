@@ -4,11 +4,11 @@
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { useResizable } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { HandleProps } from "./types.ts"
 
-  let { disabled, ...rest }: { disabled?: boolean } & PartAttributes = $props()
+  let { disabled, ...rest }: HandleProps = $props()
   const options = toSignal(() => ({ disabled }))
   const part = useResizable().handle(() => defined(options.get()))
 </script>
 
-<Part {part} tag="div" {...rest} />
+<Part of={part} tag="div" {...rest} />

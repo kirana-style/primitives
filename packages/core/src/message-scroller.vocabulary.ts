@@ -9,11 +9,13 @@ export const messageScrollerVocabulary = defineComponent({
     states: { atBottom: AT_BOTTOM },
   },
   viewport: {
+    inside: "root",
     description: "What scrolls: a log, reached by the keyboard.",
     states: { atBottom: AT_BOTTOM },
   },
-  content: { description: "The messages: what grows as one is written." },
+  content: { inside: "viewport", description: "The messages: what grows as one is written." },
   button: {
+    inside: "root",
     description: "Goes to the newest message. Inert while that is in view.",
     states: { atBottom: AT_BOTTOM },
   },

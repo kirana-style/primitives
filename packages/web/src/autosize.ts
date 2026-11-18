@@ -1,6 +1,8 @@
 import { createAutosize } from "@kirana-ui/core/autosize"
+import type { AutosizeProps } from "@kirana-ui/core/autosize"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-autosize>` around a `kui-part="root"` textarea, which is as tall as what is written
@@ -14,3 +16,9 @@ export const tag = defineElement({
   changes: {},
   parts: { root: (controller) => controller.textarea },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-autosize": ElementOf<As<typeof tag, AutosizeProps>>
+  }
+}

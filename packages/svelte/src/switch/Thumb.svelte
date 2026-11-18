@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useSwitch } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ThumbProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ThumbProps = $props()
   const controller = useSwitch()
 </script>
 
-<Part part={controller.thumb} tag="span" {...props} />
+<Part of={controller.thumb} tag="span" {...props} />

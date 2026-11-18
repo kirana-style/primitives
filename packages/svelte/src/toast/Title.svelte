@@ -1,10 +1,9 @@
 <script lang="ts">
-  import Part from "../Part.svelte"
-  import { useParts } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import Said from "./Said.svelte"
+  import type { TitleProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
-  const controller = useParts()
+  // The toast's title, unless it is given content of its own.
+  let props: TitleProps = $props()
 </script>
 
-<Part part={controller.title} tag="div" {...props} />
+<Said said="title" tag="div" {...props} />

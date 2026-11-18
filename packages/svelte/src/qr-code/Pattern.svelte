@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useQrCode } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { PatternProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: PatternProps = $props()
   const controller = useQrCode()
 </script>
 
-<Part part={controller.pattern} tag="path" {...props} />
+<Part of={controller.pattern} tag="path" {...props} />

@@ -4,11 +4,15 @@ import { createMenu } from "@kirana-ui/core/menu"
 import type {
   Menu as Controller,
   MenuCheckboxItem,
+  MenuCheckboxItemProps,
   MenuGroup,
+  MenuItemOptions,
+  MenuProps,
   MenuRadioGroup,
+  MenuRadioGroupProps,
 } from "@kirana-ui/core/menu"
 import { defineComponent, h, inject, provide, useId } from "vue"
-import type { InjectionKey, PropType } from "vue"
+import type { InjectionKey, PropType, PublicProps } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
 import { MENUBAR } from "./menubar-context.ts"
@@ -22,6 +26,20 @@ import {
   portalComponent,
   toSignal,
 } from "./runtime.ts"
+import type {
+  Changes,
+  PartComponent,
+  PartComponentProps,
+  PartGiven,
+  PartInstance,
+  PlainComponent,
+  StatesOf,
+} from "./runtime.ts"
+
+export type { PositionerProps } from "./popover.ts"
+export type { PortalProps } from "./runtime.ts"
+
+type State = StatesOf<"menu">
 
 const scope = context<Controller>("Menu")
 const GROUP: InjectionKey<MenuGroup | null> = Symbol("MenuGroup")
@@ -35,6 +53,13 @@ function inside<T>(key: InjectionKey<T>, parent: string): T {
   if (!found) throw new Error(`A Menu part must be inside <Menu.${parent}>`)
   return found
 }
+
+export type RootProps = Omit<MenuProps, "id" | "onOpenChange"> & { id?: string | undefined }
+export type SubmenuRootProps = RootProps
+export type ContextRootProps = RootProps
+
+export type RootEmits = Changes<"open", boolean>
+export type SubmenuRootEmits = RootEmits
 
 /** `v-model:open`; `@open-change` carries the details. */
 function root(name: string, kind: "menu" | "submenu" | "context") {
@@ -75,7 +100,7 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
       provide(MENUBAR, null)
       return () => slots.default?.()
     },
-  })
+  }) as unknown as PlainComponent<RootProps, RootEmits>
 }
 
 const ITEM_PROPS = {
@@ -83,6 +108,8 @@ const ITEM_PROPS = {
   label: String,
   closeOnClick: optional(Boolean),
 }
+
+export interface ItemProps extends MenuItemOptions, PartComponentProps {}
 
 const Item = defineComponent({
   name: "MenuItem",
@@ -94,7 +121,9 @@ const Item = defineComponent({
     const Element = partComponent("MenuItemElement", "div", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["item"], ItemProps>
+
+export type LinkItemProps = ItemProps
 
 /** An item that is a link: `href` and the rest go to its `<a>`. */
 const LinkItem = defineComponent({
@@ -107,7 +136,11 @@ const LinkItem = defineComponent({
     const Element = partComponent("MenuLinkItemElement", "a", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"a", State["linkItem"], LinkItemProps>
+
+export interface GroupProps extends PartComponentProps {
+  id?: string | undefined
+}
 
 const Group = defineComponent({
   name: "MenuGroup",
@@ -120,14 +153,18 @@ const Group = defineComponent({
     const Element = partComponent("MenuGroupElement", "div", () => group.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["group"], GroupProps>
 
 /** Names the group it is in. With no group around it, it is plain text. */
-const GroupLabel = partComponent(
+const GroupLabel = partComponent<"div", State["groupLabel"]>(
   "MenuGroupLabel",
   "div",
   () => inject(GROUP, null)?.label ?? scope.use().label
 )
+
+export type CheckboxItemProps = Omit<MenuCheckboxItemProps, "onCheckedChange"> & PartComponentProps
+
+export type CheckboxItemEmits = Changes<"checked", boolean>
 
 /** `v-model:checked`; `@checked-change` carries the details. */
 const CheckboxItem = defineComponent({
@@ -151,7 +188,12 @@ const CheckboxItem = defineComponent({
     const Element = partComponent("MenuCheckboxItemElement", "div", () => item.part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["checkboxItem"], CheckboxItemProps, CheckboxItemEmits>
+
+export interface CheckboxItemIndicatorProps extends PartComponentProps {
+  /** Keeps the mark in the page while the item is unchecked. */
+  keepMounted?: boolean | undefined
+}
 
 const CheckboxItemIndicator = defineComponent({
   name: "MenuCheckboxItemIndicator",
@@ -163,7 +205,12 @@ const CheckboxItemIndicator = defineComponent({
     const Element = partComponent("MenuCheckboxItemIndicatorElement", "span", () => item.indicator)
     return () => (checked.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"span", State["checkboxItemIndicator"], CheckboxItemIndicatorProps>
+
+export type RadioGroupProps<Value = unknown> = Omit<MenuRadioGroupProps<Value>, "onValueChange"> &
+  PartComponentProps
+
+export type RadioGroupEmits<Value = unknown> = Changes<"value", Value>
 
 /** `v-model:value`; `@value-change` carries the details. */
 const RadioGroup = defineComponent({
@@ -189,7 +236,19 @@ const RadioGroup = defineComponent({
     const Element = partComponent("MenuRadioGroupElement", "div", () => group.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as new <Value = unknown, As extends string = "div">(
+  props: PartGiven<As, RadioGroupProps<Value>, RadioGroupEmits<Value>> & PublicProps
+) => PartInstance<
+  As,
+  RadioGroupProps<Value>,
+  RadioGroupEmits<Value>,
+  { state: State["radioGroup"] }
+>
+
+export interface RadioItemProps extends MenuItemOptions, PartComponentProps {
+  /** What the group's value is while this item is the chosen one. */
+  value: unknown
+}
 
 const RadioItem = defineComponent({
   name: "MenuRadioItem",
@@ -208,7 +267,12 @@ const RadioItem = defineComponent({
     const Element = partComponent("MenuRadioItemElement", "div", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["radioItem"], RadioItemProps>
+
+export interface RadioItemIndicatorProps extends PartComponentProps {
+  /** Keeps the mark in the page while its item is not the chosen one. */
+  keepMounted?: boolean | undefined
+}
 
 const RadioItemIndicator = defineComponent({
   name: "MenuRadioItemIndicator",
@@ -223,24 +287,39 @@ const RadioItemIndicator = defineComponent({
     )
     return () => (checked.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"span", State["radioItemIndicator"], RadioItemIndicatorProps>
 
+export type TriggerProps = PartComponentProps
+export type PopupProps = PartComponentProps
+export type ArrowProps = PartComponentProps
+export type GroupLabelProps = PartComponentProps
+export type SeparatorProps = PartComponentProps
+export type SubmenuTriggerProps = PartComponentProps
+export type ContextTriggerProps = PartComponentProps
 export const Menu = {
   Root: root("MenuRoot", "menu"),
-  Trigger: partComponent("MenuTrigger", "button", () => scope.use().trigger),
+  Trigger: partComponent<"button", State["trigger"]>(
+    "MenuTrigger",
+    "button",
+    () => scope.use().trigger
+  ),
   Portal: portalComponent("MenuPortal", () => scope.use().mounted),
-  Positioner: positionerComponent(
+  Positioner: positionerComponent<State["positioner"]>(
     "MenuPositioner",
     () => scope.use(),
     partComponent("MenuPositionerElement", "div", () => scope.use().positioner)
   ),
-  Popup: partComponent("MenuPopup", "div", () => scope.use().popup),
-  Arrow: partComponent("MenuArrow", "div", () => scope.use().arrow),
+  Popup: partComponent<"div", State["popup"]>("MenuPopup", "div", () => scope.use().popup),
+  Arrow: partComponent<"div", State["arrow"]>("MenuArrow", "div", () => scope.use().arrow),
   Item,
   LinkItem,
   Group,
   GroupLabel,
-  Separator: partComponent("MenuSeparator", "div", () => scope.use().separator),
+  Separator: partComponent<"div", State["separator"]>(
+    "MenuSeparator",
+    "div",
+    () => scope.use().separator
+  ),
   CheckboxItem,
   CheckboxItemIndicator,
   RadioGroup,
@@ -248,7 +327,11 @@ export const Menu = {
   RadioItemIndicator,
   /** A menu that one of this menu's items opens. Its trigger is `Menu.SubmenuTrigger`. */
   SubmenuRoot: root("MenuSubmenuRoot", "submenu"),
-  SubmenuTrigger: partComponent("MenuSubmenuTrigger", "div", () => scope.use().trigger),
+  SubmenuTrigger: partComponent<"div", State["submenuTrigger"]>(
+    "MenuSubmenuTrigger",
+    "div",
+    () => scope.use().trigger
+  ),
 }
 
 export const ContextMenu = {
@@ -256,5 +339,9 @@ export const ContextMenu = {
   /** A menu for an area of the page, opened at the pointer. Its trigger is the area. */
   Root: root("ContextMenuRoot", "context"),
   /** The area a secondary press, or a long press on a touch screen, opens the menu in. */
-  Trigger: partComponent("ContextMenuTrigger", "div", () => scope.use().area),
+  Trigger: partComponent<"div", StatesOf<"contextMenu">["trigger"]>(
+    "ContextMenuTrigger",
+    "div",
+    () => scope.use().area
+  ),
 }

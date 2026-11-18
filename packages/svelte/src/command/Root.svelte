@@ -1,12 +1,11 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCommand } from "@kirana-ui/core/command"
-  import type { CommandProps } from "@kirana-ui/core/command"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     inputValue = $bindable(),
@@ -18,7 +17,7 @@
     disabled,
     id,
     ...rest
-  }: RootProps<CommandProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function changeInput(next: string, by: ChangeDetails) {
@@ -40,4 +39,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

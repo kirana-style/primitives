@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { RadioGroupProps } from "@kirana-ui/core/radio-group"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createRadioGroup } from "@kirana-ui/core/radio-group"
@@ -9,7 +8,7 @@
   import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -22,10 +21,10 @@
     form,
     id,
     ...rest
-  }: RootProps<RadioGroupProps> = $props()
+  }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function change(next: unknown, by: ChangeDetails) {
+  function change(next: Value | null, by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -45,4 +44,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

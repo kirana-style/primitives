@@ -6,7 +6,7 @@ import { KUI_FIELD } from "./field-token"
 import { hostPart } from "./runtime"
 
 /** `<label kuiLabel>`. Inside a `kuiField` it is the field's label. */
-@Directive({ selector: "[kuiLabel]" })
+@Directive({ selector: "[kuiLabel]", exportAs: "kuiLabel" })
 export class KuiLabel implements OnInit {
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly part = hostPart()

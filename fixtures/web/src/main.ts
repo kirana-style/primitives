@@ -52,6 +52,13 @@ range.addEventListener("value-change", (event) => {
   find("sl2-output").textContent = value.join(",")
 })
 
+// A thumb the page takes away and puts back, before the others.
+const lowest = find("sl5-low")
+find("sl5-toggle").addEventListener("click", () => {
+  if (lowest.isConnected) lowest.remove()
+  else find("sl5-middle").before(lowest)
+})
+
 // A form: a check of the page's own, what a server refused, what was sent.
 element<{ validate: unknown }>("kui-field", "fd2").validate = (value: string) =>
   value === "admin" ? "Taken" : null
@@ -124,7 +131,27 @@ const one = (tag: string, id: string, output: string, none = "none") =>
     )
   })
 one("kui-select", "s1", "s1-output")
+// Several values a caller holds, and labels by value given as a property.
+element("kui-select", "sm1").addEventListener("values-change", (event) => {
+  if (event.target !== event.currentTarget) return
+  find("sm1-output").textContent =
+    (event as CustomEvent<{ values: string[] }>).detail.values.join(",") || "none"
+})
+const SIZES = { s: "Small", m: "Medium", l: "Large" }
+for (const each of ["sm2", "sm3"]) {
+  element<{ items: Record<string, string> }>("kui-select", each).items = SIZES
+}
 one("kui-combobox", "cb1", "cb1-output")
+one("kui-combobox", "pl3", "pl3-output")
+// A popover placed against another element, and against a second one while it is open: its
+// button is in the popup, which is out of the page while closed, so the page hears it.
+document.addEventListener("click", (event) => {
+  const move = (event.target as Element).closest('[data-testid="pl2-move"]')
+  const positioner = move?.closest('[kui-part="positioner"]')
+  if (!positioner) return
+  const now = positioner.getAttribute("kui-anchor")
+  positioner.setAttribute("kui-anchor", now === "pl2-first" ? "pl2-second" : "pl2-first")
+})
 one("kui-number-field", "nf1", "nf1-output", "null")
 one("kui-autocomplete", "ac1", "ac1-output")
 
@@ -180,6 +207,15 @@ find("ts1-add").addEventListener("click", () => {
 })
 find("ts1-brief").addEventListener("click", () => {
   toaster.add({ title: "Gone soon", duration: 300 })
+})
+find("ts1-undo").addEventListener("click", () => {
+  toaster.add({
+    title: "Deleted",
+    action: { label: "Undo", onAction: () => void (find("ts1-output").textContent = "undone") },
+  })
+})
+find("ts1-alert").addEventListener("click", () => {
+  toaster.add({ title: "Connection lost", type: "error", priority: "assertive" })
 })
 one("kui-calendar", "cal1", "cal1-output")
 one("kui-date-field", "df1", "df1-output", "null")

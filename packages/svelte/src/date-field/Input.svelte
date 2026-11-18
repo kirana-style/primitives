@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useDateField } from "./context.ts"
-  import type { Attributes } from "../types.ts"
+  import type { InputProps } from "./types.ts"
 
-  let props: Attributes = $props()
+  let props: InputProps = $props()
   const controller = useDateField()
 </script>
 
-<Part part={controller.input} tag="input" {...props} />
+<Part of={controller.input} tag="input" {...props} />

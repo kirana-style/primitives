@@ -6,12 +6,12 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: RootProps = $props()
   const made = provide(
     controller(within(createScrollArea, { direction: useDirectionAround() }), () => ({}))
   )
 </script>
 
-<Part part={made.root} tag="div" {...props} />
+<Part of={made.root} tag="div" {...props} />

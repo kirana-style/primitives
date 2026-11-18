@@ -1,11 +1,10 @@
 <script lang="ts">
-  import type { MenuCheckboxItemProps } from "@kirana-ui/core/menu"
   import type { ChangeDetails } from "@kirana-ui/core"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provideCheckbox, useMenu } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { CheckboxItemProps } from "./types.ts"
 
   let {
     checked = $bindable(),
@@ -15,7 +14,7 @@
     label,
     closeOnClick,
     ...rest
-  }: MenuCheckboxItemProps & PartAttributes = $props()
+  }: CheckboxItemProps = $props()
 
   function change(next: boolean, by: ChangeDetails) {
     onCheckedChange?.(next, by)
@@ -34,4 +33,4 @@
   )
 </script>
 
-<Part part={item.part} tag="div" {...rest} />
+<Part of={item.part} tag="div" {...rest} />

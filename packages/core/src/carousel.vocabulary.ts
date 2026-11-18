@@ -14,12 +14,23 @@ export const carouselVocabulary = defineComponent({
     states: { orientation: ORIENTATION },
   },
   viewport: {
+    inside: "root",
     description:
       "What scrolls. The slides are its children; the design snaps them (`scroll-snap-type`) and says whether a step glides (`scroll-behavior`).",
     states: { orientation: ORIENTATION },
   },
-  item: { description: "One slide.", states: { orientation: ORIENTATION, current: CURRENT } },
-  previous: { description: "Goes back a slide.", states: { disabled: DISABLED } },
-  next: { description: "Goes on a slide.", states: { disabled: DISABLED } },
-  indicator: { description: "A button for one slide.", states: { current: CURRENT } },
+  item: {
+    inside: "viewport",
+    repeated: true,
+    description: "One slide.",
+    states: { orientation: ORIENTATION, current: CURRENT },
+  },
+  previous: { inside: "root", description: "Goes back a slide.", states: { disabled: DISABLED } },
+  next: { inside: "root", description: "Goes on a slide.", states: { disabled: DISABLED } },
+  indicator: {
+    inside: "root",
+    repeated: true,
+    description: "A button for one slide.",
+    states: { current: CURRENT },
+  },
 })

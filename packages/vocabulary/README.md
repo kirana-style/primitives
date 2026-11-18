@@ -1,6 +1,6 @@
 # @kirana-ui/vocabulary
 
-Kirana UI Primitives' parts, states and CSS variables, as data. The primitives ship no styles:
+Kirana UI Primitives' parts, where each goes, its states and its CSS variables, as data. The primitives ship no styles:
 this is the whole contract between them and a stylesheet, whatever writes it.
 
 Generated from the part definitions the core runs on (`vp run vocabulary`), so it cannot drift
@@ -33,7 +33,10 @@ package root, typed):
             ["open", "closed"],
             ["startingStyle", "endingStyle"]
           ],
-          "variables": {}
+          "variables": {},
+          "inside": ["positioner"],
+          "optional": false,
+          "repeated": false
         }
       }
     }
@@ -47,6 +50,14 @@ package root, typed):
 - `exclusive` lists, by state name, the states of a part that never hold together. The values of
   one valued state never hold together either.
 - `variables` are custom properties on the part's element, each with what it holds.
+- `inside` is where the part goes: the parts of the same component it is written inside. The
+  first is where an anatomy draws it, the others where it may also be (a submenu's portal is in
+  the submenu, a menu's in the menu); the outermost part, which a component has one of, has
+  none. `optional` marks a wrapper that may be left out, what it holds then written where the
+  wrapper would be; `repeated` a part written once for each entry (an item, a tab), or any
+  number of times. A part that draws no element (a popup's root, a `portal`, a list) is in the
+  data too, with no states: it has a place like any other. The library's own fixture pages are
+  held to it, on every framework.
 - `sharesNamesWith` names other vocabularies whose attribute names these are too: a style written
   for Base UI's states holds for these parts.
 

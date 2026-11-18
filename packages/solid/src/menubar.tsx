@@ -1,6 +1,7 @@
 import { within } from "@kirana-ui/core"
-import type { Orientation } from "@kirana-ui/core"
+import type { Orientation, StateOf } from "@kirana-ui/core"
 import { createMenubar } from "@kirana-ui/core/menubar"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -9,15 +10,19 @@ import { MenubarContext } from "./menubar-context.ts"
 import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
-/** A row of menus that work as one. Each `<Menu.Root>` inside it is one of its items. */
-export function Menubar(
-  props: PartComponentProps & {
+export type MenubarProps = PartComponentProps<
+  "div",
+  StateOf<Vocabulary["menubar"]["root"]>,
+  {
     loop?: boolean
     disabled?: boolean
     orientation?: Orientation
     id?: string
   }
-): JSX.Element {
+>
+
+/** A row of menus that work as one. Each `<Menu.Root>` inside it is one of its items. */
+export function Menubar(props: MenubarProps): JSX.Element {
   const [local, rest] = splitProps(props, ["loop", "disabled", "orientation", "id"])
   const generated = createUniqueId()
   const direction = useContext(DirectionContext)
@@ -29,7 +34,7 @@ export function Menubar(
   }))
   return (
     <MenubarContext.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </MenubarContext.Provider>
   )
 }

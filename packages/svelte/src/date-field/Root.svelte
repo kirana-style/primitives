@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
-  import type { DateFieldProps } from "@kirana-ui/core/date-field"
   import { within } from "@kirana-ui/core"
   import { createDateField } from "@kirana-ui/core/date-field"
 
@@ -8,7 +7,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -25,7 +24,7 @@
     form,
     id,
     ...rest
-  }: RootProps<DateFieldProps> = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: string | null, by: ChangeDetails) {
@@ -53,4 +52,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

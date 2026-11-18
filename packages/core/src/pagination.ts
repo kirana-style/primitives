@@ -8,7 +8,9 @@ export interface PaginationProps {
   id: string
   /** The page shown, from 1. */
   page?: number | undefined
+  /** The page it starts at, when the caller does not hold `page`. Read once. */
   defaultPage?: number | undefined
+  /** Heard as another page is about to be shown: `details.cancel()` keeps the page as it was. */
   onPageChange?: ((page: number, details: ChangeDetails) => void) | undefined
   /** How many items there are in all. */
   count: number
@@ -18,6 +20,7 @@ export interface PaginationProps {
   siblingCount?: number | undefined
   /** How many pages are always listed at each end. Default 1. */
   boundaryCount?: number | undefined
+  /** Disabled: no page can be gone to. */
   disabled?: boolean | undefined
 }
 

@@ -22,6 +22,7 @@ export class KuiAvatar implements OnInit {
 /** `<img *kuiAvatarImage="address" alt="…">`: in the page once the picture has loaded. */
 @Directive({ selector: "[kuiAvatarImage]" })
 export class KuiAvatarImage implements OnInit {
+  /** The picture's address: the element is in the page once it has loaded. */
   readonly kuiAvatarImage = input<string | undefined>()
   private readonly root = inject(KuiAvatar)
   private readonly present = presentWhile()

@@ -1,11 +1,26 @@
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
-import type { Listbox as Controller, ListboxGroup, ListboxProps } from "@kirana-ui/core/listbox"
+import type {
+  Listbox as Controller,
+  ListboxGroup,
+  ListboxItemOptions,
+  ListboxProps,
+} from "@kirana-ui/core/listbox"
 import { defineComponent, h, inject, provide, useId } from "vue"
-import type { InjectionKey, PropType } from "vue"
+import type { InjectionKey, PropType, PublicProps } from "vue"
 
 import { context, controller, fromSignal, optional, partComponent, toSignal } from "./runtime.ts"
+import type {
+  Changes,
+  PartComponent,
+  PartComponentProps,
+  PartGiven,
+  PartInstance,
+  StatesOf,
+} from "./runtime.ts"
+
+type State = StatesOf<"listbox">
 
 const scope = context<Controller>("Listbox")
 const ITEM: InjectionKey<unknown> = Symbol("ListboxItem")
@@ -13,6 +28,12 @@ const GROUP: InjectionKey<ListboxGroup> = Symbol("ListboxGroup")
 const ANY = null as unknown as PropType<unknown>
 
 const RootElement = partComponent("ListboxRootElement", "div", () => scope.use().root)
+
+export type RootProps<Value = unknown> = Omit<ListboxProps<Value>, "id" | "onValueChange"> & {
+  id?: string | undefined
+} & PartComponentProps
+
+export type RootEmits<Value = unknown> = Changes<"value", Value[]>
 
 /** `v-model:value` (a list); `@value-change` carries the details. */
 const Root = defineComponent({
@@ -51,7 +72,14 @@ const Root = defineComponent({
     )
     return () => h(RootElement, attrs, slots)
   },
-})
+}) as unknown as new <Value = unknown, As extends string = "div">(
+  props: PartGiven<As, RootProps<Value>, RootEmits<Value>> & PublicProps
+) => PartInstance<As, RootProps<Value>, RootEmits<Value>, { state: State["root"] }>
+
+export interface ItemProps extends ListboxItemOptions, PartComponentProps {
+  /** What is in the listbox's value while this item is chosen. */
+  value: unknown
+}
 
 const Item = defineComponent({
   name: "ListboxItem",
@@ -75,7 +103,12 @@ const Item = defineComponent({
     const Element = partComponent("ListboxItemElement", "div", () => part)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["item"], ItemProps>
+
+export interface ItemIndicatorProps extends PartComponentProps {
+  /** Keeps the mark in the page while its item is not chosen. */
+  keepMounted?: boolean | undefined
+}
 
 const ItemIndicator = defineComponent({
   name: "ListboxItemIndicator",
@@ -90,7 +123,11 @@ const ItemIndicator = defineComponent({
     )
     return () => (selected.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
-})
+}) as unknown as PartComponent<"span", State["itemIndicator"], ItemIndicatorProps>
+
+export interface GroupProps extends PartComponentProps {
+  id?: string | undefined
+}
 
 const Group = defineComponent({
   name: "ListboxGroup",
@@ -103,12 +140,13 @@ const Group = defineComponent({
     const Element = partComponent("ListboxGroupElement", "div", () => group.root)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"div", State["group"], GroupProps>
 
-const GroupLabel = partComponent("ListboxGroupLabel", "div", () => {
+const GroupLabel = partComponent<"div", State["groupLabel"]>("ListboxGroupLabel", "div", () => {
   const group = inject(GROUP, undefined)
   if (!group) throw new Error("A Listbox.GroupLabel must be inside <Listbox.Group>")
   return group.label
 })
 
+export type GroupLabelProps = PartComponentProps
 export const Listbox = { Root, Item, ItemIndicator, Group, GroupLabel }

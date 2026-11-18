@@ -1,18 +1,30 @@
 import {
   DestroyRef,
+  Directive,
   ElementRef,
   Injectable,
   InjectionToken,
+  Injector,
   PLATFORM_ID,
   TemplateRef,
   ViewContainerRef,
+  afterNextRender,
   effect as angularEffect,
   inject,
+  input,
   untracked,
 } from "@angular/core"
-import type { EmbeddedViewRef } from "@angular/core"
-import { bind, effect, sameProps, signal, write } from "@kirana-ui/core"
-import type { Part, ReadonlySignal, Signal } from "@kirana-ui/core"
+import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import { bind, defined, effect, sameProps, signal, write } from "@kirana-ui/core"
+import type {
+  Align,
+  Anchor,
+  Part,
+  PositionOptions,
+  ReadonlySignal,
+  Side,
+  Signal,
+} from "@kirana-ui/core"
 
 /** Ids for parts whose caller gave none: one counter per application, so a server and its client agree. */
 @Injectable({ providedIn: "root" })
@@ -58,21 +70,169 @@ export function hostPart(): (part: Part) => void {
   return (part) => destroy.onDestroy(put(element, part))
 }
 
+/**
+ * What a positioner's `anchor` may be: an element (a template variable, `#box`), an
+ * `ElementRef`, a place in the viewport (an object with `getBoundingClientRect`), or a function
+ * that gives one of those (a `viewChild` signal).
+ */
+export type PositionerAnchor =
+  | Anchor
+  | ElementRef<Element>
+  | (() => Anchor | ElementRef<Element> | null | undefined)
+  | null
+  | undefined
+
+const anchorElement = (named: Anchor | ElementRef<Element> | null | undefined) =>
+  named && "nativeElement" in named ? named.nativeElement : named
+
+function anchorOf(given: PositionerAnchor): PositionOptions["anchor"] {
+  if (typeof given !== "function") return anchorElement(given)
+  // A function is asked here, so a change of the signal it reads is followed; and given whole
+  // while it has nothing, to be asked again as the popup is placed.
+  return anchorElement(given()) ?? (() => anchorElement(given()))
+}
+
+/**
+ * A positioner: where its popup goes, as inputs. The one place they are named: each
+ * component's positioner extends this and says which controller it is a part of.
+ */
+@Directive()
+export abstract class KuiPositioner implements OnInit {
+  readonly side = input<Side>()
+  readonly align = input<Align>()
+  readonly sideOffset = input<number>()
+  readonly alignOffset = input<number>()
+  readonly collisionPadding = input<number>()
+  /**
+   * What the popup is placed against, when that is not its trigger. It may change while the
+   * popup is open: the popup follows.
+   */
+  readonly anchor = input<PositionerAnchor>()
+  private readonly host = hostPart()
+  private readonly options = () =>
+    defined({
+      side: this.side(),
+      align: this.align(),
+      sideOffset: this.sideOffset(),
+      alignOffset: this.alignOffset(),
+      collisionPadding: this.collisionPadding(),
+      anchor: anchorOf(this.anchor()),
+    })
+
+  /** The controller it is a part of, once its root has made one. */
+  protected abstract placed():
+    | { positioning: Signal<Partial<PositionOptions>>; positioner: Part }
+    | undefined
+
+  constructor() {
+    angularEffect(() => {
+      const next = this.options()
+      untracked(() => this.placed()?.positioning.set(next))
+    })
+  }
+
+  ngOnInit(): void {
+    const placed = this.placed()!
+    // Before the element attaches: the first placement reads these.
+    placed.positioning.set(untracked(this.options))
+    this.host(placed.positioner)
+  }
+}
+
 const NOTHING = () => {}
 
 /** Whether this is a server's document: no layout, no observers, and nothing changes once written. */
 // The platform's id is the word itself; `@angular/common` only wraps the comparison.
 export const onServer = (): boolean => (inject(PLATFORM_ID) as unknown) === "server"
 
+// The DOM work of the parts being made: what each attaches, and what each controller mounts, in
+// the order they were asked for.
+let pending: (() => void)[] | undefined
+
+/** Does the work that waited, in its order; what one throws is thrown once the rest is done. */
+function settle(): void {
+  const waited = pending
+  // Taken first: a view the work draws by hand is then a pass of its own, done before the
+  // work after it, as it was when nothing waited.
+  pending = undefined
+  let failed: { error: unknown } | undefined
+  for (const work of waited ?? []) {
+    try {
+      work()
+    } catch (error) {
+      failed ??= { error }
+    }
+  }
+  if (failed) throw failed.error
+}
+
+/**
+ * Puts DOM work off until every part made beside it has its props on its element, and gives
+ * the way to call it off. Angular makes a view's elements, puts them in the page, and only
+ * then hands each directive its turn: a part that measured in its turn would have the browser
+ * style the parts after it before they had a style of their own, and a design's `transition`
+ * would then run as the page mounts (each slider thumb gliding to its place). So a turn only
+ * writes, as a render does on the other adapters, and the work follows once the turns are
+ * over: when Angular has drawn, or in a microtask where nothing draws.
+ */
+function after(work: () => void, injector: Injector): () => void {
+  let wanted = true
+  if (!pending) {
+    pending = []
+    queueMicrotask(settle)
+    try {
+      afterNextRender(settle, { injector })
+    } catch {
+      // An injector that is gone has nothing left to draw: the microtask does it.
+    }
+  }
+  pending.push(() => {
+    if (wanted) work()
+  })
+  return () => {
+    wanted = false
+  }
+}
+
+/**
+ * Draws a view by hand (`view.detectChanges()`), then does the DOM work of the parts in it:
+ * at once when nothing else is being made, as a popup that opens is; with the rest of the page
+ * when it is drawn as part of one.
+ */
+export function drawing<Drawn>(draw: () => Drawn): Drawn {
+  if (pending) return draw()
+  pending = []
+  try {
+    return draw()
+  } finally {
+    settle()
+  }
+}
+
 /**
  * How a part goes on an element here: bound in a browser, written once on a server. Call it where
  * injection works.
  */
 export function binder(): (element: HTMLElement, part: Part) => () => void {
-  if (!onServer()) return bind
+  if (onServer()) {
+    return (element, part) => {
+      write(element, part)
+      return NOTHING
+    }
+  }
+  const injector = inject(Injector)
   return (element, part) => {
-    write(element, part)
-    return NOTHING
+    // Its props and its listeners now; what it does with its element when the others have theirs.
+    const unbind = bind(element, { props: part.props, attach: () => NOTHING })
+    let detach: (() => void) | undefined
+    const cancel = after(() => {
+      detach = part.attach(element)
+    }, injector)
+    return () => {
+      cancel()
+      unbind()
+      detach?.()
+    }
   }
 }
 
@@ -104,7 +264,18 @@ export function mounted(): (controller: { mount(): () => void }) => void {
   const destroy = inject(DestroyRef)
   // A controller's own effects are a browser's work.
   if (onServer()) return NOTHING
-  return (controller) => destroy.onDestroy(controller.mount())
+  const injector = inject(Injector)
+  return (controller) => {
+    // In its place among the parts' own work: after its root's, before the parts inside it.
+    let stop: (() => void) | undefined
+    const cancel = after(() => {
+      stop = controller.mount()
+    }, injector)
+    destroy.onDestroy(() => {
+      cancel()
+      stop?.()
+    })
+  }
 }
 
 /** Where the popups inside are drawn, when a `kuiPortalProvider` around them says. */
@@ -130,6 +301,7 @@ export function presentWhile(
   const destroy = inject(DestroyRef)
   const server = onServer()
   const put = binder()
+  const injector = inject(Injector)
   const where = inject(KUI_PORTAL_CONTAINER, { optional: true })
   return (
     show: ReadonlySignal<boolean> | (() => boolean),
@@ -160,23 +332,31 @@ export function presentWhile(
       // A portal is the browser's: a server draws none, as on the other adapters.
       if ((options.portal || options.into) && server) return
       untracked(() => {
-        view = container.createEmbeddedView(template)
-        const nodes = view.rootNodes as Node[]
-        const target = options.into?.()
-        if (target) {
-          target.append(...nodes)
-        } else if (options.portal) {
-          const document = (nodes[0] as Node).ownerDocument!
-          outlet = document.createElement("div")
-          outlet.setAttribute("data-kirana-portal", "")
-          outlet.append(...nodes)
-          ;(where?.() ?? document.body).appendChild(outlet)
-        }
-        // The content first, then the part: a panel is measured with its content in it.
-        view.detectChanges()
-        const element = nodes.find((each): each is HTMLElement => each.nodeType === 1)
-        if (part && element) unbind = put(element, part)
-        if (drawn && element && !server) gone = drawn(element)
+        drawing(() => {
+          view = container.createEmbeddedView(template)
+          const nodes = view.rootNodes as Node[]
+          const target = options.into?.()
+          if (target) {
+            target.append(...nodes)
+          } else if (options.portal) {
+            const document = (nodes[0] as Node).ownerDocument!
+            outlet = document.createElement("div")
+            outlet.setAttribute("data-kirana-portal", "")
+            outlet.append(...nodes)
+            ;(where?.() ?? document.body).appendChild(outlet)
+          }
+          // The content first, then the part: a panel is measured with its content in it.
+          view.detectChanges()
+          const element = nodes.find((each): each is HTMLElement => each.nodeType === 1)
+          if (part && element) unbind = put(element, part)
+          if (drawn && element && !server) {
+            // After the part's own work, as it always was.
+            const cancel = after(() => {
+              gone = drawn(element)
+            }, injector)
+            gone = cancel
+          }
+        })
       })
     })
     destroy.onDestroy(() => {

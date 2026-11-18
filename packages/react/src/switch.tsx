@@ -1,12 +1,16 @@
 import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createSwitch } from "@kirana-ui/core/switch"
 import type { Switch as Controller, SwitchProps } from "@kirana-ui/core/switch"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
-import type { ReactElement } from "react"
+import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
-import { useController, usePart } from "./runtime.tsx"
+import { PartElement, parts, useController, usePart } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["switch"]
 
 const Context = createContext<Controller | null>(null)
 
@@ -16,7 +20,11 @@ function useSwitch(part: string): Controller {
   return controller
 }
 
-export type RootProps = Omit<SwitchProps, "id"> & { id?: string } & PartComponentProps
+export type RootProps = PartComponentProps<
+  "span",
+  StateOf<Parts["root"]>,
+  Omit<SwitchProps, "id"> & { id?: string }
+>
 
 function Root({
   checked,
@@ -29,7 +37,6 @@ function Root({
   form,
   value,
   id,
-  children,
   ...rest
 }: RootProps): ReactElement {
   const field = useContext(FieldContext) ?? undefined
@@ -43,21 +50,28 @@ function Root({
     required,
     name,
     form,
-    value: value as string | undefined,
+    value,
     id,
   })
   return (
     <Context.Provider value={controller}>
-      <RootElement {...rest}>
-        {children}
-        <Input />
-      </RootElement>
+      <PartElement of={controller.root} tag="span" hold={withInput} {...rest} />
     </Context.Provider>
   )
 }
 
-const RootElement = (props: PartComponentProps) => usePart(useSwitch("Root").root, "span", props)
-const Input = () => usePart(useSwitch("Root").input, "input", {})
-const Thumb = (props: PartComponentProps) => usePart(useSwitch("Thumb").thumb, "span", props)
+// Its native input is the element's last child, whatever element the caller asked for.
+const withInput = (content: ReactNode) => (
+  <>
+    {content}
+    <Input />
+  </>
+)
 
-export const Switch = { Root, Thumb }
+const Input = () => usePart(useSwitch("Root").input, "input", {})
+
+export type ThumbProps = PartComponentProps<"span", StateOf<Parts["thumb"]>>
+
+const Thumb = (props: ThumbProps) => usePart(useSwitch("Thumb").thumb, "span", props)
+
+export const Switch = /* @__PURE__ */ parts("Switch", { Root, Thumb })

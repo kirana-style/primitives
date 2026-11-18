@@ -1,11 +1,11 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useFieldset } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { LegendProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: LegendProps = $props()
   const controller = useFieldset()
   if (!controller) throw new Error("A Fieldset part must be inside <Fieldset.Root>")
 </script>
 
-<Part part={controller.legend} tag="div" {...props} />
+<Part of={controller.legend} tag="div" {...props} />

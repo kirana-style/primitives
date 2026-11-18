@@ -2,6 +2,7 @@ import { createPagination } from "@kirana-ui/core/pagination"
 import type { Pagination, PaginationEntry, PaginationProps } from "@kirana-ui/core/pagination"
 
 import { defineElement, entryAround } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-pagination>` around a `kui-part="root"` nav with `previous` and `next` buttons and,
@@ -41,3 +42,9 @@ export const tag = defineElement<PaginationProps, Pagination>({
     },
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-pagination": ElementOf<typeof tag, { "page-change": ["onPageChange", "page"] }>
+  }
+}

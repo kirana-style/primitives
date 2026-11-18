@@ -4,6 +4,9 @@ import { defineComponent } from "./part.ts"
 // not carry these descriptions.
 export const avatarVocabulary = defineComponent({
   root: { description: "The frame the image and its stand-in share." },
-  image: { description: "The picture. In the page once it has loaded." },
-  fallback: { description: "What shows until the picture has loaded, or when it cannot." },
+  image: { inside: "root", description: "The picture. In the page once it has loaded." },
+  fallback: {
+    inside: "root",
+    description: "What shows until the picture has loaded, or when it cannot.",
+  },
 })

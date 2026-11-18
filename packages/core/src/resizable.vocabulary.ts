@@ -15,11 +15,15 @@ export const resizableVocabulary = defineComponent({
     states: { orientation: ORIENTATION, disabled: DISABLED },
   },
   panel: {
+    inside: "group",
+    repeated: true,
     description: "One panel. It carries its share of the group.",
     states: { orientation: ORIENTATION },
     variables: { "--panel-size": "The panel's share, in hundredths of the group." },
   },
   handle: {
+    inside: "group",
+    repeated: true,
     description: "The bar between two panels: dragged, or moved with the arrows.",
     states: {
       orientation: ORIENTATION,

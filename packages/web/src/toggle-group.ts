@@ -4,6 +4,7 @@ import type { ToggleGroup, ToggleGroupProps } from "@kirana-ui/core/toggle-group
 
 import { list } from "./around.ts"
 import { controllerAround, defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 type Props = Omit<ToggleGroupProps<string>, "value" | "defaultValue"> & {
   id: string
@@ -37,3 +38,9 @@ export const tag = defineElement<Props, ToggleGroup<string>>({
   changes: { onValueChange: { event: "value-change", prop: "value" } },
   parts: { root: (controller) => controller.root },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-toggle-group": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+  }
+}

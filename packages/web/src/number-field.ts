@@ -1,7 +1,9 @@
 import { createNumberField } from "@kirana-ui/core/number-field"
+import type { NumberFieldProps } from "@kirana-ui/core/number-field"
 
 import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-number-field>` around `kui-part="root"`, a `group`, an `input`, and `increment` and
@@ -46,3 +48,15 @@ export const tag = defineElement({
     decrement: (controller) => controller.decrement,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-number-field": ElementOf<
+      As<typeof tag, NumberFieldProps>,
+      {
+        "value-change": ["onValueChange", "value"]
+        "value-committed": ["onValueCommitted", "value"]
+      }
+    >
+  }
+}

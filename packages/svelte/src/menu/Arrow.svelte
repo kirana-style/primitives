@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useMenu } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ArrowProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ArrowProps = $props()
   const controller = useMenu()
 </script>
 
-<Part part={controller.arrow} tag="div" {...props} />
+<Part of={controller.arrow} tag="div" {...props} />

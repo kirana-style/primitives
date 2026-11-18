@@ -17,14 +17,19 @@ export const accordionVocabulary = defineComponent({
     states: { orientation: ORIENTATION, disabled: DISABLED },
   },
   item: {
-    description: "One section: a header with its trigger, and a panel.",
+    inside: "root",
+    repeated: true,
+    description:
+      "One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own.",
     states: { open: OPEN, disabled: DISABLED },
   },
   header: {
+    inside: "item",
     description: "The heading that holds the trigger.",
     states: { open: OPEN, disabled: DISABLED },
   },
   trigger: {
+    inside: "header",
     description: "The button that opens and closes the item's panel.",
     states: {
       panelOpen: state("data-panel-open", "Present when the item's panel is open."),
@@ -32,6 +37,7 @@ export const accordionVocabulary = defineComponent({
     },
   },
   panel: {
+    inside: "item",
     description: "The item's content. In the page while open, and through its exit's motion.",
     states: { ...TRANSITION, disabled: DISABLED, orientation: ORIENTATION },
     exclusive: EITHER_FRAME,

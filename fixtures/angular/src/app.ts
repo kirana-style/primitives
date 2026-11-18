@@ -14,6 +14,7 @@ import {
   KuiCollapsible,
   KuiCollapsiblePanel,
   KuiCollapsibleTrigger,
+  KuiAlertDialog,
   KuiDialog,
   KuiDialogBackdrop,
   KuiDialogClose,
@@ -37,6 +38,7 @@ import {
   KuiComboboxInput,
   KuiComboboxItem,
   KuiComboboxItemIndicator,
+  KuiComboboxList,
   KuiComboboxPopup,
   KuiComboboxPortal,
   KuiComboboxPositioner,
@@ -144,6 +146,7 @@ import {
   KuiCarouselNext,
   KuiCarouselPrevious,
   KuiCarouselViewport,
+  KuiToastAction,
   KuiToastClose,
   KuiToastDescription,
   KuiToastList,
@@ -256,6 +259,7 @@ import {
     KuiCollapsible,
     KuiCollapsiblePanel,
     KuiCollapsibleTrigger,
+    KuiAlertDialog,
     KuiDialog,
     KuiDialogBackdrop,
     KuiDialogClose,
@@ -279,6 +283,7 @@ import {
     KuiComboboxInput,
     KuiComboboxItem,
     KuiComboboxItemIndicator,
+    KuiComboboxList,
     KuiComboboxPopup,
     KuiComboboxPortal,
     KuiComboboxPositioner,
@@ -386,6 +391,7 @@ import {
     KuiCarouselNext,
     KuiCarouselPrevious,
     KuiCarouselViewport,
+    KuiToastAction,
     KuiToastClose,
     KuiToastDescription,
     KuiToastList,
@@ -536,6 +542,28 @@ import {
           >
             <p>Composed content</p>
           </div>
+        </div>
+        <div kuiCollapsible [kuiId]="'k2'" [(open)]="layered">
+          <button
+            kuiCollapsibleTrigger
+            class="handed asked"
+            title="asked"
+            lang="en"
+            data-testid="k2-trigger"
+            (click)="pressLayered($event)"
+          >
+            Layered {{ handed() }}/{{ asked() }}
+          </button>
+          <button kuiCollapsibleTrigger data-testid="k2-state">
+            {{ layered() ? "Open" : "Closed" }}
+          </button>
+          <div *kuiCollapsiblePanel class="panel" data-testid="k2-panel">
+            <p>Layered content</p>
+          </div>
+        </div>
+        <div class="item">
+          <a class="tag asked" title="handed" href="#k2" data-testid="k3-tag">Tag</a>
+          <span class="tag" data-testid="k3-plain">Plain</span>
         </div>
       </section>
 
@@ -838,6 +866,86 @@ import {
         </form>
         <output data-testid="s1-output">{{ fruit() ?? "none" }}</output>
       </section>
+      <section data-fixture="select-multiple">
+        <form class="bar" data-testid="sm1-form">
+          <ng-container
+            kuiSelect
+            [kuiId]="'sm1'"
+            [name]="'basket'"
+            [multiple]="true"
+            [(values)]="basket"
+          >
+            <button kuiSelectTrigger data-testid="sm1-trigger">
+              <span kuiSelectValue [placeholder]="'Pick fruits'" data-testid="sm1-value"></span>
+            </button>
+            <ng-template kuiSelectPortal>
+              <div kuiSelectPositioner [sideOffset]="4" data-testid="sm1-positioner">
+                <div kuiSelectPopup class="popup" data-testid="sm1-popup">
+                  @for (each of fruits; track each) {
+                    <div
+                      kuiSelectItem
+                      [value]="each"
+                      [disabled]="each === 'Blueberry'"
+                      class="item"
+                      [attr.data-testid]="'sm1-' + each"
+                    >
+                      <span kuiSelectItemText>{{ each }}</span>
+                      <span *kuiSelectItemIndicator>✓</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </ng-template>
+            <input kuiSelectInput />
+          </ng-container>
+          <button type="reset" data-testid="sm1-reset">Reset</button>
+        </form>
+        <output data-testid="sm1-output">{{ basket().join(",") || "none" }}</output>
+        <ng-container kuiSelect [kuiId]="'sm2'" [items]="sizes" [defaultValue]="'m'">
+          <button kuiSelectTrigger data-testid="sm2-trigger">
+            <span *kuiSelectValue="let shown" data-testid="sm2-value"
+              >{{ shown.label }} ({{ shown.value }})</span
+            >
+          </button>
+          <ng-template kuiSelectPortal>
+            <div kuiSelectPositioner [sideOffset]="4" data-testid="sm2-positioner">
+              <div kuiSelectPopup class="popup" data-testid="sm2-popup">
+                @for (each of sizeKeys; track each) {
+                  <div kuiSelectItem [value]="each" class="item" [attr.data-testid]="'sm2-' + each">
+                    <span kuiSelectItemText>{{ sizes[each] }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <ng-container
+          kuiSelect
+          [kuiId]="'sm3'"
+          [items]="sizes"
+          [multiple]="true"
+          [defaultValues]="['l', 's']"
+        >
+          <button kuiSelectTrigger data-testid="sm3-trigger">
+            <span *kuiSelectValue="let shown" class="bar" data-testid="sm3-value">
+              @for (label of shown.labels; track label) {
+                <b>{{ label }}</b>
+              }
+            </span>
+          </button>
+          <ng-template kuiSelectPortal>
+            <div kuiSelectPositioner [sideOffset]="4" data-testid="sm3-positioner">
+              <div kuiSelectPopup class="popup" data-testid="sm3-popup">
+                @for (each of sizeKeys; track each) {
+                  <div kuiSelectItem [value]="each" class="item" [attr.data-testid]="'sm3-' + each">
+                    <span kuiSelectItemText>{{ sizes[each] }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+      </section>
       <section data-fixture="menu">
         <ng-container kuiMenu [kuiId]="'mn1'">
           <button kuiMenuTrigger data-testid="mn1-trigger">File</button>
@@ -1056,11 +1164,17 @@ import {
             }
           </div>
         </div>
-        <output data-testid="lb1-output">{{ chosen()?.join(",") }}</output>
+        <output data-testid="lb1-output">{{ chosen().join(",") }}</output>
       </section>
       <section data-fixture="combobox">
         <form data-testid="cb1-form">
-          <ng-container kuiCombobox [kuiId]="'cb1'" [name]="'pick'" [(value)]="pick">
+          <ng-container
+            kuiCombobox
+            [kuiId]="'cb1'"
+            [name]="'pick'"
+            [autoHighlight]="true"
+            [(value)]="pick"
+          >
             <input kuiComboboxInput aria-label="Fruit" data-testid="cb1-input" />
             <button kuiComboboxTrigger aria-label="Show fruits" data-testid="cb1-trigger">▾</button>
             <ng-template kuiComboboxPortal>
@@ -1138,7 +1252,7 @@ import {
           </button>
           <button kuiToggle [value]="'right'" data-testid="tg1-right">Right</button>
         </div>
-        <output data-testid="tg1-output">{{ align()?.join(",") }}</output>
+        <output data-testid="tg1-output">{{ align().join(",") }}</output>
         <div kuiToolbar aria-label="Editing" class="bar" data-testid="tb1">
           <button kuiToolbarButton data-testid="tb1-save">Save</button>
           <button kuiToolbarButton [disabled]="true" data-testid="tb1-gone">Gone</button>
@@ -1192,7 +1306,7 @@ import {
                 <a kuiNavigationMenuLink href="#tools" data-testid="nm1-tools">tools</a>
               </div>
             </li>
-            <li kuiNavigationMenuItem [value]="'docs'">
+            <li kuiNavigationMenuItem>
               <button kuiNavigationMenuTrigger class="nav-trigger" data-testid="nm1-docs">
                 <span>Docs</span>
                 <span kuiNavigationMenuIcon>▾</span>
@@ -1249,6 +1363,7 @@ import {
           kuiCombobox
           [kuiId]="'cp1'"
           [inline]="true"
+          [autoHighlight]="true"
           (valueChanged)="ran.set($event.value)"
         >
           <input kuiComboboxInput aria-label="Command" data-testid="cp1-input" />
@@ -1270,7 +1385,7 @@ import {
         <output data-testid="cp1-output">{{ ran() }}</output>
         <div kuiField [kuiId]="'fcb'" [name]="'city'" data-testid="fcb">
           <label kuiFieldLabel data-testid="fcb-label">City</label>
-          <ng-container kuiCombobox [kuiId]="'fcbc'" [required]="true">
+          <ng-container kuiCombobox [kuiId]="'fcbc'" [required]="true" [autoHighlight]="true">
             <input kuiComboboxInput data-testid="fcb-input" />
             <button *kuiComboboxClear aria-label="Clear" data-testid="fcb-clear">×</button>
             <ng-template kuiComboboxPortal>
@@ -1306,6 +1421,7 @@ import {
             [kuiId]="'cbm'"
             [name]="'tags'"
             [multiple]="true"
+            [autoHighlight]="true"
             [(values)]="tags"
           >
             <div kuiComboboxChips class="bar" data-testid="cbm-chips">
@@ -1474,6 +1590,17 @@ import {
         >
           Add a brief toast
         </button>
+        <button type="button" data-testid="ts1-undo" (click)="addToastWithAction()">
+          Add a toast with an action
+        </button>
+        <button
+          type="button"
+          data-testid="ts1-alert"
+          (click)="toaster.add({ title: 'Connection lost', type: 'error', priority: 'assertive' })"
+        >
+          Add an urgent toast
+        </button>
+        <output data-testid="ts1-output">{{ toastAction() }}</output>
         <div kuiToastViewport [kuiId]="'ts1'" [toaster]="toaster" class="toasts" data-testid="ts1">
           <div
             *kuiToastList="let toast"
@@ -1488,8 +1615,13 @@ import {
               [attr.data-testid]="'ts1-' + toast.id + '-content'"
             >
               <div kuiToastTitle class="toast-title">{{ toast.title }}</div>
-              <div kuiToastDescription>{{ toast.description }}</div>
+              @if (toast.description) {
+                <div kuiToastDescription></div>
+              }
             </div>
+            @if (toast.action) {
+              <button kuiToastAction [attr.data-testid]="'ts1-' + toast.id + '-action'"></button>
+            }
             <button
               kuiToastClose
               aria-label="Close"
@@ -1726,6 +1858,18 @@ import {
             </div>
           </div>
         </div>
+        <div kuiSlider [kuiId]="'sl5'" [defaultValue]="[20, 50, 80]" data-testid="sl5">
+          <div kuiSliderControl class="slider" data-testid="sl5-control">
+            <div kuiSliderTrack class="slider-track">
+              @if (low()) {
+                <div kuiSliderThumb class="thumb" aria-label="Low" data-testid="sl5-low"></div>
+              }
+              <div kuiSliderThumb class="thumb" aria-label="Middle" data-testid="sl5-middle"></div>
+              <div kuiSliderThumb class="thumb" aria-label="High" data-testid="sl5-high"></div>
+            </div>
+          </div>
+        </div>
+        <button data-testid="sl5-toggle" (click)="low.set(!low())">Low</button>
       </section>
       <section data-fixture="measures">
         <div
@@ -2145,18 +2289,104 @@ import {
           </ng-container>
         </div>
       </section>
+
+      <section data-fixture="placing">
+        <div dir="rtl" data-testid="pl1-box">
+          <ng-container kuiPopover [kuiId]="'pl1'">
+            <button kuiPopoverTrigger data-testid="pl1-trigger">Beside</button>
+            <ng-template kuiPopoverPortal>
+              <div
+                kuiPopoverPositioner
+                [side]="'inline-end'"
+                [sideOffset]="8"
+                data-testid="pl1-positioner"
+              >
+                <div kuiPopoverPopup class="popup" data-testid="pl1-popup">
+                  <h2 kuiPopoverTitle>Beside</h2>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+        <div class="bar">
+          <ng-container kuiPopover [kuiId]="'pl2'">
+            <button kuiPopoverTrigger data-testid="pl2-trigger">Anchored</button>
+            <span #firstAnchor id="pl2-first" class="anchor" data-testid="pl2-first">First</span>
+            <span #secondAnchor id="pl2-second" class="anchor" data-testid="pl2-second"
+              >Second</span
+            >
+            <ng-template kuiPopoverPortal>
+              <div
+                kuiPopoverPositioner
+                [anchor]="moved() ? secondAnchor : firstAnchor"
+                [align]="'start'"
+                [sideOffset]="4"
+                data-testid="pl2-positioner"
+              >
+                <div kuiPopoverPopup class="popup" data-testid="pl2-popup">
+                  <h2 kuiPopoverTitle>Anchored</h2>
+                  <button type="button" data-testid="pl2-move" (click)="moved.set(!moved())">
+                    Move
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+        <div class="bar">
+          <ng-container kuiCombobox [kuiId]="'pl3'" [(value)]="sought">
+            <button kuiComboboxTrigger data-testid="pl3-trigger">Pick a fruit</button>
+            <ng-template kuiComboboxPortal>
+              <div kuiComboboxPositioner [sideOffset]="4" data-testid="pl3-positioner">
+                <div
+                  kuiComboboxPopup
+                  class="popup"
+                  aria-label="Pick a fruit"
+                  data-testid="pl3-popup"
+                >
+                  <input
+                    kuiComboboxInput
+                    class="search"
+                    aria-label="Search fruits"
+                    data-testid="pl3-input"
+                  />
+                  <div kuiComboboxList aria-label="Fruits" data-testid="pl3-list">
+                    @for (each of fruits; track each) {
+                      <div
+                        kuiComboboxItem
+                        [value]="each"
+                        [kuiId]="'pl3-' + each"
+                        class="item"
+                        [attr.data-testid]="'pl3-' + each"
+                      >
+                        {{ each }}
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <output data-testid="pl3-output">{{ sought() ?? "none" }}</output>
+        </div>
+      </section>
     </main>
   `,
 })
 export class App {
   protected readonly fruits = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
   protected readonly controlled = signal<boolean | undefined>(false)
-  protected readonly fruit = signal<unknown>("Banana")
+  protected readonly fruit = signal<string | null>("Banana")
+  // Labels by value: what a select names its values with before its list has been opened.
+  protected readonly sizes = { s: "Small", m: "Medium", l: "Large" }
+  protected readonly sizeKeys = ["s", "m", "l"] as const
+  protected readonly basket = signal(["Banana"])
   protected readonly action = signal("none")
   protected readonly picked = signal("none")
   protected readonly code = signal("none")
   protected readonly shares = signal("25,75")
   protected readonly slide = signal("0")
+  protected readonly toastAction = signal("")
   protected readonly drawn = signal("closed")
   protected readonly born = signal("none")
   protected readonly due = signal("2026-03-14")
@@ -2171,15 +2401,28 @@ export class App {
   protected readonly lines = computed(() => Array.from({ length: this.said() }, (_, at) => at + 1))
   // A page's toasts are made once: a long time, so a test reads them.
   protected readonly toaster = createToaster({ duration: 600_000 })
+
+  protected addToastWithAction(): void {
+    this.toaster.add({
+      title: "Deleted",
+      action: { label: "Undo", onAction: () => this.toastAction.set("undone") },
+    })
+  }
   protected readonly rounded = (sizes: number[]) => sizes.map(Math.round).join(",")
-  protected readonly align = signal<readonly unknown[] | undefined>(["left"])
+  protected readonly align = signal(["left"])
   protected readonly tall = signal(false)
-  protected readonly chosen = signal<readonly unknown[] | undefined>(["Banana"])
-  protected readonly pick = signal<unknown>(null)
+  protected readonly chosen = signal(["Banana"])
+  protected readonly pick = signal<string | null>(null)
+  protected readonly sought = signal<string | null>(null)
+  protected readonly moved = signal(false)
   protected readonly outside = signal(0)
-  protected readonly view = signal<unknown>("list")
+  protected readonly view = signal("list")
   protected readonly presses = signal(0)
   protected readonly locked = signal(false)
+  protected readonly handed = signal(0)
+  protected readonly asked = signal(0)
+  // The other adapters give the caller the part's state; here the caller holds it.
+  protected readonly layered = signal<boolean | undefined>(false)
   protected readonly count = signal(0)
   protected readonly done = signal<number | null>(40)
   protected readonly pictures = signal(false)
@@ -2192,6 +2435,7 @@ export class App {
     valid === null ? "unchecked" : valid ? "valid" : "invalid"
   protected readonly taken = (value: string) => (value === "admin" ? "Taken" : null)
   protected readonly span = signal<number | readonly number[] | undefined>([20, 80])
+  protected readonly low = signal(true)
   protected readonly list = (value: number | readonly number[] | undefined) =>
     typeof value === "number" ? [value] : (value ?? [])
   // A picture of one pixel, and an address that is not a picture.
@@ -2206,7 +2450,7 @@ export class App {
   protected readonly load = ["load"]
   protected readonly first = signal(0)
   protected readonly ran = signal<unknown>("none")
-  protected readonly tags = signal<readonly unknown[] | undefined>(["New"])
+  protected readonly tags = signal(["New"])
   // A list of ten thousand rows of which a window is drawn: the fixture's own few lines of
   // virtualizing, so no library's are part of what is compared.
   protected readonly firstRow = (top: number) => Math.max(0, Math.floor(top / 24) - 1)
@@ -2228,6 +2472,12 @@ export class App {
 
   protected press(event: Event): void {
     this.presses.update((count) => count + 1)
+    if (this.locked()) (event as Event & { preventKiranaHandler(): void }).preventKiranaHandler()
+  }
+
+  protected pressLayered(event: Event): void {
+    this.handed.update((count) => count + 1)
+    this.asked.update((count) => count + 1)
     if (this.locked()) (event as Event & { preventKiranaHandler(): void }).preventKiranaHandler()
   }
 }

@@ -2,6 +2,10 @@ import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import type { ChangeDetails } from "./part.ts"
 
+/**
+ * A value that is the caller's while they give one and the part's own otherwise, as a signal
+ * that is asked to change.
+ */
 export interface Bindable<T> extends ReadonlySignal<T> {
   /** Asks for a new value: the caller's `onChange` hears it, and may cancel it. */
   set(value: T, details: ChangeDetails): void

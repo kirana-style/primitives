@@ -15,6 +15,7 @@ export const checkboxVocabulary = defineComponent({
     exclusive: EITHER_CHECKED,
   },
   indicator: {
+    inside: "root",
     description: "The mark. In the page while the box is checked or indeterminate.",
     states: {
       ...CHECKED,

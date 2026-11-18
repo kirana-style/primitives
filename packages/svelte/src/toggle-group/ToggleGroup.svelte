@@ -1,5 +1,4 @@
-<script lang="ts">
-  import type { ToggleGroupProps } from "@kirana-ui/core/toggle-group"
+<script lang="ts" generics="Value">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createToggleGroup } from "@kirana-ui/core/toggle-group"
@@ -8,7 +7,7 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provideToggleGroup, useToolbarAround } from "../toolbar/context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { ToggleGroupProps } from "./types.ts"
 
   // Toggles that are one control. Each `<Toggle value>` inside it is one of its toggles.
   let {
@@ -20,9 +19,9 @@
     orientation,
     loop,
     ...rest
-  }: RootProps<ToggleGroupProps> = $props()
+  }: ToggleGroupProps<Value> = $props()
 
-  function change(next: unknown[], by: ChangeDetails) {
+  function change(next: Value[], by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -41,4 +40,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

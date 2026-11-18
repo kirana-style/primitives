@@ -2,52 +2,396 @@
 
 > Kirana UI Primitives for Angular: headless, accessible components with no styles of their own. The same components, parts, attributes and behaviour as on the other four frameworks, from one core.
 
-Generated from the library's own definitions (`bun scripts/llms.ts`): what is here is what the components do.
+Generated from the library's own source (`bun scripts/llms.ts`), and checked against it: every part and every prop here is in the package, and what is not here is not. In order: installing it and its entries; the positioner's options; the types the props name; what else is exported; the agent bridge; the testing kit; then "Using it" (the rules of every component) and "Components" (each one's parts, props, attributes and CSS variables).
+
+## Install and entries
+
+Install `@kirana-ui/angular`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/angular/agent`, `@kirana-ui/angular/testing`), so nothing is imported from a package the project did not install.
+
+Its entries: `@kirana-ui/angular` (every directive, and what a directive of your own is made with), `@kirana-ui/angular/agent` and `@kirana-ui/angular/testing`. There is no entry per component: Angular's packager writes one module, which a project's build takes apart.
+
+The attributes and CSS variables below are also data and typed selectors, for a design system: install `@kirana-ui/vocabulary` for them (`import { vocabulary } from "@kirana-ui/vocabulary"`, `import { Dialog } from "@kirana-ui/vocabulary/keys"`: `Dialog.Popup.open` is `"[data-open]"`). It is its own package, and not installed with this one.
+
+An agent's skill is in the package: `node_modules/@kirana-ui/angular/skills/kirana-ui-primitives/SKILL.md`.
+
+## Positioner options
+
+What every `Positioner` takes, beside its own props where a component's section lists any:
+
+- `side?: Side`: The side of the anchor the popup is on. `inline-start` and `inline-end` follow the reading direction the popup is placed in, and `data-side` then says the side in the same words. Default `"bottom"`.
+- `align?: Align`: Where along that side the popup is: at the anchor's start, its centre or its end. Default `"center"`.
+- `sideOffset?: number`: The gap between the anchor and the popup, measured without any arrow. Default `0`.
+- `alignOffset?: number`: How far the popup is moved along the side from where `align` puts it, in pixels. Default `0`.
+- `collisionPadding?: number`: Kept between the popup and the viewport's edges. Default `5`.
+- `anchor?: PositionerAnchor`: What the popup is placed against, when that is not its trigger. It may change while the popup is open: the popup follows.
+
+A component's own defaults lie over those: `Autocomplete` `{ align: "start" }`; `Combobox` `{ align: "start" }`; `ContextMenu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `HoverCard` `{ side: "top" }`; `Menu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `NavigationMenu` `{ align: "start" }`; `Select` `{ align: "start" }`; `Tooltip` `{ side: "top" }`.
+
+## Types
+
+The named types the props below mention, each with the entry of this package it is imported from: `import type { ChangeDetails, Side } from "@kirana-ui/angular"`. The core's own types are re-exported there, as types only, so nothing is imported from `@kirana-ui/core`, which a strict installer keeps out of a project's reach. A capital alone (`Value`) in a part's props is that part's own type parameter, said on the part's line.
+
+- `Align` (`@kirana-ui/angular`): `"start" | "center" | "end"`. Where along its side a popup is: at the anchor's start, its centre or its end.
+- `Anchor` (`@kirana-ui/angular`): `Element | VirtualElement`. What a popup is placed against: an element, or a place in the viewport that is none.
+- `CalendarDay` (`@kirana-ui/angular`): A day in the grid of the month shown.
+    - `date: IsoDate`
+    - `label: string`: The day of the month as the locale writes it.
+    - `outside: boolean`: Not of the month shown: the days that fill its first and last weeks.
+- `CalendarProps` (`@kirana-ui/angular`)
+    - `id: string`
+    - `value?: CalendarValue`: One day, or with `mode: "range"` a first and a last day; `null` for none.
+    - `defaultValue?: CalendarValue`: The value it starts with, when the caller does not hold `value`. Read once.
+    - `onValueChange?: ((value: CalendarValue, details: ChangeDetails) => void)`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
+    - `mode?: "single" | "range"`: Whether one day is chosen (the default) or a first and a last.
+    - `defaultFocusedValue?: IsoDate`: The day it opens on, when it has no value: its month is the one shown.
+    - `onMonthChange?: ((month: IsoDate) => void)`: Heard when another month is shown: its first day.
+    - `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
+    - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
+    - `min?: IsoDate`: The first and the last day that can be chosen.
+    - `max?: IsoDate`: The last day that can be chosen.
+    - `isDateUnavailable?: ((date: IsoDate) => boolean)`: Days that cannot be chosen, though they can be reached: a day off, a day taken.
+    - `disabled?: boolean`: Disabled: no day can be chosen.
+    - `readOnly?: boolean`: Shown as it is: the days can be moved through, and none can be chosen.
+    - `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
+- `CalendarValue` (`@kirana-ui/angular`): `IsoDate | DateRange | null`. What a calendar holds: a day, a range of days in `mode: "range"`, or `null` for none.
+- `CalendarWeekday` (`@kirana-ui/angular`): A day of the week, as a column's heading names it.
+    - `index: number`: Its place in the week as the locale orders it, from 0.
+    - `narrow: string`: Its name as a column's heading (`"M"`, `"Mo"`), and in full (`"Monday"`).
+    - `short: string`
+    - `long: string`
+- `ChangeDetails` (`@kirana-ui/angular`): What a change callback is given beside the value: why it changed, what made it, and a way to refuse it.
+    - `reason: string`: Why the value changed: `"trigger-press"`, `"outside-press"`, `"escape-key"`, `"item-press"` …
+    - `event: Event | undefined`: The DOM event behind it, when there is one.
+    - `source: ChangeSource`: What made it: a mouse, a finger, a pen, the keyboard, something that presses without a pointer (a screen reader, `element.click()`), code with no event at all, or an agent acting through the bridge (`@kirana-ui/core/agent`).
+    - `cancel(): void`: Keeps the value as it was.
+    - `canceled: boolean`
+- `ChangeSource` (`@kirana-ui/angular`): `"mouse" | "touch" | "pen" | "keyboard" | "virtual" | "programmatic" | "agent"`. What made a change: a kind of pointer, the keyboard, a press with no pointer (`virtual`), code with no event (`programmatic`), or an agent acting through the bridge.
+- `DateFieldProps` (`@kirana-ui/angular`)
+    - `id: string`
+    - `value?: IsoDate | null`: The day typed, once all of it is; `null` until then.
+    - `defaultValue?: IsoDate | null`: The value it starts with, when the caller does not hold `value`. Read once.
+    - `onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void)`: Heard as the day is about to change, once all of it is typed or as it is cleared: `details.cancel()` keeps the value as it was.
+    - `locale?: string`: The language and region that order the day, the month and the year and put what stands between them (`"en-US"`: month/day/year). Give it: a server does not know the reader's.
+    - `min?: IsoDate`: The first and the last day it takes: outside them it says it is invalid.
+    - `max?: IsoDate`: The last day it takes.
+    - `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`.
+    - `disabled?: boolean`: Disabled: it cannot be changed.
+    - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+    - `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
+    - `name?: string`: The name it is submitted under, by its hidden input.
+    - `form?: string`: The id of the form it belongs to, when it is not inside it.
+- `DateFieldSegment` (`@kirana-ui/angular`): One piece of the field, in the locale's order: a part that is typed, or what stands between.
+    - `type: DateUnit | "literal"`
+    - `literal: string`: What stands between two parts (`"/"`); empty for a part that is typed.
+    - `index: number`: Its place among the pieces.
+- `DateRange` (`@kirana-ui/angular`): A range of days, its first and its last, both in it.
+    - `start: IsoDate`
+    - `end: IsoDate`
+- `DateUnit` (`@kirana-ui/angular`): `"day" | "month" | "year"`. A part of a date that is typed on its own.
+- `Direction` (`@kirana-ui/angular`): `"ltr" | "rtl"`. The reading direction: left to right, or right to left.
+- `DrawerSide` (`@kirana-ui/angular`): `"up" | "down" | "left" | "right"`. The way a drawer is swiped to close it: towards the edge it came from.
+- `DrawerSnapPoint` (`@kirana-ui/angular`): `number | string`. How much of a drawer shows at a place it rests: a share of it, or a length.
+- `FieldValidity` (`@kirana-ui/angular`): What a field knows of its control's value once it has been checked.
+    - `valid: boolean | null`: `null` until the value has been checked.
+    - `errors: readonly string[]`: What is wrong, one message each.
+    - `state: Readonly<Record<ValidityKey, boolean>>`: What the browser found, by name; `customError` is the field's own `validate`.
+    - `value: string`: The value that was checked.
+- `FormErrors` (`@kirana-ui/angular`): `Record<string, string | readonly string[]>`. A form's errors as a server sends them: each field's name with its message, or messages.
+- `FormValues` (`@kirana-ui/angular`): `Record<string, FormDataEntryValue | FormDataEntryValue[]>`. A form's values by field name, as `FormData` holds them: a list where a name is there more than once.
+- `IsoDate` (`@kirana-ui/angular`): `string`. A day as `YYYY-MM-DD`, in the calendar the world's data is kept in (ISO 8601).
+- `ItemLabels<Value = unknown>` (`@kirana-ui/angular`): `readonly { value: Value; label: string }[] | Readonly<Record<string, string>>`. The labels of a control's values, as its caller gives them: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`).
+- `ListCollection` (`@kirana-ui/angular`): Every row of a list of which only some are in the page: a virtualizer draws the ones in view. The keys then move by place, and ask for a row that is not drawn to be brought into the page.
+    - `count: number`: How many rows there are, drawn or not.
+    - `label?(index: number): string`: A row's name by its place: what typing matches. Without it, typing finds nothing.
+    - `disabled?(index: number): boolean`
+    - `indexOf?(value: unknown): number`: The place of a value, or -1: where a list opens on what is chosen.
+    - `scrollToIndex(index: number): void`: Brings a row into the page: the virtualizer's own scroll.
+- `Orientation` (`@kirana-ui/angular`): `"horizontal" | "vertical"`. The way a row of things is laid out, and so which arrow keys move along it.
+- `PaginationEntry` (`@kirana-ui/angular`): `{ readonly type: "page"; readonly page: number; readonly key: string } | { readonly type: "ellipsis"; readonly key: "start" | "end" }`. One piece of the list of pages: a page, or the mark for pages left out.
+- `PhysicalSide` (`@kirana-ui/angular`): `"top" | "right" | "bottom" | "left"`. A side of the anchor as the page is drawn.
+- `PositionerAnchor` (`@kirana-ui/angular`): `Anchor | ElementRef<Element> | (() => Anchor | ElementRef<Element> | null | undefined) | null | undefined`. What a positioner's `anchor` may be: an element (a template variable, `#box`), an `ElementRef`, a place in the viewport (an object with `getBoundingClientRect`), or a function that gives one of those (a `viewChild` signal).
+- `QrCorrection` (`@kirana-ui/angular`): `"L" | "M" | "Q" | "H"`. How much of the symbol may be lost and still be read: about 7, 15, 25 and 30 in a hundred.
+- `ReadonlySignal<T>` (`@kirana-ui/angular`): A value that is read, and that tells when it changes.
+    - `get(): T`: The value, tracked by the computed or effect that reads it.
+    - `peek(): T`: The value, untracked.
+    - `subscribe(listener: () => void): () => void`: Calls `listener` after each change (not at once). Returns the unsubscribe.
+- `SelectShown<Value = unknown>` (`@kirana-ui/angular`): What a select's value part shows: what is chosen, and how it is named.
+    - `value: Value | null`: The chosen value; `null` while nothing is chosen, and with `multiple`.
+    - `label: string | undefined`: What the part says: the chosen value's label, or with `multiple` every chosen label with ", " between; `undefined` while nothing is chosen.
+    - `values: readonly Value[]`: Every chosen value, in the items' order: one or none without `multiple`.
+    - `labels: readonly string[]`: The label of each of `values`.
+- `Side` (`@kirana-ui/angular`): `PhysicalSide | "inline-start" | "inline-end"`. The side of its anchor a popup is on. `inline-start` and `inline-end` turn with the reading direction: `inline-end` is the right in English and the left in Arabic.
+- `SliderChangeDetails` (`@kirana-ui/angular`): A slider's change details: the details of any change, and which thumb moved.
+    - `index: number`: The thumb that moved.
+    - `reason: string`: Why the value changed: `"trigger-press"`, `"outside-press"`, `"escape-key"`, `"item-press"` …
+    - `event: Event | undefined`: The DOM event behind it, when there is one.
+    - `source: ChangeSource`: What made it: a mouse, a finger, a pen, the keyboard, something that presses without a pointer (a screen reader, `element.click()`), code with no event at all, or an agent acting through the bridge (`@kirana-ui/core/agent`).
+    - `cancel(): void`: Keeps the value as it was.
+    - `canceled: boolean`
+- `SliderTold<Value extends SliderValue = SliderValue>` (`@kirana-ui/angular`): `Value extends number ? number : number[]`. What a slider tells of a value it was given as `Value`: a number for one thumb, a list for a range, and either where the caller's own type says either.
+- `ToastActionOptions<Content = string>` (`@kirana-ui/angular`): A button a toast offers: what it says, and what pressing it does.
+    - `label: Content`: What the button says: `Toast.Action` draws it when it is given nothing else. Needed.
+    - `onAction(details: ChangeDetails): void`: Heard when the button is pressed, before the toast closes with the reason `"action-press"`: `details.cancel()` keeps the toast open. Needed.
+- `Toaster<Content = ToastContent>` (`@kirana-ui/angular`): The toasts of a page and what changes them: what `createToaster()` gives.
+    - `toasts: ReadonlySignal<readonly ToastRecord<Content>[]>`: Every toast that is in the page, the newest first. Empty to begin with.
+    - `limit: number`: How many are shown at once; the rest wait behind. Default: `3`.
+    - `add(options: ToastOptions<Content> & { id?: string }): string`: Shows a toast, and gives the id it is known by: `id` when one is given (the same id again is the same toast, changed), `toast-1`, `toast-2` … otherwise.
+    - `update(id: string, options: ToastOptions<Content>): void`: Changes one that is showing: what is given replaces what it had, the rest stays, and its time starts again.
+    - `dismiss(id?: string, details?: ChangeDetails): void`: Closes one, or every one when no id is given: it leaves once its motion has ended. `details` is what `onClose` hears. Default: the reason `"dismiss"`.
+    - `remove(id: string): void`: Takes one out at once, with no exit: what draws the toasts calls it when the motion has ended.
+    - `promise<Value>( promise: Promise<Value>, states: { loading: ToastState<Content> success: ToastState<Content> | ((value: Value) => ToastState<Content>) error: ToastState<Content> | ((error: unknown) => ToastState<Content>) } ): Promise<Value>`: One toast for something that takes time: `loading` (type `"loading"`, staying until the promise settles), then `success` or `error` in its place, each a title, a toast's options, or a function of what the promise gave. Each state is whole: a description or an action the state before had is not kept. Answers the promise itself.
+- `ToastOptions<Content = string>` (`@kirana-ui/angular`): What a toast is added with. `Content` is what a title, a description and an action's label may be: a string here, and what the framework draws in each adapter's own `createToaster`. The toaster hands it on as it was given, and never reads it.
+    - `title?: Content`: What the toast is called: `Toast.Title` draws it when it is given nothing else. Default: none.
+    - `description?: Content`: What the toast says: `Toast.Description` draws it when it is given nothing else. Default: none.
+    - `type?: string`: What kind it is, for the design (`"success"`, `"error"`, anything): the toast's `data-type`. Default: none.
+    - `duration?: number`: How long it stays, in milliseconds; `Infinity` until it is closed. Default: the toaster's `duration`.
+    - `priority?: "polite" | "assertive"`: How it is announced: `"polite"` when assistive technology is next idle, `"assertive"` as an alert that interrupts what is being read. Default: `"polite"`.
+    - `action?: ToastActionOptions<Content>`: A button of the toast's own, which `Toast.Action` draws and presses. Default: none.
+    - `data?: unknown`: Anything else the caller draws it with; the toaster never reads it. Default: none.
+    - `onClose?: ((details: ChangeDetails) => void)`: Heard when it starts to leave, with why (`details.reason`). Default: none.
+- `ToastRecord<Content = ToastContent>` (`@kirana-ui/angular`): A toast as its toaster holds it: what it was added with, and where it stands.
+    - `id: string`: What it is known by: the one it was added with, or one the toaster made.
+    - `duration: number`: How long it stays, in milliseconds: its own, or the toaster's when it gave none.
+    - `priority: "polite" | "assertive"`: How it is announced: its own, or `"polite"` when it gave none.
+    - `closing: boolean`: It has been closed and is on its way out. `false` until then.
+    - `title?: Content`: What the toast is called: `Toast.Title` draws it when it is given nothing else. Default: none.
+    - `description?: Content`: What the toast says: `Toast.Description` draws it when it is given nothing else. Default: none.
+    - `type?: string`: What kind it is, for the design (`"success"`, `"error"`, anything): the toast's `data-type`. Default: none.
+    - `action?: ToastActionOptions<Content>`: A button of the toast's own, which `Toast.Action` draws and presses. Default: none.
+    - `data?: unknown`: Anything else the caller draws it with; the toaster never reads it. Default: none.
+    - `onClose?: ((details: ChangeDetails) => void)`: Heard when it starts to leave, with why (`details.reason`). Default: none.
+- `ToastState<Content = string>` (`@kirana-ui/angular`): `ToastOptions<Content> | (string extends Content ? string : never)`. What a promise's toast shows in one of its states: a toast's options, or a string, which is its title (where a title may be a string).
+- `ValidationMode` (`@kirana-ui/angular`): `"onSubmit" | "onBlur" | "onChange"`. When a field checks its value. Once it is found invalid, it checks on every change.
+- `ValidityKey` (`@kirana-ui/angular`): `Exclude<keyof ValidityState, "valid">`. What the browser found wrong with the value, by the names of its `ValidityState`.
+
+## Also exported
+
+What the entries export beside the components, their parts' props types and the types above:
+
+- `AnchorOption`, from `@kirana-ui/angular`: A positioner's own anchor: an element, a place in the viewport (`getBoundingClientRect`), or a function that gives one, asked each time the popup is placed. `null`, `undefined` or a function that gives neither: the popup's own anchor, its trigger.
+- `Bindable`, from `@kirana-ui/angular`: A value that is the caller's while they give one and the part's own otherwise, as a signal that is asked to change.
+- `ComponentDefinition`, from `@kirana-ui/angular`: A component in the vocabulary: its parts by name.
+- `createToaster(options?: Core.ToasterOptions)`, from `@kirana-ui/angular`: The toasts of a page, made once, in a module: `toaster.add({ title })` from anywhere. A title, a description and an action's label are a string or a template, unless `Content` says otherwise.
+- `hostPart()`, from `@kirana-ui/angular`: Puts a part on the directive's host element: the core writes its attributes and listens for its events itself, so nothing waits for change detection. Returns a function to call in `ngOnInit`, when the part's controller exists.
+- `injectDirection()`, from `@kirana-ui/angular`: The direction the nearest `kuiDirection` states; `ltr` outside one.
+- `innerPart(tag: string)`, from `@kirana-ui/angular`: A part the directive draws itself, as the last child of its host: the hidden native input of a form control, which the caller does not write. Returns a function to call in `ngOnInit`.
+- `inputsSignal(read: () => T)`, from `@kirana-ui/angular`: A core signal that follows a directive's inputs. Call it where injection works (a field initialiser or the constructor); `read` first runs when the directive's inputs are set.
+- `KuiDirection` (`[kuiDirection]`), from `@kirana-ui/angular`: States the reading direction for the components inside: `<div kuiDirection="rtl" dir="rtl">`. It writes nothing on its element: the `dir` attribute is set with it. Inputs: `kuiDirection: Direction | ""`.
+- `KuiIds`, from `@kirana-ui/angular`: Ids for parts whose caller gave none: one counter per application, so a server and its client agree.
+- `KuiPortalProvider` (`[kuiPortalProvider]`), from `@kirana-ui/angular`: `<ng-container kuiPortalProvider [container]="element">`: says where every popup inside it is drawn, the popups those open included: an element of the page (a shadow root's host, a full-screen element) in place of `<body>`. Inputs: `container: HTMLElement | null`.
+- `KuiPositioner` (a class a positioner's directive extends), from `@kirana-ui/angular`: A positioner: where its popup goes, as inputs. The one place they are named: each component's positioner extends this and says which controller it is a part of. Inputs: `side: Side`, `align: Align`, `sideOffset: number`, `alignOffset: number`, `collisionPadding: number`, `anchor: PositionerAnchor`.
+- `mounted()`, from `@kirana-ui/angular`: Runs a controller's own effects for the directive's life.
+- `onServer()`, from `@kirana-ui/angular`: Whether this is a server's document: no layout, no observers, and nothing changes once written.
+- `Part`, from `@kirana-ui/angular`: One part of a component as the core gives it: the props for its element, and the DOM work that starts once the element is in the page. Its props are the type `PartProps`, from the same entries.
+- `PartDefinition`, from `@kirana-ui/angular`: A part of a component in the vocabulary: its states, its CSS variables, and where it goes.
+- `PartEvent`, from `@kirana-ui/angular`: An event as a handler given to a part hears it.
+- `PartState`, from `@kirana-ui/angular`: A part's state as its caller reads it: `true` for a flag, its value for a state that has one.
+- `PartStyle`, from `@kirana-ui/angular`: A part's `style`: property names as CSS writes them (`width`, `--thumb-offset`).
+- `PositionOptions`, from `@kirana-ui/angular`: How a popup is placed against its anchor: what every positioner takes.
+- `presentWhile(options: { portal?: boolean /** Drawn as children of this element instead, which is elsewhere in the page. */ into?: () => HTMLElement | undefined } = {})`, from `@kirana-ui/angular`: For a structural directive (`*kuiCollapsiblePanel`): its template is in the page only while `show` holds, so a closed panel is really gone, its content with it. `part` goes on the template's element. With `portal`, the template is drawn in a container at the end of the page. Returns a function to call in `ngOnInit`.
+- `Signal`, from `@kirana-ui/angular`: A value that is read and written, and that tells when it changes.
+- `StateDefinition`, from `@kirana-ui/angular`: A state of a part in the vocabulary: the attribute that marks it, and what it means.
+- `StateOf`, from `@kirana-ui/angular`: The state of a part, from its definition in the vocabulary: a state its attribute marks by being present is `true` or absent, one with values is one of them or absent. It is what `stateOf` reads from the part's props.
+- `ToastContent`, from `@kirana-ui/angular`: What a toast's title, description and action's label may be here: a string, or a template that draws it (`<ng-template #saved>`, read with `viewChild`).
+- `ToasterOptions`, from `@kirana-ui/angular`: What a toaster is made with.
+
+## Agent
+
+`import { createAgent } from "@kirana-ui/angular/agent"`: a bridge that lets an agent read and use a page built with these components, by the roles, states and names every part writes. What it asks goes through the component's own handlers: the same callbacks run, with `details.source === "agent"`, and may refuse.
+
+`createAgent(options)` takes (`AgentOptions`):
+
+- `root?: ParentNode`: The part of the page the agent may read and use. Default: the document.
+- `allow?: ((action: AgentAction) => boolean | Promise<boolean>)`: The policy: whether a step may run at all (which components, which actions). Asked for every step, before `confirm`. Without it every step may. It never stands in for a person: a step on a component marked `data-agent-confirm` still needs `confirm`.
+- `confirm?: ((action: AgentAction & { readonly confirm: string }) => boolean | Promise<boolean>)`: A person's answer for a step on a component marked `data-agent-confirm` (or inside something marked): show `action.confirm`, the mark's text, and resolve with what they chose. Without it such a step fails with "Needs a person", whatever `allow` says.
+
+and gives (`Agent`):
+
+- `snapshot(): AgentComponent[]`: The components in the page now.
+- `act(request: { steps: readonly AgentStep[] }): Promise<AgentResult>`: Runs steps in order, each through its component's own handlers.
+- `query(request: { text?: string; within?: string; kind?: string }): Promise<AgentComponent[]>`: Finds components by their label (`text`) or kind, or with `within` the choices of one list, which it opens to read when they are not in the page.
+- `subscribe(listener: (changed: AgentComponent[]) => void): () => void`: Hears the components that changed, a moment after they do. Returns the stop.
+- `history(): AgentChange[]`: What the agent changed through `act`, the oldest first. A person's changes are not here.
+- `undo(): Promise<AgentResult>`: Takes the agent's last change back: the component is asked for what it held before, the way any step asks (its callback hears an agent, `allow` and `confirm` are asked). A press cannot be taken back.
+- `redo(): Promise<AgentResult>`: Makes the last change taken back again.
+
+A component in a snapshot (`AgentComponent`):
+
+- `ref: string`: Names it in `act` and `query`; the same for as long as its element is in the page.
+- `component: string`: What it is: `"switch"`, `"select"`, `"input"`, `"dialog"` …
+- `label?: string`: Its accessible name, when it has one.
+- `value?: string | number`
+- `checked?: boolean | "mixed"`
+- `open?: boolean`
+- `min?: number`
+- `max?: number`
+- `items?: readonly AgentItem[]`: Its choices, where they are in the page. `query({ within })` reads a closed list's.
+- `disabled?: boolean`
+- `confirm?: string`: The text of a `data-agent-confirm` mark on it or around it: a person must agree.
+- `actions: readonly string[]`: What it can be asked to do now.
+
+A step (`AgentStep`) and what `allow` and `confirm` are asked about (`AgentAction`, the step with these beside):
+
+- `ref: string`: A component's `ref`, or its label.
+- `action: string`
+- `args?: readonly unknown[]`
+- `component: string`
+- `label: string | undefined`
+- `confirm: string | undefined`
+
+The kinds of component it reads, what each is found by, and the actions each takes (a step's `action`; `setValue`, `setChecked` and `choose` take the value as `args[0]`):
+
+- `switch` (`[role="switch"]`): `toggle`, `setChecked`
+- `checkbox` (`[role="checkbox"]`): `toggle`, `setChecked`
+- `radio-group` (`[role="radiogroup"]`): `setValue`
+- `slider` (`[role="slider"]`): `setValue`
+- `tabs` (`[role="tablist"]`): `setValue`
+- `select` (`button[role="combobox"]`): `open`, `close`, `setValue`
+- `combobox` (`input[role="combobox"]`): `setValue`, `clear`, `choose`
+- `number-field` (`input[aria-roledescription="Number field"]`): `setValue`, `clear`
+- `input` (`input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea`): `setValue`, `clear`
+- `dialog` (`[role="dialog"], [role="alertdialog"]`): `close`
+- `toggle` (`button[aria-pressed]`): `toggle`, `setChecked`
+- `disclosure` (`button[aria-expanded]`): `toggle`, `open`, `close`
+- `menu-item` (`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`): `press`
+- `button` (`button, [role="button"]`): `press`
+
+`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
+
+What `act`, `undo` and `redo` resolve with, and what `history` lists:
+
+- `AgentResult`: What `act`, `undo` and `redo` resolve with: whether every step ran, and what each did.
+    - `ok: boolean`
+    - `steps: readonly AgentStepResult[]`
+    - `error?: string`: Which step failed and why. Earlier steps stay done.
+- `AgentStepResult`: What one step did.
+    - `ref: string`
+    - `action: string`
+    - `now?: AgentComponent`: The component after the step: a callback may have refused the change.
+- `AgentChange`: One change an agent made: what it asked, and the component before and after.
+    - `ref: string`
+    - `action: string`
+    - `args: readonly unknown[]`
+    - `before: AgentComponent`
+    - `after: AgentComponent | undefined`: Absent when the component left the page with the change.
+    - `undone: boolean`: Whether `undo` took it back since.
+- `AgentItem`: One choice of a list: the value it is chosen by, and what it says.
+    - `value: string`
+    - `label: string`
+
+For a model, and for a browser's own agent:
+
+- `agentTools`: The bridge as tools a model is given: a name, what it does, and its input's JSON Schema.
+- `registerTools(agent: Agent, options: { allow: (step: AgentStep) => boolean | Promise<boolean> })`: Gives the bridge's tools to the browser's own agent, where the browser has one (`document.modelContext`, WebMCP); elsewhere it does nothing. `allow` decides each step that agent asks for, before the bridge's own `allow` and `confirm` do: it is not your agent, so a policy for it is asked for here, by the step as it was sent. Returns the removal.
+
+## Testing
+
+`import { faults, known, recorder, serialize, settled } from "@kirana-ui/angular/testing"`: what the library's own checks are made of, for a real browser test of a page built with it.
+
+- `faults(root: ParentNode, vocabularyKnown: KnownVocabulary = known(), options: FaultOptions = {})`: The faults in what is under `root`, each as a sentence; none is an empty list. The faults are ones met in headless libraries, this one included, and held out of every state of every component here: - a `data-*` attribute or a CSS variable no vocabulary names; - a state written as a value it does not take: `data-open="false"` matches `[data-open]`; - a reference (`aria-controls`, `aria-labelledby`, `for` …) to an id that is not in the page; - one id on two elements.
+- `known(...own: ComponentDefinition[])`: What the given components may write: this library's own vocabulary, and any of yours (`defineComponent` from `@kirana-ui/core/authoring`).
+- `serialize(root: Element, options: SerializeOptions = {})`: What is under `root` as text: one line an element, its attributes sorted, a run of text nodes as one text, an input's live value and not its attribute. Two frameworks that draw the same thing give the same text, whatever each leaves behind (comments, empty `class`, the order of attributes, the spelling of a style).
+- `settled(page: Document = document, timeout = 5000)`: Resolves once nothing is moving: a framework has had its turn, no part is in the first or last frame of its way in or out, and no animation is running. Rejects after `timeout` milliseconds, saying what was still moving.
+- `recorder()`: Records what a change callback hears, and can refuse what it is asked.
+
+`faults(root, known(definition), options)`: `known()` alone is the library's vocabulary, `known(definition)` adds a component of your own (`defineComponent`), and `options` (`FaultOptions`) are:
+
+- `allow?: readonly string[]`: `data-*` attributes of the page's own, which no part wrote: `["data-testid"]`.
+- `free?: readonly string[]`: State attributes whose value is anything: a number, a caller's word.
+
+Its other types:
+
+- `KnownVocabulary`: The attributes and variables parts may write, from one or more vocabularies.
+    - `attributes: ReadonlyMap<string, readonly string[] | null>`: Each state attribute: the values it takes, or `null` for one that is present or absent.
+    - `variables: ReadonlySet<string>`
+- `SerializeOptions`: What `serialize` is told to leave out.
+    - `skip?: readonly string[]`: Attributes left out: a framework's own marks. Test ids are written as `#name`.
+- `Recorder`: What `recorder()` gives: a callback to hand a component, and what it heard.
+    - `listen(value: Value, details: ChangeDetails): void`: Give this as the callback: `onValueChange: heard.listen`.
+    - `calls: readonly Heard<Value>[]`: Every call so far, in order.
+    - `said(): string[]`: The calls as `"value reason"`, for one assertion over all of them.
+    - `refuse(on?: boolean): void`: From now on, every change is refused (`details.cancel()`), or let through again.
+    - `clear(): void`
+- `Heard`: One call of a change callback, as a test reads it.
+    - `value: Value`
+    - `reason: string`
+    - `source: ChangeDetails["source"]`
 
 ## Using it
 
-- Each part is a standalone directive on the caller's own element: `<button kuiDialogTrigger>`. Import the directives a template uses into the component's `imports`.
-- A root that draws nothing can sit on `<ng-container>`. A part that is in the page only some of the time is a structural directive: `<div *kuiDialogPopup>`.
+- Each part is a standalone directive on the caller's own element: `<button kuiDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).
+- The package has one entry for the components: every directive is imported from `@kirana-ui/angular`.
 - Props are inputs. Bind them (`[defaultValue]="'a'"`): a static attribute stays on the element. An `id` is given as `[kuiId]`.
-- A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …).
+- A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …). Below, `[(name)]` is such a model and `(name)` an output.
 - A part that draws a list is structural and gives each entry: `*kuiDateFieldSegments="let segment"`.
+- A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kuiTabsPanel="'account'; keepMounted: true"`.
+- A select's value written structurally draws its own content with what is chosen: `<span *kuiSelectValue="let shown">{{ shown.label }}</span>` (`shown.value`, `shown.label`; with `multiple`, `shown.values` and `shown.labels`, in the items' order).
+- A positioner's `[anchor]` is an element (a template variable, `#box`), an `ElementRef`, an object with `getBoundingClientRect`, or a function that gives one of those (a `viewChild` signal).
 - Angular 20 and later, with signals; it renders on a server and hydrates.
+- What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kuiPortalProvider` (`[container]`) and `kuiDirection` here, and `useDirection` is `injectDirection()`.
+- Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
+- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kuiAccordionPanel`, `*kuiDialogPortal`, `*kuiComboboxClear`, `*kuiComboboxPortal`, `*kuiComboboxEmpty`, `*kuiAvatarImage`, `*kuiAvatarFallback`, `*kuiCalendarWeekdays`, `*kuiCalendarWeeks`, `*kuiCheckboxIndicator`, `*kuiCollapsiblePanel`, `*kuiComboboxItemIndicator`, `*kuiCommandEmpty`, `*kuiMenuPortal`, `*kuiMenuCheckboxItemIndicator`, `*kuiMenuRadioItemIndicator`, `*kuiDateFieldSegments`, `*kuiPopoverPortal`, `*kuiFieldError`, `*kuiFieldValidity`, `*kuiHoverCardPortal`, `*kuiListboxItemIndicator`, `*kuiNavigationMenuContent`, `*kuiNavigationMenuPortal`, `*kuiOtpCaret`, `*kuiPaginationItems`, `*kuiRadioGroupIndicator`, `*kuiScrollAreaScrollbar`, `*kuiScrollAreaCorner`, `*kuiSelectValue`, `*kuiSelectPortal`, `*kuiSelectScrollUpArrow`, `*kuiSelectScrollDownArrow`, `*kuiSelectItemIndicator`, `*kuiTabsPanel`, `*kuiToastList` and `*kuiTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>`).
+- A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kuiTabs"`.
+- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup.
+- Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
+- Every change callback is an output whose event is `{ value, details }` under the value's own name (`$event.open`, `$event.values`): `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: `(clearErrors)`, `(completed)` and `(monthChanged)`.
+- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kuiAccordionPanel]`, `[kuiCollapsiblePanel]`, `[kuiScrollAreaScrollbar]` and `[kuiTabsPanel]`.
+- `readOnly` (shown, focusable, not changeable) is a prop of `Calendar`, `Checkbox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
 - An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
-- A popup is drawn in a portal at the end of `<body>` and placed by its `Positioner`, which carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`.
-- Every change callback is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was.
 - A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.
 - A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.
 - `PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.
-- An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/core/agent` gives `snapshot()`, `act({ steps })` and `query()`; what it changes reaches the same callbacks with `details.source === "agent"`. Mark what needs a person with `data-agent-confirm`, what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`. `history()`, `undo()` and `redo()` keep what it changed and take it back.
+- An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/angular/agent` gives `snapshot()`, `act({ steps })`, `query()`, `history()`, `undo()` and `redo()`; what it changes reaches the same callbacks with `details.source === "agent"`. "Agent", above, has the whole of it.
 
 ## Components
 
 ### Accordion
 
 ```
-import { KuiAccordion } from "@kirana-ui/angular"
+import { KuiAccordion, KuiAccordionItem, KuiAccordionHeader, KuiAccordionTrigger, KuiAccordionPanel } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiAccordion]`, `[kuiAccordionItem]`, `[kuiAccordionHeader]`, `[kuiAccordionTrigger]`, `[kuiAccordionPanel]`.
 
+Anatomy:
+
+```
+kuiAccordion
+  kuiAccordionItem (repeated)
+    kuiAccordionHeader
+      kuiAccordionTrigger
+    *kuiAccordionPanel
+```
+
 Props of its root:
 
-- `value?: readonly Value[]`: The values of the open items.
+- `[(value)]: readonly Value[]`: The values of the open items.
 - `defaultValue?: readonly Value[]`: Read once.
-- `onValueChange?: ((value: Value[], details: ChangeDetails) => void)`
 - `multiple?: boolean`: Whether several items can be open at once. Default `false`: opening one closes the others.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disables every item: none can be opened or closed.
 - `orientation?: Orientation`: The way the arrows move between triggers. Default `vertical`.
 - `loop?: boolean`: Whether the arrows wrap from the last trigger to the first. Default `true`.
+- `(valueChanged): { value: Value[]; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiAccordion]` is `KuiAccordion`. `exportAs: "kuiAccordion"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kuiAccordionItem]` is `KuiAccordionItem`. `value` tells this item from the others; an item that is given none makes its own.
+    - `value?: unknown`: What tells this item from the others: it is in the accordion's `value` while the item is open. An item that is given none makes its own.
+    - `disabled?: boolean`: Disables this item: it cannot be opened or closed.
+- `[kuiAccordionHeader]` is `KuiAccordionHeader`.
+- `[kuiAccordionTrigger]` is `KuiAccordionTrigger`.
+- `[kuiAccordionPanel]` is `KuiAccordionPanel`. Structural: written `*kuiAccordionPanel`. `<div *kuiAccordionPanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden.
+    - `*kuiAccordionPanel: { keepMounted?: boolean } | ""`: The directive's own value: `*kuiAccordionPanel="…"`. Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while its item is closed.
 
 Attributes and CSS variables, by part:
 
 - root: Groups the items.
     - `data-orientation="horizontal | vertical"`: The way the items are laid out, and the arrows that move between their triggers.
     - `data-disabled`: Present when it is disabled.
-- item: One section: a header with its trigger, and a panel.
+- item: One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own.
     - `data-open`: Present when the item is open.
     - `data-disabled`: Present when it is disabled.
 - header: The heading that holds the trigger.
@@ -69,10 +413,40 @@ Attributes and CSS variables, by part:
 ### AlertDialog
 
 ```
-import { KuiDialog } from "@kirana-ui/angular"
+import { KuiAlertDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
 ```
 
-Its root is `[kuiAlertDialog]`, a selector of `KuiDialog`: inside it, that component's directives are its parts.
+Parts: `[kuiAlertDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+
+Anatomy:
+
+```
+kuiAlertDialog
+  kuiDialogTrigger
+  *kuiDialogPortal
+    kuiDialogBackdrop
+    kuiDialogPopup
+      kuiDialogTitle
+      kuiDialogDescription
+      kuiDialogClose
+```
+
+Props of its root:
+
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiAlertDialog]` is `KuiAlertDialog`. `exportAs: "kuiDialog"`. `kuiAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer. It is always modal and a press outside it never closes it, so it takes neither `[modal]` nor `[dismissible]`. Its parts are a dialog's (`kuiDialogTrigger`, `kuiDialogPopup` …), which find it as their root. Its props are above.
+- `[kuiDialogTrigger]` is `KuiDialogTrigger`.
+- `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
+- `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
+- `[kuiDialogPopup]` is `KuiDialogPopup`.
+- `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
+- `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
+- `[kuiDialogClose]` is `KuiDialogClose`. A button that closes the dialog.
 
 Attributes and CSS variables, by part:
 
@@ -94,53 +468,104 @@ Attributes and CSS variables, by part:
 ### Autocomplete
 
 ```
-import { KuiCombobox } from "@kirana-ui/angular"
+import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxClear, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxEmpty } from "@kirana-ui/angular"
 ```
 
-Its root is `[kuiAutocomplete]`, a selector of `KuiCombobox`: inside it, that component's directives are its parts.
+Parts: `[kuiAutocomplete]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxEmpty]`.
+
+Anatomy:
+
+```
+kuiAutocomplete
+  input[kuiComboboxInput]
+  kuiComboboxTrigger
+  *kuiComboboxPortal
+    kuiComboboxPositioner
+      kuiComboboxPopup
+        kuiComboboxList (optional)
+          kuiComboboxGroup (optional, repeated)
+            kuiComboboxItem (repeated)
+            kuiComboboxGroupLabel
+          kuiComboboxSeparator (repeated)
+        *kuiComboboxEmpty
+  kuiComboboxPopup (as above)
+  *kuiComboboxClear
+```
 
 Props of its root:
 
-- `value?: string`: What the input says: the text is the value.
-- `defaultValue?: string`
-- `onValueChange?: ((value: string, details: ChangeDetails) => void)`
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
-- `mode?: "list" | "none"`: `"list"` (the default): the suggestions are filtered by what is typed. `"none"`: they are as the caller draws them.
-- `filter?: ((label: string, query: string) => boolean) | null`: Whether a suggestion is shown for what was typed; `null` shows every one.
-- `openOnInputClick?: boolean`: Whether a press on the input opens the list. Default: it opens when something is typed.
-- `disabled?: boolean`
-- `required?: boolean`
+- `[(value)]: Value | null`: What the input says: the text is the value.
+- `defaultValue?: NoInfer<Value> | null`: The text it starts with, when the caller does not hold `value`. Read once.
+- `[(inputValue)]: string`: What the input says, `[(inputValue)]`. With `kuiAutocomplete` the text is `[(value)]`.
+- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
+- `[(open)]: boolean`: Whether the list is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: The input's name in the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `items?: ItemLabels<Value>`: The values' labels: a list of values with their labels, or the labels by value.
+- `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
+- `required?: boolean`: In a field, "none" is then wrong.
+- `multiple?: boolean`: Several values, each shown as a chip: they are `values`, not `value`.
+- `[(values)]: readonly Value[]`: With `multiple`: the chosen values, in the order they were chosen, `[(values)]`.
+- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+- `(valuesChanged): { values: Value[]; details: ChangeDetails }`: With `multiple`: heard as a value is about to be added or taken away; `details.cancel()` keeps the values as they were.
+- `inline?: boolean`: The list is always in the page, with no popup: a command palette.
 - `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
+- `autoHighlight?: boolean`: The first item shown for what was typed is highlighted as one types, so Enter chooses it. Off by default.
+- `mode?: "list" | "none"`: With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them.
+- `openOnInputClick?: boolean`: With `kuiAutocomplete`: a press on the input opens the list.
+- `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as the text is about to change, typed or chosen: `details.cancel()` keeps it as it was.
+- `(inputValueChanged): { value: string; details: ChangeDetails }`: Heard as the input's text is about to change; `details.cancel()` keeps it as it was.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiAutocomplete]` is `KuiCombobox`. `exportAs: "kuiCombobox"`. Generic: `<Value = unknown>`. `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
+- `input[kuiComboboxInput]` is `KuiComboboxInput`. `<input kuiComboboxInput>`: what is typed filters the list, which is placed against it.
+- `[kuiComboboxTrigger]` is `KuiComboboxTrigger`.
+- `[kuiComboboxClear]` is `KuiComboboxClear`. Structural: written `*kuiComboboxClear`. `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear.
+- `[kuiComboboxPortal]` is `KuiComboboxPortal`. Structural: written `*kuiComboboxPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiComboboxPositioner]` is `KuiComboboxPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiComboboxPopup]` is `KuiComboboxPopup`.
+- `[kuiComboboxList]` is `KuiComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+- `[kuiComboboxGroup]` is `KuiComboboxGroup`. Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown.
+- `[kuiComboboxGroupLabel]` is `KuiComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kuiComboboxSeparator]` is `KuiComboboxSeparator`. A line between groups.
+- `[kuiComboboxItem]` is `KuiComboboxItem`.
+    - `value: unknown`: Required. What the combobox's value is while this item is chosen.
+    - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
+    - `label?: string`: What is filtered and what the input shows; the item's text when left out.
+    - `index?: number`: Its place among all the rows, in a virtualized list.
+- `[kuiComboboxEmpty]` is `KuiComboboxEmpty`. Structural: written `*kuiComboboxEmpty`. `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed.
 
 Attributes and CSS variables, by part:
 
 - input: The text input: its text is the value, and what is typed asks for suggestions.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
-- trigger: A button that opens and closes the list.
+- trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
-- positioner: Places the list against the input. It carries the geometry.
+- positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
-- popup: The list of items.
+- popup: The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-empty`: Present when no item is shown for what was typed.
+- list: The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
     - `data-empty`: Present when no item is shown for what was typed.
 - item: One suggestion: chosen, its text is written into the input.
     - `data-selected`: Present on the chosen item.
@@ -152,22 +577,43 @@ Attributes and CSS variables, by part:
 ### Autosize
 
 ```
-import { KuiAutosize } from "@kirana-ui/angular"
+import { KuiAutosizeTextarea } from "@kirana-ui/angular"
 ```
 
 Parts: `textarea[kuiAutosizeTextarea]`.
 
-Props of its root:
+Anatomy:
 
-- `value?: unknown`: The text, when the caller holds it: a change that no key made (a form filled by code) is then measured too.
+```
+textarea[kuiAutosizeTextarea]
+```
+
+Each part, and its own props:
+
+- `textarea[kuiAutosizeTextarea]` is `KuiAutosizeTextarea`. `exportAs: "kuiAutosizeTextarea"`. `<textarea kuiAutosizeTextarea>`: as tall as its text.
 
 ### Avatar
 
 ```
-import { KuiAvatar } from "@kirana-ui/angular"
+import { KuiAvatar, KuiAvatarImage, KuiAvatarFallback } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiAvatar]`, `[kuiAvatarImage]`, `[kuiAvatarFallback]`.
+
+Anatomy:
+
+```
+kuiAvatar
+  *kuiAvatarImage
+  *kuiAvatarFallback
+```
+
+Each part, and its own props:
+
+- `[kuiAvatar]` is `KuiAvatar`. `exportAs: "kuiAvatar"`. The frame the image and its stand-in share.
+- `[kuiAvatarImage]` is `KuiAvatarImage`. Structural: written `*kuiAvatarImage`. `<img *kuiAvatarImage="address" alt="…">`: in the page once the picture has loaded.
+    - `*kuiAvatarImage: string`: The directive's own value: `*kuiAvatarImage="…"`. The picture's address: the element is in the page once it has loaded.
+- `[kuiAvatarFallback]` is `KuiAvatarFallback`. Structural: written `*kuiAvatarFallback`. `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot.
 
 ### Button
 
@@ -177,9 +623,11 @@ import { KuiButton } from "@kirana-ui/angular"
 
 Props:
 
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: a press does nothing.
 - `focusableWhenDisabled?: boolean`: Keeps a disabled button in the tab order, so what it would do can still be read.
-- `nativeButton?: boolean`: `false` when the element is not a `<button>`: it is given a button's role and keyboard.
+- `nativeButton?: boolean`: `false` when the element is not a `<button>`: it is given a button's role and keyboard. Default `true`.
+
+`[kuiButton]` is `KuiButton`. `exportAs: "kuiButton"`. On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one.
 
 Attributes and CSS variables, by part:
 
@@ -189,27 +637,58 @@ Attributes and CSS variables, by part:
 ### Calendar
 
 ```
-import { KuiCalendar } from "@kirana-ui/angular"
+import { KuiCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`.
 
+Anatomy:
+
+```
+kuiCalendar
+  kuiCalendarHeading
+  kuiCalendarPrevious
+  kuiCalendarNext
+  kuiCalendarGrid
+    *kuiCalendarWeekdays
+      kuiCalendarHeadCell (repeated)
+    *kuiCalendarWeeks
+      kuiCalendarCell (repeated)
+        kuiCalendarDay
+```
+
 Props of its root:
 
-- `value?: CalendarValue`: One day, or with `mode: "range"` a first and a last day; `null` for none.
-- `defaultValue?: CalendarValue`
-- `onValueChange?: ((value: CalendarValue, details: ChangeDetails) => void)`
+- `[(value)]: CalendarValue`: One day, or with `mode="range"` a first and a last: `[(value)]`.
+- `defaultValue?: CalendarValue`: The value it starts with, when the caller does not hold `value`. Read once.
 - `mode?: "single" | "range"`: Whether one day is chosen (the default) or a first and a last.
-- `defaultFocusedValue?: IsoDate`: The day it opens on, when it has no value: its month is the one shown.
-- `onMonthChange?: ((month: IsoDate) => void)`: Heard when another month is shown: its first day.
-- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
-- `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
-- `min?: IsoDate`: The first and the last day that can be chosen.
-- `max?: IsoDate`
-- `isDateUnavailable?: ((date: IsoDate) => boolean)`: Days that cannot be chosen, though they can be reached: a day off, a day taken.
-- `disabled?: boolean`
-- `readOnly?: boolean`
+- `defaultFocusedValue?: string`: The day it opens on, when it has no value: its month is the one shown.
+- `locale?: string`: The language and region its names, first day of the week and calendar follow.
+- `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one.
+- `min?: string`: The first and the last day that can be chosen.
+- `max?: string`: The last day that can be chosen.
+- `isDateUnavailable?: (date: string) => boolean`: Days that cannot be chosen, though they can be reached: a day off, a day taken.
+- `disabled?: boolean`: Disabled: no day can be chosen.
+- `readOnly?: boolean`: Shown as it is: the days can be moved through, and none can be chosen.
 - `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
+- `(valueChanged): { value: CalendarValue; details: ChangeDetails }`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
+- `(monthChanged): string`: Another month is shown: its first day.
+
+Each part, and its own props:
+
+- `[kuiCalendar]` is `KuiCalendar`. `exportAs: "kuiCalendar"`. Its props are above.
+- `[kuiCalendarHeading]` is `KuiCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
+- `[kuiCalendarPrevious]` is `KuiCalendarPrevious`.
+- `[kuiCalendarNext]` is `KuiCalendarNext`.
+- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of days: a grid the arrows move in.
+- `[kuiCalendarWeekdays]` is `KuiCalendarWeekdays`. Structural: written `*kuiCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week.
+- `[kuiCalendarHeadCell]` is `KuiCalendarHeadCell`. A column's heading: a day of the week.
+    - `weekday: CalendarWeekday`: Required. The day of the week it heads: an entry `Calendar.Weekdays` gave.
+- `[kuiCalendarWeeks]` is `KuiCalendarWeeks`. Structural: written `*kuiCalendarWeeks`. Its template is given the entry: `let entry` is a `readonly CalendarDay[]`. `<tr *kuiCalendarWeeks="let week">`: once for each week of the month shown.
+- `[kuiCalendarCell]` is `KuiCalendarCell`.
+    - `date: string`: Required. The day it holds, as `Calendar.Weeks` gave it: `day.date`.
+- `[kuiCalendarDay]` is `KuiCalendarDay`.
+    - `date: string`: Required. The day it is the button of, as `Calendar.Weeks` gave it: `day.date`.
 
 Attributes and CSS variables, by part:
 
@@ -240,18 +719,40 @@ Attributes and CSS variables, by part:
 ### Carousel
 
 ```
-import { KuiCarousel } from "@kirana-ui/angular"
+import { KuiCarousel, KuiCarouselViewport, KuiCarouselItem, KuiCarouselPrevious, KuiCarouselNext, KuiCarouselIndicator } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiCarousel]`, `[kuiCarouselViewport]`, `[kuiCarouselItem]`, `[kuiCarouselPrevious]`, `[kuiCarouselNext]`, `[kuiCarouselIndicator]`.
 
+Anatomy:
+
+```
+kuiCarousel
+  kuiCarouselViewport
+    kuiCarouselItem (repeated)
+  kuiCarouselPrevious
+  kuiCarouselNext
+  kuiCarouselIndicator (repeated)
+```
+
 Props of its root:
 
-- `index?: number`: Which slide is at the start of the view, from 0.
-- `defaultIndex?: number`
-- `onIndexChange?: ((index: number, details: ChangeDetails) => void)`
+- `[(index)]: number`: Which slide is at the start of the view: `[(index)]`.
+- `defaultIndex?: number`: The slide it starts at, when the caller does not hold `index`. Read once.
 - `orientation?: Orientation`: Whether the slides go across (the default) or down.
 - `loop?: boolean`: Whether going on from the last slide comes round to the first.
+- `(indexChanged): { index: number; details: ChangeDetails }`: Heard as another slide is about to be at the start of the view: `details.cancel()` keeps the index as it was.
+
+Each part, and its own props:
+
+- `[kuiCarousel]` is `KuiCarousel`. `exportAs: "kuiCarousel"`. Its props are above.
+- `[kuiCarouselViewport]` is `KuiCarouselViewport`.
+- `[kuiCarouselItem]` is `KuiCarouselItem`.
+    - `index: number`: Required. Its place among the slides, from 0.
+- `[kuiCarouselPrevious]` is `KuiCarouselPrevious`.
+- `[kuiCarouselNext]` is `KuiCarouselNext`.
+- `[kuiCarouselIndicator]` is `KuiCarouselIndicator`.
+    - `index: number`: Required. The slide it goes to, from 0.
 
 Attributes and CSS variables, by part:
 
@@ -272,23 +773,35 @@ Attributes and CSS variables, by part:
 ### Checkbox
 
 ```
-import { KuiCheckbox } from "@kirana-ui/angular"
+import { KuiCheckbox, KuiCheckboxIndicator } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiCheckbox]`, `[kuiCheckboxIndicator]`.
 
+Anatomy:
+
+```
+kuiCheckbox
+  *kuiCheckboxIndicator
+```
+
 Props of its root:
 
-- `checked?: boolean`
+- `[(checked)]: boolean`: Whether it is checked, when the caller holds it.
 - `defaultChecked?: boolean`: Read once.
-- `onCheckedChange?: ((checked: boolean, details: ChangeDetails) => void)`
-- `disabled?: boolean`
+- `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
-- `required?: boolean`
+- `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
 - `name?: string`: With a name, the control is submitted with the form around it when it is checked.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
-- `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
+- `(checkedChanged): { checked: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiCheckbox]` is `KuiCheckbox`. `exportAs: "kuiCheckbox"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
+- `[kuiCheckboxIndicator]` is `KuiCheckboxIndicator`. Structural: written `*kuiCheckboxIndicator`. `<span *kuiCheckboxIndicator>`: in the page while the box is checked or indeterminate.
 
 Attributes and CSS variables, by part:
 
@@ -312,17 +825,32 @@ Attributes and CSS variables, by part:
 ### Collapsible
 
 ```
-import { KuiCollapsible } from "@kirana-ui/angular"
+import { KuiCollapsible, KuiCollapsibleTrigger, KuiCollapsiblePanel } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiCollapsible]`, `[kuiCollapsibleTrigger]`, `[kuiCollapsiblePanel]`.
 
+Anatomy:
+
+```
+kuiCollapsible
+  kuiCollapsibleTrigger (repeated)
+  *kuiCollapsiblePanel
+```
+
 Props of its root:
 
-- `open?: boolean`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Read once.
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: its trigger does not open or close it.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiCollapsible]` is `KuiCollapsible`. `exportAs: "kuiCollapsible"`. Its props are above.
+- `[kuiCollapsibleTrigger]` is `KuiCollapsibleTrigger`.
+- `[kuiCollapsiblePanel]` is `KuiCollapsiblePanel`. Structural: written `*kuiCollapsiblePanel`. `<div *kuiCollapsiblePanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden.
+    - `*kuiCollapsiblePanel: { keepMounted?: boolean } | ""`: The directive's own value: `*kuiCollapsiblePanel="…"`. Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while it is closed.
 
 Attributes and CSS variables, by part:
 
@@ -344,60 +872,117 @@ Attributes and CSS variables, by part:
 ### Combobox
 
 ```
-import { KuiCombobox } from "@kirana-ui/angular"
+import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxClear, KuiComboboxChips, KuiComboboxChip, KuiComboboxChipRemove, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxItemIndicator, KuiComboboxEmpty, KuiComboboxHiddenInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCombobox],[kuiAutocomplete]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxChips]`, `[kuiComboboxChip]`, `[kuiComboboxChipRemove]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxItemIndicator]`, `[kuiComboboxEmpty]`.
+Parts: `[kuiCombobox]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxChips]`, `[kuiComboboxChip]`, `[kuiComboboxChipRemove]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxItemIndicator]`, `[kuiComboboxEmpty]`.
+
+Anatomy:
+
+```
+kuiCombobox
+  input[kuiComboboxInput]
+  kuiComboboxTrigger
+  *kuiComboboxPortal
+    kuiComboboxPositioner
+      kuiComboboxPopup
+        input[kuiComboboxInput] (as above)
+        kuiComboboxList (optional)
+          kuiComboboxGroup (optional, repeated)
+            kuiComboboxItem (repeated)
+              *kuiComboboxItemIndicator
+            kuiComboboxGroupLabel
+          kuiComboboxSeparator (repeated)
+        *kuiComboboxEmpty
+  kuiComboboxPopup (as above)
+  *kuiComboboxClear
+  kuiComboboxChips
+    input[kuiComboboxInput] (as above)
+    kuiComboboxChip (repeated)
+      kuiComboboxChipRemove
+  input[kuiComboboxHiddenInput] (Angular only)
+```
 
 Props of its root:
 
-- `value?: Value | null`: The chosen value; `null` is "none".
-- `defaultValue?: Value | null`
-- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`
-- `inputValue?: string`: What the input says.
-- `defaultInputValue?: string`
-- `onInputValueChange?: ((value: string, details: ChangeDetails) => void)`
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
-- `disabled?: boolean`
+- `[(value)]: Value | null`: The chosen value; `null` is "none".
+- `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `[(inputValue)]: string`: What the input says, `[(inputValue)]`. With `kuiAutocomplete` the text is `[(value)]`.
+- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
+- `[(open)]: boolean`: Whether the list is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: readonly { value: Value; label: string }[]`: The labels of the values, for the input to show a value before the list has ever been opened. Not needed for the list itself: its items are read from the markup.
-- `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
-- `multiple?: boolean`: Several values, each shown as a chip beside the input: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
-- `values?: readonly Value[]`
-- `defaultValues?: readonly Value[]`
-- `onValuesChange?: ((values: Value[], details: ChangeDetails) => void)`
+- `items?: ItemLabels<Value>`: The values' labels: a list of values with their labels, or the labels by value.
+- `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `required?: boolean`: In a field, "none" is then wrong.
-- `inline?: boolean`: The list is always in the page, under the input, with no popup: a command palette. An item chosen is told to the caller, and the input keeps what was typed.
-- `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view). The caller then filters: the collection is what is left, and each item is given its `index`.
+- `multiple?: boolean`: Several values, each shown as a chip: they are `values`, not `value`.
+- `[(values)]: readonly Value[]`: With `multiple`: the chosen values, in the order they were chosen, `[(values)]`.
+- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+- `(valuesChanged): { values: Value[]; details: ChangeDetails }`: With `multiple`: heard as a value is about to be added or taken away; `details.cancel()` keeps the values as they were.
+- `inline?: boolean`: The list is always in the page, with no popup: a command palette.
+- `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
+- `autoHighlight?: boolean`: The first item shown for what was typed is highlighted as one types, so Enter chooses it. Off by default.
+- `mode?: "list" | "none"`: With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them.
+- `openOnInputClick?: boolean`: With `kuiAutocomplete`: a press on the input opens the list.
+- `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as a value is about to be chosen or cleared: `details.cancel()` keeps it as it was.
+- `(inputValueChanged): { value: string; details: ChangeDetails }`: Heard as the input's text is about to change; `details.cancel()` keeps it as it was.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiCombobox]` is `KuiCombobox`. `exportAs: "kuiCombobox"`. Generic: `<Value = unknown>`. `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
+- `input[kuiComboboxInput]` is `KuiComboboxInput`. `<input kuiComboboxInput>`: what is typed filters the list, which is placed against it.
+- `[kuiComboboxTrigger]` is `KuiComboboxTrigger`.
+- `[kuiComboboxClear]` is `KuiComboboxClear`. Structural: written `*kuiComboboxClear`. `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear.
+- `[kuiComboboxChips]` is `KuiComboboxChips`. With `multiple`: what holds the chips and the input.
+- `[kuiComboboxChip]` is `KuiComboboxChip`. With `multiple`: one chosen value. Its `value` is what its remove button takes away.
+    - `value: unknown`: Required. The chosen value this chip stands for.
+- `[kuiComboboxChipRemove]` is `KuiComboboxChipRemove`.
+- `[kuiComboboxPortal]` is `KuiComboboxPortal`. Structural: written `*kuiComboboxPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiComboboxPositioner]` is `KuiComboboxPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiComboboxPopup]` is `KuiComboboxPopup`.
+- `[kuiComboboxList]` is `KuiComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+- `[kuiComboboxGroup]` is `KuiComboboxGroup`. Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown.
+- `[kuiComboboxGroupLabel]` is `KuiComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kuiComboboxSeparator]` is `KuiComboboxSeparator`. A line between groups.
+- `[kuiComboboxItem]` is `KuiComboboxItem`.
+    - `value: unknown`: Required. What the combobox's value is while this item is chosen.
+    - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
+    - `label?: string`: What is filtered and what the input shows; the item's text when left out.
+    - `index?: number`: Its place among all the rows, in a virtualized list.
+- `[kuiComboboxItemIndicator]` is `KuiComboboxItemIndicator`. Structural: written `*kuiComboboxItemIndicator`. `<span *kuiComboboxItemIndicator>`: in the page while its item is the chosen one.
+- `[kuiComboboxEmpty]` is `KuiComboboxEmpty`. Structural: written `*kuiComboboxEmpty`. `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed.
+- `input[kuiComboboxHiddenInput]` is `KuiComboboxHiddenInput`. `<input kuiComboboxHiddenInput>`: submits the value with the form around it. Angular only.
 
 Attributes and CSS variables, by part:
 
-- input: The text input. What is typed filters the list, which is placed against it.
+- input: The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
-- trigger: A button that opens and closes the list.
+- trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
-- positioner: Places the list against the input. It carries the geometry.
+- positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
-- popup: The list of items.
+- popup: The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-empty`: Present when no item is shown for what was typed.
+- list: The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
     - `data-empty`: Present when no item is shown for what was typed.
 - item: One choice in the list.
     - `data-selected`: Present on the chosen item.
@@ -411,20 +996,49 @@ Attributes and CSS variables, by part:
 ### Command
 
 ```
-import { KuiCommand } from "@kirana-ui/angular"
+import { KuiCommand, KuiCommandInput, KuiCommandList, KuiCommandEmpty, KuiCommandGroup, KuiCommandGroupHeading, KuiCommandItem, KuiCommandSeparator } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiCommand]`, `[kuiCommandInput]`, `[kuiCommandList]`, `[kuiCommandEmpty]`, `[kuiCommandGroup]`, `[kuiCommandGroupHeading]`, `[kuiCommandItem]`, `[kuiCommandSeparator]`.
 
+Anatomy:
+
+```
+kuiCommand
+  kuiCommandInput
+  kuiCommandList
+    *kuiCommandEmpty
+    kuiCommandGroup (optional, repeated)
+      kuiCommandGroupHeading
+      kuiCommandItem (repeated)
+    kuiCommandSeparator (repeated)
+```
+
 Props of its root:
 
-- `inputValue?: string`: What the input says.
-- `defaultInputValue?: string`
-- `onInputValueChange?: ((value: string, details: ChangeDetails) => void)`
-- `onSelect?: ((value: string, details: ChangeDetails) => void)`: An item was chosen: pressed, or Enter while it was highlighted.
-- `filter?: ((label: string, query: string, keywords: readonly string[]) => boolean) | null`: Whether an item is shown for what was typed. Default: its label or one of its keywords holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
+- `[(inputValue)]: string`: What the input says.
+- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
+- `filter?: ((label: string, query: string, keywords: readonly string[]) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `loop?: boolean`: Whether a step past an end of the list goes round to the other.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: nothing can be typed or chosen.
+- `(inputValueChanged): { value: string; details: ChangeDetails }`: Heard as the input's text is about to change: `details.cancel()` keeps it as it was.
+- `(itemSelected): { value: string; details: ChangeDetails }`: An item was chosen.
+
+Each part, and its own props:
+
+- `[kuiCommand]` is `KuiCommand`. `exportAs: "kuiCommand"`. Its props are above.
+- `[kuiCommandInput]` is `KuiCommandInput`.
+- `[kuiCommandList]` is `KuiCommandList`.
+- `[kuiCommandEmpty]` is `KuiCommandEmpty`. Structural: written `*kuiCommandEmpty`. `<div *kuiCommandEmpty>`: in the page while no item is shown for what was typed.
+- `[kuiCommandGroup]` is `KuiCommandGroup`. Items under a `kuiCommandGroupHeading`. Hidden while none of them is shown.
+- `[kuiCommandGroupHeading]` is `KuiCommandGroupHeading`. A group's name.
+- `[kuiCommandItem]` is `KuiCommandItem`.
+    - `value: string`: Required. What `itemSelected` is told.
+    - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
+    - `label?: string`: What is filtered; the item's text when left out.
+    - `keywords?: readonly string[]`: Other words the item answers to.
+- `[kuiCommandSeparator]` is `KuiCommandSeparator`. A line between groups: gone while something is typed, unless `alwaysRender`.
+    - `alwaysRender?: boolean`: Stays while something is typed.
 
 Attributes and CSS variables, by part:
 
@@ -441,21 +1055,90 @@ Attributes and CSS variables, by part:
 ### ContextMenu
 
 ```
-import { KuiMenu } from "@kirana-ui/angular"
+import { KuiMenu, KuiContextMenuTrigger, KuiMenuPortal, KuiMenuPositioner, KuiMenuPopup, KuiMenuArrow, KuiMenuItem, KuiMenuLinkItem, KuiMenuGroup, KuiMenuGroupLabel, KuiMenuSeparator, KuiMenuCheckboxItem, KuiMenuCheckboxItemIndicator, KuiMenuRadioGroup, KuiMenuRadioItem, KuiMenuRadioItemIndicator, KuiMenuSubmenuRoot, KuiMenuSubmenuTrigger } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiContextMenuTrigger]`.
+Parts: `[kuiContextMenu]`, `[kuiContextMenuTrigger]`, `[kuiMenuPortal]`, `[kuiMenuPositioner]`, `[kuiMenuPopup]`, `[kuiMenuArrow]`, `[kuiMenuItem]`, `a[kuiMenuLinkItem]`, `[kuiMenuGroup]`, `[kuiMenuGroupLabel]`, `[kuiMenuSeparator]`, `[kuiMenuCheckboxItem]`, `[kuiMenuCheckboxItemIndicator]`, `[kuiMenuRadioGroup]`, `[kuiMenuRadioItem]`, `[kuiMenuRadioItemIndicator]`, `[kuiMenuSubmenuRoot]`, `[kuiMenuSubmenuTrigger]`.
 
-Its root is `[kuiContextMenu]`, a selector of `KuiMenu`: inside it, that component's directives are its parts.
+Anatomy:
+
+```
+kuiContextMenu
+  kuiContextMenuTrigger
+  *kuiMenuPortal
+    kuiMenuPositioner
+      kuiMenuPopup
+        kuiMenuArrow
+        kuiMenuGroup (optional, repeated)
+          kuiMenuItem (repeated)
+          a[kuiMenuLinkItem] (repeated)
+          kuiMenuGroupLabel
+          kuiMenuCheckboxItem (repeated)
+            *kuiMenuCheckboxItemIndicator
+          kuiMenuRadioGroup (repeated)
+            kuiMenuRadioItem (repeated)
+              *kuiMenuRadioItemIndicator
+          kuiMenuSubmenuRoot (repeated)
+            *kuiMenuPortal (as above)
+            kuiMenuSubmenuTrigger
+        kuiMenuSeparator (repeated)
+```
 
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
 - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
-- `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
+- `modal?: boolean`: Holds the page while the menu is open. Not for a submenu.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiContextMenu]` is `KuiMenu`. `exportAs: "kuiMenu"`. `kuiContextMenu` in place of `kuiMenu` is a menu for an area of the page, opened at the pointer: its trigger is `kuiContextMenuTrigger`, its other parts the menu's. Its props are above.
+- `[kuiContextMenuTrigger]` is `KuiContextMenuTrigger`. The area a secondary press, or a long press on a touch screen, opens a `kuiContextMenu` in.
+- `[kuiMenuPortal]` is `KuiMenuPortal`. Structural: written `*kuiMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiMenuPositioner]` is `KuiMenuPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiMenuPopup]` is `KuiMenuPopup`.
+- `[kuiMenuArrow]` is `KuiMenuArrow`.
+- `[kuiMenuItem]` is `KuiMenuItem`.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
+- `a[kuiMenuLinkItem]` is `KuiMenuLinkItem`. `<a kuiMenuLinkItem href="…">`: an item that is a link.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
+- `[kuiMenuGroup]` is `KuiMenuGroup`. Items that belong together, named by their label.
+- `[kuiMenuGroupLabel]` is `KuiMenuGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kuiMenuSeparator]` is `KuiMenuSeparator`. A line between items.
+- `[kuiMenuCheckboxItem]` is `KuiMenuCheckboxItem`. `exportAs: "kuiMenuCheckboxItem"`.
+    - `[(checked)]: boolean`: Whether the item is checked, when the caller holds it.
+    - `defaultChecked?: boolean`: Whether the item starts checked, when the caller does not hold `checked`. Read once.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
+    - `(checkedChanged): { checked: boolean; details: ChangeDetails }`: Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
+- `[kuiMenuCheckboxItemIndicator]` is `KuiMenuCheckboxItemIndicator`. Structural: written `*kuiMenuCheckboxItemIndicator`. `<span *kuiMenuCheckboxItemIndicator>`: in the page while its item is checked.
+- `[kuiMenuRadioGroup]` is `KuiMenuRadioGroup`. `exportAs: "kuiMenuRadioGroup"`. Generic: `<Value = unknown>`.
+    - `[(value)]: Value | null`: The chosen value; `null` is "none".
+    - `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
+    - `disabled?: boolean`: Disables every item of the group.
+    - `(valueChanged): { value: Value; details: ChangeDetails }`: Told an item's own value, never `null`: a press chooses, and nothing takes the choice back.
+- `[kuiMenuRadioItem]` is `KuiMenuRadioItem`.
+    - `value: unknown`: Required. What the radio group's value is while this item is the chosen one.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
+- `[kuiMenuRadioItemIndicator]` is `KuiMenuRadioItemIndicator`. Structural: written `*kuiMenuRadioItemIndicator`. `<span *kuiMenuRadioItemIndicator>`: in the page while its item is the chosen one.
+- `[kuiMenuSubmenuRoot]` is `KuiMenuSubmenuRoot`. `exportAs: "kuiMenuSubmenuRoot"`. A menu that one of this menu's items opens. Its trigger is `kuiMenuSubmenuTrigger`.
+    - `[(open)]: boolean`: Whether it is open, when the caller holds it.
+    - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
+    - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
+    - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+    - `modal?: boolean`: Holds the page while the menu is open. Not for a submenu.
+    - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+- `[kuiMenuSubmenuTrigger]` is `KuiMenuSubmenuTrigger`. On the item of a menu that opens the submenu around it (`kuiMenuSubmenuRoot`).
 
 Attributes and CSS variables, by part:
 
@@ -464,7 +1147,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the menu against its trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -476,10 +1159,10 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
 - arrow: An element that points at the trigger.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
 - item: An action. Choosing it closes the menu.
@@ -514,25 +1197,42 @@ Attributes and CSS variables, by part:
 ### DateField
 
 ```
-import { KuiDateField } from "@kirana-ui/angular"
+import { KuiDateField, KuiDateFieldSegments, KuiDateFieldSegment, KuiDateFieldInput } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiDateField]`, `[kuiDateFieldSegments]`, `[kuiDateFieldSegment]`, `input[kuiDateFieldInput]`.
 
+Anatomy:
+
+```
+kuiDateField
+  *kuiDateFieldSegments
+    kuiDateFieldSegment (repeated)
+  input[kuiDateFieldInput]
+```
+
 Props of its root:
 
-- `value?: IsoDate | null`: The day typed, once all of it is; `null` until then.
-- `defaultValue?: IsoDate | null`
-- `onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void)`
-- `locale?: string`: The language and region that order the day, the month and the year and put what stands between them (`"en-US"`: month/day/year). Give it: a server does not know the reader's.
-- `min?: IsoDate`: The first and the last day it takes: outside them it says it is invalid.
-- `max?: IsoDate`
+- `[(value)]: string | null`: The day typed, once all of it is: `[(value)]`.
+- `defaultValue?: string | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `locale?: string`: The language and region that order the day, the month and the year.
+- `min?: string`: The first and the last day it takes: outside them it says it is invalid.
+- `max?: string`: The last day it takes.
 - `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`.
-- `disabled?: boolean`
-- `readOnly?: boolean`
-- `required?: boolean`
+- `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
 - `name?: string`: The name it is submitted under, by its hidden input.
 - `form?: string`: The id of the form it belongs to, when it is not inside it.
+- `(valueChanged): { value: string | null; details: ChangeDetails }`: Heard as the day is about to change, once all of it is typed or as it is cleared: `details.cancel()` keeps the value as it was.
+
+Each part, and its own props:
+
+- `[kuiDateField]` is `KuiDateField`. `exportAs: "kuiDateField"`. Its props are above.
+- `[kuiDateFieldSegments]` is `KuiDateFieldSegments`. Structural: written `*kuiDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kuiDateFieldSegments="let segment">`: once for each piece of the date.
+- `[kuiDateFieldSegment]` is `KuiDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
+    - `segment: DateFieldSegment`: Required. The piece it is: an entry `DateField.Segments` gave.
+- `input[kuiDateFieldInput]` is `KuiDateFieldInput`. `<input kuiDateFieldInput>`: the hidden input it is submitted by.
 
 Attributes and CSS variables, by part:
 
@@ -549,33 +1249,81 @@ Attributes and CSS variables, by part:
 ### DatePicker
 
 ```
-import { KuiDatePicker } from "@kirana-ui/angular"
+import { KuiDatePicker, KuiDatePickerField, KuiDateFieldSegments, KuiDateFieldSegment, KuiDateFieldInput, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverPositioner, KuiPopoverPopup, KuiDatePickerCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDatePicker]`, `[kuiDatePickerField]`, `[kuiDatePickerCalendar]`.
+Parts: `[kuiDatePicker]`, `[kuiDatePickerField]`, `[kuiDateFieldSegments]`, `[kuiDateFieldSegment]`, `input[kuiDateFieldInput]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiDatePickerCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`.
 
-Its other parts (Segments, Segment, Input, Trigger, Portal, Positioner, Popup, Heading, Previous, Next, Grid, Weekdays, HeadCell, Weeks, Cell, Day) are the directives of the components it is made of, used inside it.
+Anatomy:
+
+```
+kuiDatePicker
+  kuiDatePickerField
+    *kuiDateFieldSegments
+      kuiDateFieldSegment (repeated)
+    input[kuiDateFieldInput]
+  kuiPopoverTrigger
+  *kuiPopoverPortal
+    kuiPopoverPositioner
+      kuiPopoverPopup
+        kuiDatePickerCalendar
+          kuiCalendarHeading
+          kuiCalendarPrevious
+          kuiCalendarNext
+          kuiCalendarGrid
+            *kuiCalendarWeekdays
+              kuiCalendarHeadCell (repeated)
+            *kuiCalendarWeeks
+              kuiCalendarCell (repeated)
+                kuiCalendarDay
+```
 
 Props of its root:
 
-- `value?: IsoDate | null`: The day, typed or picked; `null` for none.
-- `defaultValue?: IsoDate | null`
-- `onValueChange?: ((value: IsoDate | null, details: ChangeDetails) => void)`
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(value)]: string | null`: The day, typed or picked; `null` for none.
+- `defaultValue?: string | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `[(open)]: boolean`: Whether the calendar is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether the calendar starts open, when the caller does not hold `open`. Read once.
 - `locale?: string`: The language and region of the field and the calendar. Give it: a server does not know.
-- `min?: IsoDate`: The first and the last day that can be typed or picked.
-- `max?: IsoDate`
+- `min?: string`: The first and the last day that can be typed or picked.
+- `max?: string`: The last day that can be typed or picked.
 - `isDateUnavailable?: CalendarProps["isDateUnavailable"]`: Days that cannot be picked in the calendar.
 - `calendarSystem?: CalendarProps["calendarSystem"]`: The calendar its months are laid out in, when it is not the Gregorian one.
 - `fixedWeeks?: boolean`: Always six rows of days.
 - `placeholders?: DateFieldProps["placeholders"]`: What an empty part of the field shows.
-- `disabled?: boolean`
-- `readOnly?: boolean`
-- `required?: boolean`
+- `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
 - `name?: string`: The name it is submitted under.
 - `form?: string`: The id of the form it belongs to, when it is not inside it.
+- `(valueChanged): { value: string | null; details: ChangeDetails }`: Heard as the day is about to change, typed or picked: `details.cancel()` keeps the value as it was.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the calendar is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiDatePicker]` is `KuiDatePicker`. `exportAs: "kuiDatePicker"`. A date field, and a calendar in a popover, with one value between them. On any element, or on `<ng-container>` to draw none. Inside it the date field's, the popover's and the calendar's own directives are its parts (`kuiDateFieldSegments`, `kuiPopoverTrigger`, `kuiCalendarGrid` …), with `kuiDatePickerField` and `kuiDatePickerCalendar` for the two elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows. Its props are above.
+- `[kuiDatePickerField]` is `KuiDatePickerField`. The typed date: what holds its segments and its hidden input.
+- `[kuiDateFieldSegments]` is `KuiDateFieldSegments`. Structural: written `*kuiDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kuiDateFieldSegments="let segment">`: once for each piece of the date.
+- `[kuiDateFieldSegment]` is `KuiDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
+    - `segment: DateFieldSegment`: Required. The piece it is: an entry `DateField.Segments` gave.
+- `input[kuiDateFieldInput]` is `KuiDateFieldInput`. `<input kuiDateFieldInput>`: the hidden input it is submitted by.
+- `[kuiPopoverTrigger]` is `KuiPopoverTrigger`.
+- `[kuiPopoverPortal]` is `KuiPopoverPortal`. Structural: written `*kuiPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiPopoverPositioner]` is `KuiPopoverPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiPopoverPopup]` is `KuiPopoverPopup`.
+- `[kuiDatePickerCalendar]` is `KuiDatePickerCalendar`. The calendar: what holds its heading, its buttons and its grid.
+- `[kuiCalendarHeading]` is `KuiCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
+- `[kuiCalendarPrevious]` is `KuiCalendarPrevious`.
+- `[kuiCalendarNext]` is `KuiCalendarNext`.
+- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of days: a grid the arrows move in.
+- `[kuiCalendarWeekdays]` is `KuiCalendarWeekdays`. Structural: written `*kuiCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week.
+- `[kuiCalendarHeadCell]` is `KuiCalendarHeadCell`. A column's heading: a day of the week.
+    - `weekday: CalendarWeekday`: Required. The day of the week it heads: an entry `Calendar.Weekdays` gave.
+- `[kuiCalendarWeeks]` is `KuiCalendarWeeks`. Structural: written `*kuiCalendarWeeks`. Its template is given the entry: `let entry` is a `readonly CalendarDay[]`. `<tr *kuiCalendarWeeks="let week">`: once for each week of the month shown.
+- `[kuiCalendarCell]` is `KuiCalendarCell`.
+    - `date: string`: Required. The day it holds, as `Calendar.Weeks` gave it: `day.date`.
+- `[kuiCalendarDay]` is `KuiCalendarDay`.
+    - `date: string`: Required. The day it is the button of, as `Calendar.Weeks` gave it: `day.date`.
 
 Attributes and CSS variables, by part:
 
@@ -593,7 +1341,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -605,7 +1353,7 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
 - calendar: The calendar.
     - `data-disabled`: Present when it is disabled.
@@ -634,18 +1382,47 @@ Attributes and CSS variables, by part:
 ### Dialog
 
 ```
-import { KuiDialog } from "@kirana-ui/angular"
+import { KuiDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDialog],[kuiAlertDialog],[kuiDrawer]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+Parts: `[kuiDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+
+Anatomy:
+
+```
+kuiDialog
+  kuiDialogTrigger
+  *kuiDialogPortal
+    kuiDialogBackdrop
+    kuiDialogPopup
+      kuiDialogTitle
+      kuiDialogDescription
+      kuiDialogClose
+```
 
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
+- `swipeDirection?: DrawerSide`: With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`.
+- `snapPoints?: readonly DrawerSnapPoint[]`: With `kuiDrawer`: places it rests at, each the share of itself that shows.
+- `[(snapPoint)]: DrawerSnapPoint`: With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`.
+- `defaultSnapPoint?: DrawerSnapPoint`: With `kuiDrawer`: where it opens. Default: the smallest.
+- `(snapPointChanged): { snapPoint: DrawerSnapPoint; details: ChangeDetails }`: With `kuiDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps it where it was.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiDialog]` is `KuiDialog`. `exportAs: "kuiDialog"`. On any element, or on `<ng-container>` to draw none. `kuiDrawer` in place of `kuiDialog` is a dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a dialog's (`kuiDialogPopup` …). An alert dialog has a root of its own, `kuiAlertDialog`. Its props are above.
+- `[kuiDialogTrigger]` is `KuiDialogTrigger`.
+- `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
+- `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
+- `[kuiDialogPopup]` is `KuiDialogPopup`.
+- `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
+- `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
+- `[kuiDialogClose]` is `KuiDialogClose`. A button that closes the dialog.
 
 Attributes and CSS variables, by part:
 
@@ -664,32 +1441,50 @@ Attributes and CSS variables, by part:
     - `data-nested-dialog-open`: Present when another dialog is open above this one.
     - `--nested-dialogs`: How many dialogs are open above this one.
 
-### DirectionProvider
-
-```
-import { KuiDirectionProvider } from "@kirana-ui/angular"
-```
-
 ### Drawer
 
 ```
-import { KuiDialog } from "@kirana-ui/angular"
+import { KuiDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
 ```
 
-Its root is `[kuiDrawer]`, a selector of `KuiDialog`: inside it, that component's directives are its parts.
+Parts: `[kuiDrawer]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+
+Anatomy:
+
+```
+kuiDrawer
+  kuiDialogTrigger
+  *kuiDialogPortal
+    kuiDialogBackdrop
+    kuiDialogPopup
+      kuiDialogTitle
+      kuiDialogDescription
+      kuiDialogClose
+```
 
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
-- `swipeDirection?: DrawerSide`: The way it is dragged to close it: the edge it came from. Default: `"down"`.
-- `snapPoints?: readonly DrawerSnapPoint[]`: Places it rests at, each how much of itself shows: a share (`0.4`, or `"40%"`) or a length (`"148px"`, `"20rem"`). `[0.4, 1]` is a drawer that opens two fifths shown and is dragged up to the whole. Without any, it is whole.
-- `snapPoint?: DrawerSnapPoint`: Which of them it rests at, as it was given.
-- `defaultSnapPoint?: DrawerSnapPoint`: Where it opens. Default: the smallest.
-- `onSnapPointChange?: ((snapPoint: DrawerSnapPoint, details: ChangeDetails) => void)`
+- `swipeDirection?: DrawerSide`: With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`.
+- `snapPoints?: readonly DrawerSnapPoint[]`: With `kuiDrawer`: places it rests at, each the share of itself that shows.
+- `[(snapPoint)]: DrawerSnapPoint`: With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`.
+- `defaultSnapPoint?: DrawerSnapPoint`: With `kuiDrawer`: where it opens. Default: the smallest.
+- `(snapPointChanged): { snapPoint: DrawerSnapPoint; details: ChangeDetails }`: With `kuiDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps it where it was.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiDrawer]` is `KuiDialog`. `exportAs: "kuiDialog"`. On any element, or on `<ng-container>` to draw none. `kuiDrawer` in place of `kuiDialog` is a dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a dialog's (`kuiDialogPopup` …). An alert dialog has a root of its own, `kuiAlertDialog`. Its props are above.
+- `[kuiDialogTrigger]` is `KuiDialogTrigger`.
+- `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
+- `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
+- `[kuiDialogPopup]` is `KuiDialogPopup`.
+- `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
+- `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
+- `[kuiDialogClose]` is `KuiDialogClose`. A button that closes the dialog.
 
 Attributes and CSS variables, by part:
 
@@ -731,19 +1526,40 @@ Attributes and CSS variables, by part:
 ### Field
 
 ```
-import { KuiField } from "@kirana-ui/angular"
+import { KuiField, KuiFieldLabel, KuiFieldControl, KuiFieldDescription, KuiFieldError, KuiFieldValidity } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiField]`, `[kuiFieldLabel]`, `[kuiFieldControl]`, `[kuiFieldDescription]`, `[kuiFieldError]`, `[kuiFieldValidity]`.
 
+Anatomy:
+
+```
+kuiField
+  kuiFieldLabel
+  kuiFieldControl
+  kuiFieldDescription
+  *kuiFieldError
+  *kuiFieldValidity
+```
+
 Props of its root:
 
 - `name?: string`: The control's name in the form.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disables the field: its control cannot be changed, and its parts say so (`data-disabled`).
 - `invalid?: boolean`: Invalid whatever the value: an error known from elsewhere.
-- `validate?: | (( value: string ) => string | readonly string[] | null | Promise<string | readonly string[] | null>)`: The field's own check, after the browser's: a message or several when the value is wrong, `null` when it is right. It may answer later, with a promise.
+- `validate?: ( value: string ) => string | readonly string[] | null | Promise<string | readonly string[] | null>`: The field's own check, after the browser's: a message or several when the value is wrong, `null` when it is right. It may answer later, with a promise.
 - `validationMode?: ValidationMode`: When the value is checked; the form's by default, else `"onSubmit"`.
 - `validationDebounceTime?: number`: With `"onChange"`, how long the value must rest before it is checked, in milliseconds.
+
+Each part, and its own props:
+
+- `[kuiField]` is `KuiField`. `exportAs: "kuiField"`. Its props are above.
+- `[kuiFieldLabel]` is `KuiFieldLabel`.
+- `[kuiFieldControl]` is `KuiFieldControl`. On the control: an `<input>`, a `<textarea>` or a `<select>`.
+- `[kuiFieldDescription]` is `KuiFieldDescription`.
+- `[kuiFieldError]` is `KuiFieldError`. Structural: written `*kuiFieldError`. `<div *kuiFieldError>`: in the page while something is wrong, with the message as its text unless it has content of its own. `*kuiFieldError="'valueMissing'"` shows for only that finding of the browser's, `*kuiFieldError="true"` always.
+    - `*kuiFieldError: ValidityKey | boolean | ""`: The directive's own value: `*kuiFieldError="…"`. One of the browser's findings (`"valueMissing"`) to show for only that; `true` to show always.
+- `[kuiFieldValidity]` is `KuiFieldValidity`. Structural: written `*kuiFieldValidity`. Its template is given the entry: `let entry` is a `FieldValidity`. `<ng-container *kuiFieldValidity="let validity">`: draws its template with the field's validity.
 
 Attributes and CSS variables, by part:
 
@@ -793,14 +1609,26 @@ Attributes and CSS variables, by part:
 ### Fieldset
 
 ```
-import { KuiFieldset } from "@kirana-ui/angular"
+import { KuiFieldset, KuiFieldsetLegend } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiFieldset]`, `[kuiFieldsetLegend]`.
 
+Anatomy:
+
+```
+kuiFieldset
+  kuiFieldsetLegend
+```
+
 Props of its root:
 
 - `disabled?: boolean`: Disables every field inside.
+
+Each part, and its own props:
+
+- `[kuiFieldset]` is `KuiFieldset`. `exportAs: "kuiFieldset"`. Its props are above.
+- `[kuiFieldsetLegend]` is `KuiFieldsetLegend`.
 
 Attributes and CSS variables, by part:
 
@@ -818,26 +1646,50 @@ import { KuiForm } from "@kirana-ui/angular"
 Props:
 
 - `errors?: FormErrors`: Errors from outside the page (a server's), by field name. A field shows its own until its value changes.
-- `onClearErrors?: ((errors: FormErrors) => void)`: A field's value changed while it showed an error from `errors`: what is left of them.
-- `onFormSubmit?: ((values: FormValues, details: ChangeDetails) => void)`: Every field is valid. Given this, the page is not left: the values come as an object. Without it, the form submits as a form does.
 - `validationMode?: ValidationMode`: When the form's fields check their values, unless a field says otherwise. Default `"onSubmit"`.
+- `(formSubmit): { values: FormValues; details: ChangeDetails }`: Every field is valid. Given this, the page is not left: the values come as an object. Without it, the form submits as a form does.
+- `(clearErrors): FormErrors`: A field's value changed while it showed one of `errors`: what is left of them.
+
+`form[kuiForm]` is `KuiForm`. `exportAs: "kuiForm"`. On a `<form>`: its fields say what is wrong, and `(formSubmit)` gives the values once all are valid. As with Angular's own forms, the page is left only when the form has an `action`.
 
 ### HoverCard
 
 ```
-import { KuiHoverCard } from "@kirana-ui/angular"
+import { KuiHoverCard, KuiHoverCardTrigger, KuiHoverCardPortal, KuiHoverCardPositioner, KuiHoverCardPopup, KuiHoverCardArrow } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiHoverCard]`, `[kuiHoverCardTrigger]`, `[kuiHoverCardPortal]`, `[kuiHoverCardPositioner]`, `[kuiHoverCardPopup]`, `[kuiHoverCardArrow]`.
 
+Anatomy:
+
+```
+kuiHoverCard
+  kuiHoverCardTrigger
+  *kuiHoverCardPortal
+    kuiHoverCardPositioner
+      kuiHoverCardPopup
+        kuiHoverCardArrow
+```
+
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
 - `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: the pointer and focus do not open it.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiHoverCard]` is `KuiHoverCard`. `exportAs: "kuiHoverCard"`. On any element, or on `<ng-container>` to draw none. Its props are above.
+- `[kuiHoverCardTrigger]` is `KuiHoverCardTrigger`.
+    - `delay?: number`: Its own waits, which come before the root's.
+    - `closeDelay?: number`: How long after the pointer leaves this trigger's popup closes, in milliseconds.
+- `[kuiHoverCardPortal]` is `KuiHoverCardPortal`. Structural: written `*kuiHoverCardPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiHoverCardPositioner]` is `KuiHoverCardPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiHoverCardPopup]` is `KuiHoverCardPopup`.
+- `[kuiHoverCardArrow]` is `KuiHoverCardArrow`.
 
 Attributes and CSS variables, by part:
 
@@ -846,7 +1698,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -858,11 +1710,11 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
 - arrow: An element that points at the trigger, placed along the popup's edge.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
 
@@ -874,8 +1726,10 @@ import { KuiInput } from "@kirana-ui/angular"
 
 Props:
 
-- `disabled?: boolean`
-- `onValueChange?: ((value: string, details: ChangeDetails) => void)`: What was typed, as text, each time it changes.
+- `disabled?: boolean`: Disabled: nothing can be typed in it.
+- `(valueChanged): { value: string; details: ChangeDetails }`: What was typed, as text, each time it changes.
+
+`[kuiInput]` is `KuiInput`. `exportAs: "kuiInput"`. `<input kuiInput>` or `<textarea kuiInput>`: it says its state, and inside a `kuiField` it is the field's control. Its value is the element's own (`[value]`, `ngModel`).
 
 Attributes and CSS variables, by part:
 
@@ -894,6 +1748,8 @@ Attributes and CSS variables, by part:
 import { KuiLabel } from "@kirana-ui/angular"
 ```
 
+`[kuiLabel]` is `KuiLabel`. `exportAs: "kuiLabel"`. `<label kuiLabel>`. Inside a `kuiField` it is the field's label.
+
 Attributes and CSS variables, by part:
 
 - label: A control's name. Inside a field it is the field's label, with its states.
@@ -908,22 +1764,44 @@ Attributes and CSS variables, by part:
 ### Listbox
 
 ```
-import { KuiListbox } from "@kirana-ui/angular"
+import { KuiListbox, KuiListboxItem, KuiListboxItemIndicator, KuiListboxGroup, KuiListboxGroupLabel } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiListbox]`, `[kuiListboxItem]`, `[kuiListboxItemIndicator]`, `[kuiListboxGroup]`, `[kuiListboxGroupLabel]`.
 
+Anatomy:
+
+```
+kuiListbox
+  kuiListboxGroup (optional, repeated)
+    kuiListboxItem (repeated)
+      *kuiListboxItemIndicator
+    kuiListboxGroupLabel
+```
+
 Props of its root:
 
-- `value?: readonly Value[]`: The chosen values: none, one, or with `multiple` several.
-- `defaultValue?: readonly Value[]`
-- `onValueChange?: ((value: Value[], details: ChangeDetails) => void)`
+- `[(value)]: readonly Value[]`: The chosen values: none, one, or with `multiple` several.
+- `defaultValue?: readonly Value[]`: The values it starts with, when the caller does not hold `value`. Read once.
 - `multiple?: boolean`: Whether more than one can be chosen: a press then adds or takes away.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: no item can be chosen.
 - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do not.
 - `name?: string`: With a name, the chosen values are submitted with the form around the list.
 - `form?: string`: The id of the form the list belongs to, when it is not inside it.
-- `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view): how many there are, their names, and how to bring one into the page. Each item is then given its `index`.
+- `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
+- `(valueChanged): { value: Value[]; details: ChangeDetails }`: Heard as an item is about to be chosen or taken away, with the values there would then be: `details.cancel()` keeps them as they were.
+
+Each part, and its own props:
+
+- `[kuiListbox]` is `KuiListbox`. `exportAs: "kuiListbox"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kuiListboxItem]` is `KuiListboxItem`.
+    - `value: unknown`: Required. What is in the listbox's value while this item is chosen.
+    - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `index?: number`: Its place among all the rows, in a virtualized list.
+- `[kuiListboxItemIndicator]` is `KuiListboxItemIndicator`. Structural: written `*kuiListboxItemIndicator`. `<span *kuiListboxItemIndicator>`: in the page while its item is chosen.
+- `[kuiListboxGroup]` is `KuiListboxGroup`. Items that belong together, named by their label.
+- `[kuiListboxGroupLabel]` is `KuiListboxGroupLabel`. The name of a group.
 
 Attributes and CSS variables, by part:
 
@@ -939,19 +1817,90 @@ Attributes and CSS variables, by part:
 ### Menu
 
 ```
-import { KuiMenu } from "@kirana-ui/angular"
+import { KuiMenu, KuiMenuTrigger, KuiMenuPortal, KuiMenuPositioner, KuiMenuPopup, KuiMenuArrow, KuiMenuItem, KuiMenuLinkItem, KuiMenuGroup, KuiMenuGroupLabel, KuiMenuSeparator, KuiMenuCheckboxItem, KuiMenuCheckboxItemIndicator, KuiMenuRadioGroup, KuiMenuRadioItem, KuiMenuRadioItemIndicator, KuiMenuSubmenuRoot, KuiMenuSubmenuTrigger } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiMenu],[kuiContextMenu]`, `[kuiMenuTrigger]`, `[kuiMenuPortal]`, `[kuiMenuPositioner]`, `[kuiMenuPopup]`, `[kuiMenuArrow]`, `[kuiMenuItem]`, `a[kuiMenuLinkItem]`, `[kuiMenuGroup]`, `[kuiMenuGroupLabel]`, `[kuiMenuSeparator]`, `[kuiMenuCheckboxItem]`, `[kuiMenuCheckboxItemIndicator]`, `[kuiMenuRadioGroup]`, `[kuiMenuRadioItem]`, `[kuiMenuRadioItemIndicator]`, `[kuiMenuSubmenuRoot]`, `[kuiMenuSubmenuTrigger]`.
+Parts: `[kuiMenu]`, `[kuiMenuTrigger]`, `[kuiMenuPortal]`, `[kuiMenuPositioner]`, `[kuiMenuPopup]`, `[kuiMenuArrow]`, `[kuiMenuItem]`, `a[kuiMenuLinkItem]`, `[kuiMenuGroup]`, `[kuiMenuGroupLabel]`, `[kuiMenuSeparator]`, `[kuiMenuCheckboxItem]`, `[kuiMenuCheckboxItemIndicator]`, `[kuiMenuRadioGroup]`, `[kuiMenuRadioItem]`, `[kuiMenuRadioItemIndicator]`, `[kuiMenuSubmenuRoot]`, `[kuiMenuSubmenuTrigger]`.
+
+Anatomy:
+
+```
+kuiMenu
+  kuiMenuTrigger
+  *kuiMenuPortal
+    kuiMenuPositioner
+      kuiMenuPopup
+        kuiMenuArrow
+        kuiMenuGroup (optional, repeated)
+          kuiMenuItem (repeated)
+          a[kuiMenuLinkItem] (repeated)
+          kuiMenuGroupLabel
+          kuiMenuCheckboxItem (repeated)
+            *kuiMenuCheckboxItemIndicator
+          kuiMenuRadioGroup (repeated)
+            kuiMenuRadioItem (repeated)
+              *kuiMenuRadioItemIndicator
+          kuiMenuSubmenuRoot (repeated)
+            *kuiMenuPortal (as above)
+            kuiMenuSubmenuTrigger
+        kuiMenuSeparator (repeated)
+```
 
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
 - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
-- `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
+- `modal?: boolean`: Holds the page while the menu is open. Not for a submenu.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiMenu]` is `KuiMenu`. `exportAs: "kuiMenu"`. `kuiContextMenu` in place of `kuiMenu` is a menu for an area of the page, opened at the pointer: its trigger is `kuiContextMenuTrigger`, its other parts the menu's. Its props are above.
+- `[kuiMenuTrigger]` is `KuiMenuTrigger`.
+- `[kuiMenuPortal]` is `KuiMenuPortal`. Structural: written `*kuiMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiMenuPositioner]` is `KuiMenuPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiMenuPopup]` is `KuiMenuPopup`.
+- `[kuiMenuArrow]` is `KuiMenuArrow`.
+- `[kuiMenuItem]` is `KuiMenuItem`.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
+- `a[kuiMenuLinkItem]` is `KuiMenuLinkItem`. `<a kuiMenuLinkItem href="…">`: an item that is a link.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
+- `[kuiMenuGroup]` is `KuiMenuGroup`. Items that belong together, named by their label.
+- `[kuiMenuGroupLabel]` is `KuiMenuGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kuiMenuSeparator]` is `KuiMenuSeparator`. A line between items.
+- `[kuiMenuCheckboxItem]` is `KuiMenuCheckboxItem`. `exportAs: "kuiMenuCheckboxItem"`.
+    - `[(checked)]: boolean`: Whether the item is checked, when the caller holds it.
+    - `defaultChecked?: boolean`: Whether the item starts checked, when the caller does not hold `checked`. Read once.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
+    - `(checkedChanged): { checked: boolean; details: ChangeDetails }`: Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
+- `[kuiMenuCheckboxItemIndicator]` is `KuiMenuCheckboxItemIndicator`. Structural: written `*kuiMenuCheckboxItemIndicator`. `<span *kuiMenuCheckboxItemIndicator>`: in the page while its item is checked.
+- `[kuiMenuRadioGroup]` is `KuiMenuRadioGroup`. `exportAs: "kuiMenuRadioGroup"`. Generic: `<Value = unknown>`.
+    - `[(value)]: Value | null`: The chosen value; `null` is "none".
+    - `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
+    - `disabled?: boolean`: Disables every item of the group.
+    - `(valueChanged): { value: Value; details: ChangeDetails }`: Told an item's own value, never `null`: a press chooses, and nothing takes the choice back.
+- `[kuiMenuRadioItem]` is `KuiMenuRadioItem`.
+    - `value: unknown`: Required. What the radio group's value is while this item is the chosen one.
+    - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
+    - `label?: string`: What typing matches; the item's text when left out.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
+- `[kuiMenuRadioItemIndicator]` is `KuiMenuRadioItemIndicator`. Structural: written `*kuiMenuRadioItemIndicator`. `<span *kuiMenuRadioItemIndicator>`: in the page while its item is the chosen one.
+- `[kuiMenuSubmenuRoot]` is `KuiMenuSubmenuRoot`. `exportAs: "kuiMenuSubmenuRoot"`. A menu that one of this menu's items opens. Its trigger is `kuiMenuSubmenuTrigger`.
+    - `[(open)]: boolean`: Whether it is open, when the caller holds it.
+    - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
+    - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
+    - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+    - `modal?: boolean`: Holds the page while the menu is open. Not for a submenu.
+    - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+- `[kuiMenuSubmenuTrigger]` is `KuiMenuSubmenuTrigger`. On the item of a menu that opens the submenu around it (`kuiMenuSubmenuRoot`).
 
 Attributes and CSS variables, by part:
 
@@ -961,7 +1910,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the menu against its trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -973,10 +1922,10 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
 - arrow: An element that points at the trigger.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
 - item: An action. Choosing it closes the menu.
@@ -1020,6 +1969,8 @@ Props:
 - `disabled?: boolean`: No menu of the bar opens.
 - `orientation?: Orientation`: A row (the default) or a column of menus. In a column a menu opens beside its trigger.
 
+`[kuiMenubar]` is `KuiMenubar`. `exportAs: "kuiMenubar"`. A row of menus that work as one. Each `kuiMenu` inside it is one of its items.
+
 Attributes and CSS variables, by part:
 
 - root: The row of menus. A menu inside it is one of its items.
@@ -1029,16 +1980,32 @@ Attributes and CSS variables, by part:
 ### MessageScroller
 
 ```
-import { KuiMessageScroller } from "@kirana-ui/angular"
+import { KuiMessageScroller, KuiMessageScrollerViewport, KuiMessageScrollerContent, KuiMessageScrollerButton } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiMessageScroller]`, `[kuiMessageScrollerViewport]`, `[kuiMessageScrollerContent]`, `[kuiMessageScrollerButton]`.
+
+Anatomy:
+
+```
+kuiMessageScroller
+  kuiMessageScrollerViewport
+    kuiMessageScrollerContent
+  kuiMessageScrollerButton
+```
 
 Props of its root:
 
 - `initial?: "bottom" | "top"`: Where it begins: at the newest message (the default), or at the first.
 - `threshold?: number`: How near the end counts as at it, in pixels. Default: 24.
-- `onAtBottomChange?: ((atBottom: boolean, details: ChangeDetails) => void)`: Heard when it comes to the end or leaves it.
+- `(atBottomChanged): { atBottom: boolean; details: ChangeDetails }`: It came to the end, or left it.
+
+Each part, and its own props:
+
+- `[kuiMessageScroller]` is `KuiMessageScroller`. `exportAs: "kuiMessageScroller"`. Its props are above.
+- `[kuiMessageScrollerViewport]` is `KuiMessageScrollerViewport`.
+- `[kuiMessageScrollerContent]` is `KuiMessageScrollerContent`. The messages: what grows as one is written.
+- `[kuiMessageScrollerButton]` is `KuiMessageScrollerButton`.
 
 Attributes and CSS variables, by part:
 
@@ -1052,27 +2019,93 @@ Attributes and CSS variables, by part:
 ### Meter
 
 ```
-import { KuiMeter } from "@kirana-ui/angular"
+import { KuiMeter, KuiMeterTrack, KuiMeterIndicator, KuiMeterValue, KuiMeterLabel } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiMeter]`, `[kuiMeterTrack]`, `[kuiMeterIndicator]`, `[kuiMeterValue]`, `[kuiMeterLabel]`.
 
+Anatomy:
+
+```
+kuiMeter
+  kuiMeterTrack
+    kuiMeterIndicator
+  kuiMeterValue
+  kuiMeterLabel
+```
+
+Props of its root:
+
+- `value: number`: Required. The measure, between `min` and `max`. A meter always has one.
+- `min?: number`: Default 0.
+- `max?: number`: Default 100.
+- `format?: Intl.NumberFormatOptions`: How the value is written; a percentage of the range by default.
+- `locale?: string`: The language the value is written in; the page's by default.
+- `getAriaValueText?: (text: string | undefined, value: number | null) => string`: What assistive technology reads for the value, when the written value is not enough.
+
+Each part, and its own props:
+
+- `[kuiMeter]` is `KuiMeter`. `exportAs: "kuiMeter"`. The meter: it says the value to assistive technology. Its props are above.
+- `[kuiMeterTrack]` is `KuiMeterTrack`. The whole range.
+- `[kuiMeterIndicator]` is `KuiMeterIndicator`. The filled part: its width is the value's share of the range.
+- `[kuiMeterValue]` is `KuiMeterValue`. Shows the written value.
+- `[kuiMeterLabel]` is `KuiMeterLabel`. The meter's name.
+
 ### NavigationMenu
 
 ```
-import { KuiNavigationMenu } from "@kirana-ui/angular"
+import { KuiNavigationMenu, KuiNavigationMenuList, KuiNavigationMenuItem, KuiNavigationMenuTrigger, KuiNavigationMenuIcon, KuiNavigationMenuContent, KuiNavigationMenuLink, KuiNavigationMenuPortal, KuiNavigationMenuPositioner, KuiNavigationMenuPopup, KuiNavigationMenuViewport, KuiNavigationMenuArrow, KuiNavigationMenuBackdrop } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiNavigationMenu]`, `[kuiNavigationMenuList]`, `[kuiNavigationMenuItem]`, `[kuiNavigationMenuTrigger]`, `[kuiNavigationMenuIcon]`, `[kuiNavigationMenuContent]`, `[kuiNavigationMenuLink]`, `[kuiNavigationMenuPortal]`, `[kuiNavigationMenuPositioner]`, `[kuiNavigationMenuPopup]`, `[kuiNavigationMenuViewport]`, `[kuiNavigationMenuArrow]`, `[kuiNavigationMenuBackdrop]`.
 
+Anatomy:
+
+```
+kuiNavigationMenu
+  kuiNavigationMenuList
+    kuiNavigationMenuItem (repeated)
+      kuiNavigationMenuTrigger
+        kuiNavigationMenuIcon
+      *kuiNavigationMenuContent
+        kuiNavigationMenuLink (repeated)
+      kuiNavigationMenuLink (repeated, as above)
+    kuiNavigationMenuLink (repeated, as above)
+  *kuiNavigationMenuPortal
+    kuiNavigationMenuPositioner
+      kuiNavigationMenuPopup
+        kuiNavigationMenuViewport
+        kuiNavigationMenuArrow
+    kuiNavigationMenuBackdrop
+```
+
 Props of its root:
 
-- `value?: Value | null`: The item whose content is shown; `null` is "none".
-- `defaultValue?: Value | null`
-- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`
+- `[(value)]: Value | null`: The item whose content is shown; `null` is "none".
+- `defaultValue?: NoInfer<Value> | null`: The item whose content it starts with, when the caller does not hold `value`. Read once.
 - `delay?: number`: How long the pointer rests on a trigger before its content shows, in milliseconds.
 - `closeDelay?: number`: How long after the pointer leaves the content goes, in milliseconds.
-- `orientation?: Orientation`
+- `orientation?: Orientation`: Whether the triggers are laid out across (the default) or down: the arrows that move between them follow.
+- `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as another item's content is about to show, or none: `details.cancel()` keeps the value as it was.
+
+Each part, and its own props:
+
+- `[kuiNavigationMenu]` is `KuiNavigationMenu`. `exportAs: "kuiNavigationMenu"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kuiNavigationMenuList]` is `KuiNavigationMenuList`.
+- `[kuiNavigationMenuItem]` is `KuiNavigationMenuItem`. On an item's `<li>`. `value` tells it from the others; an item that is given none makes its own.
+    - `value?: unknown`: What tells this item from the others: the menu's `value` while its content is shown. An item that is given none makes its own.
+- `[kuiNavigationMenuTrigger]` is `KuiNavigationMenuTrigger`.
+- `[kuiNavigationMenuIcon]` is `KuiNavigationMenuIcon`.
+- `[kuiNavigationMenuContent]` is `KuiNavigationMenuContent`. Structural: written `*kuiNavigationMenuContent`. `<div *kuiNavigationMenuContent>`: an item's content, drawn in `kuiNavigationMenuViewport` while it is shown.
+- `[kuiNavigationMenuLink]` is `KuiNavigationMenuLink`.
+    - `active?: boolean`: The link is the page the reader is on.
+    - `closeOnClick?: boolean`: Whether following it closes the menu. Default: it does.
+- `[kuiNavigationMenuPortal]` is `KuiNavigationMenuPortal`. Structural: written `*kuiNavigationMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiNavigationMenuPositioner]` is `KuiNavigationMenuPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiNavigationMenuPopup]` is `KuiNavigationMenuPopup`.
+- `[kuiNavigationMenuViewport]` is `KuiNavigationMenuViewport`. Where the contents are drawn, inside the popup.
+- `[kuiNavigationMenuArrow]` is `KuiNavigationMenuArrow`.
+- `[kuiNavigationMenuBackdrop]` is `KuiNavigationMenuBackdrop`.
 
 Attributes and CSS variables, by part:
 
@@ -1095,7 +2128,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the popup against the open item's trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -1109,12 +2142,12 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--popup-width`: The open content's width.
     - `--popup-height`: The open content's height.
 - arrow: An element that points at the open item's trigger.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
 - backdrop: An element behind the popup, for a design that dims the page.
@@ -1126,19 +2159,27 @@ Attributes and CSS variables, by part:
 ### NumberField
 
 ```
-import { KuiNumberField } from "@kirana-ui/angular"
+import { KuiNumberField, KuiNumberFieldGroup, KuiNumberFieldInput, KuiNumberFieldIncrement, KuiNumberFieldDecrement } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiNumberField]`, `[kuiNumberFieldGroup]`, `[kuiNumberFieldInput]`, `[kuiNumberFieldIncrement]`, `[kuiNumberFieldDecrement]`.
 
+Anatomy:
+
+```
+kuiNumberField
+  kuiNumberFieldGroup
+    kuiNumberFieldInput
+    kuiNumberFieldIncrement
+    kuiNumberFieldDecrement
+```
+
 Props of its root:
 
-- `value?: number | null`: The number; `null` is "none".
-- `defaultValue?: number | null`
-- `onValueChange?: ((value: number | null, details: ChangeDetails) => void)`
-- `onValueCommitted?: ((value: number | null, details: ChangeDetails) => void)`: Heard once a change is done: focus left the input, a key or a button stepped it.
-- `min?: number`
-- `max?: number`
+- `[(value)]: number | null`: The number; `null` is "none".
+- `defaultValue?: number | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `min?: number`: The least the number may be.
+- `max?: number`: The most the number may be.
 - `step?: number`: What the buttons and the arrows move by. Default 1.
 - `smallStep?: number`: With Alt held. Default 0.1.
 - `largeStep?: number`: With Shift held. Default 10.
@@ -1146,11 +2187,21 @@ Props of its root:
 - `allowWheelScrub?: boolean`: The wheel steps it while the pointer is over the input and focus is in it.
 - `format?: Intl.NumberFormatOptions`: How the number is written.
 - `locale?: string`: The language it is written in; the page's by default.
-- `disabled?: boolean`
-- `readOnly?: boolean`
-- `required?: boolean`
+- `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
 - `name?: string`: With a name, the number is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `(valueChanged): { value: number | null; details: ChangeDetails }`: Heard as the number is about to change, typed or stepped: `details.cancel()` keeps it as it was.
+- `(valueCommitted): { value: number | null; details: ChangeDetails }`: A change that is done: focus left the input, a key or a button stepped it.
+
+Each part, and its own props:
+
+- `[kuiNumberField]` is `KuiNumberField`. `exportAs: "kuiNumberField"`. On the element that holds the field's parts. `[(value)]` is the number, `null` for none. With a name, it draws the hidden input a form reads. Its props are above.
+- `[kuiNumberFieldGroup]` is `KuiNumberFieldGroup`.
+- `[kuiNumberFieldInput]` is `KuiNumberFieldInput`.
+- `[kuiNumberFieldIncrement]` is `KuiNumberFieldIncrement`.
+- `[kuiNumberFieldDecrement]` is `KuiNumberFieldDecrement`.
 
 Attributes and CSS variables, by part:
 
@@ -1208,22 +2259,43 @@ Attributes and CSS variables, by part:
 ### Otp
 
 ```
-import { KuiOtp } from "@kirana-ui/angular"
+import { KuiOtp, KuiOtpInput, KuiOtpGroup, KuiOtpSlot, KuiOtpSeparator, KuiOtpCaret } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiOtp]`, `input[kuiOtpInput]`, `[kuiOtpGroup]`, `[kuiOtpSlot]`, `[kuiOtpSeparator]`, `[kuiOtpCaret]`.
 
+Anatomy:
+
+```
+kuiOtp
+  input[kuiOtpInput]
+  kuiOtpGroup (repeated)
+    kuiOtpSlot (repeated)
+      *kuiOtpCaret
+  kuiOtpSeparator (repeated)
+```
+
 Props of its root:
 
 - `length?: number`: How many characters the code has. Default: 6.
-- `value?: string`
-- `defaultValue?: string`
-- `onValueChange?: ((value: string, details: ChangeDetails) => void)`
-- `onComplete?: ((value: string) => void)`: Every character is in: the moment to send the code.
+- `[(value)]: string`: The characters typed so far, when the caller holds them.
+- `defaultValue?: string`: The characters it starts with, when the caller does not hold `value`. Read once.
 - `mode?: "numeric" | "alphanumeric" | "text"`: What a character may be. Default: `numeric`.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, the code is submitted with the form around it.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
+- `(valueChanged): { value: string; details: ChangeDetails }`: Heard as the characters are about to change: `details.cancel()` keeps them as they were.
+- `(completed): string`: Every character is in: the moment to send the code.
+
+Each part, and its own props:
+
+- `[kuiOtp]` is `KuiOtp`. `exportAs: "kuiOtp"`. Its props are above.
+- `input[kuiOtpInput]` is `KuiOtpInput`. `<input kuiOtpInput>`: the one input the code is typed in.
+- `[kuiOtpGroup]` is `KuiOtpGroup`. Cells that are drawn together.
+- `[kuiOtpSlot]` is `KuiOtpSlot`. One cell. It writes its character before whatever is inside it (a caret), and leaves that alone.
+    - `index: number`: Required. Which character of the code it shows, from 0.
+- `[kuiOtpSeparator]` is `KuiOtpSeparator`. A mark between groups of cells.
+- `[kuiOtpCaret]` is `KuiOtpCaret`. Structural: written `*kuiOtpCaret`. `<div *kuiOtpCaret>`: in its cell while the cell is the active one and empty.
 
 Attributes and CSS variables, by part:
 
@@ -1242,21 +2314,42 @@ Attributes and CSS variables, by part:
 ### Pagination
 
 ```
-import { KuiPagination } from "@kirana-ui/angular"
+import { KuiPagination, KuiPaginationItems, KuiPaginationItem, KuiPaginationEllipsis, KuiPaginationPrevious, KuiPaginationNext } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiPagination]`, `[kuiPaginationItems]`, `[kuiPaginationItem]`, `[kuiPaginationEllipsis]`, `[kuiPaginationPrevious]`, `[kuiPaginationNext]`.
 
+Anatomy:
+
+```
+kuiPagination
+  *kuiPaginationItems
+    kuiPaginationItem (repeated)
+    kuiPaginationEllipsis (repeated)
+  kuiPaginationPrevious
+  kuiPaginationNext
+```
+
 Props of its root:
 
-- `page?: number`: The page shown, from 1.
-- `defaultPage?: number`
-- `onPageChange?: ((page: number, details: ChangeDetails) => void)`
-- `count: number`: How many items there are in all.
+- `[(page)]: number`: The page shown, from 1.
+- `defaultPage?: number`: The page it starts at, when the caller does not hold `page`. Read once.
+- `count: number`: Required. How many items there are in all.
 - `pageSize?: number`: How many items a page holds. Default 10.
 - `siblingCount?: number`: How many pages are listed each side of the one shown. Default 1.
 - `boundaryCount?: number`: How many pages are always listed at each end. Default 1.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: no page can be gone to.
+- `(pageChanged): { page: number; details: ChangeDetails }`: Heard as another page is about to be shown: `details.cancel()` keeps the page as it was.
+
+Each part, and its own props:
+
+- `[kuiPagination]` is `KuiPagination`. `exportAs: "kuiPagination"`. On a `<nav>`. `[(page)]` is the page shown, from 1. Its props are above.
+- `[kuiPaginationItems]` is `KuiPaginationItems`. Structural: written `*kuiPaginationItems`. Its template is given the entry: `let entry` is a `PaginationEntry`. `<ng-container *kuiPaginationItems="let entry">`: once for each piece of the row, a page or the mark for pages left out.
+- `[kuiPaginationItem]` is `KuiPaginationItem`.
+    - `page: number`: Required. The page it goes to, from 1.
+- `[kuiPaginationEllipsis]` is `KuiPaginationEllipsis`. The mark for pages left out of the row.
+- `[kuiPaginationPrevious]` is `KuiPaginationPrevious`.
+- `[kuiPaginationNext]` is `KuiPaginationNext`.
 
 Attributes and CSS variables, by part:
 
@@ -1273,16 +2366,40 @@ Attributes and CSS variables, by part:
 ### Popover
 
 ```
-import { KuiPopover } from "@kirana-ui/angular"
+import { KuiPopover, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverPositioner, KuiPopoverPopup, KuiPopoverTitle, KuiPopoverDescription, KuiPopoverClose } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiPopover]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiPopoverTitle]`, `[kuiPopoverDescription]`, `[kuiPopoverClose]`.
 
+Anatomy:
+
+```
+kuiPopover
+  kuiPopoverTrigger
+  *kuiPopoverPortal
+    kuiPopoverPositioner
+      kuiPopoverPopup
+        kuiPopoverTitle
+        kuiPopoverDescription
+        kuiPopoverClose
+```
+
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiPopover]` is `KuiPopover`. `exportAs: "kuiPopover"`. Holds the popover: whether it is open. Its props are above.
+- `[kuiPopoverTrigger]` is `KuiPopoverTrigger`.
+- `[kuiPopoverPortal]` is `KuiPopoverPortal`. Structural: written `*kuiPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiPopoverPositioner]` is `KuiPopoverPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiPopoverPopup]` is `KuiPopoverPopup`.
+- `[kuiPopoverTitle]` is `KuiPopoverTitle`. The heading that names the popover.
+- `[kuiPopoverDescription]` is `KuiPopoverDescription`. The text that describes the popover.
+- `[kuiPopoverClose]` is `KuiPopoverClose`. A button that closes the popover.
 
 Attributes and CSS variables, by part:
 
@@ -1291,7 +2408,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -1303,31 +2420,43 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
-
-### PortalProvider
-
-```
-import { KuiPortalProvider } from "@kirana-ui/angular"
-```
 
 ### Progress
 
 ```
-import { KuiProgress } from "@kirana-ui/angular"
+import { KuiProgress, KuiProgressTrack, KuiProgressIndicator, KuiProgressValue, KuiProgressLabel } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiProgress]`, `[kuiProgressTrack]`, `[kuiProgressIndicator]`, `[kuiProgressValue]`, `[kuiProgressLabel]`.
 
+Anatomy:
+
+```
+kuiProgress
+  kuiProgressTrack
+    kuiProgressIndicator
+  kuiProgressValue
+  kuiProgressLabel
+```
+
 Props of its root:
 
-- `value: number | null`: The value. For a progress bar, `null` is "under way, how far is not known".
+- `value: number | null`: Required. The value. For a progress bar, `null` is "under way, how far is not known".
 - `min?: number`: Default 0.
 - `max?: number`: Default 100.
 - `format?: Intl.NumberFormatOptions`: How the value is written; a percentage of the range by default.
 - `locale?: string`: The language the value is written in; the page's by default.
-- `getAriaValueText?: ((text: string | undefined, value: number | null) => string)`: What assistive technology reads for the value, when the written value is not enough.
+- `getAriaValueText?: (text: string | undefined, value: number | null) => string`: What assistive technology reads for the value, when the written value is not enough.
+
+Each part, and its own props:
+
+- `[kuiProgress]` is `KuiProgress`. `exportAs: "kuiProgress"`. Its props are above.
+- `[kuiProgressTrack]` is `KuiProgressTrack`.
+- `[kuiProgressIndicator]` is `KuiProgressIndicator`.
+- `[kuiProgressValue]` is `KuiProgressValue`. Shows the written value.
+- `[kuiProgressLabel]` is `KuiProgressLabel`.
 
 Attributes and CSS variables, by part:
 
@@ -1355,15 +2484,29 @@ Attributes and CSS variables, by part:
 ### QrCode
 
 ```
-import { KuiQrCode } from "@kirana-ui/angular"
+import { KuiQrCode, KuiQrCodeFrame, KuiQrCodePattern } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiQrCode]`, `[kuiQrCodeFrame]`, `[kuiQrCodePattern]`.
 
+Anatomy:
+
+```
+kuiQrCode
+  kuiQrCodeFrame
+    kuiQrCodePattern
+```
+
 Props of its root:
 
-- `value: string`: What the code says: a link, a text. Written as UTF-8.
+- `value?: string`: What the code says: a link, a text.
 - `correction?: QrCorrection`: How much of it may be lost and still be read. Default: `"M"`.
+
+Each part, and its own props:
+
+- `[kuiQrCode]` is `KuiQrCode`. `exportAs: "kuiQrCode"`. Its props are above.
+- `[kuiQrCodeFrame]` is `KuiQrCodeFrame`. `<svg kuiQrCodeFrame>`: the drawing.
+- `[kuiQrCodePattern]` is `KuiQrCodePattern`. `<svg:path kuiQrCodePattern>`: the dark modules.
 
 Attributes and CSS variables, by part:
 
@@ -1373,21 +2516,37 @@ Attributes and CSS variables, by part:
 ### RadioGroup
 
 ```
-import { KuiRadioGroup } from "@kirana-ui/angular"
+import { KuiRadioGroup, KuiRadioGroupItem, KuiRadioGroupIndicator } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiRadioGroup]`, `[kuiRadioGroupItem]`, `[kuiRadioGroupIndicator]`.
 
+Anatomy:
+
+```
+kuiRadioGroup
+  kuiRadioGroupItem (repeated)
+    *kuiRadioGroupIndicator
+```
+
 Props of its root:
 
-- `value?: Value | null`: The chosen value; `null` is "none".
-- `defaultValue?: Value | null`
-- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`: `null` only when a form's reset takes the group back to "none".
-- `disabled?: boolean`
-- `readOnly?: boolean`
-- `required?: boolean`
+- `[(value)]: Value | null`: The chosen value; `null` is "none".
+- `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `disabled?: boolean`: Disables every item of the group.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, choosing none is then invalid.
 - `name?: string`: With a name, the chosen value is submitted with the form around the group.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `(valueChanged): { value: Value | null; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiRadioGroup]` is `KuiRadioGroup`. `exportAs: "kuiRadioGroup"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kuiRadioGroupItem]` is `KuiRadioGroupItem`. On an item's element. It draws the hidden native radio inside it, which a form and a label reach.
+    - `value: unknown`: Required. What the group's value is while this item is the chosen one.
+    - `disabled?: boolean`: Disables this item: it cannot be chosen.
+- `[kuiRadioGroupIndicator]` is `KuiRadioGroupIndicator`. Structural: written `*kuiRadioGroupIndicator`. `<span *kuiRadioGroupIndicator>`: in the page while its item is the chosen one.
 
 Attributes and CSS variables, by part:
 
@@ -1413,17 +2572,35 @@ Attributes and CSS variables, by part:
 ### Resizable
 
 ```
-import { KuiResizable } from "@kirana-ui/angular"
+import { KuiResizableGroup, KuiResizablePanel, KuiResizableHandle } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiResizableGroup]`, `[kuiResizablePanel]`, `[kuiResizableHandle]`.
 
+Anatomy:
+
+```
+kuiResizableGroup
+  kuiResizablePanel (repeated)
+  kuiResizableHandle (repeated)
+```
+
 Props of its root:
 
 - `orientation?: Orientation`: Whether the panels are side by side (the default) or one over the other.
-- `onSizesChange?: ((sizes: number[], details: ChangeDetails) => void)`: Heard as the panels are resized: each panel's share, in the page's order, summing to 100.
 - `keyboardStep?: number`: How far an arrow key moves a handle, in hundredths of the group. Default: 10.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: the handles cannot be dragged or moved with the keyboard.
+- `(sizesChanged): { sizes: number[]; details: ChangeDetails }`: Each panel's share as the panels are resized, with why.
+
+Each part, and its own props:
+
+- `[kuiResizableGroup]` is `KuiResizableGroup`. `exportAs: "kuiResizableGroup"`. Its props are above.
+- `[kuiResizablePanel]` is `KuiResizablePanel`.
+    - `defaultSize?: number`: Its share to begin with, in hundredths of the group. Either every panel gives one or none does (they are then equal).
+    - `minSize?: number`: The least it can be made. Default: 0.
+    - `maxSize?: number`: The most it can be made. Default: 100.
+- `[kuiResizableHandle]` is `KuiResizableHandle`.
+    - `disabled?: boolean`: Disables this handle: it cannot be dragged or moved with the keyboard.
 
 Attributes and CSS variables, by part:
 
@@ -1441,55 +2618,127 @@ Attributes and CSS variables, by part:
 ### ScrollArea
 
 ```
-import { KuiScrollArea } from "@kirana-ui/angular"
+import { KuiScrollArea, KuiScrollAreaViewport, KuiScrollAreaContent, KuiScrollAreaScrollbar, KuiScrollAreaThumb, KuiScrollAreaCorner } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiScrollArea]`, `[kuiScrollAreaViewport]`, `[kuiScrollAreaContent]`, `[kuiScrollAreaScrollbar]`, `[kuiScrollAreaThumb]`, `[kuiScrollAreaCorner]`.
 
+Anatomy:
+
+```
+kuiScrollArea
+  kuiScrollAreaViewport
+    kuiScrollAreaContent
+  *kuiScrollAreaScrollbar (repeated)
+    kuiScrollAreaThumb
+  *kuiScrollAreaCorner
+```
+
+Each part, and its own props:
+
+- `[kuiScrollArea]` is `KuiScrollArea`. `exportAs: "kuiScrollArea"`.
+- `[kuiScrollAreaViewport]` is `KuiScrollAreaViewport`.
+- `[kuiScrollAreaContent]` is `KuiScrollAreaContent`. What is scrolled.
+- `[kuiScrollAreaScrollbar]` is `KuiScrollAreaScrollbar`. Structural: written `*kuiScrollAreaScrollbar`. `<div *kuiScrollAreaScrollbar="'horizontal'">`: in the page while there is something to scroll its way (`vertical` when no orientation is given).
+    - `*kuiScrollAreaScrollbar: Orientation | ""`: The directive's own value: `*kuiScrollAreaScrollbar="…"`. Which way it scrolls: `'horizontal'`, or `'vertical'` when none is given.
+    - `keepMounted?: boolean`: Written after the directive's value: `*kuiScrollAreaScrollbar="…; keepMounted: …"`. In the page even while there is nothing to scroll its way.
+- `[kuiScrollAreaThumb]` is `KuiScrollAreaThumb`.
+- `[kuiScrollAreaCorner]` is `KuiScrollAreaCorner`. Structural: written `*kuiScrollAreaCorner`. `<div *kuiScrollAreaCorner>`: in the page while both scrollbars are.
+
 Attributes and CSS variables, by part:
 
-- root: The area. It holds the viewport and the scrollbars.
+- root: The area. It holds the viewport and the scrollbars, which the library places against it: a design gives a scrollbar its thickness and draws it, and places nothing.
     - `data-has-overflow-x`: Present when there is more to see sideways.
     - `data-has-overflow-y`: Present when there is more to see up or down.
     - `data-scrolling`: Present while it is being scrolled, and a moment after.
     - `data-hovering`: Present while the pointer is over the area.
-    - `--scroll-area-corner-width`: The width of the corner: the vertical scrollbar's.
-    - `--scroll-area-corner-height`: The height of the corner: the horizontal scrollbar's.
+    - `--scroll-area-corner-width`: The width of the corner: the vertical scrollbar's, while both scrollbars and the corner are in the page.
+    - `--scroll-area-corner-height`: The height of the corner: the horizontal scrollbar's, while both scrollbars and the corner are in the page.
 - viewport: The element that scrolls.
     - `data-has-overflow-x`: Present when there is more to see sideways.
     - `data-has-overflow-y`: Present when there is more to see up or down.
     - `data-scrolling`: Present while it is being scrolled, and a moment after.
-- scrollbar: A scrollbar's track. In the page while there is something to scroll its way.
+- scrollbar: A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way.
     - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
     - `data-hovering`: Present while the pointer is over the area.
     - `data-scrolling`: Present while the area is scrolled its way.
-- thumb: The part of a scrollbar that shows where the view is, and can be dragged.
-    - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
     - `--scroll-area-thumb-height`: A vertical thumb's height.
     - `--scroll-area-thumb-width`: A horizontal thumb's width.
+- thumb: The part of a scrollbar that shows where the view is, and can be dragged. As long as its scrollbar's variable says.
+    - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
 
 ### Select
 
 ```
-import { KuiSelect } from "@kirana-ui/angular"
+import { KuiSelect, KuiSelectTrigger, KuiSelectValue, KuiSelectPortal, KuiSelectPositioner, KuiSelectPopup, KuiSelectList, KuiSelectScrollUpArrow, KuiSelectScrollDownArrow, KuiSelectGroup, KuiSelectGroupLabel, KuiSelectSeparator, KuiSelectItem, KuiSelectItemText, KuiSelectItemIndicator, KuiSelectInput } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiSelect]`, `[kuiSelectTrigger]`, `[kuiSelectValue]`, `[kuiSelectPortal]`, `[kuiSelectPositioner]`, `[kuiSelectPopup]`, `[kuiSelectList]`, `[kuiSelectScrollUpArrow]`, `[kuiSelectScrollDownArrow]`, `[kuiSelectGroup]`, `[kuiSelectGroupLabel]`, `[kuiSelectSeparator]`, `[kuiSelectItem]`, `[kuiSelectItemText]`, `[kuiSelectItemIndicator]`.
 
+Anatomy:
+
+```
+kuiSelect
+  kuiSelectTrigger
+    *kuiSelectValue
+  *kuiSelectPortal
+    kuiSelectPositioner
+      kuiSelectPopup
+        *kuiSelectScrollUpArrow
+        kuiSelectList (optional)
+          kuiSelectGroup (optional, repeated)
+            kuiSelectGroupLabel
+            kuiSelectItem (repeated)
+              kuiSelectItemText
+              *kuiSelectItemIndicator
+          kuiSelectSeparator (repeated)
+        *kuiSelectScrollDownArrow
+  input[kuiSelectInput] (Angular only)
+```
+
 Props of its root:
 
-- `value?: Value | null`: The chosen value; `null` is "none".
-- `defaultValue?: Value | null`
-- `onValueChange?: ((value: Value | null, details: ChangeDetails) => void)`
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
-- `disabled?: boolean`
+- `[(value)]: Value | null`: The chosen value; `null` is "none".
+- `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `[(open)]: boolean`: Whether the list is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: readonly { value: Value; label: string }[]`: The labels of the values, for the trigger to show before the list has ever been opened. Not needed for the list itself: its items are read from the markup.
-- `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view). Each item is then given its `index`.
+- `items?: ItemLabels<Value>`: The values' labels: a list of values with their labels, or the labels by value.
+- `multiple?: boolean`: Several values: they are `values`, not `value`.
+- `[(values)]: readonly Value[]`: With `multiple`: the chosen values, in the order they were chosen.
+- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+- `(valuesChanged): { values: Value[]; details: ChangeDetails }`: With `multiple`: heard as a value is about to be added or taken away, with the values there would then be: `details.cancel()` keeps them as they were.
+- `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
+- `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as a value is about to be chosen: `details.cancel()` keeps it as it was.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `[kuiSelect]` is `KuiSelect`. `exportAs: "kuiSelect"`. Generic: `<Value = unknown>`. Holds the select: its value and whether the list is open. Its props are above.
+- `[kuiSelectTrigger]` is `KuiSelectTrigger`.
+- `[kuiSelectValue]` is `KuiSelectValue`. Structural: written `*kuiSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kuiSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. `<span *kuiSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
+    - `placeholder?: string`: Shown while nothing is chosen.
+- `[kuiSelectPortal]` is `KuiSelectPortal`. Structural: written `*kuiSelectPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiSelectPositioner]` is `KuiSelectPositioner`. Takes the positioner options ("Positioner options", above).
+    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it.
+- `[kuiSelectPopup]` is `KuiSelectPopup`.
+- `[kuiSelectList]` is `KuiSelectList`. The items' own box inside the popup, when the popup also holds scroll arrows.
+- `[kuiSelectScrollUpArrow]` is `KuiSelectScrollUpArrow`. Structural: written `*kuiSelectScrollUpArrow`. `<div *kuiSelectScrollUpArrow>`: in the page while there is more of the list above. It scrolls the list while the pointer moves over it.
+- `[kuiSelectScrollDownArrow]` is `KuiSelectScrollDownArrow`. Structural: written `*kuiSelectScrollDownArrow`. `<div *kuiSelectScrollDownArrow>`: in the page while there is more of the list below.
+- `[kuiSelectGroup]` is `KuiSelectGroup`. Items that belong together, named by their `kuiSelectGroupLabel`.
+- `[kuiSelectGroupLabel]` is `KuiSelectGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kuiSelectSeparator]` is `KuiSelectSeparator`. A line between groups.
+- `[kuiSelectItem]` is `KuiSelectItem`.
+    - `value: unknown`: Required. What the select's value is while this item is chosen.
+    - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
+    - `label?: string`: What typeahead matches and the trigger shows; the item's text when left out.
+    - `index?: number`: Its place among all the rows, in a virtualized list.
+- `[kuiSelectItemText]` is `KuiSelectItemText`. The item's name: what the trigger shows once it is chosen.
+- `[kuiSelectItemIndicator]` is `KuiSelectItemIndicator`. Structural: written `*kuiSelectItemIndicator`. `<span *kuiSelectItemIndicator>`: in the page while its item is the chosen one.
+- `input[kuiSelectInput]` is `KuiSelectInput`. `<input kuiSelectInput>`: submits the value with the form around it. Angular only.
 
 Attributes and CSS variables, by part:
 
@@ -1497,12 +2746,12 @@ Attributes and CSS variables, by part:
     - `data-popup-open`: Present when the list is open.
     - `data-placeholder`: Present while nothing is chosen.
     - `data-disabled`: Present when it is disabled.
-- value: The chosen value's label, or the placeholder.
+- value: The chosen value's label, or the placeholder. With several values, their labels with commas between.
     - `data-placeholder`: Present while nothing is chosen.
 - positioner: Places the list against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left | none"`: The side of the trigger it is on, after any flip; `none` when it lies over the trigger.
+    - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger it is on, after any flip; `none` when it lies over the trigger.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -1512,13 +2761,13 @@ Attributes and CSS variables, by part:
 - scrollUpArrow: In the page while there is more of the list above: it scrolls the list while the pointer moves over it.
     - `data-direction="up | down"`: The way it scrolls the list.
     - `data-visible`: Present while there is more of the list its way.
-    - `data-side="top | right | bottom | left | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
+    - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 - scrollDownArrow: In the page while there is more of the list below: it scrolls the list while the pointer moves over it.
     - `data-direction="up | down"`: The way it scrolls the list.
     - `data-visible`: Present while there is more of the list its way.
-    - `data-side="top | right | bottom | left | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
+    - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 - popup: The list of items.
@@ -1526,10 +2775,10 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
 - item: One choice in the list.
-    - `data-selected`: Present on the chosen item.
+    - `data-selected`: Present on the chosen item, or on each of several.
     - `data-highlighted`: Present on the item the pointer or the keyboard is on.
     - `data-disabled`: Present when it is disabled.
 
@@ -1541,7 +2790,9 @@ import { KuiSeparator } from "@kirana-ui/angular"
 
 Props:
 
-- `orientation?: Orientation`
+- `orientation?: Orientation`: Whether the line lies across (the default) or stands upright: what a screen reader is told.
+
+`[kuiSeparator]` is `KuiSeparator`. `exportAs: "kuiSeparator"`.
 
 Attributes and CSS variables, by part:
 
@@ -1551,30 +2802,51 @@ Attributes and CSS variables, by part:
 ### Slider
 
 ```
-import { KuiSlider } from "@kirana-ui/angular"
+import { KuiSlider, KuiSliderValue, KuiSliderControl, KuiSliderTrack, KuiSliderIndicator, KuiSliderThumb } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiSlider]`, `[kuiSliderValue]`, `[kuiSliderControl]`, `[kuiSliderTrack]`, `[kuiSliderIndicator]`, `[kuiSliderThumb]`.
 
+Anatomy:
+
+```
+kuiSlider
+  kuiSliderValue
+  kuiSliderControl
+    kuiSliderTrack
+      kuiSliderIndicator
+      kuiSliderThumb (repeated)
+```
+
 Props of its root:
 
-- `value?: SliderValue`
-- `defaultValue?: SliderValue`: Read once. Default `min`.
-- `onValueChange?: ((value: number | number[], details: SliderChangeDetails) => void)`: Each step of a drag and each key.
-- `onValueCommitted?: ((value: number | number[], details: SliderChangeDetails) => void)`: When the pointer lets go, and after each key: the value to save.
+- `[(value)]: Value`: A number for one thumb, a list for a range: what is told back is the same kind.
+- `defaultValue?: NoInfer<Value>`: Read once. Default `min`.
 - `min?: number`: Default 0.
 - `max?: number`: Default 100.
 - `step?: number`: Default 1.
 - `largeStep?: number`: What Page Up, Page Down and an arrow with Shift move by. Default 10.
 - `minStepsBetweenValues?: number`: How many steps two thumbs of a range stay apart. Default 0.
-- `orientation?: Orientation`
-- `thumbAlignment?: "center" | "edge" | "edge-client-only"`: Where a thumb is at the ends of its range. `"center"` (the default): its centre on the control's edge, so half of it lies outside. `"edge"`: its edge on the control's edge, so it stays inside. `"edge-client-only"` is the same here: nothing waits for the browser.
-- `disabled?: boolean`
+- `thumbAlignment?: "center" | "edge" | "edge-client-only"`: `"edge"` keeps a thumb inside the control at the ends of its range.
+- `orientation?: "horizontal" | "vertical"`: Whether the track lies across (the default) or stands upright: the arrows that move a thumb follow.
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, each thumb's value is submitted with the form around the slider.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `format?: Intl.NumberFormatOptions`: How a value is written.
 - `locale?: string`: The language a value is written in; the page's by default.
-- `getAriaValueText?: ((text: string, value: number, index: number) => string)`: What assistive technology reads for a thumb, when the written value is not enough.
+- `getAriaValueText?: (text: string, value: number, index: number) => string`: What assistive technology reads for a thumb, when the written value is not enough.
+- `(valueChanged): { value: SliderTold<Value>; details: SliderChangeDetails }`: Each step of a drag and each key, with why; `details.cancel()` keeps the value.
+- `(valueCommitted): { value: SliderTold<Value>; details: SliderChangeDetails }`: When the pointer lets go, and after each key.
+
+Each part, and its own props:
+
+- `[kuiSlider]` is `KuiSlider`. `exportAs: "kuiSlider"`. Generic: `<Value extends SliderValue = SliderValue>`. Its props are above.
+- `[kuiSliderValue]` is `KuiSliderValue`. Shows the written value.
+- `[kuiSliderControl]` is `KuiSliderControl`.
+- `[kuiSliderTrack]` is `KuiSliderTrack`.
+- `[kuiSliderIndicator]` is `KuiSliderIndicator`.
+- `[kuiSliderThumb]` is `KuiSliderThumb`. On a thumb's element. It draws the hidden input inside it, which a form reads.
+    - `index?: number`: Which value of a range the thumb is, from 0. A thumb that is given none takes its place among the slider's thumbs, in the order they are written.
 
 Attributes and CSS variables, by part:
 
@@ -1600,7 +2872,7 @@ Attributes and CSS variables, by part:
     - `data-dragging`: Present while a pointer holds a thumb.
     - `--start-position`: With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.
     - `--relative-size`: With thumbs that stay inside the control and a range: the filled part's length.
-- thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads.
+- thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
     - `data-dragging`: Present while a pointer holds a thumb.
@@ -1610,22 +2882,34 @@ Attributes and CSS variables, by part:
 ### Switch
 
 ```
-import { KuiSwitch } from "@kirana-ui/angular"
+import { KuiSwitch, KuiSwitchThumb } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiSwitch]`, `[kuiSwitchThumb]`.
 
+Anatomy:
+
+```
+kuiSwitch
+  kuiSwitchThumb
+```
+
 Props of its root:
 
-- `checked?: boolean`
+- `[(checked)]: boolean`: Whether it is checked, when the caller holds it.
 - `defaultChecked?: boolean`: Read once.
-- `onCheckedChange?: ((checked: boolean, details: ChangeDetails) => void)`
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
-- `required?: boolean`
+- `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
 - `name?: string`: With a name, the control is submitted with the form around it when it is checked.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+- `(checkedChanged): { checked: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiSwitch]` is `KuiSwitch`. `exportAs: "kuiSwitch"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
+- `[kuiSwitchThumb]` is `KuiSwitchThumb`.
 
 Attributes and CSS variables, by part:
 
@@ -1645,17 +2929,41 @@ Attributes and CSS variables, by part:
 ### Tabs
 
 ```
-import { KuiTabs } from "@kirana-ui/angular"
+import { KuiTabs, KuiTabsList, KuiTabsTab, KuiTabsIndicator, KuiTabsPanel } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiTabs]`, `[kuiTabsList]`, `[kuiTabsTab]`, `[kuiTabsIndicator]`, `[kuiTabsPanel]`.
 
+Anatomy:
+
+```
+kuiTabs
+  kuiTabsList
+    kuiTabsTab (repeated)
+    kuiTabsIndicator
+  *kuiTabsPanel (repeated)
+```
+
 Props of its root:
 
-- `value?: Value | null`: The active tab's value; `null` is "none".
-- `defaultValue?: Value | null`: Read once. Without one, the first tab that can be chosen is, once the page is there.
-- `onValueChange?: ((value: Value, details: ChangeDetails) => void)`
-- `orientation?: Orientation`
+- `[(value)]: Value | null`: The active tab's value; `null` is "none".
+- `defaultValue?: NoInfer<Value> | null`: Read once. Without one, the first tab that can be chosen is, once the page is there.
+- `orientation?: Orientation`: Whether the tabs are laid out across (the default) or down: the arrows that move between them follow.
+- `(valueChanged): { value: Value; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiTabs]` is `KuiTabs`. `exportAs: "kuiTabs"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kuiTabsList]` is `KuiTabsList`.
+    - `activateOnFocus?: boolean`: Whether moving focus onto a tab with the arrows activates it. Default `false`.
+    - `loop?: boolean`: Whether the arrows wrap from the last tab to the first. Default `true`.
+- `[kuiTabsTab]` is `KuiTabsTab`.
+    - `value: unknown`: Required. What the tabs' value is while this tab is the active one.
+    - `disabled?: boolean`: Disables this tab: it cannot be chosen.
+- `[kuiTabsIndicator]` is `KuiTabsIndicator`.
+- `[kuiTabsPanel]` is `KuiTabsPanel`. Structural: written `*kuiTabsPanel`. `<div *kuiTabsPanel="'account'">`: in the page while its tab is the active one; `*kuiTabsPanel="'account'; keepMounted: true"` keeps it, hidden.
+    - `*kuiTabsPanel: unknown`: The directive's own value: `*kuiTabsPanel="…"`. Required. The value of the tab this is the panel of.
+    - `keepMounted?: boolean`: Written after the directive's value: `*kuiTabsPanel="…; keepMounted: …"`. Keeps the panel in the page, `hidden`, while its tab is not the active one.
 
 Attributes and CSS variables, by part:
 
@@ -1688,19 +2996,44 @@ Attributes and CSS variables, by part:
 ### Toast
 
 ```
-import { KuiToast } from "@kirana-ui/angular"
+import { KuiToastViewport, KuiToastList, KuiToastRoot, KuiToastContent, KuiToastTitle, KuiToastDescription, KuiToastClose, KuiToastAction } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiToastViewport]`, `[kuiToastList]`, `[kuiToastContent]`, `[kuiToastTitle]`, `[kuiToastDescription]`, `[kuiToastClose]`, `[kuiToastAction]`.
+Parts: `[kuiToastViewport]`, `[kuiToastList]`, `[kuiToastRoot]`, `[kuiToastContent]`, `[kuiToastTitle]`, `[kuiToastDescription]`, `[kuiToastClose]`, `[kuiToastAction]`.
 
-Its other parts (Root) are the directives of the components it is made of, used inside it.
+Anatomy:
+
+```
+kuiToastViewport
+  *kuiToastList
+    kuiToastRoot (repeated)
+      kuiToastContent (optional)
+        kuiToastTitle
+        kuiToastDescription
+      kuiToastClose
+      kuiToastAction
+```
 
 Props of its root:
 
-- `toaster: Toaster`
-- `label?: string`: What the region of toasts is called, for assistive technology.
-- `hotkey?: string`: The key that takes focus to the toasts. Default: `"F6"`.
-- `swipeDirection?: "left" | "right" | "up" | "down"`: The way a toast is dragged to close it. Default: `"right"`.
+- `toast: ToastRecord`: Required. The toast it draws: the one `*kuiToastList` gave its template (`let toast`).
+
+Each part, and its own props:
+
+- `[kuiToastViewport]` is `KuiToastViewport`. `exportAs: "kuiToastViewport"`. Where a toaster's toasts are drawn. Always in the page: put it once, near the root.
+    - `toaster: Toaster`: Required. The page's toaster: one is made with `createToaster()`, once, in a module.
+    - `label?: string`: What the region of toasts is called, for assistive technology.
+    - `hotkey?: string`: The key that takes focus to the toasts. Default: `"F6"`.
+    - `swipeDirection?: "left" | "right" | "up" | "down"`: The way a toast is dragged to close it. Default: `"right"`.
+- `[kuiToastList]` is `KuiToastList`. Structural: written `*kuiToastList`. Its template is given the entry: `let entry` is a `ToastRecord`. `<div *kuiToastList="let toast">`: its template once for each toast, the newest first.
+- `[kuiToastRoot]` is `KuiToastRoot`. One toast, on the element `*kuiToastList` draws for it. Its props are above.
+- `[kuiToastContent]` is `KuiToastContent`. What holds a toast's contents, when the design sizes the toast itself.
+- `[kuiToastTitle]` is `KuiToastTitle`. The toast's title, unless something is written in its element.
+- `[kuiToastDescription]` is `KuiToastDescription`. The toast's description, unless something is written in its element.
+- `[kuiToastClose]` is `KuiToastClose`. Closes the toast.
+- `[kuiToastAction]` is `KuiToastAction`. The toast's action, its label unless something is written in its element. A press tells the action (`onAction`), then closes the toast unless the action called `details.cancel()`.
+
+A page's toasts are a toaster's, made once in a module: `import { createToaster } from "@kirana-ui/angular"`, then `export const toaster = createToaster(options)` (`ToasterOptions`, under "Types"). The viewport is given it, and anything on the page adds to it: `toaster.add({ title, description, action, priority })`, `toaster.update(id, options)`, `toaster.dismiss(id)`, `toaster.promise(promise, { loading, success, error })`. What each takes and gives back is `Toaster`, `ToastOptions`, `ToastActionOptions` and `ToastRecord` under "Types".
 
 Attributes and CSS variables, by part:
 
@@ -1732,11 +3065,13 @@ import { KuiToggle } from "@kirana-ui/angular"
 
 Props:
 
-- `pressed?: boolean`
+- `[(pressed)]: boolean`: Whether it is pressed, when the caller holds it.
 - `defaultPressed?: boolean`: Read once.
-- `onPressedChange?: ((pressed: boolean, details: ChangeDetails) => void)`
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: a press does nothing.
 - `value?: unknown`: In a toggle group: what the group's value holds while this one is pressed.
+- `(pressedChanged): { pressed: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+`[kuiToggle]` is `KuiToggle`. `exportAs: "kuiToggle"`. Inside a `kuiToggleGroup`, `value` makes it one of the group's toggles.
 
 Attributes and CSS variables, by part:
 
@@ -1752,13 +3087,15 @@ import { KuiToggleGroup } from "@kirana-ui/angular"
 
 Props:
 
-- `value?: readonly Value[]`: The values of the pressed toggles: none, one, or with `multiple` several.
-- `defaultValue?: readonly Value[]`
-- `onValueChange?: ((value: Value[], details: ChangeDetails) => void)`
+- `[(value)]: readonly Value[]`: The values of the pressed toggles: none, one, or with `multiple` several.
+- `defaultValue?: readonly Value[]`: The values pressed at the start, when the caller does not hold `value`. Read once.
 - `multiple?: boolean`: Whether more than one can be pressed at a time.
-- `disabled?: boolean`
-- `orientation?: Orientation`
+- `disabled?: boolean`: Disables every toggle of the group.
+- `orientation?: Orientation`: Whether the toggles are laid out across (the default) or down: the arrows that move between them follow.
 - `loop?: boolean`: Whether the arrows go round from the last toggle to the first. Default: they do.
+- `(valueChanged): { value: Value[]; details: ChangeDetails }`: Heard as a toggle is about to be pressed or released, with the values that would then be pressed: `details.cancel()` keeps them as they were.
+
+`[kuiToggleGroup]` is `KuiToggleGroup`. `exportAs: "kuiToggleGroup"`. Generic: `<Value = unknown>`. Toggles that are one control. Each `kuiToggle` with a `value` inside it is one of its toggles.
 
 Attributes and CSS variables, by part:
 
@@ -1770,16 +3107,39 @@ Attributes and CSS variables, by part:
 ### Toolbar
 
 ```
-import { KuiToolbar } from "@kirana-ui/angular"
+import { KuiToolbar, KuiToolbarButton, KuiToolbarLink, KuiToolbarInput, KuiToolbarGroup, KuiToolbarSeparator } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiToolbar]`, `[kuiToolbarButton]`, `[kuiToolbarLink]`, `[kuiToolbarInput]`, `[kuiToolbarGroup]`, `[kuiToolbarSeparator]`.
 
+Anatomy:
+
+```
+kuiToolbar
+  kuiToolbarGroup (optional, repeated)
+    kuiToolbarButton (repeated)
+    kuiToolbarLink (repeated)
+    kuiToolbarInput (repeated)
+  kuiToolbarSeparator (repeated)
+```
+
 Props of its root:
 
-- `orientation?: Orientation`
+- `orientation?: Orientation`: Whether the controls are laid out across (the default) or down: the arrows that move between them follow.
 - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disables every control of the toolbar.
+
+Each part, and its own props:
+
+- `[kuiToolbar]` is `KuiToolbar`. `exportAs: "kuiToolbar"`. Its props are above.
+- `[kuiToolbarButton]` is `KuiToolbarButton`.
+    - `disabled?: boolean`: Disables this control.
+- `[kuiToolbarLink]` is `KuiToolbarLink`.
+- `[kuiToolbarInput]` is `KuiToolbarInput`. `<input kuiToolbarInput>`: the arrows are its own until the caret is at an end.
+    - `disabled?: boolean`: Disables this control.
+- `[kuiToolbarGroup]` is `KuiToolbarGroup`.
+    - `disabled?: boolean`: Disables this control.
+- `[kuiToolbarSeparator]` is `KuiToolbarSeparator`.
 
 Attributes and CSS variables, by part:
 
@@ -1804,19 +3164,41 @@ Attributes and CSS variables, by part:
 ### Tooltip
 
 ```
-import { KuiTooltip } from "@kirana-ui/angular"
+import { KuiTooltip, KuiTooltipTrigger, KuiTooltipPortal, KuiTooltipPositioner, KuiTooltipPopup, KuiTooltipArrow } from "@kirana-ui/angular"
 ```
 
 Parts: `[kuiTooltip]`, `[kuiTooltipTrigger]`, `[kuiTooltipPortal]`, `[kuiTooltipPositioner]`, `[kuiTooltipPopup]`, `[kuiTooltipArrow]`.
 
+Anatomy:
+
+```
+kuiTooltip
+  kuiTooltipTrigger
+  *kuiTooltipPortal
+    kuiTooltipPositioner
+      kuiTooltipPopup
+        kuiTooltipArrow
+```
+
 Props of its root:
 
-- `open?: boolean`
-- `defaultOpen?: boolean`
-- `onOpenChange?: ((open: boolean, details: ChangeDetails) => void)`
+- `[(open)]: boolean`: Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
 - `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
-- `disabled?: boolean`
+- `disabled?: boolean`: Disabled: the pointer and focus do not open it.
+- `(openChanged): { open: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+Each part, and its own props:
+
+- `[kuiTooltip]` is `KuiTooltip`. `exportAs: "kuiTooltip"`. On any element, or on `<ng-container>` to draw none. Its props are above.
+- `[kuiTooltipTrigger]` is `KuiTooltipTrigger`.
+    - `delay?: number`: Its own waits, which come before the root's.
+    - `closeDelay?: number`: How long after the pointer leaves this trigger's popup closes, in milliseconds.
+- `[kuiTooltipPortal]` is `KuiTooltipPortal`. Structural: written `*kuiTooltipPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiTooltipPositioner]` is `KuiTooltipPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kuiTooltipPopup]` is `KuiTooltipPopup`.
+- `[kuiTooltipArrow]` is `KuiTooltipArrow`.
 
 Attributes and CSS variables, by part:
 
@@ -1825,7 +3207,7 @@ Attributes and CSS variables, by part:
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
@@ -1837,10 +3219,10 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
 - arrow: An element that points at the trigger, placed along the popup's edge.
-    - `data-side="top | right | bottom | left"`: The side of the anchor it is on, after any flip.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.

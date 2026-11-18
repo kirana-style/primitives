@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useScrollArea } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ViewportProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: ViewportProps = $props()
   const controller = useScrollArea()
 </script>
 
-<Part part={controller.viewport} tag="div" {...props} />
+<Part of={controller.viewport} tag="div" {...props} />

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { MenubarProps } from "@kirana-ui/core/menubar"
   import { within } from "@kirana-ui/core"
   import { createMenubar } from "@kirana-ui/core/menubar"
 
@@ -7,10 +6,10 @@
   import { useDirectionAround } from "../direction/context.ts"
   import { provideMenubar } from "../menu/context.ts"
   import { controller } from "../runtime.svelte.ts"
-  import type { RootProps } from "../types.ts"
+  import type { MenubarProps } from "./types.ts"
 
   // A row of menus that work as one. Each `<Menu.Root>` inside it is one of its items.
-  let { loop, disabled, orientation, id, ...rest }: RootProps<MenubarProps> = $props()
+  let { loop, disabled, orientation, id, ...rest }: MenubarProps = $props()
   const generated = $props.id()
   const made = provideMenubar(
     controller(within(createMenubar, { direction: useDirectionAround() }), () => ({
@@ -22,4 +21,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

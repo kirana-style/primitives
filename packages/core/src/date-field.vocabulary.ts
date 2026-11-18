@@ -15,7 +15,14 @@ export const dateFieldVocabulary = defineComponent({
       invalid: INVALID,
     },
   },
+  segments: {
+    description:
+      "The date's segments, in the locale's order: each is given to draw. It draws no element.",
+    inside: "root",
+  },
   segment: {
+    inside: "segments",
+    repeated: true,
     description: "One piece of the date: a part that is typed, or what stands between two.",
     states: {
       segment: valued("data-segment", ["day", "month", "year", "literal"], "Which piece it is."),
@@ -24,5 +31,5 @@ export const dateFieldVocabulary = defineComponent({
       invalid: INVALID,
     },
   },
-  input: { description: "The hidden input it is submitted by." },
+  input: { inside: "root", description: "The hidden input it is submitted by." },
 })

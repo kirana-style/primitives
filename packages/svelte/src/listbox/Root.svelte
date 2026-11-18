@@ -1,12 +1,11 @@
-<script lang="ts">
-  import type { ListboxProps } from "@kirana-ui/core/listbox"
+<script lang="ts" generics="Value">
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createListbox } from "@kirana-ui/core/listbox"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
   let {
     value = $bindable(),
@@ -20,10 +19,10 @@
     virtualized,
     id,
     ...rest
-  }: RootProps<ListboxProps> = $props()
+  }: RootProps<Value> = $props()
   const generated = $props.id()
 
-  function change(next: unknown[], by: ChangeDetails) {
+  function change(next: Value[], by: ChangeDetails) {
     onValueChange?.(next, by)
     if (!by.canceled) value = next
   }
@@ -44,4 +43,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

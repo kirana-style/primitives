@@ -1,6 +1,12 @@
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createForm } from "@kirana-ui/core/form"
-import type { Form as Controller, FormErrors, FormProps, FormValues } from "@kirana-ui/core/form"
+import type {
+  Form as Controller,
+  FormProps as CoreProps,
+  FormErrors,
+  FormValues,
+} from "@kirana-ui/core/form"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, splitProps } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -10,8 +16,10 @@ import type { PartComponentProps } from "./runtime.tsx"
 /** The form a field is in, if it is in one. */
 export const FormContext = createContext<Controller>()
 
+export type FormProps = PartComponentProps<"form", StateOf<Vocabulary["form"]["root"]>, CoreProps>
+
 /** A `<form>` whose fields say what is wrong; `onFormSubmit` takes the values once all are valid. */
-export function Form(props: PartComponentProps & FormProps): JSX.Element {
+export function Form(props: FormProps): JSX.Element {
   const [local, rest] = splitProps(props, [
     "errors",
     "onClearErrors",
@@ -29,7 +37,7 @@ export function Form(props: PartComponentProps & FormProps): JSX.Element {
   }))
   return (
     <FormContext.Provider value={made}>
-      <Part part={made.root} tag="form" {...rest} />
+      <Part of={made.root} tag="form" {...rest} />
     </FormContext.Provider>
   )
 }

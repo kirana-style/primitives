@@ -168,4 +168,133 @@ describe("positioning", () => {
     expect(position.placed.peek()).toBe(false)
     expect(positioner.hasAttribute("dir")).toBe(false)
   })
+
+  it("reads a logical side in the direction it is placed in, and says it in the same words", async () => {
+    // Left to right, the end of a line is its right.
+    const ltr = page("left: 150px; top: 100px", { side: "inline-end" })
+    // Before it is placed, it says the side it was asked for.
+    expect(ltr.position.side.peek()).toBe("inline-end")
+    await ltr.placed()
+    expect(box(ltr.positioner).left).toBe(230)
+    expect(ltr.position.side.peek()).toBe("inline-end")
+    ltr.stop()
+    const start = page("left: 150px; top: 100px", { side: "inline-start" })
+    await start.placed()
+    expect(box(start.positioner).right).toBe(150)
+    expect(start.position.side.peek()).toBe("inline-start")
+    start.stop()
+    // Right to left, the same word is the other side of the page.
+    const rtl = page("left: 150px; top: 100px", { side: "inline-end" }, "rtl")
+    await rtl.placed()
+    expect(box(rtl.positioner).right).toBe(150)
+    expect(rtl.position.side.peek()).toBe("inline-end")
+    rtl.stop()
+    const back = page("left: 150px; top: 100px", { side: "inline-start" }, "rtl")
+    await back.placed()
+    expect(box(back.positioner).left).toBe(230)
+    expect(back.position.side.peek()).toBe("inline-start")
+  })
+
+  it("says the other logical side once flipped, and a physical side when one was asked for", async () => {
+    // No room at the right: flipped to the left, which is the start of the line.
+    const logical = page("right: 10px; top: 100px", { side: "inline-end" })
+    expect(logical.position.side.peek()).toBe("inline-end")
+    await logical.placed()
+    expect(box(logical.positioner).right).toBe(box(logical.anchor).left)
+    expect(logical.position.side.peek()).toBe("inline-start")
+    logical.stop()
+    const rtl = page("left: 10px; top: 100px", { side: "inline-end" }, "rtl")
+    await rtl.placed()
+    expect(box(rtl.positioner).left).toBe(box(rtl.anchor).right)
+    expect(rtl.position.side.peek()).toBe("inline-start")
+    rtl.stop()
+    // Asked for by its place on the page, it is said by its place on the page.
+    const physical = page("right: 10px; top: 100px", { side: "right" })
+    await physical.placed()
+    expect(physical.position.side.peek()).toBe("left")
+  })
+
+  it("reads a logical side in the direction its provider states, whatever the page says", async () => {
+    const root = mount(`
+      <button id="anchor" style="position: fixed; left: 150px; top: 100px; width: 80px; height: 20px; padding: 0; border: 0">A</button>
+      <div id="positioner"><div style="width: 120px; height: 40px"></div></div>`)
+    const direction = signal<"ltr" | "rtl">("rtl")
+    const position = createPosition(
+      signal<PositionOptions>({ ...POSITION_DEFAULTS, side: "inline-end" }),
+      direction
+    )
+    const positioner = find(root, "positioner")
+    onTestFinished(position.attach(positioner, find(root, "anchor")))
+    await expect.poll(() => position.placed.peek()).toBe(true)
+    expect(box(positioner).right).toBe(150)
+    expect(position.side.peek()).toBe("inline-end")
+    // The provider turns: the popup goes to the other side, by the same name.
+    direction.set("ltr")
+    await expect.poll(() => box(positioner).left).toBe(230)
+    expect(position.side.peek()).toBe("inline-end")
+  })
+
+  it("is placed against the anchor its options name, and follows another when that changes", async () => {
+    const { options, positioner, anchor, placed, root } = page("left: 100px; top: 100px")
+    const extra = (id: string, left: number, top: number, width: number) => {
+      const element = document.createElement("div")
+      element.id = id
+      element.style.cssText = `position: fixed; left: ${left}px; top: ${top}px; width: ${width}px; height: 30px`
+      root.append(element)
+      return element
+    }
+    const second = extra("second", 150, 200, 200)
+    const third = extra("third", 200, 300, 160)
+    await placed()
+    expect(box(positioner).top).toBe(120)
+    // An element: under it, and the geometry is its.
+    options.set({ ...options.peek(), align: "start", anchor: second })
+    await expect.poll(() => box(positioner).top).toBe(230)
+    expect(box(positioner).left).toBe(150)
+    expect(positioner.style.getPropertyValue("--anchor-width")).toBe("200px")
+    // Another one while it is open: it goes there, and follows that one from then on.
+    options.set({ ...options.peek(), anchor: third })
+    await expect.poll(() => box(positioner).top).toBe(330)
+    expect(positioner.style.getPropertyValue("--anchor-width")).toBe("160px")
+    third.style.top = "340px"
+    await expect.poll(() => box(positioner).top).toBe(370)
+    // The one it left is no longer followed.
+    second.style.top = "20px"
+    await new Promise((done) => setTimeout(done, 50))
+    expect(box(positioner).top).toBe(370)
+    // A function is asked each time it is placed.
+    let now: Element | null = second
+    options.set({ ...options.peek(), anchor: () => now })
+    await expect.poll(() => box(positioner).top).toBe(50)
+    // A place in the viewport that is no element.
+    options.set({
+      ...options.peek(),
+      anchor: { getBoundingClientRect: () => new DOMRect(250, 400, 0, 0) },
+    })
+    await expect.poll(() => box(positioner).top).toBe(400)
+    expect(box(positioner).left).toBe(250)
+    // Nothing named: its own anchor again.
+    now = null
+    options.set({ ...options.peek(), anchor: null })
+    await expect.poll(() => box(positioner).top).toBe(120)
+    expect(box(positioner).left).toBe(box(anchor).left)
+    expect(positioner.style.getPropertyValue("--anchor-width")).toBe("80px")
+  })
+
+  it("asks a function that gave nothing once more: its element may arrive a moment later", async () => {
+    const root = mount(`
+      <button id="anchor" style="position: fixed; left: 100px; top: 100px; width: 80px; height: 20px; padding: 0; border: 0">A</button>
+      <div id="second" style="position: fixed; left: 150px; top: 200px; width: 200px; height: 30px"></div>
+      <div id="positioner"><div style="width: 120px; height: 40px"></div></div>`)
+    // As a framework's ref is: empty while the popup attaches, set before the page is drawn.
+    const ref: { current: Element | null } = { current: null }
+    const position = createPosition(
+      signal<PositionOptions>({ ...POSITION_DEFAULTS, anchor: () => ref.current })
+    )
+    const positioner = find(root, "positioner")
+    onTestFinished(position.attach(positioner, find(root, "anchor")))
+    ref.current = find(root, "second")
+    await expect.poll(() => position.placed.peek()).toBe(true)
+    await expect.poll(() => box(positioner).top).toBe(230)
+  })
 })

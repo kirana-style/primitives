@@ -1,25 +1,28 @@
 import { defined, within } from "@kirana-ui/core"
-import type { Part, PositionOptions } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type {
-  Select as Controller,
-  SelectGroup,
-  SelectProps,
-  SelectScrollArrow,
-} from "@kirana-ui/core/select"
+import type { Select as Controller, SelectGroup, SelectProps } from "@kirana-ui/core/select"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { FieldContext } from "./field-context.ts"
 import {
   Portal as BodyPortal,
+  PartElement,
+  parts,
   useController,
   useMount,
   useOptions,
   usePart,
+  usePositioning,
   useSignal,
 } from "./runtime.tsx"
-import type { PartComponentProps } from "./runtime.tsx"
+import type { PartComponentProps, PortalProps, PositionerOptions } from "./runtime.tsx"
+
+export type { PortalProps }
+
+type Parts = Vocabulary["select"]
 
 const Context = createContext<Controller | null>(null)
 const ItemContext = createContext<unknown>(undefined)
@@ -30,17 +33,15 @@ function useSelect(part: string): Controller {
   return controller
 }
 
-export type RootProps<Value> = Omit<SelectProps<Value>, "id"> & {
+/** `Value` is what tells an item from the others: the type of `value`, and of `values`' entries. */
+export type RootProps<Value = unknown> = Omit<SelectProps<Value>, "id"> & {
   id?: string
   children?: ReactNode
 }
 
-function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
+function Root<Value = unknown>({ children, ...props }: RootProps<Value>): ReactElement {
   const field = useContext(FieldContext) ?? undefined
-  const controller = useController(
-    within(createSelect<Value>, { field }),
-    props
-  ) as unknown as Controller
+  const controller: Controller = useController(within(createSelect<Value>, { field }), props)
   const named = useSignal(controller.named)
   return (
     <Context.Provider value={controller}>
@@ -52,57 +53,77 @@ function Root<Value>({ children, ...props }: RootProps<Value>): ReactElement {
 
 const HiddenInput = () => usePart(useSelect("Root").input, "input", {})
 
-const Trigger = (props: PartComponentProps) =>
-  usePart(useSelect("Trigger").trigger, "button", props)
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 
-export interface ValueProps extends PartComponentProps {
-  /** Shown while nothing is chosen. */
-  placeholder?: ReactNode
-}
+const Trigger = (props: TriggerProps) => usePart(useSelect("Trigger").trigger, "button", props)
 
-function Value({ placeholder, children, ...props }: ValueProps): ReactElement {
+export type ValueProps<Chosen = unknown> = PartComponentProps<
+  "span",
+  StateOf<Parts["value"]>,
+  {
+    /** Shown while nothing is chosen. */
+    placeholder?: ReactNode
+    /**
+     * What to show in place of the label. A function is given the value and its label (`null`
+     * and `undefined` while nothing is chosen); with `multiple`, the values and their labels, in
+     * the items' order. Its first parameter's type says which: `(values: string[], labels) => …`.
+     */
+    children?:
+      | ReactNode
+      | ((
+          value: Chosen,
+          label: Chosen extends readonly unknown[] ? readonly string[] : string | undefined
+        ) => ReactNode)
+  }
+>
+
+function Value<Chosen = unknown>({
+  placeholder,
+  children,
+  ...props
+}: ValueProps<Chosen>): ReactElement {
   const controller = useSelect("Value")
-  const label = useSignal(controller.label)
-  return usePart(controller.valuePart, "span", {
-    ...props,
-    children: children ?? label ?? placeholder,
-  })
+  const shown = useSignal(controller.shown)
+  let drawn: ReactNode
+  if (typeof children === "function") {
+    const draw = children as (value: unknown, label: unknown) => ReactNode
+    drawn = controller.multiple ? draw(shown.values, shown.labels) : draw(shown.value, shown.label)
+  } else drawn = children ?? shown.label ?? placeholder
+  return usePart(controller.valuePart, "span", { ...props, children: drawn })
 }
 
-function Portal({ children }: { children?: ReactNode }): ReactElement | null {
+function Portal({ children }: PortalProps): ReactElement | null {
   const mounted = useSignal(useSelect("Portal").mounted)
   return mounted ? <BodyPortal>{children}</BodyPortal> : null
 }
 
-export type PositionerProps = PartComponentProps &
-  Partial<PositionOptions> & {
+export type PositionerProps = PartComponentProps<
+  "div",
+  StateOf<Parts["positioner"]>,
+  PositionerOptions & {
     /**
      * The list opens over its trigger, the chosen item's text on the trigger's own, where
      * there is room and unless a finger opened it.
      */
     alignItemWithTrigger?: boolean
   }
+>
 
-function Positioner({
-  side,
-  align,
-  sideOffset,
-  alignOffset,
-  collisionPadding,
-  alignItemWithTrigger,
-  ...props
-}: PositionerProps) {
+function Positioner({ alignItemWithTrigger, ...props }: PositionerProps): ReactElement {
   const controller = useSelect("Positioner")
   controller.alignItemWithTrigger.set(Boolean(alignItemWithTrigger))
-  controller.positioning.set(defined({ side, align, sideOffset, alignOffset, collisionPadding }))
-  return usePart(controller.positioner, "div", props)
+  return usePart(controller.positioner, "div", usePositioning(controller.positioning, props))
 }
 
-const Popup = (props: PartComponentProps) => usePart(useSelect("Popup").popup, "div", props)
+export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+
+const Popup = (props: PopupProps) => usePart(useSelect("Popup").popup, "div", props)
 const GroupContext = createContext<SelectGroup | null>(null)
 
+export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
+
 /** Items that belong together, named by their `<Select.GroupLabel>`. */
-function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactElement {
+function Group({ id, ...props }: GroupProps): ReactElement {
   const controller = useSelect("Group")
   const generated = useId()
   const group = useMemo(() => controller.group(id ?? generated), [controller, id, generated])
@@ -111,53 +132,61 @@ function Group({ id, ...props }: PartComponentProps & { id?: string }): ReactEle
   )
 }
 
+export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabel"]>>
+
 /** A group's name. Outside a group it is plain text, and names nothing. */
-function GroupLabel(props: PartComponentProps): ReactElement {
+function GroupLabel(props: GroupLabelProps): ReactElement {
   const lone = useSelect("GroupLabel").groupLabel
   return usePart(useContext(GroupContext)?.label ?? lone, "div", props)
 }
 
+export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
+
 /** A line between groups. */
-const Separator = (props: PartComponentProps) =>
-  usePart(useSelect("Separator").separator, "div", props)
+const Separator = (props: SeparatorProps) => usePart(useSelect("Separator").separator, "div", props)
+
+export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
 
 /** The items' own box inside the popup, when the popup also holds scroll arrows. */
-const List = (props: PartComponentProps) => usePart(useSelect("List").list, "div", props)
+const List = (props: ListProps) => usePart(useSelect("List").list, "div", props)
 
-function ScrollArrowElement({
-  arrow,
-  ...props
-}: PartComponentProps & { arrow: SelectScrollArrow }): ReactElement | null {
+export type ScrollUpArrowProps = PartComponentProps<"div", StateOf<Parts["scrollUpArrow"]>>
+export type ScrollDownArrowProps = PartComponentProps<"div", StateOf<Parts["scrollDownArrow"]>>
+
+/** The arrow at one end of the list, and whether it is in the page: while there is more that way. */
+function useScrollArrow(name: string, direction: "up" | "down") {
+  const controller = useSelect(name)
+  const arrow = useMemo(() => controller.scrollArrow(direction), [controller, direction])
   useMount(arrow)
-  const mounted = useSignal(arrow.mounted)
-  return mounted ? <ArrowPart part={arrow.part} {...props} /> : null
+  return { part: arrow.part, mounted: useSignal(arrow.mounted) }
 }
 
-const ArrowPart = ({ part, ...props }: PartComponentProps & { part: Part }) =>
-  usePart(part, "div", props)
-
 /** In the page while there is more of the list above: it scrolls it while the pointer moves over it. */
-function ScrollUpArrow(props: PartComponentProps): ReactElement {
-  const controller = useSelect("ScrollUpArrow")
-  const arrow = useMemo(() => controller.scrollArrow("up"), [controller])
-  return <ScrollArrowElement arrow={arrow} {...props} />
+function ScrollUpArrow(props: ScrollUpArrowProps): ReactElement | null {
+  const { part, mounted } = useScrollArrow("ScrollUpArrow", "up")
+  return mounted ? <PartElement of={part} tag="div" {...props} /> : null
 }
 
 /** In the page while there is more of the list below. */
-function ScrollDownArrow(props: PartComponentProps): ReactElement {
-  const controller = useSelect("ScrollDownArrow")
-  const arrow = useMemo(() => controller.scrollArrow("down"), [controller])
-  return <ScrollArrowElement arrow={arrow} {...props} />
+function ScrollDownArrow(props: ScrollDownArrowProps): ReactElement | null {
+  const { part, mounted } = useScrollArrow("ScrollDownArrow", "down")
+  return mounted ? <PartElement of={part} tag="div" {...props} /> : null
 }
 
-export interface ItemProps extends PartComponentProps {
-  value: unknown
-  disabled?: boolean
-  /** What typeahead matches and the trigger shows; the item's text when left out. */
-  label?: string
-  /** Its place among all the rows, in a virtualized list. */
-  index?: number
-}
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
+    /** What the select's value is while this item is chosen. */
+    value: unknown
+    /** Disables this item: it cannot be chosen, and the arrows pass over it. */
+    disabled?: boolean
+    /** What typeahead matches and the trigger shows; the item's text when left out. */
+    label?: string
+    /** Its place among all the rows, in a virtualized list. */
+    index?: number
+  }
+>
 
 function Item({ value, disabled, label, index, ...props }: ItemProps): ReactElement {
   const controller = useSelect("Item")
@@ -169,24 +198,34 @@ function Item({ value, disabled, label, index, ...props }: ItemProps): ReactElem
   return <ItemContext.Provider value={value}>{usePart(part, "div", props)}</ItemContext.Provider>
 }
 
-function ItemText(props: PartComponentProps): ReactElement {
+export type ItemTextProps = PartComponentProps<"span", StateOf<Parts["itemText"]>>
+
+function ItemText(props: ItemTextProps): ReactElement {
   const controller = useSelect("ItemText")
   const value = useContext(ItemContext)
   const part = useMemo(() => controller.itemText(value), [controller, value])
   return usePart(part, "span", props)
 }
 
-export interface ItemIndicatorProps extends PartComponentProps {
-  keepMounted?: boolean
+export type ItemIndicatorProps = PartComponentProps<
+  "span",
+  StateOf<Parts["itemIndicator"]>,
+  {
+    /** Keeps the mark in the page while its item is not chosen. */
+    keepMounted?: boolean
+  }
+>
+
+/** In the page while its item is the chosen one. */
+function ItemIndicator({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | null {
+  const controller = useSelect("ItemIndicator")
+  const value = useContext(ItemContext)
+  const selected = useSignal(controller.selected(value))
+  const part = useMemo(() => controller.itemIndicator(value), [controller, value])
+  return selected || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
 }
 
-function ItemIndicator({ keepMounted, render: _render, ref: _ref, ...rest }: ItemIndicatorProps) {
-  const selected = useSignal(useSelect("ItemIndicator").selected(useContext(ItemContext)))
-  if (!selected && !keepMounted) return null
-  return <span aria-hidden="true" {...(rest as object)} />
-}
-
-export const Select = {
+export const Select = /* @__PURE__ */ parts("Select", {
   Root,
   Trigger,
   Value,
@@ -202,4 +241,4 @@ export const Select = {
   Item,
   ItemText,
   ItemIndicator,
-}
+})

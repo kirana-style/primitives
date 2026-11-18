@@ -7,6 +7,7 @@ import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { clearGeometry, setGeometry } from "./services/geometry.ts"
 
+/** The way a drawer is swiped to close it: towards the edge it came from. */
 export type DrawerSide = "up" | "down" | "left" | "right"
 
 export interface DrawerProps extends DialogProps {
@@ -22,6 +23,9 @@ export interface DrawerProps extends DialogProps {
   snapPoint?: DrawerSnapPoint | undefined
   /** Where it opens. Default: the smallest. */
   defaultSnapPoint?: DrawerSnapPoint | undefined
+  /**
+   * Heard as it is about to rest at another snap point: `details.cancel()` keeps it where it was.
+   */
   onSnapPointChange?: ((snapPoint: DrawerSnapPoint, details: ChangeDetails) => void) | undefined
 }
 

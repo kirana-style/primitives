@@ -19,12 +19,21 @@ export interface NavigationMenuProps<Value = unknown> {
   id: string
   /** The item whose content is shown; `null` is "none". */
   value?: Value | null | undefined
+  /** The item whose content it starts with, when the caller does not hold `value`. Read once. */
   defaultValue?: Value | null | undefined
+  /**
+   * Heard as another item's content is about to show, or none: `details.cancel()` keeps the value
+   * as it was.
+   */
   onValueChange?: ((value: Value | null, details: ChangeDetails) => void) | undefined
   /** How long the pointer rests on a trigger before its content shows, in milliseconds. */
   delay?: number | undefined
   /** How long after the pointer leaves the content goes, in milliseconds. */
   closeDelay?: number | undefined
+  /**
+   * Whether the triggers are laid out across (the default) or down: the arrows that move between
+   * them follow.
+   */
   orientation?: Orientation | undefined
 }
 
@@ -59,8 +68,14 @@ export interface NavigationMenu<Value = unknown> {
   mount(): () => void
   readonly root: Part
   readonly list: Part
-  /** An item, by its value: asked for again, the same. */
+  /**
+   * An item, by its value: asked for again, the same. An item that was given no value is asked
+   * for by an id its framework made. Nothing is made until one of its parts is read, so an
+   * item that is only a link costs nothing.
+   */
   item(value: Value): NavigationMenuItem
+  /** An item's own element, with a value or without: it says nothing of its own. */
+  readonly itemPart: Part
   /** A link, in the list or in an item's content. */
   link(options?: () => NavigationMenuLinkOptions): Part
   readonly positioner: Part
@@ -74,6 +89,7 @@ export const NAVIGATION_DELAY = 50
 /** How soon after the pointer opened an item a press on its trigger is still that opening. */
 const HOVER_PRESS = 300
 const NOTHING = () => {}
+const ITEM: Part = { props: computed(() => ({})), attach: () => NOTHING }
 
 /**
  * A site's navigation: a row of links and of triggers that show a panel of more links. The
@@ -96,7 +112,7 @@ export function createNavigationMenu<Value = unknown>(
   const from = signal<"left" | "right" | undefined>(undefined)
   const viewportElement = signal<HTMLElement | undefined>(undefined)
   const roving = createRoving()
-  const placement = createPlacement({ align: "start" })
+  const placement = createPlacement({ align: "start" }, around.direction)
 
   let list: HTMLElement | undefined
   let popup: HTMLElement | undefined
@@ -188,10 +204,55 @@ export function createNavigationMenu<Value = unknown>(
     }, props.peek().closeDelay ?? NAVIGATION_DELAY)
   }
 
+  // An item is made when one of its parts is first read: an item that is only a link has no
+  // trigger and no content, and makes nothing.
   function item(key: Value): NavigationMenuItem {
     const found = items.get(key)
     if (found) return found
-    const contentId = `${id}-content-${items.size}`
+    let made: NavigationMenuItem | undefined
+    let running = false
+    let stop: (() => void) | undefined
+    const get = () => {
+      if (!made) {
+        made = make(key)
+        // A part drawn into an item that is in the page already.
+        if (running) stop = made.mount()
+      }
+      return made
+    }
+    const lazy: NavigationMenuItem = {
+      get open() {
+        return get().open
+      },
+      get mounted() {
+        return get().mounted
+      },
+      get trigger() {
+        return get().trigger
+      },
+      get icon() {
+        return get().icon
+      },
+      get content() {
+        return get().content
+      },
+      mount() {
+        running = true
+        stop = made?.mount()
+        return () => {
+          running = false
+          stop?.()
+          stop = undefined
+        }
+      },
+    }
+    items.set(key, lazy)
+    return lazy
+  }
+
+  let count = 0
+  function make(key: Value): NavigationMenuItem {
+    const contentId = `${id}-content-${count++}`
     const shown = computed(() => Object.is(value.get(), key))
     const presence = createPresence(shown)
 
@@ -281,7 +342,6 @@ export function createNavigationMenu<Value = unknown>(
         },
       },
     }
-    items.set(key, made)
     return made
   }
 
@@ -339,6 +399,7 @@ export function createNavigationMenu<Value = unknown>(
       props: computed(() => ({ "data-orientation": orientation.get() })),
       attach: () => NOTHING,
     },
+    itemPart: ITEM,
     list: {
       props: computed(() => ({
         "data-orientation": orientation.get(),

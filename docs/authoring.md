@@ -19,6 +19,12 @@ These entries change only as the components do: a release that breaks one says s
 createX(props: ReadonlySignal<XProps>, around?) => { ...signals, ...parts, mount() }
 ```
 
+- **`around` is what the component is inside**, when it is inside something: an object of
+  what its adapter found in context, each optional (`{ field }` for a control in a `Field`,
+  `{ direction }` under a direction provider, `{ group, toolbar }` for a toggle, `{ parent }`
+  for a submenu). It is given once, when the controller is made, and never changes: an adapter
+  reads its own context and passes it (`within(createX, { field })` gives a maker that takes
+  the props alone). A controller that is inside nothing takes no second argument.
 - **`props` is a signal.** The adapter keeps it up to date; the controller reads it with
   `.get()` where a change should be followed and `.peek()` where it should not. A default
   (`defaultValue`) is read once.
@@ -175,7 +181,9 @@ What it took from the library, and what that bought:
 - `createFormControl`: the form's reset, and a `<fieldset disabled>` around it.
 - `defineComponent`, `state`: its attributes as data. The components' own vocabulary is
   published as `@kirana-ui/vocabulary`; a design system's keys can be read from yours the
-  same way.
+  same way. A part also says where it goes (`inside: "root"`, with `optional` for a wrapper
+  that may be left out and `repeated` for one written per entry), which is what each
+  `llms.txt` draws a component's anatomy from.
 
 ## Drawing it
 
@@ -197,7 +205,9 @@ const stops = [
 In React, `useController` makes the controller once and keeps its props current, and
 `usePart` draws a part: the caller's props merged under the part's (its attributes win, its
 handlers run after the caller's unless the caller calls `event.preventKiranaHandler()`), a
-`render` prop for another element, and `attach` called once the element is in the page.
+`render` prop for another element, whose own props lie between the two, and `attach` called
+once the element is in the page. A function `render` is given the part's props and its state,
+read from the part's `data-*` attributes (`stateOf` in `@kirana-ui/core`).
 
 ```tsx
 import { createContext, useContext } from "react"
@@ -235,32 +245,83 @@ function Root({
     disabled,
     name,
   })
-  return (
-    <Context.Provider value={controller}>
-      <RootElement {...rest}>
-        {children}
-        {name === undefined ? null : <HiddenInput />}
-      </RootElement>
-    </Context.Provider>
-  )
+  // A part's element: the caller's props under the part's, `render` for another element, and the
+  // part's DOM work attached once the element is in the page. The last argument is for what the
+  // element holds of the part's own, whatever element the caller asked for: the hidden input.
+  const root = usePart(controller.root, "div", { ...rest, children }, undefined, (content) => (
+    <>
+      {content}
+      {name === undefined ? null : <HiddenInput />}
+    </>
+  ))
+  return <Context.Provider value={controller}>{root}</Context.Provider>
 }
 
-// A part's element: the caller's props under the part's, `render` for another element, and the
-// part's DOM work attached once the element is in the page.
-const RootElement = (props: PartComponentProps) => usePart(useRating().root, "div", props)
 const HiddenInput = () => usePart(useRating().input, "input", {})
 
-function Item({ place, ...props }: PartComponentProps & { place: number }): ReactElement {
+function Item({ place, ...props }: PartComponentProps<"button"> & { place: number }): ReactElement {
   return usePart(useRating().item(place), "button", { type: "button", ...props })
 }
 
 export const Rating = { Root, Item }
 ```
 
-The other adapters have the same two pieces under their own names: `controller` and
-`partComponent` in Vue, `controller` and `<Part>` in Svelte and Solid, `inputsSignal` and
-`hostPart` in Angular. A part's file in this repository is the example for each
+A part's props are typed by `PartComponentProps<Tag, State, Own>`: the attributes and
+handlers of the element the part draws (`Tag`, a `div` when left out; a handler's event has
+`preventKiranaHandler()`, and `ref` is that element's), `render`, and the part's own props
+(`Own`) in place of the element's of the same name. `State` is what a function `render` is
+told: `StateOf<typeof ratingVocabulary.item>` from `@kirana-ui/core` reads it from a
+vocabulary's part, types only. `usePart` takes the same tag, so the props of a `"button"`
+are refused on a `"div"`.
+
+Three more pieces of `@kirana-ui/react/runtime` are for a component that is published:
+
+- `component(name, draw)` gives a component its caller's `ref` on React 18 as on React 19
+  (a `forwardRef` only where React needs one) and the name DevTools shows.
+- `parts(name, { Root, Item })` does that for each part, named `Rating.Root`, `Rating.Item`:
+  `export const Rating = parts("Rating", { Root, Item })`.
+- `PartElement` is a part's element as a component of its own, for a part that is not always
+  in the page (a hook cannot be called under a condition):
+  `shown ? <PartElement of={controller.panel} tag="div" {...props} /> : null`. It takes the
+  part it is the element `of`, its `tag`, and `hold`, as `usePart`'s last argument.
+
+The other adapters have the same two pieces under their own names, each in its `./runtime`
+entry. A part's file in this repository is the example for each
 (`packages/<adapter>/src/toggle.*` is the smallest).
+
+| Adapter | The controller | A part's element                                 | What the element holds of the part's own                          |
+| ------- | -------------- | ------------------------------------------------ | ----------------------------------------------------------------- |
+| Vue     | `controller`   | `partComponent(name, tag, resolve, hold)`        | `hold(content, composed)` returns the element's content           |
+| Svelte  | `controller`   | `<Part of={part} tag="div" {...rest} />`         | `held={{ input }}`, handed to the caller's `child` snippet        |
+| Solid   | `controller`   | `<Part of={part} tag="div" {...rest} />`         | the `<Part>`'s children, handed to `render` as `props().children` |
+| Angular | `inputsSignal` | `hostPart()`, called in `ngOnInit` with the part | `innerPart(tag)` draws it as the host's last child                |
+
+- **Vue.** `partComponent` returns a component typed `PartComponent<Tag, State>`: it takes
+  `as` and `as-child`, and its default slot is given `{ state }`. `hold` is for what the
+  part keeps in its element, whichever element that is: a hidden input
+  (`(content) => [content, h(Input)]`), or the text the part writes, which
+  `written(() => text.value)` puts in the caller's own element while that element has no
+  content of its own.
+- **Svelte.** `<Part>` spreads the caller's attributes under the part's and takes a `child`
+  snippet, which is given `{ props, state }` and whatever the part passes as `held`: a form
+  control passes its hidden input as a snippet (`{ props, state, input }`, rendered inside
+  the caller's element with `{@render input()}`), and a part that writes its own text passes
+  it the same way (`{ props, state, text }`). A part's props are typed
+  `PartAttributes<Tag, State, Own, Held>`.
+- **Solid.** A caller's `render` is given two accessors, `props()` and `state()`.
+  `props().children` is what the `<Part>` was given as children (the caller's, the text the
+  part writes, then a hidden input), so an element that spreads `props()` holds them, and
+  one that writes its own children places `props().children` among them. `props().ref` is
+  the part's, and a `ref` given to the part is handed the same element. A part's props are
+  typed `PartComponentProps<Tag, State, Own>`, as in React.
+- **Angular.** A part is a directive on the caller's own element: `hostPart()` writes the
+  part's attributes and listeners in the directive's turn, and the part's `attach` and the
+  controller's `mount` (through `mounted()`) follow once every part made in the same pass
+  has written its props, so nothing is measured while an element beside it has no style yet.
+
+In Solid and Svelte the component that draws a part reads the part under the name `of`, as
+React's `PartElement` does: `part` is an attribute of the element (`::part()` reads it), and
+a caller's reaches the element like any other.
 
 ## Testing it
 

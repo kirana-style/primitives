@@ -3,6 +3,7 @@ import type { RadioGroupProps } from "@kirana-ui/core/radio-group"
 
 import { fieldAround } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const valueOf = (element: HTMLElement) =>
   partAround(element, "item")?.getAttribute("kui-value") ?? ""
@@ -40,3 +41,9 @@ export const tag = defineElement<
     indicator: (controller, element) => controller.indicator(valueOf(element)),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-radio-group": ElementOf<typeof tag, { "value-change": ["onValueChange", "value"] }>
+  }
+}

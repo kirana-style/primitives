@@ -11,11 +11,21 @@ import type { ToggleGroupLink } from "./toggle.ts"
 export interface ToggleGroupProps<Value = unknown> {
   /** The values of the pressed toggles: none, one, or with `multiple` several. */
   value?: readonly Value[] | undefined
+  /** The values pressed at the start, when the caller does not hold `value`. Read once. */
   defaultValue?: readonly Value[] | undefined
+  /**
+   * Heard as a toggle is about to be pressed or released, with the values that would then be
+   * pressed: `details.cancel()` keeps them as they were.
+   */
   onValueChange?: ((value: Value[], details: ChangeDetails) => void) | undefined
   /** Whether more than one can be pressed at a time. */
   multiple?: boolean | undefined
+  /** Disables every toggle of the group. */
   disabled?: boolean | undefined
+  /**
+   * Whether the toggles are laid out across (the default) or down: the arrows that move between
+   * them follow.
+   */
   orientation?: Orientation | undefined
   /** Whether the arrows go round from the last toggle to the first. Default: they do. */
   loop?: boolean | undefined

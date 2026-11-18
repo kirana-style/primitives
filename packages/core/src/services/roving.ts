@@ -3,6 +3,7 @@ import type { Direction } from "../direction.ts"
 import { signal } from "../reactivity.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
 
+/** The way a row of things is laid out, and so which arrow keys move along it. */
 export type Orientation = "horizontal" | "vertical"
 
 export interface Roving {

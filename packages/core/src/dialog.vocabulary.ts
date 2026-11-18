@@ -4,16 +4,25 @@ import { EITHER_FRAME, TRANSITION, state } from "./states.ts"
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const dialogVocabulary = defineComponent({
+  root: { description: "Holds the dialog: whether it is open. It draws no element." },
   trigger: {
+    inside: "root",
     description: "The button that opens the dialog.",
     states: { popupOpen: state("data-popup-open", "Present when the dialog is open.") },
   },
+  portal: {
+    description:
+      "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+    inside: "root",
+  },
   backdrop: {
+    inside: "portal",
     description: "The layer over the page behind the dialog.",
     states: TRANSITION,
     exclusive: EITHER_FRAME,
   },
   popup: {
+    inside: "portal",
     description: "The dialog itself.",
     states: {
       ...TRANSITION,
@@ -25,7 +34,7 @@ export const dialogVocabulary = defineComponent({
     exclusive: EITHER_FRAME,
     variables: { "--nested-dialogs": "How many dialogs are open above this one." },
   },
-  title: { description: "The heading that names the dialog." },
-  description: { description: "The text that describes the dialog." },
-  close: { description: "A button that closes the dialog." },
+  title: { inside: "popup", description: "The heading that names the dialog." },
+  description: { inside: "popup", description: "The text that describes the dialog." },
+  close: { inside: "popup", description: "A button that closes the dialog." },
 })

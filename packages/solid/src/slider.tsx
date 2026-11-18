@@ -1,6 +1,14 @@
 import { within } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
-import type { Slider as Controller, SliderChangeDetails, SliderProps } from "@kirana-ui/core/slider"
+import type {
+  Slider as Controller,
+  SliderChangeDetails,
+  SliderProps,
+  SliderTold,
+  SliderValue,
+} from "@kirana-ui/core/slider"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
@@ -8,6 +16,8 @@ import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["slider"]
 
 const Context = createContext<Controller>()
 
@@ -17,9 +27,18 @@ function useSlider(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & Omit<SliderProps, "id"> & { id?: string }
+/**
+ * `Value` is what the slider is given, `value` or `defaultValue`: a number for one thumb, a
+ * list for a range. What `onValueChange` and `onValueCommitted` are told is the same kind.
+ */
+export type RootProps<Value extends SliderValue = SliderValue> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<SliderProps<Value>, "id"> & { id?: string }
+>
 
-function Root(props: RootProps): JSX.Element {
+// Given neither `value` nor `defaultValue`, a slider has one thumb: its value is a number.
+function Root<Value extends SliderValue = number>(props: RootProps<Value>): JSX.Element {
   const [local, rest] = splitProps(props, [
     "value",
     "defaultValue",
@@ -43,63 +62,73 @@ function Root(props: RootProps): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext)
   const made = controller(
-    within(createSlider, { field, direction: useContext(DirectionContext) }),
+    within(createSlider<Value>, { field, direction: useContext(DirectionContext) }),
     () => ({
       ...local,
       id: local.id ?? generated,
-      onValueChange: (value: number | number[], details: SliderChangeDetails) =>
+      onValueChange: (value: SliderTold<Value>, details: SliderChangeDetails) =>
         local.onValueChange?.(value, details),
-      onValueCommitted: (value: number | number[], details: SliderChangeDetails) =>
+      onValueCommitted: (value: SliderTold<Value>, details: SliderChangeDetails) =>
         local.onValueCommitted?.(value, details),
     })
   )
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
+export type ThumbProps = PartComponentProps<"div", StateOf<Parts["thumb"]>, { index?: number }>
+
 /** `index` is which value of a range the thumb is, from 0. */
-function Thumb(props: PartComponentProps & { index?: number }): JSX.Element {
+function Thumb(props: ThumbProps): JSX.Element {
   const [local, rest] = splitProps(props, ["index", "children"])
-  // A thumb is its index for as long as it is in the page.
-  const index = untrack(() => local.index ?? 0)
+  // A thumb is its index for as long as it is in the page. Given none, it takes its place
+  // among the slider's thumbs, in the order they are written.
+  const generated = createUniqueId()
+  const index = untrack(() => local.index ?? generated)
   const slider = useSlider()
   return (
-    <Part part={slider.thumb(index)} tag="div" {...rest}>
+    <Part of={slider.thumb(index)} tag="div" {...rest}>
       {local.children}
-      <Part part={slider.thumbInput(index)} tag="input" />
+      <Part of={slider.thumbInput(index)} tag="input" />
     </Part>
   )
 }
 
+export type ValueProps = PartComponentProps<
+  "output",
+  StateOf<Parts["value"]>,
+  { children?: (text: () => string, values: () => readonly number[]) => JSX.Element }
+>
+
 /** The written value, or what its child, a function, makes of it and of the values. */
-function Value(
-  props: Omit<PartComponentProps, "children"> & {
-    children?: (text: () => string, values: () => readonly number[]) => JSX.Element
-  }
-): JSX.Element {
+function Value(props: ValueProps): JSX.Element {
   const [local, rest] = splitProps(props, ["children"])
   const made = useSlider()
   const text = fromSignal(made.text)
   const values = fromSignal(made.values)
   return (
-    <Part part={made.value} tag="output" {...rest}>
+    <Part of={made.value} tag="output" {...rest}>
       {local.children ? local.children(text, values) : text()}
     </Part>
   )
 }
 
-const part = (key: "control" | "track" | "indicator") => (props: PartComponentProps) => (
-  <Part part={useSlider()[key]} tag="div" {...props} />
-)
+export type ControlProps = PartComponentProps<"div", StateOf<Parts["control"]>>
+export type TrackProps = PartComponentProps<"div", StateOf<Parts["track"]>>
+export type IndicatorProps = PartComponentProps<"div", StateOf<Parts["indicator"]>>
+
+const part =
+  <Props extends Record<string, unknown>>(key: "control" | "track" | "indicator") =>
+  (props: Props): JSX.Element => <Part of={useSlider()[key]} tag="div" {...props} />
 
 export const Slider = {
   Root,
   Value,
-  Control: part("control"),
-  Track: part("track"),
-  Indicator: part("indicator"),
+  Control: part<ControlProps>("control"),
+  Track: part<TrackProps>("track"),
+  Indicator: part<IndicatorProps>("indicator"),
   Thumb,
 }

@@ -1,10 +1,10 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useGroup } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { GroupLabelProps } from "./types.ts"
 
-  let props: PartAttributes = $props()
+  let props: GroupLabelProps = $props()
   const group = useGroup()
 </script>
 
-<Part part={group.label} tag="div" {...props} />
+<Part of={group.label} tag="div" {...props} />

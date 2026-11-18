@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { RadioItemOptions } from "@kirana-ui/core/radio-group"
   import { defined } from "@kirana-ui/core"
   import { setContext } from "svelte"
 
   import Part from "../Part.svelte"
   import { toSignal } from "../runtime.svelte.ts"
   import { ITEM, useRadioGroup } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ItemProps } from "./types.ts"
 
-  let { value, disabled, children, ...rest }: { value: unknown } & RadioItemOptions & PartAttributes = $props()
+  let { value, disabled, children, ...rest }: ItemProps = $props()
   const options = toSignal(() => ({ disabled }))
   const read = () => defined(options.get())
   // An item is its value for as long as it is in the page.
@@ -20,6 +19,11 @@
   setContext(ITEM, item)
 </script>
 
-<Part {part} tag="span" {...rest}>
-  {@render children?.()}<Part part={input} tag="input" />
+<!-- The native input is the part's own, not its content: with `child` the caller's element is
+     the caller's to draw, so the snippet is given `input` to render inside it, last, where
+     every other adapter keeps it. A snippet that leaves it out draws a control no form reads. -->
+{#snippet held()}<Part of={input} tag="input" />{/snippet}
+
+<Part of={part} tag="span" {...rest} held={{ input: held }}>
+  {@render children?.()}<Part of={input} tag="input" />
 </Part>

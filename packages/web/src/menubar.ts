@@ -1,6 +1,8 @@
 import { createMenubar } from "@kirana-ui/core/menubar"
+import type { MenubarProps } from "@kirana-ui/core/menubar"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-menubar>` around `kui-part="root"` and its `<kui-menu>`s, which work as one: the
@@ -14,3 +16,9 @@ export const tag = defineElement({
   changes: {},
   parts: { root: (controller) => controller.root },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-menubar": ElementOf<As<typeof tag, MenubarProps>>
+  }
+}

@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { CollapsibleProps } from "@kirana-ui/core/collapsible"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCollapsible } from "@kirana-ui/core/collapsible"
 
   import Part from "../Part.svelte"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
-  import type { RootProps } from "../types.ts"
+  import type { RootProps } from "./types.ts"
 
-  let { open = $bindable(), defaultOpen, onOpenChange, disabled, id, ...rest }: RootProps<CollapsibleProps> = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, disabled, id, ...rest }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -27,4 +26,4 @@
   )
 </script>
 
-<Part part={made.root} tag="div" {...rest} />
+<Part of={made.root} tag="div" {...rest} />

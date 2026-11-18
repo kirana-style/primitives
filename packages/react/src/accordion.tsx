@@ -1,17 +1,28 @@
 import { defined, within } from "@kirana-ui/core"
-import type { Part } from "@kirana-ui/core"
+import type { StateOf } from "@kirana-ui/core"
 import { createAccordion } from "@kirana-ui/core/accordion"
 import type {
   AccordionItem,
   AccordionProps,
   Accordion as Controller,
 } from "@kirana-ui/core/accordion"
-import { createContext, useContext, useMemo } from "react"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
+import { createContext, useContext, useId, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
-import { useController, useMount, useOptions, usePart, useSignal } from "./runtime.tsx"
+import {
+  PartElement,
+  parts,
+  useController,
+  useMount,
+  useOptions,
+  usePart,
+  useSignal,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["accordion"]
 
 const Context = createContext<Controller | null>(null)
 const ItemContext = createContext<AccordionItem | null>(null)
@@ -28,11 +39,14 @@ function useItem(part: string): AccordionItem {
   return item
 }
 
-export type RootProps<Value> = Omit<AccordionProps<Value>, "id"> & {
-  id?: string
-} & PartComponentProps
+/** `Value` is what tells an item from the others: the type of `value`'s entries. */
+export type RootProps<Value = unknown> = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  Omit<AccordionProps<Value>, "id"> & { id?: string }
+>
 
-function Root<Value>({
+function Root<Value = unknown>({
   value,
   defaultValue,
   onValueChange,
@@ -45,59 +59,74 @@ function Root<Value>({
 }: RootProps<Value>): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
   const create = within(createAccordion<Value>, { direction })
-  const controller = useController(create, {
-    value: value as readonly Value[] | undefined,
-    defaultValue: defaultValue as readonly Value[] | undefined,
+  const controller: Controller = useController(create, {
+    value,
+    defaultValue,
     onValueChange,
     multiple,
     disabled,
     orientation,
     loop,
     id,
-  }) as unknown as Controller
+  })
   return (
     <Context.Provider value={controller}>
-      <PartElement part={controller.root} tag="div" {...rest} />
+      <PartElement of={controller.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-const PartElement = ({ part, tag, ...props }: PartComponentProps & { part: Part; tag: string }) =>
-  usePart(part, tag, props)
-
-export interface ItemProps extends PartComponentProps {
-  value: unknown
-  disabled?: boolean
-}
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
+    /**
+     * What tells this item from the others: it is in the accordion's `value` while the item is
+     * open. An item that is given none makes its own.
+     */
+    value?: unknown
+    /** Disables this item: it cannot be opened or closed. */
+    disabled?: boolean
+  }
+>
 
 function Item({ value, disabled, ...rest }: ItemProps): ReactElement {
   const controller = useAccordion("Item")
   const options = useOptions({ disabled })
+  const generated = useId()
+  const key = value === undefined ? generated : value
   const item = useMemo(
-    () => controller.item(value, () => defined(options.get())),
-    [controller, value, options]
+    () => controller.item(key, () => defined(options.get())),
+    [controller, key, options]
   )
   useMount(item)
   return (
     <ItemContext.Provider value={item}>
-      <PartElement part={item.root} tag="div" {...rest} />
+      <PartElement of={item.root} tag="div" {...rest} />
     </ItemContext.Provider>
   )
 }
 
-const Header = (props: PartComponentProps) => usePart(useItem("Header").header, "h3", props)
-const Trigger = (props: PartComponentProps) => usePart(useItem("Trigger").trigger, "button", props)
+export type HeaderProps = PartComponentProps<"h3", StateOf<Parts["header"]>>
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 
-export interface PanelProps extends PartComponentProps {
-  /** Keeps the closed panel in the page, `hidden`. */
-  keepMounted?: boolean
-}
+const Header = (props: HeaderProps) => usePart(useItem("Header").header, "h3", props)
+const Trigger = (props: TriggerProps) => usePart(useItem("Trigger").trigger, "button", props)
+
+export type PanelProps = PartComponentProps<
+  "div",
+  StateOf<Parts["panel"]>,
+  {
+    /** Keeps the closed panel in the page, `hidden`. */
+    keepMounted?: boolean
+  }
+>
 
 function Panel({ keepMounted, ...props }: PanelProps): ReactElement | null {
   const item = useItem("Panel")
   const mounted = useSignal(item.mounted)
   if (!mounted && !keepMounted) return null
-  return <PartElement part={item.panel} tag="div" {...props} />
+  return <PartElement of={item.panel} tag="div" {...props} />
 }
 
-export const Accordion = { Root, Item, Header, Trigger, Panel }
+export const Accordion = /* @__PURE__ */ parts("Accordion", { Root, Item, Header, Trigger, Panel })

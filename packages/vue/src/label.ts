@@ -3,6 +3,9 @@ import { defineComponent, h } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
 import { partComponent } from "./runtime.ts"
+import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
+
+export type LabelProps = PartComponentProps
 
 /** A `<label>`. Inside a `<Field.Root>` it is the field's label. */
 export const Label = defineComponent({
@@ -13,4 +16,4 @@ export const Label = defineComponent({
     const Element = partComponent("LabelElement", "label", () => made.label)
     return () => h(Element, attrs, slots)
   },
-})
+}) as unknown as PartComponent<"label", StatesOf<"label">["label"], LabelProps>

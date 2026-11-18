@@ -15,7 +15,12 @@ export interface TabsProps<Value = unknown> {
   value?: Value | null | undefined
   /** Read once. Without one, the first tab that can be chosen is, once the page is there. */
   defaultValue?: Value | null | undefined
+  /** Told a tab's own value, never `null`: tabs do not go back to none. */
   onValueChange?: ((value: Value, details: ChangeDetails) => void) | undefined
+  /**
+   * Whether the tabs are laid out across (the default) or down: the arrows that move between them
+   * follow.
+   */
   orientation?: Orientation | undefined
 }
 
@@ -27,6 +32,7 @@ export interface TabsListOptions {
 }
 
 export interface TabOptions {
+  /** Disables this tab: it cannot be chosen. */
   disabled?: boolean
 }
 
@@ -68,6 +74,8 @@ export function createTabs<Value = unknown>(
   const value = bindable<Value | null>({
     value: () => props.get().value,
     defaultValue: props.peek().defaultValue ?? null,
+    // Only a tab's own value is ever set (`setValue`): `null` is the "none" the tabs may
+    // begin with, and is never told.
     onChange: (next, by) => props.peek().onValueChange?.(next as Value, by),
   })
   const isActive = keyed(value as ReadonlySignal<Value | null>)

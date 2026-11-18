@@ -5,5 +5,5 @@ import { DISABLED } from "./states.ts"
 // not carry these descriptions.
 export const fieldsetVocabulary = defineComponent({
   root: { description: "The group of fields.", states: { disabled: DISABLED } },
-  legend: { description: "The group's name.", states: { disabled: DISABLED } },
+  legend: { inside: "root", description: "The group's name.", states: { disabled: DISABLED } },
 })

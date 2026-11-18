@@ -2,8 +2,6 @@
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createDatePicker } from "@kirana-ui/core/date-picker"
-  import type { DatePickerProps } from "@kirana-ui/core/date-picker"
-  import type { Snippet } from "svelte"
 
   import { provide as provideCalendar } from "../calendar/context.ts"
   import { provide as provideField } from "../date-field/context.ts"
@@ -11,6 +9,7 @@
   import { provide as providePopover } from "../popover/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
+  import type { RootProps } from "./types.ts"
 
   // A date field, and a calendar in a popover, with one value between them. It draws nothing.
   // `bind:value` is the day, `bind:open` whether the calendar shows.
@@ -35,7 +34,7 @@
     form,
     id,
     children,
-  }: Omit<DatePickerProps, "id"> & { id?: string; children?: Snippet } = $props()
+  }: RootProps = $props()
   const generated = $props.id()
 
   function changeValue(next: string | null, by: ChangeDetails) {

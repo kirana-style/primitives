@@ -4,9 +4,9 @@
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { RADIO_ITEM, useRadioGroup } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { RadioItemIndicatorProps } from "./types.ts"
 
-  let { keepMounted = false, ...rest }: { keepMounted?: boolean } & PartAttributes = $props()
+  let { keepMounted = false, ...rest }: RadioItemIndicatorProps = $props()
   const group = useRadioGroup()
   const value = getContext(RADIO_ITEM)
   const checked = fromSignal(group.checked(value))
@@ -14,5 +14,5 @@
 </script>
 
 {#if checked.current || keepMounted}
-  <Part {part} tag="span" {...rest} />
+  <Part of={part} tag="span" {...rest} />
 {/if}

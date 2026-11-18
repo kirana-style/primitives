@@ -1,7 +1,8 @@
 import { createToggle } from "@kirana-ui/core/toggle"
-import type { ToggleAround } from "@kirana-ui/core/toggle"
+import type { ToggleAround, ToggleProps } from "@kirana-ui/core/toggle"
 
 import { defineElement, hostAround } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 type Group = NonNullable<ToggleAround["group"]>
 type Toolbar = NonNullable<ToggleAround["toolbar"]>
@@ -25,3 +26,12 @@ export const tag = defineElement({
   changes: { onPressedChange: { event: "pressed-change", prop: "pressed" } },
   parts: { root: (controller) => controller.root },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-toggle": ElementOf<
+      As<typeof tag, ToggleProps>,
+      { "pressed-change": ["onPressedChange", "pressed"] }
+    >
+  }
+}

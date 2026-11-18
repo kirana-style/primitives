@@ -1,11 +1,14 @@
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createCollapsible } from "@kirana-ui/core/collapsible"
 import type { Collapsible as Controller } from "@kirana-ui/core/collapsible"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
+
+type Parts = Vocabulary["collapsible"]
 
 const Context = createContext<Controller>()
 
@@ -15,13 +18,17 @@ function useCollapsible(): Controller {
   return made
 }
 
-export type RootProps = PartComponentProps & {
-  open?: boolean
-  defaultOpen?: boolean
-  onOpenChange?: (open: boolean, details: ChangeDetails) => void
-  disabled?: boolean
-  id?: string
-}
+export type RootProps = PartComponentProps<
+  "div",
+  StateOf<Parts["root"]>,
+  {
+    open?: boolean
+    defaultOpen?: boolean
+    onOpenChange?: (open: boolean, details: ChangeDetails) => void
+    disabled?: boolean
+    id?: string
+  }
+>
 
 function Root(props: RootProps): JSX.Element {
   const [local, rest] = splitProps(props, ["open", "defaultOpen", "onOpenChange", "disabled", "id"])
@@ -35,23 +42,31 @@ function Root(props: RootProps): JSX.Element {
   }))
   return (
     <Context.Provider value={made}>
-      <Part part={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest} />
     </Context.Provider>
   )
 }
 
-const Trigger = (props: PartComponentProps) => (
-  <Part part={useCollapsible().trigger} tag="button" {...props} />
+export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+
+const Trigger = (props: TriggerProps) => (
+  <Part of={useCollapsible().trigger} tag="button" {...props} />
 )
 
+export type PanelProps = PartComponentProps<
+  "div",
+  StateOf<Parts["panel"]>,
+  { keepMounted?: boolean }
+>
+
 /** `keepMounted` keeps the closed panel in the page, `hidden`. */
-function Panel(props: PartComponentProps & { keepMounted?: boolean }): JSX.Element {
+function Panel(props: PanelProps): JSX.Element {
   const [local, rest] = splitProps(props, ["keepMounted"])
   const made = useCollapsible()
   const mounted = fromSignal(made.mounted)
   return (
     <Show when={mounted() || local.keepMounted}>
-      <Part part={made.panel} tag="div" {...rest} />
+      <Part of={made.panel} tag="div" {...rest} />
     </Show>
   )
 }

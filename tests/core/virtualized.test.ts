@@ -219,4 +219,55 @@ describe("a select over a collection", () => {
     await press("ArrowDown")
     expect(focused()).toBe("r7001")
   })
+
+  it("with several values, opens on the first of them by place, and names them in that order", async () => {
+    const root = mount(`<button id="trigger">Pick</button><div id="list" tabindex="-1"></div>`)
+    const host = find(root, "list")
+    const collection: ListCollection = {
+      count: COUNT,
+      label: name,
+      indexOf: (value) => value as number,
+      scrollToIndex: (index) => rows.scrollToIndex(index),
+    }
+    const made = createSelect(
+      signal<SelectProps<number>>({
+        id: "s",
+        multiple: true,
+        defaultValues: [7000, 4000],
+        virtualized: collection,
+      })
+    )
+    onTestFinished(made.mount())
+    onTestFinished(bind(find(root, "trigger"), made.trigger))
+    const rows = windowed(
+      (index, element) =>
+        bind(
+          element,
+          made.item(index, () => ({ index }))
+        ),
+      host
+    )
+    onTestFinished(bind(host, made.popup))
+    // Neither row has been in the page: named by their values, in the collection's order.
+    expect(made.label.peek()).toBe("4000, 7000")
+    find(root, "trigger").click()
+    await settled()
+    await settled()
+    expect(focused()).toBe("r4000")
+    expect(find(root, "r4000").getAttribute("aria-selected")).toBe("true")
+    expect(host.getAttribute("aria-multiselectable")).toBe("true")
+    await press("ArrowDown")
+    expect(focused()).toBe("r4001")
+    // A press adds it, and the list stays open on the row.
+    await press("Enter")
+    expect(made.values.peek()).toEqual([7000, 4000, 4001])
+    expect(made.open.peek()).toBe(true)
+    expect(focused()).toBe("r4001")
+    expect(made.label.peek()).toBe("Row 4000, Row 4001, 7000")
+    await press("End")
+    await settled()
+    expect(focused()).toBe(`r${COUNT - 1}`)
+    await press("Enter")
+    expect(made.shown.peek().values).toEqual([4000, 4001, 7000, COUNT - 1])
+  })
 })

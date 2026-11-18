@@ -2,6 +2,7 @@ import { createCarousel } from "@kirana-ui/core/carousel"
 import type { Carousel, CarouselProps } from "@kirana-ui/core/carousel"
 
 import { defineElement } from "./runtime.ts"
+import type { ElementOf } from "./runtime.ts"
 
 const indexOf = (element: HTMLElement) => Number(element.getAttribute("kui-index") ?? 0)
 
@@ -24,3 +25,9 @@ export const tag = defineElement<CarouselProps, Carousel>({
     indicator: (controller, element) => controller.indicator(indexOf(element)),
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-carousel": ElementOf<typeof tag, { "index-change": ["onIndexChange", "index"] }>
+  }
+}

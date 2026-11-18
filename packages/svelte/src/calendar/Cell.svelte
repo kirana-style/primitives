@@ -1,12 +1,12 @@
 <script lang="ts">
   import Part from "../Part.svelte"
   import { useCalendar } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { CellProps } from "./types.ts"
 
-  let { date, ...rest }: { date: string } & PartAttributes = $props()
+  let { date, ...rest }: CellProps = $props()
   // It is its day for as long as it is in the page.
   // svelte-ignore state_referenced_locally
   const part = useCalendar().cell(date)
 </script>
 
-<Part {part} tag="td" {...rest} />
+<Part of={part} tag="td" {...rest} />

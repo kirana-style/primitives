@@ -1,6 +1,8 @@
 import { createFieldset } from "@kirana-ui/core/fieldset"
+import type { FieldsetProps } from "@kirana-ui/core/fieldset"
 
 import { defineElement } from "./runtime.ts"
+import type { As, ElementOf } from "./runtime.ts"
 
 /** `<kui-fieldset>` around a `kui-part="root"` fieldset and its `legend`. `disabled`. */
 export const tag = defineElement({
@@ -13,3 +15,9 @@ export const tag = defineElement({
     legend: (controller) => controller.legend,
   },
 })
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "kui-fieldset": ElementOf<As<typeof tag, FieldsetProps>>
+  }
+}

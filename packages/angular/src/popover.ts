@@ -1,20 +1,10 @@
-import {
-  Directive,
-  booleanAttribute,
-  effect,
-  inject,
-  input,
-  model,
-  output,
-  untracked,
-} from "@angular/core"
+import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
 import type { OnInit } from "@angular/core"
-import { defined } from "@kirana-ui/core"
-import type { Align, ChangeDetails, Side } from "@kirana-ui/core"
+import type { ChangeDetails } from "@kirana-ui/core"
 import { createPopover } from "@kirana-ui/core/popover"
 import type { Popover } from "@kirana-ui/core/popover"
 
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kuiPopover]", exportAs: "kuiPopover" })
 export class KuiPopover implements OnInit {
@@ -56,34 +46,11 @@ export class KuiPopoverPortal implements OnInit {
 }
 
 @Directive({ selector: "[kuiPopoverPositioner]" })
-export class KuiPopoverPositioner implements OnInit {
-  readonly side = input<Side>()
-  readonly align = input<Align>()
-  readonly sideOffset = input<number>()
-  readonly alignOffset = input<number>()
-  readonly collisionPadding = input<number>()
+export class KuiPopoverPositioner extends KuiPositioner {
   private readonly root = inject(KuiPopover)
-  private readonly put = hostPart()
-  private readonly options = () =>
-    defined({
-      side: this.side(),
-      align: this.align(),
-      sideOffset: this.sideOffset(),
-      alignOffset: this.alignOffset(),
-      collisionPadding: this.collisionPadding(),
-    })
 
-  constructor() {
-    effect(() => {
-      const next = this.options()
-      untracked(() => this.root.controller?.positioning.set(next))
-    })
-  }
-
-  ngOnInit(): void {
-    // Before the element attaches: the first placement reads these.
-    this.root.controller.positioning.set(untracked(this.options))
-    this.put(this.root.controller.positioner)
+  protected placed() {
+    return this.root.controller
   }
 }
 

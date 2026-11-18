@@ -3,17 +3,17 @@
   import Outlet from "../Portal.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
   import { useItem, useNavigation } from "./context.ts"
-  import type { PartAttributes } from "../types.ts"
+  import type { ContentProps } from "./types.ts"
 
   // An item's content: drawn in `<NavigationMenu.Viewport>`, while it is shown.
-  let { children, ...rest }: PartAttributes = $props()
+  let { children, ...rest }: ContentProps = $props()
   const item = useItem()
   const mounted = fromSignal(item.mounted)
   const viewport = fromSignal(useNavigation().viewportElement)
 </script>
 
 {#snippet content()}
-  <Part part={item.content} tag="div" {...rest} {children} />
+  <Part of={item.content} tag="div" {...rest} {children} />
 {/snippet}
 
 {#if viewport.current}

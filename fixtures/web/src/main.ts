@@ -2,6 +2,7 @@ import "../../shared/styles.css"
 import { effect } from "@kirana-ui/core"
 import type { Field } from "@kirana-ui/core/field"
 import "@kirana-ui/web"
+import type { Placed } from "@kirana-ui/web"
 import { toasterOf } from "@kirana-ui/web/toast"
 
 // What the other fixtures keep in their framework's state: here, a few listeners.
@@ -42,6 +43,14 @@ find("av-load").addEventListener("click", () => {
   const [first, second] = document.querySelectorAll<HTMLElement & { src: string }>("kui-avatar")
   first!.src = PIXEL
   second!.src = BROKEN
+})
+
+// A checkbox group a caller holds, and what the caller heard.
+const toppings = element<{ value: string[] }>("kui-checkbox-group", "cg1")
+toppings.addEventListener("value-change", (event) => {
+  const { value } = (event as CustomEvent<{ value: string[] }>).detail
+  toppings.value = value
+  find("cg1-output").textContent = value.join(",")
 })
 
 // A range a caller holds.
@@ -143,6 +152,46 @@ for (const each of ["sm2", "sm3"]) {
 }
 one("kui-combobox", "cb1", "cb1-output")
 one("kui-combobox", "pl3", "pl3-output")
+// A combobox's items as data, in groups: the combobox filters them, and a collection draws them.
+const PANTRY = [
+  {
+    value: "Fruits",
+    items: [
+      { value: "apple", label: "Apple" },
+      { value: "apricot", label: "Apricot" },
+      { value: "banana", label: "Banana", disabled: true },
+    ],
+  },
+  {
+    value: "Roots",
+    items: [
+      { value: "beet", label: "Beet" },
+      { value: "carrot", label: "Carrot" },
+    ],
+  },
+]
+const BERRIES = [
+  { value: "blackberry", label: "Blackberry" },
+  { value: "blueberry", label: "Blueberry" },
+  { value: "cherry", label: "Cherry" },
+]
+const pantry = element<{ items: typeof PANTRY }>("kui-combobox", "cd1")
+pantry.items = PANTRY
+// What a status says of the pantry for what was typed: how many of its items hold the text.
+pantry.addEventListener("input-value-change", (event) => {
+  if (event.target !== event.currentTarget) return
+  const text = (event as CustomEvent<{ inputValue: string }>).detail.inputValue
+  const all = PANTRY.flatMap((each) => each.items)
+  find("cd1-status").textContent =
+    text === ""
+      ? ""
+      : `${all.filter((each) => each.label.toLowerCase().includes(text.toLowerCase())).length} left`
+})
+const berries = element<{ items: typeof BERRIES; readOnly: boolean }>("kui-combobox", "cd2")
+berries.items = BERRIES
+find("cd2-unlock").addEventListener("click", () => {
+  berries.readOnly = false
+})
 // A popover placed against another element, and against a second one while it is open: its
 // button is in the popup, which is out of the page while closed, so the page hears it.
 document.addEventListener("click", (event) => {
@@ -152,6 +201,12 @@ document.addEventListener("click", (event) => {
   const now = positioner.getAttribute("kui-anchor")
   positioner.setAttribute("kui-anchor", now === "pl2-first" ? "pl2-second" : "pl2-first")
 })
+// What no attribute can say of a positioner: a gap as tall as the anchor, a padding a side.
+element<Placed>("kui-popover", "pm3").positioning = {
+  sideOffset: ({ anchor }) => anchor.height,
+  collisionPadding: { left: 12, right: 12 },
+  collisionAvoidance: { side: "none" },
+}
 one("kui-number-field", "nf1", "nf1-output", "null")
 one("kui-autocomplete", "ac1", "ac1-output")
 

@@ -505,7 +505,19 @@ function positionerOf(
   }
 }
 
-const ORDER = ["side", "align", "sideOffset", "alignOffset", "collisionPadding", "anchor"]
+const ORDER = [
+  "side",
+  "align",
+  "sideOffset",
+  "alignOffset",
+  "collisionPadding",
+  "collisionBoundary",
+  "collisionAvoidance",
+  "sticky",
+  "arrowPadding",
+  "positionMethod",
+  "anchor",
+]
 
 function exportsOfAdapter(adapter: string): Map<string, Map<string, "value" | "type">> {
   const program = programOf(adapter)

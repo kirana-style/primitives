@@ -9,6 +9,7 @@ import "./button.ts"
 import "./calendar.ts"
 import "./carousel.ts"
 import "./checkbox.ts"
+import "./checkbox-group.ts"
 import "./collapsible.ts"
 import "./combobox.ts"
 import "./command.ts"
@@ -61,6 +62,7 @@ export type { Drawn, Each, ElementSpec } from "./runtime.ts"
 // The core's types an event's detail or a property names: imported from this package, the one
 // a project installs.
 // Types only: nothing of the core's is drawn in by them.
+export type { Placed } from "./around.ts"
 export type {
   Align,
   Anchor,
@@ -68,10 +70,15 @@ export type {
   Bindable,
   ChangeDetails,
   ChangeSource,
+  CollisionAvoidance,
+  CollisionBoundary,
+  CollisionPadding,
   ComponentDefinition,
   Direction,
   ItemLabels,
   ListCollection,
+  OffsetData,
+  OffsetFunction,
   Orientation,
   Part,
   PartDefinition,
@@ -100,4 +107,12 @@ export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/for
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
 export type { SelectShown } from "@kirana-ui/core/select"
+export type {
+  ComboboxEntry,
+  ComboboxGroupData,
+  ComboboxGroupEntry,
+  ComboboxItemData,
+  ComboboxItemEntry,
+  ComboboxShown,
+} from "@kirana-ui/core/combobox"
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"

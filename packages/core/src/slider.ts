@@ -60,6 +60,11 @@ export interface SliderProps<Value extends SliderValue = SliderValue> {
   thumbAlignment?: "center" | "edge" | "edge-client-only" | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /**
+   * Shown as it is, focusable, not changeable: no key and no pointer moves a thumb, and its
+   * value is still submitted with the form.
+   */
+  readOnly?: boolean | undefined
   /** With a name, each thumb's value is submitted with the form around the slider. */
   name?: string | undefined
   /** The id of the form the control belongs to, when it is not inside it. */
@@ -167,6 +172,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
   const disabled = computed(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
   )
+  const readOnly = computed(() => Boolean(props.get().readOnly))
   const orientation = computed(() => props.get().orientation ?? "horizontal")
   const dragging = signal<number | null>(null)
   // What a thumb is centred by depends on the reading direction: the provider's, which a server
@@ -266,6 +272,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
     ...field?.state(),
     "data-orientation": orientation.get(),
     "data-disabled": flag(disabled.get()),
+    "data-readonly": flag(readOnly.get()),
     "data-dragging": flag(dragging.get() !== null),
   })
 
@@ -294,7 +301,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
 
   /** Moves a thumb, and says whether it moved. */
   function setValue(index: number, raw: number, by: SliderChangeDetails): boolean {
-    if (disabled.peek()) return false
+    if (disabled.peek() || readOnly.peek()) return false
     const list = latest ?? values.peek()
     if (index < 0 || index >= list.length) return false
     const next = within(list, index, raw)
@@ -354,6 +361,12 @@ export function createSlider<Value extends SliderValue = SliderValue>(
     const pressed = [...thumbs].find(([, element]) => element.contains(target))
     let index: number
     let offset = 0
+    if (readOnly.peek()) {
+      // Nothing moves and nothing is dragged: the thumb pressed, or the one nearest, takes focus.
+      event.preventDefault()
+      const at = pressed ? indexOf(pressed[0]) : nearest(valueAt(event, control, 0))
+      return (pressed?.[1] ?? elementAt(at))?.focus({ preventScroll: true })
+    }
     if (!pressed) {
       const at = valueAt(event, control, 0)
       index = nearest(at)
@@ -394,7 +407,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
   }
 
   function key(index: number, event: KeyboardEvent) {
-    if (disabled.peek()) return
+    if (disabled.peek() || readOnly.peek()) return
     const { min, max, step } = range.peek()
     const large = props.peek().largeStep ?? 10
     const current = values.peek()[index]
@@ -473,6 +486,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
             "aria-valuetext": getAriaValueText?.(written!, current, nth) ?? written,
             "aria-orientation": orientation.get(),
             "aria-disabled": disabled.get() ? "true" : undefined,
+            "aria-readonly": readOnly.get() ? "true" : undefined,
             ...field?.aria(),
             "data-index": String(nth),
             ...state(),

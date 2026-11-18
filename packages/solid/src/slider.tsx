@@ -52,6 +52,7 @@ function Root<Value extends SliderValue = number>(props: RootProps<Value>): JSX.
     "thumbAlignment",
     "orientation",
     "disabled",
+    "readOnly",
     "name",
     "form",
     "format",

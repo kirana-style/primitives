@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PartEvent } from "@kirana-ui/vue"
+import type { OffsetFunction, PartEvent } from "@kirana-ui/vue"
 import {
   Calendar,
   Autocomplete,
@@ -23,6 +23,7 @@ import {
   Avatar,
   Button,
   Checkbox,
+  CheckboxGroup,
   Collapsible,
   Dialog,
   DirectionProvider,
@@ -58,7 +59,39 @@ import { ref } from "vue"
 
 // The page every adapter draws, element for element: the conformance run walks it and compares
 // the DOM of each state across adapters. Change it in every fixture at once.
+// A gap as tall as the anchor: what a positioner asks a function for.
+const anchorHigh: OffsetFunction = ({ anchor }) => anchor.height
+
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
+// A combobox's items as data, in groups: the combobox filters them, and a collection draws them.
+const PANTRY = [
+  {
+    value: "Fruits",
+    items: [
+      { value: "apple", label: "Apple" },
+      { value: "apricot", label: "Apricot" },
+      { value: "banana", label: "Banana", disabled: true },
+    ],
+  },
+  {
+    value: "Roots",
+    items: [
+      { value: "beet", label: "Beet" },
+      { value: "carrot", label: "Carrot" },
+    ],
+  },
+]
+const BERRIES = [
+  { value: "blackberry", label: "Blackberry" },
+  { value: "blueberry", label: "Blueberry" },
+  { value: "cherry", label: "Cherry" },
+]
+/** What a status says of the pantry for what was typed: how many of its items hold the text. */
+function pantryLeft(text: string): string {
+  if (text === "") return ""
+  const all = PANTRY.flatMap((each) => each.items)
+  return `${all.filter((each) => each.label.toLowerCase().includes(text.toLowerCase())).length} left`
+}
 // Labels by value: what a select names its values with before its list has been opened.
 const SIZES = { s: "Small", m: "Medium", l: "Large" }
 const SIZE_KEYS = ["s", "m", "l"] as const
@@ -70,6 +103,9 @@ const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? 
 const taken = (value: string) => (value === "admin" ? "Taken" : null)
 const SECTIONS = ["one", "two", "three", "four"]
 const PLANS = ["free", "pro", "team", "max"]
+const TOPPINGS = ["cheese", "ham", "olives"]
+const EXTRAS = ["napkins", "straw"]
+const LOCKED = ["Apple", "Banana"]
 // A list of ten thousand rows of which a window is drawn: the fixture's own few lines of
 // virtualizing, so no library's are part of what is compared.
 const VROW = 24
@@ -95,6 +131,7 @@ const LINES = Array.from({ length: 20 }, (_each, at) => `Row ${at + 1}`)
 const LOAD = ["load"]
 const controlled = ref(false)
 const alerts = ref(false)
+const toppings = ref<string[]>(["ham"])
 const count = ref(0)
 const done = ref(40)
 const pictures = ref(false)
@@ -106,6 +143,8 @@ const span = ref<number[]>([20, 80])
 const low = ref(true)
 const moved = ref(false)
 const sought = ref<string | null>(null)
+const looked = ref("")
+const sealed = ref(true)
 const firstAnchor = ref<HTMLElement | null>(null)
 const secondAnchor = ref<HTMLElement | null>(null)
 const fruit = ref<string | null>("Banana")
@@ -451,6 +490,19 @@ function press(event: PartEvent<MouseEvent>) {
             </Dialog.Root>
             <Dialog.Close data-testid="d1-close">Close</Dialog.Close>
           </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
+      <Dialog.Root id="d3">
+        <Dialog.Trigger data-testid="d3-trigger">Open long dialog</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Backdrop class="backdrop" data-testid="d3-backdrop" />
+          <Dialog.Viewport class="viewport" data-testid="d3-viewport">
+            <Dialog.Popup class="dialog long" data-testid="d3-popup">
+              <Dialog.Title>Terms</Dialog.Title>
+              <Dialog.Description>Longer than the page: its viewport scrolls.</Dialog.Description>
+              <Dialog.Close data-testid="d3-close">Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Viewport>
         </Dialog.Portal>
       </Dialog.Root>
     </section>
@@ -1351,9 +1403,14 @@ function press(event: PartEvent<MouseEvent>) {
         :default-value="5"
         :min="0"
         :max="10"
+        class="number-field"
         data-testid="nf1"
         @value-change="(next: number | null) => (qty = String(next))"
       >
+        <NumberField.ScrubArea class="scrub" data-testid="nf1-scrub">
+          <span>Quantity</span>
+          <NumberField.ScrubAreaCursor class="scrub-cursor" />
+        </NumberField.ScrubArea>
         <NumberField.Group class="number-group" data-testid="nf1-group">
           <NumberField.Decrement data-testid="nf1-down">-</NumberField.Decrement>
           <NumberField.Input aria-label="Quantity" data-testid="nf1-input" />
@@ -1652,6 +1709,87 @@ function press(event: PartEvent<MouseEvent>) {
       </Form>
       <span data-testid="f2-sent">{{ sent2 }}</span>
     </section>
+    <section data-fixture="checkbox-group">
+      <form data-testid="cg1-form">
+        <CheckboxGroup
+          id="cg1"
+          v-model:value="toppings"
+          :all-values="TOPPINGS"
+          class="bar"
+          data-testid="cg1"
+        >
+          <Checkbox.Root
+            parent
+            id="cg1-all-input"
+            class="box"
+            aria-label="All"
+            data-testid="cg1-all"
+          >
+            <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+          </Checkbox.Root>
+          <Checkbox.Root
+            v-for="each in TOPPINGS"
+            :id="`cg1-${each}-input`"
+            :key="each"
+            name="topping"
+            :value="each"
+            class="box"
+            :aria-label="each"
+            :data-testid="`cg1-${each}`"
+          >
+            <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+          </Checkbox.Root>
+        </CheckboxGroup>
+        <button type="reset" data-testid="cg1-reset">Reset</button>
+      </form>
+      <output data-testid="cg1-output">{{ toppings.join(",") }}</output>
+      <Field.Root id="cg2" name="extras" data-testid="cg2">
+        <Field.Label data-testid="cg2-label">Extras</Field.Label>
+        <CheckboxGroup :default-value="['napkins']" class="bar" data-testid="cg2-group">
+          <Checkbox.Root
+            v-for="each in EXTRAS"
+            :id="`cg2-${each}-input`"
+            :key="each"
+            :value="each"
+            class="box"
+            :aria-label="each"
+            :data-testid="`cg2-${each}`"
+          >
+            <Checkbox.Indicator class="mark">✓</Checkbox.Indicator>
+          </Checkbox.Root>
+        </CheckboxGroup>
+      </Field.Root>
+    </section>
+    <section data-fixture="read-only">
+      <Slider.Root id="ro1" :default-value="40" read-only data-testid="ro1">
+        <Slider.Control class="slider" data-testid="ro1-control">
+          <Slider.Track class="slider-track">
+            <Slider.Indicator class="fill" />
+            <Slider.Thumb class="thumb" aria-label="Level" data-testid="ro1-thumb" />
+          </Slider.Track>
+        </Slider.Control>
+      </Slider.Root>
+      <Select.Root id="ro2" default-value="Banana" read-only>
+        <Select.Trigger data-testid="ro2-trigger">
+          <Select.Value data-testid="ro2-value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner :side-offset="4">
+            <Select.Popup class="popup" data-testid="ro2-popup">
+              <Select.Item
+                v-for="each in LOCKED"
+                :key="each"
+                :value="each"
+                class="item"
+                :data-testid="`ro2-${each}`"
+              >
+                <Select.ItemText>{{ each }}</Select.ItemText>
+              </Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    </section>
     <section data-fixture="direction">
       <button
         type="button"
@@ -1750,6 +1888,138 @@ function press(event: PartEvent<MouseEvent>) {
           </Combobox.Portal>
         </Combobox.Root>
         <output data-testid="pl3-output">{{ sought ?? "none" }}</output>
+      </div>
+    </section>
+    <section data-fixture="popover-more">
+      <div class="bar">
+        <Popover.Root id="pm1" modal>
+          <Popover.Trigger data-testid="pm1-trigger">Modal popover</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Backdrop class="backdrop" data-testid="pm1-backdrop" />
+            <Popover.Positioner
+              :side-offset="8"
+              :arrow-padding="8"
+              sticky
+              data-testid="pm1-positioner"
+            >
+              <Popover.Popup class="popup pointed" data-testid="pm1-popup">
+                <Popover.Arrow class="arrow" data-testid="pm1-arrow" />
+                <Popover.Title>Modal</Popover.Title>
+                <button type="button" data-testid="pm1-first">First</button>
+                <Popover.Close data-testid="pm1-close">Close</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <Popover.Root id="pm2" modal="trap-focus">
+          <Popover.Trigger open-on-hover :delay="50" data-testid="pm2-trigger">
+            Hover popover
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner :side-offset="8" data-testid="pm2-positioner">
+              <Popover.Popup class="popup" data-testid="pm2-popup">
+                <Popover.Title>Hovered</Popover.Title>
+                <button type="button" data-testid="pm2-first">First</button>
+                <Popover.Close data-testid="pm2-close">Close</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <Popover.Root id="pm3">
+          <Popover.Trigger data-testid="pm3-trigger">Placed popover</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner
+              side="top"
+              align="start"
+              position-method="fixed"
+              :side-offset="anchorHigh"
+              :collision-padding="{ left: 12, right: 12 }"
+              :collision-avoidance="{ side: 'none' }"
+              data-testid="pm3-positioner"
+            >
+              <Popover.Popup class="popup" aria-label="Placed" data-testid="pm3-popup">
+                Placed
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </div>
+    </section>
+    <section data-fixture="combobox-data">
+      <div class="bar">
+        <Combobox.Root
+          id="cd1"
+          :items="PANTRY"
+          auto-highlight
+          @input-value-change="(text: string) => (looked = text)"
+        >
+          <Combobox.Trigger data-testid="cd1-trigger">
+            <span data-testid="cd1-value"><Combobox.Value placeholder="Pick one" /></span>
+          </Combobox.Trigger>
+          <Combobox.Status data-testid="cd1-status">{{ pantryLeft(looked) }}</Combobox.Status>
+          <Combobox.Portal>
+            <Combobox.Positioner :side-offset="4" data-testid="cd1-positioner">
+              <Combobox.Popup class="popup" aria-label="Pantry" data-testid="cd1-popup">
+                <Combobox.Input
+                  class="search"
+                  aria-label="Search the pantry"
+                  data-testid="cd1-input"
+                />
+                <Combobox.List aria-label="Pantry" data-testid="cd1-list">
+                  <Combobox.Collection v-slot="{ entry: group }">
+                    <Combobox.Group
+                      :id="`cd1-g-${group.value}`"
+                      :data-testid="`cd1-g-${group.value}`"
+                    >
+                      <Combobox.GroupLabel>{{ group.label }}</Combobox.GroupLabel>
+                      <Combobox.Collection :of="group" v-slot="{ entry: item }">
+                        <Combobox.Item
+                          :value="item.value"
+                          :id="`cd1-${item.value}`"
+                          :disabled="item.disabled"
+                          class="item"
+                          :data-testid="`cd1-${item.value}`"
+                          >{{ item.label }}</Combobox.Item
+                        >
+                      </Combobox.Collection>
+                    </Combobox.Group>
+                  </Combobox.Collection>
+                </Combobox.List>
+                <Combobox.Empty data-testid="cd1-empty">Nothing in the pantry</Combobox.Empty>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </div>
+      <div class="bar">
+        <Combobox.Root
+          id="cd2"
+          name="berry"
+          :items="BERRIES"
+          default-value="cherry"
+          :read-only="sealed"
+          auto-highlight
+        >
+          <Combobox.Input aria-label="Berry" data-testid="cd2-input" />
+          <Combobox.Clear aria-label="Clear the berry" data-testid="cd2-clear">×</Combobox.Clear>
+          <Combobox.Portal>
+            <Combobox.Positioner :side-offset="4" data-testid="cd2-positioner">
+              <Combobox.Popup class="popup" aria-label="Berries" data-testid="cd2-popup">
+                <Combobox.Collection v-slot="{ entry: item }">
+                  <Combobox.Item
+                    :value="item.value"
+                    :id="`cd2-${item.value}`"
+                    class="item"
+                    :data-testid="`cd2-${item.value}`"
+                    >{{ item.label }}</Combobox.Item
+                  >
+                </Combobox.Collection>
+                <Combobox.Empty data-testid="cd2-empty">No berry</Combobox.Empty>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+        <button type="button" data-testid="cd2-unlock" @click="sealed = false">Unlock</button>
       </div>
     </section>
   </main>

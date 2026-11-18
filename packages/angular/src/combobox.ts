@@ -1,22 +1,43 @@
 import {
+  DestroyRef,
   Directive,
+  ElementRef,
   HostAttributeToken,
+  TemplateRef,
+  ViewContainerRef,
   booleanAttribute,
+  effect,
   inject,
   input,
   model,
   output,
+  untracked,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
-import { computed } from "@kirana-ui/core"
-import type { ChangeDetails, ItemLabels, ListCollection } from "@kirana-ui/core"
+import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import { computed, effect as coreEffect } from "@kirana-ui/core"
+import type { ChangeDetails, ListCollection } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
-import type { Combobox, ComboboxGroup } from "@kirana-ui/core/combobox"
+import type {
+  Combobox,
+  ComboboxEntry,
+  ComboboxGroup,
+  ComboboxProps,
+  ComboboxShown,
+} from "@kirana-ui/core/combobox"
 
 import { KUI_FIELD } from "./field-token"
-import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import {
+  KuiIds,
+  KuiPositioner,
+  drawing,
+  hostPart,
+  inputsSignal,
+  mounted,
+  onServer,
+  presentWhile,
+} from "./runtime"
 
 /**
  * `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the
@@ -33,11 +54,21 @@ export class KuiCombobox<Value = unknown> implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
+  /**
+   * Its value can be read and not changed: the list still opens and can be gone through, but
+   * no press and no Enter chooses, nothing typed is taken, and its clear and chip buttons do
+   * nothing. Its value is still submitted.
+   */
+  readonly readOnly = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
-  /** The values' labels: a list of values with their labels, or the labels by value. */
-  readonly items = input<ItemLabels<Value>>()
+  /**
+   * The values with their labels: a list of them, groups of them (`{ value, items }`), or the
+   * labels by value. With a `*kuiComboboxCollection` it is the list itself: the combobox
+   * filters it, and the collection draws what is left.
+   */
+  readonly items = input<ComboboxProps<Value>["items"]>()
   /** Whether an item is shown for what was typed; `null` shows every item. */
   readonly filter = input<((label: string, query: string) => boolean) | null>()
   /** In a field, "none" is then wrong. */
@@ -88,6 +119,7 @@ export class KuiCombobox<Value = unknown> implements OnInit {
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     disabled: this.disabled(),
+    readOnly: this.readOnly(),
     name: this.name(),
     form: this.form(),
     items: this.items(),
@@ -152,6 +184,8 @@ export class KuiCombobox<Value = unknown> implements OnInit {
               filter: own.filter,
               openOnInputClick: own.openOnInputClick,
               disabled: own.disabled,
+              readOnly: own.readOnly,
+              items: own.items as AutocompleteProps["items"],
               required: own.required,
               name: own.name,
               form: own.form,
@@ -185,7 +219,7 @@ export class KuiComboboxPositioner extends KuiPositioner {
   }
 }
 
-function part(name: "input" | "trigger" | "popup" | "list" | "hidden" | "chips") {
+function part(name: "input" | "trigger" | "popup" | "list" | "hidden" | "chips" | "status") {
   const root = inject(KuiCombobox)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -370,5 +404,140 @@ export class KuiComboboxEmpty implements OnInit {
 
   ngOnInit(): void {
     this.present(this.root.controller.empty, this.root.controller.emptyPart)
+  }
+}
+
+/**
+ * Says how the list stands ("3 results", "Loading") to software that reads the page, as its
+ * text changes. Keep it in the page and change what it holds: inside the popup, or beside the
+ * input.
+ */
+@Directive({ selector: "[kuiComboboxStatus]" })
+export class KuiComboboxStatus implements OnInit {
+  private readonly init = part("status")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/**
+ * `<span kuiComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its
+ * placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between.
+ * `<ng-container *kuiComboboxValue="let shown">` draws its own content instead, with what is
+ * chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`,
+ * in the order they were chosen. For a button that is the combobox, its input inside the popup.
+ */
+@Directive({ selector: "[kuiComboboxValue]" })
+export class KuiComboboxValue implements OnInit {
+  readonly placeholder = input("")
+  private readonly root = inject(KuiCombobox)
+  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
+  private readonly template = inject<TemplateRef<{ $implicit: ComboboxShown }>>(TemplateRef, {
+    optional: true,
+  })
+  private readonly container = inject(ViewContainerRef)
+  private readonly destroy = inject(DestroyRef)
+
+  constructor() {
+    effect(() => {
+      this.placeholder()
+      untracked(() => this.write())
+    })
+  }
+
+  private write(): void {
+    // With a template, the content is the caller's.
+    if (!this.root.controller || this.template) return
+    this.element.textContent =
+      this.root.controller.shown.peek().label ?? untracked(this.placeholder)
+  }
+
+  ngOnInit(): void {
+    const { controller } = this.root
+    if (!this.template) {
+      this.destroy.onDestroy(
+        coreEffect(() => {
+          controller.shown.get()
+          this.write()
+        })
+      )
+      return
+    }
+    let view: EmbeddedViewRef<{ $implicit: ComboboxShown }> | undefined
+    this.destroy.onDestroy(
+      coreEffect(() => {
+        const shown = controller.shown.get()
+        if (!view) view = this.container.createEmbeddedView(this.template!, { $implicit: shown })
+        else view.context.$implicit = shown
+        const kept = view
+        drawing(() => kept.detectChanges())
+      })
+    )
+  }
+
+  static ngTemplateContextGuard(
+    _directive: KuiComboboxValue,
+    _context: unknown
+  ): _context is { $implicit: ComboboxShown } {
+    return true
+  }
+}
+
+type Drawn = EmbeddedViewRef<{ $implicit: ComboboxEntry }>
+
+/**
+ * `<ng-container *kuiComboboxCollection="let entry">` draws the list from the root's `items`:
+ * once for each item left for what was typed, or for each group that has items left. With
+ * `of` (`*kuiComboboxCollection="let item; of: group"`), for each of that group's items left.
+ * The root then filters, and no item hides itself.
+ */
+@Directive({ selector: "[kuiComboboxCollection]" })
+export class KuiComboboxCollection implements OnInit {
+  /** A group the root's `items` gave: its items left are then what is drawn. */
+  readonly kuiComboboxCollectionOf = input<ComboboxEntry>()
+  private readonly root = inject(KuiCombobox)
+  private readonly template = inject<TemplateRef<{ $implicit: ComboboxEntry }>>(TemplateRef)
+  private readonly container = inject(ViewContainerRef)
+  private readonly destroy = inject(DestroyRef)
+  private readonly server = onServer()
+  private readonly views = new Map<string, Drawn>()
+
+  ngOnInit(): void {
+    // A group is known by its key, which is its own for as long as it is drawn.
+    const left = this.root.controller.entries(untracked(this.kuiComboboxCollectionOf))
+    const draw = (entries: readonly ComboboxEntry[]) => {
+      // By key: an item that is left keeps its element.
+      const wanted = new Set(entries.map((each) => each.key))
+      for (const [key, view] of this.views) {
+        if (wanted.has(key)) continue
+        view.destroy()
+        this.views.delete(key)
+      }
+      // What stays is already in order (the items are never reordered), so nothing is moved.
+      // What is new goes in at its place.
+      entries.forEach((entry, at) => {
+        let view = this.views.get(entry.key)
+        if (!view) {
+          view = this.container.createEmbeddedView(this.template, { $implicit: entry }, at)
+          this.views.set(entry.key, view)
+        } else view.context.$implicit = entry
+        view.detectChanges()
+      })
+    }
+    if (this.server) return draw(left.peek())
+    this.destroy.onDestroy(
+      coreEffect(() => {
+        const entries = left.get()
+        drawing(() => draw(entries))
+      })
+    )
+  }
+
+  static ngTemplateContextGuard(
+    _directive: KuiComboboxCollection,
+    _context: unknown
+  ): _context is { $implicit: ComboboxEntry } {
+    return true
   }
 }

@@ -6,6 +6,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { CheckboxGroupContext } from "./checkbox-group-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { PartElement, parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -31,6 +32,7 @@ function Root({
   defaultChecked,
   onCheckedChange,
   indeterminate,
+  parent,
   disabled,
   readOnly,
   required,
@@ -41,12 +43,14 @@ function Root({
   ...rest
 }: RootProps): ReactElement {
   const field = useContext(FieldContext) ?? undefined
-  const create = within(createCheckbox, { field })
+  const group = useContext(CheckboxGroupContext) ?? undefined
+  const create = within(createCheckbox, { field, group })
   const controller = useController(create, {
     checked,
     defaultChecked,
     onCheckedChange,
     indeterminate,
+    parent,
     disabled,
     readOnly,
     required,

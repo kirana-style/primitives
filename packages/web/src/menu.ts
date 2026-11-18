@@ -12,6 +12,7 @@ import type {
 } from "@kirana-ui/core/menu"
 
 import { once, positioner, valueOf } from "./around.ts"
+import type { Placed } from "./around.ts"
 import { defineElement, hostAround, partAround, partProps } from "./runtime.ts"
 import type { Drawn, ElementOf, Told } from "./runtime.ts"
 
@@ -159,6 +160,7 @@ declare global {
       typeof tag,
       { "open-change": ["onOpenChange", "open"] },
       { "checked-change": Told<"checked", boolean>; "value-change": Told<"value", string> }
-    >
+    > &
+      Placed
   }
 }

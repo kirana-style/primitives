@@ -3,6 +3,7 @@ import { createSelect } from "@kirana-ui/core/select"
 import type { Select, SelectGroup, SelectProps, SelectScrollArrow } from "@kirana-ui/core/select"
 
 import { fieldAround, itemOptions, list, MARK, once, positioner, valueOf } from "./around.ts"
+import type { Placed } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
 import type { Drawn, Each, ElementOf } from "./runtime.ts"
 
@@ -31,7 +32,7 @@ const arrow = (drawn: SelectScrollArrow): Drawn => ({
  * it draws the hidden input a form reads. A `value` part that holds something says what the
  * page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value
  * (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`,
- * `default-open`, `disabled`, `required`, `multiple`, `values` and `default-values` (with
+ * `default-open`, `disabled`, `read-only`, `required`, `multiple`, `values` and `default-values` (with
  * commas between), `name`, `form`; `items` as a property; it tells `value-change`,
  * `values-change` and `open-change`.
  */
@@ -43,6 +44,7 @@ export const tag = defineElement<Props, Select<string>>({
     open: "boolean",
     "default-open": "boolean",
     disabled: "boolean",
+    "read-only": "boolean",
     required: "boolean",
     multiple: "boolean",
     values: "string",
@@ -116,6 +118,7 @@ declare global {
         "values-change": ["onValuesChange", "values"]
         "open-change": ["onOpenChange", "open"]
       }
-    >
+    > &
+      Placed
   }
 }

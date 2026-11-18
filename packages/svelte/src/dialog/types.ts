@@ -13,6 +13,8 @@ export type PortalProps = { children?: Snippet | undefined }
 
 export type BackdropProps = PartAttributes<"div", StateFor<"dialog", "backdrop">>
 
+export type ViewportProps = PartAttributes<"div", StateFor<"dialog", "viewport">>
+
 export type PopupProps = PartAttributes<"div", StateFor<"dialog", "popup">>
 
 export type TitleProps = PartAttributes<"h2", StateFor<"dialog", "title">>

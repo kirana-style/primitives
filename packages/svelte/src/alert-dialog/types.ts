@@ -11,6 +11,7 @@ export type {
   PortalProps,
   TitleProps,
   TriggerProps,
+  ViewportProps,
 } from "../dialog/types.ts"
 
 /** A dialog that asks for an answer: a press outside it does not close it. It draws nothing. */

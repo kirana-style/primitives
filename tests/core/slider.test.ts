@@ -240,3 +240,56 @@ describe("a slider's thumbs that are given no index", () => {
     expect(said()).toEqual(["a:0=30", "b:0=30"])
   })
 })
+
+describe("a read-only slider", () => {
+  it("says so on every part, and keeps its thumb a stop for Tab", () => {
+    const { props, control, fill, a } = slider({ defaultValue: 40, readOnly: true })
+    for (const each of [control, fill, a]) expect(each.hasAttribute("data-readonly")).toBe(true)
+    expect(a.getAttribute("aria-readonly")).toBe("true")
+    expect(a.getAttribute("tabindex")).toBe("0")
+    expect(a.hasAttribute("aria-disabled")).toBe(false)
+    props.set({ ...props.peek(), readOnly: false })
+    for (const each of [control, fill, a]) expect(each.hasAttribute("data-readonly")).toBe(false)
+    expect(a.hasAttribute("aria-readonly")).toBe(false)
+  })
+
+  it("is moved by no key and no pointer, and the press still gives its thumb focus", () => {
+    const { made, heard, a, press, release } = slider({ defaultValue: 40, readOnly: true })
+    for (const key of ["ArrowRight", "ArrowLeft", "PageUp", "Home", "End"]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })
+      a.dispatchEvent(event)
+      // The key is not the slider's: it is left to the page.
+      expect(event.defaultPrevented).toBe(false)
+    }
+    press(150)
+    expect(document.activeElement).toBe(a)
+    expect(made.dragging.peek()).toBe(null)
+    document.dispatchEvent(new PointerEvent("pointermove", { clientX: 20, clientY: 10 }))
+    release()
+    expect(made.values.peek()).toEqual([40])
+    expect(heard).toEqual([])
+    expect(a.getAttribute("aria-valuenow")).toBe("40")
+  })
+
+  it("is still submitted, and still goes back with its form", () => {
+    const root = mount(
+      `<form><div class="control"><div class="thumb"><input class="hidden" /></div></div></form>`
+    )
+    const props = signal<SliderProps>({ id: "s", name: "volume", defaultValue: 40 })
+    const made = createSlider(props)
+    const form = root.querySelector("form")!
+    onTestFinished(bind(root.querySelector<HTMLElement>(".control")!, made.control))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".thumb")!, made.thumb(0)))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".hidden")!, made.thumbInput(0)))
+    root
+      .querySelector<HTMLElement>(".thumb")!
+      .dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+    props.set({ ...props.peek(), readOnly: true })
+    expect(new FormData(form).get("volume")).toBe("41")
+    expect(root.querySelector<HTMLInputElement>(".hidden")!.disabled).toBe(false)
+    // As a native read-only control: a reset is not a change it refuses.
+    form.reset()
+    expect(made.values.peek()).toEqual([40])
+    expect(new FormData(form).get("volume")).toBe("40")
+  })
+})

@@ -20,9 +20,14 @@ What every `Positioner` takes, beside its own props where a component's section 
 
 - `side?: Side`: The side of the anchor the popup is on. `inline-start` and `inline-end` follow the reading direction the popup is placed in, and `data-side` then says the side in the same words. Default `"bottom"`.
 - `align?: Align`: Where along that side the popup is: at the anchor's start, its centre or its end. Default `"center"`.
-- `sideOffset?: number`: The gap between the anchor and the popup, measured without any arrow. Default `0`.
-- `alignOffset?: number`: How far the popup is moved along the side from where `align` puts it, in pixels. Default `0`.
-- `collisionPadding?: number`: Kept between the popup and the viewport's edges. Default `5`.
+- `sideOffset?: number | OffsetFunction`: The gap between the anchor and the popup, measured without any arrow: a number of pixels, or a function of what was measured (`({ side, align, anchor, positioner }) => number`). Default `0`.
+- `alignOffset?: number | OffsetFunction`: How far the popup is moved along the side from where `align` puts it: a number of pixels, or a function of what was measured (`({ side, align, anchor, positioner }) => number`). Default `0`.
+- `collisionPadding?: CollisionPadding`: Kept between the popup and the edges it is held inside: one number, or one for each side (`{ top, right, bottom, left }`, a side left out is 0). Default `5`.
+- `collisionBoundary?: CollisionBoundary`: What the popup is held inside: an element, several, or a rectangle of the viewport. Left out or `"clipping-ancestors"`: the ancestors that clip it, and the viewport.
+- `collisionAvoidance?: CollisionAvoidance`: What the popup does when it does not fit: `side` and `align` each `"flip"`, `"shift"` or `"none"`, and `fallbackAxisSide`. Left out: it flips to the opposite side and is moved along its side.
+- `sticky?: boolean`: Keeps the popup in view once its anchor has been scrolled out of it. Otherwise the popup leaves with its anchor. Default `false`.
+- `arrowPadding?: number`: Kept between an arrow and the ends of the popup's edge, so the arrow does not stand on a rounded corner. Default `5`.
+- `positionMethod?: "absolute" | "fixed"`: The CSS `position` the positioner is given: `"absolute"` or `"fixed"`. Default `"absolute"`.
 - `anchor?: PositionerAnchor`: What the popup is placed against, when that is not its trigger. It may change while the popup is open: the popup follows.
 
 A component's own defaults lie over those: `Autocomplete` `{ align: "start" }`; `Combobox` `{ align: "start" }`; `ContextMenu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `HoverCard` `{ side: "top" }`; `Menu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `NavigationMenu` `{ align: "start" }`; `Select` `{ align: "start" }`; `Tooltip` `{ side: "top" }`.
@@ -66,6 +71,39 @@ The named types the props below mention, each with the entry of this package it 
     - `cancel(): void`: Keeps the value as it was.
     - `canceled: boolean`
 - `ChangeSource` (`@kirana-ui/angular`): `"mouse" | "touch" | "pen" | "keyboard" | "virtual" | "programmatic" | "agent"`. What made a change: a kind of pointer, the keyboard, a press with no pointer (`virtual`), code with no event (`programmatic`), or an agent acting through the bridge.
+- `CollisionAvoidance` (`@kirana-ui/angular`): What a popup does when it does not fit where it was asked to be.
+    - `side?: "flip" | "shift" | "none"`: Across from the anchor: `"flip"` goes to the opposite side, `"shift"` keeps the side and moves over the anchor to stay in view, `"none"` lets it overflow. Default `"flip"`.
+    - `align?: "flip" | "shift" | "none"`: Along its side: `"flip"` swaps `start` and `end`, `"shift"` moves the popup along the side to stay in view, `"none"` lets it overflow. Default `"flip"`. With `side: "shift"` it is `"shift"` or `"none"`.
+    - `fallbackAxisSide?: "start" | "end" | "none"`: Where it goes when neither the side asked for nor its opposite fits: to the other axis, its `"start"` or its `"end"` first, or nowhere (`"none"`). Default `"end"`.
+- `CollisionBoundary` (`@kirana-ui/angular`): `"clipping-ancestors" | Element | Element[] | { x: number; y: number; width: number; height: number }`. What a popup is held inside: the ancestors that clip it (`"clipping-ancestors"`), an element, several, or a rectangle of the viewport.
+- `CollisionPadding` (`@kirana-ui/angular`): `number | Partial<Record<PhysicalSide, number>>`. The room kept between a popup and the edges it is held inside: one number, or one a side.
+- `ComboboxEntry<Value = unknown>` (`@kirana-ui/angular`): `ComboboxItemEntry<Value> | ComboboxGroupEntry<Value>`. What a `Collection` hands to be drawn: an item that is left, or a group that has items left.
+- `ComboboxGroupData<Value = unknown>` (`@kirana-ui/angular`): Items given as data that belong together: `value` is the group's name.
+    - `value: string`
+    - `items: readonly ComboboxItemData<Value>[]`
+- `ComboboxGroupEntry<Value = unknown>` (`@kirana-ui/angular`): A group that has items left, with those items.
+    - `type: "group"`
+    - `key: string`: What it is known by from one drawing to the next.
+    - `value: string`: The group's name, as it was given.
+    - `label: string`: The same name: an entry of either kind has a `label`.
+    - `disabled: false`: Never: an entry of either kind says whether it is disabled.
+    - `items: readonly ComboboxItemEntry<Value>[]`: The items of the group that are left.
+- `ComboboxItemData<Value = unknown>` (`@kirana-ui/angular`): One item given as data: its value, and what it is called.
+    - `value: Value`
+    - `label: string`
+    - `disabled?: boolean`: It cannot be chosen: its entry says so, for the item drawn for it.
+- `ComboboxItemEntry<Value = unknown>` (`@kirana-ui/angular`): One item left of the `items` given as data, as a `Collection` hands it to be drawn.
+    - `type: "item"`
+    - `key: string`: What it is known by from one drawing to the next.
+    - `value: Value`
+    - `label: string`
+    - `disabled: boolean`
+    - `item: ComboboxItemData<Value>`: The item as it was given, with whatever else it carries.
+- `ComboboxShown<Value = unknown>` (`@kirana-ui/angular`): What a combobox's value part shows: what is chosen, and how it is named.
+    - `value: Value | null`: The chosen value; `null` while nothing is chosen, and with `multiple`.
+    - `label: string | undefined`: The chosen value's label, or with `multiple` every chosen label with ", " between; `undefined` while nothing is chosen.
+    - `values: readonly Value[]`: Every chosen value, in the order they were chosen: one or none without `multiple`.
+    - `labels: readonly string[]`: The label of each of `values`.
 - `DateFieldProps` (`@kirana-ui/angular`)
     - `id: string`
     - `value?: IsoDate | null`: The day typed, once all of it is; `null` until then.
@@ -106,6 +144,12 @@ The named types the props below mention, each with the entry of this package it 
     - `disabled?(index: number): boolean`
     - `indexOf?(value: unknown): number`: The place of a value, or -1: where a list opens on what is chosen.
     - `scrollToIndex(index: number): void`: Brings a row into the page: the virtualizer's own scroll.
+- `OffsetData` (`@kirana-ui/angular`): What an offset given as a function is told: where the popup is, and the two sizes.
+    - `side: Side`: The side of the anchor the popup is on, in the words it was asked for in.
+    - `align: Align`: Where along that side the popup is.
+    - `anchor: { width: number; height: number }`: The anchor's size, in pixels.
+    - `positioner: { width: number; height: number }`: The positioner's size, in pixels.
+- `OffsetFunction` (`@kirana-ui/angular`): `(data: OffsetData) => number`. A gap worked out from what was measured: `({ side, align, anchor, positioner }) => number`.
 - `Orientation` (`@kirana-ui/angular`): `"horizontal" | "vertical"`. The way a row of things is laid out, and so which arrow keys move along it.
 - `PaginationEntry` (`@kirana-ui/angular`): `{ readonly type: "page"; readonly page: number; readonly key: string } | { readonly type: "ellipsis"; readonly key: "start" | "end" }`. One piece of the list of pages: a page, or the mark for pages left out.
 - `PhysicalSide` (`@kirana-ui/angular`): `"top" | "right" | "bottom" | "left"`. A side of the anchor as the page is drawn.
@@ -179,7 +223,7 @@ What the entries export beside the components, their parts' props types and the 
 - `KuiDirection` (`[kuiDirection]`), from `@kirana-ui/angular`: States the reading direction for the components inside: `<div kuiDirection="rtl" dir="rtl">`. It writes nothing on its element: the `dir` attribute is set with it. Inputs: `kuiDirection: Direction | ""`.
 - `KuiIds`, from `@kirana-ui/angular`: Ids for parts whose caller gave none: one counter per application, so a server and its client agree.
 - `KuiPortalProvider` (`[kuiPortalProvider]`), from `@kirana-ui/angular`: `<ng-container kuiPortalProvider [container]="element">`: says where every popup inside it is drawn, the popups those open included: an element of the page (a shadow root's host, a full-screen element) in place of `<body>`. Inputs: `container: HTMLElement | null`.
-- `KuiPositioner` (a class a positioner's directive extends), from `@kirana-ui/angular`: A positioner: where its popup goes, as inputs. The one place they are named: each component's positioner extends this and says which controller it is a part of. Inputs: `side: Side`, `align: Align`, `sideOffset: number`, `alignOffset: number`, `collisionPadding: number`, `anchor: PositionerAnchor`.
+- `KuiPositioner` (a class a positioner's directive extends), from `@kirana-ui/angular`: A positioner: where its popup goes, as inputs. The one place they are named: each component's positioner extends this and says which controller it is a part of. Inputs: `side: Side`, `align: Align`, `sideOffset: number | OffsetFunction`, `alignOffset: number | OffsetFunction`, `collisionPadding: CollisionPadding`, `collisionBoundary: CollisionBoundary`, `collisionAvoidance: CollisionAvoidance`, `sticky: boolean`, `arrowPadding: number`, `positionMethod: "absolute" | "fixed"`, `anchor: PositionerAnchor`.
 - `mounted()`, from `@kirana-ui/angular`: Runs a controller's own effects for the directive's life.
 - `onServer()`, from `@kirana-ui/angular`: Whether this is a server's document: no layout, no observers, and nothing changes once written.
 - `Part`, from `@kirana-ui/angular`: One part of a component as the core gives it: the props for its element, and the DOM work that starts once the element is in the page. Its props are the type `PartProps`, from the same entries.
@@ -227,6 +271,7 @@ A component in a snapshot (`AgentComponent`):
 - `max?: number`
 - `items?: readonly AgentItem[]`: Its choices, where they are in the page. `query({ within })` reads a closed list's.
 - `disabled?: boolean`
+- `readOnly?: boolean`: It can be read and not changed: it then has no action.
 - `confirm?: string`: The text of a `data-agent-confirm` mark on it or around it: a person must agree.
 - `actions: readonly string[]`: What it can be asked to do now.
 
@@ -330,13 +375,13 @@ Its other types:
 - Angular 20 and later, with signals; it renders on a server and hydrates.
 - What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kuiPortalProvider` (`[container]`) and `kuiDirection` here, and `useDirection` is `injectDirection()`.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kuiAccordionPanel`, `*kuiDialogPortal`, `*kuiComboboxClear`, `*kuiComboboxPortal`, `*kuiComboboxEmpty`, `*kuiAvatarImage`, `*kuiAvatarFallback`, `*kuiCalendarWeekdays`, `*kuiCalendarWeeks`, `*kuiCheckboxIndicator`, `*kuiCollapsiblePanel`, `*kuiComboboxItemIndicator`, `*kuiCommandEmpty`, `*kuiMenuPortal`, `*kuiMenuCheckboxItemIndicator`, `*kuiMenuRadioItemIndicator`, `*kuiDateFieldSegments`, `*kuiPopoverPortal`, `*kuiFieldError`, `*kuiFieldValidity`, `*kuiHoverCardPortal`, `*kuiListboxItemIndicator`, `*kuiNavigationMenuContent`, `*kuiNavigationMenuPortal`, `*kuiOtpCaret`, `*kuiPaginationItems`, `*kuiRadioGroupIndicator`, `*kuiScrollAreaScrollbar`, `*kuiScrollAreaCorner`, `*kuiSelectValue`, `*kuiSelectPortal`, `*kuiSelectScrollUpArrow`, `*kuiSelectScrollDownArrow`, `*kuiSelectItemIndicator`, `*kuiTabsPanel`, `*kuiToastList` and `*kuiTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>`).
+- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kuiAccordionPanel`, `*kuiDialogPortal`, `*kuiComboboxClear`, `*kuiComboboxPortal`, `*kuiComboboxCollection`, `*kuiComboboxEmpty`, `*kuiAvatarImage`, `*kuiAvatarFallback`, `*kuiCalendarWeekdays`, `*kuiCalendarWeeks`, `*kuiCheckboxIndicator`, `*kuiCollapsiblePanel`, `*kuiComboboxValue`, `*kuiComboboxItemIndicator`, `*kuiCommandEmpty`, `*kuiMenuPortal`, `*kuiMenuCheckboxItemIndicator`, `*kuiMenuRadioItemIndicator`, `*kuiDateFieldSegments`, `*kuiPopoverPortal`, `*kuiFieldError`, `*kuiFieldValidity`, `*kuiHoverCardPortal`, `*kuiListboxItemIndicator`, `*kuiNavigationMenuContent`, `*kuiNavigationMenuPortal`, `*kuiNumberFieldScrubAreaCursor`, `*kuiOtpCaret`, `*kuiPaginationItems`, `*kuiRadioGroupIndicator`, `*kuiScrollAreaScrollbar`, `*kuiScrollAreaCorner`, `*kuiSelectValue`, `*kuiSelectPortal`, `*kuiSelectScrollUpArrow`, `*kuiSelectScrollDownArrow`, `*kuiSelectItemIndicator`, `*kuiTabsPanel`, `*kuiToastList` and `*kuiTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>`).
 - A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kuiTabs"`.
-- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup.
-- Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
+- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
+- Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
 - Every change callback is an output whose event is `{ value, details }` under the value's own name (`$event.open`, `$event.values`): `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: `(clearErrors)`, `(completed)` and `(monthChanged)`.
 - A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kuiAccordionPanel]`, `[kuiCollapsiblePanel]`, `[kuiScrollAreaScrollbar]` and `[kuiTabsPanel]`.
-- `readOnly` (shown, focusable, not changeable) is a prop of `Calendar`, `Checkbox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup` and `Switch` and of no other component.
+- `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
 - An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
@@ -413,10 +458,10 @@ Attributes and CSS variables, by part:
 ### AlertDialog
 
 ```
-import { KuiAlertDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
+import { KuiAlertDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogViewport, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiAlertDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+Parts: `[kuiAlertDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogViewport]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
 
 Anatomy:
 
@@ -425,10 +470,11 @@ kuiAlertDialog
   kuiDialogTrigger
   *kuiDialogPortal
     kuiDialogBackdrop
-    kuiDialogPopup
-      kuiDialogTitle
-      kuiDialogDescription
-      kuiDialogClose
+    kuiDialogViewport (optional)
+      kuiDialogPopup
+        kuiDialogTitle
+        kuiDialogDescription
+        kuiDialogClose
 ```
 
 Props of its root:
@@ -443,6 +489,7 @@ Each part, and its own props:
 - `[kuiDialogTrigger]` is `KuiDialogTrigger`.
 - `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
 - `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
+- `[kuiDialogViewport]` is `KuiDialogViewport`. What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert dialog's; a drawer lies at an edge of the page and has none.
 - `[kuiDialogPopup]` is `KuiDialogPopup`.
 - `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
 - `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
@@ -457,6 +504,13 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- viewport: What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
 - popup: The dialog itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -468,10 +522,10 @@ Attributes and CSS variables, by part:
 ### Autocomplete
 
 ```
-import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxClear, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxEmpty } from "@kirana-ui/angular"
+import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxClear, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxCollection, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxEmpty, KuiComboboxStatus } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiAutocomplete]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxEmpty]`.
+Parts: `[kuiAutocomplete]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxCollection]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxEmpty]`, `[kuiComboboxStatus]`.
 
 Anatomy:
 
@@ -483,12 +537,19 @@ kuiAutocomplete
     kuiComboboxPositioner
       kuiComboboxPopup
         kuiComboboxList (optional)
+          *kuiComboboxCollection (optional)
+            kuiComboboxItem (repeated, as above)
+            kuiComboboxGroup (optional, repeated, as above)
           kuiComboboxGroup (optional, repeated)
+            *kuiComboboxCollection (optional, as above)
             kuiComboboxItem (repeated)
             kuiComboboxGroupLabel
           kuiComboboxSeparator (repeated)
+        *kuiComboboxCollection (optional, as above)
         *kuiComboboxEmpty
+        kuiComboboxStatus (optional)
   kuiComboboxPopup (as above)
+  kuiComboboxStatus (optional, as above)
   *kuiComboboxClear
 ```
 
@@ -501,9 +562,10 @@ Props of its root:
 - `[(open)]: boolean`: Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Its value can be read and not changed: the list still opens and can be gone through, but no press and no Enter chooses, nothing typed is taken, and its clear and chip buttons do nothing. Its value is still submitted.
 - `name?: string`: The input's name in the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: ItemLabels<Value>`: The values' labels: a list of values with their labels, or the labels by value.
+- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`), or the labels by value. With a `*kuiComboboxCollection` it is the list itself: the combobox filters it, and the collection draws what is left.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `multiple?: boolean`: Several values, each shown as a chip: they are `values`, not `value`.
@@ -529,6 +591,8 @@ Each part, and its own props:
 - `[kuiComboboxPositioner]` is `KuiComboboxPositioner`. Takes the positioner options ("Positioner options", above).
 - `[kuiComboboxPopup]` is `KuiComboboxPopup`.
 - `[kuiComboboxList]` is `KuiComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+- `[kuiComboboxCollection]` is `KuiComboboxCollection`. Structural: written `*kuiComboboxCollection`. Its template is given the entry: `let entry` is a `ComboboxEntry`. `<ng-container *kuiComboboxCollection="let entry">` draws the list from the root's `items`: once for each item left for what was typed, or for each group that has items left. With `of` (`*kuiComboboxCollection="let item; of: group"`), for each of that group's items left. The root then filters, and no item hides itself.
+    - `of?: ComboboxEntry`: Written after the directive's value: `*kuiComboboxCollection="…; of: …"`. A group the root's `items` gave: its items left are then what is drawn.
 - `[kuiComboboxGroup]` is `KuiComboboxGroup`. Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown.
 - `[kuiComboboxGroupLabel]` is `KuiComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
 - `[kuiComboboxSeparator]` is `KuiComboboxSeparator`. A line between groups.
@@ -538,15 +602,18 @@ Each part, and its own props:
     - `label?: string`: What is filtered and what the input shows; the item's text when left out.
     - `index?: number`: Its place among all the rows, in a virtualized list.
 - `[kuiComboboxEmpty]` is `KuiComboboxEmpty`. Structural: written `*kuiComboboxEmpty`. `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed.
+- `[kuiComboboxStatus]` is `KuiComboboxStatus`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. Keep it in the page and change what it holds: inside the popup, or beside the input.
 
 Attributes and CSS variables, by part:
 
 - input: The text input: its text is the value, and what is typed asks for suggestions.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -790,6 +857,7 @@ Props of its root:
 - `[(checked)]: boolean`: Whether it is checked, when the caller holds it.
 - `defaultChecked?: boolean`: Read once.
 - `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
+- `parent?: boolean`: In a `kuiCheckboxGroup` with `allValues`: the box that stands for them all.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
@@ -812,6 +880,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-parent`: Present on the checkbox that stands for every box of its group.
 - indicator: The mark. In the page while the box is checked or indeterminate.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
@@ -821,6 +890,27 @@ Attributes and CSS variables, by part:
     - `data-required`: Present when the form needs it.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### CheckboxGroup
+
+```
+import { KuiCheckboxGroup } from "@kirana-ui/angular"
+```
+
+Props:
+
+- `[(value)]: readonly string[]`: The values of the checked checkboxes, when the caller holds them.
+- `defaultValue?: readonly string[]`: The values checked at the start, when the caller does not hold `value`. Read once.
+- `allValues?: readonly string[]`: The value of every checkbox of the group, for a parent checkbox.
+- `disabled?: boolean`: Disables every checkbox of the group.
+- `(valueChanged): { value: string[]; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
+
+`[kuiCheckboxGroup]` is `KuiCheckboxGroup`. `exportAs: "kuiCheckboxGroup"`. Checkboxes that hold one list of values. Each `kuiCheckbox` with a `value` inside it is checked while the list has its value; with `allValues`, a `kuiCheckbox` marked `parent` stands for them all.
+
+Attributes and CSS variables, by part:
+
+- root: The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.
+    - `data-disabled`: Present when it is disabled.
 
 ### Collapsible
 
@@ -872,10 +962,10 @@ Attributes and CSS variables, by part:
 ### Combobox
 
 ```
-import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxClear, KuiComboboxChips, KuiComboboxChip, KuiComboboxChipRemove, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxItemIndicator, KuiComboboxEmpty, KuiComboboxHiddenInput } from "@kirana-ui/angular"
+import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxValue, KuiComboboxClear, KuiComboboxChips, KuiComboboxChip, KuiComboboxChipRemove, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxCollection, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxItemIndicator, KuiComboboxEmpty, KuiComboboxStatus, KuiComboboxHiddenInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCombobox]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxChips]`, `[kuiComboboxChip]`, `[kuiComboboxChipRemove]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxItemIndicator]`, `[kuiComboboxEmpty]`.
+Parts: `[kuiCombobox]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxValue]`, `[kuiComboboxClear]`, `[kuiComboboxChips]`, `[kuiComboboxChip]`, `[kuiComboboxChipRemove]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxCollection]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxItemIndicator]`, `[kuiComboboxEmpty]`, `[kuiComboboxStatus]`.
 
 Anatomy:
 
@@ -883,18 +973,26 @@ Anatomy:
 kuiCombobox
   input[kuiComboboxInput]
   kuiComboboxTrigger
+    *kuiComboboxValue (optional)
   *kuiComboboxPortal
     kuiComboboxPositioner
       kuiComboboxPopup
         input[kuiComboboxInput] (as above)
         kuiComboboxList (optional)
+          *kuiComboboxCollection (optional)
+            kuiComboboxItem (repeated, as above)
+            kuiComboboxGroup (optional, repeated, as above)
           kuiComboboxGroup (optional, repeated)
+            *kuiComboboxCollection (optional, as above)
             kuiComboboxItem (repeated)
               *kuiComboboxItemIndicator
             kuiComboboxGroupLabel
           kuiComboboxSeparator (repeated)
+        *kuiComboboxCollection (optional, as above)
         *kuiComboboxEmpty
+        kuiComboboxStatus (optional)
   kuiComboboxPopup (as above)
+  kuiComboboxStatus (optional, as above)
   *kuiComboboxClear
   kuiComboboxChips
     input[kuiComboboxInput] (as above)
@@ -912,9 +1010,10 @@ Props of its root:
 - `[(open)]: boolean`: Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Its value can be read and not changed: the list still opens and can be gone through, but no press and no Enter chooses, nothing typed is taken, and its clear and chip buttons do nothing. Its value is still submitted.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: ItemLabels<Value>`: The values' labels: a list of values with their labels, or the labels by value.
+- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`), or the labels by value. With a `*kuiComboboxCollection` it is the list itself: the combobox filters it, and the collection draws what is left.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `multiple?: boolean`: Several values, each shown as a chip: they are `values`, not `value`.
@@ -935,6 +1034,8 @@ Each part, and its own props:
 - `[kuiCombobox]` is `KuiCombobox`. `exportAs: "kuiCombobox"`. Generic: `<Value = unknown>`. `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
 - `input[kuiComboboxInput]` is `KuiComboboxInput`. `<input kuiComboboxInput>`: what is typed filters the list, which is placed against it.
 - `[kuiComboboxTrigger]` is `KuiComboboxTrigger`.
+- `[kuiComboboxValue]` is `KuiComboboxValue`. Structural: written `*kuiComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kuiComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. `<ng-container *kuiComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
+    - `placeholder?: string`: Shown while nothing is chosen.
 - `[kuiComboboxClear]` is `KuiComboboxClear`. Structural: written `*kuiComboboxClear`. `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear.
 - `[kuiComboboxChips]` is `KuiComboboxChips`. With `multiple`: what holds the chips and the input.
 - `[kuiComboboxChip]` is `KuiComboboxChip`. With `multiple`: one chosen value. Its `value` is what its remove button takes away.
@@ -944,6 +1045,8 @@ Each part, and its own props:
 - `[kuiComboboxPositioner]` is `KuiComboboxPositioner`. Takes the positioner options ("Positioner options", above).
 - `[kuiComboboxPopup]` is `KuiComboboxPopup`.
 - `[kuiComboboxList]` is `KuiComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+- `[kuiComboboxCollection]` is `KuiComboboxCollection`. Structural: written `*kuiComboboxCollection`. Its template is given the entry: `let entry` is a `ComboboxEntry`. `<ng-container *kuiComboboxCollection="let entry">` draws the list from the root's `items`: once for each item left for what was typed, or for each group that has items left. With `of` (`*kuiComboboxCollection="let item; of: group"`), for each of that group's items left. The root then filters, and no item hides itself.
+    - `of?: ComboboxEntry`: Written after the directive's value: `*kuiComboboxCollection="…; of: …"`. A group the root's `items` gave: its items left are then what is drawn.
 - `[kuiComboboxGroup]` is `KuiComboboxGroup`. Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown.
 - `[kuiComboboxGroupLabel]` is `KuiComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
 - `[kuiComboboxSeparator]` is `KuiComboboxSeparator`. A line between groups.
@@ -954,6 +1057,7 @@ Each part, and its own props:
     - `index?: number`: Its place among all the rows, in a virtualized list.
 - `[kuiComboboxItemIndicator]` is `KuiComboboxItemIndicator`. Structural: written `*kuiComboboxItemIndicator`. `<span *kuiComboboxItemIndicator>`: in the page while its item is the chosen one.
 - `[kuiComboboxEmpty]` is `KuiComboboxEmpty`. Structural: written `*kuiComboboxEmpty`. `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed.
+- `[kuiComboboxStatus]` is `KuiComboboxStatus`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. Keep it in the page and change what it holds: inside the popup, or beside the input.
 - `input[kuiComboboxHiddenInput]` is `KuiComboboxHiddenInput`. `<input kuiComboboxHiddenInput>`: submits the value with the form around it. Angular only.
 
 Attributes and CSS variables, by part:
@@ -961,9 +1065,11 @@ Attributes and CSS variables, by part:
 - input: The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1308,6 +1414,9 @@ Each part, and its own props:
     - `segment: DateFieldSegment`: Required. The piece it is: an entry `DateField.Segments` gave.
 - `input[kuiDateFieldInput]` is `KuiDateFieldInput`. `<input kuiDateFieldInput>`: the hidden input it is submitted by.
 - `[kuiPopoverTrigger]` is `KuiPopoverTrigger`.
+    - `openOnHover?: boolean`: Whether the pointer resting on the trigger opens the popover too. A press and the keyboard still open it, and a press on one the pointer opened keeps it open. Default `false`.
+    - `delay?: number`: How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300.
+    - `closeDelay?: number`: How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0.
 - `[kuiPopoverPortal]` is `KuiPopoverPortal`. Structural: written `*kuiPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `[kuiPopoverPositioner]` is `KuiPopoverPositioner`. Takes the positioner options ("Positioner options", above).
 - `[kuiPopoverPopup]` is `KuiPopoverPopup`.
@@ -1382,10 +1491,10 @@ Attributes and CSS variables, by part:
 ### Dialog
 
 ```
-import { KuiDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
+import { KuiDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogViewport, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+Parts: `[kuiDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogViewport]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
 
 Anatomy:
 
@@ -1394,10 +1503,11 @@ kuiDialog
   kuiDialogTrigger
   *kuiDialogPortal
     kuiDialogBackdrop
-    kuiDialogPopup
-      kuiDialogTitle
-      kuiDialogDescription
-      kuiDialogClose
+    kuiDialogViewport (optional)
+      kuiDialogPopup
+        kuiDialogTitle
+        kuiDialogDescription
+        kuiDialogClose
 ```
 
 Props of its root:
@@ -1419,6 +1529,7 @@ Each part, and its own props:
 - `[kuiDialogTrigger]` is `KuiDialogTrigger`.
 - `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
 - `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
+- `[kuiDialogViewport]` is `KuiDialogViewport`. What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert dialog's; a drawer lies at an edge of the page and has none.
 - `[kuiDialogPopup]` is `KuiDialogPopup`.
 - `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
 - `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
@@ -1433,6 +1544,13 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- viewport: What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
 - popup: The dialog itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2159,10 +2277,10 @@ Attributes and CSS variables, by part:
 ### NumberField
 
 ```
-import { KuiNumberField, KuiNumberFieldGroup, KuiNumberFieldInput, KuiNumberFieldIncrement, KuiNumberFieldDecrement } from "@kirana-ui/angular"
+import { KuiNumberField, KuiNumberFieldGroup, KuiNumberFieldInput, KuiNumberFieldIncrement, KuiNumberFieldDecrement, KuiNumberFieldScrubArea, KuiNumberFieldScrubAreaCursor } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiNumberField]`, `[kuiNumberFieldGroup]`, `[kuiNumberFieldInput]`, `[kuiNumberFieldIncrement]`, `[kuiNumberFieldDecrement]`.
+Parts: `[kuiNumberField]`, `[kuiNumberFieldGroup]`, `[kuiNumberFieldInput]`, `[kuiNumberFieldIncrement]`, `[kuiNumberFieldDecrement]`, `[kuiNumberFieldScrubArea]`, `[kuiNumberFieldScrubAreaCursor]`.
 
 Anatomy:
 
@@ -2172,6 +2290,8 @@ kuiNumberField
     kuiNumberFieldInput
     kuiNumberFieldIncrement
     kuiNumberFieldDecrement
+  kuiNumberFieldScrubArea
+    *kuiNumberFieldScrubAreaCursor
 ```
 
 Props of its root:
@@ -2202,6 +2322,11 @@ Each part, and its own props:
 - `[kuiNumberFieldInput]` is `KuiNumberFieldInput`.
 - `[kuiNumberFieldIncrement]` is `KuiNumberFieldIncrement`.
 - `[kuiNumberFieldDecrement]` is `KuiNumberFieldDecrement`.
+- `[kuiNumberFieldScrubArea]` is `KuiNumberFieldScrubArea`. On the element that is pressed and dragged to change the number: the field's label, as a rule.
+    - `direction?: "horizontal" | "vertical"`: The way the pointer is dragged: `"horizontal"`, where right is more, or `"vertical"`, where up is more. Default `"horizontal"`.
+    - `pixelSensitivity?: number`: How many pixels the pointer moves before the number changes. Default 2.
+    - `teleportDistance?: number`: How far past the area's edges the drawn cursor goes before it comes back in at the other side. Default: the edges of the window.
+- `[kuiNumberFieldScrubAreaCursor]` is `KuiNumberFieldScrubAreaCursor`. Structural: written `*kuiNumberFieldScrubAreaCursor`. `<span *kuiNumberFieldScrubAreaCursor>`: drawn in place of the pointer while it is locked for a drag, at the end of the page.
 
 Attributes and CSS variables, by part:
 
@@ -2213,6 +2338,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - group: What holds the input and its buttons, as one control.
@@ -2223,6 +2349,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - input: The text input: it takes what its locale writes a number with.
@@ -2233,6 +2360,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - increment: A button that steps the number up. Held, it goes on.
@@ -2243,6 +2371,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - decrement: A button that steps the number down. Held, it goes on.
@@ -2253,6 +2382,29 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- scrubArea: An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- scrubAreaCursor: What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 
@@ -2366,10 +2518,10 @@ Attributes and CSS variables, by part:
 ### Popover
 
 ```
-import { KuiPopover, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverPositioner, KuiPopoverPopup, KuiPopoverTitle, KuiPopoverDescription, KuiPopoverClose } from "@kirana-ui/angular"
+import { KuiPopover, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverBackdrop, KuiPopoverPositioner, KuiPopoverPopup, KuiPopoverArrow, KuiPopoverTitle, KuiPopoverDescription, KuiPopoverClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiPopover]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiPopoverTitle]`, `[kuiPopoverDescription]`, `[kuiPopoverClose]`.
+Parts: `[kuiPopover]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverBackdrop]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiPopoverArrow]`, `[kuiPopoverTitle]`, `[kuiPopoverDescription]`, `[kuiPopoverClose]`.
 
 Anatomy:
 
@@ -2377,26 +2529,34 @@ Anatomy:
 kuiPopover
   kuiPopoverTrigger
   *kuiPopoverPortal
+    kuiPopoverBackdrop
     kuiPopoverPositioner
       kuiPopoverPopup
         kuiPopoverTitle
         kuiPopoverDescription
         kuiPopoverClose
+        kuiPopoverArrow
 ```
 
 Props of its root:
 
 - `[(open)]: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
+- `modal?: boolean | "trap-focus"`: What the page behind it may do while it is open. `false` (the default): everything. `true`: nothing, the page is inert and does not scroll, and Tab stays inside the popover. `"trap-focus"`: Tab stays inside the popover, and the page can still be pressed and scrolled. A popover the pointer opened holds nothing until it is pressed. Read as it opens.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
 - `[kuiPopover]` is `KuiPopover`. `exportAs: "kuiPopover"`. Holds the popover: whether it is open. Its props are above.
 - `[kuiPopoverTrigger]` is `KuiPopoverTrigger`.
+    - `openOnHover?: boolean`: Whether the pointer resting on the trigger opens the popover too. A press and the keyboard still open it, and a press on one the pointer opened keeps it open. Default `false`.
+    - `delay?: number`: How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300.
+    - `closeDelay?: number`: How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0.
 - `[kuiPopoverPortal]` is `KuiPopoverPortal`. Structural: written `*kuiPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kuiPopoverBackdrop]` is `KuiPopoverBackdrop`.
 - `[kuiPopoverPositioner]` is `KuiPopoverPositioner`. Takes the positioner options ("Positioner options", above).
 - `[kuiPopoverPopup]` is `KuiPopoverPopup`.
+- `[kuiPopoverArrow]` is `KuiPopoverArrow`.
 - `[kuiPopoverTitle]` is `KuiPopoverTitle`. The heading that names the popover.
 - `[kuiPopoverDescription]` is `KuiPopoverDescription`. The text that describes the popover.
 - `[kuiPopoverClose]` is `KuiPopoverClose`. A button that closes the popover.
@@ -2405,6 +2565,11 @@ Attributes and CSS variables, by part:
 
 - trigger: The button that opens the popover, and what it is placed against.
     - `data-popup-open`: Present when the popover is open.
+- backdrop: A layer over the page behind the popover.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2422,6 +2587,10 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+- arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
 
 ### Progress
 
@@ -2703,6 +2872,7 @@ Props of its root:
 - `[(open)]: boolean`: Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable: the list still opens, and nothing is chosen.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
@@ -2746,6 +2916,7 @@ Attributes and CSS variables, by part:
     - `data-popup-open`: Present when the list is open.
     - `data-placeholder`: Present while nothing is chosen.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - value: The chosen value's label, or the placeholder. With several values, their labels with commas between.
     - `data-placeholder`: Present while nothing is chosen.
 - positioner: Places the list against the trigger. It carries the geometry.
@@ -2830,6 +3001,7 @@ Props of its root:
 - `thumbAlignment?: "center" | "edge" | "edge-client-only"`: `"edge"` keeps a thumb inside the control at the ends of its range.
 - `orientation?: "horizontal" | "vertical"`: Whether the track lies across (the default) or stands upright: the arrows that move a thumb follow.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable; its value is still submitted.
 - `name?: string`: With a name, each thumb's value is submitted with the form around the slider.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `format?: Intl.NumberFormatOptions`: How a value is written.
@@ -2853,28 +3025,34 @@ Attributes and CSS variables, by part:
 - root: Groups the slider's parts.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - value: The value, written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - control: What a pointer presses and drags on. It holds the track and the thumbs.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - track: The whole range.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - indicator: The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
     - `--start-position`: With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.
     - `--relative-size`: With thumbs that stay inside the control and a range: the filled part's length.
 - thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
     - `data-index`: Which thumb it is, from 0.
     - `--position`: With thumbs that stay inside the control: where the thumb's centre is.

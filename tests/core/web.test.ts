@@ -730,4 +730,68 @@ describe("the components as custom elements", () => {
     expect(thumb.style.translate).toBe("-50% -50%")
     expect(thumb.getAnimations()).toEqual([])
   })
+
+  it("a popover: what its positioner, its trigger and its root are asked, by attribute and by property", async () => {
+    const root = mount(
+      `<div id="within" style="position: fixed; left: 300px; top: 0; width: 400px; height: 400px"></div>
+       <kui-popover modal="trap-focus">
+         <button kui-part="trigger" kui-open-on-hover kui-delay="0"
+           style="position: fixed; left: 300px; top: 100px; width: 80px; height: 20px; padding: 0; border: 0">Open</button>
+         <div kui-part="portal">
+           <div kui-part="backdrop"></div>
+           <div kui-part="positioner" kui-position-method="fixed" kui-collision-boundary="within"
+             kui-collision-padding="0" kui-arrow-padding="7" kui-sticky>
+             <div kui-part="popup" style="width: 120px; height: 40px">
+               <div kui-part="arrow" style="width: 10px; height: 10px"></div>
+               <button kui-part="close">Done</button>
+             </div>
+           </div>
+         </div>
+       </kui-popover>`
+    )
+    const host = root.querySelector<HTMLElement & { positioning?: object; open: boolean }>(
+      "kui-popover"
+    )!
+    const trigger = root.querySelector("button")!
+    // What no attribute can say: a gap worked out from the anchor.
+    host.positioning = {
+      sideOffset: ({ anchor }: { anchor: { height: number } }) => anchor.height / 2,
+      collisionPadding: { left: 30 },
+    }
+    trigger.click()
+    await settled()
+    const portal = document.querySelector<HTMLElement>("body > [data-kirana-portal]")!
+    const positioner = portal.querySelector<HTMLElement>('[kui-part="positioner"]')!
+    await expect.poll(() => positioner.style.transform).not.toBe("")
+    const placed = positioner.getBoundingClientRect()
+    expect(getComputedStyle(positioner).position).toBe("fixed")
+    // Half the anchor's height under it: the property's function.
+    expect(placed.top).toBe(130)
+    // Held inside the box its attribute names, with no padding: the attribute's, which comes
+    // before the property's.
+    expect(placed.left).toBe(300)
+    const backdrop = portal.querySelector<HTMLElement>('[kui-part="backdrop"]')!
+    expect(backdrop.hasAttribute("data-open")).toBe(true)
+    const arrow = portal.querySelector<HTMLElement>('[kui-part="arrow"]')!
+    expect(arrow.getAttribute("data-side")).toBe("bottom")
+    // It traps focus and holds nothing of the page.
+    expect(portal.contains(document.activeElement)).toBe(true)
+    expect(root.closest("[inert]")).toBe(null)
+    await userEvent.tab()
+    expect(portal.contains(document.activeElement)).toBe(true)
+    expect(faults(document.body)).toEqual([])
+    // A property set since is read when the popup next comes into the page.
+    await userEvent.keyboard("{Escape}")
+    await expect.poll(() => document.querySelector("[data-kirana-portal]")).toBe(null)
+    host.positioning = { sideOffset: () => 40 }
+    trigger.click()
+    await settled()
+    await expect.poll(() => positioner.getBoundingClientRect().top).toBe(160)
+    await userEvent.keyboard("{Escape}")
+    await expect.poll(() => document.querySelector("[data-kirana-portal]")).toBe(null)
+    // The pointer opens it too, where its trigger says so.
+    trigger.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }))
+    await expect.poll(() => host.open).toBe(true)
+    host.open = false
+  })
 })

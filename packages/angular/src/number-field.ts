@@ -1,19 +1,22 @@
 import {
   Directive,
   booleanAttribute,
+  effect,
   inject,
   input,
   model,
   numberAttribute,
   output,
+  untracked,
 } from "@angular/core"
 import type { OnInit } from "@angular/core"
+import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
 import type { NumberField } from "@kirana-ui/core/number-field"
 
 import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, innerPart, inputsSignal, mounted } from "./runtime"
+import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
@@ -128,5 +131,60 @@ export class KuiNumberFieldDecrement implements OnInit {
 
   ngOnInit(): void {
     this.init()
+  }
+}
+
+/**
+ * On the element that is pressed and dragged to change the number: the field's label, as a
+ * rule.
+ */
+@Directive({ selector: "[kuiNumberFieldScrubArea]" })
+export class KuiNumberFieldScrubArea implements OnInit {
+  /**
+   * The way the pointer is dragged: `"horizontal"`, where right is more, or `"vertical"`, where
+   * up is more. Default `"horizontal"`.
+   */
+  readonly direction = input<"horizontal" | "vertical">()
+  /** How many pixels the pointer moves before the number changes. Default 2. */
+  readonly pixelSensitivity = input(undefined, { transform: optionalNumber })
+  /**
+   * How far past the area's edges the drawn cursor goes before it comes back in at the other
+   * side. Default: the edges of the window.
+   */
+  readonly teleportDistance = input(undefined, { transform: optionalNumber })
+  private readonly root = inject(KuiNumberField)
+  private readonly put = hostPart()
+  private readonly options = () =>
+    defined({
+      direction: this.direction(),
+      pixelSensitivity: this.pixelSensitivity(),
+      teleportDistance: this.teleportDistance(),
+    })
+
+  constructor() {
+    effect(() => {
+      const options = this.options()
+      untracked(() => this.root.controller?.scrub.set(options))
+    })
+  }
+
+  ngOnInit(): void {
+    this.root.controller.scrub.set(this.options())
+    this.put(this.root.controller.scrubArea)
+  }
+}
+
+/**
+ * `<span *kuiNumberFieldScrubAreaCursor>`: drawn in place of the pointer while it is locked for
+ * a drag, at the end of the page.
+ */
+@Directive({ selector: "[kuiNumberFieldScrubAreaCursor]" })
+export class KuiNumberFieldScrubAreaCursor implements OnInit {
+  private readonly root = inject(KuiNumberField)
+  private readonly present = presentWhile({ portal: true })
+
+  ngOnInit(): void {
+    const cursor = this.root.controller.scrubAreaCursor
+    this.present(cursor.mounted, cursor.part)
   }
 }

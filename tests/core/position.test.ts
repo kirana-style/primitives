@@ -297,4 +297,148 @@ describe("positioning", () => {
     await expect.poll(() => position.placed.peek()).toBe(true)
     await expect.poll(() => box(positioner).top).toBe(230)
   })
+
+  it("leaves with an anchor that is scrolled out of view, and stays in view when it is sticky", async () => {
+    // Out past the top: the side it is on has no room, and neither has the other.
+    const above = page("left: 100px; top: -100px")
+    await above.placed()
+    expect(box(above.positioner).top).toBe(-80)
+    above.options.set({ ...above.options.peek(), sticky: true })
+    await expect.poll(() => box(above.positioner).top).toBe(5)
+    above.stop()
+    // Out past the start of its side: it goes no further along than its anchor reaches.
+    const beside = page("left: -200px; top: 100px")
+    await beside.placed()
+    expect(box(beside.positioner).left).toBe(-120)
+    beside.options.set({ ...beside.options.peek(), sticky: true })
+    await expect.poll(() => box(beside.positioner).left).toBe(5)
+  })
+
+  it("is held inside the boundary it is given: an element, or a rectangle", async () => {
+    const { options, positioner, placed, root } = page("left: 200px; top: 100px")
+    await placed()
+    expect(box(positioner).left).toBe(180)
+    const within = document.createElement("div")
+    within.style.cssText = "position: fixed; left: 200px; top: 50px; width: 400px; height: 300px"
+    root.append(within)
+    options.set({ ...options.peek(), collisionBoundary: within })
+    await expect.poll(() => box(positioner).left).toBe(205)
+    expect(positioner.style.getPropertyValue("--available-height")).toBe("225px")
+    options.set({
+      ...options.peek(),
+      collisionBoundary: { x: 190, y: 0, width: 400, height: 300 },
+    })
+    await expect.poll(() => box(positioner).left).toBe(195)
+    options.set({ ...options.peek(), collisionBoundary: "clipping-ancestors" })
+    await expect.poll(() => box(positioner).left).toBe(180)
+  })
+
+  it("keeps an arrow off the ends of the popup's edge by the padding asked for", async () => {
+    // The anchor's centre is out of the page: the arrow goes as near to it as it may.
+    const { options, position, placed, root } = page("left: -70px; top: 100px", { sticky: true })
+    const arrow = document.createElement("div")
+    arrow.style.cssText = "width: 10px; height: 10px"
+    find(root, "popup").append(arrow)
+    position.arrow(arrow)
+    await placed()
+    await expect.poll(() => arrow.style.left).toBe("5px")
+    expect(position.uncentered.peek()).toBe(true)
+    options.set({ ...options.peek(), arrowPadding: 20 })
+    await expect.poll(() => arrow.style.left).toBe("20px")
+  })
+
+  it("is positioned the way it is asked to be: absolute, or fixed", async () => {
+    const { options, positioner, placed } = page("left: 100px; top: 100px")
+    await placed()
+    expect(getComputedStyle(positioner).position).toBe("absolute")
+    options.set({ ...options.peek(), positionMethod: "fixed" })
+    await expect.poll(() => getComputedStyle(positioner).position).toBe("fixed")
+    expect(box(positioner).top).toBe(120)
+    expect(box(positioner).left).toBe(80)
+  })
+
+  it("asks a function for a gap, and tells it what was measured", async () => {
+    const told: unknown[] = []
+    const { options, positioner, placed } = page("left: 100px; top: 100px", {
+      sideOffset(data) {
+        told.push(data)
+        return data.anchor.height
+      },
+    })
+    await placed()
+    expect(box(positioner).top).toBe(140)
+    expect(told.at(-1)).toEqual({
+      side: "bottom",
+      align: "center",
+      anchor: { width: 80, height: 20 },
+      positioner: { width: 120, height: 40 },
+    })
+    options.set({
+      ...options.peek(),
+      sideOffset: 0,
+      align: "start",
+      alignOffset: (data) => data.positioner.width / 4,
+    })
+    await expect.poll(() => box(positioner).left).toBe(130)
+    expect(box(positioner).top).toBe(120)
+  })
+
+  it("tells a function the side the popup flipped to", async () => {
+    const sides: string[] = []
+    const { position, positioner, anchor, placed } = page("left: 100px; bottom: 10px", {
+      sideOffset(data) {
+        sides.push(data.side)
+        return 8
+      },
+    })
+    await placed()
+    expect(position.side.peek()).toBe("top")
+    expect(sides.at(-1)).toBe("top")
+    expect(box(anchor).top - box(positioner).bottom).toBe(8)
+  })
+
+  it("keeps a padding of its own at each side", async () => {
+    const { options, positioner, placed } = page("left: 0px; top: 100px", {
+      collisionPadding: { left: 20 },
+    })
+    await placed()
+    expect(box(positioner).left).toBe(20)
+    // A side left out keeps none.
+    expect(parseFloat(positioner.style.getPropertyValue("--available-height"))).toBe(
+      window.innerHeight - 120
+    )
+    // The same padding written again is the same: nothing is placed again for it.
+    const before = positioner.style.transform
+    options.set({ ...options.peek(), collisionPadding: { left: 20 } })
+    await new Promise((done) => setTimeout(done, 50))
+    expect(positioner.style.transform).toBe(before)
+  })
+
+  it("avoids a collision the way it is told to", async () => {
+    // No room under the anchor: it would flip.
+    const under = page("left: 100px; bottom: 10px", { collisionAvoidance: { side: "none" } })
+    await under.placed()
+    expect(under.position.side.peek()).toBe("bottom")
+    expect(box(under.positioner).top).toBe(box(under.anchor).bottom)
+    under.options.set({ ...under.options.peek(), collisionAvoidance: { side: "shift" } })
+    await expect.poll(() => box(under.positioner).bottom).toBe(window.innerHeight - 5)
+    expect(under.position.side.peek()).toBe("bottom")
+    under.options.set({ ...under.options.peek(), collisionAvoidance: { side: "flip" } })
+    await expect.poll(() => under.position.side.peek()).toBe("top")
+    under.stop()
+    // No room along the side: it would be moved.
+    const along = page("left: 0px; top: 100px", { collisionAvoidance: { align: "none" } })
+    await along.placed()
+    expect(box(along.positioner).left).toBe(-20)
+    along.options.set({ ...along.options.peek(), collisionAvoidance: { align: "shift" } })
+    await expect.poll(() => box(along.positioner).left).toBe(5)
+    along.options.set({
+      ...along.options.peek(),
+      align: "end",
+      collisionAvoidance: { align: "flip" },
+    })
+    // Swapped to the anchor's start, then moved in from the edge.
+    await expect.poll(() => along.position.align.peek()).toBe("start")
+    expect(box(along.positioner).left).toBe(5)
+  })
 })

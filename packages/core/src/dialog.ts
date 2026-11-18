@@ -4,7 +4,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { setGeometry } from "./services/geometry.ts"
-import { layersAbove, layersChanged } from "./services/layers.ts"
+import { layersAbove, layersBelow, layersChanged } from "./services/layers.ts"
 import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 
@@ -29,6 +29,11 @@ export interface Dialog {
   mount(): () => void
   readonly trigger: Part
   readonly backdrop: Part
+  /**
+   * What a long dialog scrolls in: an element between the backdrop and the popup, which may be
+   * left out. A press on it beside the popup is a press outside; one on its scrollbar is not.
+   */
+  readonly viewport: Part
   readonly popup: Part
   readonly title: Part
   readonly description: Part
@@ -36,6 +41,20 @@ export interface Dialog {
 }
 
 const NOTHING = () => {}
+
+/** Whether a press is on the scrollbar of the element it landed on: it scrolls, and closes nothing. */
+function onScrollbar(event: PointerEvent, element: HTMLElement): boolean {
+  // A finger meets no scrollbar.
+  if (event.pointerType === "touch") return false
+  const box = element.getBoundingClientRect()
+  // Inside its borders and its scrollbars, wherever the browser draws them.
+  const x = event.clientX - box.left - element.clientLeft
+  const y = event.clientY - box.top - element.clientTop
+  return (
+    (element.scrollHeight > element.clientHeight && (x < 0 || x >= element.clientWidth)) ||
+    (element.scrollWidth > element.clientWidth && (y < 0 || y >= element.clientHeight))
+  )
+}
 
 export function createDialog(
   props: ReadonlySignal<DialogProps>,
@@ -53,6 +72,9 @@ export function createDialog(
   const titled = signal(false)
   const described = signal(false)
   const nested = signal(0)
+  // Whether it opened over another dialog: kept through its exit, when it has left the stack.
+  const over = signal(false)
+  const viewport = signal<HTMLElement | undefined>(undefined)
 
   const setOpen = (next: boolean, by: ChangeDetails) => open.set(next, by)
   const popup = createPopup({
@@ -62,7 +84,12 @@ export function createDialog(
     kind: "dialog",
     modal: () => props.peek().modal ?? true,
     // An alert dialog asks for an answer.
-    outsidePress: () => !kind.alert && props.peek().dismissible !== false,
+    outsidePress(event) {
+      if (kind.alert || props.peek().dismissible === false) return false
+      const within = viewport.peek()
+      // Its viewport's own scrollbar scrolls the dialog.
+      return !(within && event.target === within && onScrollbar(event, within))
+    },
     focus: popupFocus(),
     hold: lockPage,
   })
@@ -85,6 +112,20 @@ export function createDialog(
       props: computed(() => ({ role: "presentation", ...popup.state() })),
       attach: (element) => popup.attachBackdrop(element),
     },
+    viewport: {
+      props: computed(() => ({
+        role: "presentation",
+        ...popup.state(),
+        "data-nested": flag(over.get()),
+        "data-nested-dialog-open": flag(nested.get() > 0),
+      })),
+      attach(element) {
+        viewport.set(element)
+        return () => {
+          if (viewport.peek() === element) viewport.set(undefined)
+        }
+      },
+    },
     popup: {
       props: computed(() => ({
         id: popupId,
@@ -98,6 +139,17 @@ export function createDialog(
       })),
       attach(element) {
         const stops = [
+          // On its way out the viewport lies over the page and takes no press, as the popup
+          // takes none. Written here and before the popup follows `open`, not by a framework
+          // in its own time: reopened, the popup takes focus at once, which nothing inside an
+          // inert element can.
+          effect(() => {
+            const around = viewport.get()
+            const live = open.get()
+            if (!around) return
+            if (live) around.removeAttribute("inert")
+            else around.setAttribute("inert", "")
+          }),
           popup.attach(element),
           // How many dialogs are open above this one, for a design that stacks them.
           effect(() => {
@@ -105,6 +157,8 @@ export function createDialog(
             const above = layersAbove(element, "dialog")
             nested.set(above)
             setGeometry(element, "--nested-dialogs", String(above))
+            const under = layersBelow(element, "dialog")
+            if (under >= 0) over.set(under > 0)
           }),
         ]
         return () => {

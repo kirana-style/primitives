@@ -1,4 +1,5 @@
 import { defineMenu } from "./menu.ts"
+import type { Placed } from "./around.ts"
 import type { ElementOf, Told } from "./runtime.ts"
 
 /**
@@ -18,6 +19,7 @@ declare global {
       typeof tag,
       { "open-change": ["onOpenChange", "open"] },
       { "checked-change": Told<"checked", boolean>; "value-change": Told<"value", string> }
-    >
+    > &
+      Placed
   }
 }

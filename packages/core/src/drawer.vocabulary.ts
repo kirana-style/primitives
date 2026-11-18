@@ -11,9 +11,12 @@ const MOVED = {
     "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.",
 }
 
+// A drawer has no viewport: it lies at an edge of the page, and what scrolls is inside it.
+const { viewport: _viewport, ...shared } = dialogVocabulary
+
 // A drawer's parts are a dialog's; two of them also say how far it has been dragged.
 export const drawerVocabulary = defineComponent({
-  ...dialogVocabulary,
+  ...shared,
   backdrop: {
     ...dialogVocabulary.backdrop,
     states: { ...dialogVocabulary.backdrop.states, swiping: SWIPING },
@@ -21,6 +24,7 @@ export const drawerVocabulary = defineComponent({
   },
   popup: {
     ...dialogVocabulary.popup,
+    inside: "portal",
     description:
       "The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
     states: {

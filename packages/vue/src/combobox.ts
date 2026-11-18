@@ -5,11 +5,13 @@ import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
 import type {
   Combobox as Controller,
+  ComboboxEntry,
   ComboboxGroup,
   ComboboxItemOptions,
   ComboboxProps,
+  ComboboxShown,
 } from "@kirana-ui/core/combobox"
-import { defineComponent, h, inject, provide, useId } from "vue"
+import { defineComponent, Fragment, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType, PublicProps } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
@@ -93,6 +95,7 @@ const Root = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     disabled: Boolean,
+    readOnly: Boolean,
     required: Boolean,
     multiple: Boolean,
     values: optional(Array as PropType<readonly unknown[]>),
@@ -132,6 +135,7 @@ const Root = defineComponent({
         open: props.open,
         defaultOpen: props.defaultOpen,
         disabled: props.disabled,
+        readOnly: props.readOnly,
         required: props.required,
         multiple: props.multiple,
         values: props.values,
@@ -276,6 +280,49 @@ const Empty = defineComponent({
   },
 }) as unknown as PartComponent<"div", State["empty"], EmptyProps>
 
+export interface ValueProps {
+  /** What it shows while nothing is chosen. */
+  placeholder?: string | undefined
+}
+
+/**
+ * The chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the
+ * chosen labels with commas between. Or what its slot makes of them
+ * (`v-slot="{ value, label }"`, with `multiple` `v-slot="{ values, labels }"`, in the order
+ * they were chosen). For a button that is the combobox, its input inside the popup. It draws
+ * no element.
+ */
+const Value = defineComponent({
+  name: "ComboboxValue",
+  props: { placeholder: { type: String, default: "" } },
+  setup(props, { slots }) {
+    const shown = fromSignal(scope.use().shown)
+    return () =>
+      slots.default ? slots.default(shown.value) : (shown.value.label ?? props.placeholder)
+  },
+}) as unknown as PlainComponent<ValueProps, {}, ComboboxShown>
+
+export interface CollectionProps {
+  /** A group the root's `items` gave: its items left are then what is drawn. */
+  of?: ComboboxEntry | undefined
+}
+
+/**
+ * Draws the list from the root's `items`: its slot (`v-slot="{ entry }"`) once for each item
+ * left for what was typed, or for each group that has items left; with `of`, for each of that
+ * group's. The root then filters, and no item hides itself. It draws no element.
+ */
+const Collection = defineComponent({
+  name: "ComboboxCollection",
+  props: { of: Object as PropType<ComboboxEntry> },
+  setup(props, { slots }) {
+    // A group is known by its key, which is its own for as long as it is drawn.
+    const entries = fromSignal(scope.use().entries(props.of))
+    return () =>
+      entries.value.map((entry) => h(Fragment, { key: entry.key }, slots.default?.({ entry })))
+  },
+}) as unknown as PlainComponent<CollectionProps, {}, { entry: ComboboxEntry }>
+
 export type AutocompleteRootProps = Omit<
   AutocompleteProps,
   "id" | "value" | "onValueChange" | "onOpenChange"
@@ -305,6 +352,8 @@ const AutocompleteRoot = defineComponent({
     },
     openOnInputClick: Boolean,
     disabled: Boolean,
+    readOnly: Boolean,
+    items: [Array, Object] as PropType<AutocompleteProps["items"]>,
     required: Boolean,
     name: String,
     form: String,
@@ -326,6 +375,8 @@ const AutocompleteRoot = defineComponent({
         filter: props.filter,
         openOnInputClick: props.openOnInputClick,
         disabled: props.disabled,
+        readOnly: props.readOnly,
+        items: props.items,
         required: props.required,
         name: props.name,
         form: props.form,
@@ -353,6 +404,19 @@ export type PopupProps = PartComponentProps
 export type ListProps = PartComponentProps
 export type GroupLabelProps = PartComponentProps
 export type SeparatorProps = PartComponentProps
+export type StatusProps = PartComponentProps
+
+/**
+ * Says how the list stands ("3 results", "Loading") to software that reads the page, as its
+ * text changes. Keep it in the page and change what it holds: inside the popup, or beside the
+ * input.
+ */
+const Status = partComponent<"div", State["status"]>(
+  "ComboboxStatus",
+  "div",
+  () => scope.use().status
+)
+
 export const Combobox = {
   Root,
   Input: partComponent<"input", State["input"]>("ComboboxInput", "input", () => scope.use().input),
@@ -361,6 +425,7 @@ export const Combobox = {
     "button",
     () => scope.use().trigger
   ),
+  Value,
   Clear,
   /** With `multiple`: what holds the chips and the input. */
   Chips: partComponent<"div", State["chips"]>("ComboboxChips", "div", () => scope.use().chips),
@@ -380,6 +445,7 @@ export const Combobox = {
    * is then the listbox.
    */
   List: partComponent<"div", State["list"]>("ComboboxList", "div", () => scope.use().list),
+  Collection,
   Group,
   GroupLabel,
   /** A line between groups. */
@@ -391,6 +457,7 @@ export const Combobox = {
   Item,
   ItemIndicator,
   Empty,
+  Status,
 }
 
 export const Autocomplete = {
@@ -402,9 +469,11 @@ export const Autocomplete = {
   Positioner: Combobox.Positioner,
   Popup: Combobox.Popup,
   List: Combobox.List,
+  Collection: Combobox.Collection,
   Group: Combobox.Group,
   GroupLabel: Combobox.GroupLabel,
   Separator: Combobox.Separator,
   Item: Combobox.Item,
   Empty: Combobox.Empty,
+  Status: Combobox.Status,
 }

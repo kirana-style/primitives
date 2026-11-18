@@ -1,9 +1,10 @@
 import { defineComponent } from "./part.ts"
-import { DISABLED, state, valued } from "./states.ts"
+import { CONTROL, DISABLED, state, valued } from "./states.ts"
 
 const STATES = {
   orientation: valued("data-orientation", ["horizontal", "vertical"], "The way the track runs."),
   disabled: DISABLED,
+  readonly: CONTROL.readonly,
   dragging: state("data-dragging", "Present while a pointer holds a thumb."),
 }
 

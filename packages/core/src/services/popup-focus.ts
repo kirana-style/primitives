@@ -8,12 +8,16 @@ import { lockScroll } from "./scroll-lock.ts"
  * A popup's focus: it moves in as the popup opens (`"none"`: the component moves it itself, a
  * moment later) and goes back as it closes, to the trigger; if that is gone, to what had focus
  * before; if that is gone too, to the popup this one was opened from. A modal popup keeps Tab
- * inside and makes the page around it inert.
+ * inside and makes the page around it inert. `trap` keeps Tab inside one that is not modal: the
+ * page around it stays live.
  */
-export function popupFocus(initial?: FocusScopeOptions["initial"]): PopupFocus {
+export function popupFocus(
+  initial?: FocusScopeOptions["initial"],
+  trap?: () => boolean
+): PopupFocus {
   return (element, context) => {
     const release = focusScope(element, {
-      trap: context.modal,
+      trap: context.modal || Boolean(trap?.()),
       initial,
       restore: context.trigger,
       fallback: () => layerBelow(element),

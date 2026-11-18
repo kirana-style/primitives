@@ -66,7 +66,7 @@ export interface FieldSubject {
   readonly element: HTMLElement
   focus(): void
   /** The native control it stands for: the browser words "this is required" for each its own way. */
-  readonly kind: "checkbox" | "radio" | "select" | "range"
+  readonly kind: "checkbox" | "radio" | "select" | "range" | "group"
   required(): boolean
   /** Its value as text when it joins; empty is "none". */
   readonly value: string
@@ -149,7 +149,7 @@ function wording(kind: FieldSubject["kind"], page: Document): string {
     return probe.validationMessage
   }
   const probe = page.createElement("input")
-  probe.type = kind === "range" ? "text" : kind
+  probe.type = kind === "range" || kind === "group" ? "text" : kind
   // A radio with no name is in no group, and a browser finds nothing missing in it.
   probe.name = "probe"
   probe.required = true

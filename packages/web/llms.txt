@@ -8,7 +8,7 @@ Generated from the library's own source (`bun scripts/llms.ts`), and checked aga
 
 Install `@kirana-ui/web`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/web/agent`, `@kirana-ui/web/testing`).
 
-Its entries: an entry per element (`@kirana-ui/web/tabs`, 48 of them), the package root `@kirana-ui/web` (every element at once), `@kirana-ui/web/runtime` (`defineElement`, for an element of your own), `@kirana-ui/web/agent` and `@kirana-ui/web/testing` (the agent bridge and the testing kit: what they give is the same on every framework, and written out in each framework package's `llms.txt`).
+Its entries: an entry per element (`@kirana-ui/web/tabs`, 49 of them), the package root `@kirana-ui/web` (every element at once), `@kirana-ui/web/runtime` (`defineElement`, for an element of your own), `@kirana-ui/web/agent` and `@kirana-ui/web/testing` (the agent bridge and the testing kit: what they give is the same on every framework, and written out in each framework package's `llms.txt`).
 
 The attributes and CSS variables below are also data and typed selectors, for a design system: install `@kirana-ui/vocabulary` for them. It is its own package, and not installed with this one.
 
@@ -18,7 +18,7 @@ The attributes and CSS variables below are also data and typed selectors, for a 
 - The custom element (`<kui-dialog>`) holds the component and draws nothing: it takes no room (`display: contents`) and has no shadow root. Every part, the root among them, is an element of the page's own inside it, named by `kui-part`: `<button kui-part="trigger">`. So a trigger is a real button, and the page is the page the other adapters draw.
 - A prop is an attribute in kebab case on the custom element (`default-open`), and a property in camel case (`element.defaultOpen`, `element.open = true`). A prop that is a function or an object is a property only, listed for its element.
 - A change is an event on the custom element, named for its callback (`open-change`, `value-change`): `event.detail` holds the value under its prop's name (`detail.open`) and `detail.details` (`reason`, `event`, `source`, `cancel()`). `event.preventDefault()` keeps the value as it was. The element then holds the value: it is controlled by writing the property back.
-- What a part needs of its own is a `kui-` attribute on the part's element: `kui-value`, `kui-disabled`, `kui-index`, `kui-label`, a positioner's `kui-side`, `kui-align`, `kui-side-offset`, `kui-align-offset`, `kui-collision-padding` and `kui-anchor` (the id of the element the popup is placed against, when that is not its trigger). An `id` for the component is `kui-id` on the custom element.
+- What a part needs of its own is a `kui-` attribute on the part's element: `kui-value`, `kui-disabled`, `kui-index`, `kui-label`, a positioner's `kui-side`, `kui-align`, `kui-side-offset`, `kui-align-offset`, `kui-collision-padding`, `kui-sticky`, `kui-arrow-padding`, `kui-position-method`, `kui-anchor` (the id of the element the popup is placed against, when that is not its trigger) and `kui-collision-boundary` (the id of the element it is held inside). What an attribute cannot say of a positioner (`sideOffset` as a function, `collisionBoundary` as an element or a rectangle, `collisionPadding` a side, `collisionAvoidance`) is the `positioning` property of its custom element, an object of the positioner's options read as the popup comes into the page (`popover.positioning = { sideOffset: ({ anchor }) => anchor.height }`); an attribute on the positioner comes before the same option there. An `id` for the component is `kui-id` on the custom element.
 - A part that is in the page only some of the time (a closed panel, a popup) is taken out of the page while it is not, and put back where it was; `kui-keep-mounted` on the part keeps it. A portal part (`kui-part="portal"`) is moved to the end of `<body>`.
 - A list the component draws is written once, as a `<template kui-each="name">` where the list goes: it is stamped for each entry, `{field}` in its text and attributes filled from the entry, and an element with `kui-when` kept only for entries of that type.
 - A component inside another's custom element is that one's own: a `<kui-menu>` inside a `<kui-menu>` is its submenu, a control inside a `<kui-field>` is the field's control.
@@ -103,7 +103,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/alert-dialog"
 ```
 
-`<kui-alert-dialog>`: `<kui-alert-dialog>`: a dialog that asks, with the dialog's parts. A press outside does not close it. `open`, `default-open`; it tells `open-change`.
+`<kui-alert-dialog>`: `<kui-alert-dialog>`: a dialog that asks, with the dialog's parts, its `viewport` too. A press outside does not close it. `open`, `default-open`; it tells `open-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -118,6 +118,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `trigger`
 - `backdrop`
+- `viewport`
 - `popup`
 - `title`
 - `description`
@@ -130,10 +131,11 @@ Anatomy:
   trigger
   portal
     backdrop
-    popup
-      title
-      description
-      close
+    viewport (optional)
+      popup
+        title
+        description
+        close
 ```
 
 Attributes and CSS variables, by part:
@@ -145,6 +147,13 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- viewport: What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
 - popup: The dialog itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -159,7 +168,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/autocomplete"
 ```
 
-`<kui-autocomplete>`: `<kui-autocomplete>`: a combobox whose text is the value, with a combobox's parts: the list only suggests. `value`, `default-value`, `open`, `default-open`, `mode`, `open-on-input-click`, `auto-highlight`, `disabled`, `required`, `name`, `form`; `filter` as a property; it tells `value-change` and `open-change`.
+`<kui-autocomplete>`: `<kui-autocomplete>`: a combobox whose text is the value, with a combobox's parts: the list only suggests. `value`, `default-value`, `open`, `default-open`, `mode`, `open-on-input-click`, `auto-highlight`, `disabled`, `read-only`, `required`, `name`, `form`; `filter` and `items` as properties (with `items`, the suggestions are a `<template kui-each="collection">`, as a combobox's); it tells `value-change` and `open-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -171,6 +180,7 @@ Attributes of the element (each also a property, in camel case):
 - `open-on-input-click` (boolean): Whether a press on the input opens the list. Default: it opens when something is typed.
 - `auto-highlight` (boolean): The first suggestion for what was typed is highlighted as one types, so Enter takes it. Off by default: no suggestion is highlighted for having been typed at, and Enter is the form's, with the text as typed, until an arrow or the pointer has gone to one.
 - `disabled` (boolean): Disabled: it cannot be changed.
+- `read-only` (boolean): Its text can be read and not changed: nothing typed is taken, no suggestion pressed is written in, and its clear button does nothing. The list still opens (by its button, the arrows, or a press with `openOnInputClick`) and can be gone through. It keeps focus, and its text is still submitted.
 - `required` (boolean): Needed: in a `Field`, leaving it empty is then invalid.
 - `name` (string): The input's name in the form around it.
 - `form` (string): The id of the form the control belongs to, when it is not inside it.
@@ -178,6 +188,7 @@ Attributes of the element (each also a property, in camel case):
 Properties only:
 
 - `filter`: Whether a suggestion is shown for what was typed; `null` shows every one.
+- `items`: The suggestions as data, for a `Collection` to draw: a list of them with their labels, groups of them (`{ value, items }`, `value` the group's name), or the labels by value. The autocomplete filters them by what is typed (not with `mode: "none"`), and the `Collection` draws what is left.
 
 Events:
 
@@ -188,8 +199,10 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `input`
 - `trigger`
+- `value`: `kui-placeholder`
+- `status`
 - `clear`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `list`
 - `empty`
@@ -202,6 +215,8 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `chip-remove`
 - `item-indicator`: `kui-value`
 
+Lists (`<template kui-each="…">`): `collection`.
+
 Anatomy:
 
 ```
@@ -212,12 +227,19 @@ Anatomy:
     positioner
       popup
         list (optional)
+          <template kui-each="collection"> (optional)
+            item (repeated, as above)
+            group (optional, repeated, as above)
           group (optional, repeated)
+            <template kui-each="collection"> (optional, as above)
             item (repeated)
             group-label
           separator (repeated)
+        <template kui-each="collection"> (optional, as above)
         empty
+        status (optional)
   popup (as above)
+  status (optional, as above)
   clear
 ```
 
@@ -226,9 +248,11 @@ Attributes and CSS variables, by part:
 - input: The text input: its text is the value, and what is typed asks for suggestions.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -485,13 +509,14 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/checkbox"
 ```
 
-`<kui-checkbox>`: `<kui-checkbox>` around a `kui-part="root"` button with an `indicator` inside, which is in the page while the box is checked or indeterminate. The root draws the hidden native input a form and a label reach. `checked`, `default-checked`, `indeterminate`, `disabled`, `read-only`, `required`, `name`, `form`, `value`; it tells `checked-change`.
+`<kui-checkbox>`: `<kui-checkbox>` around a `kui-part="root"` button with an `indicator` inside, which is in the page while the box is checked or indeterminate. The root draws the hidden native input a form and a label reach. Inside a `<kui-checkbox-group>` it is one of the group's boxes, by its `value`, or with `parent` the one that stands for them all. `checked`, `default-checked`, `indeterminate`, `parent`, `disabled`, `read-only`, `required`, `name`, `form`, `value`; it tells `checked-change`.
 
 Attributes of the element (each also a property, in camel case):
 
 - `checked` (boolean): Whether it is checked, when the caller holds it.
 - `default-checked` (boolean): Read once.
 - `indeterminate` (boolean): Neither checked nor unchecked: a parent of boxes that disagree.
+- `parent` (boolean): In a checkbox group with `allValues`: the box that stands for them all. It is checked when every one is, mixed when some are, a press on it sets them all, and it is not submitted. Read once.
 - `disabled` (boolean): Disabled: it cannot be changed.
 - `read-only` (boolean): Shown as it is, focusable, not changeable.
 - `required` (boolean): Needed: in a `Field`, leaving it unchecked is then invalid.
@@ -525,6 +550,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-parent`: Present on the checkbox that stands for every box of its group.
 - indicator: The mark. In the page while the box is checked or indeterminate.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
@@ -534,6 +560,41 @@ Attributes and CSS variables, by part:
     - `data-required`: Present when the form needs it.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### CheckboxGroup
+
+```
+import "@kirana-ui/web/checkbox-group"
+```
+
+`<kui-checkbox-group>`: `<kui-checkbox-group>` around `kui-part="root"` and its `<kui-checkbox>`es, each with a `value`; one marked `parent` stands for every value of `all-values`. `value`, `default-value` and `all-values` (with commas between), `disabled`; it tells `value-change`.
+
+Attributes of the element (each also a property, in camel case):
+
+- `value` (string): The values of the checked checkboxes, when the caller holds them.
+- `default-value` (string): The values checked at the start, when the caller does not hold `value`. Read once.
+- `all-values` (string): The value of every checkbox of the group, for a checkbox marked `parent`: it is checked when all of them are, mixed when some are, and a press on it sets them all.
+- `disabled` (boolean): Disables every checkbox of the group.
+
+Events:
+
+- `value-change`: `event.detail.value`, with `event.detail.details`. `preventDefault()` keeps `value` as it was.
+
+Parts (`kui-part`), each with the `kui-` attributes its element is read for:
+
+- `root`
+
+Anatomy:
+
+```
+<kui-checkbox-group>
+  root
+```
+
+Attributes and CSS variables, by part:
+
+- root: The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.
+    - `data-disabled`: Present when it is disabled.
 
 ### Collapsible
 
@@ -591,7 +652,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/combobox"
 ```
 
-`<kui-combobox>`: `<kui-combobox>` around an `input`, with a `trigger` and a `clear` button if it has them, and a `portal` with a `positioner` (`kui-side` … and `kui-anchor`, an element's id) around the `popup`, which holds an `item` for each `kui-value` (`kui-disabled`, `kui-label`, `kui-id`) with an `item-indicator`, in `group`s with a `group-label` and `separator`s if it has them, and an `empty` part drawn while nothing matches. The `input` may be inside the `popup`, the items then in a `list` part: the popup is placed against the `trigger`, and the input has focus while it is open. With `multiple`, the input is in a `chips` part with a `<template kui-each="chips">` holding a `chip` (`{value}`) and its `chip-remove` button. With a name it draws the hidden input a form reads. `value`, `default-value`, `input-value`, `default-input-value`, `open`, `default-open`, `disabled`, `required`, `inline`, `auto-highlight`, `multiple`, `values` and `default-values` (with commas between), `name`, `form`; `items` and `filter` as properties; it tells `value-change`, `values-change`, `input-value-change` and `open-change`.
+`<kui-combobox>`: `<kui-combobox>` around an `input`, with a `trigger` and a `clear` button if it has them, and a `portal` with a `positioner` (`kui-side` … and `kui-anchor`, an element's id) around the `popup`, which holds an `item` for each `kui-value` (`kui-disabled`, `kui-label`, `kui-id`) with an `item-indicator`, in `group`s with a `group-label` and `separator`s if it has them, and an `empty` part drawn while nothing matches. The `input` may be inside the `popup`, the items then in a `list` part: the popup is placed against the `trigger`, and the input has focus while it is open. With `multiple`, the input is in a `chips` part with a `<template kui-each="chips">` holding a `chip` (`{value}`) and its `chip-remove` button. With the input in the popup, the `trigger` may hold a `value` part: it says the chosen value's label, or its `kui-placeholder`. A `status` part says how the list stands to software that reads the page, as the page changes its text. With `items` given as data, the list is a `<template kui-each="collection">` holding an `item` (`kui-value="{value}"`, `{label}`; `kui-when="item"` where groups are given too) or a `group` (`kui-when="group"`, `{value}` its name) with a `<template kui-each="collection">` of its own for its items: the element filters, and draws what is left. With a name it draws the hidden input a form reads. `value`, `default-value`, `input-value`, `default-input-value`, `open`, `default-open`, `disabled`, `read-only`, `required`, `inline`, `auto-highlight`, `multiple`, `values` and `default-values` (with commas between), `name`, `form`; `items` and `filter` as properties; it tells `value-change`, `values-change`, `input-value-change` and `open-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -602,6 +663,7 @@ Attributes of the element (each also a property, in camel case):
 - `open` (boolean): Whether the list is open, when the caller holds it.
 - `default-open` (boolean): Whether the list starts open, when the caller does not hold `open`. Read once.
 - `disabled` (boolean): Disabled: it cannot be changed.
+- `read-only` (boolean): Its value can be read and not changed. The list still opens and can be gone through, by the pointer and the arrows, but no press and no Enter chooses; nothing typed is taken, and its clear and chip buttons do nothing. It keeps focus, and its value is still submitted.
 - `required` (boolean): In a field, "none" is then wrong.
 - `inline` (boolean): The list is always in the page, under the input, with no popup: a command palette. An item chosen is told to the caller, and the input keeps what was typed.
 - `auto-highlight` (boolean): The first item shown for what was typed is highlighted as one types, so Enter chooses it. Off by default: typing then highlights nothing, and Enter chooses once an arrow or the pointer has gone to an item. Either way a list opened with nothing typed is on its chosen item, if it has one.
@@ -613,8 +675,8 @@ Attributes of the element (each also a property, in camel case):
 
 Properties only:
 
-- `items`: The labels of the values, for the input to show a value before the list has ever been opened: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the markup.
-- `filter`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
+- `items`: The values with their labels: a list of them, groups of them (`{ value, items }`, `value` the group's name), or, for values that are text, the labels by value (`{ apple: "Apple" }`). The input shows a value by its label from here before the list has ever been opened. With the items written in the markup that is all it is for. With a `Collection` it is the list itself: the combobox filters it by what is typed, and the `Collection` draws what is left.
+- `filter`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants (or gives the `items` it wants, when they are loaded for what was typed).
 
 Events:
 
@@ -627,8 +689,10 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `input`
 - `trigger`
+- `value`: `kui-placeholder`
+- `status`
 - `clear`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `list`
 - `empty`
@@ -641,7 +705,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `chip-remove`
 - `item-indicator`: `kui-value`
 
-Lists (`<template kui-each="…">`): `chips`.
+Lists (`<template kui-each="…">`): `chips`, `collection`.
 
 Anatomy:
 
@@ -649,18 +713,26 @@ Anatomy:
 <kui-combobox>
   input
   trigger
+    value (optional)
   portal
     positioner
       popup
         input (as above)
         list (optional)
+          <template kui-each="collection"> (optional)
+            item (repeated, as above)
+            group (optional, repeated, as above)
           group (optional, repeated)
+            <template kui-each="collection"> (optional, as above)
             item (repeated)
               item-indicator
             group-label
           separator (repeated)
+        <template kui-each="collection"> (optional, as above)
         empty
+        status (optional)
   popup (as above)
+  status (optional, as above)
   clear
   chips
     input (as above)
@@ -673,9 +745,11 @@ Attributes and CSS variables, by part:
 - input: The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -780,7 +854,7 @@ Events:
 
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `arrow`
 - `separator`
@@ -971,7 +1045,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `segment`
 - `input`
 - `trigger`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `calendar`
 - `heading`
@@ -1069,7 +1143,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/dialog"
 ```
 
-`<kui-dialog>`: `<kui-dialog>` around a `kui-part="trigger"` button and a `portal`, which is drawn at the end of the page while the dialog is open and holds its `backdrop` and its `popup`, with a `title`, a `description` and a `close` button. `open`, `default-open`, `modal`, `dismissible`; it tells `open-change`.
+`<kui-dialog>`: `<kui-dialog>` around a `kui-part="trigger"` button and a `portal`, which is drawn at the end of the page while the dialog is open and holds its `backdrop` and its `popup`, with a `title`, a `description` and a `close` button. A long dialog's popup is in a `viewport`, which scrolls. `open`, `default-open`, `modal`, `dismissible`; it tells `open-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -1086,6 +1160,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `trigger`
 - `backdrop`
+- `viewport`
 - `popup`
 - `title`
 - `description`
@@ -1098,10 +1173,11 @@ Anatomy:
   trigger
   portal
     backdrop
-    popup
-      title
-      description
-      close
+    viewport (optional)
+      popup
+        title
+        description
+        close
 ```
 
 Attributes and CSS variables, by part:
@@ -1113,6 +1189,13 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- viewport: What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
 - popup: The dialog itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1375,7 +1458,7 @@ Events:
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `trigger`: `kui-close-delay`, `kui-delay`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `arrow`
 
@@ -1551,7 +1634,7 @@ Events:
 
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `arrow`
 - `separator`
@@ -1785,7 +1868,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `icon`: `kui-value`
 - `content`: `kui-value`
 - `link`: `kui-active`, `kui-close-on-click`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `viewport`
 - `arrow`
@@ -1867,7 +1950,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/number-field"
 ```
 
-`<kui-number-field>`: `<kui-number-field>` around `kui-part="root"`, a `group`, an `input`, and `increment` and `decrement` buttons. With a name, the root draws the hidden input a form reads. `value`, `default-value`, `min`, `max`, `step`, `small-step`, `large-step`, `snap-on-step`, `allow-wheel-scrub`, `locale`, `disabled`, `read-only`, `required`, `name`, `form`; `format` as a property; it tells `value-change` and `value-committed`.
+`<kui-number-field>`: `<kui-number-field>` around `kui-part="root"`, a `group`, an `input`, and `increment` and `decrement` buttons. With a name, the root draws the hidden input a form reads. A `scrub-area` (a label, as a rule) is pressed and dragged to change the number, with `kui-direction="vertical"`, `kui-pixel-sensitivity` and `kui-teleport-distance` on it; a `scrub-area-cursor` inside it is drawn at the end of the page while the pointer is locked. `value`, `default-value`, `min`, `max`, `step`, `small-step`, `large-step`, `snap-on-step`, `allow-wheel-scrub`, `locale`, `disabled`, `read-only`, `required`, `name`, `form`; `format` as a property; it tells `value-change` and `value-committed`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -1903,6 +1986,8 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `input`
 - `increment`
 - `decrement`
+- `scrub-area`: `kui-direction`, `kui-pixel-sensitivity`, `kui-teleport-distance`
+- `scrub-area-cursor`
 
 Anatomy:
 
@@ -1913,6 +1998,8 @@ Anatomy:
       input
       increment
       decrement
+    scrub-area
+      scrub-area-cursor
 ```
 
 Attributes and CSS variables, by part:
@@ -1925,6 +2012,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - group: What holds the input and its buttons, as one control.
@@ -1935,6 +2023,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - input: The text input: it takes what its locale writes a number with.
@@ -1945,6 +2034,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - increment: A button that steps the number up. Held, it goes on.
@@ -1955,6 +2045,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - decrement: A button that steps the number down. Held, it goes on.
@@ -1965,6 +2056,29 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- scrubArea: An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- scrubAreaCursor: What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 
@@ -2088,12 +2202,13 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/popover"
 ```
 
-`<kui-popover>`: `<kui-popover>` around a `kui-part="trigger"` button and a `portal`, drawn at the end of the page while it is open, with a `positioner` (`kui-side`, `kui-align`, `kui-side-offset`, `kui-align-offset`, `kui-collision-padding`, and `kui-anchor`: the id of the element it is placed against, when that is not the trigger) around the `popup`, which may hold a `title`, a `description` and a `close` button. `open`, `default-open`; it tells `open-change`.
+`<kui-popover>`: `<kui-popover>` around a `kui-part="trigger"` button and a `portal`, drawn at the end of the page while it is open, with a `positioner` (`kui-side`, `kui-align`, `kui-side-offset`, `kui-align-offset`, `kui-collision-padding`, and `kui-anchor`: the id of the element it is placed against, when that is not the trigger) around the `popup`, which may hold an `arrow`, a `title`, a `description` and a `close` button; the portal may hold a `backdrop` too. The trigger takes `kui-open-on-hover`, with `kui-delay` and `kui-close-delay`. `open`, `default-open`, `modal` (there, or `"trap-focus"`); it tells `open-change`.
 
 Attributes of the element (each also a property, in camel case):
 
 - `open` (boolean): Whether it is open, when the caller holds it.
 - `default-open` (boolean): Whether it starts open, when the caller does not hold `open`. Read once.
+- `modal` (string): What the page behind it may do while it is open. `false` (the default): everything. `true`: nothing, the page is inert and does not scroll, and Tab stays inside the popover. `"trap-focus"`: Tab stays inside the popover, and the page can still be pressed and scrolled. A popover the pointer opened holds nothing until it is pressed. Read as it opens.
 
 Events:
 
@@ -2101,9 +2216,11 @@ Events:
 
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
-- `trigger`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `trigger`: `kui-close-delay`, `kui-delay`, `kui-open-on-hover`
+- `backdrop`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
+- `arrow`
 - `title`
 - `description`
 - `close`
@@ -2114,17 +2231,24 @@ Anatomy:
 <kui-popover>
   trigger
   portal
+    backdrop
     positioner
       popup
         title
         description
         close
+        arrow
 ```
 
 Attributes and CSS variables, by part:
 
 - trigger: The button that opens the popover, and what it is placed against.
     - `data-popup-open`: Present when the popover is open.
+- backdrop: A layer over the page behind the popover.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2142,6 +2266,10 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+- arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
 
 ### Progress
 
@@ -2399,7 +2527,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/select"
 ```
 
-`<kui-select>`: `<kui-select>` around a `kui-part="trigger"` button holding a `value` (it says the chosen item's text, or its `kui-placeholder`; with `multiple`, the chosen items' texts with commas between), and a `portal` with a `positioner` (its `kui-side` and the like, and `kui-align-item-with-trigger`) around the `popup`. The popup holds an `item` for each `kui-value` (`kui-disabled`, `kui-label`), each with an `item-text` and an `item-indicator`; items may be in a `group` with a `group-label`, with `separator`s between, and in a `list` between a `scroll-up-arrow` and a `scroll-down-arrow`. With a name it draws the hidden input a form reads. A `value` part that holds something says what the page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`, `default-open`, `disabled`, `required`, `multiple`, `values` and `default-values` (with commas between), `name`, `form`; `items` as a property; it tells `value-change`, `values-change` and `open-change`.
+`<kui-select>`: `<kui-select>` around a `kui-part="trigger"` button holding a `value` (it says the chosen item's text, or its `kui-placeholder`; with `multiple`, the chosen items' texts with commas between), and a `portal` with a `positioner` (its `kui-side` and the like, and `kui-align-item-with-trigger`) around the `popup`. The popup holds an `item` for each `kui-value` (`kui-disabled`, `kui-label`), each with an `item-text` and an `item-indicator`; items may be in a `group` with a `group-label`, with `separator`s between, and in a `list` between a `scroll-up-arrow` and a `scroll-down-arrow`. With a name it draws the hidden input a form reads. A `value` part that holds something says what the page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`, `default-open`, `disabled`, `read-only`, `required`, `multiple`, `values` and `default-values` (with commas between), `name`, `form`; `items` as a property; it tells `value-change`, `values-change` and `open-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -2408,6 +2536,7 @@ Attributes of the element (each also a property, in camel case):
 - `open` (boolean): Whether the list is open, when the caller holds it.
 - `default-open` (boolean): Whether the list starts open, when the caller does not hold `open`. Read once.
 - `disabled` (boolean): Disabled: it cannot be changed.
+- `read-only` (boolean): Shown as it is, focusable, not changeable: the list still opens to be read, and no item can be chosen. Its value is still submitted with the form.
 - `required` (boolean): In a field, "none" is then wrong.
 - `multiple` (boolean): Several values: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
 - `values` (string): With `multiple`: the chosen values, in the order they were chosen.
@@ -2429,7 +2558,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `trigger`
 - `value`: `kui-placeholder`
-- `positioner`: `kui-align`, `kui-align-item-with-trigger`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-item-with-trigger`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `list`
 - `scroll-up-arrow`
@@ -2470,6 +2599,7 @@ Attributes and CSS variables, by part:
     - `data-popup-open`: Present when the list is open.
     - `data-placeholder`: Present while nothing is chosen.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - value: The chosen value's label, or the placeholder. With several values, their labels with commas between.
     - `data-placeholder`: Present while nothing is chosen.
 - positioner: Places the list against the trigger. It carries the geometry.
@@ -2540,7 +2670,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/slider"
 ```
 
-`<kui-slider>`: `<kui-slider>` around `kui-part="root"`, a `value` (which says the value as it is written), a `control` with its `track`, `indicator` and a `thumb` for each value, in the values' order (or each with its `kui-index`). A thumb draws the hidden input a form reads. `value` and `default-value` (a range with a comma), `min`, `max`, `step`, `large-step`, `min-steps-between-values`, `thumb-alignment`, `orientation`, `disabled`, `name`, `form`, `locale`; it tells `value-change` and `value-committed`.
+`<kui-slider>`: `<kui-slider>` around `kui-part="root"`, a `value` (which says the value as it is written), a `control` with its `track`, `indicator` and a `thumb` for each value, in the values' order (or each with its `kui-index`). A thumb draws the hidden input a form reads. `value` and `default-value` (a range with a comma), `min`, `max`, `step`, `large-step`, `min-steps-between-values`, `thumb-alignment`, `orientation`, `disabled`, `read-only`, `name`, `form`, `locale`; it tells `value-change` and `value-committed`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -2554,6 +2684,7 @@ Attributes of the element (each also a property, in camel case):
 - `thumb-alignment` (string): Where a thumb is at the ends of its range. `"center"` (the default): its centre on the control's edge, so half of it lies outside. `"edge"`: its edge on the control's edge, so it stays inside. `"edge-client-only"` is the same here: nothing waits for the browser.
 - `orientation` (string): Whether the track lies across (the default) or stands upright: the arrows that move a thumb follow.
 - `disabled` (boolean): Disabled: it cannot be changed.
+- `read-only` (boolean): Shown as it is, focusable, not changeable: no key and no pointer moves a thumb, and its value is still submitted with the form.
 - `name` (string): With a name, each thumb's value is submitted with the form around the slider.
 - `form` (string): The id of the form the control belongs to, when it is not inside it.
 - `locale` (string): The language a value is written in; the page's by default.
@@ -2594,28 +2725,34 @@ Attributes and CSS variables, by part:
 - root: Groups the slider's parts.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - value: The value, written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - control: What a pointer presses and drags on. It holds the track and the thumbs.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - track: The whole range.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - indicator: The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
     - `--start-position`: With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.
     - `--relative-size`: With thumbs that stay inside the control and a range: the filled part's length.
 - thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
     - `data-index`: Which thumb it is, from 0.
     - `--position`: With thumbs that stay inside the control: where the thumb's centre is.
@@ -2957,7 +3094,7 @@ Events:
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `trigger`: `kui-close-delay`, `kui-delay`
-- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-collision-padding`, `kui-side`, `kui-side-offset`
+- `positioner`: `kui-align`, `kui-align-offset`, `kui-anchor`, `kui-arrow-padding`, `kui-collision-boundary`, `kui-collision-padding`, `kui-position-method`, `kui-side`, `kui-side-offset`, `kui-sticky`
 - `popup`
 - `arrow`
 

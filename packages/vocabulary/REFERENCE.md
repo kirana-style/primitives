@@ -82,10 +82,11 @@ Root
   Trigger
   Portal
     Backdrop
-    Popup
-      Title
-      Description
-      Close
+    Viewport (optional)
+      Popup
+        Title
+        Description
+        Close
 ```
 
 ### AlertDialog.Root
@@ -114,6 +115,19 @@ The layer over the page behind the dialog.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+### AlertDialog.Viewport
+
+What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested` | Present when the dialog opened over another dialog. |
+| `data-nested-dialog-open` | Present when another dialog is open above this one. |
 
 ### AlertDialog.Popup
 
@@ -192,6 +206,7 @@ The box. It holds a hidden native checkbox, which a form and a label reach.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-parent` | Present on the checkbox that stands for every box of its group. |
 
 ### Checkbox.Indicator
 
@@ -207,6 +222,16 @@ The mark. In the page while the box is checked or indeterminate.
 | `data-required` | Present when the form needs it. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+## CheckboxGroup
+
+### CheckboxGroup.Root
+
+The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
 
 ## Collapsible
 
@@ -257,18 +282,26 @@ The content. In the page while open, and through its exit's motion.
 Root
   Input
   Trigger
+    Value (optional)
   Portal
     Positioner
       Popup
         Input (as above)
         List (optional)
+          Collection (optional)
+            Item (as above)
+            Group (as above)
           Group (optional, repeated)
+            Collection (as above)
             Item (repeated)
               ItemIndicator
             GroupLabel
           Separator (repeated)
+        Collection (as above)
         Empty
+        Status (optional)
   Popup (as above)
+  Status (as above)
   Clear
   Chips
     Input (as above)
@@ -288,6 +321,7 @@ The text input. What is typed filters the list, which is placed against it, or a
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 
 ### Combobox.Trigger
 
@@ -297,6 +331,11 @@ A button that opens and closes the list. With the input inside the popup it is t
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+
+### Combobox.Value
+
+The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between. It draws no element.
 
 ### Combobox.Portal
 
@@ -343,6 +382,10 @@ The items' own box inside the popup, when the popup holds more than items (an in
 | --- | --- |
 | `data-empty` | Present when no item is shown for what was typed. |
 
+### Combobox.Collection
+
+Draws the list from the root's `items`: its content once for each item left for what was typed, or for each group that has items left; given a group, for each of that group's items left. The root then filters, and no item hides itself. It draws no element.
+
 ### Combobox.Item
 
 One choice in the list.
@@ -372,6 +415,10 @@ A mark an item shows while it is the chosen one.
 ### Combobox.Empty
 
 What is shown when no item is.
+
+### Combobox.Status
+
+Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.
 
 ### Combobox.Clear
 
@@ -578,10 +625,11 @@ Root
   Trigger
   Portal
     Backdrop
-    Popup
-      Title
-      Description
-      Close
+    Viewport (optional)
+      Popup
+        Title
+        Description
+        Close
 ```
 
 ### Dialog.Root
@@ -610,6 +658,19 @@ The layer over the page behind the dialog.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+### Dialog.Viewport
+
+What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested` | Present when the dialog opened over another dialog. |
+| `data-nested-dialog-open` | Present when another dialog is open above this one. |
 
 ### Dialog.Popup
 
@@ -1421,6 +1482,8 @@ Root
     Input
     Increment
     Decrement
+  ScrubArea
+    ScrubAreaCursor
 ```
 
 ### NumberField.Root
@@ -1436,6 +1499,7 @@ Groups the number field's parts.
 | `data-dirty` | Present while the number is not the one it started with. |
 | `data-filled` | Present while there is a number. |
 | `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
 | `data-valid` | In a field: present once the number was checked and found right. |
 | `data-invalid` | In a field: present while the number is wrong. |
 
@@ -1452,6 +1516,7 @@ What holds the input and its buttons, as one control.
 | `data-dirty` | Present while the number is not the one it started with. |
 | `data-filled` | Present while there is a number. |
 | `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
 | `data-valid` | In a field: present once the number was checked and found right. |
 | `data-invalid` | In a field: present while the number is wrong. |
 
@@ -1468,6 +1533,7 @@ The text input: it takes what its locale writes a number with.
 | `data-dirty` | Present while the number is not the one it started with. |
 | `data-filled` | Present while there is a number. |
 | `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
 | `data-valid` | In a field: present once the number was checked and found right. |
 | `data-invalid` | In a field: present while the number is wrong. |
 
@@ -1484,6 +1550,7 @@ A button that steps the number up. Held, it goes on.
 | `data-dirty` | Present while the number is not the one it started with. |
 | `data-filled` | Present while there is a number. |
 | `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
 | `data-valid` | In a field: present once the number was checked and found right. |
 | `data-invalid` | In a field: present while the number is wrong. |
 
@@ -1500,6 +1567,41 @@ A button that steps the number down. Held, it goes on.
 | `data-dirty` | Present while the number is not the one it started with. |
 | `data-filled` | Present while there is a number. |
 | `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+### NumberField.ScrubArea
+
+An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
+| `data-valid` | In a field: present once the number was checked and found right. |
+| `data-invalid` | In a field: present while the number is wrong. |
+
+### NumberField.ScrubAreaCursor
+
+What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the number cannot be changed. |
+| `data-required` | Present when a number must be given. |
+| `data-touched` | Present once focus has left the input. |
+| `data-dirty` | Present while the number is not the one it started with. |
+| `data-filled` | Present while there is a number. |
+| `data-focused` | Present while the input has focus. |
+| `data-scrubbing` | Present while the number is dragged from its scrub area. |
 | `data-valid` | In a field: present once the number was checked and found right. |
 | `data-invalid` | In a field: present while the number is wrong. |
 
@@ -1513,12 +1615,19 @@ Root
     Positioner
       Popup
         List (optional)
+          Collection (optional)
+            Item (as above)
+            Group (as above)
           Group (optional, repeated)
+            Collection (as above)
             Item (repeated)
             GroupLabel
           Separator (repeated)
+        Collection (as above)
         Empty
+        Status (optional)
   Popup (as above)
+  Status (as above)
   Clear
 ```
 
@@ -1534,6 +1643,7 @@ The text input: its text is the value, and what is typed asks for suggestions.
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 
 ### Autocomplete.Trigger
 
@@ -1543,6 +1653,7 @@ A button that opens and closes the list. With the input inside the popup it is t
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 
 ### Autocomplete.Portal
 
@@ -1589,6 +1700,10 @@ The items' own box inside the popup, when the popup holds more than items (an in
 | --- | --- |
 | `data-empty` | Present when no item is shown for what was typed. |
 
+### Autocomplete.Collection
+
+Draws the suggestions from the root's `items`: its content once for each one left for what was typed, or for each group that has some left; given a group, for each of that group's. The root then filters. It draws no element.
+
 ### Autocomplete.Item
 
 One suggestion: chosen, its text is written into the input.
@@ -1614,6 +1729,10 @@ A line between groups.
 ### Autocomplete.Empty
 
 What is shown when no item is.
+
+### Autocomplete.Status
+
+Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.
 
 ### Autocomplete.Clear
 
@@ -2237,11 +2356,13 @@ A button of the toast's own: the action it was added with, when nothing else is 
 Root
   Trigger
   Portal
+    Backdrop
     Positioner
       Popup
         Title
         Description
         Close
+        Arrow
 ```
 
 ### Popover.Root
@@ -2259,6 +2380,17 @@ The button that opens the popover, and what it is placed against.
 ### Popover.Portal
 
 Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
+### Popover.Backdrop
+
+A layer over the page behind the popover.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ### Popover.Positioner
 
@@ -2303,6 +2435,16 @@ The text that describes the popover.
 ### Popover.Close
 
 A button that closes the popover.
+
+### Popover.Arrow
+
+An element that points at the trigger, placed along the popup's edge.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
 
 ## Progress
 
@@ -2548,6 +2690,7 @@ The button that shows the value and opens the list.
 | `data-popup-open` | Present when the list is open. |
 | `data-placeholder` | Present while nothing is chosen. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 
 ### Select.Value
 
@@ -2680,6 +2823,7 @@ Groups the slider's parts.
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the track runs. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 
 ### Slider.Value
@@ -2690,6 +2834,7 @@ The value, written.
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the track runs. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 
 ### Slider.Control
@@ -2700,6 +2845,7 @@ What a pointer presses and drags on. It holds the track and the thumbs.
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the track runs. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 
 ### Slider.Track
@@ -2710,6 +2856,7 @@ The whole range.
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the track runs. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 
 ### Slider.Indicator
@@ -2720,6 +2867,7 @@ The filled part: up to the thumb, or from the first thumb to the last. Its place
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the track runs. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 
 | Variable | Holds |
@@ -2735,6 +2883,7 @@ What is dragged, and what the keyboard moves: a slider to assistive technology. 
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | The way the track runs. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
 | `data-index` | Which thumb it is, from 0. |
 

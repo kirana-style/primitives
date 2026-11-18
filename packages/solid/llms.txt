@@ -8,7 +8,7 @@ Generated from the library's own source (`bun scripts/llms.ts`), and checked aga
 
 Install `@kirana-ui/solid`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/solid/agent`, `@kirana-ui/solid/testing`), so nothing is imported from a package the project did not install.
 
-Its entries: an entry per component (`@kirana-ui/solid/tabs`, 48 of them, each named under its component below), the package root `@kirana-ui/solid` (every component at once, for a bundler that shakes trees), and `@kirana-ui/solid/runtime`, `@kirana-ui/solid/agent`, `@kirana-ui/solid/testing` and `@kirana-ui/solid/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/solid/direction`, `PortalProvider` in the package root.
+Its entries: an entry per component (`@kirana-ui/solid/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/solid` (every component at once, for a bundler that shakes trees), and `@kirana-ui/solid/runtime`, `@kirana-ui/solid/agent`, `@kirana-ui/solid/testing` and `@kirana-ui/solid/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/solid/direction`, `PortalProvider` in the package root.
 
 The attributes and CSS variables below are also data and typed selectors, for a design system: install `@kirana-ui/vocabulary` for them (`import { vocabulary } from "@kirana-ui/vocabulary"`, `import { Dialog } from "@kirana-ui/vocabulary/keys"`: `Dialog.Popup.open` is `"[data-open]"`). It is its own package, and not installed with this one.
 
@@ -20,9 +20,14 @@ What every `Positioner` takes, beside its own props where a component's section 
 
 - `side?: Side`: The side of the anchor the popup is on. `inline-start` and `inline-end` follow the reading direction the popup is placed in, and `data-side` then says the side in the same words. Default `"bottom"`.
 - `align?: Align`: Where along that side the popup is: at the anchor's start, its centre or its end. Default `"center"`.
-- `sideOffset?: number`: The gap between the anchor and the popup, measured without any arrow. Default `0`.
-- `alignOffset?: number`: How far the popup is moved along the side from where `align` puts it, in pixels. Default `0`.
-- `collisionPadding?: number`: Kept between the popup and the viewport's edges. Default `5`.
+- `sideOffset?: number | OffsetFunction`: The gap between the anchor and the popup, measured without any arrow: a number of pixels, or a function of what was measured (`({ side, align, anchor, positioner }) => number`). Default `0`.
+- `alignOffset?: number | OffsetFunction`: How far the popup is moved along the side from where `align` puts it: a number of pixels, or a function of what was measured (`({ side, align, anchor, positioner }) => number`). Default `0`.
+- `collisionPadding?: CollisionPadding`: Kept between the popup and the edges it is held inside: one number, or one for each side (`{ top, right, bottom, left }`, a side left out is 0). Default `5`.
+- `collisionBoundary?: CollisionBoundary`: What the popup is held inside: an element, several, or a rectangle of the viewport. Left out or `"clipping-ancestors"`: the ancestors that clip it, and the viewport.
+- `collisionAvoidance?: CollisionAvoidance`: What the popup does when it does not fit: `side` and `align` each `"flip"`, `"shift"` or `"none"`, and `fallbackAxisSide`. Left out: it flips to the opposite side and is moved along its side.
+- `sticky?: boolean`: Keeps the popup in view once its anchor has been scrolled out of it. Otherwise the popup leaves with its anchor. Default `false`.
+- `arrowPadding?: number`: Kept between an arrow and the ends of the popup's edge, so the arrow does not stand on a rounded corner. Default `5`.
+- `positionMethod?: "absolute" | "fixed"`: The CSS `position` the positioner is given: `"absolute"` or `"fixed"`. Default `"absolute"`.
 - `anchor?: Anchor | (() => Anchor | null | undefined) | null`: What the popup is placed against, when that is not its trigger: an element, a place in the viewport (an object with `getBoundingClientRect`), or a function that gives one (a signal's accessor, or `() => element` for a variable a `ref` fills). It may change while the popup is open: the popup follows.
 
 A component's own defaults lie over those: `Autocomplete` `{ align: "start" }`; `Combobox` `{ align: "start" }`; `ContextMenu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `HoverCard` `{ side: "top" }`; `Menu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `NavigationMenu` `{ align: "start" }`; `Select` `{ align: "start" }`; `Tooltip` `{ side: "top" }`.
@@ -50,6 +55,34 @@ The named types the props below mention, each with the entry of this package it 
     - `cancel(): void`: Keeps the value as it was.
     - `canceled: boolean`
 - `ChangeSource` (`@kirana-ui/solid`): `"mouse" | "touch" | "pen" | "keyboard" | "virtual" | "programmatic" | "agent"`. What made a change: a kind of pointer, the keyboard, a press with no pointer (`virtual`), code with no event (`programmatic`), or an agent acting through the bridge.
+- `CollisionAvoidance` (`@kirana-ui/solid`): What a popup does when it does not fit where it was asked to be.
+    - `side?: "flip" | "shift" | "none"`: Across from the anchor: `"flip"` goes to the opposite side, `"shift"` keeps the side and moves over the anchor to stay in view, `"none"` lets it overflow. Default `"flip"`.
+    - `align?: "flip" | "shift" | "none"`: Along its side: `"flip"` swaps `start` and `end`, `"shift"` moves the popup along the side to stay in view, `"none"` lets it overflow. Default `"flip"`. With `side: "shift"` it is `"shift"` or `"none"`.
+    - `fallbackAxisSide?: "start" | "end" | "none"`: Where it goes when neither the side asked for nor its opposite fits: to the other axis, its `"start"` or its `"end"` first, or nowhere (`"none"`). Default `"end"`.
+- `CollisionBoundary` (`@kirana-ui/solid`): `"clipping-ancestors" | Element | Element[] | { x: number; y: number; width: number; height: number }`. What a popup is held inside: the ancestors that clip it (`"clipping-ancestors"`), an element, several, or a rectangle of the viewport.
+- `CollisionPadding` (`@kirana-ui/solid`): `number | Partial<Record<PhysicalSide, number>>`. The room kept between a popup and the edges it is held inside: one number, or one a side.
+- `ComboboxEntry<Value = unknown>` (`@kirana-ui/solid`): `ComboboxItemEntry<Value> | ComboboxGroupEntry<Value>`. What a `Collection` hands to be drawn: an item that is left, or a group that has items left.
+- `ComboboxGroupData<Value = unknown>` (`@kirana-ui/solid`): Items given as data that belong together: `value` is the group's name.
+    - `value: string`
+    - `items: readonly ComboboxItemData<Value>[]`
+- `ComboboxGroupEntry<Value = unknown>` (`@kirana-ui/solid`): A group that has items left, with those items.
+    - `type: "group"`
+    - `key: string`: What it is known by from one drawing to the next.
+    - `value: string`: The group's name, as it was given.
+    - `label: string`: The same name: an entry of either kind has a `label`.
+    - `disabled: false`: Never: an entry of either kind says whether it is disabled.
+    - `items: readonly ComboboxItemEntry<Value>[]`: The items of the group that are left.
+- `ComboboxItemData<Value = unknown>` (`@kirana-ui/solid`): One item given as data: its value, and what it is called.
+    - `value: Value`
+    - `label: string`
+    - `disabled?: boolean`: It cannot be chosen: its entry says so, for the item drawn for it.
+- `ComboboxItemEntry<Value = unknown>` (`@kirana-ui/solid`): One item left of the `items` given as data, as a `Collection` hands it to be drawn.
+    - `type: "item"`
+    - `key: string`: What it is known by from one drawing to the next.
+    - `value: Value`
+    - `label: string`
+    - `disabled: boolean`
+    - `item: ComboboxItemData<Value>`: The item as it was given, with whatever else it carries.
 - `DateFieldSegment` (`@kirana-ui/solid`): One piece of the field, in the locale's order: a part that is typed, or what stands between.
     - `type: DateUnit | "literal"`
     - `literal: string`: What stands between two parts (`"/"`); empty for a part that is typed.
@@ -74,6 +107,12 @@ The named types the props below mention, each with the entry of this package it 
     - `disabled?(index: number): boolean`
     - `indexOf?(value: unknown): number`: The place of a value, or -1: where a list opens on what is chosen.
     - `scrollToIndex(index: number): void`: Brings a row into the page: the virtualizer's own scroll.
+- `OffsetData` (`@kirana-ui/solid`): What an offset given as a function is told: where the popup is, and the two sizes.
+    - `side: Side`: The side of the anchor the popup is on, in the words it was asked for in.
+    - `align: Align`: Where along that side the popup is.
+    - `anchor: { width: number; height: number }`: The anchor's size, in pixels.
+    - `positioner: { width: number; height: number }`: The positioner's size, in pixels.
+- `OffsetFunction` (`@kirana-ui/solid`): `(data: OffsetData) => number`. A gap worked out from what was measured: `({ side, align, anchor, positioner }) => number`.
 - `Orientation` (`@kirana-ui/solid`): `"horizontal" | "vertical"`. The way a row of things is laid out, and so which arrow keys move along it.
 - `PaginationEntry` (`@kirana-ui/solid`): `{ readonly type: "page"; readonly page: number; readonly key: string } | { readonly type: "ellipsis"; readonly key: "start" | "end" }`. One piece of the list of pages: a page, or the mark for pages left out.
 - `PhysicalSide` (`@kirana-ui/solid`): `"top" | "right" | "bottom" | "left"`. A side of the anchor as the page is drawn.
@@ -132,6 +171,7 @@ What the entries export beside the components, their parts' props types and the 
 
 - `AnchorOption`, from `@kirana-ui/solid`: A positioner's own anchor: an element, a place in the viewport (`getBoundingClientRect`), or a function that gives one, asked each time the popup is placed. `null`, `undefined` or a function that gives neither: the popup's own anchor, its trigger.
 - `Bindable`, from `@kirana-ui/solid`: A value that is the caller's while they give one and the part's own otherwise, as a signal that is asked to change.
+- `ComboboxShown`, from `@kirana-ui/solid`: What a combobox's value part shows: what is chosen, and how it is named.
 - `ComponentDefinition`, from `@kirana-ui/solid`: A component in the vocabulary: its parts by name.
 - `Direction`, from `@kirana-ui/solid`: The reading direction: left to right, or right to left.
 - `ItemLabels`, from `@kirana-ui/solid`: The labels of a control's values, as its caller gives them: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`).
@@ -152,6 +192,7 @@ What the entries export beside the components, their parts' props types and the 
 - `PopoverContext`, from `@kirana-ui/solid/popover`: The popover its parts are inside. Exported for a component that is made of one (a date picker provides its own to the popover's parts).
 - `positioned(props: P, positioning: Signal<Partial<PositionOptions>>)`, from `@kirana-ui/solid/popover`: A positioner's own props, written where its placement reads them, before its element attaches: the one place they are named. Gives back what is left, for the part's element.
 - `PositionerOptions`, from `@kirana-ui/solid/popover`: A positioner's own props: where its popup goes, and what it is placed against.
+- `TriggerOptions`, from `@kirana-ui/solid/popover`: What a trigger takes of its own: whether the pointer opens the popover too, and its waits.
 - `createToaster(options?: Core.ToasterOptions)`, from `@kirana-ui/solid` or `@kirana-ui/solid/toast`: The toasts of a page, made once, in a module: `toaster.add({ title })` from anywhere. A title, a description and an action's label are anything Solid draws, unless `Content` says otherwise.
 - `ToastContent`, from `@kirana-ui/solid` or `@kirana-ui/solid/toast`: What a toast's title, description and action's label may be here: anything Solid draws.
 - `ToasterOptions`, from `@kirana-ui/solid` or `@kirana-ui/solid/toast`: What a toaster is made with.
@@ -198,6 +239,7 @@ A component in a snapshot (`AgentComponent`):
 - `max?: number`
 - `items?: readonly AgentItem[]`: Its choices, where they are in the page. `query({ within })` reads a closed list's.
 - `disabled?: boolean`
+- `readOnly?: boolean`: It can be read and not changed: it then has no action.
 - `confirm?: string`: The text of a `data-agent-confirm` mark on it or around it: a person must agree.
 - `actions: readonly string[]`: What it can be asked to do now.
 
@@ -301,12 +343,12 @@ Its other types:
 - A `Positioner`'s `anchor` is an element, an object with `getBoundingClientRect`, or a function that gives one of those: a signal's accessor, or `() => element` for a variable a `ref` fills.
 - Each part's props are a type of the same entry, named for the part: `import type { TabProps } from "@kirana-ui/solid/tabs"`. They are the part's own props listed below, `as`, `render`, and the attributes of the element it draws.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Select.Root`, `Toast.List` and `Tooltip.Root`. Every other part draws the element named for it below.
-- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup.
-- Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
+- These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Autocomplete.Collection`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `Combobox.Value`, `Combobox.Collection`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Select.Root`, `Toast.List` and `Tooltip.Root`. Every other part draws the element named for it below.
+- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
+- Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
 - Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`onAtBottomChange`, `onCheckedChange`, `onFormSubmit`, `onIndexChange`, `onInputValueChange`, `onOpenChange`, `onPageChange`, `onPressedChange`, `onSelect`, `onSizesChange`, `onSnapPointChange`, `onValueChange`, `onValueCommitted` and `onValuesChange`). A callback that reports something that happened takes only that, and cannot be refused: `onClearErrors`, `onComplete` and `onMonthChange`.
 - A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `Accordion.Panel`, `Autocomplete.Clear`, `Checkbox.Indicator`, `Collapsible.Panel`, `Combobox.Clear`, `Combobox.ItemIndicator`, `ContextMenu.CheckboxItemIndicator`, `ContextMenu.RadioItemIndicator`, `Listbox.ItemIndicator`, `Menu.CheckboxItemIndicator`, `Menu.RadioItemIndicator`, `RadioGroup.Indicator`, `ScrollArea.Scrollbar`, `Select.ItemIndicator` and `Tabs.Panel`.
-- `readOnly` (shown, focusable, not changeable) is a prop of `Calendar`, `Checkbox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup` and `Switch` and of no other component.
+- `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
 - An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
@@ -386,7 +428,7 @@ Attributes and CSS variables, by part:
 import { AlertDialog } from "@kirana-ui/solid/alert-dialog"
 ```
 
-Parts: `<AlertDialog.Root>`, `<AlertDialog.Trigger>`, `<AlertDialog.Portal>`, `<AlertDialog.Backdrop>`, `<AlertDialog.Popup>`, `<AlertDialog.Title>`, `<AlertDialog.Description>`, `<AlertDialog.Close>`.
+Parts: `<AlertDialog.Root>`, `<AlertDialog.Trigger>`, `<AlertDialog.Portal>`, `<AlertDialog.Backdrop>`, `<AlertDialog.Viewport>`, `<AlertDialog.Popup>`, `<AlertDialog.Title>`, `<AlertDialog.Description>`, `<AlertDialog.Close>`.
 
 Anatomy:
 
@@ -395,10 +437,11 @@ Anatomy:
   <AlertDialog.Trigger>
   <AlertDialog.Portal>
     <AlertDialog.Backdrop>
-    <AlertDialog.Popup>
-      <AlertDialog.Title>
-      <AlertDialog.Description>
-      <AlertDialog.Close>
+    <AlertDialog.Viewport> (optional)
+      <AlertDialog.Popup>
+        <AlertDialog.Title>
+        <AlertDialog.Description>
+        <AlertDialog.Close>
 ```
 
 Props of its root:
@@ -413,6 +456,7 @@ Each part, and its own props:
 - `<AlertDialog.Trigger>` draws a `<button>`.
 - `<AlertDialog.Portal>` draws no element. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `<AlertDialog.Backdrop>` draws a `<div>`.
+- `<AlertDialog.Viewport>` draws a `<div>`.
 - `<AlertDialog.Popup>` draws a `<div>`.
 - `<AlertDialog.Title>` draws a `<h2>`. The heading that names the dialog.
 - `<AlertDialog.Description>` draws a `<p>`. The text that describes the dialog.
@@ -427,6 +471,13 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- viewport: What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
 - popup: The dialog itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -441,7 +492,7 @@ Attributes and CSS variables, by part:
 import { Autocomplete } from "@kirana-ui/solid/autocomplete"
 ```
 
-Parts: `<Autocomplete.Root>`, `<Autocomplete.Input>`, `<Autocomplete.Trigger>`, `<Autocomplete.Clear>`, `<Autocomplete.Portal>`, `<Autocomplete.Positioner>`, `<Autocomplete.Popup>`, `<Autocomplete.List>`, `<Autocomplete.Group>`, `<Autocomplete.GroupLabel>`, `<Autocomplete.Separator>`, `<Autocomplete.Item>`, `<Autocomplete.Empty>`.
+Parts: `<Autocomplete.Root>`, `<Autocomplete.Input>`, `<Autocomplete.Trigger>`, `<Autocomplete.Clear>`, `<Autocomplete.Portal>`, `<Autocomplete.Positioner>`, `<Autocomplete.Popup>`, `<Autocomplete.List>`, `<Autocomplete.Collection>`, `<Autocomplete.Group>`, `<Autocomplete.GroupLabel>`, `<Autocomplete.Separator>`, `<Autocomplete.Item>`, `<Autocomplete.Empty>`, `<Autocomplete.Status>`.
 
 Anatomy:
 
@@ -453,12 +504,19 @@ Anatomy:
     <Autocomplete.Positioner>
       <Autocomplete.Popup>
         <Autocomplete.List> (optional)
+          <Autocomplete.Collection> (optional)
+            <Autocomplete.Item> (repeated, as above)
+            <Autocomplete.Group> (optional, repeated, as above)
           <Autocomplete.Group> (optional, repeated)
+            <Autocomplete.Collection> (optional, as above)
             <Autocomplete.Item> (repeated)
             <Autocomplete.GroupLabel>
           <Autocomplete.Separator> (repeated)
+        <Autocomplete.Collection> (optional, as above)
         <Autocomplete.Empty>
+        <Autocomplete.Status> (optional)
   <Autocomplete.Popup> (as above)
+  <Autocomplete.Status> (optional, as above)
   <Autocomplete.Clear>
 ```
 
@@ -474,6 +532,8 @@ Props of its root:
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether a suggestion is shown for what was typed; `null` shows every one.
 - `openOnInputClick?: boolean`: Whether a press on the input opens the list. Default: it opens when something is typed.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Its text can be read and not changed: nothing typed is taken, no suggestion pressed is written in, and its clear button does nothing. The list still opens (by its button, the arrows, or a press with `openOnInputClick`) and can be gone through. It keeps focus, and its text is still submitted.
+- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The suggestions as data, for a `Collection` to draw: a list of them with their labels, groups of them (`{ value, items }`, `value` the group's name), or the labels by value. The autocomplete filters them by what is typed (not with `mode: "none"`), and the `Collection` draws what is left.
 - `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
 - `name?: string`: The input's name in the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
@@ -491,6 +551,9 @@ Each part, and its own props:
 - `<Autocomplete.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
 - `<Autocomplete.Popup>` draws a `<div>`.
 - `<Autocomplete.List>` draws a `<div>`.
+- `<Autocomplete.Collection>` draws no element. Generic: `<Value = unknown>`. Draws the suggestions from the root's `items`: its content once for each one left for what was typed, or for each group that has some left; given a group, for each of that group's. The root then filters.
+    - `of?: ComboboxEntry<Value>`: A group the root's `items` gave: its items left are then what is drawn.
+    - `children: (entry: ComboboxEntry<Value>) => JSX.Element`: Required. Drawn once for each item left, or for each group that has items left.
 - `<Autocomplete.Group>` draws a `<div>`. Items that belong together, named by their label. Hidden while none is shown.
 - `<Autocomplete.GroupLabel>` draws a `<div>`. The name of a group. Outside a group it is plain text, and names nothing.
 - `<Autocomplete.Separator>` draws a `<div>`. A line between groups.
@@ -500,15 +563,18 @@ Each part, and its own props:
     - `label?: string`: What is filtered and what the input shows; the item's text when left out.
     - `index?: number`: Its place among all the rows, in a virtualized list.
 - `<Autocomplete.Empty>` draws a `<div>`. What is shown when no item is.
+- `<Autocomplete.Status>` draws a `<div>`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.
 
 Attributes and CSS variables, by part:
 
 - input: The text input: its text is the value, and what is typed asks for suggestions.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -755,6 +821,7 @@ Props of its root:
 - `defaultChecked?: boolean`: Read once.
 - `onCheckedChange?: (checked: boolean, details: ChangeDetails) => void`: Heard as it is about to be checked or unchecked: `details.cancel()` keeps it as it was.
 - `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
+- `parent?: boolean`: In a checkbox group with `allValues`: the box that stands for them all. It is checked when every one is, mixed when some are, a press on it sets them all, and it is not submitted. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
@@ -777,6 +844,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-parent`: Present on the checkbox that stands for every box of its group.
 - indicator: The mark. In the page while the box is checked or indeterminate.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
@@ -786,6 +854,27 @@ Attributes and CSS variables, by part:
     - `data-required`: Present when the form needs it.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### CheckboxGroup
+
+```
+import { CheckboxGroup } from "@kirana-ui/solid/checkbox-group"
+```
+
+Props:
+
+- `value?: readonly string[]`: The values of the checked checkboxes, when the caller holds them.
+- `defaultValue?: readonly string[]`: The values checked at the start, when the caller does not hold `value`. Read once.
+- `onValueChange?: (value: string[], details: ChangeDetails) => void`: Heard as a checkbox of the group is about to be checked or unchecked, with the values that would then be checked: `details.cancel()` keeps them as they were.
+- `allValues?: readonly string[]`: The value of every checkbox of the group, for a checkbox marked `parent`: it is checked when all of them are, mixed when some are, and a press on it sets them all.
+- `disabled?: boolean`: Disables every checkbox of the group.
+
+`<CheckboxGroup>` draws a `<div>`.
+
+Attributes and CSS variables, by part:
+
+- root: The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.
+    - `data-disabled`: Present when it is disabled.
 
 ### Collapsible
 
@@ -840,7 +929,7 @@ Attributes and CSS variables, by part:
 import { Combobox } from "@kirana-ui/solid/combobox"
 ```
 
-Parts: `<Combobox.Root>`, `<Combobox.Input>`, `<Combobox.Trigger>`, `<Combobox.Clear>`, `<Combobox.Chips>`, `<Combobox.Chip>`, `<Combobox.ChipRemove>`, `<Combobox.Portal>`, `<Combobox.Positioner>`, `<Combobox.Popup>`, `<Combobox.List>`, `<Combobox.Group>`, `<Combobox.GroupLabel>`, `<Combobox.Separator>`, `<Combobox.Item>`, `<Combobox.ItemIndicator>`, `<Combobox.Empty>`.
+Parts: `<Combobox.Root>`, `<Combobox.Input>`, `<Combobox.Trigger>`, `<Combobox.Value>`, `<Combobox.Clear>`, `<Combobox.Chips>`, `<Combobox.Chip>`, `<Combobox.ChipRemove>`, `<Combobox.Portal>`, `<Combobox.Positioner>`, `<Combobox.Popup>`, `<Combobox.List>`, `<Combobox.Collection>`, `<Combobox.Group>`, `<Combobox.GroupLabel>`, `<Combobox.Separator>`, `<Combobox.Item>`, `<Combobox.ItemIndicator>`, `<Combobox.Empty>`, `<Combobox.Status>`.
 
 Anatomy:
 
@@ -848,18 +937,26 @@ Anatomy:
 <Combobox.Root>
   <Combobox.Input>
   <Combobox.Trigger>
+    <Combobox.Value> (optional)
   <Combobox.Portal>
     <Combobox.Positioner>
       <Combobox.Popup>
         <Combobox.Input> (as above)
         <Combobox.List> (optional)
+          <Combobox.Collection> (optional)
+            <Combobox.Item> (repeated, as above)
+            <Combobox.Group> (optional, repeated, as above)
           <Combobox.Group> (optional, repeated)
+            <Combobox.Collection> (optional, as above)
             <Combobox.Item> (repeated)
               <Combobox.ItemIndicator>
             <Combobox.GroupLabel>
           <Combobox.Separator> (repeated)
+        <Combobox.Collection> (optional, as above)
         <Combobox.Empty>
+        <Combobox.Status> (optional)
   <Combobox.Popup> (as above)
+  <Combobox.Status> (optional, as above)
   <Combobox.Clear>
   <Combobox.Chips>
     <Combobox.Input> (as above)
@@ -879,10 +976,11 @@ Props of its root:
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Its value can be read and not changed. The list still opens and can be gone through, by the pointer and the arrows, but no press and no Enter chooses; nothing typed is taken, and its clear and chip buttons do nothing. It keeps focus, and its value is still submitted.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: readonly { value: Value; label: string }[] | Readonly<Record<string, string>>`: The labels of the values, for the input to show a value before the list has ever been opened: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the markup.
-- `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
+- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`, `value` the group's name), or, for values that are text, the labels by value (`{ apple: "Apple" }`). The input shows a value by its label from here before the list has ever been opened. With the items written in the markup that is all it is for. With a `Collection` it is the list itself: the combobox filters it by what is typed, and the `Collection` draws what is left.
+- `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants (or gives the `items` it wants, when they are loaded for what was typed).
 - `multiple?: boolean`: Several values, each shown as a chip beside the input: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
 - `values?: readonly Value[]`: With `multiple`: the chosen values, in the order they were chosen.
 - `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
@@ -897,6 +995,9 @@ Each part, and its own props:
 - `<Combobox.Root>` draws no element. Generic: `<Value = unknown>`. `Value` is what an item's `value` is: the root's `value` and `onValueChange` hold one or `null` for none, and with `multiple` its `values` and `onValuesChange` hold several. Its props are above.
 - `<Combobox.Input>` draws a `<input>`.
 - `<Combobox.Trigger>` draws a `<button>`.
+- `<Combobox.Value>` draws no element. Generic: `<Chosen = unknown>`. The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between.
+    - `placeholder?: JSX.Element`: Shown while nothing is chosen.
+    - `children?: JSX.Element | (( value: Accessor<Chosen>, label: Accessor<Chosen extends readonly unknown[] ? readonly string[] : string | undefined> ) => JSX.Element)`: What to show in place of the label. A function is given the value and its label, each to be called where it is read (`null` and `undefined` while nothing is chosen); with `multiple`, the values and their labels, in the order they were chosen.
 - `<Combobox.Clear>` draws a `<button>`.
     - `keepMounted?: boolean`: Keeps the button in the page while there is nothing to clear.
 - `<Combobox.Chips>` draws a `<div>`. With several values: what holds the chips and the input, and what the list is placed against.
@@ -907,6 +1008,9 @@ Each part, and its own props:
 - `<Combobox.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
 - `<Combobox.Popup>` draws a `<div>`.
 - `<Combobox.List>` draws a `<div>`.
+- `<Combobox.Collection>` draws no element. Generic: `<Value = unknown>`. Draws the list from the root's `items`: its content once for each item left for what was typed, or for each group that has items left; given a group, for each of that group's items left. The root then filters, and no item hides itself.
+    - `of?: ComboboxEntry<Value>`: A group the root's `items` gave: its items left are then what is drawn.
+    - `children: (entry: ComboboxEntry<Value>) => JSX.Element`: Required. Drawn once for each item left, or for each group that has items left.
 - `<Combobox.Group>` draws a `<div>`. Items that belong together, named by their label. Hidden while none is shown.
 - `<Combobox.GroupLabel>` draws a `<div>`. The name of a group. Outside a group it is plain text, and names nothing.
 - `<Combobox.Separator>` draws a `<div>`. A line between groups.
@@ -918,15 +1022,18 @@ Each part, and its own props:
 - `<Combobox.ItemIndicator>` draws a `<span>`. A mark an item shows while it is the chosen one.
     - `keepMounted?: boolean`: Keeps the mark in the page while its item is not chosen.
 - `<Combobox.Empty>` draws a `<div>`. What is shown when no item is.
+- `<Combobox.Status>` draws a `<div>`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.
 
 Attributes and CSS variables, by part:
 
 - input: The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1275,6 +1382,9 @@ Each part, and its own props:
     - `segment: DateFieldSegment`: Required. The piece it is: an entry `DateField.Segments` gave.
 - `<DatePicker.Input>` draws a `<input>`. The hidden input it is submitted by.
 - `<DatePicker.Trigger>` draws a `<button>`.
+    - `openOnHover?: boolean`: Whether the pointer resting on the trigger opens the popover too. A press and the keyboard still open it, and a press on one the pointer opened keeps it open. Default `false`.
+    - `delay?: number`: How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300.
+    - `closeDelay?: number`: How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0.
 - `<DatePicker.Portal>` draws no element. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `<DatePicker.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
 - `<DatePicker.Popup>` draws a `<div>`.
@@ -1354,7 +1464,7 @@ Attributes and CSS variables, by part:
 import { Dialog } from "@kirana-ui/solid/dialog"
 ```
 
-Parts: `<Dialog.Root>`, `<Dialog.Trigger>`, `<Dialog.Portal>`, `<Dialog.Backdrop>`, `<Dialog.Popup>`, `<Dialog.Title>`, `<Dialog.Description>`, `<Dialog.Close>`.
+Parts: `<Dialog.Root>`, `<Dialog.Trigger>`, `<Dialog.Portal>`, `<Dialog.Backdrop>`, `<Dialog.Viewport>`, `<Dialog.Popup>`, `<Dialog.Title>`, `<Dialog.Description>`, `<Dialog.Close>`.
 
 Anatomy:
 
@@ -1363,10 +1473,11 @@ Anatomy:
   <Dialog.Trigger>
   <Dialog.Portal>
     <Dialog.Backdrop>
-    <Dialog.Popup>
-      <Dialog.Title>
-      <Dialog.Description>
-      <Dialog.Close>
+    <Dialog.Viewport> (optional)
+      <Dialog.Popup>
+        <Dialog.Title>
+        <Dialog.Description>
+        <Dialog.Close>
 ```
 
 Props of its root:
@@ -1383,6 +1494,7 @@ Each part, and its own props:
 - `<Dialog.Trigger>` draws a `<button>`.
 - `<Dialog.Portal>` draws no element. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `<Dialog.Backdrop>` draws a `<div>`.
+- `<Dialog.Viewport>` draws a `<div>`.
 - `<Dialog.Popup>` draws a `<div>`.
 - `<Dialog.Title>` draws a `<h2>`. The heading that names the dialog.
 - `<Dialog.Description>` draws a `<p>`. The text that describes the dialog.
@@ -1397,6 +1509,13 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- viewport: What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
+    - `data-nested-dialog-open`: Present when another dialog is open above this one.
 - popup: The dialog itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2131,7 +2250,7 @@ Attributes and CSS variables, by part:
 import { NumberField } from "@kirana-ui/solid/number-field"
 ```
 
-Parts: `<NumberField.Root>`, `<NumberField.Group>`, `<NumberField.Input>`, `<NumberField.Increment>`, `<NumberField.Decrement>`.
+Parts: `<NumberField.Root>`, `<NumberField.Group>`, `<NumberField.Input>`, `<NumberField.Increment>`, `<NumberField.Decrement>`, `<NumberField.ScrubArea>`, `<NumberField.ScrubAreaCursor>`.
 
 Anatomy:
 
@@ -2141,6 +2260,8 @@ Anatomy:
     <NumberField.Input>
     <NumberField.Increment>
     <NumberField.Decrement>
+  <NumberField.ScrubArea>
+    <NumberField.ScrubAreaCursor>
 ```
 
 Props of its root:
@@ -2171,6 +2292,11 @@ Each part, and its own props:
 - `<NumberField.Input>` draws a `<input>`.
 - `<NumberField.Increment>` draws a `<button>`.
 - `<NumberField.Decrement>` draws a `<button>`.
+- `<NumberField.ScrubArea>` draws a `<span>`.
+    - `direction?: "horizontal" | "vertical"`: The way the pointer is dragged to change the number: `"horizontal"`, where right is more, or `"vertical"`, where up is more. Default `"horizontal"`.
+    - `pixelSensitivity?: number`: How many pixels the pointer moves before the number changes: more is slower. Default 2.
+    - `teleportDistance?: number`: How far past the scrub area's edges the drawn cursor goes before it comes back in at the other side, in pixels, half of it at each edge. Default: the edges of the window.
+- `<NumberField.ScrubAreaCursor>` draws a `<span>`.
 
 Attributes and CSS variables, by part:
 
@@ -2182,6 +2308,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - group: What holds the input and its buttons, as one control.
@@ -2192,6 +2319,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - input: The text input: it takes what its locale writes a number with.
@@ -2202,6 +2330,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - increment: A button that steps the number up. Held, it goes on.
@@ -2212,6 +2341,7 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 - decrement: A button that steps the number down. Held, it goes on.
@@ -2222,6 +2352,29 @@ Attributes and CSS variables, by part:
     - `data-dirty`: Present while the number is not the one it started with.
     - `data-filled`: Present while there is a number.
     - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- scrubArea: An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
+    - `data-valid`: In a field: present once the number was checked and found right.
+    - `data-invalid`: In a field: present while the number is wrong.
+- scrubAreaCursor: What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the number cannot be changed.
+    - `data-required`: Present when a number must be given.
+    - `data-touched`: Present once focus has left the input.
+    - `data-dirty`: Present while the number is not the one it started with.
+    - `data-filled`: Present while there is a number.
+    - `data-focused`: Present while the input has focus.
+    - `data-scrubbing`: Present while the number is dragged from its scrub area.
     - `data-valid`: In a field: present once the number was checked and found right.
     - `data-invalid`: In a field: present while the number is wrong.
 
@@ -2339,7 +2492,7 @@ Attributes and CSS variables, by part:
 import { Popover } from "@kirana-ui/solid/popover"
 ```
 
-Parts: `<Popover.Root>`, `<Popover.Trigger>`, `<Popover.Portal>`, `<Popover.Positioner>`, `<Popover.Popup>`, `<Popover.Title>`, `<Popover.Description>`, `<Popover.Close>`.
+Parts: `<Popover.Root>`, `<Popover.Trigger>`, `<Popover.Portal>`, `<Popover.Backdrop>`, `<Popover.Positioner>`, `<Popover.Popup>`, `<Popover.Arrow>`, `<Popover.Title>`, `<Popover.Description>`, `<Popover.Close>`.
 
 Anatomy:
 
@@ -2347,11 +2500,13 @@ Anatomy:
 <Popover.Root>
   <Popover.Trigger>
   <Popover.Portal>
+    <Popover.Backdrop>
     <Popover.Positioner>
       <Popover.Popup>
         <Popover.Title>
         <Popover.Description>
         <Popover.Close>
+        <Popover.Arrow>
 ```
 
 Props of its root:
@@ -2359,14 +2514,20 @@ Props of its root:
 - `open?: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
+- `modal?: boolean | "trap-focus"`: What the page behind it may do while it is open. `false` (the default): everything. `true`: nothing, the page is inert and does not scroll, and Tab stays inside the popover. `"trap-focus"`: Tab stays inside the popover, and the page can still be pressed and scrolled. A popover the pointer opened holds nothing until it is pressed. Read as it opens.
 
 Each part, and its own props:
 
 - `<Popover.Root>` draws no element. Holds the popover: whether it is open. Its props are above.
 - `<Popover.Trigger>` draws a `<button>`.
+    - `openOnHover?: boolean`: Whether the pointer resting on the trigger opens the popover too. A press and the keyboard still open it, and a press on one the pointer opened keeps it open. Default `false`.
+    - `delay?: number`: How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300.
+    - `closeDelay?: number`: How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0.
 - `<Popover.Portal>` draws no element. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `<Popover.Backdrop>` draws a `<div>`.
 - `<Popover.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
 - `<Popover.Popup>` draws a `<div>`.
+- `<Popover.Arrow>` draws a `<div>`.
 - `<Popover.Title>` draws a `<h2>`. The heading that names the popover.
 - `<Popover.Description>` draws a `<p>`. The text that describes the popover.
 - `<Popover.Close>` draws a `<button>`. A button that closes the popover.
@@ -2375,6 +2536,11 @@ Attributes and CSS variables, by part:
 
 - trigger: The button that opens the popover, and what it is placed against.
     - `data-popup-open`: Present when the popover is open.
+- backdrop: A layer over the page behind the popover.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2392,6 +2558,10 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+- arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
 
 ### Progress
 
@@ -2676,6 +2846,7 @@ Props of its root:
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable: the list still opens to be read, and no item can be chosen. Its value is still submitted with the form.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
@@ -2718,6 +2889,7 @@ Attributes and CSS variables, by part:
     - `data-popup-open`: Present when the list is open.
     - `data-placeholder`: Present while nothing is chosen.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
 - value: The chosen value's label, or the placeholder. With several values, their labels with commas between.
     - `data-placeholder`: Present while nothing is chosen.
 - positioner: Places the list against the trigger. It carries the geometry.
@@ -2804,6 +2976,7 @@ Props of its root:
 - `orientation?: Orientation`: Whether the track lies across (the default) or stands upright: the arrows that move a thumb follow.
 - `thumbAlignment?: "center" | "edge" | "edge-client-only"`: Where a thumb is at the ends of its range. `"center"` (the default): its centre on the control's edge, so half of it lies outside. `"edge"`: its edge on the control's edge, so it stays inside. `"edge-client-only"` is the same here: nothing waits for the browser.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable: no key and no pointer moves a thumb, and its value is still submitted with the form.
 - `name?: string`: With a name, each thumb's value is submitted with the form around the slider.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `format?: Intl.NumberFormatOptions`: How a value is written.
@@ -2826,28 +2999,34 @@ Attributes and CSS variables, by part:
 - root: Groups the slider's parts.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - value: The value, written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - control: What a pointer presses and drags on. It holds the track and the thumbs.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - track: The whole range.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
 - indicator: The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
     - `--start-position`: With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.
     - `--relative-size`: With thumbs that stay inside the control and a range: the filled part's length.
 - thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
     - `data-index`: Which thumb it is, from 0.
     - `--position`: With thumbs that stay inside the control: where the thumb's centre is.

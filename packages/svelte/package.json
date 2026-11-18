@@ -45,6 +45,10 @@
       "svelte": "./src/checkbox.ts",
       "default": "./src/checkbox.ts"
     },
+    "./checkbox-group": {
+      "svelte": "./src/checkbox-group.ts",
+      "default": "./src/checkbox-group.ts"
+    },
     "./collapsible": {
       "svelte": "./src/collapsible.ts",
       "default": "./src/collapsible.ts"

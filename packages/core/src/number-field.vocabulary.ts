@@ -9,6 +9,7 @@ const STATES = {
   dirty: state("data-dirty", "Present while the number is not the one it started with."),
   filled: state("data-filled", "Present while there is a number."),
   focused: state("data-focused", "Present while the input has focus."),
+  scrubbing: state("data-scrubbing", "Present while the number is dragged from its scrub area."),
   valid: state("data-valid", "In a field: present once the number was checked and found right."),
   invalid: state("data-invalid", "In a field: present while the number is wrong."),
 }
@@ -39,6 +40,20 @@ export const numberFieldVocabulary = defineComponent({
   decrement: {
     inside: "group",
     description: "A button that steps the number down. Held, it goes on.",
+    states: STATES,
+    exclusive: ONE_OF,
+  },
+  scrubArea: {
+    inside: "root",
+    description:
+      "An area that is pressed and dragged to change the number: the field's label, as a rule. It takes `direction`, `pixelSensitivity` and `teleportDistance`. A mouse's pointer is locked for the drag where the browser has that (not in Safari); a finger drags as it is.",
+    states: STATES,
+    exclusive: ONE_OF,
+  },
+  scrubAreaCursor: {
+    inside: "scrubArea",
+    description:
+      "What is drawn in place of the pointer while it is locked for a drag: in the page only then, at the end of `<body>`, placed by the component.",
     states: STATES,
     exclusive: ONE_OF,
   },

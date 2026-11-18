@@ -54,6 +54,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     open: props.open,
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
+    readOnly: props.readOnly,
     required: props.required,
     name: props.name,
     form: props.form,

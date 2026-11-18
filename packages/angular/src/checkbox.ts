@@ -4,6 +4,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox } from "@kirana-ui/core/checkbox"
 
+import { KUI_CHECKBOX_GROUP } from "./checkbox-group-token"
 import { KUI_FIELD } from "./field-token"
 import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
@@ -13,6 +14,8 @@ export class KuiCheckbox implements OnInit {
   readonly checked = model<boolean | undefined>(undefined)
   readonly defaultChecked = input(false, { transform: booleanAttribute })
   readonly indeterminate = input(false, { transform: booleanAttribute })
+  /** In a `kuiCheckboxGroup` with `allValues`: the box that stands for them all. */
+  readonly parent = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly readOnly = input(false, { transform: booleanAttribute })
   readonly required = input(false, { transform: booleanAttribute })
@@ -26,12 +29,14 @@ export class KuiCheckbox implements OnInit {
 
   controller!: Checkbox
   private readonly field = inject(KUI_FIELD, { optional: true })
+  private readonly group = inject(KUI_CHECKBOX_GROUP, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly props = inputsSignal(() => ({
     id: this.kuiId() ?? this.generated,
     checked: this.checked(),
     defaultChecked: this.defaultChecked(),
     indeterminate: this.indeterminate(),
+    parent: this.parent(),
     disabled: this.disabled(),
     readOnly: this.readOnly(),
     required: this.required(),
@@ -51,7 +56,10 @@ export class KuiCheckbox implements OnInit {
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.controller = createCheckbox(this.props(), { field: this.field?.controller })
+    this.controller = createCheckbox(this.props(), {
+      field: this.field?.controller,
+      group: this.group?.controller,
+    })
     this.part(this.controller.root)
     this.inner(this.controller.input)
     this.mount(this.controller)

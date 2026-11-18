@@ -2,6 +2,7 @@ import { createDatePicker } from "@kirana-ui/core/date-picker"
 import type { DatePicker, DatePickerProps } from "@kirana-ui/core/date-picker"
 
 import { positioner } from "./around.ts"
+import type { Placed } from "./around.ts"
 import { calendarParts, fieldParts } from "./dates.ts"
 import { defineElement } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
@@ -63,6 +64,7 @@ declare global {
     "kui-date-picker": ElementOf<
       typeof tag,
       { "value-change": ["onValueChange", "value"]; "open-change": ["onOpenChange", "open"] }
-    >
+    > &
+      Placed
   }
 }

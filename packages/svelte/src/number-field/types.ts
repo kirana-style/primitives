@@ -1,4 +1,4 @@
-import type { NumberFieldProps } from "@kirana-ui/core/number-field"
+import type { NumberFieldProps, NumberFieldScrubOptions } from "@kirana-ui/core/number-field"
 
 import type { Controlled, HeldInput, PartAttributes, StateFor } from "../types.ts"
 
@@ -20,3 +20,15 @@ export type InputProps = PartAttributes<"input", StateFor<"numberField", "input"
 export type DecrementProps = PartAttributes<"button", StateFor<"numberField", "decrement">>
 
 export type IncrementProps = PartAttributes<"button", StateFor<"numberField", "increment">>
+
+/** Pressed and dragged to change the number: which way, and how fast. */
+export type ScrubAreaProps = PartAttributes<
+  "span",
+  StateFor<"numberField", "scrubArea">,
+  NumberFieldScrubOptions
+>
+
+export type ScrubAreaCursorProps = PartAttributes<
+  "span",
+  StateFor<"numberField", "scrubAreaCursor">
+>

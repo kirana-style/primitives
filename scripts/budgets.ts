@@ -18,6 +18,7 @@ const COMPONENTS: Record<string, string[]> = {
   avatar: ["avatar"],
   button: ["button"],
   checkbox: ["checkbox"],
+  "checkbox-group": ["checkbox-group"],
   collapsible: ["collapsible"],
   combobox: ["combobox"],
   "context-menu": ["context-menu"],

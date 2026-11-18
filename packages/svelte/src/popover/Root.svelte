@@ -6,7 +6,7 @@
   import { provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
 
-  let { open = $bindable(), defaultOpen, onOpenChange, id, children }: RootProps = $props()
+  let { open = $bindable(), defaultOpen, modal, onOpenChange, id, children }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -14,7 +14,7 @@
     if (!by.canceled) open = next
   }
 
-  provide(controller(createPopover, () => ({ id: id ?? generated, open, defaultOpen, onOpenChange: change })))
+  provide(controller(createPopover, () => ({ id: id ?? generated, open, defaultOpen, modal, onOpenChange: change })))
 </script>
 
 {@render children?.()}

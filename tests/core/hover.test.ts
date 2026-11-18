@@ -218,6 +218,28 @@ describe("a popup that opens on hover", () => {
     document.dispatchEvent(new PointerEvent("pointermove", { clientX: 300, clientY: 300 }))
     expect(open.peek()).toBe(true)
   })
+
+  it("forgets a popup that was taken over: its wait ends, and it is not the one to close", () => {
+    // A wait that has not ended: a press opened the popup meanwhile.
+    const waiting = popup()
+    waiting.enter()
+    vi.advanceTimersByTime(300)
+    waiting.hover.forget()
+    vi.advanceTimersByTime(1000)
+    expect(waiting.open.peek()).toBe(false)
+    // One the pointer opened and a press kept: the next popup's trigger does not close it,
+    // and waits its own wait, as after any popup that is not the pointer's.
+    const kept = popup({ delay: 0 })
+    kept.enter()
+    expect(kept.open.peek()).toBe(true)
+    kept.hover.forget()
+    const next = popup()
+    next.enter()
+    expect(kept.open.peek()).toBe(true)
+    expect(next.open.peek()).toBe(false)
+    vi.advanceTimersByTime(600)
+    expect(next.open.peek()).toBe(true)
+  })
 })
 
 describe("a popup that opens on focus", () => {

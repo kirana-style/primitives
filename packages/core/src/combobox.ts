@@ -8,12 +8,72 @@ import { byPlace } from "./services/list-places.ts"
 import { createList, pointerMoved } from "./services/list.ts"
 import { createFormControl } from "./services/form-control.ts"
 import { restInputs } from "./services/hidden-inputs.ts"
-import { labelIn } from "./services/items.ts"
+import { itemsOf, labelIn } from "./services/items.ts"
+import type { ItemLabels } from "./services/items.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import { textOf } from "./services/typeahead.ts"
 import type { PositionOptions } from "./services/position.ts"
+
+/** One item given as data: its value, and what it is called. */
+export interface ComboboxItemData<Value = unknown> {
+  value: Value
+  label: string
+  /** It cannot be chosen: its entry says so, for the item drawn for it. */
+  disabled?: boolean | undefined
+}
+
+/** Items given as data that belong together: `value` is the group's name. */
+export interface ComboboxGroupData<Value = unknown> {
+  value: string
+  items: readonly ComboboxItemData<Value>[]
+}
+
+/** One item left of the `items` given as data, as a `Collection` hands it to be drawn. */
+export interface ComboboxItemEntry<Value = unknown> {
+  readonly type: "item"
+  /** What it is known by from one drawing to the next. */
+  readonly key: string
+  readonly value: Value
+  readonly label: string
+  readonly disabled: boolean
+  /** The item as it was given, with whatever else it carries. */
+  readonly item: ComboboxItemData<Value>
+}
+
+/** A group that has items left, with those items. */
+export interface ComboboxGroupEntry<Value = unknown> {
+  readonly type: "group"
+  /** What it is known by from one drawing to the next. */
+  readonly key: string
+  /** The group's name, as it was given. */
+  readonly value: string
+  /** The same name: an entry of either kind has a `label`. */
+  readonly label: string
+  /** Never: an entry of either kind says whether it is disabled. */
+  readonly disabled: false
+  /** The items of the group that are left. */
+  readonly items: readonly ComboboxItemEntry<Value>[]
+}
+
+/** What a `Collection` hands to be drawn: an item that is left, or a group that has items left. */
+export type ComboboxEntry<Value = unknown> = ComboboxItemEntry<Value> | ComboboxGroupEntry<Value>
+
+/** What a combobox's value part shows: what is chosen, and how it is named. */
+export interface ComboboxShown<Value = unknown> {
+  /** The chosen value; `null` while nothing is chosen, and with `multiple`. */
+  readonly value: Value | null
+  /**
+   * The chosen value's label, or with `multiple` every chosen label with ", " between;
+   * `undefined` while nothing is chosen.
+   */
+  readonly label: string | undefined
+  /** Every chosen value, in the order they were chosen: one or none without `multiple`. */
+  readonly values: readonly Value[]
+  /** The label of each of `values`. */
+  readonly labels: readonly string[]
+}
 
 export interface ComboboxProps<Value = unknown> {
   id: string
@@ -37,20 +97,34 @@ export interface ComboboxProps<Value = unknown> {
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /**
+   * Its value can be read and not changed. The list still opens and can be gone through, by
+   * the pointer and the arrows, but no press and no Enter chooses; nothing typed is taken,
+   * and its clear and chip buttons do nothing. It keeps focus, and its value is still
+   * submitted.
+   */
+  readOnly?: boolean | undefined
   /** With a name, the value is submitted with the form around it. */
   name?: string | undefined
   /** The id of the form the control belongs to, when it is not inside it. */
   form?: string | undefined
   /**
-   * The labels of the values, for the input to show a value before the list has ever been
-   * opened: a list of values with their labels, or, for values that are text, the labels by
-   * value (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the
-   * markup.
+   * The values with their labels: a list of them, groups of them (`{ value, items }`, `value`
+   * the group's name), or, for values that are text, the labels by value
+   * (`{ apple: "Apple" }`). The input shows a value by its label from here before the list has
+   * ever been opened. With the items written in the markup that is all it is for. With a
+   * `Collection` it is the list itself: the combobox filters it by what is typed, and the
+   * `Collection` draws what is left.
    */
-  items?: readonly { value: Value; label: string }[] | Readonly<Record<string, string>> | undefined
+  items?:
+    | readonly ComboboxItemData<Value>[]
+    | readonly ComboboxGroupData<Value>[]
+    | Readonly<Record<string, string>>
+    | undefined
   /**
    * Whether an item is shown for what was typed. Default: its label holds the text, without
-   * regard to case. `null`: every item is shown, and the caller draws the ones it wants.
+   * regard to case. `null`: every item is shown, and the caller draws the ones it wants (or
+   * gives the `items` it wants, when they are loaded for what was typed).
    */
   filter?: ((label: string, query: string) => boolean) | null | undefined
   /**
@@ -118,6 +192,17 @@ export interface Combobox<Value = unknown> {
   readonly named: ReadonlySignal<boolean>
   /** Whether there is anything to clear: its clear button is in the page only then. */
   readonly clearable: ReadonlySignal<boolean>
+  /** Whether it holds several values. Read once, when the combobox is made. */
+  readonly multiple: boolean
+  /** What is chosen and how it is named, for a value part its caller draws. */
+  readonly shown: ReadonlySignal<ComboboxShown<Value>>
+  /**
+   * The `items` given as data that are left for what was typed, for a `Collection` to draw:
+   * items, or the groups that have items left; given one of those groups, its items left. Asking
+   * says the list is drawn from data: the combobox is then what filters, and no item hides
+   * itself.
+   */
+  entries(of?: { readonly key: string }): ReadonlySignal<readonly ComboboxEntry<Value>[]>
   setOpen(open: boolean, details: ChangeDetails): void
   setValue(value: Value | null, details: ChangeDetails): void
   readonly positioning: Signal<Partial<PositionOptions>>
@@ -154,6 +239,11 @@ export interface Combobox<Value = unknown> {
   readonly list: Part
   /** What is shown when no item is. */
   readonly emptyPart: Part
+  /**
+   * What says how the list stands ("3 results", "Loading"): software that reads the page says
+   * its text as the text changes. It stays in the page, with its text changed or taken out.
+   */
+  readonly status: Part
   /** The hidden input that submits the value. Rendered only when the combobox has a name. */
   readonly hidden: Part
   item(value: Value, options: () => ComboboxItemOptions, group?: ComboboxGroup): Part
@@ -181,6 +271,87 @@ const holds = (label: string, query: string) => label.toLowerCase().includes(que
 
 interface Shown {
   readonly shown: ReadonlySignal<boolean>
+}
+
+type Given<Value> = ComboboxProps<Value>["items"]
+const grouped = <Value>(items: Given<Value>): items is readonly ComboboxGroupData<Value>[] =>
+  Array.isArray(items) && Array.isArray((items[0] as ComboboxGroupData<Value> | undefined)?.items)
+
+/** The items given, out of their groups, as values with their labels. */
+function leaves<Value>(items: Given<Value>) {
+  return grouped(items) ? items.flatMap((each) => each.items) : (items as ItemLabels<Value>)
+}
+
+/** `items` as entries: each with a key that is its own, by which a drawn item is kept. */
+function arrange<Value>(items: Given<Value>): readonly ComboboxEntry<Value>[] {
+  const taken = new Set<string>()
+  const own = (wanted: string) => {
+    let key = wanted
+    for (let again = 2; taken.has(key); again++) key = `${wanted}#${again}`
+    taken.add(key)
+    return key
+  }
+  const entry = (item: ComboboxItemData<Value>): ComboboxItemEntry<Value> => ({
+    type: "item",
+    key: own(String(item.value)),
+    value: item.value,
+    label: item.label,
+    disabled: Boolean(item.disabled),
+    item,
+  })
+  if (!grouped(items)) return itemsOf(items as ItemLabels<Value>).map(entry)
+  return items.map((group) => ({
+    type: "group",
+    key: own(`group ${group.value}`),
+    value: group.value,
+    label: group.value,
+    disabled: false,
+    items: group.items.map(entry),
+  }))
+}
+
+/** A zero-width mark: adding it to a text is a change software that reads the page hears. */
+const JOINER = "\u2060"
+
+/**
+ * A status that comes into the page with its text already in it is not said: only a change
+ * is. So its text is changed once, by a mark that draws nothing, and put back. Not on iOS,
+ * where a status is said as it appears.
+ */
+const STATUS_PART: Part = {
+  props: STATUS,
+  attach(element) {
+    let live = true
+    let undo = NOTHING
+    // A framework may write the text after the element attaches.
+    queueMicrotask(() => {
+      const page = element.ownerDocument
+      const { platform, maxTouchPoints } = page.defaultView?.navigator ?? { platform: "" }
+      const ios =
+        platform.startsWith("iP") || (platform === "MacIntel" && (maxTouchPoints ?? 0) > 1)
+      if (!live || !element.isConnected || ios) return
+      const walker = page.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+      let last: Text | undefined
+      while (walker.nextNode()) if (walker.currentNode.nodeValue) last = walker.currentNode as Text
+      if (!last) return
+      const node = last
+      const text = node.data
+      const marked = `${text}${JOINER}`
+      node.data = marked
+      const back = () => {
+        if (node.data === marked) node.data = text
+      }
+      const timer = setTimeout(back, 200)
+      undo = () => {
+        clearTimeout(timer)
+        back()
+      }
+    })
+    return () => {
+      live = false
+      undo()
+    }
+  },
 }
 
 interface Members extends ComboboxGroup {
@@ -221,7 +392,7 @@ export function createCombobox<Value = unknown>(
 
   function labelOf(item: Value | null): string {
     if (item === null) return ""
-    return labelIn(props.peek().items, item) ?? labels.get(item) ?? String(item)
+    return labelIn(leaves(props.peek().items), item) ?? labels.get(item) ?? String(item)
   }
 
   const open = bindable({
@@ -277,6 +448,7 @@ export function createCombobox<Value = unknown>(
   const disabled = computed(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
   )
+  const readOnly = computed(() => Boolean(props.get().readOnly))
   const name = computed(() => props.get().name ?? field?.name.get())
   // Only what was typed since the list opened filters it: opened on a chosen value, it shows
   // all. A list that is always in the page is always filtered by what its input says.
@@ -301,6 +473,51 @@ export function createCombobox<Value = unknown>(
   }
 
   const without = (item: Value) => values.peek().filter((each) => !Object.is(each, item))
+  // Whether a `Collection` draws the list from `items`: the combobox is then what filters.
+  let fromData = false
+  const whole = computed(() => arrange(props.get().items))
+  const left = computed<readonly ComboboxEntry<Value>[]>(() => {
+    const all = whole.get()
+    const text = query.get()
+    const filter = props.get().filter
+    if (filter === null || text === "") return all
+    const keeps = (each: ComboboxItemEntry<Value>) => (filter ?? holds)(each.label, text)
+    const rest: ComboboxEntry<Value>[] = []
+    for (const each of all) {
+      if (each.type === "item") {
+        if (keeps(each)) rest.push(each)
+        continue
+      }
+      const items = each.items.filter(keeps)
+      // A group with nothing left is not there; one with everything left is as it was.
+      if (items.length > 0)
+        rest.push(items.length === each.items.length ? each : { ...each, items })
+    }
+    return rest
+  })
+  const inGroup = new Map<string, ReadonlySignal<readonly ComboboxEntry<Value>[]>>()
+  const itemsLeft = () =>
+    left.peek().flatMap((each) => (each.type === "group" ? each.items : [each]))
+  // The labels learned from the markup, counted: what is chosen is named by one of them.
+  const learned = signal(0)
+  const showing = computed<ComboboxShown<Value>>(() => {
+    void props.get().items
+    learned.get()
+    if (multiple) {
+      const all = values.get()
+      const names = all.map(labelOf)
+      return {
+        value: null,
+        label: all.length > 0 ? names.join(", ") : undefined,
+        values: all,
+        labels: names,
+      }
+    }
+    const one = value.get()
+    if (one === null) return { value: null, label: undefined, values: NONE, labels: NONE }
+    const label = labelOf(one)
+    return { value: one, label, values: [one], labels: [label] }
+  })
   const list = createList({
     selector: '[role="option"]',
     virtual: true,
@@ -317,12 +534,17 @@ export function createCombobox<Value = unknown>(
     const every = props.get().virtualized
     if (every) return every.count === 0
     registered.get()
+    // Drawn from data, it is the data that says: an item made and never put in the page (a
+    // render that was thrown away) is no item.
+    if (fromData) return left.get().length === 0
     for (const each of shown) if (each.shown.get()) return false
     return true
   })
   const placement = createPlacement({ align: "start" })
 
   let input: HTMLInputElement | undefined
+  // The items the input's text was last named from.
+  let known = props.peek().items
   // The text a field was last told, when the text is the value.
   let told = inputValue.peek()
   let trigger: HTMLElement | undefined
@@ -346,6 +568,23 @@ export function createCombobox<Value = unknown>(
   // Whether focus goes back to the button as the popup closes: not when it left by itself.
   let back = true
   const auto = () => Boolean(props.peek().autoHighlight)
+  // Drawn from data, the items left come into the page after the text has changed: the first
+  // of them is highlighted once they have.
+  let awaited = false
+
+  /** Highlights the first item, once the page holds the items that are left and no other. */
+  function arrive() {
+    if (!awaited) return
+    const wanted = new Set(itemsLeft().map((each) => each.value))
+    for (const each of wanted) if (!rows.has(each)) return
+    for (const each of whole.peek()) {
+      for (const item of each.type === "group" ? each.items : [each]) {
+        if (!wanted.has(item.value) && rows.has(item.value)) return
+      }
+    }
+    awaited = false
+    list.highlight(list.rows()[0], true)
+  }
 
   /** Reads where the input is, once it or what it may be in is in the page or has left. */
   function sort() {
@@ -415,6 +654,7 @@ export function createCombobox<Value = unknown>(
   })
 
   function choose(item: Value, text: string, event: Event) {
+    if (readOnly.peek()) return
     const by = details("item-press", event)
     if (multiple) {
       // Added, or taken away; the list stays open for the next, and what was typed has been
@@ -475,6 +715,21 @@ export function createCombobox<Value = unknown>(
       () => value.get() !== null || values.get().length > 0 || inputValue.get() !== ""
     ),
     values,
+    multiple,
+    shown: showing,
+    entries(of) {
+      fromData = true
+      if (!of) return left
+      let found = inGroup.get(of.key)
+      if (!found) {
+        found = computed(() => {
+          const group = left.get().find((each) => each.key === of.key)
+          return group?.type === "group" ? group.items : NONE
+        })
+        inGroup.set(of.key, found)
+      }
+      return found
+    },
     chips: {
       props: EMPTY,
       attach(element) {
@@ -497,6 +752,7 @@ export function createCombobox<Value = unknown>(
           // Focus stays in the input.
           onMouseDown: (event: Event) => event.preventDefault(),
           onClick(event: Event) {
+            if (readOnly.peek()) return
             setValues(without(item), details("chip-remove-press", event))
             input?.focus({ preventScroll: true })
           },
@@ -551,7 +807,8 @@ export function createCombobox<Value = unknown>(
         // What it says, so a server draws it. In a page the core writes it too.
         value: inputValue.get(),
         autocomplete: "off",
-        "aria-autocomplete": "list",
+        // Read only, it takes nothing typed: no completion is offered.
+        "aria-autocomplete": readOnly.get() ? "none" : "list",
         "aria-haspopup": "listbox",
         ...(inline
           ? { "aria-expanded": "true", "aria-controls": boxed.get() ? listId : popupId }
@@ -560,13 +817,18 @@ export function createCombobox<Value = unknown>(
           inline || open.get() ? list.highlighted.get()?.element()?.id : undefined,
         form: props.get().form,
         disabled: flag(disabled.get()),
+        readonly: flag(readOnly.get()),
+        "aria-readonly": readOnly.get() ? "true" : undefined,
         "aria-required": props.get().required ? "true" : undefined,
         ...field?.aria(),
         ...field?.state(),
         "data-disabled": flag(disabled.get()),
+        "data-readonly": flag(readOnly.get()),
         onFocus: () => member?.focused(true),
         onInput(event: Event) {
           const text = (event.currentTarget as HTMLInputElement).value
+          // The browser takes no key for it, but a script may still write it: put back.
+          if (readOnly.peek()) return void (input && (input.value = inputValue.peek()))
           const by = details("input-change", event)
           typed.set(true)
           inputValue.set(text, by)
@@ -584,6 +846,7 @@ export function createCombobox<Value = unknown>(
           // With nothing typed, Backspace takes the last chip away.
           if (
             multiple &&
+            !readOnly.peek() &&
             event.key === "Backspace" &&
             (event.currentTarget as HTMLInputElement).value === "" &&
             values.peek().length > 0
@@ -600,6 +863,9 @@ export function createCombobox<Value = unknown>(
             // caller's handler on it hears too. With none, nothing.
             const row = list.highlighted.peek()
             const on = row && list.rows().includes(row)
+            // Read only, Enter chooses nothing: on an item it is not the form's either, and
+            // with none it is the form's as it would be with the list closed.
+            if (readOnly.peek()) return void (on && event.preventDefault())
             // With no suggestion taken, Enter is the form's, with the text as typed.
             if (free && !on) return setOpen(false, details("input-submit", event))
             event.preventDefault()
@@ -636,6 +902,22 @@ export function createCombobox<Value = unknown>(
             member = undefined
           },
           inForm.attach(element),
+          // The labels may come after the value (items that are loaded): a text that named the
+          // value by what was known then names it by what is known now.
+          effect(() => {
+            const next = props.get().items
+            untracked(() => {
+              const before = known
+              known = next
+              const current = value.peek()
+              if (before === next || free || multiple || current === null || inside.peek()) return
+              const was = labelIn(leaves(before), current) ?? labels.get(current) ?? String(current)
+              const now = labelOf(current)
+              if (was !== now && inputValue.peek() === was) {
+                inputValue.set(now, details("input-reset"))
+              }
+            })
+          }),
           // The input's text is the core's to write: a framework that held it would write it
           // in its own time, after what was typed since.
           effect(() => {
@@ -664,9 +946,12 @@ export function createCombobox<Value = unknown>(
           "aria-haspopup": own ? "dialog" : "listbox",
           "aria-expanded": own ? String(open.get()) : undefined,
           "aria-controls": layer.mounted.get() ? popupId : undefined,
+          // Said by the combobox: beside an input, that is the input.
+          "aria-readonly": own && readOnly.get() ? "true" : undefined,
           "data-popup-open": flag(open.get()),
           disabled: flag(disabled.get()),
           "data-disabled": flag(disabled.get()),
+          "data-readonly": flag(readOnly.get()),
           // Focus stays in an input beside it.
           onMouseDown(event: Event) {
             if (!alone.peek()) event.preventDefault()
@@ -700,6 +985,7 @@ export function createCombobox<Value = unknown>(
         // Focus stays in the input.
         onMouseDown: (event: Event) => event.preventDefault(),
         onClick(event: Event) {
+          if (readOnly.peek()) return
           if (multiple) setValues([], details("clear-press", event))
           else setValue(null, details("clear-press", event))
           inputValue.set("", details("clear-press", event))
@@ -726,6 +1012,8 @@ export function createCombobox<Value = unknown>(
         id: popupId,
         // With a list inside, that is the listbox: around an input and a list, this is a dialog.
         role: boxed.get() ? (inside.get() ? "dialog" : "presentation") : "listbox",
+        // Said by the listbox: its options can be gone through, and none chosen.
+        "aria-readonly": !boxed.get() && readOnly.get() ? "true" : undefined,
         // Always in the page, it is neither open nor closed, and is placed by the page.
         ...(inline ? {} : { ...layer.state(), ...layer.placed() }),
         "data-empty": flag(empty.get()),
@@ -746,7 +1034,10 @@ export function createCombobox<Value = unknown>(
           // Each time it opens, once its items are in the page.
           effect(() => {
             if (inline) return
-            if (!open.get()) return untracked(() => list.highlight(undefined))
+            if (!open.get()) {
+              awaited = false
+              return untracked(() => list.highlight(undefined))
+            }
             queueMicrotask(() => {
               if (popup === element && open.peek()) land()
             })
@@ -760,10 +1051,18 @@ export function createCombobox<Value = unknown>(
               if (text === asked || !(inline || open.peek())) return void (asked = text)
               asked = text
               // Typed at, nothing is highlighted unless asked to; a suggestion, only for text.
+              awaited = false
               if (!auto() || (free && text.trim() === "")) return list.highlight(undefined)
+              // Drawn from data, the items for this text are not in the page yet.
+              if (fromData) return ((awaited = true), arrive())
               if (list.collection()) list.move("first")
               else list.highlight(list.rows()[0], true)
             })
+          }),
+          // As items come into the page and leave it.
+          effect(() => {
+            registered.get()
+            untracked(arrive)
           }),
         ]
         return () => {
@@ -777,6 +1076,7 @@ export function createCombobox<Value = unknown>(
       props: computed(() => ({
         id: listId,
         role: "listbox",
+        "aria-readonly": readOnly.get() ? "true" : undefined,
         "data-empty": flag(empty.get()),
       })),
       attach(element) {
@@ -788,6 +1088,7 @@ export function createCombobox<Value = unknown>(
     },
     // Said when it comes into the page, where a reader's software follows a status.
     emptyPart: { props: STATUS, attach: () => NOTHING },
+    status: STATUS_PART,
     hidden: {
       props: computed(() => {
         const current = value.get()
@@ -871,8 +1172,9 @@ export function createCombobox<Value = unknown>(
         drawn.get()
         const text = query.get()
         const filter = props.get().filter
-        // In a collection the caller has filtered: every row that is drawn is shown.
-        if (filter === null || text === "" || props.get().virtualized) return true
+        // In a collection the caller has filtered: every row that is drawn is shown. Drawn
+        // from data, the combobox has: what is in the page is what is left.
+        if (filter === null || text === "" || props.get().virtualized || fromData) return true
         // Not through the row: its options ask whether it is shown, which is this.
         const element = row.element()
         return (filter ?? holds)(options().label ?? (element ? textOf(element) : ""), text)
@@ -913,7 +1215,10 @@ export function createCombobox<Value = unknown>(
           // A framework may write the text after the element attaches: read it a moment later.
           queueMicrotask(() => {
             if (!element.isConnected) return
-            labels.set(item, row.label())
+            if (labels.get(item) !== row.label()) {
+              labels.set(item, row.label())
+              learned.set(learned.peek() + 1)
+            }
             drawn.set(drawn.peek() + 1)
           })
           return () => {

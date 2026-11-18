@@ -83,6 +83,7 @@ const AlertRoot = defineComponent({
 
 export type TriggerProps = PartComponentProps
 export type BackdropProps = PartComponentProps
+export type ViewportProps = PartComponentProps
 export type PopupProps = PartComponentProps
 export type TitleProps = PartComponentProps
 export type DescriptionProps = PartComponentProps
@@ -99,6 +100,12 @@ export const Dialog = {
     "DialogBackdrop",
     "div",
     () => scope.use().backdrop
+  ),
+  /** What a long dialog scrolls in, around its popup: it may be left out. */
+  Viewport: partComponent<"div", State["viewport"]>(
+    "DialogViewport",
+    "div",
+    () => scope.use().viewport
   ),
   Popup: partComponent<"div", State["popup"]>("DialogPopup", "div", () => scope.use().popup),
   Title: partComponent<"h2", State["title"]>("DialogTitle", "h2", () => scope.use().title),
@@ -160,9 +167,12 @@ const DrawerRoot = defineComponent({
   },
 }) as unknown as PlainComponent<DrawerRootProps, DrawerRootEmits>
 
+// A drawer has no viewport: it lies at an edge of the page, and what scrolls is inside it.
+const { Viewport: _, ...shared } = Dialog
+
 /** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
 export const Drawer = {
-  ...Dialog,
+  ...shared,
   Root: DrawerRoot,
   // The same two parts, with what they also say of a drag.
   Backdrop: Dialog.Backdrop as unknown as PartComponent<"div", StatesOf<"drawer">["backdrop"]>,

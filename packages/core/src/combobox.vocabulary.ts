@@ -1,6 +1,7 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  CONTROL,
   DISABLED,
   EITHER_FRAME,
   EITHER_OPEN,
@@ -23,13 +24,19 @@ export const comboboxVocabulary = defineComponent({
     inside: ["root", "chips", "popup"],
     description:
       "The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.",
-    states: { popupOpen: POPUP_OPEN, disabled: DISABLED },
+    states: { popupOpen: POPUP_OPEN, disabled: DISABLED, readonly: CONTROL.readonly },
   },
   trigger: {
     inside: "root",
     description:
       "A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.",
-    states: { popupOpen: POPUP_OPEN, disabled: DISABLED },
+    states: { popupOpen: POPUP_OPEN, disabled: DISABLED, readonly: CONTROL.readonly },
+  },
+  value: {
+    inside: "trigger",
+    optional: true,
+    description:
+      "The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between. It draws no element.",
   },
   portal: {
     description:
@@ -62,8 +69,14 @@ export const comboboxVocabulary = defineComponent({
       "The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.",
     states: { empty: state("data-empty", "Present when no item is shown for what was typed.") },
   },
+  collection: {
+    inside: ["list", "popup", "group"],
+    optional: true,
+    description:
+      "Draws the list from the root's `items`: its content once for each item left for what was typed, or for each group that has items left; given a group, for each of that group's items left. The root then filters, and no item hides itself. It draws no element.",
+  },
   item: {
-    inside: "group",
+    inside: ["group", "collection"],
     repeated: true,
     description: "One choice in the list.",
     states: {
@@ -76,7 +89,7 @@ export const comboboxVocabulary = defineComponent({
     },
   },
   group: {
-    inside: "list",
+    inside: ["list", "collection"],
     optional: true,
     repeated: true,
     description: "Items that belong together, named by their label. Hidden while none is shown.",
@@ -91,6 +104,12 @@ export const comboboxVocabulary = defineComponent({
     description: "A mark an item shows while it is the chosen one.",
   },
   empty: { inside: "popup", description: "What is shown when no item is." },
+  status: {
+    inside: ["popup", "root"],
+    optional: true,
+    description:
+      'Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input.',
+  },
   clear: {
     inside: "root",
     description: "A button that empties the input and the value.",

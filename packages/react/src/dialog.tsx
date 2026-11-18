@@ -38,6 +38,7 @@ function Portal({ children }: PortalProps): ReactElement | null {
 
 export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
 export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
@@ -45,6 +46,8 @@ export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
 
 const Trigger = (props: TriggerProps) => usePart(useDialog("Trigger").trigger, "button", props)
 const Backdrop = (props: BackdropProps) => usePart(useDialog("Backdrop").backdrop, "div", props)
+/** What a long dialog scrolls in, around its popup: it may be left out. */
+const Viewport = (props: ViewportProps) => usePart(useDialog("Viewport").viewport, "div", props)
 const Popup = (props: PopupProps) => usePart(useDialog("Popup").popup, "div", props)
 const Title = (props: TitleProps) => usePart(useDialog("Title").title, "h2", props)
 const Description = (props: DescriptionProps) =>
@@ -56,6 +59,7 @@ export const Dialog = /* @__PURE__ */ parts("Dialog", {
   Trigger,
   Portal,
   Backdrop,
+  Viewport,
   Popup,
   Title,
   Description,
@@ -88,9 +92,12 @@ export type DrawerPopupProps = PartComponentProps<"div", StateOf<DrawerParts["po
 const DrawerBackdrop: (props: DrawerBackdropProps) => ReactElement = Dialog.Backdrop
 const DrawerPopup: (props: DrawerPopupProps) => ReactElement = Dialog.Popup
 
+// A drawer has no viewport: it lies at an edge of the page, and what scrolls is inside it.
+const { Viewport: _, ...shared } = Dialog
+
 /** A dialog that comes from an edge and is dragged back to it. Its parts are a dialog's. */
 export const Drawer = /* @__PURE__ */ parts("Drawer", {
-  ...Dialog,
+  ...shared,
   Root: DrawerRoot,
   Backdrop: DrawerBackdrop,
   Popup: DrawerPopup,

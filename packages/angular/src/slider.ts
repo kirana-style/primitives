@@ -40,6 +40,8 @@ export class KuiSlider<Value extends SliderValue = SliderValue> implements OnIni
   readonly thumbAlignment = input<"center" | "edge" | "edge-client-only">()
   readonly orientation = input<"horizontal" | "vertical">()
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** Shown as it is, focusable, not changeable; its value is still submitted. */
+  readonly readOnly = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
@@ -68,6 +70,7 @@ export class KuiSlider<Value extends SliderValue = SliderValue> implements OnIni
     thumbAlignment: this.thumbAlignment(),
     orientation: this.orientation(),
     disabled: this.disabled(),
+    readOnly: this.readOnly(),
     name: this.name(),
     form: this.form(),
     format: this.format(),

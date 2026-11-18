@@ -431,12 +431,37 @@ function anchorOf(anchor: PositionerOptions["anchor"]): PositionOptions["anchor"
  */
 export function usePositioning<Props extends PositionerOptions>(
   positioning: Signal<Partial<PositionOptions>>,
-  { side, align, sideOffset, alignOffset, collisionPadding, anchor, ...rest }: Props
+  {
+    side,
+    align,
+    sideOffset,
+    alignOffset,
+    collisionPadding,
+    collisionBoundary,
+    collisionAvoidance,
+    sticky,
+    arrowPadding,
+    positionMethod,
+    anchor,
+    ...rest
+  }: Props
 ): Omit<Props, keyof PositionerOptions> {
   // Written while rendering, so the first placement (made when the element attaches, before
   // this component's effects) reads them. Nothing re-renders for it: the core compares.
   positioning.set(
-    defined({ side, align, sideOffset, alignOffset, collisionPadding, anchor: anchorOf(anchor) })
+    defined({
+      side,
+      align,
+      sideOffset,
+      alignOffset,
+      collisionPadding,
+      collisionBoundary,
+      collisionAvoidance,
+      sticky,
+      arrowPadding,
+      positionMethod,
+      anchor: anchorOf(anchor),
+    })
   )
   return rest
 }

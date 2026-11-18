@@ -37,6 +37,8 @@ export class KuiSelect<Value = unknown> implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** Shown as it is, focusable, not changeable: the list still opens, and nothing is chosen. */
+  readonly readOnly = input(false, { transform: booleanAttribute })
   readonly required = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
@@ -64,6 +66,7 @@ export class KuiSelect<Value = unknown> implements OnInit {
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     disabled: this.disabled(),
+    readOnly: this.readOnly(),
     required: this.required(),
     name: this.name(),
     form: this.form(),

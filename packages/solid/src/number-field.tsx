@@ -1,13 +1,24 @@
-import { within } from "@kirana-ui/core"
+import { defined, within } from "@kirana-ui/core"
 import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
-import type { NumberField as Controller, NumberFieldProps } from "@kirana-ui/core/number-field"
+import type {
+  NumberField as Controller,
+  NumberFieldProps,
+  NumberFieldScrubOptions,
+} from "@kirana-ui/core/number-field"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
+import {
+  Show,
+  createComputed,
+  createContext,
+  createUniqueId,
+  splitProps,
+  useContext,
+} from "solid-js"
 import type { JSX } from "solid-js"
 
 import { FieldContext } from "./field-context.ts"
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, Portal, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["numberField"]
@@ -98,8 +109,39 @@ const part =
   ) =>
   (props: Props): JSX.Element => <Part of={useNumberField()[name]} tag={tag} {...props} />
 
+export type ScrubAreaProps = PartComponentProps<
+  "span",
+  StateOf<Parts["scrubArea"]>,
+  NumberFieldScrubOptions
+>
+export type ScrubAreaCursorProps = PartComponentProps<"span", StateOf<Parts["scrubAreaCursor"]>>
+
+/** Pressed and dragged to change the number; `direction`, `pixelSensitivity`, `teleportDistance`. */
+function ScrubArea(props: ScrubAreaProps): JSX.Element {
+  const [local, rest] = splitProps(props as NumberFieldScrubOptions, [
+    "direction",
+    "pixelSensitivity",
+    "teleportDistance",
+  ])
+  const made = useNumberField()
+  createComputed(() => made.scrub.set(defined({ ...local })))
+  return <Part of={made.scrubArea} tag="span" {...rest} />
+}
+
+/** Drawn in place of the pointer while it is locked for a drag, at the end of `<body>`. */
+function ScrubAreaCursor(props: ScrubAreaCursorProps): JSX.Element {
+  const made = useNumberField()
+  return (
+    <Portal mounted={made.scrubAreaCursor.mounted}>
+      <Part of={made.scrubAreaCursor.part} tag="span" {...props} />
+    </Portal>
+  )
+}
+
 export const NumberField = {
   Root,
+  ScrubArea,
+  ScrubAreaCursor,
   Group: part<GroupProps>("group", "div"),
   Input: part<InputProps>("input", "input"),
   Increment: part<IncrementProps>("increment", "button"),

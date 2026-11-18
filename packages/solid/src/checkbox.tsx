@@ -6,6 +6,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
 import type { JSX } from "solid-js"
 
+import { CheckboxGroupContext } from "./checkbox-group-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -28,6 +29,7 @@ export type RootProps = PartComponentProps<
     defaultChecked?: boolean
     onCheckedChange?: (checked: boolean, details: ChangeDetails) => void
     indeterminate?: boolean
+    parent?: boolean
     disabled?: boolean
     readOnly?: boolean
     required?: boolean
@@ -44,6 +46,7 @@ function Root(props: RootProps): JSX.Element {
     "defaultChecked",
     "onCheckedChange",
     "indeterminate",
+    "parent",
     "disabled",
     "readOnly",
     "required",
@@ -55,11 +58,13 @@ function Root(props: RootProps): JSX.Element {
   ])
   const generated = createUniqueId()
   const field = useContext(FieldContext)
-  const made = controller(within(createCheckbox, { field }), () => ({
+  const group = useContext(CheckboxGroupContext) ?? undefined
+  const made = controller(within(createCheckbox, { field, group }), () => ({
     id: local.id ?? generated,
     checked: local.checked,
     defaultChecked: local.defaultChecked,
     indeterminate: local.indeterminate,
+    parent: local.parent,
     disabled: local.disabled,
     readOnly: local.readOnly,
     required: local.required,

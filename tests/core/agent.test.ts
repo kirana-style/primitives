@@ -274,6 +274,59 @@ describe("the agent bridge", () => {
     await expect.poll(() => heard).toEqual(["Notifications true"])
   })
 
+  it("offers nothing a read-only control refuses, and says why not when asked", async () => {
+    const root = mount(`
+      <span class="box" aria-label="Terms"><input class="box-input" /></span>
+      <button class="region" aria-label="Region"><span class="shown">Asia</span></button>
+      <div class="positioner"><div class="popup"><div class="option">Europe</div></div></div>
+      <div class="control"><div class="thumb" aria-label="Volume"></div></div>
+      <input aria-label="Code" value="A1" readonly />`)
+    const find = (name: string) => root.querySelector<HTMLElement>(name)!
+    const picked = recorder<string | null>()
+    const turned = recorder<number | number[]>()
+    const box = createSwitch(signal({ id: "b", readOnly: true }))
+    onTestFinished(bind(find(".box"), box.root))
+    onTestFinished(bind(find(".box-input"), box.input))
+    const select = createSelect(
+      signal<SelectProps<string>>({
+        id: "se",
+        defaultValue: "Asia",
+        readOnly: true,
+        onValueChange: picked.listen,
+      })
+    )
+    onTestFinished(select.mount())
+    onTestFinished(bind(find(".region"), select.trigger))
+    onTestFinished(bind(find(".option"), select.item("Europe")))
+    onTestFinished(bind(find(".positioner"), select.positioner))
+    onTestFinished(bind(find(".popup"), select.popup))
+    const slider = createSlider(
+      signal({ id: "sl", defaultValue: 40, readOnly: true, onValueChange: turned.listen })
+    )
+    onTestFinished(bind(find(".control"), slider.control))
+    onTestFinished(bind(find(".thumb"), slider.thumb(0)))
+    const agent = createAgent({ root })
+    expect(agent.snapshot().map((each) => `${each.label}: ${each.actions.join(" ")}`)).toEqual([
+      "Terms: ",
+      // Its list still opens to be read.
+      "Region: open close",
+      "Volume: ",
+      "Code: ",
+    ])
+    const refused = await agent.act({
+      steps: [{ ref: "Volume", action: "setValue", args: [60] }],
+    })
+    expect(refused.ok).toBe(false)
+    expect(refused.error).toContain('has no action "setValue" now')
+    const [region] = await agent.query({ within: "Region" })
+    expect(region!.items).toEqual([{ value: "Europe", label: "Europe" }])
+    expect(
+      (await agent.act({ steps: [{ ref: "Region", action: "setValue", args: ["Europe"] }] })).ok
+    ).toBe(false)
+    expect(picked.calls).toEqual([])
+    expect(turned.calls).toEqual([])
+  })
+
   it("gives its tools to a browser's own agent, each step asked for", async () => {
     const { agent, toggled } = page()
     const tools = new Map<

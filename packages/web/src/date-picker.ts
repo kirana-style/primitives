@@ -15,9 +15,10 @@ const calendar = calendarParts<DatePicker>((controller) => controller.calendar)
  * `kui-part="field"` with a date field's `segments` template and `input`; a `trigger`
  * button; and a `portal` with a `positioner` around the `popup`, which holds the `calendar`
  * with a calendar's parts and templates. `value`, `default-value`, `open`, `default-open`,
- * `locale`, `min`, `max`, `calendar-system`, `fixed-weeks`, `disabled`, `read-only`,
- * `required`, `name`, `form`; `isDateUnavailable` and `placeholders` as properties; it tells
- * `value-change` and `open-change`.
+ * `locale`, `min`, `max`, `calendar-system`, `fixed-weeks`, `months` (each drawn in a
+ * `<template kui-each="months">`), `paged-navigation`, `month`, `default-month`, `disabled`,
+ * `read-only`, `required`, `name`, `form`; `isDateUnavailable` and `placeholders` as
+ * properties; it tells `value-change`, `open-change` and `month-change`.
  */
 export const tag = defineElement<DatePickerProps, DatePicker & { mounted: unknown }>({
   tag: "kui-date-picker",
@@ -31,6 +32,10 @@ export const tag = defineElement<DatePickerProps, DatePicker & { mounted: unknow
     max: "string",
     "calendar-system": "string",
     "fixed-weeks": "boolean",
+    months: "number",
+    "paged-navigation": "boolean",
+    month: "string",
+    "default-month": "string",
     disabled: "boolean",
     "read-only": "boolean",
     required: "boolean",
@@ -46,6 +51,7 @@ export const tag = defineElement<DatePickerProps, DatePicker & { mounted: unknow
   changes: {
     onValueChange: { event: "value-change", prop: "value" },
     onOpenChange: { event: "open-change", prop: "open" },
+    onMonthChange: { event: "month-change", prop: "month" },
   },
   lists: { ...field.lists, ...calendar.lists },
   parts: {
@@ -63,7 +69,11 @@ declare global {
   interface HTMLElementTagNameMap {
     "kui-date-picker": ElementOf<
       typeof tag,
-      { "value-change": ["onValueChange", "value"]; "open-change": ["onOpenChange", "open"] }
+      {
+        "value-change": ["onValueChange", "value"]
+        "open-change": ["onOpenChange", "open"]
+        "month-change": ["onMonthChange", "month"]
+      }
     > &
       Placed
   }

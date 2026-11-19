@@ -1,5 +1,5 @@
 import { Directive, ElementRef, inject, input, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createForm } from "@kirana-ui/core/form"
 import type { Form, FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"
@@ -20,7 +20,7 @@ export class KuiForm implements OnInit {
 
   controller!: Form
   private readonly element = inject<ElementRef<HTMLFormElement>>(ElementRef).nativeElement
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     errors: this.errors(),
     validationMode: this.validationMode(),
     onFormSubmit: this.element.hasAttribute("action")
@@ -30,6 +30,10 @@ export class KuiForm implements OnInit {
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createForm(this.props())

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vite-plus/test"
 
 import {
   Accordion,
+  Avatar,
   Button,
   Checkbox,
   Collapsible,
@@ -238,6 +239,28 @@ describe("on the server", () => {
     )
     // No corner until both scrollbars have something to scroll.
     expect(html).not.toContain("position:absolute;bottom:0px")
+  })
+
+  it("draws an avatar as Base UI's server does: a fallback that waits is not drawn", () => {
+    const html = renderToString(
+      <>
+        <Avatar.Root>
+          <Avatar.Image src="/a.png" alt="A" />
+          <Avatar.Fallback>A</Avatar.Fallback>
+        </Avatar.Root>
+        <Avatar.Root>
+          <Avatar.Image src="/b.png" alt="B" keepMounted />
+          <Avatar.Fallback delay={600}>B</Avatar.Fallback>
+        </Avatar.Root>
+      </>
+    )
+    // React may put a preload of the kept picture before them.
+    expect(html).toContain(
+      '<span data-image-loading-status="idle"><span>A</span></span>' +
+        // Kept in the page, with its own address, unheard until it loads.
+        '<span data-image-loading-status="idle"><img src="/b.png" alt="B" aria-hidden="true"/></span>'
+    )
+    expect(html).not.toContain(">B<")
   })
 })
 

@@ -1,4 +1,9 @@
-import type { Calendar, CalendarDay, CalendarWeekday } from "@kirana-ui/core/calendar"
+import type {
+  Calendar,
+  CalendarDay,
+  CalendarMonth,
+  CalendarWeekday,
+} from "@kirana-ui/core/calendar"
 import type { DateField, DateFieldSegment } from "@kirana-ui/core/date-field"
 
 import { entryAround } from "./runtime.ts"
@@ -30,25 +35,36 @@ export function fieldParts<Controller>(of: (controller: Controller) => DateField
   return { parts, lists }
 }
 
+const isMonth = (entry: unknown) =>
+  typeof entry === "object" && entry !== null && "weeks" in entry && "title" in entry
+
+/** The month a part is written in, in a `months` template: its place among those shown. */
+const monthAround = (element: Node) => entryAround<CalendarMonth>(element, isMonth)?.index
+
 /** A calendar's parts and its lists, for a component that is one or holds one. */
 export function calendarParts<Controller>(of: (controller: Controller) => Calendar) {
   const date = (element: HTMLElement) => entryAround<CalendarDay>(element)?.date
+  const month = (controller: Controller, element: HTMLElement) =>
+    of(controller).monthAt(monthAround(element) ?? 0)
   const parts: Parts<Controller> = {
-    heading: (controller) => ({ part: of(controller).heading, text: of(controller).title }),
+    heading(controller, element) {
+      const shown = month(controller, element)
+      return { part: shown.heading, text: shown.title }
+    },
     previous: (controller) => of(controller).previous,
     next: (controller) => of(controller).next,
-    grid: (controller) => of(controller).grid,
+    grid: (controller, element) => month(controller, element).grid,
     "head-cell"(controller, element) {
       const weekday = entryAround<CalendarWeekday>(element)
       return weekday && of(controller).headCell(weekday)
     },
     cell(controller, element) {
       const day = date(element)
-      return day === undefined ? undefined : of(controller).cell(day)
+      return day === undefined ? undefined : of(controller).cell(day, monthAround(element))
     },
     day(controller, element) {
       const day = date(element)
-      return day === undefined ? undefined : of(controller).day(day)
+      return day === undefined ? undefined : of(controller).day(day, monthAround(element))
     },
   }
   const lists: Lists<Controller> = {
@@ -56,20 +72,47 @@ export function calendarParts<Controller>(of: (controller: Controller) => Calend
       entries: of(controller).weekdays,
       key: (weekday: CalendarWeekday) => weekday.index,
     }),
-    weeks: (controller) => ({
-      entries: of(controller).weeks,
+    months: (controller) => ({
+      entries: of(controller).months,
+      key: (shown: CalendarMonth) => shown.index,
+      values: (shown: CalendarMonth) => ({
+        index: shown.index,
+        month: shown.month,
+        title: shown.title,
+      }),
+    }),
+    // Written in a month's copy: that month's weeks; else the first month's.
+    weeks: (controller, around) => ({
+      entries: isMonth(around)
+        ? of(controller).monthAt((around as CalendarMonth).index).weeks
+        : of(controller).weeks,
       key: (week: readonly CalendarDay[]) => week[0]!.date,
       values: () => ({}),
     }),
-    // Written in a week's row: that week's days.
-    days: (_controller, week) => ({
-      entries: (week as readonly CalendarDay[] | undefined) ?? [],
-      key: (day: CalendarDay) => day.date,
-    }),
+    // Written in a week's row: that week's days, each with the place of its month
+    // (`{monthIndex}`), for a page that names a day where it is drawn twice.
+    days(controller, week) {
+      const row = (week as readonly CalendarDay[] | undefined) ?? []
+      const shown = of(controller)
+        .months.peek()
+        .find((each) => each.weeks.includes(row))
+      return {
+        entries: row,
+        key: (day: CalendarDay) => day.date,
+        values: (day: CalendarDay) => ({ ...day, monthIndex: shown?.index ?? 0 }),
+      }
+    },
   }
   return { parts, lists }
 }
 
-/** A calendar's value as an attribute writes it: a day, or several with commas between. */
-export const days = (given: unknown): unknown =>
-  typeof given === "string" && given.includes(",") ? given.split(",") : given
+/**
+ * A calendar's value as an attribute writes it: a day, or several with commas between (a
+ * range's first and last, or a list's days).
+ */
+export function days(given: unknown, mode?: unknown): unknown {
+  const list = typeof given === "string" && given.includes(",") ? given.split(",") : given
+  if (mode === "range" && Array.isArray(list)) return { start: list[0], end: list[1] ?? list[0] }
+  if (mode === "multiple" && typeof list === "string") return list === "" ? [] : [list]
+  return list
+}

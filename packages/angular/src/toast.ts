@@ -7,7 +7,7 @@ import {
   inject,
   input,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import { createToast, createToaster as createCoreToaster } from "@kirana-ui/core/toast"
 import type * as Core from "@kirana-ui/core/toast"
@@ -54,13 +54,17 @@ export class KuiToastViewport implements OnInit {
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     toaster: this.toaster(),
     label: this.label(),
     hotkey: this.hotkey(),
     swipeDirection: this.swipeDirection(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createToast(this.props())

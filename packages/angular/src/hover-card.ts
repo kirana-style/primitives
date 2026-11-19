@@ -9,7 +9,7 @@ import {
   output,
   untracked,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createHoverCard } from "@kirana-ui/core/hover-card"
@@ -33,7 +33,7 @@ export class KuiHoverCard implements OnInit {
 
   controller!: HoverPopup
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
@@ -49,6 +49,10 @@ export class KuiHoverCard implements OnInit {
     },
   }))
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createHoverCard(this.props())

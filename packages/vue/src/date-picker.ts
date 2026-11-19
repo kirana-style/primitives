@@ -16,16 +16,22 @@ type State = StatesOf<"datePicker">
 
 const scope = context<Controller>("DatePicker")
 
-export type RootProps = Omit<DatePickerProps, "id" | "onValueChange" | "onOpenChange"> & {
+export type RootProps = Omit<
+  DatePickerProps,
+  "id" | "onValueChange" | "onOpenChange" | "onMonthChange"
+> & {
   id?: string | undefined
 }
 
 /** The value is `null` while the date is not whole. */
-export type RootEmits = Changes<"value", string | null> & Changes<"open", boolean>
+export type RootEmits = Changes<"value", string | null> &
+  Changes<"open", boolean> &
+  Changes<"month", string>
 
 /**
  * A date field, and a calendar in a popover, with one value between them. It draws nothing.
- * `v-model:value`, `v-model:open`; the `-change` events carry the details.
+ * `v-model:value`, `v-model:open`, `v-model:month` (the first day of the month the calendar
+ * shows); the `-change` events carry the details.
  */
 const Root = defineComponent({
   name: "DatePickerRoot",
@@ -40,6 +46,10 @@ const Root = defineComponent({
     isDateUnavailable: Function as PropType<DatePickerProps["isDateUnavailable"]>,
     calendarSystem: Object as PropType<DatePickerProps["calendarSystem"]>,
     fixedWeeks: Boolean,
+    months: Number,
+    pagedNavigation: Boolean,
+    month: optional(String),
+    defaultMonth: String,
     placeholders: Object as PropType<DatePickerProps["placeholders"]>,
     disabled: Boolean,
     readOnly: Boolean,
@@ -48,7 +58,14 @@ const Root = defineComponent({
     form: String,
     id: String,
   },
-  emits: ["update:value", "valueChange", "update:open", "openChange"],
+  emits: [
+    "update:value",
+    "valueChange",
+    "update:open",
+    "openChange",
+    "update:month",
+    "monthChange",
+  ],
   setup(props, { slots, emit }) {
     const generated = useId()
     const made = scope.provide(
@@ -62,6 +79,10 @@ const Root = defineComponent({
         onOpenChange(open: boolean, details: ChangeDetails) {
           emit("openChange", open, details)
           if (!details.canceled) emit("update:open", open)
+        },
+        onMonthChange(month: string, details: ChangeDetails) {
+          emit("monthChange", month, details)
+          if (!details.canceled) emit("update:month", month)
         },
       }))
     )
@@ -82,6 +103,7 @@ export type {
   GridProps,
   HeadCellProps,
   HeadingProps,
+  MonthsProps,
   NextProps,
   PreviousProps,
   WeekdaysProps,
@@ -111,6 +133,7 @@ export const DatePicker = {
   Heading: Calendar.Heading,
   Previous: Calendar.Previous,
   Next: Calendar.Next,
+  Months: Calendar.Months,
   Grid: Calendar.Grid,
   Weekdays: Calendar.Weekdays,
   HeadCell: Calendar.HeadCell,

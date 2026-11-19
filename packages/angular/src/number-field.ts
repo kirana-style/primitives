@@ -9,7 +9,7 @@ import {
   output,
   untracked,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
@@ -51,7 +51,7 @@ export class KuiNumberField implements OnInit {
   controller!: NumberField
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -82,6 +82,10 @@ export class KuiNumberField implements OnInit {
   private readonly part = hostPart()
   private readonly inner = innerPart("input")
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createNumberField(this.props(), { field: this.field?.controller })

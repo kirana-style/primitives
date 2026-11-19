@@ -105,6 +105,33 @@ describe("a one-time code", () => {
     expect(made.value.peek()).toBe("a1b")
   })
 
+  it("takes letters alone, and what a pattern names, from the keys, a paste and its first value", async () => {
+    const letters = otp({ mode: "alphabetic", defaultValue: "a1" })
+    expect(letters.made.value.peek()).toBe("a")
+    expect(letters.input.getAttribute("inputmode")).toBe("text")
+    expect(letters.input.hasAttribute("pattern")).toBe(false)
+    letters.input.focus()
+    await userEvent.keyboard("{End}2B-c")
+    await settled()
+    expect(letters.made.value.peek()).toBe("aBc")
+    letters.root.remove()
+
+    // A pattern is one character's rule, in place of the mode's, and its keyboard is letters'.
+    const hex = otp({ pattern: "[A-F0-9]" })
+    expect(hex.input.getAttribute("inputmode")).toBe("text")
+    hex.input.focus()
+    hex.input.dispatchEvent(
+      new InputEvent("beforeinput", {
+        inputType: "insertFromPaste",
+        data: "0a-F9 G",
+        bubbles: true,
+        cancelable: true,
+      })
+    )
+    await settled()
+    expect(hex.made.value.peek()).toBe("0F9")
+  })
+
   it("a press on a cell puts the caret there, and on a filled one selects it", async () => {
     const { root, input, made, active } = otp({ defaultValue: "12" })
     find(root, "s3").dispatchEvent(

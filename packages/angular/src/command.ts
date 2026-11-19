@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCommand } from "@kirana-ui/core/command"
 import type { Command, CommandGroup, CommandProps } from "@kirana-ui/core/command"
@@ -13,6 +13,10 @@ export class KuiCommand implements OnInit {
   /** Whether an item is shown for what was typed; `null` shows every item. */
   readonly filter = input<CommandProps["filter"]>()
   readonly loop = input(false, { transform: booleanAttribute })
+  /** Whether the first item shown is highlighted from the start. Default: `true`. */
+  readonly autoHighlight = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly kuiId = input<string>()
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
@@ -21,12 +25,13 @@ export class KuiCommand implements OnInit {
 
   controller!: Command
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     inputValue: this.inputValue(),
     defaultInputValue: this.defaultInputValue(),
     filter: this.filter(),
     loop: this.loop(),
+    autoHighlight: this.autoHighlight(),
     disabled: this.disabled(),
     onInputValueChange: (value: string, details: ChangeDetails) => {
       this.inputValueChanged.emit({ value, details })
@@ -38,6 +43,10 @@ export class KuiCommand implements OnInit {
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createCommand(this.props())
@@ -122,12 +131,16 @@ export class KuiCommandItem implements OnInit {
   private readonly within = inject(KuiCommandGroup, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     keywords: this.keywords(),
     id: this.kuiId() ?? this.generated,
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -141,7 +154,11 @@ export class KuiCommandSeparator implements OnInit {
   readonly alwaysRender = input(false, { transform: booleanAttribute })
   private readonly root = inject(KuiCommand)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({ alwaysRender: this.alwaysRender() }))
+  private readonly options = inputsSignal(this, () => ({ alwaysRender: this.alwaysRender() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

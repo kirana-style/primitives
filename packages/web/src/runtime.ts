@@ -53,10 +53,16 @@ export interface Each<Entry = any> {
 
 const ENTRY = new WeakMap<Node, unknown>()
 
-/** The entry an element was stamped for, or the nearest around it: a part reads its own. */
-export function entryAround<Entry>(element: Node): Entry | undefined {
+/**
+ * The entry an element was stamped for, or the nearest around it: a part reads its own. With
+ * `which`, the nearest that is of that list (a day's month, around its week).
+ */
+export function entryAround<Entry>(
+  element: Node,
+  which?: (entry: unknown) => boolean
+): Entry | undefined {
   for (let each: Node | null = element; each; each = each.parentNode) {
-    if (ENTRY.has(each)) return ENTRY.get(each) as Entry
+    if (ENTRY.has(each) && (!which || which(ENTRY.get(each)))) return ENTRY.get(each) as Entry
   }
   return undefined
 }

@@ -25,6 +25,7 @@ const PAGE = `
   import * as Switch from "./src/switch/index.ts"
   import * as Toast from "./src/toast/index.ts"
   import { createToaster } from "./src/toast.ts"
+  import { Primitive, mergeProps } from "./src/primitive.ts"
 
   const toaster = createToaster({ duration: Infinity })
   toaster.add({ id: "t", title: "Saved", description: "To the cloud", action: { label: "Undo", onAction() {} } })
@@ -119,6 +120,12 @@ const PAGE = `
     {/snippet}
   </Toast.List>
 </Toast.Viewport>
+<Primitive as="span" {...mergeProps({ class: "badge", title: "own" }, { class: "mine" })} state={{ active: true }} data-kind="new">New</Primitive>
+<Primitive as="b" {...mergeProps({ class: "badge", title: "own" }, { title: "theirs" })} state={{ active: false }}>Bold</Primitive>
+<Primitive {...mergeProps({ class: "badge", title: "own" }, { class: "mine" })} state={{ active: true }}>
+  {#snippet child({ props, state })}<a {...props} href="/new">{state.active ? "On" : "Off"}</a>{/snippet}
+</Primitive>
+<Primitive as="input" class="void" value="kept" />
 <Collapsible.Root id="shadow" part="root">
   <Collapsible.Trigger part="trigger">Open</Collapsible.Trigger>
   <Collapsible.Panel part="panel" keepMounted>
@@ -127,13 +134,57 @@ const PAGE = `
 </Collapsible.Root>
 `
 
+// Every part drawn as a void element (an input, an image), each as plainly as it is written.
+const VOID = `
+<script lang="ts">
+  import { signal } from "@kirana-ui/core"
+
+  import Part from "./src/Part.svelte"
+  import * as Checkbox from "./src/checkbox/index.ts"
+  import * as Combobox from "./src/combobox/index.ts"
+  import * as Command from "./src/command/index.ts"
+  import * as DateField from "./src/date-field/index.ts"
+  import * as Field from "./src/field/index.ts"
+  import Input from "./src/input/Input.svelte"
+  import * as NumberField from "./src/number-field/index.ts"
+  import * as Otp from "./src/otp/index.ts"
+  import * as RadioGroup from "./src/radio-group/index.ts"
+  import * as Select from "./src/select/index.ts"
+  import * as Slider from "./src/slider/index.ts"
+  import * as Switch from "./src/switch/index.ts"
+  import * as Toolbar from "./src/toolbar/index.ts"
+
+  // An avatar's image is drawn once its picture has loaded, which a server never sees.
+  const image = { props: signal({ src: "a.png", alt: "" }), attach: () => () => {} }
+</script>
+
+<Part of={image} tag="img" />
+<Checkbox.Root id="v-box" name="box" />
+<Switch.Root id="v-switch" name="switch" />
+<RadioGroup.Root id="v-radio" name="radio"><RadioGroup.Item value="a" /></RadioGroup.Root>
+<Slider.Root id="v-slider" name="slider" defaultValue={10}><Slider.Thumb /></Slider.Root>
+<Otp.Root id="v-otp" length={2}><Otp.Input /></Otp.Root>
+<Command.Root id="v-command"><Command.Input /></Command.Root>
+<Combobox.Root id="v-combobox" name="combobox"><Combobox.Input /></Combobox.Root>
+<Select.Root id="v-select" name="select" />
+<NumberField.Root id="v-number" name="number"><NumberField.Input /></NumberField.Root>
+<DateField.Root id="v-date" name="date" locale="en-US"><DateField.Input /></DateField.Root>
+<Toolbar.Root id="v-toolbar"><Toolbar.Input /></Toolbar.Root>
+<Field.Root id="v-field"><Field.Control /></Field.Root>
+<Input id="v-input" />
+`
+
 const RENDER = `
 import { readFileSync } from "node:fs"
 import { compile, compileModule } from "svelte/compiler"
 
 const root = process.cwd()
 const types = new Bun.Transpiler({ loader: "ts" })
-const server = (source, filename) => compile(source, { generate: "server", filename }).js.code
+// With \`DEV\`, as a development build compiles it, and a warning of Svelte's is a failure.
+const dev = Boolean(process.env.DEV)
+const warned = []
+if (dev) console.warn = (...given) => void warned.push(given.join(" "))
+const server = (source, filename) => compile(source, { generate: "server", filename, dev }).js.code
 Bun.plugin({
   name: "svelte",
   setup(build) {
@@ -156,14 +207,20 @@ Bun.plugin({
 })
 const { default: Page } = await import("virtual:page")
 const { render } = await import("svelte/server")
-process.stdout.write(render(Page).body)
+const body = render(Page).body
+if (warned.length) {
+  process.stderr.write(warned.join("\\n"))
+  process.exit(1)
+}
+process.stdout.write(body)
 `
 
-function rendered(): string {
+function rendered(page = PAGE, dev = false): string {
   const html = execFileSync("bun", ["--conditions", "svelte", "-e", RENDER], {
     cwd: path.join(import.meta.dirname, ".."),
-    env: { ...process.env, PAGE },
+    env: { ...process.env, PAGE: page, ...(dev ? { DEV: "1" } : {}) },
     encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
   })
   // Svelte's own marks for hydration are not the page's.
   return html.replace(/<!--[^>]*-->/g, "")
@@ -194,6 +251,19 @@ describe("on the server", () => {
     expect(html).toMatch(/<section[^>]*><input type="hidden" name="count" value="3"><\/section>/)
   })
 
+  it("draws a plain element of one's own as a part is drawn, its state as attributes", () => {
+    // The component's own class joined with its caller's, its state under both.
+    expect(html).toContain(
+      '<span data-active="" class="badge mine" title="own" data-kind="new">New</span>'
+    )
+    // Another tag, a later set winning an attribute, a state that does not hold absent.
+    expect(html).toContain('<b class="badge" title="theirs">Bold</b>')
+    // The caller's own element, given the props and the state.
+    expect(html).toContain('<a data-active="" class="badge mine" title="own" href="/new">On</a>')
+    // An element that holds nothing holds nothing.
+    expect(html).toContain('<input class="void" value="kept">')
+  })
+
   it("draws no input a snippet did not render, and none for a number field with no name", () => {
     expect(html).toMatch(/<label role="checkbox"[^>]*>Bare<\/label>/)
     expect(html).toMatch(/<article[^>]*><\/article>/)
@@ -221,5 +291,14 @@ describe("on the server", () => {
     expect(html).toMatch(/<div [^>]*part="root"/)
     expect(html).toMatch(/<button [^>]*part="trigger"[^>]*>Open<\/button>/)
     expect(html).toMatch(/<section [^>]*part="panel"[^>]*>Held<\/section>/)
+  })
+})
+
+describe("in a development build", () => {
+  it("draws a void element with no content, so Svelte has nothing to warn of", () => {
+    const html = rendered(VOID, true)
+    expect(html).toContain('<img src="a.png" alt="">')
+    expect(html).toMatch(/<input type="radio" name="radio" value="a"/)
+    expect(html).toMatch(/<input[^>]*name="combobox"/)
   })
 })

@@ -1,5 +1,6 @@
-import { Component, signal } from "@angular/core"
+import { Component, Directive, booleanAttribute, computed, input, signal } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
+import type { DateRange } from "@kirana-ui/core/calendar"
 import {
   KuiAccordion,
   KuiAccordionItem,
@@ -35,8 +36,14 @@ import {
   KuiToastViewport,
   KuiToggleGroup,
   createToaster,
+  KuiCommand,
+  KuiComboboxItem,
+  KuiTooltip,
+  hostInputs,
 } from "@kirana-ui/angular"
-import type { ToastRecord } from "@kirana-ui/angular"
+import type { ToastRecord, InputsOf } from "@kirana-ui/angular"
+
+import { DsDialog } from "./design-system"
 
 /** What a change tells: the value as its caller holds it, and why. */
 interface Told<Value> {
@@ -127,6 +134,11 @@ interface Told<Value> {
     <ng-container kuiSelect multiple [(values)]="sizes" (valuesChanged)="known($event.values)" />
     <ng-container kuiCombobox multiple [(values)]="open" (valuesChanged)="known($event.values)" />
 
+    <!-- A calendar's value is its mode's: a day, a range, or a list of days. -->
+    <div kuiCalendar [mode]="'multiple'" (valueChanged)="days($event)"></div>
+    <div kuiCalendar [mode]="'range'" (valueChanged)="stay($event)"></div>
+    <div kuiCalendar [mode]="'single'" (valueChanged)="textOrNone($event)"></div>
+
     <!-- What a template is handed. -->
     <div kuiCalendar>
       <span *kuiCalendarWeekdays="let weekday">{{ known(weekday).short }}</span>
@@ -173,6 +185,8 @@ export class TypedUsages {
   protected textOrNone(_change: Told<string | null>): void {}
   protected texts(_change: Told<string[]>): void {}
   protected counts(_change: Told<number[]>): void {}
+  protected days(_change: Told<readonly string[]>): void {}
+  protected stay(_change: Told<DateRange | null>): void {}
   protected record(toast: ToastRecord): ToastRecord {
     return toast
   }
@@ -181,4 +195,109 @@ export class TypedUsages {
   protected known<Value>(value: 0 extends 1 & Value ? never : Value): Value {
     return value
   }
+}
+
+/*
+ * A design system's directives that give the primitives they host what they work out from their
+ * own inputs (`hostInputs`), where a subclass of the primitive standing in for it was needed:
+ * never drawn, for Angular's compiler to check the inputs given against the primitive's.
+ */
+
+/** A combobox whose items are the design system's, given as labels, and its one default value. */
+@Directive({
+  selector: "[dsCombobox]",
+  hostDirectives: [{ directive: KuiCombobox, inputs: ["multiple", "disabled"] }],
+})
+export class DsCombobox {
+  readonly options = input<readonly { value: string; label: string }[]>([])
+  readonly initial = input<string | readonly string[]>()
+
+  constructor() {
+    const many = (value: string | readonly string[] | undefined) =>
+      typeof value === "string" ? [value] : value
+    hostInputs(KuiCombobox, {
+      items: computed(() => this.options()),
+      defaultValue: computed(() => {
+        const value = this.initial()
+        return typeof value === "string" ? value : null
+      }),
+      defaultValues: computed(() => many(this.initial())),
+    })
+  }
+}
+
+/** Its item, named by the design system's own way of naming a value. */
+@Directive({
+  selector: "[dsComboboxItem]",
+  hostDirectives: [{ directive: KuiComboboxItem, inputs: ["value", "disabled"] }],
+})
+export class DsComboboxItem {
+  readonly named = input<string>()
+
+  constructor() {
+    hostInputs(KuiComboboxItem, { label: this.named })
+  }
+}
+
+/** A command menu that leaves the filtering to its caller while `shouldFilter` is false. */
+@Directive({ selector: "[dsCommand]", hostDirectives: [KuiCommand] })
+export class DsCommand {
+  readonly shouldFilter = input(true, { transform: booleanAttribute })
+
+  constructor() {
+    hostInputs(KuiCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })
+  }
+}
+
+/** A slider whose thumbs stay inside its track at the ends. */
+@Directive({
+  selector: "[dsSlider]",
+  hostDirectives: [{ directive: KuiSlider, inputs: ["value", "defaultValue", "min", "max"] }],
+})
+export class DsSlider {
+  constructor() {
+    hostInputs(KuiSlider, { thumbAlignment: () => "edge" })
+  }
+}
+
+/** A tooltip shown only while its sidebar is collapsed. */
+@Directive({ selector: "[dsSidebarTip]", hostDirectives: [KuiTooltip] })
+export class DsSidebarTip {
+  readonly collapsed = input(false, { transform: booleanAttribute })
+
+  constructor() {
+    hostInputs(KuiTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })
+  }
+}
+
+/** A design system's dialog, its change heard through the primitive's model. */
+@Component({
+  selector: "typed-design",
+  imports: [DsDialog],
+  template: `<ng-container dsDialog (openChange)="heard($event)"></ng-container>`,
+})
+export class TypedDesign {
+  /** A model's change output carries its type: `boolean | undefined` for a dialog's `open`. */
+  protected heard(open: boolean | undefined): void {
+    void open
+  }
+}
+
+// What is given is what the input reads, after its transform.
+type Expect<Type extends true> = Type
+type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
+export type InputTypes = [
+  Expect<Same<InputsOf<KuiTooltip>["delay"], number | undefined>>,
+  Expect<Same<InputsOf<KuiTooltip>["disabled"], boolean>>,
+  Expect<Same<InputsOf<KuiTooltip>["open"], boolean | undefined>>,
+]
+// @ts-expect-error what is not an input is not given: a directive's controller is its own
+export const notAnInput: Expect<Same<keyof InputsOf<KuiTooltip>, keyof KuiTooltip>> = true
+
+/** Never called: what `hostInputs` refuses. */
+export function refusedInputs(): void {
+  // @ts-expect-error a tooltip's delay is a number
+  hostInputs(KuiTooltip, { delay: () => "soon" })
+  // @ts-expect-error a command has no such input
+  hostInputs(KuiCommand, { delay: () => 0 })
 }

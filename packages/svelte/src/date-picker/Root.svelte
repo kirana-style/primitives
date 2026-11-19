@@ -12,7 +12,8 @@
   import type { RootProps } from "./types.ts"
 
   // A date field, and a calendar in a popover, with one value between them. It draws nothing.
-  // `bind:value` is the day, `bind:open` whether the calendar shows.
+  // `bind:value` is the day, `bind:open` whether the calendar shows, `bind:month` the first day
+  // of the month it shows.
   let {
     value = $bindable(),
     defaultValue,
@@ -26,6 +27,11 @@
     isDateUnavailable,
     calendarSystem,
     fixedWeeks,
+    months,
+    pagedNavigation,
+    month = $bindable(),
+    defaultMonth,
+    onMonthChange,
     placeholders,
     disabled,
     readOnly,
@@ -47,6 +53,11 @@
     if (!by.canceled) open = next
   }
 
+  function changeMonth(next: string, by: ChangeDetails) {
+    onMonthChange?.(next, by)
+    if (!by.canceled && month !== undefined) month = next
+  }
+
   const made = provide(
     controller(within(createDatePicker, { direction: useDirectionAround() }), () => ({
       id: id ?? generated,
@@ -60,6 +71,10 @@
       isDateUnavailable,
       calendarSystem,
       fixedWeeks,
+      months,
+      pagedNavigation,
+      month,
+      defaultMonth,
       placeholders,
       disabled,
       readOnly,
@@ -68,6 +83,7 @@
       form,
       onValueChange: changeValue,
       onOpenChange: changeOpen,
+      onMonthChange: changeMonth,
     }))
   )
   provideField(made.field)

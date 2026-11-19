@@ -9,7 +9,7 @@ import {
   numberAttribute,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
@@ -23,6 +23,7 @@ export class KuiOtp implements OnInit {
   readonly value = model<string | undefined>(undefined)
   readonly defaultValue = input<string>()
   readonly mode = input<OtpProps["mode"]>()
+  readonly pattern = input<string>()
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
   /** The id of the form the input belongs to, when it is not inside it. */
@@ -35,12 +36,13 @@ export class KuiOtp implements OnInit {
   controller!: Otp
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     length: this.length(),
     value: this.value(),
     defaultValue: this.defaultValue(),
     mode: this.mode(),
+    pattern: this.pattern(),
     disabled: this.disabled(),
     name: this.name(),
     form: this.form(),
@@ -53,6 +55,10 @@ export class KuiOtp implements OnInit {
     },
     onComplete: (value: string) => this.completed.emit(value),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createOtp(this.props())

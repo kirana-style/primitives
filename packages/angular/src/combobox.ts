@@ -13,7 +13,7 @@ import {
   output,
   untracked,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { computed, effect as coreEffect } from "@kirana-ui/core"
 import type { ChangeDetails, ListCollection } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
@@ -110,7 +110,7 @@ export class KuiCombobox<Value = unknown> implements OnInit {
     inject(new HostAttributeToken("kuiAutocomplete"), { optional: true }) !== null
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -163,6 +163,10 @@ export class KuiCombobox<Value = unknown> implements OnInit {
     },
   }))
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     const around = { field: this.field?.controller }
@@ -327,12 +331,16 @@ export class KuiComboboxItem implements OnInit {
   private readonly within = inject(KuiComboboxGroup, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     index: this.index(),
     id: this.kuiId() ?? this.generated,
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { createFieldset } from "@kirana-ui/core/fieldset"
 import type { Fieldset } from "@kirana-ui/core/fieldset"
 
@@ -12,12 +12,16 @@ export class KuiFieldset implements OnInit {
 
   controller!: Fieldset
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     disabled: this.disabled(),
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createFieldset(this.props())

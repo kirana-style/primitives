@@ -7,8 +7,8 @@
   import { ITEM, useRadioGroup } from "./context.ts"
   import type { ItemProps } from "./types.ts"
 
-  let { value, disabled, children, ...rest }: ItemProps = $props()
-  const options = toSignal(() => ({ disabled }))
+  let { value, disabled, id, children, ...rest }: ItemProps = $props()
+  const options = toSignal(() => ({ disabled, id }))
   const read = () => defined(options.get())
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally

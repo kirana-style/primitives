@@ -9,7 +9,7 @@ import {
   numberAttribute,
   output,
 } from "@angular/core"
-import type { AfterViewInit, OnInit } from "@angular/core"
+import type { AfterViewInit, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import { createSlider } from "@kirana-ui/core/slider"
 import type {
@@ -58,7 +58,7 @@ export class KuiSlider<Value extends SliderValue = SliderValue> implements OnIni
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -95,6 +95,10 @@ export class KuiSlider<Value extends SliderValue = SliderValue> implements OnIni
   // server writes a part once, and in a browser a thumb first written at another's place
   // would be seen to move to its own.
   private waiting: { element: HTMLElement; put(): void }[] | undefined = []
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createSlider(this.props(), {

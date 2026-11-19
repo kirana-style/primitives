@@ -78,12 +78,14 @@ export type ItemProps = PartComponentProps<
     value: unknown
     /** Disables this item: it cannot be chosen. */
     disabled?: boolean
+    /** The id of the item's native radio, unique in the page: a `<label htmlFor>` names it. */
+    id?: string
   }
 >
 
-function Item({ value, disabled, ...rest }: ItemProps): ReactElement {
+function Item({ value, disabled, id, ...rest }: ItemProps): ReactElement {
   const controller = useRadioGroup("Item")
-  const options = useOptions({ disabled })
+  const options = useOptions({ disabled, id })
   const made = useMemo(() => {
     const read = () => defined(options.get())
     return { item: controller.item(value, read), input: controller.itemInput(value, read) }

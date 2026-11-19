@@ -79,9 +79,33 @@ function Tag({
   })
 }
 
+// An element of the page's own with a state of its own, composed as a part is: its own class,
+// type and handler under its caller's, its state written as `data-*` and handed to `render`.
+function Mark({
+  render,
+  ...props
+}: {
+  render?: RenderProp<{ active: boolean }>
+  [attribute: string]: unknown
+}) {
+  const [active, setActive] = useState(false)
+  return useRender({
+    render,
+    defaultTagName: "button",
+    state: { active },
+    props: mergeProps(
+      { className: "mark", type: "button", onClick: () => setActive((on) => !on) },
+      props
+    ),
+  })
+}
+
 // A picture of one pixel, and an address that is not a picture.
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 const BROKEN = "data:image/png;base64,AAAA"
+// A picture 160 wide: a row of three is wider than its scroll area once they have loaded.
+const WIDE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3C/svg%3E"
 // What the fixture writes for a field's validity, and its own check of a value.
 const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? "valid" : "invalid")
 const taken = (value: string) => (value === "admin" ? "Taken" : null)
@@ -175,6 +199,9 @@ export function App() {
   const [named, setNamed] = useState("")
   const [did, setDid] = useState("none")
   const [dated, setDated] = useState("none")
+  const [stay, setStay] = useState("none")
+  const [chosenDays, setChosenDays] = useState("none")
+  const [shownMonth, setShownMonth] = useState("2026-03-01")
   const [rests, setRests] = useState("0.5")
   const [said, setSaid] = useState(8)
   const [first, setFirst] = useState(0)
@@ -182,6 +209,7 @@ export function App() {
   const [tags, setTags] = useState<string[]>(["New"])
   const [align, setAlign] = useState<string[]>(["left"])
   const [tall, setTall] = useState(false)
+  const [rowLoaded, setRowLoaded] = useState(false)
   const [chosen, setChosen] = useState<string[]>(["Banana"])
   const [pick, setPick] = useState<string | null>(null)
   const [outside, setOutside] = useState(0)
@@ -190,11 +218,14 @@ export function App() {
   const [locked, setLocked] = useState(false)
   const [handed, setHanded] = useState(0)
   const [asked, setAsked] = useState(0)
+  const [marks, setMarks] = useState(0)
+  const [tipOff, setTipOff] = useState(false)
   const [alerts, setAlerts] = useState(false)
   const [toppings, setToppings] = useState<string[]>(["ham"])
   const [count, setCount] = useState(0)
   const [done, setDone] = useState(40)
   const [pictures, setPictures] = useState(false)
+  const [heard, setHeard] = useState("none")
   const [sent, setSent] = useState("")
   const [sent2, setSent2] = useState("")
   const [reading, setReading] = useState<"ltr" | "rtl">("rtl")
@@ -319,6 +350,59 @@ export function App() {
           />
           <Tag data-testid="k3-plain">Plain</Tag>
         </div>
+        <div className="item">
+          <Mark
+            className="mine"
+            onClick={() => setMarks((value) => value + 1)}
+            render={(props, state) => (
+              <button {...props} data-testid="k4-mark">
+                {state.active ? "On" : "Off"} {marks}
+              </button>
+            )}
+          />
+        </div>
+      </section>
+
+      <section data-fixture="design">
+        <Dialog.Root id="ds1">
+          <Dialog.Trigger data-testid="ds1-trigger">Wrapped dialog</Dialog.Trigger>
+          <div>
+            <Dialog.Portal>
+              <Dialog.Backdrop className="backdrop" />
+              <Dialog.Popup className="dialog" data-testid="ds1-popup">
+                <Dialog.Title data-testid="ds1-title">Wrapped title</Dialog.Title>
+                <Dialog.Close data-testid="ds1-close">Close</Dialog.Close>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </div>
+        </Dialog.Root>
+        <label className="item">
+          <input
+            type="checkbox"
+            data-testid="ds2-off"
+            checked={tipOff}
+            onChange={(event) => setTipOff(event.target.checked)}
+          />
+          Off
+        </label>
+        <Tooltip.Root id="ds2" delay={0} disabled={tipOff}>
+          <Tooltip.Trigger data-testid="ds2-trigger">Quick</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner sideOffset={8}>
+              <Tooltip.Popup className="tip" data-testid="ds2-popup">
+                At once
+              </Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+        <div className="item">
+          <Otp.Root id="ds3a" length={2} mode="text">
+            <Otp.Input aria-label="Text code" data-testid="ds3a-input" />
+          </Otp.Root>
+          <Otp.Root id="ds3b" length={2} mode="numeric">
+            <Otp.Input aria-label="Number code" data-testid="ds3b-input" />
+          </Otp.Root>
+        </div>
       </section>
 
       <section data-fixture="controls">
@@ -356,6 +440,7 @@ export function App() {
                   disabled={each === "team"}
                   className="radio"
                   data-testid={`r1-${each}`}
+                  id={`r1-${each}-radio`}
                 >
                   <RadioGroup.Indicator className="dot" />
                 </RadioGroup.Item>
@@ -363,6 +448,9 @@ export function App() {
               </label>
             ))}
           </RadioGroup.Root>
+          <label htmlFor="r1-free-radio" data-testid="r1-label">
+            Free plan
+          </label>
           <button type="reset" data-testid="f1-reset">
             Reset
           </button>
@@ -540,12 +628,29 @@ export function App() {
           Load pictures
         </button>
         <Avatar.Root className="avatar" data-testid="av1">
-          <Avatar.Image src={pictures ? PIXEL : undefined} alt="Kirana" data-testid="av1-image" />
+          <Avatar.Image
+            src={pictures ? PIXEL : undefined}
+            alt="Kirana"
+            data-testid="av1-image"
+            onLoadingStatusChange={setHeard}
+          />
           <Avatar.Fallback data-testid="av1-fallback">K</Avatar.Fallback>
         </Avatar.Root>
+        <span data-testid="av1-status">{heard}</span>
         <Avatar.Root className="avatar" data-testid="av2">
           <Avatar.Image src={pictures ? BROKEN : undefined} alt="Nobody" data-testid="av2-image" />
           <Avatar.Fallback data-testid="av2-fallback">N</Avatar.Fallback>
+        </Avatar.Root>
+        <Avatar.Root className="avatar" data-testid="av3">
+          <Avatar.Image
+            keepMounted
+            src={pictures ? PIXEL : undefined}
+            alt="Kept"
+            data-testid="av3-image"
+          />
+          <Avatar.Fallback delay={60000} data-testid="av3-fallback">
+            L
+          </Avatar.Fallback>
         </Avatar.Root>
         <AlertDialog.Root id="ad1">
           <AlertDialog.Trigger data-testid="ad1-trigger">Delete</AlertDialog.Trigger>
@@ -1097,6 +1202,50 @@ export function App() {
         <button type="button" data-testid="sa1-grow" onClick={() => setTall(!tall)}>
           Grow
         </button>
+        <ScrollArea.Root className="scroll-wide" data-testid="sa2">
+          <ScrollArea.Viewport className="scroll-view" data-testid="sa2-view">
+            <div className="scroll-pictures" data-testid="sa2-row">
+              <div className="scroll-figure">
+                <img
+                  className="scroll-picture"
+                  src={rowLoaded ? WIDE : undefined}
+                  alt=""
+                  data-testid="sa2-picture-1"
+                />
+              </div>
+              <div className="scroll-figure">
+                <img
+                  className="scroll-picture"
+                  src={rowLoaded ? WIDE : undefined}
+                  alt=""
+                  data-testid="sa2-picture-2"
+                />
+              </div>
+              <div className="scroll-figure">
+                <img
+                  className="scroll-picture"
+                  src={rowLoaded ? WIDE : undefined}
+                  alt=""
+                  data-testid="sa2-picture-3"
+                />
+              </div>
+            </div>
+            <ScrollArea.Scrollbar
+              orientation="horizontal"
+              className="scroll-bar"
+              data-testid="sa2-x"
+            >
+              <ScrollArea.Thumb className="scroll-thumb" data-testid="sa2-x-thumb" />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar className="scroll-bar" data-testid="sa2-y">
+            <ScrollArea.Thumb className="scroll-thumb" data-testid="sa2-y-thumb" />
+          </ScrollArea.Scrollbar>
+          <ScrollArea.Corner className="scroll-corner" data-testid="sa2-corner" />
+        </ScrollArea.Root>
+        <button type="button" data-testid="sa2-load" onClick={() => setRowLoaded(true)}>
+          Load pictures
+        </button>
       </section>
       <section data-fixture="navigation-menu">
         <NavigationMenu.Root id="nm1" aria-label="Site" data-testid="nm1">
@@ -1293,6 +1442,23 @@ export function App() {
           </Otp.Root>
         </form>
         <output data-testid="otp1-output">{code}</output>
+        <div className="otp-row">
+          <Otp.Root id="otp2" length={2} mode="alphabetic" className="otp" data-testid="otp2">
+            <Otp.Input aria-label="Letters" className="otp-input" data-testid="otp2-input" />
+            <Otp.Group className="otp-group">
+              <Otp.Slot index={0} className="otp-slot" data-testid="otp2-0" />
+              <Otp.Slot index={1} className="otp-slot" data-testid="otp2-1" />
+            </Otp.Group>
+          </Otp.Root>
+          <Otp.Root id="otp3" length={3} pattern="[A-F0-9]" className="otp" data-testid="otp3">
+            <Otp.Input aria-label="Hex" className="otp-input" data-testid="otp3-input" />
+            <Otp.Group className="otp-group">
+              <Otp.Slot index={0} className="otp-slot" data-testid="otp3-0" />
+              <Otp.Slot index={1} className="otp-slot" data-testid="otp3-1" />
+              <Otp.Slot index={2} className="otp-slot" data-testid="otp3-2" />
+            </Otp.Group>
+          </Otp.Root>
+        </div>
         <Resizable.Group
           id="rs1"
           className="split"
@@ -1520,6 +1686,141 @@ export function App() {
           </DateField.Root>
         </form>
         <output data-testid="df1-output">{born}</output>
+      </section>
+      <section data-fixture="calendars">
+        <Calendar.Root
+          id="cal2"
+          locale="en-US"
+          mode="range"
+          months={2}
+          defaultMonth="2026-03-01"
+          defaultFocusedValue="2026-03-15"
+          className="calendar calendar-months"
+          data-testid="cal2"
+          onValueChange={(next: unknown) => setStay(JSON.stringify(next))}
+        >
+          <Calendar.Previous aria-label="Previous month" data-testid="cal2-previous">
+            Previous
+          </Calendar.Previous>
+          <Calendar.Next aria-label="Next month" data-testid="cal2-next">
+            Next
+          </Calendar.Next>
+          <div className="months">
+            <Calendar.Months>
+              {(month) => (
+                <div data-testid={`cal2-month-${month.index}`}>
+                  <Calendar.Heading data-testid={`cal2-heading-${month.index}`} />
+                  <Calendar.Grid data-testid={`cal2-grid-${month.index}`}>
+                    <thead>
+                      <tr>
+                        <Calendar.Weekdays>
+                          {(weekday) => (
+                            <Calendar.HeadCell weekday={weekday}>{weekday.short}</Calendar.HeadCell>
+                          )}
+                        </Calendar.Weekdays>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <Calendar.Weeks>
+                        {(week) => (
+                          <tr>
+                            {week.map((day) => (
+                              <Calendar.Cell key={day.date} date={day.date}>
+                                <Calendar.Day
+                                  date={day.date}
+                                  data-testid={`cal2-${month.index}-${day.date}`}
+                                >
+                                  {day.label}
+                                </Calendar.Day>
+                              </Calendar.Cell>
+                            ))}
+                          </tr>
+                        )}
+                      </Calendar.Weeks>
+                    </tbody>
+                  </Calendar.Grid>
+                </div>
+              )}
+            </Calendar.Months>
+          </div>
+        </Calendar.Root>
+        <output data-testid="cal2-output">{stay}</output>
+        <form data-testid="cal3-form">
+          <Calendar.Root
+            id="cal3"
+            locale="en-US"
+            mode="multiple"
+            name="days"
+            maxDays={3}
+            defaultValue={["2026-03-02"]}
+            defaultFocusedValue="2026-03-15"
+            className="calendar"
+            data-testid="cal3"
+            onValueChange={(next: unknown) => setChosenDays(String(next))}
+          >
+            <Calendar.Heading data-testid="cal3-heading" />
+            <Calendar.Grid data-testid="cal3-grid">
+              <tbody>
+                <Calendar.Weeks>
+                  {(week) => (
+                    <tr>
+                      {week.map((day) => (
+                        <Calendar.Cell key={day.date} date={day.date}>
+                          <Calendar.Day date={day.date} data-testid={`cal3-${day.date}`}>
+                            {day.label}
+                          </Calendar.Day>
+                        </Calendar.Cell>
+                      ))}
+                    </tr>
+                  )}
+                </Calendar.Weeks>
+              </tbody>
+            </Calendar.Grid>
+            <Calendar.Input data-testid="cal3-input" />
+          </Calendar.Root>
+          <button type="reset" data-testid="cal3-reset">
+            Reset
+          </button>
+        </form>
+        <output data-testid="cal3-output">{chosenDays}</output>
+        <Calendar.Root
+          id="cal4"
+          locale="en-US"
+          month={shownMonth}
+          onMonthChange={(next: string) => setShownMonth(next)}
+          defaultFocusedValue="2026-03-15"
+          className="calendar"
+          data-testid="cal4"
+        >
+          <Calendar.Previous aria-label="Previous month" data-testid="cal4-previous">
+            Previous
+          </Calendar.Previous>
+          <Calendar.Heading data-testid="cal4-heading" />
+          <Calendar.Next aria-label="Next month" data-testid="cal4-next">
+            Next
+          </Calendar.Next>
+          <Calendar.Grid data-testid="cal4-grid">
+            <tbody>
+              <Calendar.Weeks>
+                {(week) => (
+                  <tr>
+                    {week.map((day) => (
+                      <Calendar.Cell key={day.date} date={day.date}>
+                        <Calendar.Day date={day.date} data-testid={`cal4-${day.date}`}>
+                          {day.label}
+                        </Calendar.Day>
+                      </Calendar.Cell>
+                    ))}
+                  </tr>
+                )}
+              </Calendar.Weeks>
+            </tbody>
+          </Calendar.Grid>
+        </Calendar.Root>
+        <button type="button" data-testid="cal4-jump" onClick={() => setShownMonth("2030-12-01")}>
+          December 2030
+        </button>
+        <output data-testid="cal4-output">{shownMonth}</output>
       </section>
       <section data-fixture="command">
         <Label htmlFor="in1" data-testid="in1-label">

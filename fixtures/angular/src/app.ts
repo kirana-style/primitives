@@ -135,6 +135,8 @@ import {
   KuiCalendarGrid,
   KuiCalendarHeadCell,
   KuiCalendarHeading,
+  KuiCalendarInput,
+  KuiCalendarMonths,
   KuiCalendarNext,
   KuiCalendarPrevious,
   KuiCalendarWeekdays,
@@ -245,6 +247,18 @@ import {
 } from "@kirana-ui/angular"
 import type { OffsetFunction } from "@kirana-ui/angular"
 
+import {
+  DsCode,
+  DsDialog,
+  DsDialogClose,
+  DsDialogContent,
+  DsDialogTitle,
+  DsDialogTrigger,
+  DsMark,
+  DsTooltip,
+  DsTooltipPositioner,
+} from "./design-system"
+
 /**
  * The page every adapter draws, element for element: the conformance run walks it and compares
  * the DOM of each state across adapters. Change it in all three fixtures at once.
@@ -255,6 +269,15 @@ import type { OffsetFunction } from "@kirana-ui/angular"
 @Component({
   selector: "app-root",
   imports: [
+    DsCode,
+    DsDialog,
+    DsDialogClose,
+    DsDialogContent,
+    DsDialogTitle,
+    DsDialogTrigger,
+    DsMark,
+    DsTooltip,
+    DsTooltipPositioner,
     KuiAccordion,
     KuiAccordionHeader,
     KuiAccordionItem,
@@ -390,6 +413,8 @@ import type { OffsetFunction } from "@kirana-ui/angular"
     KuiCalendarGrid,
     KuiCalendarHeadCell,
     KuiCalendarHeading,
+    KuiCalendarInput,
+    KuiCalendarMonths,
     KuiCalendarNext,
     KuiCalendarPrevious,
     KuiCalendarWeekdays,
@@ -584,6 +609,52 @@ import type { OffsetFunction } from "@kirana-ui/angular"
           <a class="tag asked" title="handed" href="#k2" data-testid="k3-tag">Tag</a>
           <span class="tag" data-testid="k3-plain">Plain</span>
         </div>
+        <div class="item">
+          <button
+            dsMark
+            #mark="dsMark"
+            class="mine"
+            data-testid="k4-mark"
+            (click)="marks.set(marks() + 1)"
+          >
+            {{ mark.active() ? "On" : "Off" }} {{ marks() }}
+          </button>
+        </div>
+      </section>
+
+      <section data-fixture="design">
+        <ng-container dsDialog [kuiId]="'ds1'">
+          <button dsDialogTrigger data-testid="ds1-trigger">Wrapped dialog</button>
+          <div dsDialogContent [popupTestid]="'ds1-popup'">
+            <h2 dsDialogTitle data-testid="ds1-title">Wrapped title</h2>
+            <button dsDialogClose data-testid="ds1-close">Close</button>
+          </div>
+        </ng-container>
+        <label class="item">
+          <input
+            type="checkbox"
+            data-testid="ds2-off"
+            [checked]="tipOff()"
+            (change)="tipOff.set($any($event.target).checked)"
+          />
+          Off
+        </label>
+        <ng-container dsTooltip [kuiId]="'ds2'" [off]="tipOff()">
+          <button kuiTooltipTrigger data-testid="ds2-trigger">Quick</button>
+          <ng-template kuiTooltipPortal>
+            <div dsTooltipPositioner>
+              <div kuiTooltipPopup class="tip" data-testid="ds2-popup">At once</div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <div class="item">
+          <div dsCode [kuiId]="'ds3a'" [length]="2">
+            <input kuiOtpInput aria-label="Text code" data-testid="ds3a-input" />
+          </div>
+          <div dsCode [kuiId]="'ds3b'" [length]="2" [mode]="'numeric'">
+            <input kuiOtpInput aria-label="Number code" data-testid="ds3b-input" />
+          </div>
+        </div>
       </section>
 
       <section data-fixture="controls">
@@ -627,6 +698,7 @@ import type { OffsetFunction } from "@kirana-ui/angular"
                   [disabled]="each === 'team'"
                   class="radio"
                   [attr.data-testid]="'r1-' + each"
+                  [kuiId]="'r1-' + each + '-radio'"
                 >
                   <span *kuiRadioGroupIndicator class="dot"></span>
                 </span>
@@ -634,6 +706,7 @@ import type { OffsetFunction } from "@kirana-ui/angular"
               </label>
             }
           </div>
+          <label for="r1-free-radio" data-testid="r1-label">Free plan</label>
           <button type="reset" data-testid="f1-reset">Reset</button>
         </form>
         <output data-testid="w1-output">{{ alerts() ? "on" : "off" }}</output>
@@ -782,7 +855,7 @@ import type { OffsetFunction } from "@kirana-ui/angular"
           <span kuiMeterValue data-testid="m1-value"></span>
         </div>
         <button data-testid="av-load" (click)="pictures.set(true)">Load pictures</button>
-        <span kuiAvatar class="avatar" data-testid="av1">
+        <span kuiAvatar class="avatar" data-testid="av1" (loadingStatusChanged)="heard.set($event)">
           <img
             *kuiAvatarImage="pictures() ? pixel : undefined"
             alt="Kirana"
@@ -790,6 +863,7 @@ import type { OffsetFunction } from "@kirana-ui/angular"
           />
           <span *kuiAvatarFallback data-testid="av1-fallback">K</span>
         </span>
+        <span data-testid="av1-status">{{ heard() }}</span>
         <span kuiAvatar class="avatar" data-testid="av2">
           <img
             *kuiAvatarImage="pictures() ? broken : undefined"
@@ -797,6 +871,15 @@ import type { OffsetFunction } from "@kirana-ui/angular"
             data-testid="av2-image"
           />
           <span *kuiAvatarFallback data-testid="av2-fallback">N</span>
+        </span>
+        <span kuiAvatar class="avatar" data-testid="av3">
+          <img
+            kuiAvatarImage
+            [attr.src]="pictures() ? pixel : null"
+            alt="Kept"
+            data-testid="av3-image"
+          />
+          <span *kuiAvatarFallback="{ delay: 60000 }" data-testid="av3-fallback">L</span>
         </span>
         <ng-container kuiAlertDialog [kuiId]="'ad1'">
           <button kuiDialogTrigger data-testid="ad1-trigger">Delete</button>
@@ -1324,6 +1407,46 @@ import type { OffsetFunction } from "@kirana-ui/angular"
           <div *kuiScrollAreaCorner class="scroll-corner" data-testid="sa1-corner"></div>
         </div>
         <button type="button" data-testid="sa1-grow" (click)="tall.set(!tall())">Grow</button>
+        <div kuiScrollArea class="scroll-wide" data-testid="sa2">
+          <div kuiScrollAreaViewport class="scroll-view" data-testid="sa2-view">
+            <div class="scroll-pictures" data-testid="sa2-row">
+              <div class="scroll-figure">
+                <img
+                  class="scroll-picture"
+                  [attr.src]="rowLoaded() ? wide : null"
+                  alt=""
+                  data-testid="sa2-picture-1"
+                />
+              </div>
+              <div class="scroll-figure">
+                <img
+                  class="scroll-picture"
+                  [attr.src]="rowLoaded() ? wide : null"
+                  alt=""
+                  data-testid="sa2-picture-2"
+                />
+              </div>
+              <div class="scroll-figure">
+                <img
+                  class="scroll-picture"
+                  [attr.src]="rowLoaded() ? wide : null"
+                  alt=""
+                  data-testid="sa2-picture-3"
+                />
+              </div>
+            </div>
+            <div *kuiScrollAreaScrollbar="'horizontal'" class="scroll-bar" data-testid="sa2-x">
+              <div kuiScrollAreaThumb class="scroll-thumb" data-testid="sa2-x-thumb"></div>
+            </div>
+          </div>
+          <div *kuiScrollAreaScrollbar class="scroll-bar" data-testid="sa2-y">
+            <div kuiScrollAreaThumb class="scroll-thumb" data-testid="sa2-y-thumb"></div>
+          </div>
+          <div *kuiScrollAreaCorner class="scroll-corner" data-testid="sa2-corner"></div>
+        </div>
+        <button type="button" data-testid="sa2-load" (click)="rowLoaded.set(true)">
+          Load pictures
+        </button>
       </section>
       <section data-fixture="navigation-menu">
         <nav kuiNavigationMenu [kuiId]="'nm1'" aria-label="Site" data-testid="nm1">
@@ -1529,6 +1652,37 @@ import type { OffsetFunction } from "@kirana-ui/angular"
           </div>
         </form>
         <output data-testid="otp1-output">{{ code() }}</output>
+        <div class="otp-row">
+          <div
+            kuiOtp
+            [kuiId]="'otp2'"
+            [length]="2"
+            [mode]="'alphabetic'"
+            class="otp"
+            data-testid="otp2"
+          >
+            <input kuiOtpInput aria-label="Letters" class="otp-input" data-testid="otp2-input" />
+            <div kuiOtpGroup class="otp-group">
+              <div kuiOtpSlot [index]="0" class="otp-slot" data-testid="otp2-0"></div>
+              <div kuiOtpSlot [index]="1" class="otp-slot" data-testid="otp2-1"></div>
+            </div>
+          </div>
+          <div
+            kuiOtp
+            [kuiId]="'otp3'"
+            [length]="3"
+            [pattern]="'[A-F0-9]'"
+            class="otp"
+            data-testid="otp3"
+          >
+            <input kuiOtpInput aria-label="Hex" class="otp-input" data-testid="otp3-input" />
+            <div kuiOtpGroup class="otp-group">
+              <div kuiOtpSlot [index]="0" class="otp-slot" data-testid="otp3-0"></div>
+              <div kuiOtpSlot [index]="1" class="otp-slot" data-testid="otp3-1"></div>
+              <div kuiOtpSlot [index]="2" class="otp-slot" data-testid="otp3-2"></div>
+            </div>
+          </div>
+        </div>
         <div
           kuiResizableGroup
           [kuiId]="'rs1'"
@@ -1773,6 +1927,128 @@ import type { OffsetFunction } from "@kirana-ui/angular"
           </div>
         </form>
         <output data-testid="df1-output">{{ born() }}</output>
+      </section>
+      <section data-fixture="calendars">
+        <div
+          kuiCalendar
+          [kuiId]="'cal2'"
+          [locale]="'en-US'"
+          [mode]="'range'"
+          [months]="2"
+          [defaultMonth]="'2026-03-01'"
+          [defaultFocusedValue]="'2026-03-15'"
+          class="calendar calendar-months"
+          data-testid="cal2"
+          (valueChanged)="stay.set(json($event.value))"
+        >
+          <button kuiCalendarPrevious aria-label="Previous month" data-testid="cal2-previous">
+            Previous
+          </button>
+          <button kuiCalendarNext aria-label="Next month" data-testid="cal2-next">Next</button>
+          <div class="months">
+            <div *kuiCalendarMonths="let month" [attr.data-testid]="'cal2-month-' + month.index">
+              <div kuiCalendarHeading [attr.data-testid]="'cal2-heading-' + month.index"></div>
+              <table kuiCalendarGrid [attr.data-testid]="'cal2-grid-' + month.index">
+                <thead>
+                  <tr>
+                    <th *kuiCalendarWeekdays="let weekday" kuiCalendarHeadCell [weekday]="weekday">
+                      {{ weekday.short }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *kuiCalendarWeeks="let week">
+                    @for (day of week; track day.date) {
+                      <td kuiCalendarCell [date]="day.date">
+                        <button
+                          kuiCalendarDay
+                          [date]="day.date"
+                          [attr.data-testid]="'cal2-' + month.index + '-' + day.date"
+                        >
+                          {{ day.label }}
+                        </button>
+                      </td>
+                    }
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <output data-testid="cal2-output">{{ stay() }}</output>
+        <form data-testid="cal3-form">
+          <div
+            kuiCalendar
+            [kuiId]="'cal3'"
+            [locale]="'en-US'"
+            [mode]="'multiple'"
+            [name]="'days'"
+            [maxDays]="3"
+            [defaultValue]="['2026-03-02']"
+            [defaultFocusedValue]="'2026-03-15'"
+            class="calendar"
+            data-testid="cal3"
+            (valueChanged)="chosenDays.set('' + $event.value)"
+          >
+            <div kuiCalendarHeading data-testid="cal3-heading"></div>
+            <table kuiCalendarGrid data-testid="cal3-grid">
+              <tbody>
+                <tr *kuiCalendarWeeks="let week">
+                  @for (day of week; track day.date) {
+                    <td kuiCalendarCell [date]="day.date">
+                      <button
+                        kuiCalendarDay
+                        [date]="day.date"
+                        [attr.data-testid]="'cal3-' + day.date"
+                      >
+                        {{ day.label }}
+                      </button>
+                    </td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+            <input kuiCalendarInput data-testid="cal3-input" />
+          </div>
+          <button type="reset" data-testid="cal3-reset">Reset</button>
+        </form>
+        <output data-testid="cal3-output">{{ chosenDays() }}</output>
+        <div
+          kuiCalendar
+          [kuiId]="'cal4'"
+          [locale]="'en-US'"
+          [(month)]="shownMonth"
+          [defaultFocusedValue]="'2026-03-15'"
+          class="calendar"
+          data-testid="cal4"
+        >
+          <button kuiCalendarPrevious aria-label="Previous month" data-testid="cal4-previous">
+            Previous
+          </button>
+          <div kuiCalendarHeading data-testid="cal4-heading"></div>
+          <button kuiCalendarNext aria-label="Next month" data-testid="cal4-next">Next</button>
+          <table kuiCalendarGrid data-testid="cal4-grid">
+            <tbody>
+              <tr *kuiCalendarWeeks="let week">
+                @for (day of week; track day.date) {
+                  <td kuiCalendarCell [date]="day.date">
+                    <button
+                      kuiCalendarDay
+                      [date]="day.date"
+                      [attr.data-testid]="'cal4-' + day.date"
+                    >
+                      {{ day.label }}
+                    </button>
+                  </td>
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button type="button" data-testid="cal4-jump" (click)="shownMonth.set('2030-12-01')">
+          December 2030
+        </button>
+        <output data-testid="cal4-output">{{ shownMonth() }}</output>
       </section>
       <section data-fixture="command">
         <label kuiLabel for="in1" data-testid="in1-label">Name</label>
@@ -2659,6 +2935,9 @@ export class App {
   protected readonly named = signal("")
   protected readonly did = signal("none")
   protected readonly dated = signal("none")
+  protected readonly stay = signal("none")
+  protected readonly chosenDays = signal("none")
+  protected readonly shownMonth = signal<string | undefined>("2026-03-01")
   protected readonly rests = signal("0.5")
   protected readonly said = signal(8)
   protected readonly lines = computed(() => Array.from({ length: this.said() }, (_, at) => at + 1))
@@ -2674,6 +2953,10 @@ export class App {
   protected readonly rounded = (sizes: number[]) => sizes.map(Math.round).join(",")
   protected readonly align = signal(["left"])
   protected readonly tall = signal(false)
+  protected readonly rowLoaded = signal(false)
+  // A picture 160 wide: a row of three is wider than its scroll area once they have loaded.
+  protected readonly wide =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3C/svg%3E"
   protected readonly chosen = signal(["Banana"])
   protected readonly pick = signal<string | null>(null)
   protected readonly sought = signal<string | null>(null)
@@ -2717,11 +3000,14 @@ export class App {
   protected readonly locked = signal(false)
   protected readonly handed = signal(0)
   protected readonly asked = signal(0)
+  protected readonly marks = signal(0)
+  protected readonly tipOff = signal(false)
   // The other adapters give the caller the part's state; here the caller holds it.
   protected readonly layered = signal<boolean | undefined>(false)
   protected readonly count = signal(0)
   protected readonly done = signal<number | null>(40)
   protected readonly pictures = signal(false)
+  protected readonly heard = signal<string>("none")
   protected readonly sent = signal("")
   protected readonly sent2 = signal("")
   protected readonly reading = signal<"ltr" | "rtl">("rtl")

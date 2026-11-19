@@ -77,14 +77,20 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
 export type ItemProps = PartComponentProps<
   "span",
   StateOf<Parts["item"]>,
-  { value: unknown; disabled?: boolean }
+  {
+    value: unknown
+    /** Disables this item: it cannot be chosen. */
+    disabled?: boolean
+    /** The id of the item's native radio, unique in the page: a `<label for>` names it. */
+    id?: string
+  }
 >
 
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "children"])
+  const [local, rest] = splitProps(props, ["value", "disabled", "id", "children"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
-  const options = toSignal(() => ({ disabled: local.disabled }))
+  const options = toSignal(() => ({ disabled: local.disabled, id: local.id }))
   const read = () => defined(options.get())
   const group = useRadioGroup()
   return (

@@ -7,7 +7,7 @@ import {
   model,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
@@ -35,7 +35,7 @@ export class KuiRadioGroup<Value = unknown> implements OnInit {
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -55,6 +55,10 @@ export class KuiRadioGroup<Value = unknown> implements OnInit {
   private readonly part = hostPart()
   private readonly mount = mounted()
 
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
+
   ngOnInit(): void {
     this.controller = createRadioGroup(this.props(), {
       field: this.field?.controller,
@@ -70,10 +74,19 @@ export class KuiRadioGroup<Value = unknown> implements OnInit {
 export class KuiRadioGroupItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** The id of the item's native radio, unique in the page: a `<label for>` names it. */
+  readonly kuiId = input<string>()
   readonly group = inject(KuiRadioGroup)
   private readonly part = hostPart()
   private readonly inner = innerPart("input")
-  private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({
+    disabled: this.disabled(),
+    id: this.kuiId(),
+  }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

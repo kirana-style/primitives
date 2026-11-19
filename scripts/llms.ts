@@ -95,7 +95,6 @@ const IDIOM: Record<Adapter, string[]> = {
     "With a `render` element there are three layers of props, lowest first: the props handed to the part, the `render` element's own props, the part's own (its role, ARIA, state attributes and handlers). A higher layer wins an attribute it gives, and one it leaves `undefined` stays; `className`s are joined; `style`s are merged property by property, the higher layer winning a property; every handler of an event runs, lowest first (the part's caller's, the element's, the part's), and `event.preventKiranaHandler()` called in either of the first two stops only the part's own. The `render` element's own children are drawn when it has any, the part's otherwise. The part's `ref` and the `render` element's own ref both get the element. So `<Button data-slot=\"button\" render={<a data-slot=\"link\" href=\"/x\">Next</a>} />` is `<a data-slot=\"link\" href=\"/x\">Next</a>` with the button's role and handlers.",
     'A function `render` is given the props handed to the part merged under the part\'s own, to spread on its element, and the part\'s state, read from the part\'s `data-*` attributes listed below, camel-cased: `data-open` is `state.open === true`, `data-side="bottom"` is `state.side === "bottom"`, `data-starting-style` is `state.startingStyle`, and a state that does not hold is absent. `<Popover.Popup render={(props, state) => <div {...props}>{state.side}</div>} />`.',
     "What a part keeps in its element stays in the element it is rendered as: a form control's hidden native input is its last child whatever `render` draws, and the text a part writes (`Meter.Value`, `Select.Value`, `Calendar.Heading`, a toast's `Title`) is the children handed to the element, drawn unless the `render` element has children of its own. A handler given to a part is typed with the event's `preventKiranaHandler()`: `PartEvent<MouseEvent<HTMLButtonElement>>`, exported by the package.",
-    "For an element of your own that takes `render` (a badge, a breadcrumb's link): `import { useRender, mergeProps } from \"@kirana-ui/react/use-render\"`. `useRender({ render, defaultTagName, props, state, ref })` returns the element, by the same rule: `props` lie under the `render` element's own props, classes joined, styles merged, both handlers of an event run, every ref gets the element. `state` is given to a function `render` and written on the element as `data-*` attributes, under `props`: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's: a later set wins an attribute, classes are joined, styles merged, the handlers of an event run in order, and `event.preventKiranaHandler()` stops those after it.",
     "Controlled: `value` with `onValueChange`. Uncontrolled: `defaultValue`.",
     "A `Positioner`'s `anchor` is an element, a ref object (`useRef`), an object with `getBoundingClientRect`, or a function that gives one of those.",
     "Works in React 18 and 19, on a server, and in StrictMode.",
@@ -108,7 +107,6 @@ const IDIOM: Record<Adapter, string[]> = {
     'With `as-child` there are three layers of props, lowest first: the attributes on the part, the slotted element\'s own, the part\'s own (its role, ARIA, state attributes and listeners). A higher layer wins an attribute it gives, and one it leaves `undefined` stays; classes are joined; styles are merged, the higher layer winning a property; every listener of an event runs, lowest first (the part\'s caller\'s, the element\'s, the part\'s), and `event.preventKiranaHandler()` called in either of the first two stops only the part\'s own. So `<Button as-child data-slot="button"><a data-slot="link" href="/x">Next</a></Button>` is `<a data-slot="link" href="/x">Next</a>` with the button\'s role and listeners. Without `as-child` there are two layers: the attributes on the part, then the part\'s own.',
     'A part\'s default slot is given the part\'s state, with `as-child` and without: `v-slot="{ state }"`, read from the part\'s `data-*` attributes listed below, camel-cased: `data-open` is `state.open === true`, `data-side="bottom"` is `state.side === "bottom"`, `data-starting-style` is `state.startingStyle`, and a state that does not hold is absent.',
     "With `as-child`, what a part keeps in its element is in the slotted element: a form control's hidden native input as its last child, and the text a part writes (`Meter.Value`, `Select.Value`, `Calendar.Heading`, a toast's `Title`) while the slotted element has no content of its own: `<Meter.Value as-child><b /></Meter.Value>` is `<b>40%</b>`. A listener given to a part is typed with the event's `preventKiranaHandler()`: `PartEvent<MouseEvent>`, exported by the package.",
-    'For an element of your own that takes `as` and `as-child` (a badge, a breadcrumb\'s link): `import { Primitive } from "@kirana-ui/vue/primitive"`. `<Primitive as="span">` draws that element (a `div` by default) with the attributes it is given; `<Primitive as-child>` draws the element in its slot, by the same rule: the slotted element\'s own props lie over the attributes on the `Primitive`, classes joined, styles merged, both listeners of an event run.',
     'Props are written in kebab case (`default-value`). A value binds with `v-model:value` (`v-model:open`, `v-model:page` …); the matching event carries the details: `@value-change="(value, details) => …"`. Below, a prop marked `v-model` binds so, and an event is written as its listener: `@value-change`.',
     'A part that draws a list gives each entry to its slot: `v-slot="{ segment }"`.',
     'A part that says a value gives it to its slot, to draw something else: `<Select.Value v-slot="{ value, label }">` (with `multiple`, `{ values, labels }`, in the items\' order), `<Slider.Value v-slot="{ text, values }">`.',
@@ -118,7 +116,7 @@ const IDIOM: Record<Adapter, string[]> = {
   svelte: [
     "Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.",
     "A part renders its own element and takes that element's attributes. A `child` snippet draws the caller's own element, spreading the part's props: `{#snippet child({ props, state })}<a {...props}>…</a>{/snippet}`.",
-    "`props` is the attributes given to the part merged under the part's own (its role, ARIA, state attributes and handlers): the part's win, and one it leaves `undefined` stays; classes are joined; styles are merged; for an event the caller's handler runs first, then the part's unless the caller called `event.preventKiranaHandler()`. The element is the caller's to write: an attribute it writes after `{...props}` wins over all of that, the part's own included, and one written before it loses to the same attribute in `props`. An element of your own needs nothing from the library to be composed: it spreads the props it is given.",
+    "`props` is the attributes given to the part merged under the part's own (its role, ARIA, state attributes and handlers): the part's win, and one it leaves `undefined` stays; classes are joined; styles are merged; for an event the caller's handler runs first, then the part's unless the caller called `event.preventKiranaHandler()`. The element is the caller's to write: an attribute it writes after `{...props}` wins over all of that, the part's own included, and one written before it loses to the same attribute in `props`. The element a snippet draws needs nothing from the library: it spreads the props it is given.",
     '`state` is the part\'s state, read from the part\'s `data-*` attributes listed below, camel-cased: `data-open` is `state.open === true`, `data-side="bottom"` is `state.side === "bottom"`, `data-starting-style` is `state.startingStyle`, and a state that does not hold is absent.',
     "A `child` snippet is also given what the part keeps in its element, to render inside the caller's own. A form control (`Checkbox.Root`, `Switch.Root`, `RadioGroup.Item`, `Slider.Thumb`, `NumberField.Root`) gives its hidden native input as `input`: `{#snippet child({ props, input })}<label {...props}>…{@render input()}</label>{/snippet}`, last in the element; a control drawn without it is one no form reads. A part that writes its own text (`Meter.Value`, `Progress.Value`, `Slider.Value`, `Select.Value`, `Calendar.Heading`, `DateField.Segment`, `Field.Error`, a toast's `Title`, `Description` and `Action`) gives it as `text`: `{#snippet child({ props, text })}<b {...props}>{@render text()}</b>{/snippet}`. `Otp.Slot` gives its character as `char`. A handler given to a part is typed with the event's `preventKiranaHandler()`: `PartEvent<MouseEvent>`, exported by the package.",
     "A value binds with `bind:value` (`bind:open`, `bind:page` …); `onValueChange={(value, details) => …}` carries the details. Below, a prop marked `bind:` binds so.",
@@ -131,7 +129,7 @@ const IDIOM: Record<Adapter, string[]> = {
   solid: [
     "Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.",
     'A part renders its own element and takes that element\'s attributes (`class`, not `className`). `as="a"` draws another element; `render` draws the caller\'s own, spreading the part\'s props: `render={(props, state) => <a {...props()} href="/x" />}`.',
-    "What `render` is given are two accessors. `props()` is the attributes given to the part merged under the part's own (its role, ARIA, state attributes and handlers): the part's win, and one it leaves `undefined` stays; classes are joined; styles are merged; for an event the caller's handler runs first, then the part's unless the caller called `event.preventKiranaHandler()`. The element is the caller's to write: an attribute it writes after `{...props()}` wins over all of that, the part's own included, and one written before it loses to the same attribute in `props()`. An element of your own needs nothing from the library to be composed: it spreads the props it is given.",
+    "What `render` is given are two accessors. `props()` is the attributes given to the part merged under the part's own (its role, ARIA, state attributes and handlers): the part's win, and one it leaves `undefined` stays; classes are joined; styles are merged; for an event the caller's handler runs first, then the part's unless the caller called `event.preventKiranaHandler()`. The element is the caller's to write: an attribute it writes after `{...props()}` wins over all of that, the part's own included, and one written before it loses to the same attribute in `props()`. The element `render` draws needs nothing from the library: it spreads the props it is given.",
     '`state()` is the part\'s state, read from the part\'s `data-*` attributes listed below, camel-cased: `data-open` is `state().open === true`, `data-side="bottom"` is `state().side === "bottom"`, `data-starting-style` is `state().startingStyle`, and a state that does not hold is absent.',
     "`props().children` is what the part holds: the children it was given, or the text it writes (`Meter.Value`, `Select.Value`, `Calendar.Heading`, a toast's `Title`), then a form control's hidden native input. An element that spreads `props()` and writes no children holds them; one that writes its own places `props().children` among them, or a control is drawn that no form reads. `props().ref` is the part's, and a `ref` given to the part gets the same element. A handler given to a part is typed with the event's `preventKiranaHandler()` (`PartEvent`, exported by the package).",
     "Controlled: `value={value()}` with `onValueChange`. Uncontrolled: `defaultValue`.",
@@ -151,6 +149,38 @@ const IDIOM: Record<Adapter, string[]> = {
     "A positioner's `[anchor]` is an element (a template variable, `#box`), an `ElementRef`, an object with `getBoundingClientRect`, or a function that gives one of those (a `viewChild` signal).",
     "Angular 20 and later, with signals; it renders on a server and hydrates.",
     "What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kuiPortalProvider` (`[container]`) and `kuiDirection` here, and `useDirection` is `injectDirection()`.",
+  ],
+}
+
+/** What a tooltip's wait is, and how a design system changes it: no provider, on any framework. */
+const TOOLTIP_WAIT =
+  "Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes)."
+
+/** "For a design system": what a component library built on the parts writes, per framework. */
+const DESIGN: Record<Adapter, string[]> = {
+  react: [
+    "For an element of your own that takes `render` (a badge, a breadcrumb's link): `import { useRender, mergeProps } from \"@kirana-ui/react/use-render\"`. `useRender({ render, defaultTagName, props, state, ref })` returns the element, by the same rule: `props` lie under the `render` element's own props, classes joined, styles merged, both handlers of an event run, every ref gets the element. `state` is given to a function `render` and written on the element as `data-*` attributes, under `props`: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's: a later set wins an attribute, classes are joined, styles merged, the handlers of an event run in order, and `event.preventKiranaHandler()` stops those after it.",
+    `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`function MyTooltip(props: ComponentProps<typeof Tooltip.Root>) { return <Tooltip.Root delay={0} {...props} /> }\` (its caller's \`delay\` still wins).`,
+  ],
+  vue: [
+    'For an element of your own that takes `as` and `as-child` (a badge, a breadcrumb\'s link): `import { Primitive } from "@kirana-ui/vue/primitive"`. `<Primitive as="span">` draws that element (a `div` by default) with the attributes it is given; `<Primitive as-child>` draws the element in its slot, by the same rule: the slotted element\'s own props lie over the attributes on the `Primitive`, classes joined, styles merged, both listeners of an event run.',
+    `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`<Tooltip.Root :delay="0" v-bind="$attrs">\` in its own component (its caller's \`delay\` still wins).`,
+  ],
+  svelte: [
+    "For an element of your own that takes `as` and `child` as a part does (a badge, a breadcrumb's link): `import { Primitive, mergeProps } from \"@kirana-ui/svelte/primitive\"`. `<Primitive as=\"span\" {...mergeProps({ class: \"badge\" }, rest)} state={{ active }} />` draws that element (a `div` by default) with the attributes it is given; given a `child` snippet it draws none and hands the snippet `{ props, state }`, to spread on the caller's own element, as a part's `child` is. `state` is written on the element as `data-*` attributes, under the attributes given: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's, by a part's rule: a later set wins an attribute (one it leaves `undefined` stays), classes are joined (lists and objects of conditions too), styles merged, the handlers of an event run in order and `event.preventKiranaHandler()` stops those after it, and every attachment is kept. Its props type is `PrimitiveProps<Tag, State>`.",
+    `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`<Tooltip.Root delay={0} {...rest}>\` in its own component (its caller's \`delay\` in \`rest\` still wins).`,
+  ],
+  solid: [
+    "For an element of your own that takes `as` and `render` as a part does (a badge, a breadcrumb's link): `import { Primitive, mergeProps } from \"@kirana-ui/solid/primitive\"`. `<Primitive as=\"span\" {...mergeProps({ class: \"badge\" }, props)} state={{ active: active() }} />` draws that element (a `div` by default) with the attributes it is given; with `render={(props, state) => <a {...props()} />}` it draws the caller's own instead, given the props and the state as accessors, as a part's `render` is (`props().children` is what it holds). `state` is written on the element as `data-*` attributes, under the attributes given: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's, by a part's rule: a later set wins an attribute (one it leaves `undefined` stays), classes are joined, styles merged, the handlers of an event run in order and `event.preventKiranaHandler()` stops those after it, and every `ref` gets the element. It reads its sets when a prop is read, so the props stay reactive. It is not solid-js's `mergeProps`, where a later class replaces an earlier one: import one under another name where both are used. Its props type is `PrimitiveProps<Tag, State>`.",
+    `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`<Tooltip.Root delay={0} {...props} />\` in its own component (its caller's \`delay\` still wins).`,
+  ],
+  angular: [
+    'A design system\'s part is a directive of its own that hosts the primitive\'s: `@Directive({ selector: "[uiDialog]", hostDirectives: [{ directive: KuiDialog, inputs: ["kuiId", "open", "defaultOpen"], outputs: ["openChange", "openChanged"] }] })`. Angular binds a host directive\'s inputs and outputs only where the host exposes them (`inputs`, `outputs`, each `"name"` or `"name: alias"`): expose what its callers set, and give the rest yourself (below). Its own host bindings (`host: { class: "…", "[attr.data-size]": "size()" }`) join the element\'s: classes are joined, and both handlers of an event run. An element of the design system\'s own (a badge) is such a directive with no primitive: nothing of the library\'s is needed for it.',
+    "Keep the design system's selectors apart from the primitives' `kui…`: two directives with one selector in one template's `imports` both match the element, silently (Angular says nothing), and a part would then be made twice. Name your own `[ui…]`, `[my…]`, anything but `kui`.",
+    "A model's output, `openChange` beside `[(open)]` (`valueChange`, `pageChange` …), carries the model's type, `boolean | undefined` for `open`: its first value can be the `undefined` the model starts with. Expose it with the model's input for a two-way `[(open)]` on the design system's directive, or expose `openChanged` for the change with its details.",
+    "A part that comes and goes is structural (`*kuiDialogPortal`), and an attribute cannot put a structural directive around its own element: draw it in a component's template around `<ng-content />`. `@Component({ selector: \"[uiDialogContent]\", imports: [KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup], template: `<ng-template kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup><ng-content /></div></ng-template>` })`. A part given to it (`<h2 uiDialogTitle>`) is made where it is written, so it finds its root there, inside the design system's `[uiDialog]`, not where it is drawn: the title labels the popup.",
+    "`hostInputs(directive, given)` gives a primitive the design system hosts its inputs, where its callers do not: call it in the hosting directive's constructor or a field initialiser, with each value a function read like a signal, so one worked out from the design system's own inputs follows them: `hostInputs(KuiTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })`, `hostInputs(KuiCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })`, `hostInputs(KuiTooltipPositioner, { sideOffset: () => 4 })`. An input the element binds, one the host exposes and its caller writes, wins over what is given. It is typed against the primitive's inputs (`HostInputs<KuiTooltip>`, `InputsOf<KuiTooltip>`), and an input that does not reach the component (a structural directive's own value) throws when the primitive starts. No subclass of a primitive is needed for any of this.",
+    `${TOOLTIP_WAIT} A design system whose tooltips open at once gives \`delay\` to the tooltip it hosts: \`hostInputs(KuiTooltip, { delay: () => 0 })\`, exposing \`delay\` so a caller can still set it.`,
   ],
 }
 
@@ -225,6 +255,61 @@ function comment(
 
 const DEFAULT = /\bDefault:? `/
 
+/** A default the core writes that is said as it is: a number, a text, `true`. */
+const LITERAL = /^(-?\d+(?:\.\d+)?|"[^"]*"|true)$/
+
+/**
+ * The defaults the core states in code for a component's controller, by prop: the value after
+ * `??` where it reads the prop (`props.peek().loop ?? true`), a constant it names there
+ * (`?? NAVIGATION_DELAY`, `const NAVIGATION_DELAY = 50`), or a value the component's own file
+ * hands the maker it shares with another (`?? kind.delay`, the tooltip's `createHoverPopup(props,
+ * { delay: 600 })`). Read from the component's file, then the files it imports; the first wins.
+ * A default worked out from something else (a field's name, another prop) is none of these, and
+ * stays in the prop's comment.
+ */
+export function coreDefaults(component: string): Map<string, string> {
+  const found = new Map<string, string>()
+  const seen = new Set<string>()
+  const own = `${kebab(component)}.ts`
+  const exists = (file: string) => existsSync(join(ROOT, "packages/core/src", file))
+  const ownText = exists(own) ? read(`packages/core/src/${own}`) : ""
+  const look = (file: string) => {
+    if (seen.has(file) || !exists(file)) return
+    seen.add(file)
+    const text = read(`packages/core/src/${file}`)
+    for (const [, name, given] of text.matchAll(
+      /props\.(?:peek|get)\(\)\.(\w+) \?\? ([\w."-]+)/g
+    )) {
+      if (found.has(name!)) continue
+      let value = given!
+      if (/^[A-Z][A-Z_]+$/.test(value))
+        value = new RegExp(`const ${value} = ([^\\n;]+)`).exec(text)?.[1]?.trim() ?? value
+      const handed = /^\w+\.(\w+)$/.exec(value)
+      if (handed) value = new RegExp(`\\b${handed[1]}:\\s*([^,}\\s]+)`).exec(ownText)?.[1] ?? value
+      if (LITERAL.test(value)) found.set(name!, value)
+    }
+    // Another component's maker this one hands its own props to: its defaults are this one's.
+    for (const [, names, next] of text.matchAll(/import \{([^}]*)\} from "\.\/([\w-]+\.ts)"/g)) {
+      const makers = names!.split(",").map((each) => each.trim())
+      if (makers.some((each) => each && text.includes(`${each}(props`))) look(next!)
+    }
+  }
+  look(own)
+  return found
+}
+
+/**
+ * What a comment says a prop's default is, where it says it as a value (`Default \`true\``,
+ * `Default: 24`, `Default 1`); a comment that says it in words ("the default", "Default: they
+ * do") is taken as saying it, and is not compared.
+ */
+function saidDefault(doc: string): string | undefined {
+  const value = /\bDefault:?\s+(`[^`]+`|-?\d+(?:\.\d+)?\b|true\b|false\b)/.exec(doc)?.[1]
+  return value?.replace(/^`(.*)`$/, "$1")
+}
+const SAYS_DEFAULT = /\bdefault\b/i
+const unquoted = (value: string) => value.replace(/^"(.*)"$/, "$1")
+
 function propLine(
   adapter: Adapter,
   component: string,
@@ -233,7 +318,8 @@ function propLine(
   react: AdapterReference,
   models: Set<string>,
   problems: Problem[],
-  indent: string
+  indent: string,
+  defaults: Map<string, string>
 ): string | undefined {
   const own = part.directive && attribute(part.directive.selector)
   let signature = `${prop.name}${prop.optional ? "?" : ""}: ${prop.type}`
@@ -268,12 +354,22 @@ function propLine(
       adapter,
       said: `${component}.${part.part} ${prop.name} has no comment (${prop.at})`,
     })
+  const stated =
+    prop.kind === "emit" || prop.kind === "output" ? undefined : defaults.get(prop.name)
+  const inComment = saidDefault(doc)
+  if (stated && inComment !== undefined && unquoted(inComment) !== unquoted(stated))
+    problems.push({
+      rule: "props",
+      adapter,
+      said: `${component}.${part.part} ${prop.name}: its comment says the default is \`${inComment}\`, the core's is \`${stated}\``,
+    })
   if (
     prop.initial &&
     !["false", "null", '""', "undefined"].includes(prop.initial) &&
     !DEFAULT.test(doc)
   )
     said.push(`Default \`${prop.initial}\`.`)
+  else if (stated && !prop.initial && !SAYS_DEFAULT.test(doc)) said.push(`Default \`${stated}\`.`)
   return `${indent}- \`${signature}\`${said.length ? `: ${said.join(" ")}` : ""}`
 }
 
@@ -284,7 +380,8 @@ function propLines(
   part: PartReference,
   react: AdapterReference,
   problems: Problem[],
-  indent: string
+  indent: string,
+  defaults: Map<string, string> = new Map()
 ): string[] {
   const models = new Set(
     adapter === "vue"
@@ -295,7 +392,8 @@ function propLines(
       : []
   )
   return part.props.flatMap(
-    (prop) => propLine(adapter, component, part, prop, react, models, problems, indent) ?? []
+    (prop) =>
+      propLine(adapter, component, part, prop, react, models, problems, indent, defaults) ?? []
   )
 }
 
@@ -864,8 +962,10 @@ function componentSection(
   // The root: the part named so, or the first where none is (a group, a viewport).
   const root = component.parts.find((each) => each.part === "Root") ?? component.parts[0]
   for (const part of component.parts) mentioned.push(...part.types)
+  // What the core defaults in code is said of the root's props, the controller's own.
+  const defaults = coreDefaults(name)
   if (root) {
-    const lines = propLines(adapter, name, root, react, problems, "")
+    const lines = propLines(adapter, name, root, react, problems, "", defaults)
     if (lines.length > 0) out.push(lone ? "Props:" : "Props of its root:", "", ...lines, "")
   }
   const described = definition
@@ -1228,6 +1328,10 @@ async function fileFor(adapter: Adapter, problems: Problem[]): Promise<string> {
     ...SHARED.map((each) => `- ${each}`),
     `- An agent can read and use a page built with these: \`createAgent()\` from \`${agent}\` gives \`snapshot()\`, \`act({ steps })\`, \`query()\`, \`history()\`, \`undo()\` and \`redo()\`; what it changes reaches the same callbacks with \`details.source === "agent"\`. "Agent", above, has the whole of it.`,
     "",
+    "### For a design system",
+    "",
+    ...DESIGN[adapter].map((each) => `- ${each}`),
+    "",
     "## Components",
     ...sections,
   ]
@@ -1389,6 +1493,11 @@ async function web(problems: Problem[]): Promise<string> {
     ...WEB.map((each) => `- ${each}`),
     `- ${ANATOMY} There the first line is the custom element, which holds a root that draws nothing; a \`<template kui-each>\` is a list; a \`<kui-menu>\` inside a menu's popup is its submenu.`,
     ...SHARED.filter((each) => !each.startsWith("`PortalProvider`")).map((each) => `- ${each}`),
+    "",
+    "### For a design system",
+    "",
+    "- A design system's own element (a badge, a breadcrumb's link) is the page's own element, with its own classes and attributes: nothing of the library's is needed for it, and none is given, since a custom element's parts are the page's own elements too and are composed by writing them.",
+    `- ${TOOLTIP_WAIT} A design system whose tooltips open at once writes \`delay="0"\` on each \`<kui-tooltip>\`.`,
     "",
     "## Elements",
   ]

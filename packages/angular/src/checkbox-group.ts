@@ -7,7 +7,7 @@ import {
   model,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckboxGroup } from "@kirana-ui/core/checkbox-group"
 import type { CheckboxGroup } from "@kirana-ui/core/checkbox-group"
@@ -40,7 +40,7 @@ export class KuiCheckboxGroup implements OnInit {
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -54,6 +54,10 @@ export class KuiCheckboxGroup implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createCheckboxGroup(this.props(), { field: this.field?.controller })

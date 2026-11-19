@@ -10,4 +10,10 @@ export type Tooltip = HoverPopup
 
 /** A short description of its trigger, shown while the pointer rests on it or it has focus. */
 export const createTooltip = (props: ReadonlySignal<TooltipProps>): Tooltip =>
-  createHoverPopup(props, { name: "tooltip", delay: 600, closeDelay: 0, describes: true })
+  createHoverPopup(props, {
+    name: "tooltip",
+    delay: 600,
+    closeDelay: 0,
+    describes: true,
+    trigger: "button",
+  })

@@ -86,11 +86,12 @@ const Item = defineComponent({
   props: {
     value: { type: null as unknown as PropType<unknown>, required: true },
     disabled: optional(Boolean),
+    id: String,
   },
   setup(props, { attrs, slots }) {
     // An item is its value for as long as it is in the page.
     const value = props.value
-    const options = toSignal(() => ({ disabled: props.disabled }))
+    const options = toSignal(() => ({ disabled: props.disabled, id: props.id }))
     const read = () => defined(options.get())
     const group = scope.use()
     const item = group.item(value, read)

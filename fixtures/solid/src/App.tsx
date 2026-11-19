@@ -53,14 +53,40 @@ import {
   Tooltip,
 } from "@kirana-ui/solid"
 import type { OffsetFunction } from "@kirana-ui/solid"
+import { Primitive, mergeProps } from "@kirana-ui/solid/primitive"
+import type { PrimitiveProps } from "@kirana-ui/solid/primitive"
 import { For, Show, createSignal } from "solid-js"
 import type { Accessor } from "solid-js"
+
+// An element of the page's own with the `as` and `render` a part takes.
+function Tag(props: PrimitiveProps<"span">) {
+  return <Primitive as="span" {...mergeProps({ class: "tag" }, props)} />
+}
+
+// An element of the page's own with a state of its own, composed as a part is: its own class,
+// type and handler under its caller's, its state written as `data-*` and handed to `render`.
+function Mark(props: PrimitiveProps<"button", { active: boolean }>) {
+  const [active, setActive] = createSignal(false)
+  return (
+    <Primitive
+      as="button"
+      {...mergeProps(
+        { class: "mark", type: "button" as const, onClick: () => setActive((on) => !on) },
+        props
+      )}
+      state={{ active: active() }}
+    />
+  )
+}
 
 // A picture of one pixel, and an address that is not a picture.
 // A page's toasts are made once, apart from any component: a long time, so a test reads them.
 const toaster = createToaster({ duration: 600_000 })
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 const BROKEN = "data:image/png;base64,AAAA"
+// A picture 160 wide: a row of three is wider than its scroll area once they have loaded.
+const WIDE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3C/svg%3E"
 // What the fixture writes for a field's validity, and its own check of a value.
 const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? "valid" : "invalid")
 const taken = (value: string) => (value === "admin" ? "Taken" : null)
@@ -154,6 +180,9 @@ export function App() {
   const [named, setNamed] = createSignal("")
   const [did, setDid] = createSignal("none")
   const [dated, setDated] = createSignal("none")
+  const [stay, setStay] = createSignal("none")
+  const [chosenDays, setChosenDays] = createSignal("none")
+  const [shownMonth, setShownMonth] = createSignal("2026-03-01")
   const [rests, setRests] = createSignal("0.5")
   const [said, setSaid] = createSignal(8)
   const [first, setFirst] = createSignal(0)
@@ -161,6 +190,7 @@ export function App() {
   const [tags, setTags] = createSignal<string[]>(["New"])
   const [align, setAlign] = createSignal<string[]>(["left"])
   const [tall, setTall] = createSignal(false)
+  const [rowLoaded, setRowLoaded] = createSignal(false)
   const [chosen, setChosen] = createSignal<string[]>(["Banana"])
   const [pick, setPick] = createSignal<string | null>(null)
   const [outside, setOutside] = createSignal(0)
@@ -169,11 +199,14 @@ export function App() {
   const [locked, setLocked] = createSignal(false)
   const [handed, setHanded] = createSignal(0)
   const [asked, setAsked] = createSignal(0)
+  const [marks, setMarks] = createSignal(0)
+  const [tipOff, setTipOff] = createSignal(false)
   const [alerts, setAlerts] = createSignal(false)
   const [toppings, setToppings] = createSignal<string[]>(["ham"])
   const [count, setCount] = createSignal(0)
   const [done, setDone] = createSignal<number | null>(40)
   const [pictures, setPictures] = createSignal(false)
+  const [heard, setHeard] = createSignal<string>("none")
   const [sent, setSent] = createSignal("")
   const [sent2, setSent2] = createSignal("")
   const [reading, setReading] = createSignal<"ltr" | "rtl">("rtl")
@@ -287,12 +320,73 @@ export function App() {
           </Collapsible.Panel>
         </Collapsible.Root>
         <div class="item">
-          <a class="tag asked" title="handed" href="#k2" data-testid="k3-tag">
-            Tag
-          </a>
-          <span class="tag" data-testid="k3-plain">
-            Plain
-          </span>
+          <Tag
+            title="handed"
+            render={(props) => (
+              <a
+                {...props()}
+                class={`${String(props().class)} asked`}
+                href="#k2"
+                data-testid="k3-tag"
+              >
+                Tag
+              </a>
+            )}
+          />
+          <Tag data-testid="k3-plain">Plain</Tag>
+        </div>
+        <div class="item">
+          <Mark
+            class="mine"
+            onClick={() => setMarks((value) => value + 1)}
+            render={(props, state) => (
+              <button {...props()} data-testid="k4-mark">
+                {state().active ? "On" : "Off"} {marks()}
+              </button>
+            )}
+          />
+        </div>
+      </section>
+
+      <section data-fixture="design">
+        <Dialog.Root id="ds1">
+          <Dialog.Trigger data-testid="ds1-trigger">Wrapped dialog</Dialog.Trigger>
+          <div>
+            <Dialog.Portal>
+              <Dialog.Backdrop class="backdrop" />
+              <Dialog.Popup class="dialog" data-testid="ds1-popup">
+                <Dialog.Title data-testid="ds1-title">Wrapped title</Dialog.Title>
+                <Dialog.Close data-testid="ds1-close">Close</Dialog.Close>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </div>
+        </Dialog.Root>
+        <label class="item">
+          <input
+            type="checkbox"
+            data-testid="ds2-off"
+            checked={tipOff()}
+            onChange={(event) => setTipOff(event.currentTarget.checked)}
+          />
+          Off
+        </label>
+        <Tooltip.Root id="ds2" delay={0} disabled={tipOff()}>
+          <Tooltip.Trigger data-testid="ds2-trigger">Quick</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner sideOffset={8}>
+              <Tooltip.Popup class="tip" data-testid="ds2-popup">
+                At once
+              </Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+        <div class="item">
+          <Otp.Root id="ds3a" length={2} mode="text">
+            <Otp.Input aria-label="Text code" data-testid="ds3a-input" />
+          </Otp.Root>
+          <Otp.Root id="ds3b" length={2} mode="numeric">
+            <Otp.Input aria-label="Number code" data-testid="ds3b-input" />
+          </Otp.Root>
         </div>
       </section>
 
@@ -332,6 +426,7 @@ export function App() {
                     disabled={each === "team"}
                     class="radio"
                     data-testid={`r1-${each}`}
+                    id={`r1-${each}-radio`}
                   >
                     <RadioGroup.Indicator class="dot" />
                   </RadioGroup.Item>
@@ -340,6 +435,9 @@ export function App() {
               )}
             </For>
           </RadioGroup.Root>
+          <label for="r1-free-radio" data-testid="r1-label">
+            Free plan
+          </label>
           <button type="reset" data-testid="f1-reset">
             Reset
           </button>
@@ -516,9 +614,15 @@ export function App() {
           Load pictures
         </button>
         <Avatar.Root class="avatar" data-testid="av1">
-          <Avatar.Image src={pictures() ? PIXEL : undefined} alt="Kirana" data-testid="av1-image" />
+          <Avatar.Image
+            src={pictures() ? PIXEL : undefined}
+            alt="Kirana"
+            data-testid="av1-image"
+            onLoadingStatusChange={(status) => setHeard(status)}
+          />
           <Avatar.Fallback data-testid="av1-fallback">K</Avatar.Fallback>
         </Avatar.Root>
+        <span data-testid="av1-status">{heard()}</span>
         <Avatar.Root class="avatar" data-testid="av2">
           <Avatar.Image
             src={pictures() ? BROKEN : undefined}
@@ -526,6 +630,17 @@ export function App() {
             data-testid="av2-image"
           />
           <Avatar.Fallback data-testid="av2-fallback">N</Avatar.Fallback>
+        </Avatar.Root>
+        <Avatar.Root class="avatar" data-testid="av3">
+          <Avatar.Image
+            keepMounted
+            src={pictures() ? PIXEL : undefined}
+            alt="Kept"
+            data-testid="av3-image"
+          />
+          <Avatar.Fallback delay={60000} data-testid="av3-fallback">
+            L
+          </Avatar.Fallback>
         </Avatar.Root>
         <AlertDialog.Root id="ad1">
           <AlertDialog.Trigger data-testid="ad1-trigger">Delete</AlertDialog.Trigger>
@@ -1092,6 +1207,46 @@ export function App() {
         <button type="button" data-testid="sa1-grow" onClick={() => setTall(!tall())}>
           Grow
         </button>
+        <ScrollArea.Root class="scroll-wide" data-testid="sa2">
+          <ScrollArea.Viewport class="scroll-view" data-testid="sa2-view">
+            <div class="scroll-pictures" data-testid="sa2-row">
+              <div class="scroll-figure">
+                <img
+                  class="scroll-picture"
+                  src={rowLoaded() ? WIDE : undefined}
+                  alt=""
+                  data-testid="sa2-picture-1"
+                />
+              </div>
+              <div class="scroll-figure">
+                <img
+                  class="scroll-picture"
+                  src={rowLoaded() ? WIDE : undefined}
+                  alt=""
+                  data-testid="sa2-picture-2"
+                />
+              </div>
+              <div class="scroll-figure">
+                <img
+                  class="scroll-picture"
+                  src={rowLoaded() ? WIDE : undefined}
+                  alt=""
+                  data-testid="sa2-picture-3"
+                />
+              </div>
+            </div>
+            <ScrollArea.Scrollbar orientation="horizontal" class="scroll-bar" data-testid="sa2-x">
+              <ScrollArea.Thumb class="scroll-thumb" data-testid="sa2-x-thumb" />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar class="scroll-bar" data-testid="sa2-y">
+            <ScrollArea.Thumb class="scroll-thumb" data-testid="sa2-y-thumb" />
+          </ScrollArea.Scrollbar>
+          <ScrollArea.Corner class="scroll-corner" data-testid="sa2-corner" />
+        </ScrollArea.Root>
+        <button type="button" data-testid="sa2-load" onClick={() => setRowLoaded(true)}>
+          Load pictures
+        </button>
       </section>
       <section data-fixture="navigation-menu">
         <NavigationMenu.Root id="nm1" aria-label="Site" data-testid="nm1">
@@ -1285,6 +1440,23 @@ export function App() {
           </Otp.Root>
         </form>
         <output data-testid="otp1-output">{code()}</output>
+        <div class="otp-row">
+          <Otp.Root id="otp2" length={2} mode="alphabetic" class="otp" data-testid="otp2">
+            <Otp.Input aria-label="Letters" class="otp-input" data-testid="otp2-input" />
+            <Otp.Group class="otp-group">
+              <Otp.Slot index={0} class="otp-slot" data-testid="otp2-0" />
+              <Otp.Slot index={1} class="otp-slot" data-testid="otp2-1" />
+            </Otp.Group>
+          </Otp.Root>
+          <Otp.Root id="otp3" length={3} pattern="[A-F0-9]" class="otp" data-testid="otp3">
+            <Otp.Input aria-label="Hex" class="otp-input" data-testid="otp3-input" />
+            <Otp.Group class="otp-group">
+              <Otp.Slot index={0} class="otp-slot" data-testid="otp3-0" />
+              <Otp.Slot index={1} class="otp-slot" data-testid="otp3-1" />
+              <Otp.Slot index={2} class="otp-slot" data-testid="otp3-2" />
+            </Otp.Group>
+          </Otp.Root>
+        </div>
         <Resizable.Group
           id="rs1"
           class="split"
@@ -1507,6 +1679,147 @@ export function App() {
           </DateField.Root>
         </form>
         <output data-testid="df1-output">{born()}</output>
+      </section>
+      <section data-fixture="calendars">
+        <Calendar.Root
+          id="cal2"
+          locale="en-US"
+          mode="range"
+          months={2}
+          defaultMonth="2026-03-01"
+          defaultFocusedValue="2026-03-15"
+          class="calendar calendar-months"
+          data-testid="cal2"
+          onValueChange={(next: unknown) => setStay(JSON.stringify(next))}
+        >
+          <Calendar.Previous aria-label="Previous month" data-testid="cal2-previous">
+            Previous
+          </Calendar.Previous>
+          <Calendar.Next aria-label="Next month" data-testid="cal2-next">
+            Next
+          </Calendar.Next>
+          <div class="months">
+            <Calendar.Months>
+              {(month) => (
+                <div data-testid={`cal2-month-${month.index}`}>
+                  <Calendar.Heading data-testid={`cal2-heading-${month.index}`} />
+                  <Calendar.Grid data-testid={`cal2-grid-${month.index}`}>
+                    <thead>
+                      <tr>
+                        <Calendar.Weekdays>
+                          {(weekday) => (
+                            <Calendar.HeadCell weekday={weekday}>{weekday.short}</Calendar.HeadCell>
+                          )}
+                        </Calendar.Weekdays>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <Calendar.Weeks>
+                        {(week) => (
+                          <tr>
+                            <For each={week}>
+                              {(day) => (
+                                <Calendar.Cell date={day.date}>
+                                  <Calendar.Day
+                                    date={day.date}
+                                    data-testid={`cal2-${month.index}-${day.date}`}
+                                  >
+                                    {day.label}
+                                  </Calendar.Day>
+                                </Calendar.Cell>
+                              )}
+                            </For>
+                          </tr>
+                        )}
+                      </Calendar.Weeks>
+                    </tbody>
+                  </Calendar.Grid>
+                </div>
+              )}
+            </Calendar.Months>
+          </div>
+        </Calendar.Root>
+        <output data-testid="cal2-output">{stay()}</output>
+        <form data-testid="cal3-form">
+          <Calendar.Root
+            id="cal3"
+            locale="en-US"
+            mode="multiple"
+            name="days"
+            maxDays={3}
+            defaultValue={["2026-03-02"]}
+            defaultFocusedValue="2026-03-15"
+            class="calendar"
+            data-testid="cal3"
+            onValueChange={(next: unknown) => setChosenDays(String(next))}
+          >
+            <Calendar.Heading data-testid="cal3-heading" />
+            <Calendar.Grid data-testid="cal3-grid">
+              <tbody>
+                <Calendar.Weeks>
+                  {(week) => (
+                    <tr>
+                      <For each={week}>
+                        {(day) => (
+                          <Calendar.Cell date={day.date}>
+                            <Calendar.Day date={day.date} data-testid={`cal3-${day.date}`}>
+                              {day.label}
+                            </Calendar.Day>
+                          </Calendar.Cell>
+                        )}
+                      </For>
+                    </tr>
+                  )}
+                </Calendar.Weeks>
+              </tbody>
+            </Calendar.Grid>
+            <Calendar.Input data-testid="cal3-input" />
+          </Calendar.Root>
+          <button type="reset" data-testid="cal3-reset">
+            Reset
+          </button>
+        </form>
+        <output data-testid="cal3-output">{chosenDays()}</output>
+        <Calendar.Root
+          id="cal4"
+          locale="en-US"
+          month={shownMonth()}
+          onMonthChange={(next: string) => setShownMonth(next)}
+          defaultFocusedValue="2026-03-15"
+          class="calendar"
+          data-testid="cal4"
+        >
+          <Calendar.Previous aria-label="Previous month" data-testid="cal4-previous">
+            Previous
+          </Calendar.Previous>
+          <Calendar.Heading data-testid="cal4-heading" />
+          <Calendar.Next aria-label="Next month" data-testid="cal4-next">
+            Next
+          </Calendar.Next>
+          <Calendar.Grid data-testid="cal4-grid">
+            <tbody>
+              <Calendar.Weeks>
+                {(week) => (
+                  <tr>
+                    <For each={week}>
+                      {(day) => (
+                        <Calendar.Cell date={day.date}>
+                          <Calendar.Day date={day.date} data-testid={`cal4-${day.date}`}>
+                            {day.label}
+                          </Calendar.Day>
+                        </Calendar.Cell>
+                      )}
+                    </For>
+                  </tr>
+                )}
+              </Calendar.Weeks>
+            </tbody>
+          </Calendar.Grid>
+        </Calendar.Root>
+        <button type="button" data-testid="cal4-jump" onClick={() => setShownMonth("2030-12-01")}>
+          December 2030
+        </button>
+        <output data-testid="cal4-output">{shownMonth()}</output>
       </section>
       <section data-fixture="command">
         <Label for="in1" data-testid="in1-label">

@@ -3,7 +3,8 @@ import { describe, expectTypeOf, it } from "vite-plus/test"
 import { h } from "vue"
 import type { Component } from "vue"
 
-import { Collapsible, Menu, RadioGroup, Select, Slider, Tabs } from "./index.ts"
+import { Calendar, Collapsible, Menu, RadioGroup, Select, Slider, Tabs } from "./index.ts"
+import type { DateRange } from "./index.ts"
 import type { PanelProps, RootEmits } from "./collapsible.ts"
 import { partComponent } from "./runtime.ts"
 import type { PartComponent, PartComponentProps, PartEvent } from "./runtime.ts"
@@ -93,6 +94,21 @@ describe("a part's type", () => {
       >()
       // @ts-expect-error a number where the default says the value is a string
       new Tabs.Root({ value: 1, defaultValue: "one" })
+      // A calendar's value is its mode's: a day, a range, or a list of days.
+      const day = new Calendar.Root({})
+      expectTypeOf(day.$props["onUpdate:value"]).toEqualTypeOf<
+        ((value: string | null) => void) | undefined
+      >()
+      const several = new Calendar.Root({ mode: "multiple" })
+      expectTypeOf(several.$props["onUpdate:value"]).toEqualTypeOf<
+        ((value: readonly string[]) => void) | undefined
+      >()
+      const stay = new Calendar.Root({ mode: "range" })
+      expectTypeOf(stay.$props.onValueChange).toEqualTypeOf<
+        ((value: DateRange | null, details: ChangeDetails) => void) | undefined
+      >()
+      // @ts-expect-error a day where the mode chooses several
+      new Calendar.Root({ mode: "multiple", value: "2026-03-02" })
     }
     expectTypeOf(check).toBeFunction()
   })

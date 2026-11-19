@@ -27,6 +27,13 @@ export interface CommandProps {
   loop?: boolean | undefined
   /** Disabled: nothing can be typed or chosen. */
   disabled?: boolean | undefined
+  /**
+   * Whether the first item shown is highlighted from the start and again whenever the text
+   * changes, so Enter does it with no arrow key first, as a command palette is used. Default:
+   * `true`. With `false`, nothing is highlighted until the input has focus or an arrow or the
+   * pointer moves to an item.
+   */
+  autoHighlight?: boolean | undefined
 }
 
 export interface CommandItemOptions {
@@ -79,6 +86,11 @@ interface Shown {
   readonly shown: ReadonlySignal<boolean>
 }
 
+interface Made extends Shown {
+  readonly row: ListRow
+  readonly options: () => CommandItemOptions
+}
+
 interface Members extends CommandGroup {
   readonly members: Set<Shown>
   readonly joined: ReturnType<typeof signal<number>>
@@ -119,6 +131,33 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
   // The text the list was last filtered by.
   let asked = inputValue.peek()
 
+  // Every item, in the order it was made: a server's order, and the page's until it is drawn.
+  const made = new Set<Made>()
+  const byRow = new Map<ListRow, Made>()
+  const auto = () => props.get().autoHighlight ?? true
+  // With `autoHighlight`, the item highlighted while no other is: the first shown. Derived, not
+  // set, so it is the first of what the page holds now, whenever the rows the text leaves come
+  // in, and a server draws it as the page then does.
+  const first = computed((): Made | undefined => {
+    if (!auto() || disabled.get() || list.highlighted.get()) return undefined
+    registered.get()
+    // Every item's `shown` is read, so a change to any of them comes back here.
+    let found: Made | undefined
+    for (const each of made) if (each.shown.get() && !each.options().disabled) found ??= each
+    if (!listed.get()) return found
+    // In a page: the first in the page's order, which a caller's own list may set.
+    const row = list.rows()[0]
+    return row ? byRow.get(row) : undefined
+  })
+  // Whether focus is in the input: the item shown highlighted is named to a reader then. At
+  // rest it is not, so the input a server draws, before any item is made, says the same.
+  const focused = signal(false)
+  // A key that acts on the highlight acts on the one shown.
+  const settle = () => {
+    const lit = first.peek()
+    if (lit?.row.element()) list.highlight(lit.row)
+  }
+
   return {
     inputValue,
     empty,
@@ -137,13 +176,17 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
         "aria-autocomplete": "list",
         "aria-expanded": "true",
         "aria-controls": listId,
-        "aria-activedescendant": list.highlighted.get()?.element()?.id,
+        "aria-activedescendant":
+          list.highlighted.get()?.element()?.id ??
+          (focused.get() ? first.get()?.options().id : undefined),
         disabled: flag(disabled.get()),
         "data-disabled": flag(disabled.get()),
         // The first command is the one Enter does, once the palette is being used.
         onFocus() {
+          focused.set(true)
           if (!list.highlighted.peek()) list.highlight(list.rows()[0], true)
         },
+        onBlur: () => focused.set(false),
         onInput(event: Event) {
           inputValue.set(
             (event.currentTarget as HTMLInputElement).value,
@@ -151,6 +194,8 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
           )
         },
         onKeyDown(event: KeyboardEvent) {
+          if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter")
+            settle()
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault()
             return list.move(event.key === "ArrowDown" ? 1 : -1)
@@ -186,10 +231,10 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
         onMouseDown: (event: Event) => event.preventDefault(),
       })),
       attach(element) {
+        // The list first: once it is in the page, the first item is read from it.
+        const stops = [list.attach(element), () => listed.set(false)]
         listed.set(true)
-        const stops = [
-          () => listed.set(false),
-          list.attach(element),
+        stops.push(
           // As what is typed changes, the highlight is on the first item still shown. Followed
           // here, not done where the key is heard: a caller who holds the text gives it back
           // later, and the list is filtered by what the caller has given.
@@ -198,10 +243,13 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
             untracked(() => {
               if (text === asked) return
               asked = text
-              list.highlight(list.rows()[0], true)
+              // With `autoHighlight`, the first shown is highlighted by itself once the page
+              // holds what is left: a caller drawing the rows from data draws them later.
+              if (auto()) list.highlight(undefined)
+              else list.highlight(list.rows()[0], true)
             })
-          }),
-        ]
+          })
+        )
         return () => {
           for (const stop of stops.reverse()) stop()
         }
@@ -271,7 +319,10 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
           options().keywords ?? []
         )
       })
-      const record: Shown = { shown: visible }
+      const record: Made = { shown: visible, row, options }
+      made.add(record)
+      byRow.set(row, record)
+      const lit = computed(() => row.active.get() || first.get() === record)
       const within = group as Members | undefined
       // Counted from when it is made: a server attaches nothing, and must not say "empty".
       shown.add(record)
@@ -283,10 +334,10 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
             id: options().id,
             role: "option",
             // Nothing stays chosen: "selected" is the one the keys are on.
-            "aria-selected": String(row.active.get()),
+            "aria-selected": String(lit.get()),
             "aria-disabled": off ? "true" : undefined,
             hidden: flag(!visible.get()),
-            "data-highlighted": flag(row.active.get()),
+            "data-highlighted": flag(lit.get()),
             "data-disabled": flag(off),
             onPointerMove(event: PointerEvent) {
               if (pointerMoved(event) && !off && !row.active.peek()) list.highlight(row)
@@ -298,6 +349,8 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
         }),
         attach(element) {
           const detach = row.attach(element)
+          made.add(record)
+          byRow.set(row, record)
           shown.add(record)
           within?.members.add(record)
           within?.joined.set(within.joined.peek() + 1)
@@ -309,6 +362,8 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
           })
           return () => {
             detach()
+            made.delete(record)
+            byRow.delete(row)
             shown.delete(record)
             within?.members.delete(record)
             within?.joined.set(within.joined.peek() + 1)

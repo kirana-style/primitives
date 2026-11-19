@@ -69,8 +69,89 @@ function palette(given: Partial<CommandProps> = {}) {
 }
 
 describe("a command list", () => {
-  it("has no highlight until it is used, then the first command", async () => {
-    const { input, active, press, heard } = palette()
+  it("highlights the first shown command from the start, so Enter does it", async () => {
+    const { root, input, active, press, heard } = palette()
+    expect(root.querySelector("#c-new")!.hasAttribute("data-highlighted")).toBe(true)
+    expect(root.querySelector("#c-new")!.getAttribute("aria-selected")).toBe("true")
+    // Named to a reader once focus is in the input, where it is read.
+    expect(active()).toBe(undefined)
+    input.focus()
+    await settled()
+    expect(active()).toBe("new")
+    await press("Enter")
+    expect(heard).toEqual(["new virtual"])
+    // The first is the highlight: the next is a step from it.
+    await press("ArrowDown")
+    expect(active()).toBe("open")
+    await userEvent.keyboard("co")
+    await settled()
+    expect(active()).toBe("copy")
+    expect(root.querySelector("#c-open")!.hasAttribute("data-highlighted")).toBe(false)
+  })
+
+  it("highlights the first of the rows a caller draws for the text, once they are drawn", async () => {
+    const root = mount(`<input id="i" /><div id="l"></div>`)
+    const props = signal<CommandProps>({ id: "d", filter: null })
+    const made = createCommand(props)
+    const input = find<HTMLInputElement>(root, "i")
+    const list = find(root, "l")
+    onTestFinished(bind(input, made.input))
+    onTestFinished(bind(list, made.list))
+    const unbind = new Map<string, () => void>()
+    // The caller's own list, drawn from data a moment after the text changes.
+    const draw = (values: string[]) => {
+      for (const [value, stop] of unbind) {
+        if (values.includes(value)) continue
+        stop()
+        list.querySelector(`#d-${value}`)!.remove()
+        unbind.delete(value)
+      }
+      for (const value of values) {
+        if (unbind.has(value)) continue
+        const element = document.createElement("div")
+        element.textContent = value
+        list.prepend(element)
+        unbind.set(
+          value,
+          bind(
+            element,
+            made.item(value, () => ({ id: `d-${value}` }))
+          )
+        )
+      }
+    }
+    onTestFinished(() => draw([]))
+    draw(["apple", "apricot"].reverse())
+    await settled()
+    const active = () => input.getAttribute("aria-activedescendant")
+    const lit = () => list.querySelector("[data-highlighted]")?.id
+    expect(lit()).toBe("d-apple")
+    input.focus()
+    await settled()
+    expect(active()).toBe("d-apple")
+    await userEvent.keyboard("b")
+    await settled()
+    // The old rows are still the page's: the first of them, until the new ones come.
+    expect(active()).toBe("d-apple")
+    draw(["banana", "blueberry"].reverse())
+    await settled()
+    expect(active()).toBe("d-banana")
+    expect(lit()).toBe("d-banana")
+  })
+
+  it("draws its first item highlighted before any element is known, as a server does", () => {
+    const made = createCommand(signal<CommandProps>({ id: "s" }))
+    const one = made.item("one", () => ({ id: "s-one", disabled: true }))
+    const two = made.item("two", () => ({ id: "s-two" }))
+    expect(one.props.peek()["data-highlighted"]).toBe(undefined)
+    expect(two.props.peek()["data-highlighted"]).toBe("")
+    expect(two.props.peek()["aria-selected"]).toBe("true")
+    // The input is drawn before its items: it names none until focus is in it.
+    expect(made.input.props.peek()["aria-activedescendant"]).toBe(undefined)
+  })
+
+  it("has no highlight until it is used without autoHighlight, then the first command", async () => {
+    const { input, active, press, heard } = palette({ autoHighlight: false })
     expect(input.getAttribute("role")).toBe("combobox")
     expect(input.getAttribute("aria-controls")).toBe("c-list")
     expect(active()).toBe(undefined)

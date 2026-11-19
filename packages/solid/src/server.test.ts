@@ -22,6 +22,7 @@ type Drawn = "plain" | "as" | "render"
 interface Cases {
   controls: Record<string, (drawn: Drawn) => unknown>
   content: Record<string, () => unknown>
+  primitive: Record<Drawn, () => unknown>
 }
 
 let server: ViteDevServer
@@ -130,6 +131,19 @@ describe("on the server", () => {
     expect(written).toMatch(/<h3[^>]*>Saved<\/h3>/)
     expect(written).toMatch(/<p[^>]*>To the cloud<\/p>/)
     expect(written).toMatch(/<a[^>]*>Undo<\/a>/)
+  })
+
+  it("draws a plain element of one's own as a part is drawn, its state as attributes", () => {
+    // The component's own class joined with its caller's, its state under both.
+    expect(html(cases.primitive.plain!)).toMatch(
+      /^<span data-active="" class="badge mine ?" title="own" data-kind="new" ?>New<\/span>$/
+    )
+    // Another tag, a later set winning an attribute, a state that does not hold absent.
+    expect(html(cases.primitive.as!)).toMatch(/^<b class="badge ?" title="theirs" ?>New<\/b>$/)
+    // The caller's own element, given the props and the state.
+    expect(html(cases.primitive.render!)).toMatch(
+      /^<a data-active="" class="badge mine ?" title="own" href="\/new" ?>On<\/a>$/
+    )
   })
 
   it("leaves a caller's `part` attribute on the element, for `::part()`", () => {

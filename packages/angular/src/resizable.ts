@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, numberAttribute, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createResizable } from "@kirana-ui/core/resizable"
@@ -23,7 +23,7 @@ export class KuiResizableGroup implements OnInit {
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     orientation: this.orientation(),
     keyboardStep: this.keyboardStep(),
@@ -31,6 +31,10 @@ export class KuiResizableGroup implements OnInit {
     onSizesChange: (sizes: number[], details: ChangeDetails) =>
       this.sizesChanged.emit({ sizes, details }),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createResizable(this.props(), { direction: this.around?.direction })
@@ -47,11 +51,15 @@ export class KuiResizablePanel implements OnInit {
   readonly maxSize = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
   private readonly root = inject(KuiResizableGroup)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     defaultSize: this.defaultSize(),
     minSize: this.minSize(),
     maxSize: this.maxSize(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -64,7 +72,11 @@ export class KuiResizableHandle implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   private readonly root = inject(KuiResizableGroup)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

@@ -12,7 +12,7 @@ import {
   output,
   untracked,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { defined, effect as coreEffect } from "@kirana-ui/core"
 import type { ChangeDetails, ItemLabels, ListCollection } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
@@ -59,7 +59,7 @@ export class KuiSelect<Value = unknown> implements OnInit {
   controller!: Select<Value>
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -98,6 +98,10 @@ export class KuiSelect<Value = unknown> implements OnInit {
     },
   }))
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createSelect(this.props(), { field: this.field?.controller })
@@ -264,11 +268,15 @@ export class KuiSelectItem implements OnInit {
   readonly index = input<number>()
   readonly root = inject(KuiSelect)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     index: this.index(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

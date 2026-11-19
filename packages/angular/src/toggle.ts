@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createToggle } from "@kirana-ui/core/toggle"
 
@@ -19,7 +19,7 @@ export class KuiToggle implements OnInit {
 
   private readonly group = inject(KUI_TOGGLE_GROUP, { optional: true })
   private readonly toolbar = inject(KUI_TOOLBAR, { optional: true })
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     pressed: this.pressed(),
     defaultPressed: this.defaultPressed(),
     disabled: this.disabled(),
@@ -33,6 +33,10 @@ export class KuiToggle implements OnInit {
     },
   }))
   private readonly part = hostPart()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     const around = {

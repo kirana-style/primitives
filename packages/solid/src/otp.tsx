@@ -29,6 +29,7 @@ export type RootProps = PartComponentProps<
     onValueChange?: (value: string, details: ChangeDetails) => void
     onComplete?: (value: string) => void
     mode?: OtpProps["mode"]
+    pattern?: string
     disabled?: boolean
     name?: string
     form?: string
@@ -44,6 +45,7 @@ function Root(props: RootProps): JSX.Element {
     "onValueChange",
     "onComplete",
     "mode",
+    "pattern",
     "disabled",
     "name",
     "form",
@@ -56,6 +58,7 @@ function Root(props: RootProps): JSX.Element {
     value: local.value,
     defaultValue: local.defaultValue,
     mode: local.mode,
+    pattern: local.pattern,
     disabled: local.disabled,
     name: local.name,
     form: local.form,

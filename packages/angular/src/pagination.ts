@@ -10,7 +10,7 @@ import {
   numberAttribute,
   output,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createPagination } from "@kirana-ui/core/pagination"
@@ -36,7 +36,7 @@ export class KuiPagination implements OnInit {
 
   controller!: Pagination
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     page: this.page(),
     defaultPage: this.defaultPage(),
@@ -55,6 +55,10 @@ export class KuiPagination implements OnInit {
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createPagination(this.props())

@@ -169,13 +169,22 @@ Root
 
 The frame the image and its stand-in share.
 
+| Attribute | When |
+| --- | --- |
+| `data-image-loading-status` (idle, loading, loaded, error) | Where the picture is in its loading: `idle` while it has no address. |
+
 ### Avatar.Image
 
-The picture. In the page once it has loaded.
+The picture. In the page once it has loaded; with `keepMounted` (on Angular, the attribute form) in the page all along, `aria-hidden` until it has loaded.
+
+| Attribute | When |
+| --- | --- |
+| `data-loading` | Present while the picture loads, on an image kept in the page. |
+| `data-error` | Present when the picture cannot load, on an image kept in the page. |
 
 ### Avatar.Fallback
 
-What shows until the picture has loaded, or when it cannot.
+What shows until the picture has loaded, or when it cannot; after its `delay`, when it has one.
 
 ## Button
 
@@ -1807,15 +1816,16 @@ Root
     Positioner
       Popup
         Calendar
-          Heading
+          Months (optional)
+            Heading
+            Grid
+              Weekdays
+                HeadCell (repeated)
+              Weeks
+                Cell (repeated)
+                  Day
           Previous
           Next
-          Grid
-            Weekdays
-              HeadCell (repeated)
-            Weeks
-              Cell (repeated)
-                Day
 ```
 
 ### DatePicker.Root
@@ -1904,6 +1914,10 @@ The calendar.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when its value cannot be changed. |
 
+### DatePicker.Months
+
+The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month.
+
 ### DatePicker.Heading
 
 Names the month shown. Read out when it changes.
@@ -1926,7 +1940,7 @@ Shows the month after.
 
 ### DatePicker.Grid
 
-The table of days: a grid the arrows move in.
+The table of a month's days: a grid the arrows move in, from one month shown into the next.
 
 ### DatePicker.Weekdays
 
@@ -1946,7 +1960,7 @@ A day's cell.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
@@ -1960,7 +1974,7 @@ The button for a day.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
@@ -1972,15 +1986,17 @@ The button for a day.
 
 ```
 Root
-  Heading
+  Months (optional)
+    Heading
+    Grid
+      Weekdays
+        HeadCell (repeated)
+      Weeks
+        Cell (repeated)
+          Day
   Previous
   Next
-  Grid
-    Weekdays
-      HeadCell (repeated)
-    Weeks
-      Cell (repeated)
-        Day
+  Input
 ```
 
 ### Calendar.Root
@@ -1991,6 +2007,10 @@ The calendar.
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when its value cannot be changed. |
+
+### Calendar.Months
+
+The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month.
 
 ### Calendar.Heading
 
@@ -2014,7 +2034,7 @@ Shows the month after.
 
 ### Calendar.Grid
 
-The table of days: a grid the arrows move in.
+The table of a month's days: a grid the arrows move in, from one month shown into the next.
 
 ### Calendar.Weekdays
 
@@ -2034,7 +2054,7 @@ A day's cell.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
@@ -2048,13 +2068,17 @@ The button for a day.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, and on every day of a chosen range. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
 | `data-unavailable` | Present on a day that cannot be chosen. |
 | `data-range-start` | Present on the first day of a range. |
 | `data-range-end` | Present on the last day of a range. |
+
+### Calendar.Input
+
+The hidden input it is submitted by, when it has a name: one more is drawn after it for each other day.
 
 ## Drawer
 
@@ -2526,7 +2550,7 @@ Groups the items: one of them is chosen at most.
 
 ### RadioGroup.Item
 
-One choice. It holds a hidden native radio, which a form and a label reach.
+One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
 
 | Attribute | When |
 | --- | --- |
@@ -2560,7 +2584,7 @@ Group
 
 ### Resizable.Group
 
-The panels and the bars between them. A design lays it out as a flex box.
+The panels and the bars between them. A design lays it out as a flex box: `display: flex`, and `flex-direction: column` when it is vertical. A group in a panel that is a flex box itself takes `min-width: 0` and `min-height: 0`, or what it holds widens the panel.
 
 | Attribute | When |
 | --- | --- |
@@ -2569,7 +2593,7 @@ The panels and the bars between them. A design lays it out as a flex box.
 
 ### Resizable.Panel
 
-One panel. It carries its share of the group.
+One panel. It carries its share of the group, written as its `flex` with `min-width: 0` and `min-height: 0`, so what it holds cannot keep it past its share. Its `overflow` is the design's.
 
 | Attribute | When |
 | --- | --- |
@@ -2581,7 +2605,7 @@ One panel. It carries its share of the group.
 
 ### Resizable.Handle
 
-The bar between two panels: dragged, or moved with the arrows.
+The bar between two panels: dragged, or moved with the arrows. A design gives it its thickness and `flex-shrink: 0`, so the panels do not squeeze it.
 
 | Attribute | When |
 | --- | --- |
@@ -2594,7 +2618,8 @@ The bar between two panels: dragged, or moved with the arrows.
 ```
 Root
   Viewport
-    Content
+    Content (optional)
+    Scrollbar (as above)
   Scrollbar (repeated)
     Thumb
   Corner
@@ -2628,7 +2653,7 @@ The element that scrolls.
 
 ### ScrollArea.Content
 
-What is scrolled.
+A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
 
 ### ScrollArea.Scrollbar
 

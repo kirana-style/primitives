@@ -78,9 +78,22 @@ the text a part writes (`Meter.Value`, `Select.Value`) stay inside it on React a
 `props().children` on Solid, and are given to a Svelte `child` snippet to render
 (`{ props, state, input }`, `{ props, state, text }`). A handler given to a part is typed
 with `preventKiranaHandler()` (`PartEvent`, exported by each package). For an element of the
-design system's own that takes `render` or `as-child`, use `useRender` and `mergeProps` from
-`@kirana-ui/react/use-render`, or `Primitive` from `@kirana-ui/vue/primitive`; never write
-another merge.
+design system's own composed as a part is, use `useRender` and `mergeProps` from
+`@kirana-ui/react/use-render`, `Primitive` from `@kirana-ui/vue/primitive`, or `Primitive`
+and `mergeProps` from `@kirana-ui/solid/primitive` and `@kirana-ui/svelte/primitive` (Solid's
+`as` and `render`, Svelte's `as` and `child`, a `state` written as `data-*`); never write
+another merge. On Angular such an element is a directive of your own with host bindings, and
+custom elements need nothing: the page writes its own element.
+
+A design system on Angular hosts each primitive in a directive of its own
+(`hostDirectives: [{ directive: KuiDialog, inputs: [...], outputs: [...] }]`), exposing what
+its callers set; gives the primitive the rest with `hostInputs(KuiTooltip, { delay: () => 0 })`
+in its constructor (each value a function read like a signal, so `computed` values follow;
+an input the element binds wins), never a subclass of the primitive; draws a structural part
+(`kuiDialogPortal`) in a component's template around `<ng-content />` (a part given to it finds
+its root where it is written); and keeps its selectors apart from `kui…`, since two
+directives with one selector both match, silently. Tooltips need no provider on any
+framework: a design system passes `delay` on its own tooltip root (`hostInputs` on Angular).
 
 ## When something is wrong
 

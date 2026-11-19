@@ -10,7 +10,7 @@ import {
   model,
   output,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createDateField } from "@kirana-ui/core/date-field"
@@ -43,7 +43,7 @@ export class KuiDateField implements OnInit {
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -65,6 +65,10 @@ export class KuiDateField implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createDateField(this.props(), { direction: this.around?.direction })

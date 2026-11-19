@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails, ListCollection } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
@@ -26,7 +26,7 @@ export class KuiListbox<Value = unknown> implements OnInit {
   controller!: Listbox<Value>
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -45,6 +45,10 @@ export class KuiListbox<Value = unknown> implements OnInit {
     },
   }))
 
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
+
   ngOnInit(): void {
     this.controller = createListbox(this.props())
     this.put(this.controller.root)
@@ -61,11 +65,15 @@ export class KuiListboxItem implements OnInit {
   readonly index = input<number>()
   readonly root = inject(KuiListbox)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     index: this.index(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

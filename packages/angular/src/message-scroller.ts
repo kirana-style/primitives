@@ -1,5 +1,5 @@
 import { Directive, inject, input, numberAttribute, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createMessageScroller } from "@kirana-ui/core/message-scroller"
 import type { MessageScroller } from "@kirana-ui/core/message-scroller"
@@ -18,13 +18,17 @@ export class KuiMessageScroller implements OnInit {
   controller!: MessageScroller
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     initial: this.initial(),
     threshold: this.threshold(),
     onAtBottomChange: (atBottom: boolean, details: ChangeDetails) =>
       this.atBottomChanged.emit({ atBottom, details }),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createMessageScroller(this.props())

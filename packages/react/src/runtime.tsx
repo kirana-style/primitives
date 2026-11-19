@@ -221,18 +221,25 @@ export type RenderedProps = HTMLAttributes<HTMLElement> & {
 
 /**
  * What `render` takes: an element, drawn with the part's props merged over its own, or a
- * function given the part's props and its state.
+ * function given the part's props and its state. Unnamed, a state is any entries a `data-*`
+ * attribute is written from: a part's own entry names its exactly.
  */
-export type RenderProp<State = PartState> =
+export type RenderProp<State = Record<string, string | boolean | null | undefined>> =
   | ReactElement<Record<string, unknown>>
   | ((props: RenderedProps, state: State) => ReactElement)
 
 /**
  * A part's props: its element's own (`Tag`'s attributes and handlers, a `ref` to that
  * element), `render`, and the part's own props (`Own`) in place of the element's of the same
- * name. `State` is what a `render` function is told of the part.
+ * name. `State` is what a `render` function is told of the part. A plain element of one's own
+ * drawn through `useRender` names its state here (`PartComponentProps<"span", { variant:
+ * string | null }>`); unnamed, it is any entries of `string | boolean | null | undefined`.
  */
-export type PartComponentProps<Tag extends PartTag = "div", State = PartState, Own = unknown> = {
+export type PartComponentProps<
+  Tag extends PartTag = "div",
+  State = Record<string, string | boolean | null | undefined>,
+  Own = unknown,
+> = {
   [Name in keyof ComponentPropsWithoutRef<Tag> as Name extends keyof Own ? never : Name]: Hearing<
     ComponentPropsWithoutRef<Tag>[Name]
   >

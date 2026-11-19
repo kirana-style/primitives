@@ -24,7 +24,12 @@ export interface ScrollArea {
   readonly root: Part
   /** The element that scrolls. Its own scrollbars are hidden; it still scrolls as any does. */
   readonly viewport: Part
-  /** What is scrolled: watched, so content that lays out late is measured again. */
+  /**
+   * A box around what is scrolled, as wide as what it holds. Not needed for what is measured:
+   * the viewport's children are watched in any case. It is for content whose own box does not
+   * follow what is in it (a block narrower than a wide table it holds, or bare text), which
+   * it wraps in a box that does.
+   */
   readonly content: Part
   /**
    * A scrollbar and its thumb. The scrollbar is placed along its edge of the area, short of
@@ -379,7 +384,29 @@ export function createScrollArea(
         viewport = element
         last = { left: element.scrollLeft, top: element.scrollTop }
         const unwatch = watch(element)
+        // What it holds, with or without the content part: the viewport keeps its size while
+        // pictures in it load or a row in it grows, and only its children say so. Each child is
+        // watched, and the children are followed as they come and go.
+        const held = new Map<Element, () => void>()
+        const follow = () => {
+          const now = new Set(element.children)
+          for (const [child, stop] of held) {
+            if (now.has(child)) continue
+            stop()
+            held.delete(child)
+          }
+          for (const child of now) {
+            if (!held.has(child) && child instanceof HTMLElement) held.set(child, watch(child))
+          }
+          measure()
+        }
+        const children =
+          typeof MutationObserver === "undefined" ? undefined : new MutationObserver(follow)
+        children?.observe(element, { childList: true })
+        follow()
         return () => {
+          children?.disconnect()
+          for (const stop of held.values()) stop()
           unwatch()
           if (viewport === element) viewport = undefined
         }

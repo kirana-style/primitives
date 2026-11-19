@@ -72,6 +72,33 @@ const pointer = (target: Element, type: string, x: number, y = 0) =>
   )
 
 describe("resizable panels", () => {
+  it("keep their share whatever they hold, with nothing from the design but the flex box", async () => {
+    // What a design gives a group and nothing more: the panels' minimums are the library's.
+    style(`#wide { display: flex; width: 350px; } .content { width: 200px; height: 10px; }`)
+    const root = mount(`
+      <div id="wide">
+        <div id="w1"><div class="content"></div></div>
+        <div id="w2"><div class="content"></div></div>
+      </div>`)
+    const made = createResizable(signal<ResizableProps>({ id: "wide" }))
+    onTestFinished(bind(find(root, "wide"), made.group))
+    onTestFinished(
+      bind(
+        find(root, "w1"),
+        made.panel(() => ({ defaultSize: 25 }))
+      )
+    )
+    onTestFinished(
+      bind(
+        find(root, "w2"),
+        made.panel(() => ({ defaultSize: 75 }))
+      )
+    )
+    await settled()
+    const width = (id: string) => find(root, id).getBoundingClientRect().width
+    expect([width("w1"), width("w2")]).toEqual([87.5, 262.5])
+  })
+
   it("share what the bars leave, by what each began with", async () => {
     const { root, widths, shares } = panels()
     await settled()

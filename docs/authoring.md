@@ -318,6 +318,9 @@ entry. A part's file in this repository is the example for each
   part's attributes and listeners in the directive's turn, and the part's `attach` and the
   controller's `mount` (through `mounted()`) follow once every part made in the same pass
   has written its props, so nothing is measured while an element beside it has no style yet.
+  `inputsSignal(this, () => ({ … }))`, with `ngOnChanges(changes) { this.props.bound(changes) }`,
+  lets a design system's directive that hosts yours give it inputs (`hostInputs`), an input
+  the element binds winning over what is given; `inputsSignal(() => …)` alone takes none.
 
 In Solid and Svelte the component that draws a part reads the part under the name `of`, as
 React's `PartElement` does: `part` is an attribute of the element (`::part()` reads it), and

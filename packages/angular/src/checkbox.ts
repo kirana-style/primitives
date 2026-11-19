@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox } from "@kirana-ui/core/checkbox"
@@ -31,7 +31,7 @@ export class KuiCheckbox implements OnInit {
   private readonly field = inject(KUI_FIELD, { optional: true })
   private readonly group = inject(KUI_CHECKBOX_GROUP, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     checked: this.checked(),
     defaultChecked: this.defaultChecked(),
@@ -54,6 +54,10 @@ export class KuiCheckbox implements OnInit {
   private readonly part = hostPart()
   private readonly inner = innerPart("input")
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createCheckbox(this.props(), {

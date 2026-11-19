@@ -43,6 +43,11 @@ find("av-load").addEventListener("click", () => {
   const [first, second] = document.querySelectorAll<HTMLElement & { src: string }>("kui-avatar")
   first!.src = PIXEL
   second!.src = BROKEN
+  // A picture kept in the page says its own address.
+  find("av3-image").setAttribute("src", PIXEL)
+})
+document.querySelector("kui-avatar")!.addEventListener("loading-status-change", (event) => {
+  find("av1-status").textContent = (event as CustomEvent<{ status: string }>).detail.status
 })
 
 // A checkbox group a caller holds, and what the caller heard.
@@ -99,6 +104,12 @@ const heard = (tag: string, id: string | undefined, output: string) =>
     })
 heard("kui-listbox", "lb1", "lb1-output")
 heard("kui-toggle-group", undefined, "tg1-output")
+// A picture 160 wide: a row of three is wider than its scroll area once they have loaded.
+const WIDE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3C/svg%3E"
+find("sa2-load").addEventListener("click", () => {
+  for (const each of [1, 2, 3]) find<HTMLImageElement>(`sa2-picture-${each}`).src = WIDE
+})
 find("sa1-grow").addEventListener("click", () => {
   const box = find("sa1-box")
   box.className = box.className === "scroll-tall" ? "scroll-short" : "scroll-tall"
@@ -273,6 +284,23 @@ find("ts1-alert").addEventListener("click", () => {
   toaster.add({ title: "Connection lost", type: "error", priority: "assertive" })
 })
 one("kui-calendar", "cal1", "cal1-output")
+// Two months and a range, written out whole; several days; the month its caller holds.
+element("kui-calendar", "cal2").addEventListener("value-change", (event) => {
+  if (event.target !== event.currentTarget) return
+  find("cal2-output").textContent = JSON.stringify(
+    (event as CustomEvent<{ value: unknown }>).detail.value
+  )
+})
+one("kui-calendar", "cal3", "cal3-output")
+const shownMonth = element<{ month: string }>("kui-calendar", "cal4")
+shownMonth.addEventListener("month-change", (event) => {
+  if (event.target !== event.currentTarget) return
+  find("cal4-output").textContent = (event as CustomEvent<{ month: string }>).detail.month
+})
+find("cal4-jump").addEventListener("click", () => {
+  shownMonth.month = "2030-12-01"
+  find("cal4-output").textContent = "2030-12-01"
+})
 one("kui-date-field", "df1", "df1-output", "null")
 one("kui-date-picker", "dk1", "dk1-output", "null")
 element("kui-pagination", "pg1").addEventListener("page-change", (event) => {

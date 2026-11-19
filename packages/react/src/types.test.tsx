@@ -11,8 +11,10 @@ import type { RootProps as CheckboxRootProps } from "./checkbox.tsx"
 import type { PopupProps, TriggerProps } from "./dialog.tsx"
 import type { PopupProps as DrawerPopupProps } from "./drawer.tsx"
 import * as all from "./index.ts"
+import type { DateRange } from "./index.ts"
 import {
   Accordion,
+  Calendar,
   Checkbox,
   Combobox,
   ContextMenu,
@@ -32,6 +34,7 @@ import {
   Tooltip,
 } from "./index.ts"
 import type { PartComponentProps, PartEvent, RenderProp } from "./runtime.tsx"
+import { useRender } from "./use-render.tsx"
 import type { TriggerProps as TooltipTriggerProps } from "./tooltip.tsx"
 
 // A component of the caller's own, which a part is drawn as.
@@ -142,6 +145,21 @@ export function Typed(): ReactElement {
         onValueCommitted={(value) => expectTypeOf(value).toEqualTypeOf<number[]>()}
       />
       <Slider.Root onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<number>()} />
+      {/* A calendar's value is its mode's: a day, a range, or a list of days. */}
+      <Calendar.Root
+        onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<string | null>()}
+      />
+      <Calendar.Root
+        mode="range"
+        onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<DateRange | null>()}
+      />
+      <Calendar.Root
+        mode="multiple"
+        defaultValue={["2026-03-02"]}
+        onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<readonly string[]>()}
+      />
+      {/* @ts-expect-error a day where the mode chooses several */}
+      <Calendar.Root mode="multiple" value="2026-03-02" />
       {/* @ts-expect-error a range's list is told where a list was given */}
       <Slider.Root value={range} onValueChange={setLevel} />
       <NavigationMenu.Root value={fruit} onValueChange={setFruit} />
@@ -205,6 +223,42 @@ export function Mine(props: ComponentProps<typeof Checkbox.Root>): ReactElement 
   expectTypeOf(props.ref).toEqualTypeOf<Ref<HTMLSpanElement> | undefined>()
   expectTypeOf(props.onClick).parameter(0).toEqualTypeOf<PartEvent<MouseEvent<HTMLSpanElement>>>()
   return <Checkbox.Root {...props} />
+}
+
+// A plain element of one's own through `useRender`, typed as the docs say: its state may hold
+// `false`, `null` and `undefined`, which are written as absent. Its `render` is a part's, with
+// the state unnamed or named.
+export function Badge({
+  render,
+  variant,
+  ...props
+}: PartComponentProps<"span"> & { variant?: string | null }): ReactElement {
+  return useRender({ render, defaultTagName: "span", props, state: { slot: "badge", variant } })
+}
+
+export function Marker({
+  render,
+  active,
+  ...props
+}: PartComponentProps<"li", { active: boolean; tone: string | undefined }> & {
+  active?: boolean
+}): ReactElement {
+  const state = { active: Boolean(active), tone: undefined }
+  return useRender({ render, defaultTagName: "li", props, state })
+}
+
+export function Badges(): ReactElement {
+  return (
+    <>
+      <Badge variant={null} render={(props, state) => <b {...props}>{String(state.variant)}</b>} />
+      <Marker
+        render={(props, state) => {
+          expectTypeOf(state.active).toEqualTypeOf<boolean>()
+          return <li {...props} />
+        }}
+      />
+    </>
+  )
 }
 
 describe("a part's types", () => {

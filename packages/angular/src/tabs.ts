@@ -9,7 +9,7 @@ import {
   output,
   untracked,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { computed, defined } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
@@ -30,7 +30,7 @@ export class KuiTabs<Value = unknown> implements OnInit {
   controller!: Tabs<Value>
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -45,6 +45,10 @@ export class KuiTabs<Value = unknown> implements OnInit {
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createTabs(this.props(), { direction: this.around?.direction })
@@ -83,7 +87,11 @@ export class KuiTabsTab implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   private readonly root = inject(KuiTabs)
   private readonly part = hostPart()
-  private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

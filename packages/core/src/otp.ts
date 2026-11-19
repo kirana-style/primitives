@@ -17,8 +17,20 @@ export interface OtpProps {
   onValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
   /** Every character is in: the moment to send the code. */
   onComplete?: ((value: string) => void) | undefined
-  /** What a character may be. Default: `numeric`. */
-  mode?: "numeric" | "alphanumeric" | "text" | undefined
+  /**
+   * What a character may be: a digit (`numeric`), a letter (`alphabetic`, `a` to `z` either
+   * case), either (`alphanumeric`), or anything but white space (`text`). It also says which
+   * keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`,
+   * on purpose: a one-time code is digits, and its keyboard is then the one to type them on.
+   */
+  mode?: "numeric" | "alphabetic" | "alphanumeric" | "text" | undefined
+  /**
+   * What else a character may be: a regular expression, as text, that one character must match
+   * whole (`"[A-F0-9]"`), in place of `mode`'s rule. Text, as an attribute can only be, so it
+   * is given the same way on every framework and on a custom element. With a pattern, `mode`
+   * only says the keyboard, and defaults to `text`.
+   */
+  pattern?: string | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
   /** With a name, the code is submitted with the form around it. */
@@ -54,7 +66,21 @@ export interface Otp {
 }
 
 const NOTHING = () => {}
-const ALLOWED = { numeric: /[^0-9]/g, alphanumeric: /[^0-9a-zA-Z]/g, text: /[\s]/g }
+const ALLOWED = {
+  numeric: "[0-9]",
+  alphabetic: "[a-zA-Z]",
+  alphanumeric: "[0-9a-zA-Z]",
+  text: "\\S",
+}
+const rules = new Map<string, RegExp>()
+/** What is left of `text` once each character the rule refuses is taken out. */
+function keep(text: string, rule: string): string {
+  let made = rules.get(rule)
+  if (!made) rules.set(rule, (made = new RegExp(`^(?:${rule})$`, "u")))
+  let kept = ""
+  for (const char of text) if (made.test(char)) kept += char
+  return kept
+}
 
 /**
  * A one-time code: one text input, and a cell drawn for each of its characters. One input, so a
@@ -63,8 +89,9 @@ const ALLOWED = { numeric: /[^0-9]/g, alphanumeric: /[^0-9a-zA-Z]/g, text: /[\s]
  */
 export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
   const length = () => Math.max(1, props.peek().length ?? 6)
-  const clean = (text: string) =>
-    text.replace(ALLOWED[props.peek().mode ?? "numeric"], "").slice(0, length())
+  // The pattern given, or the mode's: read each time, as a caller may change either.
+  const rule = () => props.peek().pattern ?? ALLOWED[props.peek().mode ?? "numeric"]
+  const clean = (text: string) => keep(text, rule()).slice(0, length())
   const value = bindable<string>({
     value: () => props.get().value,
     defaultValue: clean(props.peek().defaultValue ?? ""),
@@ -164,7 +191,7 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
     caretPart: { props: computed(() => ({ "aria-hidden": "true" })), attach: () => NOTHING },
     input: {
       props: computed(() => {
-        const mode = props.get().mode ?? "numeric"
+        const mode = props.get().mode ?? (props.get().pattern ? "text" : "numeric")
         return {
           id: props.get().id,
           type: "text",
@@ -172,7 +199,7 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
           // What a phone offers from the message the code came in.
           autocomplete: "one-time-code",
           maxlength: String(length()),
-          pattern: mode === "numeric" ? "[0-9]*" : undefined,
+          pattern: mode === "numeric" && !props.get().pattern ? "[0-9]*" : undefined,
           name: props.get().name,
           form: props.get().form,
           disabled: flag(disabled.get()),
@@ -183,7 +210,7 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
             // A paste's text is the event's own in an input, or in what it carries.
             const text = event.data ?? event.dataTransfer?.getData("text/plain")
             if (text === null || text === undefined || text === "") return
-            const kept = text.replace(ALLOWED[props.peek().mode ?? "numeric"], "")
+            const kept = keep(text, rule())
             if (kept === text) return
             event.preventDefault()
             // A paste with spaces or dashes in it: what is left of it goes in.

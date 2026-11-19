@@ -1,5 +1,5 @@
 import { DestroyRef, Directive, ElementRef, inject, input } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import { createProgress } from "@kirana-ui/core/progress"
 import type { ValueBar, ValueBarProps } from "@kirana-ui/core/progress"
@@ -18,7 +18,7 @@ export class KuiProgress implements OnInit {
 
   controller!: ValueBar
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     min: this.min(),
@@ -28,6 +28,10 @@ export class KuiProgress implements OnInit {
     getAriaValueText: this.getAriaValueText(),
   }))
   private readonly part = hostPart()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createProgress(this.props())

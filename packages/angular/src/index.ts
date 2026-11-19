@@ -102,6 +102,8 @@ export {
   KuiCalendarGrid,
   KuiCalendarHeadCell,
   KuiCalendarHeading,
+  KuiCalendarInput,
+  KuiCalendarMonths,
   KuiCalendarNext,
   KuiCalendarPrevious,
   KuiCalendarWeekdays,
@@ -271,6 +273,9 @@ export { KuiFieldset, KuiFieldsetLegend } from "./fieldset"
 export { KuiForm } from "./form"
 export { KuiDirection, injectDirection } from "./direction"
 export { KuiPortalProvider } from "./portal"
+// What a design system's directive gives a primitive it hosts.
+export { hostInputs } from "./runtime"
+export type { HostInputs, InputsOf } from "./runtime"
 // What a part's directive is made with, for a component of one's own.
 export {
   KuiIds,
@@ -282,6 +287,7 @@ export {
   onServer,
   presentWhile,
 } from "./runtime"
+export type { InputsSignal } from "./runtime"
 // The core's types a prop names: imported from this package, the one a project installs.
 // Types only: nothing of the core's is drawn in by them.
 export type {
@@ -317,8 +323,11 @@ export type {
 } from "@kirana-ui/core"
 export type {
   CalendarDay,
+  CalendarMode,
+  CalendarMonth,
   CalendarProps,
   CalendarValue,
+  CalendarValueOf,
   CalendarWeekday,
   DateRange,
   IsoDate,
@@ -339,4 +348,5 @@ export type {
   ComboboxShown,
 } from "@kirana-ui/core/combobox"
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"
+export type { ImageStatus } from "@kirana-ui/core/avatar"
 export type { PositionerAnchor } from "./runtime"

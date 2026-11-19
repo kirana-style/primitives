@@ -1,12 +1,22 @@
-import type { CalendarDay, CalendarProps, CalendarWeekday } from "@kirana-ui/core/calendar"
+import type {
+  CalendarDay,
+  CalendarMode,
+  CalendarMonth,
+  CalendarProps,
+  CalendarWeekday,
+} from "@kirana-ui/core/calendar"
 import type { Snippet } from "svelte"
 
 import type { Controlled, HeldText, PartAttributes, StateFor } from "../types.ts"
 
-export type RootProps = PartAttributes<
+/**
+ * `bind:value`, and `bind:month` (the first day of the month shown). `value` and
+ * `onValueChange` are typed by `mode`: a day, a range, or a list of days.
+ */
+export type RootProps<Mode extends CalendarMode = "single"> = PartAttributes<
   "div",
   StateFor<"calendar", "root">,
-  Controlled<CalendarProps>
+  Controlled<CalendarProps<Mode>>
 >
 
 /** Names the month shown, unless it is given something else to say. */
@@ -30,6 +40,12 @@ export type HeadCellProps = PartAttributes<
   }
 >
 
+/**
+ * Draws nothing itself: its snippet once for each month shown, side by side. The parts inside
+ * each are that month's. Left out for one month.
+ */
+export type MonthsProps = { children: Snippet<[CalendarMonth]> }
+
 /** Draws nothing itself: its snippet once for each week of the month shown. */
 export type WeeksProps = { children: Snippet<[readonly CalendarDay[]]> }
 
@@ -50,3 +66,6 @@ export type DayProps = PartAttributes<
     date: string
   }
 >
+
+/** The hidden input the value is submitted by, when the root has a `name`. */
+export type InputProps = PartAttributes<"input", StateFor<"calendar", "input">>

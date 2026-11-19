@@ -95,7 +95,10 @@ export type {
 } from "@kirana-ui/core"
 export type {
   CalendarDay,
+  CalendarMode,
+  CalendarMonth,
   CalendarValue,
+  CalendarValueOf,
   CalendarWeekday,
   DateRange,
   IsoDate,
@@ -116,3 +119,4 @@ export type {
   ComboboxShown,
 } from "@kirana-ui/core/combobox"
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"
+export type { ImageStatus } from "@kirana-ui/core/avatar"

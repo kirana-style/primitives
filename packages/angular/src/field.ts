@@ -9,7 +9,7 @@ import {
   input,
   numberAttribute,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
 import { createField } from "@kirana-ui/core/field"
 import type { Field, FieldProps, FieldValidity, ValidityKey } from "@kirana-ui/core/field"
@@ -40,7 +40,7 @@ export class KuiField implements OnInit {
   private readonly form = inject(KuiForm, { optional: true })
   private readonly fieldset = inject(KuiFieldset, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     name: this.name(),
     disabled: this.disabled(),
@@ -51,6 +51,10 @@ export class KuiField implements OnInit {
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createField(this.props(), {
@@ -109,7 +113,11 @@ export class KuiFieldError implements OnInit {
   private readonly root = inject(KuiField)
   private readonly destroy = inject(DestroyRef)
   private readonly present = presentWhile()
-  private readonly options = inputsSignal(() => ({ match: this.match() || undefined }))
+  private readonly options = inputsSignal(this, () => ({ match: this.match() || undefined }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

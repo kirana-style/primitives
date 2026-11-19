@@ -60,6 +60,7 @@ const WEB = [
   "command",
   "toast",
   "dates",
+  "calendars",
   "picking",
   "placing",
   "popover-more",
@@ -111,7 +112,7 @@ const jobsFor = (engine: string) =>
 // Scenarios that measure a wait or look for one frame (a tooltip's delay, a dialog's first
 // style): played with nothing else on the machine, or what is measured is the machine and not
 // the component. Firefox failed both with six pages at once.
-const TIMED = new Set(["hover", "dialog", "popover-more"])
+const TIMED = new Set(["hover", "dialog", "popover-more", "design"])
 let playing = 0
 let held = false
 let asking = 0
@@ -297,9 +298,10 @@ function serialize(): string {
       return
     }
     const attributes = [...node.attributes]
-      // An Angular directive's selector stays on its element (`kuidialogtrigger`): how the
-      // adapter is written, the one difference an Angular page is allowed.
-      .filter((each) => !SKIP.has(each.name) && !/^(_ng|kui)/.test(each.name))
+      // An Angular directive's selector stays on its element (`kuidialogtrigger`, and the
+      // fixture's own design system's `dsdialog`): how the adapter is written, the one
+      // difference an Angular page is allowed.
+      .filter((each) => !SKIP.has(each.name) && !/^(_ng|kui|ds[a-z])/.test(each.name))
       .map((each) => {
         let value = each.value
         if (generated && REFERENCES.has(each.name)) {
@@ -561,6 +563,10 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await id("r1-pro").click()
     await snapshot("radio chosen by a press")
     expect((await form("plan")).join() === "pro", "a press chooses")
+    await id("r1-label").click()
+    await snapshot("radio chosen through a label that names its item")
+    expect((await form("plan")).join() === "free", "`<label for>` reaches an item's radio")
+    expect((await attribute("r1-free", "aria-checked")) === "true", "and the item is chosen")
 
     // A form's reset reaches each control as it reaches a native one: back to where it began,
     // whether the control holds its value (the box, the group) or its caller does (the switch).
@@ -776,13 +782,44 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await attribute("m1", "data-progressing")) === null, "a meter is not a task")
 
     expect(await present("av1-fallback"), "with no picture, the stand-in shows")
+    expect(
+      (await attribute("av1", "data-image-loading-status")) === "idle",
+      "the root says there is no picture to load"
+    )
+    expect((await id("av1-status").textContent()) === "none", "and nothing is told of it yet")
+    // A picture kept in the page is there, unheard, before it loads; a stand-in that waits
+    // is not drawn at first, by a server either.
+    expect(await present("av3-image"), "a kept picture is in the page from the start")
+    expect((await attribute("av3-image", "aria-hidden")) === "true", "unheard until it loads")
+    expect(!(await present("av3-fallback")), "a stand-in with a delay waits")
     await id("av-load").click()
     await id("av1-image").waitFor({ state: "attached", timeout: 3000 })
-    await page.waitForFunction(() => document.querySelectorAll("img").length === 1)
+    // The kept picture, and the one drawn once it has loaded; never the one that cannot.
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll('[data-testid^="av"] img:not([aria-hidden])').length === 2 &&
+        document.querySelector('[data-testid="av2"]')?.getAttribute("data-image-loading-status") ===
+          "error"
+    )
     await snapshot("pictures loaded")
     expect(!(await present("av1-fallback")), "a loaded picture replaces its stand-in")
     expect(!(await present("av2-image")), "a picture that cannot load is never drawn")
     expect(await present("av2-fallback"), "its stand-in stays")
+    expect(
+      (await attribute("av1", "data-image-loading-status")) === "loaded" &&
+        (await attribute("av2", "data-image-loading-status")) === "error",
+      "each root says how its picture went"
+    )
+    expect(
+      (await id("av1-status").textContent()) === "loaded",
+      "the image's callback hears it, as Base UI's onLoadingStatusChange"
+    )
+    expect(
+      (await attribute("av3", "data-image-loading-status")) === "loaded" &&
+        (await attribute("av3-image", "src")) !== null,
+      "a kept picture follows its own address"
+    )
+    expect(!(await present("av3-fallback")), "a picture that loads first never shows the stand-in")
 
     await id("ad1-trigger").click()
     await snapshot("alert dialog open")
@@ -1324,6 +1361,73 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await classes("k3-tag")) === "tag asked", "with the classes of both")
     expect((await attribute("k3-tag", "title")) === "handed", "and what it was handed")
     expect((await tag("k3-plain")) === "span", "or as its own element")
+
+    // One with a state and a handler of its own (React's `useRender`, Vue's `Primitive`,
+    // Svelte's and Solid's `Primitive`, an Angular directive's host bindings): its class
+    // beside the caller's, its state written as `data-*` and handed to the caller's element.
+    expect(
+      (await classes("k4-mark")) === "mark mine",
+      "a plain element joins its class with its caller's"
+    )
+    expect((await attribute("k4-mark", "type")) === "button", "and keeps its own attribute")
+    expect(
+      (await attribute("k4-mark", "data-active")) === null,
+      "a state that does not hold is absent"
+    )
+    expect((await text("k4-mark")) === "Off 0", "the caller reads the state")
+    await id("k4-mark").click()
+    await snapshot("a plain element of one's own pressed")
+    expect(
+      (await text("k4-mark")) === "On 1",
+      "both handlers ran, and the caller reads the new state"
+    )
+    expect(
+      (await attribute("k4-mark", "data-active")) === "",
+      "the state is written on the element"
+    )
+  },
+
+  // A design system built on the parts: on Angular its own directives host the primitives
+  // (`hostDirectives`) and give them its defaults (`hostInputs`); elsewhere it passes props.
+  async design({ page, snapshot, id, present, attribute }) {
+    const away = () => page.mouse.move(900, 700)
+    const shown = (testid: string) => id(testid).waitFor({ state: "attached", timeout: 3000 })
+    const gone = (testid: string) => id(testid).waitFor({ state: "detached", timeout: 3000 })
+    await snapshot("at rest")
+    expect(
+      (await attribute("ds3a-input", "inputmode")) === "text",
+      "a code input takes the mode its design system gives"
+    )
+    expect(
+      (await attribute("ds3b-input", "inputmode")) === "numeric",
+      "and the one bound on its element over that"
+    )
+
+    await id("ds1-trigger").click()
+    await shown("ds1-popup")
+    await snapshot("a wrapped dialog open")
+    const title = await attribute("ds1-title", "id")
+    expect(
+      !!title && (await attribute("ds1-popup", "aria-labelledby")) === title,
+      "a title handed to the design system's content labels the popup"
+    )
+    await id("ds1-close").click()
+    await gone("ds1-popup")
+    await settled(page)
+
+    await away()
+    await id("ds2-off").check()
+    await id("ds2-trigger").hover()
+    await page.waitForTimeout(700)
+    expect(!(await present("ds2-popup")), "turned off by its design system's input, it stays shut")
+    await away()
+    await id("ds2-off").uncheck()
+    await id("ds2-trigger").hover()
+    await page.waitForTimeout(250)
+    expect(await present("ds2-popup"), "on again, it opens without the 600 ms a tooltip waits")
+    await snapshot("a design system's tooltip, opened at once")
+    await away()
+    await gone("ds2-popup")
   },
 
   async dialog({ page, snapshot, id, present, attribute, focused }) {
@@ -2495,6 +2599,54 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.waitForSelector('[data-testid="sa1-y"]', { state: "detached" })
     await snapshot("nothing to scroll again")
     expect(!(await present("sa1-corner")), "content that shrinks takes them away")
+
+    // A row of pictures that load late, as shadcn/ui's horizontal example draws it: no content
+    // part, the horizontal scrollbar inside the viewport, padding on the area. The viewport
+    // keeps its size as the pictures arrive; the thumb must follow the row all the same.
+    const thumbAgainstArithmetic = () =>
+      page.evaluate(() => {
+        const view = document.querySelector<HTMLElement>('[data-testid="sa2-view"]')!
+        const track = document.querySelector<HTMLElement>('[data-testid="sa2-x"]')
+        const handle = document.querySelector<HTMLElement>('[data-testid="sa2-x-thumb"]')
+        if (!track || !handle) return { drawn: false, width: 0, share: 0, whole: view.scrollWidth }
+        // The seen share of what the viewport shows, no longer than the track (no padding on
+        // the scrollbar, no margin on the thumb in this page).
+        const seen = view.clientWidth
+        const share = Math.min(track.offsetWidth, seen) * (seen / view.scrollWidth)
+        return {
+          drawn: true,
+          width: handle.getBoundingClientRect().width,
+          share,
+          whole: view.scrollWidth,
+        }
+      })
+    const before = await thumbAgainstArithmetic()
+    expect(!before.drawn, "a row that fits its area has no scrollbar before its pictures load")
+    await id("sa2-load").click()
+    await page.waitForFunction(() =>
+      [1, 2, 3].every((each) => {
+        const picture = document.querySelector<HTMLImageElement>(
+          `[data-testid="sa2-picture-${each}"]`
+        )
+        return picture?.complete && picture.naturalWidth > 0
+      })
+    )
+    await settled(page)
+    let after = await thumbAgainstArithmetic()
+    for (
+      let tries = 0;
+      tries < 20 && !(after.drawn && Math.abs(after.width - after.share) <= 1);
+      tries++
+    ) {
+      await page.waitForTimeout(50)
+      after = await thumbAgainstArithmetic()
+    }
+    await snapshot("pictures loaded late")
+    expect(after.whole === 496, `the row is three pictures and two gaps wide (${after.whole})`)
+    expect(
+      after.drawn && Math.abs(after.width - after.share) <= 1,
+      `and the thumb follows the pictures that loaded (${after.width} against ${after.share})`
+    )
   },
 
   async "navigation-menu"({ page, snapshot, id, present, attribute, focused }) {
@@ -2752,6 +2904,31 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await key("Backspace")
     expect((await cell(3)).text === "", "Backspace takes the last character")
     expect((await attribute("otp1", "data-complete")) === null, "and it is complete no more")
+
+    // What each code takes, given by its mode or by a pattern: the adapters pass both through.
+    const typed = (testid: string) =>
+      id(`${testid}-input`).evaluate((element) => (element as HTMLInputElement).value)
+    const shown = (testid: string, index: number) =>
+      id(`${testid}-${index}`).evaluate((element) => element.textContent!.trim())
+    await id("otp2-input").focus()
+    await settled(page)
+    await page.keyboard.type("1")
+    await settled(page)
+    expect((await typed("otp2")) === "", "a code of letters refuses a digit")
+    await page.keyboard.type("k")
+    await settled(page)
+    expect((await typed("otp2")) === "k", "and takes a letter")
+    expect((await shown("otp2", 0)) === "k", "which its first cell shows")
+    await id("otp3-input").focus()
+    await settled(page)
+    await page.keyboard.type("G")
+    await settled(page)
+    expect((await typed("otp3")) === "", "a pattern refuses what it does not match")
+    await page.keyboard.type("A7")
+    await settled(page)
+    await snapshot("codes by mode and pattern")
+    expect((await typed("otp3")) === "A7", "and takes what it does")
+    expect((await shown("otp3", 0)) === "A" && (await shown("otp3", 1)) === "7", "each in its cell")
 
     const share = () => attribute("rs1-bar", "aria-valuenow")
     const width = (testid: string) =>
@@ -3166,6 +3343,112 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       "the day chosen before is chosen no more"
     )
     await snapshot("a calendar back at its month")
+  },
+  async calendars({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const press = async (testid: string) => {
+      await id(testid).click()
+      await settled(page)
+    }
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    const stops = (testid: string) =>
+      page.locator(`[data-testid="${testid}"] td button[tabindex="0"]`).count()
+    await id("cal2").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    // Two months side by side, one selection and one grid for the keys.
+    expect((await text("cal2-heading-0")) === "March 2026", "the first month is named")
+    expect((await text("cal2-heading-1")) === "April 2026", "and the second beside it")
+    expect(
+      (await attribute("cal2-grid-1", "aria-labelledby")) === "cal2-heading-1",
+      "each grid is named by its month"
+    )
+    expect((await stops("cal2")) === 1, "one stop for Tab across both")
+    expect(
+      (await attribute("cal2-0-2026-04-01", "data-outside-month")) === "" &&
+        (await attribute("cal2-0-2026-04-01", "tabindex")) === "-1",
+      "a day of the second month filling the first's last week is a copy there"
+    )
+    await snapshot("two months at rest")
+
+    await press("cal2-0-2026-03-28")
+    await press("cal2-1-2026-04-03")
+    expect(
+      (await text("cal2-output")) === '{"start":"2026-03-28","end":"2026-04-03"}',
+      `a range is chosen across the months (${await text("cal2-output")})`
+    )
+    expect((await attribute("cal2-1-2026-04-01", "data-selected")) === "", "the days between")
+    expect((await attribute("cal2-0-2026-04-01", "data-selected")) === null, "but not their copies")
+    expect((await focused()) === "cal2-1-2026-04-03", "focus is on the last day pressed")
+    await key("ArrowLeft")
+    await key("ArrowLeft")
+    await key("ArrowLeft")
+    expect((await focused()) === "cal2-0-2026-03-31", "the arrows go back into the first month")
+    await key("ArrowRight")
+    expect((await focused()) === "cal2-1-2026-04-01", "and on into the second")
+    await snapshot("a range across two months, focus moved")
+    for (let week = 0; week < 5; week++) await key("ArrowDown")
+    expect(
+      (await text("cal2-heading-0")) === "April 2026",
+      "past the second month, they turn by one"
+    )
+    expect((await text("cal2-heading-1")) === "May 2026", "so the day is shown")
+    expect((await focused()) === "cal2-1-2026-05-06", "and focus goes with it")
+    await press("cal2-previous")
+    expect((await text("cal2-heading-0")) === "March 2026", "Previous turns one month back")
+    await snapshot("two months back where they were")
+
+    // Several days, submitted as a list, and a form's reset.
+    await id("cal3").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    const sent = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="cal3-form"]')!).getAll(
+          "days"
+        )
+      )
+    expect((await sent()).join(",") === "2026-03-02", "it starts with the day it is given")
+    await press("cal3-2026-03-05")
+    await press("cal3-2026-03-09")
+    expect(
+      (await text("cal3-output")) === "2026-03-02,2026-03-05,2026-03-09",
+      `a day pressed is added (${await text("cal3-output")})`
+    )
+    expect(
+      (await attribute("cal3-2026-03-10", "data-disabled")) === "",
+      "the most it takes is reached: the other days cannot be chosen"
+    )
+    await press("cal3-2026-03-02")
+    expect(
+      (await text("cal3-output")) === "2026-03-05,2026-03-09",
+      "and pressed again it is taken away"
+    )
+    await key("ArrowRight")
+    await key("Enter")
+    expect(
+      (await text("cal3-output")) === "2026-03-05,2026-03-09,2026-03-03",
+      "Enter adds the day focus is on"
+    )
+    expect((await sent()).join(",") === "2026-03-05,2026-03-09,2026-03-03", "each day is sent")
+    await snapshot("several days chosen")
+    await press("cal3-reset")
+    expect((await text("cal3-output")) === "2026-03-02", "a form's reset puts the first days back")
+    expect((await sent()).join(",") === "2026-03-02", "and only they are sent")
+
+    // The month its caller holds.
+    await id("cal4").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect((await text("cal4-heading")) === "March 2026", "it shows the month it is given")
+    await press("cal4-next")
+    expect((await text("cal4-output")) === "2026-04-01", "it asks for the next month")
+    expect((await text("cal4-heading")) === "April 2026", "which its caller gives")
+    await press("cal4-jump")
+    expect((await text("cal4-heading")) === "December 2030", "the caller's own button sets it")
+    expect((await stops("cal4")) === 1, "Tab still has one day to reach")
+    await id("cal4-2030-12-01").focus()
+    await key("PageDown")
+    expect((await text("cal4-heading")) === "January 2031", "the keys ask for the month too")
+    expect((await focused()) === "cal4-2031-01-01", "and focus follows into it")
+    await snapshot("a month its caller holds")
   },
   async "date-field"({ page, snapshot, id, attribute, focused }) {
     const key = async (name: string) => {
@@ -3641,6 +3924,11 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(
       (await attribute("cm1-file", "aria-labelledby")) === "cm1-file-heading",
       "named by their headings"
+    )
+    // At rest, before it is used: the first command is highlighted already (`autoHighlight`).
+    expect(
+      (await attribute("cm1-new", "data-highlighted")) === "",
+      "at rest, the first command is highlighted"
     )
     await id("cm1-input").focus()
     await settled(page)

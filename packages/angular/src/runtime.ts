@@ -12,9 +12,17 @@ import {
   effect as angularEffect,
   inject,
   input,
+  signal as angularSignal,
   untracked,
 } from "@angular/core"
-import type { EmbeddedViewRef, OnInit } from "@angular/core"
+import type {
+  EmbeddedViewRef,
+  InputSignalWithTransform,
+  OnChanges,
+  OnInit,
+  ProviderToken,
+  SimpleChanges,
+} from "@angular/core"
 import { bind, defined, effect, sameProps, signal, write } from "@kirana-ui/core"
 import type {
   Align,
@@ -40,12 +48,123 @@ export class KuiIds {
 }
 
 /**
+ * The inputs of a directive, by the name its class gives each, and the value each reads (after
+ * its transform): `InputsOf<KuiTooltip>["delay"]` is `number | undefined`.
+ */
+export type InputsOf<Directive> = {
+  // oxlint-disable-next-line typescript/no-explicit-any
+  [
+    Name in keyof Directive as Directive[Name] extends InputSignalWithTransform<any, any>
+      ? Name
+      : never
+  ]: Directive[Name] extends InputSignalWithTransform<infer Read, infer _Write> ? Read : never
+}
+
+/**
+ * What a directive hosting a primitive gives the primitive's inputs: each a function read like
+ * a signal (a signal, a `computed`, `() => 0`), so a value worked out from the host's own
+ * inputs follows them.
+ */
+export type HostInputs<Directive> = {
+  [Name in keyof InputsOf<Directive>]?: () => InputsOf<Directive>[Name]
+}
+
+/** What a directive's hosts gave it, and which of its inputs the element binds. */
+interface Hosted {
+  given: Record<string, () => unknown>
+  bound: ReturnType<typeof angularSignal<ReadonlySet<string>>>
+}
+
+const HOSTED = new WeakMap<object, Hosted>()
+
+function hostedOf(owner: object): Hosted {
+  let record = HOSTED.get(owner)
+  if (!record) {
+    record = { given: {}, bound: angularSignal<ReadonlySet<string>>(new Set()) }
+    HOSTED.set(owner, record)
+  }
+  return record
+}
+
+/** A directive's own values with what its hosts gave laid over each the element does not bind. */
+function withHosts<T extends Record<string, unknown>>(owner: object, own: T): T {
+  const { given, bound } = hostedOf(owner)
+  const names = Object.keys(given)
+  if (names.length === 0) return own
+  const binds = bound()
+  const out: Record<string, unknown> = { ...own }
+  for (const name of names) {
+    if (binds.has(name)) continue
+    // An id is given as `kuiId` and read as `id`; one given as nothing keeps the one made.
+    const key = name === "kuiId" ? "id" : name
+    if (!(key in own)) {
+      throw new Error(
+        `Kirana UI: \`${name}\` was given by a host directive, and this directive takes no such input from its host`
+      )
+    }
+    const value = given[name]!()
+    if (key === "id" && value === undefined) continue
+    out[key] = value
+  }
+  return out as T
+}
+
+/**
+ * Gives the inputs of a primitive this directive hosts (`hostDirectives: [KuiTooltip]`), as a
+ * design system's directive gives its defaults: `hostInputs(KuiTooltip, { delay: () => 0 })`.
+ * Each value is a function read like a signal, so one worked out from the host's own inputs
+ * (`{ disabled: computed(() => !this.collapsed()) }`) follows them. An input the element binds
+ * (one the host exposes through `hostDirectives`' `inputs`, written on the element) wins over
+ * what is given here. Call it where injection works (a field initialiser or the constructor):
+ * host directives are made before their host, and read their inputs after it is made.
+ */
+export function hostInputs<Directive extends object>(
+  directive: ProviderToken<Directive>,
+  given: NoInfer<HostInputs<Directive>>
+): void {
+  const target = inject(directive, { self: true })
+  const own = HOSTED.get(target)
+  if (!own) {
+    throw new Error(
+      "Kirana UI: hostInputs() names a directive that takes no inputs from its host (its inputs are not read through inputsSignal)"
+    )
+  }
+  Object.assign(own.given, given)
+}
+
+/** What `inputsSignal` gives: the signal, and the two calls its directive makes. */
+export type InputsSignal<T> = (() => Signal<T>) & {
+  /**
+   * Reads the inputs now. Angular's own effect runs a turn later, and a part that has just
+   * written a model back (`this.open.set(open)`) must not spend that turn showing the old value.
+   */
+  sync(): void
+  /**
+   * Notes which inputs the element binds: call it from `ngOnChanges`. An input given by a host
+   * directive (`hostInputs`) gives way to one the element binds.
+   */
+  bound(changes: SimpleChanges): void
+}
+
+/**
  * A core signal that follows a directive's inputs. Call it where injection works (a field
  * initialiser or the constructor); `read` first runs when the directive's inputs are set.
+ * Given its directive (`inputsSignal(this, () => …)`), what a host gives it through
+ * `hostInputs` is laid over the inputs the element does not bind: the directive then calls
+ * `bound(changes)` from its `ngOnChanges`.
  */
+export function inputsSignal<T extends Record<string, unknown>>(read: () => T): InputsSignal<T>
 export function inputsSignal<T extends Record<string, unknown>>(
+  owner: object,
   read: () => T
-): (() => Signal<T>) & { sync(): void } {
+): InputsSignal<T>
+export function inputsSignal<T extends Record<string, unknown>>(
+  ...args: [read: () => T] | [owner: object, read: () => T]
+): InputsSignal<T> {
+  const owner = args.length === 2 ? args[0] : undefined
+  const own = args.length === 2 ? args[1] : args[0]
+  if (owner) hostedOf(owner)
+  const read = owner ? () => withHosts(owner, own()) : own
   let source: Signal<T> | undefined
   angularEffect(() => {
     const next = read()
@@ -54,11 +173,14 @@ export function inputsSignal<T extends Record<string, unknown>>(
   // Made on first use, in `ngOnInit`: a default is read once, with the inputs in.
   const get = () => (source ??= signal(untracked(read), sameProps as (a: T, b: T) => boolean))
   return Object.assign(get, {
-    /**
-     * Reads the inputs now. Angular's own effect runs a turn later, and a part that has just
-     * written a model back (`this.open.set(open)`) must not spend that turn showing the old value.
-     */
     sync: () => source?.set(untracked(read)),
+    bound: (changes: SimpleChanges) => {
+      if (!owner) return
+      const { bound } = hostedOf(owner)
+      const known = untracked(bound)
+      const added = Object.keys(changes).filter((name) => !known.has(name))
+      if (added.length > 0) bound.set(new Set([...known, ...added]))
+    },
   })
 }
 
@@ -101,7 +223,7 @@ function anchorOf(given: PositionerAnchor): PositionOptions["anchor"] {
  * component's positioner extends this and says which controller it is a part of.
  */
 @Directive()
-export abstract class KuiPositioner implements OnInit {
+export abstract class KuiPositioner implements OnInit, OnChanges {
   readonly side = input<Side>()
   readonly align = input<Align>()
   readonly sideOffset = input<number | OffsetFunction>()
@@ -118,8 +240,9 @@ export abstract class KuiPositioner implements OnInit {
    */
   readonly anchor = input<PositionerAnchor>()
   private readonly host = hostPart()
-  private readonly options = () =>
-    defined({
+  private readonly given = hostedOf(this)
+  private readonly options = () => {
+    const own = withHosts(this, {
       side: this.side(),
       align: this.align(),
       sideOffset: this.sideOffset(),
@@ -130,8 +253,10 @@ export abstract class KuiPositioner implements OnInit {
       sticky: this.sticky(),
       arrowPadding: this.arrowPadding(),
       positionMethod: this.positionMethod(),
-      anchor: anchorOf(this.anchor()),
+      anchor: this.anchor(),
     })
+    return defined({ ...own, anchor: anchorOf(own.anchor) })
+  }
 
   /** The controller it is a part of, once its root has made one. */
   protected abstract placed():
@@ -143,6 +268,11 @@ export abstract class KuiPositioner implements OnInit {
       const next = this.options()
       untracked(() => this.placed()?.positioning.set(next))
     })
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const known = untracked(this.given.bound)
+    this.given.bound.set(new Set([...known, ...Object.keys(changes)]))
   }
 
   ngOnInit(): void {

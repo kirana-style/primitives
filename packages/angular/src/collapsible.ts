@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { computed } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createCollapsible } from "@kirana-ui/core/collapsible"
@@ -18,7 +18,7 @@ export class KuiCollapsible implements OnInit {
 
   controller!: Collapsible
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
@@ -33,6 +33,10 @@ export class KuiCollapsible implements OnInit {
   }))
   private readonly part = hostPart()
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createCollapsible(this.props())

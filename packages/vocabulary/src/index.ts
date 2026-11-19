@@ -374,7 +374,18 @@ export const vocabulary = {
       "parts": {
         "root": {
           "description": "The frame the image and its stand-in share.",
-          "states": {},
+          "states": {
+            "imageLoadingStatus": {
+              "attribute": "data-image-loading-status",
+              "description": "Where the picture is in its loading: `idle` while it has no address.",
+              "values": {
+                "idle": "[data-image-loading-status=\"idle\"]",
+                "loading": "[data-image-loading-status=\"loading\"]",
+                "loaded": "[data-image-loading-status=\"loaded\"]",
+                "error": "[data-image-loading-status=\"error\"]"
+              }
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [],
@@ -382,8 +393,19 @@ export const vocabulary = {
           "repeated": false
         },
         "image": {
-          "description": "The picture. In the page once it has loaded.",
-          "states": {},
+          "description": "The picture. In the page once it has loaded; with `keepMounted` (on Angular, the attribute form) in the page all along, `aria-hidden` until it has loaded.",
+          "states": {
+            "loading": {
+              "attribute": "data-loading",
+              "description": "Present while the picture loads, on an image kept in the page.",
+              "selector": "[data-loading]"
+            },
+            "error": {
+              "attribute": "data-error",
+              "description": "Present when the picture cannot load, on an image kept in the page.",
+              "selector": "[data-error]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -393,7 +415,7 @@ export const vocabulary = {
           "repeated": false
         },
         "fallback": {
-          "description": "What shows until the picture has loaded, or when it cannot.",
+          "description": "What shows until the picture has loaded, or when it cannot; after its `delay`, when it has one.",
           "states": {},
           "exclusive": [],
           "variables": {},
@@ -4859,13 +4881,24 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "months": {
+          "description": "The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "calendar"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "heading": {
           "description": "Names the month shown. Read out when it changes.",
           "states": {},
           "exclusive": [],
           "variables": {},
           "inside": [
-            "calendar"
+            "months"
           ],
           "optional": false,
           "repeated": false
@@ -4905,12 +4938,12 @@ export const vocabulary = {
           "repeated": false
         },
         "grid": {
-          "description": "The table of days: a grid the arrows move in.",
+          "description": "The table of a month's days: a grid the arrows move in, from one month shown into the next.",
           "states": {},
           "exclusive": [],
           "variables": {},
           "inside": [
-            "calendar"
+            "months"
           ],
           "optional": false,
           "repeated": false
@@ -4953,7 +4986,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5000,7 +5033,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5066,13 +5099,24 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "months": {
+          "description": "The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "heading": {
           "description": "Names the month shown. Read out when it changes.",
           "states": {},
           "exclusive": [],
           "variables": {},
           "inside": [
-            "root"
+            "months"
           ],
           "optional": false,
           "repeated": false
@@ -5112,12 +5156,12 @@ export const vocabulary = {
           "repeated": false
         },
         "grid": {
-          "description": "The table of days: a grid the arrows move in.",
+          "description": "The table of a month's days: a grid the arrows move in, from one month shown into the next.",
           "states": {},
           "exclusive": [],
           "variables": {},
           "inside": [
-            "root"
+            "months"
           ],
           "optional": false,
           "repeated": false
@@ -5160,7 +5204,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5207,7 +5251,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, and on every day of a chosen range.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5245,6 +5289,17 @@ export const vocabulary = {
           "variables": {},
           "inside": [
             "cell"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "input": {
+          "description": "The hidden input it is submitted by, when it has a name: one more is drawn after it for each other day.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
           ],
           "optional": false,
           "repeated": false
@@ -6324,7 +6379,7 @@ export const vocabulary = {
           "repeated": false
         },
         "item": {
-          "description": "One choice. It holds a hidden native radio, which a form and a label reach.",
+          "description": "One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.",
           "states": {
             "checked": {
               "attribute": "data-checked",
@@ -6426,7 +6481,7 @@ export const vocabulary = {
     "resizable": {
       "parts": {
         "group": {
-          "description": "The panels and the bars between them. A design lays it out as a flex box.",
+          "description": "The panels and the bars between them. A design lays it out as a flex box: `display: flex`, and `flex-direction: column` when it is vertical. A group in a panel that is a flex box itself takes `min-width: 0` and `min-height: 0`, or what it holds widens the panel.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -6449,7 +6504,7 @@ export const vocabulary = {
           "repeated": false
         },
         "panel": {
-          "description": "One panel. It carries its share of the group.",
+          "description": "One panel. It carries its share of the group, written as its `flex` with `min-width: 0` and `min-height: 0`, so what it holds cannot keep it past its share. Its `overflow` is the design's.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -6471,7 +6526,7 @@ export const vocabulary = {
           "repeated": true
         },
         "handle": {
-          "description": "The bar between two panels: dragged, or moved with the arrows.",
+          "description": "The bar between two panels: dragged, or moved with the arrows. A design gives it its thickness and `flex-shrink: 0`, so the panels do not squeeze it.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -6565,14 +6620,14 @@ export const vocabulary = {
           "repeated": false
         },
         "content": {
-          "description": "What is scrolled.",
+          "description": "A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).",
           "states": {},
           "exclusive": [],
           "variables": {},
           "inside": [
             "viewport"
           ],
-          "optional": false,
+          "optional": true,
           "repeated": false
         },
         "scrollbar": {
@@ -6603,7 +6658,8 @@ export const vocabulary = {
             "--scroll-area-thumb-width": "A horizontal thumb's width."
           },
           "inside": [
-            "root"
+            "root",
+            "viewport"
           ],
           "optional": false,
           "repeated": true

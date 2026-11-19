@@ -74,13 +74,25 @@
             <kui-radio-group kui-id="r1" name="plan" default-value="pro">
               <div kui-part="root" data-testid="r1">
                 <label>
-                  <span kui-part="item" kui-value="free" class="radio" data-testid="r1-free">
+                  <span
+                    kui-part="item"
+                    kui-value="free"
+                    kui-id="r1-free-radio"
+                    class="radio"
+                    data-testid="r1-free"
+                  >
                     <span kui-part="indicator" class="dot"></span>
                   </span>
                   free
                 </label>
                 <label>
-                  <span kui-part="item" kui-value="pro" class="radio" data-testid="r1-pro">
+                  <span
+                    kui-part="item"
+                    kui-value="pro"
+                    kui-id="r1-pro-radio"
+                    class="radio"
+                    data-testid="r1-pro"
+                  >
                     <span kui-part="indicator" class="dot"></span>
                   </span>
                   pro
@@ -89,6 +101,7 @@
                   <span
                     kui-part="item"
                     kui-value="team"
+                    kui-id="r1-team-radio"
                     kui-disabled
                     class="radio"
                     data-testid="r1-team"
@@ -98,13 +111,20 @@
                   team
                 </label>
                 <label>
-                  <span kui-part="item" kui-value="max" class="radio" data-testid="r1-max">
+                  <span
+                    kui-part="item"
+                    kui-value="max"
+                    kui-id="r1-max-radio"
+                    class="radio"
+                    data-testid="r1-max"
+                  >
                     <span kui-part="indicator" class="dot"></span>
                   </span>
                   max
                 </label>
               </div>
             </kui-radio-group>
+            <label for="r1-free-radio" data-testid="r1-label">Free plan</label>
             <button type="reset" data-testid="f1-reset">Reset</button>
           </form>
           <output data-testid="w1-output">off</output>
@@ -296,10 +316,17 @@
               <span kui-part="fallback" data-testid="av1-fallback">K</span>
             </span>
           </kui-avatar>
+          <span data-testid="av1-status">none</span>
           <kui-avatar>
             <span kui-part="root" class="avatar" data-testid="av2">
               <img kui-part="image" alt="Nobody" data-testid="av2-image" />
               <span kui-part="fallback" data-testid="av2-fallback">N</span>
+            </span>
+          </kui-avatar>
+          <kui-avatar>
+            <span kui-part="root" class="avatar" data-testid="av3">
+              <img kui-part="image" kui-keep-mounted alt="Kept" data-testid="av3-image" />
+              <span kui-part="fallback" kui-delay="60000" data-testid="av3-fallback">L</span>
             </span>
           </kui-avatar>
           <kui-alert-dialog kui-id="ad1">
@@ -885,6 +912,36 @@
             </div>
           </kui-scroll-area>
           <button type="button" data-testid="sa1-grow">Grow</button>
+          <kui-scroll-area>
+            <div kui-part="root" class="scroll-wide" data-testid="sa2">
+              <div kui-part="viewport" class="scroll-view" data-testid="sa2-view">
+                <div class="scroll-pictures" data-testid="sa2-row">
+                  <div class="scroll-figure">
+                    <img class="scroll-picture" alt="" data-testid="sa2-picture-1" />
+                  </div>
+                  <div class="scroll-figure">
+                    <img class="scroll-picture" alt="" data-testid="sa2-picture-2" />
+                  </div>
+                  <div class="scroll-figure">
+                    <img class="scroll-picture" alt="" data-testid="sa2-picture-3" />
+                  </div>
+                </div>
+                <div
+                  kui-part="scrollbar"
+                  kui-orientation="horizontal"
+                  class="scroll-bar"
+                  data-testid="sa2-x"
+                >
+                  <div kui-part="thumb" class="scroll-thumb" data-testid="sa2-x-thumb"></div>
+                </div>
+              </div>
+              <div kui-part="scrollbar" class="scroll-bar" data-testid="sa2-y">
+                <div kui-part="thumb" class="scroll-thumb" data-testid="sa2-y-thumb"></div>
+              </div>
+              <div kui-part="corner" class="scroll-corner" data-testid="sa2-corner"></div>
+            </div>
+          </kui-scroll-area>
+          <button type="button" data-testid="sa2-load">Load pictures</button>
         </section>
         <section data-fixture="navigation-menu">
           <kui-navigation-menu kui-id="nm1">
@@ -960,6 +1017,37 @@
             </kui-otp>
           </form>
           <output data-testid="otp1-output">none</output>
+          <div class="otp-row">
+            <kui-otp kui-id="otp2" length="2" mode="alphabetic">
+              <div kui-part="root" class="otp" data-testid="otp2">
+                <input
+                  kui-part="input"
+                  aria-label="Letters"
+                  class="otp-input"
+                  data-testid="otp2-input"
+                />
+                <div kui-part="group" class="otp-group">
+                  <div kui-part="slot" kui-index="0" class="otp-slot" data-testid="otp2-0"></div>
+                  <div kui-part="slot" kui-index="1" class="otp-slot" data-testid="otp2-1"></div>
+                </div>
+              </div>
+            </kui-otp>
+            <kui-otp kui-id="otp3" length="3" pattern="[A-F0-9]">
+              <div kui-part="root" class="otp" data-testid="otp3">
+                <input
+                  kui-part="input"
+                  aria-label="Hex"
+                  class="otp-input"
+                  data-testid="otp3-input"
+                />
+                <div kui-part="group" class="otp-group">
+                  <div kui-part="slot" kui-index="0" class="otp-slot" data-testid="otp3-0"></div>
+                  <div kui-part="slot" kui-index="1" class="otp-slot" data-testid="otp3-1"></div>
+                  <div kui-part="slot" kui-index="2" class="otp-slot" data-testid="otp3-2"></div>
+                </div>
+              </div>
+            </kui-otp>
+          </div>
           <kui-resizable kui-id="rs1">
             <div kui-part="group" class="split" data-testid="rs1">
               <div
@@ -1144,6 +1232,113 @@
             </kui-date-field>
           </form>
           <output data-testid="df1-output">none</output>
+        </section>
+        <section data-fixture="calendars">
+          <kui-calendar
+            kui-id="cal2"
+            locale="en-US"
+            mode="range"
+            months="2"
+            default-month="2026-03-01"
+            default-focused-value="2026-03-15"
+          >
+            <div kui-part="root" class="calendar calendar-months" data-testid="cal2">
+              <button kui-part="previous" aria-label="Previous month" data-testid="cal2-previous">
+                Previous
+              </button>
+              <button kui-part="next" aria-label="Next month" data-testid="cal2-next">Next</button>
+              <div class="months">
+                <template kui-each="months">
+                  <div data-testid="cal2-month-{index}">
+                    <div kui-part="heading" data-testid="cal2-heading-{index}"></div>
+                    <table kui-part="grid" data-testid="cal2-grid-{index}">
+                      <thead>
+                        <tr>
+                          <template kui-each="weekdays"
+                            ><th kui-part="head-cell">{short}</th></template
+                          >
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template kui-each="weeks">
+                          <tr>
+                            <template kui-each="days">
+                              <td kui-part="cell">
+                                <button kui-part="day" data-testid="cal2-{monthIndex}-{date}">
+                                  {label}
+                                </button>
+                              </td>
+                            </template>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </kui-calendar>
+          <output data-testid="cal2-output">none</output>
+          <form data-testid="cal3-form">
+            <kui-calendar
+              kui-id="cal3"
+              locale="en-US"
+              mode="multiple"
+              name="days"
+              max-days="3"
+              default-value="2026-03-02"
+              default-focused-value="2026-03-15"
+            >
+              <div kui-part="root" class="calendar" data-testid="cal3">
+                <div kui-part="heading" data-testid="cal3-heading"></div>
+                <table kui-part="grid" data-testid="cal3-grid">
+                  <tbody>
+                    <template kui-each="weeks">
+                      <tr>
+                        <template kui-each="days">
+                          <td kui-part="cell">
+                            <button kui-part="day" data-testid="cal3-{date}">{label}</button>
+                          </td>
+                        </template>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+                <input kui-part="input" data-testid="cal3-input" />
+              </div>
+            </kui-calendar>
+            <button type="reset" data-testid="cal3-reset">Reset</button>
+          </form>
+          <output data-testid="cal3-output">none</output>
+          <kui-calendar
+            kui-id="cal4"
+            locale="en-US"
+            month="2026-03-01"
+            default-focused-value="2026-03-15"
+          >
+            <div kui-part="root" class="calendar" data-testid="cal4">
+              <button kui-part="previous" aria-label="Previous month" data-testid="cal4-previous">
+                Previous
+              </button>
+              <div kui-part="heading" data-testid="cal4-heading"></div>
+              <button kui-part="next" aria-label="Next month" data-testid="cal4-next">Next</button>
+              <table kui-part="grid" data-testid="cal4-grid">
+                <tbody>
+                  <template kui-each="weeks">
+                    <tr>
+                      <template kui-each="days">
+                        <td kui-part="cell">
+                          <button kui-part="day" data-testid="cal4-{date}">{label}</button>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </kui-calendar>
+          <button type="button" data-testid="cal4-jump">December 2030</button>
+          <output data-testid="cal4-output">2026-03-01</output>
         </section>
         <section data-fixture="command">
           <kui-label>

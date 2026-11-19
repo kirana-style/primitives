@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createInput } from "@kirana-ui/core/input"
 
@@ -15,12 +15,16 @@ export class KuiInput implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly valueChanged = output<{ value: string; details: ChangeDetails }>()
   private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     disabled: this.disabled(),
     onValueChange: (value: string, details: ChangeDetails) =>
       this.valueChanged.emit({ value, details }),
   }))
   private readonly part = hostPart()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.part(createInput(this.props(), { field: this.field?.controller }).input)

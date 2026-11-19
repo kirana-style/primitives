@@ -9,7 +9,7 @@ import {
   model,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createMenu } from "@kirana-ui/core/menu"
@@ -44,7 +44,7 @@ abstract class MenuRoot implements OnInit {
   protected readonly context: boolean = false
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
@@ -60,6 +60,10 @@ abstract class MenuRoot implements OnInit {
     },
   }))
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createMenu(this.props(), {
@@ -110,12 +114,16 @@ export class KuiMenubar implements OnInit {
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     loop: this.loop(),
     disabled: this.disabled(),
     orientation: this.orientation(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createMenubar(this.props(), { direction: this.around?.direction })
@@ -225,11 +233,15 @@ export class KuiMenuItem implements OnInit {
   })
   private readonly root = inject(KUI_MENU)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     closeOnClick: this.closeOnClick(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -248,11 +260,15 @@ export class KuiMenuLinkItem implements OnInit {
   })
   private readonly root = inject(KUI_MENU)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     closeOnClick: this.closeOnClick(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -303,7 +319,7 @@ export class KuiMenuCheckboxItem implements OnInit {
   item!: MenuCheckboxItem
   private readonly root = inject(KUI_MENU)
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     checked: this.checked(),
     defaultChecked: this.defaultChecked(),
     disabled: this.disabled(),
@@ -317,6 +333,10 @@ export class KuiMenuCheckboxItem implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.item = this.root.controller.checkboxItem(this.props())
@@ -346,7 +366,7 @@ export class KuiMenuRadioGroup<Value = unknown> implements OnInit {
   private readonly root = inject(KUI_MENU)
   private readonly put = hostPart()
   private readonly mount = mounted()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     value: this.value(),
     defaultValue: this.defaultValue(),
     disabled: this.disabled(),
@@ -358,6 +378,10 @@ export class KuiMenuRadioGroup<Value = unknown> implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.group = this.root.controller.radioGroup(this.props())
@@ -377,11 +401,15 @@ export class KuiMenuRadioItem implements OnInit {
   })
   readonly owner = inject(KuiMenuRadioGroup)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     closeOnClick: this.closeOnClick(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

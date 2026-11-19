@@ -152,10 +152,14 @@ export function createResizable(
           return {
             "data-orientation": orientation.get(),
             // Its share of what the bars leave: the one length the component writes. As one
-            // declaration, which a browser and a server write the same.
+            // declaration, which a browser and a server write the same. A flex item's minimum is
+            // its content's unless it is told otherwise, and wide content would hold the panel
+            // past its share: the minimums are part of the share, written with it.
             style: {
               "--panel-size": String(Math.round(size * 1000) / 1000),
               flex: `${Math.round(size * 1000) / 1000} 1 0px`,
+              "min-width": "0px",
+              "min-height": "0px",
             },
           }
         }),

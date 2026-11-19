@@ -22,6 +22,7 @@ export type {
   GridProps,
   HeadCellProps,
   HeadingProps,
+  MonthsProps,
   NextProps,
   PreviousProps,
   WeekdaysProps,
@@ -57,6 +58,10 @@ function Root(props: RootProps): JSX.Element {
       isDateUnavailable: props.isDateUnavailable,
       calendarSystem: props.calendarSystem,
       fixedWeeks: props.fixedWeeks,
+      months: props.months,
+      pagedNavigation: props.pagedNavigation,
+      month: props.month,
+      defaultMonth: props.defaultMonth,
       placeholders: props.placeholders,
       disabled: props.disabled,
       readOnly: props.readOnly,
@@ -66,6 +71,8 @@ function Root(props: RootProps): JSX.Element {
       onValueChange: (value: string | null, details: ChangeDetails) =>
         props.onValueChange?.(value, details),
       onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
+      onMonthChange: (month: string, details: ChangeDetails) =>
+        props.onMonthChange?.(month, details),
     })
   )
   return (
@@ -102,6 +109,7 @@ export const DatePicker = {
   Heading: Calendar.Heading,
   Previous: Calendar.Previous,
   Next: Calendar.Next,
+  Months: Calendar.Months,
   Grid: Calendar.Grid,
   Weekdays: Calendar.Weekdays,
   HeadCell: Calendar.HeadCell,

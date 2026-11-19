@@ -17,6 +17,10 @@
       "svelte": "./src/runtime.ts",
       "default": "./src/runtime.ts"
     },
+    "./primitive": {
+      "svelte": "./src/primitive.ts",
+      "default": "./src/primitive.ts"
+    },
     "./agent": {
       "svelte": "./src/agent.ts",
       "default": "./src/agent.ts"

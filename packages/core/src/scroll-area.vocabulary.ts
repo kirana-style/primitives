@@ -30,9 +30,15 @@ export const scrollAreaVocabulary = defineComponent({
     },
   },
   viewport: { inside: "root", description: "The element that scrolls.", states: OVERFLOW },
-  content: { inside: "viewport", description: "What is scrolled." },
+  content: {
+    inside: "viewport",
+    optional: true,
+    description:
+      "A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).",
+  },
   scrollbar: {
-    inside: "root",
+    // Anywhere in the area: shadcn/ui's horizontal one is written among what is scrolled.
+    inside: ["root", "viewport"],
     repeated: true,
     description:
       "A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way.",

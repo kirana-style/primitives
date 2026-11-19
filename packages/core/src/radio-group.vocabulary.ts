@@ -11,7 +11,8 @@ export const radioGroupVocabulary = defineComponent({
   item: {
     inside: "root",
     repeated: true,
-    description: "One choice. It holds a hidden native radio, which a form and a label reach.",
+    description:
+      "One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.",
     states: { ...CHECKED, ...CONTROL },
     exclusive: EITHER_CHECKED,
   },

@@ -37,8 +37,30 @@
   )
 </script>
 
+<script lang="ts" module>
+  // An element that holds nothing is drawn with no content block: Svelte warns on every render
+  // of a void element given one, children or not.
+  const VOID = new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+  ])
+</script>
+
 {#if child}
   {@render child({ ...held, props: merged.current, state: merged.state })}
+{:else if VOID.has(tag)}
+  <svelte:element this={tag} {...merged.current} />
 {:else}
   <svelte:element this={tag} {...merged.current}>{@render children?.()}</svelte:element>
 {/if}

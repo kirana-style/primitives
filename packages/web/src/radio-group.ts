@@ -7,13 +7,20 @@ import type { ElementOf } from "./runtime.ts"
 
 const valueOf = (element: HTMLElement) =>
   partAround(element, "item")?.getAttribute("kui-value") ?? ""
-const options = (element: HTMLElement) => () =>
-  partAround(element, "item")?.hasAttribute("kui-disabled") ? { disabled: true } : {}
+const options = (element: HTMLElement) => () => {
+  const item = partAround(element, "item")
+  return {
+    disabled: item?.hasAttribute("kui-disabled") || undefined,
+    // The id of the item's native radio: a `<label for>` names it.
+    id: item?.getAttribute("kui-id") ?? undefined,
+  }
+}
 
 /**
  * `<kui-radio-group>` around `kui-part="root"` and an `item` button for each `value`, with an
  * `indicator` inside that is in the page while its item is the chosen one. An item draws the
- * hidden native radio a form and a label reach. `value`, `default-value`, `disabled`,
+ * hidden native radio a form and a label reach; an item's `kui-id` is that radio's id, which a
+ * `<label for>` names. `value`, `default-value`, `disabled`,
  * `read-only`, `required`, `name`, `form`; it tells `value-change`.
  */
 export const tag = defineElement<

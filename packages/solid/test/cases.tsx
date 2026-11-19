@@ -8,6 +8,8 @@ import { Collapsible } from "../src/collapsible.tsx"
 import { DateField } from "../src/date-field.tsx"
 import { Meter } from "../src/meter.tsx"
 import { NumberField } from "../src/number-field.tsx"
+import { Primitive, mergeProps } from "../src/primitive.tsx"
+import type { PrimitiveProps } from "../src/primitive.tsx"
 import { Progress } from "../src/progress.tsx"
 import { RadioGroup } from "../src/radio-group.tsx"
 import { Select } from "../src/select.tsx"
@@ -155,5 +157,35 @@ export const content = {
         render={(props) => <section {...props()}>Held</section>}
       />
     </Collapsible.Root>
+  ),
+}
+
+/** A design system's own element, composed as a part is: its props under its caller's. */
+function Badge(props: PrimitiveProps<"span", { active: boolean }>) {
+  return <Primitive as="span" {...mergeProps({ class: "badge", title: "own" }, props)} />
+}
+
+/** A plain element of one's own, drawn as itself, as another tag, or by its caller. */
+export const primitive = {
+  plain: () => (
+    <Badge class="mine" state={{ active: true }} data-kind="new">
+      New
+    </Badge>
+  ),
+  as: () => (
+    <Badge as="b" title="theirs" state={{ active: false }}>
+      New
+    </Badge>
+  ),
+  render: () => (
+    <Badge
+      class="mine"
+      state={{ active: true }}
+      render={(props, state) => (
+        <a {...props()} href="/new">
+          {state().active ? "On" : "Off"}
+        </a>
+      )}
+    />
   ),
 }

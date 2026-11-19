@@ -13,7 +13,7 @@ export interface UseRenderOptions<State extends Record<string, unknown>> {
    * What its caller asked the element to be drawn as: an element, whose own props lie over
    * `props`, or a function given the props and the state.
    */
-  render?: RenderProp<State> | undefined
+  render?: RenderProp<NoInfer<State>> | undefined
   /** The element drawn when there is no `render`: a `div` unless said. */
   defaultTagName?: string | undefined
   /** The element's props: the component's own and its caller's, already merged (`mergeProps`). */

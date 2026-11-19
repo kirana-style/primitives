@@ -18,6 +18,8 @@ import { Command, ContextMenu, Menu, Menubar, NavigationMenu, Tabs } from "../sr
 import type { PartComponentProps } from "../src/index.ts"
 import { Listbox } from "../src/listbox.tsx"
 import { Meter } from "../src/meter.tsx"
+import { Primitive, mergeProps } from "../src/primitive.tsx"
+import type { PrimitiveProps } from "../src/primitive.tsx"
 import { Progress } from "../src/progress.tsx"
 import { QrCode } from "../src/qr-code.tsx"
 import { RadioGroup } from "../src/radio-group.tsx"
@@ -226,6 +228,30 @@ export function values(): JSX.Element {
         value={text()}
         onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<string | null>()}
       />
+    </>
+  )
+}
+
+/** A plain element of one's own: its tag's attributes, its state, the caller's element. */
+export function primitive(): JSX.Element {
+  const Badge = (props: PrimitiveProps<"span", { active: boolean }>) => (
+    <Primitive as="span" {...mergeProps({ class: "badge" }, props)} />
+  )
+  return (
+    <>
+      <Primitive as="a" href="/x" onClick={(event) => expectTypeOf(event).toExtend<MouseEvent>()} />
+      {/* @ts-expect-error a `div`, the element when no `as` is given, has no `href` */}
+      <Primitive href="/x" />
+      <Badge
+        state={{ active: true }}
+        render={(props, state) => {
+          expectTypeOf(state).toEqualTypeOf<() => { active: boolean }>()
+          expectTypeOf(props).returns.toExtend<Record<string, unknown>>()
+          return <a {...props()} />
+        }}
+      />
+      {/* @ts-expect-error the state is the component's own type */}
+      <Badge state={{ active: "yes" }} />
     </>
   )
 }

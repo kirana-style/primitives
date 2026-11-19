@@ -13,10 +13,14 @@ const { parts, lists } = calendarParts<Calendar>((controller) => controller)
  * (it says the month) and a `grid` table. The table's head row holds a
  * `<template kui-each="weekdays">` with a `head-cell` (`{short}`, `{narrow}`, `{long}`); its
  * body a `<template kui-each="weeks">` with a row, which holds a `<template kui-each="days">`
- * with a `cell` and its `day` button (`{date}`, `{label}`). `value` and `default-value` (a
- * day as `2026-03-14`; several with commas between), `mode`, `default-focused-value`,
- * `locale`, `calendar-system`, `min`, `max`, `disabled`, `read-only`, `fixed-weeks`;
- * `isDateUnavailable` as a property; it tells `value-change` and `month-change`.
+ * with a `cell` and its `day` button (`{date}`, `{label}`). With several `months`, a
+ * `<template kui-each="months">` (`{index}`, `{month}`, `{title}`) holds each month's
+ * `heading` and `grid`. An `<input kui-part="input">` submits the value under `name`.
+ * `value` and `default-value` (a day as `2026-03-14`; a range's first and last, or a list's
+ * days, with commas between), `mode`, `min-days`, `max-days`, `months`, `paged-navigation`,
+ * `month`, `default-month`, `default-focused-value`, `locale`, `calendar-system`, `min`,
+ * `max`, `disabled`, `read-only`, `fixed-weeks`, `name`, `form`; `isDateUnavailable` as a
+ * property; it tells `value-change` and `month-change`.
  */
 export const tag = defineElement<CalendarProps, Calendar>({
   tag: "kui-calendar",
@@ -24,6 +28,12 @@ export const tag = defineElement<CalendarProps, Calendar>({
     value: "string",
     "default-value": "string",
     mode: "string",
+    "min-days": "number",
+    "max-days": "number",
+    months: "number",
+    "paged-navigation": "boolean",
+    month: "string",
+    "default-month": "string",
     "default-focused-value": "string",
     locale: "string",
     "calendar-system": "string",
@@ -32,6 +42,8 @@ export const tag = defineElement<CalendarProps, Calendar>({
     disabled: "boolean",
     "read-only": "boolean",
     "fixed-weeks": "boolean",
+    name: "string",
+    form: "string",
   },
   properties: ["isDateUnavailable"],
   create: (props) =>
@@ -40,17 +52,21 @@ export const tag = defineElement<CalendarProps, Calendar>({
         const own = props.get()
         return {
           ...own,
-          value: days(own.value),
-          defaultValue: days(own.defaultValue),
+          value: days(own.value, own.mode),
+          defaultValue: days(own.defaultValue, own.mode),
         } as CalendarProps
       })
     ),
   changes: {
     onValueChange: { event: "value-change", prop: "value" },
-    onMonthChange: { event: "month-change", prop: "month", hold: false },
+    onMonthChange: { event: "month-change", prop: "month" },
   },
   lists,
-  parts: { root: (controller) => controller.root, ...parts },
+  parts: {
+    root: (controller) => controller.root,
+    input: (controller) => controller.input,
+    ...parts,
+  },
 })
 
 declare global {

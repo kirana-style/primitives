@@ -1,5 +1,8 @@
 <script lang="ts">
   import type { OffsetFunction, PartEvent } from "@kirana-ui/svelte"
+
+  import Mark from "./Mark.svelte"
+  import Tag from "./Tag.svelte"
   import {
     Calendar,
     Autocomplete,
@@ -96,6 +99,8 @@
   // A picture of one pixel, and an address that is not a picture.
   const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   const BROKEN = "data:image/png;base64,AAAA"
+  // A picture 160 wide: a row of three is wider than its scroll area once they have loaded.
+  const WIDE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='40'%3E%3C/svg%3E"
   // What the fixture writes for a field's validity, and its own check of a value.
   const word = (valid: boolean | null) => (valid === null ? "unchecked" : valid ? "valid" : "invalid")
   const taken = (value: string) => (value === "admin" ? "Taken" : null)
@@ -133,6 +138,7 @@
   let count = $state(0)
   let done = $state(40)
   let pictures = $state(false)
+  let heard = $state("none")
   let sent = $state("")
   let sent2 = $state("")
   let reading = $state<"ltr" | "rtl">("rtl")
@@ -163,6 +169,9 @@
   let named = $state("")
   let did = $state("none")
   let dated = $state("none")
+  let stay = $state("none")
+  let chosenDays = $state("none")
+  let shownMonth = $state("2026-03-01")
   let rests = $state("0.5")
   let said = $state(8)
   // A page's toasts are made once: a long time, so a test reads them.
@@ -172,6 +181,7 @@
   let tags = $state<readonly unknown[] | undefined>(["New"])
   let align = $state<readonly unknown[] | undefined>(["left"])
   let tall = $state(false)
+  let rowLoaded = $state(false)
   let chosen = $state<readonly unknown[] | undefined>(["Banana"])
   let pick = $state<unknown>(null)
   let outside = $state(0)
@@ -180,6 +190,8 @@
   let locked = $state(false)
   let handed = $state(0)
   let asked = $state(0)
+  let marks = $state(0)
+  let tipOff = $state(false)
   function pressLayered(event: PartEvent<MouseEvent>) {
     handed += 1
     asked += 1
@@ -263,8 +275,54 @@
       </Collapsible.Panel>
     </Collapsible.Root>
     <div class="item">
-      <a class="tag asked" title="handed" href="#k2" data-testid="k3-tag">Tag</a>
-      <span class="tag" data-testid="k3-plain">Plain</span>
+      <Tag title="handed">
+        {#snippet child({ props })}
+          <a {...props} class={[props.class, "asked"]} href="#k2" data-testid="k3-tag">Tag</a>
+        {/snippet}
+      </Tag>
+      <Tag data-testid="k3-plain">Plain</Tag>
+    </div>
+    <div class="item">
+      <Mark class="mine" onclick={() => (marks += 1)}>
+        {#snippet child({ props, state })}
+          <button {...props} data-testid="k4-mark">{state.active ? "On" : "Off"} {marks}</button>
+        {/snippet}
+      </Mark>
+    </div>
+  </section>
+
+  <section data-fixture="design">
+    <Dialog.Root id="ds1">
+      <Dialog.Trigger data-testid="ds1-trigger">Wrapped dialog</Dialog.Trigger>
+      <div>
+        <Dialog.Portal>
+          <Dialog.Backdrop class="backdrop" />
+          <Dialog.Popup class="dialog" data-testid="ds1-popup">
+            <Dialog.Title data-testid="ds1-title">Wrapped title</Dialog.Title>
+            <Dialog.Close data-testid="ds1-close">Close</Dialog.Close>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </div>
+    </Dialog.Root>
+    <label class="item">
+      <input type="checkbox" data-testid="ds2-off" bind:checked={tipOff} />
+      Off
+    </label>
+    <Tooltip.Root id="ds2" delay={0} disabled={tipOff}>
+      <Tooltip.Trigger data-testid="ds2-trigger">Quick</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Positioner sideOffset={8}>
+          <Tooltip.Popup class="tip" data-testid="ds2-popup">At once</Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+    <div class="item">
+      <Otp.Root id="ds3a" length={2} mode="text">
+        <Otp.Input aria-label="Text code" data-testid="ds3a-input" />
+      </Otp.Root>
+      <Otp.Root id="ds3b" length={2} mode="numeric">
+        <Otp.Input aria-label="Number code" data-testid="ds3b-input" />
+      </Otp.Root>
     </div>
   </section>
 
@@ -294,6 +352,7 @@
               disabled={each === "team"}
               class="radio"
               data-testid={`r1-${each}`}
+              id={`r1-${each}-radio`}
             >
               <RadioGroup.Indicator class="dot" />
             </RadioGroup.Item>
@@ -301,6 +360,7 @@
           </label>
         {/each}
       </RadioGroup.Root>
+      <label for="r1-free-radio" data-testid="r1-label">Free plan</label>
       <button type="reset" data-testid="f1-reset">Reset</button>
     </form>
     <output data-testid="w1-output">{alerts ? "on" : "off"}</output>
@@ -432,12 +492,27 @@
     </Meter.Root>
     <button data-testid="av-load" onclick={() => (pictures = true)}>Load pictures</button>
     <Avatar.Root class="avatar" data-testid="av1">
-      <Avatar.Image src={pictures ? PIXEL : undefined} alt="Kirana" data-testid="av1-image" />
+      <Avatar.Image
+        src={pictures ? PIXEL : undefined}
+        alt="Kirana"
+        data-testid="av1-image"
+        onLoadingStatusChange={(status) => (heard = status)}
+      />
       <Avatar.Fallback data-testid="av1-fallback">K</Avatar.Fallback>
     </Avatar.Root>
+    <span data-testid="av1-status">{heard}</span>
     <Avatar.Root class="avatar" data-testid="av2">
       <Avatar.Image src={pictures ? BROKEN : undefined} alt="Nobody" data-testid="av2-image" />
       <Avatar.Fallback data-testid="av2-fallback">N</Avatar.Fallback>
+    </Avatar.Root>
+    <Avatar.Root class="avatar" data-testid="av3">
+      <Avatar.Image
+        keepMounted
+        src={pictures ? PIXEL : undefined}
+        alt="Kept"
+        data-testid="av3-image"
+      />
+      <Avatar.Fallback delay={60000} data-testid="av3-fallback">L</Avatar.Fallback>
     </Avatar.Root>
     <AlertDialog.Root id="ad1">
       <AlertDialog.Trigger data-testid="ad1-trigger">Delete</AlertDialog.Trigger>
@@ -945,6 +1020,46 @@
     <button type="button" data-testid="sa1-grow" onclick={() => (tall = !tall)}>
       Grow
     </button>
+    <ScrollArea.Root class="scroll-wide" data-testid="sa2">
+      <ScrollArea.Viewport class="scroll-view" data-testid="sa2-view">
+        <div class="scroll-pictures" data-testid="sa2-row">
+          <div class="scroll-figure">
+          <img
+            class="scroll-picture"
+            src={rowLoaded ? WIDE : undefined}
+            alt=""
+            data-testid="sa2-picture-1"
+          />
+        </div>
+          <div class="scroll-figure">
+          <img
+            class="scroll-picture"
+            src={rowLoaded ? WIDE : undefined}
+            alt=""
+            data-testid="sa2-picture-2"
+          />
+        </div>
+          <div class="scroll-figure">
+          <img
+            class="scroll-picture"
+            src={rowLoaded ? WIDE : undefined}
+            alt=""
+            data-testid="sa2-picture-3"
+          />
+        </div>
+        </div>
+        <ScrollArea.Scrollbar orientation="horizontal" class="scroll-bar" data-testid="sa2-x">
+          <ScrollArea.Thumb class="scroll-thumb" data-testid="sa2-x-thumb" />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Viewport>
+      <ScrollArea.Scrollbar class="scroll-bar" data-testid="sa2-y">
+        <ScrollArea.Thumb class="scroll-thumb" data-testid="sa2-y-thumb" />
+      </ScrollArea.Scrollbar>
+      <ScrollArea.Corner class="scroll-corner" data-testid="sa2-corner" />
+    </ScrollArea.Root>
+    <button type="button" data-testid="sa2-load" onclick={() => (rowLoaded = true)}>
+      Load pictures
+    </button>
   </section>
   <section data-fixture="navigation-menu">
     <NavigationMenu.Root id="nm1" aria-label="Site" data-testid="nm1">
@@ -1120,6 +1235,23 @@
       </Otp.Root>
     </form>
     <output data-testid="otp1-output">{code}</output>
+    <div class="otp-row">
+      <Otp.Root id="otp2" length={2} mode="alphabetic" class="otp" data-testid="otp2">
+        <Otp.Input aria-label="Letters" class="otp-input" data-testid="otp2-input" />
+        <Otp.Group class="otp-group">
+          <Otp.Slot index={0} class="otp-slot" data-testid="otp2-0" />
+          <Otp.Slot index={1} class="otp-slot" data-testid="otp2-1" />
+        </Otp.Group>
+      </Otp.Root>
+      <Otp.Root id="otp3" length={3} pattern="[A-F0-9]" class="otp" data-testid="otp3">
+        <Otp.Input aria-label="Hex" class="otp-input" data-testid="otp3-input" />
+        <Otp.Group class="otp-group">
+          <Otp.Slot index={0} class="otp-slot" data-testid="otp3-0" />
+          <Otp.Slot index={1} class="otp-slot" data-testid="otp3-1" />
+          <Otp.Slot index={2} class="otp-slot" data-testid="otp3-2" />
+        </Otp.Group>
+      </Otp.Root>
+    </div>
     <Resizable.Group
       id="rs1"
       class="split"
@@ -1319,6 +1451,131 @@
       </DateField.Root>
     </form>
     <output data-testid="df1-output">{born}</output>
+  </section>
+  <section data-fixture="calendars">
+    <Calendar.Root
+      id="cal2"
+      locale="en-US"
+      mode="range"
+      months={2}
+      defaultMonth="2026-03-01"
+      defaultFocusedValue="2026-03-15"
+      class="calendar calendar-months"
+      data-testid="cal2"
+      onValueChange={(next: unknown) => (stay = JSON.stringify(next))}
+    >
+      <Calendar.Previous aria-label="Previous month" data-testid="cal2-previous">
+        Previous
+      </Calendar.Previous>
+      <Calendar.Next aria-label="Next month" data-testid="cal2-next">Next</Calendar.Next>
+      <div class="months">
+        <Calendar.Months>
+          {#snippet children(month)}
+            <div data-testid={`cal2-month-${month.index}`}>
+              <Calendar.Heading data-testid={`cal2-heading-${month.index}`} />
+              <Calendar.Grid data-testid={`cal2-grid-${month.index}`}>
+                <thead>
+                  <tr>
+                    <Calendar.Weekdays>
+                      {#snippet children(weekday)}
+                        <Calendar.HeadCell {weekday}>{weekday.short}</Calendar.HeadCell>
+                      {/snippet}
+                    </Calendar.Weekdays>
+                  </tr>
+                </thead>
+                <tbody>
+                  <Calendar.Weeks>
+                    {#snippet children(week)}
+                      <tr>
+                        {#each week as day (day.date)}
+                          <Calendar.Cell date={day.date}>
+                            <Calendar.Day date={day.date} data-testid={`cal2-${month.index}-${day.date}`}>
+                              {day.label}
+                            </Calendar.Day>
+                          </Calendar.Cell>
+                        {/each}
+                      </tr>
+                    {/snippet}
+                  </Calendar.Weeks>
+                </tbody>
+              </Calendar.Grid>
+            </div>
+          {/snippet}
+        </Calendar.Months>
+      </div>
+    </Calendar.Root>
+    <output data-testid="cal2-output">{stay}</output>
+    <form data-testid="cal3-form">
+      <Calendar.Root
+        id="cal3"
+        locale="en-US"
+        mode="multiple"
+        name="days"
+        maxDays={3}
+        defaultValue={["2026-03-02"]}
+        defaultFocusedValue="2026-03-15"
+        class="calendar"
+        data-testid="cal3"
+        onValueChange={(next: unknown) => (chosenDays = String(next))}
+      >
+        <Calendar.Heading data-testid="cal3-heading" />
+        <Calendar.Grid data-testid="cal3-grid">
+          <tbody>
+            <Calendar.Weeks>
+              {#snippet children(week)}
+                <tr>
+                  {#each week as day (day.date)}
+                    <Calendar.Cell date={day.date}>
+                      <Calendar.Day date={day.date} data-testid={`cal3-${day.date}`}>
+                        {day.label}
+                      </Calendar.Day>
+                    </Calendar.Cell>
+                  {/each}
+                </tr>
+              {/snippet}
+            </Calendar.Weeks>
+          </tbody>
+        </Calendar.Grid>
+        <Calendar.Input data-testid="cal3-input" />
+      </Calendar.Root>
+      <button type="reset" data-testid="cal3-reset">Reset</button>
+    </form>
+    <output data-testid="cal3-output">{chosenDays}</output>
+    <Calendar.Root
+      id="cal4"
+      locale="en-US"
+      bind:month={shownMonth}
+      defaultFocusedValue="2026-03-15"
+      class="calendar"
+      data-testid="cal4"
+    >
+      <Calendar.Previous aria-label="Previous month" data-testid="cal4-previous">
+        Previous
+      </Calendar.Previous>
+      <Calendar.Heading data-testid="cal4-heading" />
+      <Calendar.Next aria-label="Next month" data-testid="cal4-next">Next</Calendar.Next>
+      <Calendar.Grid data-testid="cal4-grid">
+        <tbody>
+          <Calendar.Weeks>
+            {#snippet children(week)}
+              <tr>
+                {#each week as day (day.date)}
+                  <Calendar.Cell date={day.date}>
+                    <Calendar.Day date={day.date} data-testid={`cal4-${day.date}`}>
+                      {day.label}
+                    </Calendar.Day>
+                  </Calendar.Cell>
+                {/each}
+              </tr>
+            {/snippet}
+          </Calendar.Weeks>
+        </tbody>
+      </Calendar.Grid>
+    </Calendar.Root>
+    <button type="button" data-testid="cal4-jump" onclick={() => (shownMonth = "2030-12-01")}>
+      December 2030
+    </button>
+    <output data-testid="cal4-output">{shownMonth}</output>
   </section>
   <section data-fixture="command">
       <Label for="in1" data-testid="in1-label">

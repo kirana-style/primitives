@@ -11,7 +11,7 @@ const indexOf = (element: HTMLElement | null) => Number(element?.getAttribute("k
  * `<kui-otp>` around `kui-part="root"`, the one `input` that is typed in, and a `slot` for
  * each character (`kui-index`, from 0), which says its character and may hold a `caret`, in
  * the page while the next character goes there. Slots may be in `group`s with a `separator`
- * between. `length`, `value`, `default-value`, `mode`, `disabled`, `name`, `form`; it tells
+ * between. `length`, `value`, `default-value`, `mode`, `pattern`, `disabled`, `name`, `form`; it tells
  * `value-change` and `complete`.
  */
 export const tag = defineElement<OtpProps, Otp>({
@@ -21,6 +21,7 @@ export const tag = defineElement<OtpProps, Otp>({
     value: "string",
     "default-value": "string",
     mode: "string",
+    pattern: "string",
     disabled: "boolean",
     name: "string",
     form: "string",

@@ -110,4 +110,39 @@ describe("a date picker", () => {
     trigger.click()
     expect(made.open.peek()).toBe(false)
   })
+  it("shows several months, and the month its caller holds", async () => {
+    const turned: string[] = []
+    const { made, props, trigger, field, heard } = picker({
+      months: 2,
+      month: "2026-03-01",
+      onMonthChange: (month) => void turned.push(month),
+    })
+    expect(made.calendar.months.peek().map((each) => each.title)).toEqual([
+      "March 2026",
+      "April 2026",
+    ])
+    trigger.click()
+    // A day of the second month is picked where it is shown, and the field has it.
+    const april = made.calendar.day("2026-04-09", 1)
+    const button = document.createElement("button")
+    document.body.append(button)
+    const stop = bind(button, april)
+    button.click()
+    stop()
+    button.remove()
+    expect(heard.at(-1)).toBe("2026-04-09")
+    expect(made.open.peek()).toBe(false)
+    // Shown already: the months stay where they are.
+    expect(turned).toEqual([])
+    // A day typed in another month asks the caller for it: the least turn that shows it, so
+    // July is the second month.
+    field.querySelector<HTMLElement>('[role="spinbutton"]')!.focus()
+    await userEvent.keyboard("07042026")
+    expect(turned.at(-1)).toBe("2026-06-01")
+    props.set({ ...props.peek(), month: "2026-06-01" })
+    expect(made.calendar.months.peek().map((each) => each.title)).toEqual([
+      "June 2026",
+      "July 2026",
+    ])
+  })
 })

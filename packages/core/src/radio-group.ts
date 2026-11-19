@@ -32,6 +32,8 @@ export interface RadioGroupProps<Value = unknown> {
 export interface RadioItemOptions {
   /** Disables this item: it cannot be chosen. */
   disabled?: boolean
+  /** The id of the item's native radio, unique in the page: a `<label for>` names it. */
+  id?: string | undefined
 }
 
 /** An item's mark: in the page while the item is the chosen one, and through its exit. */
@@ -205,6 +207,7 @@ export function createRadioGroup<Value = unknown>(
       return {
         props: computed(() => ({
           type: "radio",
+          id: options().id,
           name: props.get().name ?? field?.name.get(),
           form: props.get().form,
           value: String(item),

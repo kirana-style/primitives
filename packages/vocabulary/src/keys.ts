@@ -8,6 +8,7 @@ export const exclusive: string[][] = [
   ["[data-orientation=\"horizontal\"]","[data-orientation=\"vertical\"]"],
   ["[data-open]","[data-closed]"],
   ["[data-starting-style]","[data-ending-style]"],
+  ["[data-image-loading-status=\"idle\"]","[data-image-loading-status=\"loading\"]","[data-image-loading-status=\"loaded\"]","[data-image-loading-status=\"error\"]"],
   ["[data-checked]","[data-unchecked]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"inline-start\"]","[data-side=\"inline-end\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
@@ -140,11 +141,22 @@ export const AlertDialog = {
 export const Avatar = {
   /** The frame the image and its stand-in share. */
   Root: {
+    /** Where the picture is in its loading: `idle` while it has no address. */
+    imageLoadingStatus: {
+      idle: "[data-image-loading-status=\"idle\"]",
+      loading: "[data-image-loading-status=\"loading\"]",
+      loaded: "[data-image-loading-status=\"loaded\"]",
+      error: "[data-image-loading-status=\"error\"]",
+    },
   },
-  /** The picture. In the page once it has loaded. */
+  /** The picture. In the page once it has loaded; with `keepMounted` (on Angular, the attribute form) in the page all along, `aria-hidden` until it has loaded. */
   Image: {
+    /** Present while the picture loads, on an image kept in the page. */
+    loading: "[data-loading]",
+    /** Present when the picture cannot load, on an image kept in the page. */
+    error: "[data-error]",
   },
-  /** What shows until the picture has loaded, or when it cannot. */
+  /** What shows until the picture has loaded, or when it cannot; after its `delay`, when it has one. */
   Fallback: {
   },
 } as const
@@ -1699,6 +1711,9 @@ export const DatePicker = {
     /** Present when its value cannot be changed. */
     readonly: "[data-readonly]",
   },
+  /** The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month. */
+  Months: {
+  },
   /** Names the month shown. Read out when it changes. */
   Heading: {
   },
@@ -1712,7 +1727,7 @@ export const DatePicker = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** The table of days: a grid the arrows move in. */
+  /** The table of a month's days: a grid the arrows move in, from one month shown into the next. */
   Grid: {
   },
   /** The days of the week: each is given to draw its head cell. It draws no element. */
@@ -1726,7 +1741,7 @@ export const DatePicker = {
   },
   /** A day's cell. */
   Cell: {
-    /** Present on a chosen day, and on every day of a chosen range. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1743,7 +1758,7 @@ export const DatePicker = {
   },
   /** The button for a day. */
   Day: {
-    /** Present on a chosen day, and on every day of a chosen range. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1768,6 +1783,9 @@ export const Calendar = {
     /** Present when its value cannot be changed. */
     readonly: "[data-readonly]",
   },
+  /** The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month. */
+  Months: {
+  },
   /** Names the month shown. Read out when it changes. */
   Heading: {
   },
@@ -1781,7 +1799,7 @@ export const Calendar = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** The table of days: a grid the arrows move in. */
+  /** The table of a month's days: a grid the arrows move in, from one month shown into the next. */
   Grid: {
   },
   /** The days of the week: each is given to draw its head cell. It draws no element. */
@@ -1795,7 +1813,7 @@ export const Calendar = {
   },
   /** A day's cell. */
   Cell: {
-    /** Present on a chosen day, and on every day of a chosen range. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1812,7 +1830,7 @@ export const Calendar = {
   },
   /** The button for a day. */
   Day: {
-    /** Present on a chosen day, and on every day of a chosen range. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1826,6 +1844,9 @@ export const Calendar = {
     rangeStart: "[data-range-start]",
     /** Present on the last day of a range. */
     rangeEnd: "[data-range-end]",
+  },
+  /** The hidden input it is submitted by, when it has a name: one more is drawn after it for each other day. */
+  Input: {
   },
 } as const
 
@@ -2192,7 +2213,7 @@ export const RadioGroup = {
     /** Present when the form needs it. */
     required: "[data-required]",
   },
-  /** One choice. It holds a hidden native radio, which a form and a label reach. */
+  /** One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names. */
   Item: {
     /** Present when it is checked. */
     checked: "[data-checked]",
@@ -2225,7 +2246,7 @@ export const RadioGroup = {
 } as const
 
 export const Resizable = {
-  /** The panels and the bars between them. A design lays it out as a flex box. */
+  /** The panels and the bars between them. A design lays it out as a flex box: `display: flex`, and `flex-direction: column` when it is vertical. A group in a panel that is a flex box itself takes `min-width: 0` and `min-height: 0`, or what it holds widens the panel. */
   Group: {
     /** Whether the panels are side by side or one over the other. */
     orientation: {
@@ -2235,7 +2256,7 @@ export const Resizable = {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
-  /** One panel. It carries its share of the group. */
+  /** One panel. It carries its share of the group, written as its `flex` with `min-width: 0` and `min-height: 0`, so what it holds cannot keep it past its share. Its `overflow` is the design's. */
   Panel: {
     /** Whether the panels are side by side or one over the other. */
     orientation: {
@@ -2243,7 +2264,7 @@ export const Resizable = {
       vertical: "[data-orientation=\"vertical\"]",
     },
   },
-  /** The bar between two panels: dragged, or moved with the arrows. */
+  /** The bar between two panels: dragged, or moved with the arrows. A design gives it its thickness and `flex-shrink: 0`, so the panels do not squeeze it. */
   Handle: {
     /** Whether the panels are side by side or one over the other. */
     orientation: {
@@ -2278,7 +2299,7 @@ export const ScrollArea = {
     /** Present while it is being scrolled, and a moment after. */
     scrolling: "[data-scrolling]",
   },
-  /** What is scrolled. */
+  /** A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text). */
   Content: {
   },
   /** A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way. */

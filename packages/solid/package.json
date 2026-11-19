@@ -10,6 +10,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./runtime": "./src/runtime.tsx",
+    "./primitive": "./src/primitive.tsx",
     "./agent": "./src/agent.ts",
     "./testing": "./src/testing.ts",
     "./accordion": "./src/accordion.tsx",

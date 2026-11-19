@@ -52,9 +52,24 @@ note. Three places hold them:
   field's label prevents the click and moves focus.
 - **Ids nobody gave come from the framework**, so the server's and the browser's agree. The
   second fixture page gives no id anywhere and is compared before and after hydration.
+- **Every `<button>` a part draws says `type="button"`.** One with no type submits the form it
+  sits in. Met in the tooltip's trigger, whose props came from the controller it shares with
+  the hover card, whose trigger is a link and takes no type. Held by
+  `packages/react/src/buttons.test.tsx`, which catches every element React's parts make on both
+  fixture pages and in open popups, and fails on a button with no type.
+- **A control's `id` is its native input's.** A `<label for>` reaches only a labelable element,
+  so a radio item's `id` goes on its hidden radio, as a checkbox's and a switch's do. Held by
+  the `controls` scenario, which presses a label `for` a radio item.
 
 ## Lists and menus
 
+- **A highlight the list keeps by itself is derived, not set.** A command highlights its first
+  shown item from the start (`autoHighlight`): set once from the page, it would be the first of
+  the rows the text left behind, before a caller drawing its rows from data had drawn the new
+  ones, and a server, which has no rows, would draw none. It is computed from the items in the
+  order they were made, then from the page's order once the list is there, so the server draws
+  it and it follows each row that comes or goes. Held by `tests/core/command.test.ts` ("the
+  rows a caller draws", "as a server does") and the run's server-against-rest comparison.
 - **A label needs no group.** A menu's label outside a group is plain text that names
   nothing; inside one, the group is named by it. Nothing throws either way.
 - **Rows are read from the page, in its order, when a key needs them.** Nothing registers
@@ -141,6 +156,22 @@ note. Three places hold them:
   focus has been in the bar every trigger can take it; after, only the one it was last on.
 - **White space between a row's parts is drawn by some frameworks and not others.** A row is
   a flex box, or its parts are elements with nothing between them.
+- **A day drawn in two months is one day.** With several months side by side, the days that
+  fill a month's last week are the next month's own days too. Given one part per date, both
+  elements were the stop for Tab and both said they were chosen. A day is now a part per
+  month it is drawn in (`calendar.day(date, index)`): where it is a copy (its own month is
+  shown beside), it is never the stop for Tab and never said to be chosen, and a press on it
+  sends focus to the day in its own month (`calendar.test.ts`, "has one stop for Tab, and a
+  day of another month shown is a copy"; scenario `calendars`).
+- **A month that turns on focus moves the day being pressed.** A day of another month,
+  pressed, takes focus on the pointer's press, before its click: turning the month then
+  redraws the grid under the pointer, and the click lands on whatever day is there now. The
+  month turns on the click (`calendar.test.ts`, "hears why the month changed": its reason is
+  the press, not the focus).
+- **A caller who holds the month answers later.** Which element a key's focus goes to is
+  decided from the month asked for, not from the month read back after asking: until the
+  caller gives it, the old month is still the one shown (`calendar.test.ts`, "follows the
+  keys into a month the caller has not shown yet").
 
 ## Toolbars, toggle groups and scroll areas
 
@@ -186,6 +217,16 @@ note. Three places hold them:
   change length.
 - **Pointer capture is best effort.** `setPointerCapture` throws for a pointer the browser
   no longer has; a drag goes on without it.
+- **What a viewport holds grows without the viewport growing.** Pictures in a row that load
+  after the area is measured make the row wider and leave the viewport its size, so with no
+  content part (as shadcn/ui's examples write it) nothing watched said so, and the thumb kept
+  the length the row had before. A page rendered on a server hid it: its pictures had loaded
+  before it hydrated, and the first measure was already right. The viewport's children are
+  watched, and followed as they come and go; the content part is only for content whose own
+  box does not grow with what is in it. Held by `tests/core/scroll-area.test.ts` ("measures
+  again when what it holds grows late, with no content part", "measures what is put into it
+  later, with no content part") and the conformance run's `scroll-area` scenario (pictures
+  loaded late, the thumb against the arithmetic).
 
 ## Navigation menu
 
@@ -302,9 +343,28 @@ note. Three places hold them:
   compiler does not follow a constant (`NG1010`), and only the fixture's build says so.
 - **Solid and Svelte** attach children around their parent in an order of their own: a list
   reads its rows in the page's order at use time, never the order they registered in.
+- **Svelte warns on a void element given a content block**, children or not:
+  `<svelte:element this="input">{@render children?.()}</svelte:element>` warned on every
+  render of every hidden input. `Part.svelte` draws a void tag without one. Held by
+  `packages/svelte/src/server.test.ts` ("in a development build"), which renders each part
+  drawn as an `input` or an `img` with Svelte's warnings as failures. React throws on a void
+  element with children, Solid's server leaves them out and Vue passes none, so the fault is
+  Svelte's alone.
 
 ## Composition
 
+- **A length a part writes keeps its meaning whatever the part holds.** A resizable panel's
+  share is its `flex`; a flex item's minimum is its content's unless told otherwise, so a wide
+  table held a 25 panel at 108 px in a 350 px group. The panel writes `min-width: 0` and
+  `min-height: 0` beside its `flex`, as part of the share. The core test's page had given the
+  panels both itself, which hid it. Held by `tests/core/resizable.test.ts` ("keep their share
+  whatever they hold").
+- **A type that names a state is told by its value, not by the `render` beside it.** React's
+  `useRender` inferred its state's type from `render`, typed as a part's (`string | true`), so a
+  plain element's state with `false` or `null` in it, which the docs say are absent, did not
+  check. The state is inferred from `state` (`NoInfer` on `render`), and `PartComponentProps`
+  with no state named takes any `string | boolean | null | undefined`. Held by
+  `packages/react/src/types.test.tsx` (`Badge`).
 - **The element a caller asks for is the caller's last word.** A part drawn as another element
   (`render`, `as-child`) has three layers of props, lowest first: what was handed to the
   part, the element's own, the part's. Merged the other way round, a design system's wrapper
@@ -350,6 +410,23 @@ note. Three places hold them:
   `state.side`) is taken from the part's own `data-*` attributes, so no part can say one
   thing to a stylesheet and another to a function. A test holds every state's name in the
   vocabulary to the name its attribute reads as.
+- **A design system's own element is composed by the same rule, on every framework.** React
+  had `useRender` and Vue `Primitive`; on Solid and Svelte a badge drawn as a link had to
+  write its own `render` or `child` and its own merge, where solid-js's `mergeProps` and a
+  Svelte spread let a later class replace an earlier one and run one handler of two. Each
+  now has `Primitive` and `mergeProps` (`@kirana-ui/solid/primitive`,
+  `@kirana-ui/svelte/primitive`); Solid's `mergeProps` reads its sets as each prop is read,
+  or the component's props would stop following its caller, and Svelte's keeps the
+  attachments a spread carries under symbols. Held by the two adapters' `server.test` files
+  and type tests, and the conformance run's `composition` scenario (`k4`).
+- **Angular: a host directive's inputs are bound only from the element.** A design system's
+  directive that hosts a primitive could not give it a default (a tooltip's `delay`) or a
+  value worked out from its own inputs (a command's `filter`), and subclassed the primitive
+  to redeclare the input, standing in for it through `useExisting`. `hostInputs` gives them:
+  the primitive reads them where the element binds nothing, which it learns from
+  `ngOnChanges` (an input never bound never appears there), and the values are functions so
+  a `computed` follows. Held by the fixtures' `design` section and scenario, and by `ngc`
+  over `fixtures/angular/src/typed.ts`.
 
 ## Browsers
 

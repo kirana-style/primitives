@@ -38,18 +38,30 @@ The named types the props below mention, each with the entry of this package it 
 
 - `Align` (`@kirana-ui/angular`): `"start" | "center" | "end"`. Where along its side a popup is: at the anchor's start, its centre or its end.
 - `Anchor` (`@kirana-ui/angular`): `Element | VirtualElement`. What a popup is placed against: an element, or a place in the viewport that is none.
-- `CalendarDay` (`@kirana-ui/angular`): A day in the grid of the month shown.
+- `CalendarDay` (`@kirana-ui/angular`): A day in the grid of a month shown.
     - `date: IsoDate`
     - `label: string`: The day of the month as the locale writes it.
-    - `outside: boolean`: Not of the month shown: the days that fill its first and last weeks.
-- `CalendarProps` (`@kirana-ui/angular`)
+    - `outside: boolean`: Not of the month it is drawn in: the days that fill its first and last weeks.
+- `CalendarMonth` (`@kirana-ui/angular`): One of the months shown, as `Calendar.Months` gives it.
+    - `index: number`: Its place among the months shown, from 0.
+    - `month: IsoDate`: Its first day.
+    - `title: string`: Its name as the locale writes it (`"March 2026"`).
+    - `weekdays: readonly CalendarWeekday[]`
+    - `weeks: readonly (readonly CalendarDay[])[]`
+- `CalendarProps<Mode extends CalendarMode = CalendarMode>` (`@kirana-ui/angular`)
     - `id: string`
-    - `value?: CalendarValue`: One day, or with `mode: "range"` a first and a last day; `null` for none.
-    - `defaultValue?: CalendarValue`: The value it starts with, when the caller does not hold `value`. Read once.
-    - `onValueChange?: ((value: CalendarValue, details: ChangeDetails) => void)`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
-    - `mode?: "single" | "range"`: Whether one day is chosen (the default) or a first and a last.
-    - `defaultFocusedValue?: IsoDate`: The day it opens on, when it has no value: its month is the one shown.
-    - `onMonthChange?: ((month: IsoDate) => void)`: Heard when another month is shown: its first day.
+    - `value?: CalendarValueOf<Mode>`: One day; with `mode: "range"` a first and a last day; with `mode: "multiple"` a list of days, in the order they were chosen. `null` (or an empty list) for none.
+    - `defaultValue?: CalendarValueOf<Mode>`: The value it starts with, when the caller does not hold `value`. Read once.
+    - `onValueChange?: ((value: CalendarValueOf<Mode>, details: ChangeDetails) => void)`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
+    - `mode?: Mode`: Whether one day is chosen (the default), a first and a last (`"range"`), or any number (`"multiple"`: a day pressed is added, and pressed again is taken away).
+    - `minDays?: number`: With `mode: "multiple"`: the fewest days that can be left chosen. A press that would leave fewer does nothing.
+    - `maxDays?: number`: With `mode: "multiple"`: the most days that can be chosen. Once they are, the other days are disabled until one is taken away.
+    - `months?: number`: How many months are shown side by side (1 by default): one selection and one grid for the keys, which go from a month into the next. Each is drawn in `Calendar.Months`.
+    - `pagedNavigation?: boolean`: With several `months`: whether Previous and Next turn them all (a page) rather than one month. Off by default, as in react-day-picker.
+    - `month?: IsoDate`: The month shown (the first of them, with several `months`), when the caller holds it: any day of it. A caption's month and year menus, or a "today" button, set it.
+    - `defaultMonth?: IsoDate`: The month it starts on, when the caller does not hold `month`. Read once. Without it, the month of `defaultFocusedValue`, of the value, or of today.
+    - `onMonthChange?: ((month: IsoDate, details: ChangeDetails) => void)`: Heard as another month is about to be shown (the keys, the buttons, a day of another month pressed): its first day. `details.cancel()` keeps the month as it was.
+    - `defaultFocusedValue?: IsoDate`: The day it opens on, focusable when Tab reaches the grid. It is also the month it opens on, unless `month` or `defaultMonth` says another: then the stop for Tab is a chosen day of the months shown, today, or their first day.
     - `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
     - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
     - `min?: IsoDate`: The first and the last day that can be chosen.
@@ -58,7 +70,9 @@ The named types the props below mention, each with the entry of this package it 
     - `disabled?: boolean`: Disabled: no day can be chosen.
     - `readOnly?: boolean`: Shown as it is: the days can be moved through, and none can be chosen.
     - `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
-- `CalendarValue` (`@kirana-ui/angular`): `IsoDate | DateRange | null`. What a calendar holds: a day, a range of days in `mode: "range"`, or `null` for none.
+    - `name?: string`: The name its hidden input submits the value under: a day; the first and the last of a range, as two entries; each day of a list.
+    - `form?: string`: The id of the form it belongs to, when it is not inside it.
+- `CalendarValueOf<Mode extends CalendarMode | undefined>` (`@kirana-ui/angular`): `Mode extends "range" ? DateRange | null : Mode extends "multiple" ? readonly IsoDate[] : IsoDate | null`. The value of one mode: a day or `null`, a range or `null`, or a list (empty for none). What `value` and `onValueChange` are typed by, from the `mode` a root is given.
 - `CalendarWeekday` (`@kirana-ui/angular`): A day of the week, as a column's heading names it.
     - `index: number`: Its place in the week as the locale orders it, from 0.
     - `narrow: string`: Its name as a column's heading (`"M"`, `"Mo"`), and in full (`"Monday"`).
@@ -136,6 +150,7 @@ The named types the props below mention, each with the entry of this package it 
     - `value: string`: The value that was checked.
 - `FormErrors` (`@kirana-ui/angular`): `Record<string, string | readonly string[]>`. A form's errors as a server sends them: each field's name with its message, or messages.
 - `FormValues` (`@kirana-ui/angular`): `Record<string, FormDataEntryValue | FormDataEntryValue[]>`. A form's values by field name, as `FormData` holds them: a list where a name is there more than once.
+- `ImageStatus` (`@kirana-ui/angular`): `"idle" | "loading" | "loaded" | "error"`. Where an avatar's picture is in its loading: `idle` while it has no address, `loading`, then `loaded` or `error`. Base UI's `ImageLoadingStatus`.
 - `IsoDate` (`@kirana-ui/angular`): `string`. A day as `YYYY-MM-DD`, in the calendar the world's data is kept in (ISO 8601).
 - `ItemLabels<Value = unknown>` (`@kirana-ui/angular`): `readonly { value: Value; label: string }[] | Readonly<Record<string, string>>`. The labels of a control's values, as its caller gives them: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`).
 - `ListCollection` (`@kirana-ui/angular`): Every row of a list of which only some are in the page: a virtualizer draws the ones in view. The keys then move by place, and ask for a row that is not drawn to be brought into the page.
@@ -214,12 +229,18 @@ What the entries export beside the components, their parts' props types and the 
 
 - `AnchorOption`, from `@kirana-ui/angular`: A positioner's own anchor: an element, a place in the viewport (`getBoundingClientRect`), or a function that gives one, asked each time the popup is placed. `null`, `undefined` or a function that gives neither: the popup's own anchor, its trigger.
 - `Bindable`, from `@kirana-ui/angular`: A value that is the caller's while they give one and the part's own otherwise, as a signal that is asked to change.
+- `CalendarMode`, from `@kirana-ui/angular`: How many days it chooses: one, a first and a last, or any number.
+- `CalendarValue`, from `@kirana-ui/angular`: What a calendar holds: a day, a range of days in `mode: "range"`, a list of days in `mode: "multiple"`, or `null` for none.
 - `ComponentDefinition`, from `@kirana-ui/angular`: A component in the vocabulary: its parts by name.
 - `createToaster(options?: Core.ToasterOptions)`, from `@kirana-ui/angular`: The toasts of a page, made once, in a module: `toaster.add({ title })` from anywhere. A title, a description and an action's label are a string or a template, unless `Content` says otherwise.
+- `hostInputs(directive: ProviderToken<Directive>, given: NoInfer<HostInputs<Directive>>)`, from `@kirana-ui/angular`: Gives the inputs of a primitive this directive hosts (`hostDirectives: [KuiTooltip]`), as a design system's directive gives its defaults: `hostInputs(KuiTooltip, { delay: () => 0 })`. Each value is a function read like a signal, so one worked out from the host's own inputs (`{ disabled: computed(() => !this.collapsed()) }`) follows them. An input the element binds (one the host exposes through `hostDirectives`' `inputs`, written on the element) wins over what is given here. Call it where injection works (a field initialiser or the constructor): host directives are made before their host, and read their inputs after it is made.
+- `HostInputs`, from `@kirana-ui/angular`: What a directive hosting a primitive gives the primitive's inputs: each a function read like a signal (a signal, a `computed`, `() => 0`), so a value worked out from the host's own inputs follows them.
 - `hostPart()`, from `@kirana-ui/angular`: Puts a part on the directive's host element: the core writes its attributes and listens for its events itself, so nothing waits for change detection. Returns a function to call in `ngOnInit`, when the part's controller exists.
 - `injectDirection()`, from `@kirana-ui/angular`: The direction the nearest `kuiDirection` states; `ltr` outside one.
 - `innerPart(tag: string)`, from `@kirana-ui/angular`: A part the directive draws itself, as the last child of its host: the hidden native input of a form control, which the caller does not write. Returns a function to call in `ngOnInit`.
-- `inputsSignal(read: () => T)`, from `@kirana-ui/angular`: A core signal that follows a directive's inputs. Call it where injection works (a field initialiser or the constructor); `read` first runs when the directive's inputs are set.
+- `InputsOf`, from `@kirana-ui/angular`: The inputs of a directive, by the name its class gives each, and the value each reads (after its transform): `InputsOf<KuiTooltip>["delay"]` is `number | undefined`.
+- `inputsSignal(read: () => T)`, from `@kirana-ui/angular`: A core signal that follows a directive's inputs. Call it where injection works (a field initialiser or the constructor); `read` first runs when the directive's inputs are set. Given its directive (`inputsSignal(this, () => …)`), what a host gives it through `hostInputs` is laid over the inputs the element does not bind: the directive then calls `bound(changes)` from its `ngOnChanges`.
+- `InputsSignal`, from `@kirana-ui/angular`: What `inputsSignal` gives: the signal, and the two calls its directive makes.
 - `KuiDirection` (`[kuiDirection]`), from `@kirana-ui/angular`: States the reading direction for the components inside: `<div kuiDirection="rtl" dir="rtl">`. It writes nothing on its element: the `dir` attribute is set with it. Inputs: `kuiDirection: Direction | ""`.
 - `KuiIds`, from `@kirana-ui/angular`: Ids for parts whose caller gave none: one counter per application, so a server and its client agree.
 - `KuiPortalProvider` (`[kuiPortalProvider]`), from `@kirana-ui/angular`: `<ng-container kuiPortalProvider [container]="element">`: says where every popup inside it is drawn, the popups those open included: an element of the page (a shadow root's host, a full-screen element) in place of `<body>`. Inputs: `container: HTMLElement | null`.
@@ -375,11 +396,11 @@ Its other types:
 - Angular 20 and later, with signals; it renders on a server and hydrates.
 - What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kuiPortalProvider` (`[container]`) and `kuiDirection` here, and `useDirection` is `injectDirection()`.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kuiAccordionPanel`, `*kuiDialogPortal`, `*kuiComboboxClear`, `*kuiComboboxPortal`, `*kuiComboboxCollection`, `*kuiComboboxEmpty`, `*kuiAvatarImage`, `*kuiAvatarFallback`, `*kuiCalendarWeekdays`, `*kuiCalendarWeeks`, `*kuiCheckboxIndicator`, `*kuiCollapsiblePanel`, `*kuiComboboxValue`, `*kuiComboboxItemIndicator`, `*kuiCommandEmpty`, `*kuiMenuPortal`, `*kuiMenuCheckboxItemIndicator`, `*kuiMenuRadioItemIndicator`, `*kuiDateFieldSegments`, `*kuiPopoverPortal`, `*kuiFieldError`, `*kuiFieldValidity`, `*kuiHoverCardPortal`, `*kuiListboxItemIndicator`, `*kuiNavigationMenuContent`, `*kuiNavigationMenuPortal`, `*kuiNumberFieldScrubAreaCursor`, `*kuiOtpCaret`, `*kuiPaginationItems`, `*kuiRadioGroupIndicator`, `*kuiScrollAreaScrollbar`, `*kuiScrollAreaCorner`, `*kuiSelectValue`, `*kuiSelectPortal`, `*kuiSelectScrollUpArrow`, `*kuiSelectScrollDownArrow`, `*kuiSelectItemIndicator`, `*kuiTabsPanel`, `*kuiToastList` and `*kuiTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>`).
+- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kuiAccordionPanel`, `*kuiDialogPortal`, `*kuiComboboxClear`, `*kuiComboboxPortal`, `*kuiComboboxCollection`, `*kuiComboboxEmpty`, `*kuiAvatarImage`, `*kuiAvatarFallback`, `*kuiCalendarMonths`, `*kuiCalendarWeekdays`, `*kuiCalendarWeeks`, `*kuiCheckboxIndicator`, `*kuiCollapsiblePanel`, `*kuiComboboxValue`, `*kuiComboboxItemIndicator`, `*kuiCommandEmpty`, `*kuiMenuPortal`, `*kuiMenuCheckboxItemIndicator`, `*kuiMenuRadioItemIndicator`, `*kuiDateFieldSegments`, `*kuiPopoverPortal`, `*kuiFieldError`, `*kuiFieldValidity`, `*kuiHoverCardPortal`, `*kuiListboxItemIndicator`, `*kuiNavigationMenuContent`, `*kuiNavigationMenuPortal`, `*kuiNumberFieldScrubAreaCursor`, `*kuiOtpCaret`, `*kuiPaginationItems`, `*kuiRadioGroupIndicator`, `*kuiScrollAreaScrollbar`, `*kuiScrollAreaCorner`, `*kuiSelectValue`, `*kuiSelectPortal`, `*kuiSelectScrollUpArrow`, `*kuiSelectScrollDownArrow`, `*kuiSelectItemIndicator`, `*kuiTabsPanel`, `*kuiToastList` and `*kuiTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>`).
 - A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kuiTabs"`.
 - A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
 - Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
-- Every change callback is an output whose event is `{ value, details }` under the value's own name (`$event.open`, `$event.values`): `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: `(clearErrors)`, `(completed)` and `(monthChanged)`.
+- Every change callback is an output whose event is `{ value, details }` under the value's own name (`$event.open`, `$event.values`): `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: `(clearErrors)`, `(completed)` and `(loadingStatusChanged)`.
 - A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kuiAccordionPanel]`, `[kuiCollapsiblePanel]`, `[kuiScrollAreaScrollbar]` and `[kuiTabsPanel]`.
 - `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
@@ -389,6 +410,15 @@ Its other types:
 - A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.
 - `PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.
 - An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/angular/agent` gives `snapshot()`, `act({ steps })`, `query()`, `history()`, `undo()` and `redo()`; what it changes reaches the same callbacks with `details.source === "agent"`. "Agent", above, has the whole of it.
+
+### For a design system
+
+- A design system's part is a directive of its own that hosts the primitive's: `@Directive({ selector: "[uiDialog]", hostDirectives: [{ directive: KuiDialog, inputs: ["kuiId", "open", "defaultOpen"], outputs: ["openChange", "openChanged"] }] })`. Angular binds a host directive's inputs and outputs only where the host exposes them (`inputs`, `outputs`, each `"name"` or `"name: alias"`): expose what its callers set, and give the rest yourself (below). Its own host bindings (`host: { class: "…", "[attr.data-size]": "size()" }`) join the element's: classes are joined, and both handlers of an event run. An element of the design system's own (a badge) is such a directive with no primitive: nothing of the library's is needed for it.
+- Keep the design system's selectors apart from the primitives' `kui…`: two directives with one selector in one template's `imports` both match the element, silently (Angular says nothing), and a part would then be made twice. Name your own `[ui…]`, `[my…]`, anything but `kui`.
+- A model's output, `openChange` beside `[(open)]` (`valueChange`, `pageChange` …), carries the model's type, `boolean | undefined` for `open`: its first value can be the `undefined` the model starts with. Expose it with the model's input for a two-way `[(open)]` on the design system's directive, or expose `openChanged` for the change with its details.
+- A part that comes and goes is structural (`*kuiDialogPortal`), and an attribute cannot put a structural directive around its own element: draw it in a component's template around `<ng-content />`. `@Component({ selector: "[uiDialogContent]", imports: [KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup], template: `<ng-template kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup><ng-content /></div></ng-template>` })`. A part given to it (`<h2 uiDialogTitle>`) is made where it is written, so it finds its root there, inside the design system's `[uiDialog]`, not where it is drawn: the title labels the popup.
+- `hostInputs(directive, given)` gives a primitive the design system hosts its inputs, where its callers do not: call it in the hosting directive's constructor or a field initialiser, with each value a function read like a signal, so one worked out from the design system's own inputs follows them: `hostInputs(KuiTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })`, `hostInputs(KuiCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })`, `hostInputs(KuiTooltipPositioner, { sideOffset: () => 4 })`. An input the element binds, one the host exposes and its caller writes, wins over what is given. It is typed against the primitive's inputs (`HostInputs<KuiTooltip>`, `InputsOf<KuiTooltip>`), and an input that does not reach the component (a structural directive's own value) throws when the primitive starts. No subclass of a primitive is needed for any of this.
+- Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes). A design system whose tooltips open at once gives `delay` to the tooltip it hosts: `hostInputs(KuiTooltip, { delay: () => 0 })`, exposing `delay` so a caller can still set it.
 
 ## Components
 
@@ -675,12 +705,25 @@ kuiAvatar
   *kuiAvatarFallback
 ```
 
+Props of its root:
+
+- `(loadingStatusChanged): ImageStatus`: Each time the picture's loading status changes: `loading` once it has an address, then `loaded` or `error`; `idle` again when its address is taken away. Base UI's `onLoadingStatusChange`; the root says the same in `data-image-loading-status`.
+
 Each part, and its own props:
 
-- `[kuiAvatar]` is `KuiAvatar`. `exportAs: "kuiAvatar"`. The frame the image and its stand-in share.
-- `[kuiAvatarImage]` is `KuiAvatarImage`. Structural: written `*kuiAvatarImage`. `<img *kuiAvatarImage="address" alt="…">`: in the page once the picture has loaded.
-    - `*kuiAvatarImage: string`: The directive's own value: `*kuiAvatarImage="…"`. The picture's address: the element is in the page once it has loaded.
-- `[kuiAvatarFallback]` is `KuiAvatarFallback`. Structural: written `*kuiAvatarFallback`. `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot.
+- `[kuiAvatar]` is `KuiAvatar`. `exportAs: "kuiAvatar"`. `<span kuiAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either of the image's forms (a structural directive's own outputs cannot be bound from its element). Its props are above.
+- `[kuiAvatarImage]` is `KuiAvatarImage`. Structural: written `*kuiAvatarImage`. The picture, in either of two forms. `<img *kuiAvatarImage="address" alt="…">` is in the page once the picture has loaded. `<img kuiAvatarImage [src]="address" alt="…">` is the caller's own element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
+    - `*kuiAvatarImage: string`: The directive's own value: `*kuiAvatarImage="…"`. The picture's address, in the structural form: the element is in the page once it has loaded.
+- `[kuiAvatarFallback]` is `KuiAvatarFallback`. Structural: written `*kuiAvatarFallback`. `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot. `{ delay: 600 }` waits that many milliseconds first, so a picture that loads sooner never lets it be seen.
+    - `*kuiAvatarFallback: { delay?: number | undefined } | ""`: The directive's own value: `*kuiAvatarFallback="…"`. Its options: `{ delay: 600 }` waits that many milliseconds before showing. Read once. Default: no wait.
+
+Attributes and CSS variables, by part:
+
+- root: The frame the image and its stand-in share.
+    - `data-image-loading-status="idle | loading | loaded | error"`: Where the picture is in its loading: `idle` while it has no address.
+- image: The picture. In the page once it has loaded; with `keepMounted` (on Angular, the attribute form) in the page all along, `aria-hidden` until it has loaded.
+    - `data-loading`: Present while the picture loads, on an image kept in the page.
+    - `data-error`: Present when the picture cannot load, on an image kept in the page.
 
 ### Button
 
@@ -704,33 +747,41 @@ Attributes and CSS variables, by part:
 ### Calendar
 
 ```
-import { KuiCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay } from "@kirana-ui/angular"
+import { KuiCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarMonths, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay, KuiCalendarInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`.
+Parts: `[kuiCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarMonths]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`, `input[kuiCalendarInput]`.
 
 Anatomy:
 
 ```
 kuiCalendar
-  kuiCalendarHeading
+  *kuiCalendarMonths (optional)
+    kuiCalendarHeading
+    kuiCalendarGrid
+      *kuiCalendarWeekdays
+        kuiCalendarHeadCell (repeated)
+      *kuiCalendarWeeks
+        kuiCalendarCell (repeated)
+          kuiCalendarDay
   kuiCalendarPrevious
   kuiCalendarNext
-  kuiCalendarGrid
-    *kuiCalendarWeekdays
-      kuiCalendarHeadCell (repeated)
-    *kuiCalendarWeeks
-      kuiCalendarCell (repeated)
-        kuiCalendarDay
+  input[kuiCalendarInput]
 ```
 
 Props of its root:
 
-- `[(value)]: CalendarValue`: One day, or with `mode="range"` a first and a last: `[(value)]`.
-- `defaultValue?: CalendarValue`: The value it starts with, when the caller does not hold `value`. Read once.
-- `mode?: "single" | "range"`: Whether one day is chosen (the default) or a first and a last.
-- `defaultFocusedValue?: string`: The day it opens on, when it has no value: its month is the one shown.
-- `locale?: string`: The language and region its names, first day of the week and calendar follow.
+- `[(value)]: CalendarValueOf<Mode>`: One day; with `mode="range"` a first and a last; with `mode="multiple"` a list: `[(value)]`. Typed by `mode`.
+- `defaultValue?: NoInfer<CalendarValueOf<Mode>>`: The value it starts with, when the caller does not hold `value`. Read once.
+- `mode?: Mode`: One day (the default), a first and a last (`"range"`), or any number (`"multiple"`).
+- `minDays?: number`: With `mode="multiple"`: the fewest days that can be left chosen.
+- `maxDays?: number`: With `mode="multiple"`: the most days that can be chosen.
+- `months?: number`: How many months are shown side by side, each drawn by `*kuiCalendarMonths`. Default `1`.
+- `pagedNavigation?: boolean`: With several `months`: Previous and Next turn them all rather than one month.
+- `[(month)]: string`: The first day of the month shown (any day of it): `[(month)]`.
+- `defaultMonth?: string`: The month it starts on, when the caller does not hold `month`. Read once.
+- `defaultFocusedValue?: string`: The day it opens on, focusable when Tab reaches the grid. It is also the month it opens on, unless `month` or `defaultMonth` says another: then the stop for Tab is a chosen day of the months shown, today, or their first day.
+- `locale?: string`: The language and region its names, first day of the week and calendar follow. Default `"en-US"`.
 - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one.
 - `min?: string`: The first and the last day that can be chosen.
 - `max?: string`: The last day that can be chosen.
@@ -738,16 +789,19 @@ Props of its root:
 - `disabled?: boolean`: Disabled: no day can be chosen.
 - `readOnly?: boolean`: Shown as it is: the days can be moved through, and none can be chosen.
 - `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
-- `(valueChanged): { value: CalendarValue; details: ChangeDetails }`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
-- `(monthChanged): string`: Another month is shown: its first day.
+- `name?: string`: The name its hidden input (`kuiCalendarInput`) submits the value under.
+- `form?: string`: The id of the form it belongs to, when it is not inside it.
+- `(valueChanged): { value: CalendarValueOf<Mode>; details: ChangeDetails }`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
+- `(monthChanged): { month: string; details: ChangeDetails }`: Another month is about to be shown: its first day, and `details.cancel()`.
 
 Each part, and its own props:
 
-- `[kuiCalendar]` is `KuiCalendar`. `exportAs: "kuiCalendar"`. Its props are above.
+- `[kuiCalendar]` is `KuiCalendar`. `exportAs: "kuiCalendar"`. Generic: `<Mode extends CalendarMode = CalendarMode>`. Its props are above.
 - `[kuiCalendarHeading]` is `KuiCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
 - `[kuiCalendarPrevious]` is `KuiCalendarPrevious`.
 - `[kuiCalendarNext]` is `KuiCalendarNext`.
-- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of days: a grid the arrows move in.
+- `[kuiCalendarMonths]` is `KuiCalendarMonths`. Structural: written `*kuiCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kuiCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
+- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
 - `[kuiCalendarWeekdays]` is `KuiCalendarWeekdays`. Structural: written `*kuiCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week.
 - `[kuiCalendarHeadCell]` is `KuiCalendarHeadCell`. A column's heading: a day of the week.
     - `weekday: CalendarWeekday`: Required. The day of the week it heads: an entry `Calendar.Weekdays` gave.
@@ -756,6 +810,7 @@ Each part, and its own props:
     - `date: string`: Required. The day it holds, as `Calendar.Weeks` gave it: `day.date`.
 - `[kuiCalendarDay]` is `KuiCalendarDay`.
     - `date: string`: Required. The day it is the button of, as `Calendar.Weeks` gave it: `day.date`.
+- `input[kuiCalendarInput]` is `KuiCalendarInput`. `<input kuiCalendarInput>`: the hidden input the value is submitted by, with a `name`.
 
 Attributes and CSS variables, by part:
 
@@ -767,7 +822,7 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -775,7 +830,7 @@ Attributes and CSS variables, by part:
     - `data-range-start`: Present on the first day of a range.
     - `data-range-end`: Present on the last day of a range.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -805,7 +860,7 @@ kuiCarousel
 Props of its root:
 
 - `[(index)]: number`: Which slide is at the start of the view: `[(index)]`.
-- `defaultIndex?: number`: The slide it starts at, when the caller does not hold `index`. Read once.
+- `defaultIndex?: number`: The slide it starts at, when the caller does not hold `index`. Read once. Default `0`.
 - `orientation?: Orientation`: Whether the slides go across (the default) or down.
 - `loop?: boolean`: Whether going on from the last slide comes round to the first.
 - `(indexChanged): { index: number; details: ChangeDetails }`: Heard as another slide is about to be at the start of the view: `details.cancel()` keeps the index as it was.
@@ -1123,9 +1178,10 @@ kuiCommand
 Props of its root:
 
 - `[(inputValue)]: string`: What the input says.
-- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
+- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once. Default `""`.
 - `filter?: ((label: string, query: string, keywords: readonly string[]) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `loop?: boolean`: Whether a step past an end of the list goes round to the other.
+- `autoHighlight?: boolean`: Whether the first item shown is highlighted from the start. Default: `true`.
 - `disabled?: boolean`: Disabled: nothing can be typed or chosen.
 - `(inputValueChanged): { value: string; details: ChangeDetails }`: Heard as the input's text is about to change: `details.cancel()` keeps it as it was.
 - `(itemSelected): { value: string; details: ChangeDetails }`: An item was chosen.
@@ -1321,7 +1377,7 @@ Props of its root:
 
 - `[(value)]: string | null`: The day typed, once all of it is: `[(value)]`.
 - `defaultValue?: string | null`: The value it starts with, when the caller does not hold `value`. Read once.
-- `locale?: string`: The language and region that order the day, the month and the year.
+- `locale?: string`: The language and region that order the day, the month and the year. Default `"en-US"`.
 - `min?: string`: The first and the last day it takes: outside them it says it is invalid.
 - `max?: string`: The last day it takes.
 - `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`.
@@ -1355,10 +1411,10 @@ Attributes and CSS variables, by part:
 ### DatePicker
 
 ```
-import { KuiDatePicker, KuiDatePickerField, KuiDateFieldSegments, KuiDateFieldSegment, KuiDateFieldInput, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverPositioner, KuiPopoverPopup, KuiDatePickerCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay } from "@kirana-ui/angular"
+import { KuiDatePicker, KuiDatePickerField, KuiDateFieldSegments, KuiDateFieldSegment, KuiDateFieldInput, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverPositioner, KuiPopoverPopup, KuiDatePickerCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarMonths, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDatePicker]`, `[kuiDatePickerField]`, `[kuiDateFieldSegments]`, `[kuiDateFieldSegment]`, `input[kuiDateFieldInput]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiDatePickerCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`.
+Parts: `[kuiDatePicker]`, `[kuiDatePickerField]`, `[kuiDateFieldSegments]`, `[kuiDateFieldSegment]`, `input[kuiDateFieldInput]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiDatePickerCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarMonths]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`.
 
 Anatomy:
 
@@ -1373,15 +1429,16 @@ kuiDatePicker
     kuiPopoverPositioner
       kuiPopoverPopup
         kuiDatePickerCalendar
-          kuiCalendarHeading
+          *kuiCalendarMonths (optional)
+            kuiCalendarHeading
+            kuiCalendarGrid
+              *kuiCalendarWeekdays
+                kuiCalendarHeadCell (repeated)
+              *kuiCalendarWeeks
+                kuiCalendarCell (repeated)
+                  kuiCalendarDay
           kuiCalendarPrevious
           kuiCalendarNext
-          kuiCalendarGrid
-            *kuiCalendarWeekdays
-              kuiCalendarHeadCell (repeated)
-            *kuiCalendarWeeks
-              kuiCalendarCell (repeated)
-                kuiCalendarDay
 ```
 
 Props of its root:
@@ -1396,6 +1453,10 @@ Props of its root:
 - `isDateUnavailable?: CalendarProps["isDateUnavailable"]`: Days that cannot be picked in the calendar.
 - `calendarSystem?: CalendarProps["calendarSystem"]`: The calendar its months are laid out in, when it is not the Gregorian one.
 - `fixedWeeks?: boolean`: Always six rows of days.
+- `months?: number`: How many months the calendar shows side by side.
+- `pagedNavigation?: boolean`: With several `months`: Previous and Next turn them all rather than one month.
+- `[(month)]: string`: The first day of the month the calendar shows (any day of it): `[(month)]`.
+- `defaultMonth?: string`: The month the calendar starts on, when the caller does not hold `month`. Read once.
 - `placeholders?: DateFieldProps["placeholders"]`: What an empty part of the field shows.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
@@ -1404,10 +1465,11 @@ Props of its root:
 - `form?: string`: The id of the form it belongs to, when it is not inside it.
 - `(valueChanged): { value: string | null; details: ChangeDetails }`: Heard as the day is about to change, typed or picked: `details.cancel()` keeps the value as it was.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the calendar is about to open or close: `details.cancel()` keeps it as it was.
+- `(monthChanged): { month: string; details: ChangeDetails }`: The calendar is about to show another month: its first day, and `details.cancel()`.
 
 Each part, and its own props:
 
-- `[kuiDatePicker]` is `KuiDatePicker`. `exportAs: "kuiDatePicker"`. A date field, and a calendar in a popover, with one value between them. On any element, or on `<ng-container>` to draw none. Inside it the date field's, the popover's and the calendar's own directives are its parts (`kuiDateFieldSegments`, `kuiPopoverTrigger`, `kuiCalendarGrid` …), with `kuiDatePickerField` and `kuiDatePickerCalendar` for the two elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows. Its props are above.
+- `[kuiDatePicker]` is `KuiDatePicker`. `exportAs: "kuiDatePicker"`. A date field, and a calendar in a popover, with one value between them. On any element, or on `<ng-container>` to draw none. Inside it the date field's, the popover's and the calendar's own directives are its parts (`kuiDateFieldSegments`, `kuiPopoverTrigger`, `kuiCalendarGrid` …), with `kuiDatePickerField` and `kuiDatePickerCalendar` for the two elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows, `[(month)]` the first day of the month it shows. Its props are above.
 - `[kuiDatePickerField]` is `KuiDatePickerField`. The typed date: what holds its segments and its hidden input.
 - `[kuiDateFieldSegments]` is `KuiDateFieldSegments`. Structural: written `*kuiDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kuiDateFieldSegments="let segment">`: once for each piece of the date.
 - `[kuiDateFieldSegment]` is `KuiDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
@@ -1424,7 +1486,8 @@ Each part, and its own props:
 - `[kuiCalendarHeading]` is `KuiCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
 - `[kuiCalendarPrevious]` is `KuiCalendarPrevious`.
 - `[kuiCalendarNext]` is `KuiCalendarNext`.
-- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of days: a grid the arrows move in.
+- `[kuiCalendarMonths]` is `KuiCalendarMonths`. Structural: written `*kuiCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kuiCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
+- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
 - `[kuiCalendarWeekdays]` is `KuiCalendarWeekdays`. Structural: written `*kuiCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week.
 - `[kuiCalendarHeadCell]` is `KuiCalendarHeadCell`. A column's heading: a day of the week.
     - `weekday: CalendarWeekday`: Required. The day of the week it heads: an entry `Calendar.Weekdays` gave.
@@ -1472,7 +1535,7 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -1480,7 +1543,7 @@ Attributes and CSS variables, by part:
     - `data-range-start`: Present on the first day of a range.
     - `data-range-end`: Present on the last day of a range.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -1667,7 +1730,7 @@ Props of its root:
 - `invalid?: boolean`: Invalid whatever the value: an error known from elsewhere.
 - `validate?: ( value: string ) => string | readonly string[] | null | Promise<string | readonly string[] | null>`: The field's own check, after the browser's: a message or several when the value is wrong, `null` when it is right. It may answer later, with a promise.
 - `validationMode?: ValidationMode`: When the value is checked; the form's by default, else `"onSubmit"`.
-- `validationDebounceTime?: number`: With `"onChange"`, how long the value must rest before it is checked, in milliseconds.
+- `validationDebounceTime?: number`: With `"onChange"`, how long the value must rest before it is checked, in milliseconds. Default `0`.
 
 Each part, and its own props:
 
@@ -1793,8 +1856,8 @@ Props of its root:
 
 - `[(open)]: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
-- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
-- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
+- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds. Default `600`.
+- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds. Default `300`.
 - `disabled?: boolean`: Disabled: the pointer and focus do not open it.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 
@@ -2201,8 +2264,8 @@ Props of its root:
 
 - `[(value)]: Value | null`: The item whose content is shown; `null` is "none".
 - `defaultValue?: NoInfer<Value> | null`: The item whose content it starts with, when the caller does not hold `value`. Read once.
-- `delay?: number`: How long the pointer rests on a trigger before its content shows, in milliseconds.
-- `closeDelay?: number`: How long after the pointer leaves the content goes, in milliseconds.
+- `delay?: number`: How long the pointer rests on a trigger before its content shows, in milliseconds. Default `50`.
+- `closeDelay?: number`: How long after the pointer leaves the content goes, in milliseconds. Default `50`.
 - `orientation?: Orientation`: Whether the triggers are laid out across (the default) or down: the arrows that move between them follow.
 - `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as another item's content is about to show, or none: `details.cancel()` keeps the value as it was.
 
@@ -2431,8 +2494,9 @@ Props of its root:
 
 - `length?: number`: How many characters the code has. Default: 6.
 - `[(value)]: string`: The characters typed so far, when the caller holds them.
-- `defaultValue?: string`: The characters it starts with, when the caller does not hold `value`. Read once.
-- `mode?: "numeric" | "alphanumeric" | "text"`: What a character may be. Default: `numeric`.
+- `defaultValue?: string`: The characters it starts with, when the caller does not hold `value`. Read once. Default `""`.
+- `mode?: "numeric" | "alphabetic" | "alphanumeric" | "text"`: What a character may be: a digit (`numeric`), a letter (`alphabetic`, `a` to `z` either case), either (`alphanumeric`), or anything but white space (`text`). It also says which keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`, on purpose: a one-time code is digits, and its keyboard is then the one to type them on.
+- `pattern?: string`: What else a character may be: a regular expression, as text, that one character must match whole (`"[A-F0-9]"`), in place of `mode`'s rule. Text, as an attribute can only be, so it is given the same way on every framework and on a custom element. With a pattern, `mode` only says the keyboard, and defaults to `text`.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, the code is submitted with the form around it.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
@@ -2485,7 +2549,7 @@ kuiPagination
 Props of its root:
 
 - `[(page)]: number`: The page shown, from 1.
-- `defaultPage?: number`: The page it starts at, when the caller does not hold `page`. Read once.
+- `defaultPage?: number`: The page it starts at, when the caller does not hold `page`. Read once. Default `1`.
 - `count: number`: Required. How many items there are in all.
 - `pageSize?: number`: How many items a page holds. Default 10.
 - `siblingCount?: number`: How many pages are listed each side of the one shown. Default 1.
@@ -2723,7 +2787,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
-- item: One choice. It holds a hidden native radio, which a form and a label reach.
+- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
@@ -2773,13 +2837,13 @@ Each part, and its own props:
 
 Attributes and CSS variables, by part:
 
-- group: The panels and the bars between them. A design lays it out as a flex box.
+- group: The panels and the bars between them. A design lays it out as a flex box: `display: flex`, and `flex-direction: column` when it is vertical. A group in a panel that is a flex box itself takes `min-width: 0` and `min-height: 0`, or what it holds widens the panel.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `data-disabled`: Present when it is disabled.
-- panel: One panel. It carries its share of the group.
+- panel: One panel. It carries its share of the group, written as its `flex` with `min-width: 0` and `min-height: 0`, so what it holds cannot keep it past its share. Its `overflow` is the design's.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `--panel-size`: The panel's share, in hundredths of the group.
-- handle: The bar between two panels: dragged, or moved with the arrows.
+- handle: The bar between two panels: dragged, or moved with the arrows. A design gives it its thickness and `flex-shrink: 0`, so the panels do not squeeze it.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `data-dragging`: Present while the bar is dragged.
     - `data-disabled`: Present when it is disabled.
@@ -2797,7 +2861,8 @@ Anatomy:
 ```
 kuiScrollArea
   kuiScrollAreaViewport
-    kuiScrollAreaContent
+    kuiScrollAreaContent (optional)
+    *kuiScrollAreaScrollbar (repeated, as above)
   *kuiScrollAreaScrollbar (repeated)
     kuiScrollAreaThumb
   *kuiScrollAreaCorner
@@ -2807,7 +2872,7 @@ Each part, and its own props:
 
 - `[kuiScrollArea]` is `KuiScrollArea`. `exportAs: "kuiScrollArea"`.
 - `[kuiScrollAreaViewport]` is `KuiScrollAreaViewport`.
-- `[kuiScrollAreaContent]` is `KuiScrollAreaContent`. What is scrolled.
+- `[kuiScrollAreaContent]` is `KuiScrollAreaContent`. A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
 - `[kuiScrollAreaScrollbar]` is `KuiScrollAreaScrollbar`. Structural: written `*kuiScrollAreaScrollbar`. `<div *kuiScrollAreaScrollbar="'horizontal'">`: in the page while there is something to scroll its way (`vertical` when no orientation is given).
     - `*kuiScrollAreaScrollbar: Orientation | ""`: The directive's own value: `*kuiScrollAreaScrollbar="…"`. Which way it scrolls: `'horizontal'`, or `'vertical'` when none is given.
     - `keepMounted?: boolean`: Written after the directive's value: `*kuiScrollAreaScrollbar="…; keepMounted: …"`. In the page even while there is nothing to scroll its way.
@@ -2998,7 +3063,7 @@ Props of its root:
 - `step?: number`: Default 1.
 - `largeStep?: number`: What Page Up, Page Down and an arrow with Shift move by. Default 10.
 - `minStepsBetweenValues?: number`: How many steps two thumbs of a range stay apart. Default 0.
-- `thumbAlignment?: "center" | "edge" | "edge-client-only"`: `"edge"` keeps a thumb inside the control at the ends of its range.
+- `thumbAlignment?: "center" | "edge" | "edge-client-only"`: `"edge"` keeps a thumb inside the control at the ends of its range. Default `"center"`.
 - `orientation?: "horizontal" | "vertical"`: Whether the track lies across (the default) or stands upright: the arrows that move a thumb follow.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable; its value is still submitted.
@@ -3362,8 +3427,8 @@ Props of its root:
 
 - `[(open)]: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
-- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
-- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
+- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds. Default `600`.
+- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds. Default `0`.
 - `disabled?: boolean`: Disabled: the pointer and focus do not open it.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 

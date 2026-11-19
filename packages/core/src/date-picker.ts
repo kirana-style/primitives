@@ -40,6 +40,19 @@ export interface DatePickerProps {
   calendarSystem?: CalendarProps["calendarSystem"]
   /** Always six rows of days. */
   fixedWeeks?: boolean | undefined
+  /** How many months the calendar shows side by side (1 by default). */
+  months?: CalendarProps["months"]
+  /** With several `months`: whether Previous and Next turn them all rather than one month. */
+  pagedNavigation?: boolean | undefined
+  /** The month the calendar shows (the first, with several), when the caller holds it. */
+  month?: IsoDate | undefined
+  /** The month the calendar starts on, when the caller does not hold `month`. Read once. */
+  defaultMonth?: IsoDate | undefined
+  /**
+   * Heard as the calendar is about to show another month, a day typed or picked included: its
+   * first day. `details.cancel()` keeps the month as it was.
+   */
+  onMonthChange?: CalendarProps["onMonthChange"]
   /** What an empty part of the field shows. */
   placeholders?: DateFieldProps["placeholders"]
   /** Disabled: it cannot be changed. */
@@ -130,6 +143,11 @@ export function createDatePicker(
         max: own.max,
         isDateUnavailable: own.isDateUnavailable,
         fixedWeeks: own.fixedWeeks,
+        months: own.months,
+        pagedNavigation: own.pagedNavigation,
+        month: own.month,
+        defaultMonth: own.defaultMonth,
+        onMonthChange: (next, by) => props.peek().onMonthChange?.(next, by),
         disabled: own.disabled,
         readOnly: own.readOnly,
       }

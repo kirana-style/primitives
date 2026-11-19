@@ -14,6 +14,7 @@
     onSelect,
     filter,
     loop,
+    autoHighlight,
     disabled,
     id,
     ...rest
@@ -32,6 +33,7 @@
       defaultInputValue,
       filter,
       loop,
+      autoHighlight,
       disabled,
       onInputValueChange: changeInput,
       onSelect: (value: string, by: ChangeDetails) => onSelect?.(value, by),

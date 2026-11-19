@@ -281,12 +281,93 @@ interface NgNode {
   [key: string]: unknown
 }
 
+/** The attribute a directive is written as (`[kuiTooltip]` is `kuiTooltip`), by its class. */
+async function attributesByClass(): Promise<Map<string, string>> {
+  const found = new Map<string, string>()
+  for (const component of (await reference("angular")).components.values())
+    for (const part of component.parts) {
+      const all = part.directive!.selector.split(/,\s*/)
+      const mine = all.find((one) => one.includes(`kui${component.name}]`)) ?? all[0]!
+      const attribute = /\[(\w+)\]/.exec(mine)?.[1]
+      if (attribute) found.set(part.directive!.name, attribute)
+    }
+  return found
+}
+
+/**
+ * The Angular fixture's own design system (`src/design-system.ts`), by the attribute each of
+ * its directives is written as: the primitives it stands for, outermost first. A directive
+ * stands for the primitives it hosts (`hostDirectives`), and a component also for those its
+ * template draws around `<ng-content />` (a dialog's portal and popup), so what is written
+ * inside it is inside them.
+ */
+async function designSystem(
+  parseTemplate: (template: string, url: string) => { nodes: NgNode[] }
+): Promise<Map<string, string[]>> {
+  const found = new Map<string, string[]>()
+  const path = "fixtures/angular/src/design-system.ts"
+  const byClass = await attributesByClass()
+  const source = ts.createSourceFile(path, text(path), 99, true)
+  const wrapping = (nodes: NgNode[], chain: string[]): string[] | undefined => {
+    for (const node of nodes) {
+      if (node.name === "ng-content") return chain
+      const mine = [...(node.templateAttrs ?? []), ...(node.attributes ?? [])]
+        .map((each) => each.name)
+        .filter((name) => name.startsWith("kui"))
+      const held = node.children
+      const deeper = Array.isArray(held)
+        ? wrapping(held as NgNode[], [...chain, ...mine])
+        : undefined
+      if (deeper) return deeper
+    }
+    return undefined
+  }
+  const visit = (node: TS.Node) => {
+    if (ts.isObjectLiteralExpression(node)) {
+      const property = (name: string) =>
+        node.properties.find(
+          (each): each is TS.PropertyAssignment =>
+            ts.isPropertyAssignment(each) && each.name.getText(source) === name
+        )?.initializer
+      const selector = property("selector")
+      const attribute =
+        selector && ts.isStringLiteral(selector)
+          ? /^\[(\w+)\]$/.exec(selector.text)?.[1]
+          : undefined
+      if (attribute) {
+        const chain: string[] = []
+        const hosts = property("hostDirectives")
+        if (hosts && ts.isArrayLiteralExpression(hosts)) {
+          for (const each of hosts.elements) {
+            const host = ts.isObjectLiteralExpression(each)
+              ? each.properties.find(
+                  (one): one is TS.PropertyAssignment =>
+                    ts.isPropertyAssignment(one) && one.name.getText(source) === "directive"
+                )?.initializer
+              : each
+            const hosted = host && byClass.get(host.getText(source))
+            if (hosted) chain.push(hosted)
+          }
+        }
+        const template = property("template")
+        if (template && ts.isNoSubstitutionTemplateLiteral(template))
+          chain.push(...(wrapping(parseTemplate(template.text, path).nodes, []) ?? []))
+        if (chain.length > 0) found.set(attribute, chain)
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+  return found
+}
+
 async function angular(file: string): Promise<Placed[]> {
   const path = `fixtures/angular/${file}`
   const known = await selectors()
   const { parseTemplate } = (await import(from("angular").resolve("@angular/compiler"))) as {
     parseTemplate(template: string, url: string): { nodes: NgNode[] }
   }
+  const standsFor = await designSystem(parseTemplate)
   const source = ts.createSourceFile(path, text(path), 99, true)
   const found: Placed[] = []
   const HOLD = ["children", "branches", "cases", "empty", "placeholder", "loading", "error"]
@@ -298,14 +379,18 @@ async function angular(file: string): Promise<Placed[]> {
     const attributes = around_
       ? node.templateAttrs!
       : [...(node.templateAttrs ?? []), ...(node.attributes ?? []), ...(node.inputs ?? [])]
-    for (const attribute of attributes) {
-      const names = known.get(attribute.name)
+    // A design system's directive is written for the primitives it stands for.
+    const written = attributes.flatMap(
+      (attribute) => standsFor.get(attribute.name) ?? attribute.name
+    )
+    for (const name of written) {
+      const names = known.get(name)
       if (!names) continue
       // Several directives on one element: each is placed by what is around the element.
       const one: Placed = {
         adapter: "angular",
         at: `${path}:${first + (node.sourceSpan?.start.line ?? 0)}`,
-        written: attribute.name,
+        written: name,
         names,
         // The directives of one element, in the order written: the first is around the next.
         parent: here,

@@ -18,7 +18,12 @@ const PAGE = `
 function area(
   width: number,
   height: number,
-  { dir, corner = true, padded = false }: { dir?: "rtl"; corner?: boolean; padded?: boolean } = {}
+  {
+    dir,
+    corner = true,
+    padded = false,
+    wrapped = true,
+  }: { dir?: "rtl"; corner?: boolean; padded?: boolean; wrapped?: boolean } = {}
 ) {
   style(`
     #area { width: 100px; height: 100px; }
@@ -81,7 +86,9 @@ function area(
       return { element, undo: [bind(element, made.corner.part)] }
     })
   }
-  stops.push(bind(find(root, "view"), made.viewport), bind(content, made.content), made.mount())
+  // Without the content part, what the viewport holds is only its children.
+  stops.push(bind(find(root, "view"), made.viewport), made.mount())
+  if (wrapped) stops.push(bind(content, made.content))
   onTestFinished(() => {
     for (const stop of stops.reverse()) stop()
   })
@@ -141,6 +148,36 @@ describe("a scroll area", () => {
     // Watched afterwards all the same: a track that changes length moves its thumb.
     find(root, "vertical").style.height = "50px"
     await expect.poll(() => Math.round(box(find(root, "vertical-thumb")).height)).toBe(16)
+  })
+
+  it("measures again when what it holds grows late, with no content part", async () => {
+    // Pictures that load after the area is measured, as in a row of them: the viewport keeps
+    // its size and only what it holds grows, so watching the viewport alone kept the thumb at
+    // the length the row had before.
+    const { root, content } = area(100, 100, { wrapped: false })
+    await drawn()
+    expect(root.querySelector("#horizontal")).toBe(null)
+    content.style.width = "400px"
+    await expect.poll(() => root.querySelector("#horizontal")).not.toBe(null)
+    // A quarter is seen: a quarter of the track.
+    await expect.poll(() => box(find(root, "horizontal-thumb")).width).toBeCloseTo(25, 1)
+    content.style.width = "200px"
+    await expect.poll(() => box(find(root, "horizontal-thumb")).width).toBeCloseTo(50, 1)
+  })
+
+  it("measures what is put into it later, with no content part", async () => {
+    const { root, view } = area(100, 100, { wrapped: false })
+    await drawn()
+    const more = document.createElement("div")
+    more.style.cssText = "width: 400px; height: 0px"
+    view.append(more)
+    await expect.poll(() => root.querySelector("#horizontal")).not.toBe(null)
+    await expect.poll(() => box(find(root, "horizontal-thumb")).width).toBeCloseTo(25, 1)
+    // What is put in is watched too: it grows, and the thumb follows.
+    more.style.width = "200px"
+    await expect.poll(() => box(find(root, "horizontal-thumb")).width).toBeCloseTo(50, 1)
+    more.remove()
+    await expect.poll(() => root.querySelector("#horizontal")).toBe(null)
   })
 
   it("scrolls as its thumb is dragged, and jumps to a press on its track", async () => {

@@ -9,6 +9,7 @@ export type {
   GridProps,
   HeadCellProps,
   HeadingProps,
+  MonthsProps,
   NextProps,
   PreviousProps,
   WeekdaysProps,
@@ -19,7 +20,8 @@ export type { PopupProps, PortalProps, PositionerProps, TriggerProps } from "../
 
 /**
  * A date field, and a calendar in a popover, with one value between them. It draws nothing.
- * `bind:value` is the day, `bind:open` whether the calendar shows.
+ * `bind:value` is the day, `bind:open` whether the calendar shows, `bind:month` the first day of
+ * the month it shows.
  */
 export type RootProps = Renderless<DatePickerProps>
 

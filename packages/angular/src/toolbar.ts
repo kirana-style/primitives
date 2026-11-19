@@ -8,7 +8,7 @@ import {
   model,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createToggleGroup } from "@kirana-ui/core/toggle-group"
@@ -43,11 +43,15 @@ export class KuiToolbar implements OnInit {
   controller!: Toolbar
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     orientation: this.orientation(),
     loop: this.loop(),
     disabled: this.disabled(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createToolbar(this.props(), { direction: this.around?.direction })
@@ -66,7 +70,11 @@ export class KuiToolbarButton implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   private readonly root = useToolbar()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -80,7 +88,11 @@ export class KuiToolbarInput implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   private readonly root = useToolbar()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -93,7 +105,11 @@ export class KuiToolbarGroup implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   private readonly root = useToolbar()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()
@@ -140,7 +156,7 @@ export class KuiToggleGroup<Value = unknown> implements OnInit {
   private readonly around = inject(KUI_DIRECTION, { optional: true })
   private readonly toolbar = inject(KUI_TOOLBAR, { optional: true })
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     value: this.value(),
     defaultValue: this.defaultValue(),
     multiple: this.multiple(),
@@ -155,6 +171,10 @@ export class KuiToggleGroup<Value = unknown> implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createToggleGroup(this.props(), {

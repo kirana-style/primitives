@@ -5,6 +5,7 @@ export {
   Grid,
   HeadCell,
   Heading,
+  Months,
   Next,
   Previous,
   Weekdays,

@@ -30,6 +30,8 @@ export type RootProps = PartComponentProps<
     onSelect?: (value: string, details: ChangeDetails) => void
     filter?: CommandProps["filter"]
     loop?: boolean
+    /** Whether the first item shown is highlighted from the start. Default: `true`. */
+    autoHighlight?: boolean
     disabled?: boolean
     id?: string
   }
@@ -43,6 +45,7 @@ function Root(props: RootProps): JSX.Element {
     "onSelect",
     "filter",
     "loop",
+    "autoHighlight",
     "disabled",
     "id",
   ])
@@ -53,6 +56,7 @@ function Root(props: RootProps): JSX.Element {
     defaultInputValue: local.defaultInputValue,
     filter: local.filter,
     loop: local.loop,
+    autoHighlight: local.autoHighlight,
     disabled: local.disabled,
     onInputValueChange: (value: string, details: ChangeDetails) =>
       local.onInputValueChange?.(value, details),

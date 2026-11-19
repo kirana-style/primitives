@@ -7,7 +7,7 @@ import {
   numberAttribute,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createCarousel } from "@kirana-ui/core/carousel"
 import type { Carousel } from "@kirana-ui/core/carousel"
@@ -32,7 +32,7 @@ export class KuiCarousel implements OnInit {
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     index: this.index(),
     defaultIndex: this.defaultIndex(),
@@ -47,6 +47,10 @@ export class KuiCarousel implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createCarousel(this.props(), { direction: this.around?.direction })

@@ -40,6 +40,7 @@ function Root({
   onSelect,
   filter,
   loop,
+  autoHighlight,
   disabled,
   id,
   ...rest
@@ -51,6 +52,7 @@ function Root({
     onSelect,
     filter,
     loop,
+    autoHighlight,
     disabled,
     id,
   })

@@ -136,10 +136,10 @@ const IDIOM: Record<
     entries?: Record<string, string>
   }
 > = {
-  // A plain element of one's own with the composition a part has. In Solid and Svelte the
-  // caller draws the element and spreads the props on it, so there is nothing to merge for it;
-  // in Angular a directive is on the caller's own element; a custom element's parts are the
-  // page's own elements.
+  // A plain element of one's own with the composition a part has, each in its framework's
+  // form: React's `render`, Vue's `as` and `as-child`, Solid's `as` and `render`, Svelte's
+  // `child` snippet. In Angular a directive is on the caller's own element and its host's
+  // bindings join the element's own; a custom element's parts are the page's own elements.
   react: {
     entries: {
       "./use-render":
@@ -150,6 +150,18 @@ const IDIOM: Record<
     entries: {
       "./primitive":
         "`as` and `as-child` are props a component reads: `Primitive` gives a plain element the same",
+    },
+  },
+  solid: {
+    entries: {
+      "./primitive":
+        "`as` and `render` are props a component reads: `Primitive` and `mergeProps` give a plain element the same",
+    },
+  },
+  svelte: {
+    entries: {
+      "./primitive":
+        "`child` is a snippet a component draws: `Primitive` and `mergeProps` give a plain element the same",
     },
   },
   angular: {
@@ -167,6 +179,7 @@ const IDIOM: Record<
       "DatePicker.HeadCell": DATE_PICKER,
       "DatePicker.Heading": DATE_PICKER,
       "DatePicker.Input": DATE_PICKER,
+      "DatePicker.Months": DATE_PICKER,
       "DatePicker.Next": DATE_PICKER,
       "DatePicker.Popup": DATE_PICKER,
       "DatePicker.Portal": DATE_PICKER,
@@ -183,6 +196,8 @@ const IDIOM: Record<
     extra: {
       Ids: RUNTIME,
       Positioner: RUNTIME,
+      hostInputs:
+        "a design system's directive hosts a primitive's (`hostDirectives`), whose inputs Angular binds only from the element: this gives them. Elsewhere a design system passes props to the part it draws",
       hostPart: RUNTIME,
       innerPart: RUNTIME,
       inputsSignal: RUNTIME,
@@ -290,6 +305,8 @@ const SRC =
   "the part waits for the picture before it draws an element, so the address is its own prop: React's reads its element's `src`"
 const BOUND =
   "`bind:value` binds a prop the component declares: React's is the element's own `value`"
+const ON_ROOT =
+  "a structural directive's outputs cannot be bound from the element it draws: the root tells its image's loading"
 const TAG =
   "another element (a `<textarea>`, a `<select>`) is asked for by its tag: React's `render` draws it"
 
@@ -352,9 +369,19 @@ const PROPS: Record<string, PropIdiom> = {
         "a text input's own `select` event bubbles to the root: the output is `itemSelected`",
       ],
       "Otp.Root.onCompleted": ["onComplete", "an output is named for what happened: `completed`"],
+      "Avatar.Fallback.kuiAvatarFallback": [
+        "delay",
+        'the directive\'s own value is its options: `*kuiAvatarFallback="{ delay: 600 }"`',
+      ],
+    },
+    without: {
+      "Avatar.Image.onLoadingStatusChange": ON_ROOT,
+      "Avatar.Image.keepMounted":
+        "the image kept in the page is the directive's attribute form, `<img kuiAvatarImage [src]>`",
     },
     extra: {
       "Avatar.Image.kuiAvatarImage": SRC,
+      "Avatar.Root.onLoadingStatusChange": ON_ROOT,
       "Dialog.Root.swipeDirection": ONE_DIALOG,
       "Dialog.Root.snapPoints": ONE_DIALOG,
       "Dialog.Root.snapPoint": ONE_DIALOG,

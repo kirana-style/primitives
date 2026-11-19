@@ -8,7 +8,7 @@ Generated from the library's own source (`bun scripts/llms.ts`), and checked aga
 
 Install `@kirana-ui/solid`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/solid/agent`, `@kirana-ui/solid/testing`), so nothing is imported from a package the project did not install.
 
-Its entries: an entry per component (`@kirana-ui/solid/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/solid` (every component at once, for a bundler that shakes trees), and `@kirana-ui/solid/runtime`, `@kirana-ui/solid/agent`, `@kirana-ui/solid/testing` and `@kirana-ui/solid/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/solid/direction`, `PortalProvider` in the package root.
+Its entries: an entry per component (`@kirana-ui/solid/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/solid` (every component at once, for a bundler that shakes trees), and `@kirana-ui/solid/runtime`, `@kirana-ui/solid/primitive`, `@kirana-ui/solid/agent`, `@kirana-ui/solid/testing` and `@kirana-ui/solid/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/solid/direction`, `PortalProvider` in the package root.
 
 The attributes and CSS variables below are also data and typed selectors, for a design system: install `@kirana-ui/vocabulary` for them (`import { vocabulary } from "@kirana-ui/vocabulary"`, `import { Dialog } from "@kirana-ui/vocabulary/keys"`: `Dialog.Popup.open` is `"[data-open]"`). It is its own package, and not installed with this one.
 
@@ -38,11 +38,17 @@ The named types the props below mention, each with the entry of this package it 
 
 - `Align` (`@kirana-ui/solid`): `"start" | "center" | "end"`. Where along its side a popup is: at the anchor's start, its centre or its end.
 - `Anchor` (`@kirana-ui/solid`): `Element | VirtualElement`. What a popup is placed against: an element, or a place in the viewport that is none.
-- `CalendarDay` (`@kirana-ui/solid`): A day in the grid of the month shown.
+- `CalendarDay` (`@kirana-ui/solid`): A day in the grid of a month shown.
     - `date: IsoDate`
     - `label: string`: The day of the month as the locale writes it.
-    - `outside: boolean`: Not of the month shown: the days that fill its first and last weeks.
-- `CalendarValue` (`@kirana-ui/solid`): `IsoDate | DateRange | null`. What a calendar holds: a day, a range of days in `mode: "range"`, or `null` for none.
+    - `outside: boolean`: Not of the month it is drawn in: the days that fill its first and last weeks.
+- `CalendarMonth` (`@kirana-ui/solid`): One of the months shown, as `Calendar.Months` gives it.
+    - `index: number`: Its place among the months shown, from 0.
+    - `month: IsoDate`: Its first day.
+    - `title: string`: Its name as the locale writes it (`"March 2026"`).
+    - `weekdays: readonly CalendarWeekday[]`
+    - `weeks: readonly (readonly CalendarDay[])[]`
+- `CalendarValueOf<Mode extends CalendarMode | undefined>` (`@kirana-ui/solid`): `Mode extends "range" ? DateRange | null : Mode extends "multiple" ? readonly IsoDate[] : IsoDate | null`. The value of one mode: a day or `null`, a range or `null`, or a list (empty for none). What `value` and `onValueChange` are typed by, from the `mode` a root is given.
 - `CalendarWeekday` (`@kirana-ui/solid`): A day of the week, as a column's heading names it.
     - `index: number`: Its place in the week as the locale orders it, from 0.
     - `narrow: string`: Its name as a column's heading (`"M"`, `"Mo"`), and in full (`"Monday"`).
@@ -100,6 +106,7 @@ The named types the props below mention, each with the entry of this package it 
     - `value: string`: The value that was checked.
 - `FormErrors` (`@kirana-ui/solid`): `Record<string, string | readonly string[]>`. A form's errors as a server sends them: each field's name with its message, or messages.
 - `FormValues` (`@kirana-ui/solid`): `Record<string, FormDataEntryValue | FormDataEntryValue[]>`. A form's values by field name, as `FormData` holds them: a list where a name is there more than once.
+- `ImageStatus` (`@kirana-ui/solid`): `"idle" | "loading" | "loaded" | "error"`. Where an avatar's picture is in its loading: `idle` while it has no address, `loading`, then `loaded` or `error`. Base UI's `ImageLoadingStatus`.
 - `IsoDate` (`@kirana-ui/solid`): `string`. A day as `YYYY-MM-DD`, in the calendar the world's data is kept in (ISO 8601).
 - `ListCollection` (`@kirana-ui/solid`): Every row of a list of which only some are in the page: a virtualizer draws the ones in view. The keys then move by place, and ask for a row that is not drawn to be brought into the page.
     - `count: number`: How many rows there are, drawn or not.
@@ -171,6 +178,8 @@ What the entries export beside the components, their parts' props types and the 
 
 - `AnchorOption`, from `@kirana-ui/solid`: A positioner's own anchor: an element, a place in the viewport (`getBoundingClientRect`), or a function that gives one, asked each time the popup is placed. `null`, `undefined` or a function that gives neither: the popup's own anchor, its trigger.
 - `Bindable`, from `@kirana-ui/solid`: A value that is the caller's while they give one and the part's own otherwise, as a signal that is asked to change.
+- `CalendarMode`, from `@kirana-ui/solid`: How many days it chooses: one, a first and a last, or any number.
+- `CalendarValue`, from `@kirana-ui/solid`: What a calendar holds: a day, a range of days in `mode: "range"`, a list of days in `mode: "multiple"`, or `null` for none.
 - `ComboboxShown`, from `@kirana-ui/solid`: What a combobox's value part shows: what is chosen, and how it is named.
 - `ComponentDefinition`, from `@kirana-ui/solid`: A component in the vocabulary: its parts by name.
 - `Direction`, from `@kirana-ui/solid`: The reading direction: left to right, or right to left.
@@ -193,6 +202,8 @@ What the entries export beside the components, their parts' props types and the 
 - `positioned(props: P, positioning: Signal<Partial<PositionOptions>>)`, from `@kirana-ui/solid/popover`: A positioner's own props, written where its placement reads them, before its element attaches: the one place they are named. Gives back what is left, for the part's element.
 - `PositionerOptions`, from `@kirana-ui/solid/popover`: A positioner's own props: where its popup goes, and what it is placed against.
 - `TriggerOptions`, from `@kirana-ui/solid/popover`: What a trigger takes of its own: whether the pointer opens the popover too, and its waits.
+- `Merged`, from `@kirana-ui/solid/primitive`: The props of several sets as one: each set's, the later's over the earlier's.
+- `Primitive(props: PrimitiveProps<Tag, State>)`, from `@kirana-ui/solid/primitive`: A plain element of one's own (a badge, a breadcrumb's link) with the composition a part has: `as` for another tag (a `div` unless said), or `render` for the caller's own element, given the props to spread and the state. `state` is written as `data-*` attributes under the attributes given. Merge the component's own props with its caller's through `mergeProps`, as a part's are merged.
 - `createToaster(options?: Core.ToasterOptions)`, from `@kirana-ui/solid` or `@kirana-ui/solid/toast`: The toasts of a page, made once, in a module: `toaster.add({ title })` from anywhere. A title, a description and an action's label are anything Solid draws, unless `Content` says otherwise.
 - `ToastContent`, from `@kirana-ui/solid` or `@kirana-ui/solid/toast`: What a toast's title, description and action's label may be here: anything Solid draws.
 - `ToasterOptions`, from `@kirana-ui/solid` or `@kirana-ui/solid/toast`: What a toaster is made with.
@@ -334,7 +345,7 @@ Its other types:
 
 - Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.
 - A part renders its own element and takes that element's attributes (`class`, not `className`). `as="a"` draws another element; `render` draws the caller's own, spreading the part's props: `render={(props, state) => <a {...props()} href="/x" />}`.
-- What `render` is given are two accessors. `props()` is the attributes given to the part merged under the part's own (its role, ARIA, state attributes and handlers): the part's win, and one it leaves `undefined` stays; classes are joined; styles are merged; for an event the caller's handler runs first, then the part's unless the caller called `event.preventKiranaHandler()`. The element is the caller's to write: an attribute it writes after `{...props()}` wins over all of that, the part's own included, and one written before it loses to the same attribute in `props()`. An element of your own needs nothing from the library to be composed: it spreads the props it is given.
+- What `render` is given are two accessors. `props()` is the attributes given to the part merged under the part's own (its role, ARIA, state attributes and handlers): the part's win, and one it leaves `undefined` stays; classes are joined; styles are merged; for an event the caller's handler runs first, then the part's unless the caller called `event.preventKiranaHandler()`. The element is the caller's to write: an attribute it writes after `{...props()}` wins over all of that, the part's own included, and one written before it loses to the same attribute in `props()`. The element `render` draws needs nothing from the library: it spreads the props it is given.
 - `state()` is the part's state, read from the part's `data-*` attributes listed below, camel-cased: `data-open` is `state().open === true`, `data-side="bottom"` is `state().side === "bottom"`, `data-starting-style` is `state().startingStyle`, and a state that does not hold is absent.
 - `props().children` is what the part holds: the children it was given, or the text it writes (`Meter.Value`, `Select.Value`, `Calendar.Heading`, a toast's `Title`), then a form control's hidden native input. An element that spreads `props()` and writes no children holds them; one that writes its own places `props().children` among them, or a control is drawn that no form reads. `props().ref` is the part's, and a `ref` given to the part gets the same element. A handler given to a part is typed with the event's `preventKiranaHandler()` (`PartEvent`, exported by the package).
 - Controlled: `value={value()}` with `onValueChange`. Uncontrolled: `defaultValue`.
@@ -343,11 +354,11 @@ Its other types:
 - A `Positioner`'s `anchor` is an element, an object with `getBoundingClientRect`, or a function that gives one of those: a signal's accessor, or `() => element` for a variable a `ref` fills.
 - Each part's props are a type of the same entry, named for the part: `import type { TabProps } from "@kirana-ui/solid/tabs"`. They are the part's own props listed below, `as`, `render`, and the attributes of the element it draws.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Autocomplete.Collection`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `Combobox.Value`, `Combobox.Collection`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Select.Root`, `Toast.List` and `Tooltip.Root`. Every other part draws the element named for it below.
+- These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Autocomplete.Collection`, `Calendar.Months`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `Combobox.Value`, `Combobox.Collection`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Months`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Select.Root`, `Toast.List` and `Tooltip.Root`. Every other part draws the element named for it below.
 - A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
 - Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
-- Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`onAtBottomChange`, `onCheckedChange`, `onFormSubmit`, `onIndexChange`, `onInputValueChange`, `onOpenChange`, `onPageChange`, `onPressedChange`, `onSelect`, `onSizesChange`, `onSnapPointChange`, `onValueChange`, `onValueCommitted` and `onValuesChange`). A callback that reports something that happened takes only that, and cannot be refused: `onClearErrors`, `onComplete` and `onMonthChange`.
-- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `Accordion.Panel`, `Autocomplete.Clear`, `Checkbox.Indicator`, `Collapsible.Panel`, `Combobox.Clear`, `Combobox.ItemIndicator`, `ContextMenu.CheckboxItemIndicator`, `ContextMenu.RadioItemIndicator`, `Listbox.ItemIndicator`, `Menu.CheckboxItemIndicator`, `Menu.RadioItemIndicator`, `RadioGroup.Indicator`, `ScrollArea.Scrollbar`, `Select.ItemIndicator` and `Tabs.Panel`.
+- Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`onAtBottomChange`, `onCheckedChange`, `onFormSubmit`, `onIndexChange`, `onInputValueChange`, `onMonthChange`, `onOpenChange`, `onPageChange`, `onPressedChange`, `onSelect`, `onSizesChange`, `onSnapPointChange`, `onValueChange`, `onValueCommitted` and `onValuesChange`). A callback that reports something that happened takes only that, and cannot be refused: `onClearErrors`, `onComplete` and `onLoadingStatusChange`.
+- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `Accordion.Panel`, `Autocomplete.Clear`, `Avatar.Image`, `Checkbox.Indicator`, `Collapsible.Panel`, `Combobox.Clear`, `Combobox.ItemIndicator`, `ContextMenu.CheckboxItemIndicator`, `ContextMenu.RadioItemIndicator`, `Listbox.ItemIndicator`, `Menu.CheckboxItemIndicator`, `Menu.RadioItemIndicator`, `RadioGroup.Indicator`, `ScrollArea.Scrollbar`, `Select.ItemIndicator` and `Tabs.Panel`.
 - `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
@@ -356,6 +367,11 @@ Its other types:
 - A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.
 - `PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.
 - An agent can read and use a page built with these: `createAgent()` from `@kirana-ui/solid/agent` gives `snapshot()`, `act({ steps })`, `query()`, `history()`, `undo()` and `redo()`; what it changes reaches the same callbacks with `details.source === "agent"`. "Agent", above, has the whole of it.
+
+### For a design system
+
+- For an element of your own that takes `as` and `render` as a part does (a badge, a breadcrumb's link): `import { Primitive, mergeProps } from "@kirana-ui/solid/primitive"`. `<Primitive as="span" {...mergeProps({ class: "badge" }, props)} state={{ active: active() }} />` draws that element (a `div` by default) with the attributes it is given; with `render={(props, state) => <a {...props()} />}` it draws the caller's own instead, given the props and the state as accessors, as a part's `render` is (`props().children` is what it holds). `state` is written on the element as `data-*` attributes, under the attributes given: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's, by a part's rule: a later set wins an attribute (one it leaves `undefined` stays), classes are joined, styles merged, the handlers of an event run in order and `event.preventKiranaHandler()` stops those after it, and every `ref` gets the element. It reads its sets when a prop is read, so the props stay reactive. It is not solid-js's `mergeProps`, where a later class replaces an earlier one: import one under another name where both are used. Its props type is `PrimitiveProps<Tag, State>`.
+- Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes). A design system whose tooltips open at once passes `delay` on its own root: `<Tooltip.Root delay={0} {...props} />` in its own component (its caller's `delay` still wins).
 
 ## Components
 
@@ -638,10 +654,21 @@ Anatomy:
 
 Each part, and its own props:
 
-- `<Avatar.Root>` draws a `<span>`. The frame the image and its stand-in share.
-- `<Avatar.Image>` draws a `<img>`. The picture. In the page once it has loaded.
+- `<Avatar.Root>` draws a `<span>`.
+- `<Avatar.Image>` draws a `<img>`.
+    - `onLoadingStatusChange?: (status: ImageStatus) => void`: Called each time the picture's loading status changes: `loading` once it has an address, then `loaded` or `error`; `idle` again when its address is taken away. The same status is on the root, as `data-image-loading-status`.
+    - `keepMounted?: boolean`: Keeps the image's element in the page while the picture loads, as Base UI's: the element loads it itself (`loading="lazy"` works), its own `src` is the address, and until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to hide or fade it by. Default: `false`, the element is drawn once the picture has loaded.
     - `src?: string`: The picture's address: the element is in the page once it has loaded.
-- `<Avatar.Fallback>` draws a `<span>`. What shows until the picture has loaded, or when it cannot.
+- `<Avatar.Fallback>` draws a `<span>`. What shows until the picture has loaded, or when it cannot; after its `delay`, when it has one.
+    - `delay?: number`: How long the fallback waits before it shows, in milliseconds, so a picture that loads sooner never lets it be seen. Read once, when the fallback is made. Default: `0`, at once (a server draws it then, and draws nothing while there is a wait).
+
+Attributes and CSS variables, by part:
+
+- root: The frame the image and its stand-in share.
+    - `data-image-loading-status="idle | loading | loaded | error"`: Where the picture is in its loading: `idle` while it has no address.
+- image: The picture. In the page once it has loaded; with `keepMounted` (on Angular, the attribute form) in the page all along, `aria-hidden` until it has loaded.
+    - `data-loading`: Present while the picture loads, on an image kept in the page.
+    - `data-error`: Present when the picture cannot load, on an image kept in the page.
 
 ### Button
 
@@ -668,32 +695,40 @@ Attributes and CSS variables, by part:
 import { Calendar } from "@kirana-ui/solid/calendar"
 ```
 
-Parts: `<Calendar.Root>`, `<Calendar.Heading>`, `<Calendar.Previous>`, `<Calendar.Next>`, `<Calendar.Grid>`, `<Calendar.Weekdays>`, `<Calendar.HeadCell>`, `<Calendar.Weeks>`, `<Calendar.Cell>`, `<Calendar.Day>`.
+Parts: `<Calendar.Root>`, `<Calendar.Heading>`, `<Calendar.Previous>`, `<Calendar.Next>`, `<Calendar.Months>`, `<Calendar.Grid>`, `<Calendar.Weekdays>`, `<Calendar.HeadCell>`, `<Calendar.Weeks>`, `<Calendar.Cell>`, `<Calendar.Day>`, `<Calendar.Input>`.
 
 Anatomy:
 
 ```
 <Calendar.Root>
-  <Calendar.Heading>
+  <Calendar.Months> (optional)
+    <Calendar.Heading>
+    <Calendar.Grid>
+      <Calendar.Weekdays>
+        <Calendar.HeadCell> (repeated)
+      <Calendar.Weeks>
+        <Calendar.Cell> (repeated)
+          <Calendar.Day>
   <Calendar.Previous>
   <Calendar.Next>
-  <Calendar.Grid>
-    <Calendar.Weekdays>
-      <Calendar.HeadCell> (repeated)
-    <Calendar.Weeks>
-      <Calendar.Cell> (repeated)
-        <Calendar.Day>
+  <Calendar.Input>
 ```
 
 Props of its root:
 
-- `value?: CalendarValue`: One day, or with `mode: "range"` a first and a last day; `null` for none.
-- `defaultValue?: CalendarValue`: The value it starts with, when the caller does not hold `value`. Read once.
-- `onValueChange?: (value: CalendarValue, details: ChangeDetails) => void`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
-- `mode?: "single" | "range"`: Whether one day is chosen (the default) or a first and a last.
-- `defaultFocusedValue?: IsoDate`: The day it opens on, when it has no value: its month is the one shown.
-- `onMonthChange?: (month: IsoDate) => void`: Heard when another month is shown: its first day.
-- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
+- `value?: CalendarValueOf<Mode>`: One day; with `mode: "range"` a first and a last day; with `mode: "multiple"` a list of days, in the order they were chosen. `null` (or an empty list) for none.
+- `defaultValue?: CalendarValueOf<Mode>`: The value it starts with, when the caller does not hold `value`. Read once.
+- `onValueChange?: (value: CalendarValueOf<Mode>, details: ChangeDetails) => void`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
+- `mode?: Mode`: Whether one day is chosen (the default), a first and a last (`"range"`), or any number (`"multiple"`: a day pressed is added, and pressed again is taken away).
+- `minDays?: number`: With `mode: "multiple"`: the fewest days that can be left chosen. A press that would leave fewer does nothing.
+- `maxDays?: number`: With `mode: "multiple"`: the most days that can be chosen. Once they are, the other days are disabled until one is taken away.
+- `months?: number`: How many months are shown side by side (1 by default): one selection and one grid for the keys, which go from a month into the next. Each is drawn in `Calendar.Months`.
+- `pagedNavigation?: boolean`: With several `months`: whether Previous and Next turn them all (a page) rather than one month. Off by default, as in react-day-picker.
+- `month?: IsoDate`: The month shown (the first of them, with several `months`), when the caller holds it: any day of it. A caption's month and year menus, or a "today" button, set it.
+- `defaultMonth?: IsoDate`: The month it starts on, when the caller does not hold `month`. Read once. Without it, the month of `defaultFocusedValue`, of the value, or of today.
+- `onMonthChange?: (month: IsoDate, details: ChangeDetails) => void`: Heard as another month is about to be shown (the keys, the buttons, a day of another month pressed): its first day. `details.cancel()` keeps the month as it was.
+- `defaultFocusedValue?: IsoDate`: The day it opens on, focusable when Tab reaches the grid. It is also the month it opens on, unless `month` or `defaultMonth` says another: then the stop for Tab is a chosen day of the months shown, today, or their first day.
+- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. Default `"en-US"`.
 - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
 - `min?: IsoDate`: The first and the last day that can be chosen.
 - `max?: IsoDate`: The last day that can be chosen.
@@ -701,14 +736,18 @@ Props of its root:
 - `disabled?: boolean`: Disabled: no day can be chosen.
 - `readOnly?: boolean`: Shown as it is: the days can be moved through, and none can be chosen.
 - `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
+- `name?: string`: The name its hidden input submits the value under: a day; the first and the last of a range, as two entries; each day of a list.
+- `form?: string`: The id of the form it belongs to, when it is not inside it.
 
 Each part, and its own props:
 
-- `<Calendar.Root>` draws a `<div>`. Its props are above.
+- `<Calendar.Root>` draws a `<div>`. Generic: `<Mode extends CalendarMode = "single">`. `value` and `onValueChange` are typed by `mode`: a day, a range, or a list of days. Its props are above.
 - `<Calendar.Heading>` draws a `<div>`. Names the month shown. Read out when it changes.
 - `<Calendar.Previous>` draws a `<button>`.
 - `<Calendar.Next>` draws a `<button>`.
-- `<Calendar.Grid>` draws a `<table>`. The table of days: a grid the arrows move in.
+- `<Calendar.Months>` draws no element. The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month.
+    - `children: (month: CalendarMonth) => JSX.Element`: Required. Draws one month, once for each shown: its heading and its grid.
+- `<Calendar.Grid>` draws a `<table>`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
 - `<Calendar.Weekdays>` draws no element. The days of the week: each is given to draw its head cell.
     - `children: (weekday: CalendarWeekday) => JSX.Element`: Required. Draws one day of the week, once for each: its heading cell.
 - `<Calendar.HeadCell>` draws a `<th>`. A column's heading: a day of the week.
@@ -719,6 +758,7 @@ Each part, and its own props:
     - `date: string`: Required. The day it holds, as `Calendar.Weeks` gave it: `day.date`.
 - `<Calendar.Day>` draws a `<button>`.
     - `date: string`: Required. The day it is the button of, as `Calendar.Weeks` gave it: `day.date`.
+- `<Calendar.Input>` draws a `<input>`. The hidden input it is submitted by, when it has a name: one more is drawn after it for each other day.
 
 Attributes and CSS variables, by part:
 
@@ -730,7 +770,7 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -738,7 +778,7 @@ Attributes and CSS variables, by part:
     - `data-range-start`: Present on the first day of a range.
     - `data-range-end`: Present on the last day of a range.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -768,7 +808,7 @@ Anatomy:
 Props of its root:
 
 - `index?: number`: Which slide is at the start of the view, from 0.
-- `defaultIndex?: number`: The slide it starts at, when the caller does not hold `index`. Read once.
+- `defaultIndex?: number`: The slide it starts at, when the caller does not hold `index`. Read once. Default `0`.
 - `onIndexChange?: (index: number, details: ChangeDetails) => void`: Heard as another slide is about to be at the start of the view: `details.cancel()` keeps the index as it was.
 - `orientation?: Orientation`: Whether the slides go across (the default) or down.
 - `loop?: boolean`: Whether going on from the last slide comes round to the first.
@@ -1087,11 +1127,12 @@ Anatomy:
 Props of its root:
 
 - `inputValue?: string`: What the input says.
-- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
+- `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once. Default `""`.
 - `onInputValueChange?: (value: string, details: ChangeDetails) => void`: Heard as the input's text is about to change: `details.cancel()` keeps it as it was.
 - `onSelect?: (value: string, details: ChangeDetails) => void`: An item was chosen. It takes the place of the element's own `select` event.
 - `filter?: ((label: string, query: string, keywords: readonly string[]) => boolean) | null`: Whether an item is shown for what was typed. Default: its label or one of its keywords holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants.
 - `loop?: boolean`: Whether a step past an end of the list goes round to the other.
+- `autoHighlight?: boolean`: Whether the first item shown is highlighted from the start. Default: `true`.
 - `disabled?: boolean`: Disabled: nothing can be typed or chosen.
 
 Each part, and its own props:
@@ -1288,7 +1329,7 @@ Props of its root:
 - `value?: IsoDate | null`: The day typed, once all of it is; `null` until then.
 - `defaultValue?: IsoDate | null`: The value it starts with, when the caller does not hold `value`. Read once.
 - `onValueChange?: (value: IsoDate | null, details: ChangeDetails) => void`: Heard as the day is about to change, once all of it is typed or as it is cleared: `details.cancel()` keeps the value as it was.
-- `locale?: string`: The language and region that order the day, the month and the year and put what stands between them (`"en-US"`: month/day/year). Give it: a server does not know the reader's.
+- `locale?: string`: The language and region that order the day, the month and the year and put what stands between them (`"en-US"`: month/day/year). Give it: a server does not know the reader's. Default `"en-US"`.
 - `min?: IsoDate`: The first and the last day it takes: outside them it says it is invalid.
 - `max?: IsoDate`: The last day it takes.
 - `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`.
@@ -1325,7 +1366,7 @@ Attributes and CSS variables, by part:
 import { DatePicker } from "@kirana-ui/solid/date-picker"
 ```
 
-Parts: `<DatePicker.Root>`, `<DatePicker.Field>`, `<DatePicker.Segments>`, `<DatePicker.Segment>`, `<DatePicker.Input>`, `<DatePicker.Trigger>`, `<DatePicker.Portal>`, `<DatePicker.Positioner>`, `<DatePicker.Popup>`, `<DatePicker.Calendar>`, `<DatePicker.Heading>`, `<DatePicker.Previous>`, `<DatePicker.Next>`, `<DatePicker.Grid>`, `<DatePicker.Weekdays>`, `<DatePicker.HeadCell>`, `<DatePicker.Weeks>`, `<DatePicker.Cell>`, `<DatePicker.Day>`.
+Parts: `<DatePicker.Root>`, `<DatePicker.Field>`, `<DatePicker.Segments>`, `<DatePicker.Segment>`, `<DatePicker.Input>`, `<DatePicker.Trigger>`, `<DatePicker.Portal>`, `<DatePicker.Positioner>`, `<DatePicker.Popup>`, `<DatePicker.Calendar>`, `<DatePicker.Heading>`, `<DatePicker.Previous>`, `<DatePicker.Next>`, `<DatePicker.Months>`, `<DatePicker.Grid>`, `<DatePicker.Weekdays>`, `<DatePicker.HeadCell>`, `<DatePicker.Weeks>`, `<DatePicker.Cell>`, `<DatePicker.Day>`.
 
 Anatomy:
 
@@ -1340,15 +1381,16 @@ Anatomy:
     <DatePicker.Positioner>
       <DatePicker.Popup>
         <DatePicker.Calendar>
-          <DatePicker.Heading>
+          <DatePicker.Months> (optional)
+            <DatePicker.Heading>
+            <DatePicker.Grid>
+              <DatePicker.Weekdays>
+                <DatePicker.HeadCell> (repeated)
+              <DatePicker.Weeks>
+                <DatePicker.Cell> (repeated)
+                  <DatePicker.Day>
           <DatePicker.Previous>
           <DatePicker.Next>
-          <DatePicker.Grid>
-            <DatePicker.Weekdays>
-              <DatePicker.HeadCell> (repeated)
-            <DatePicker.Weeks>
-              <DatePicker.Cell> (repeated)
-                <DatePicker.Day>
 ```
 
 Props of its root:
@@ -1365,6 +1407,11 @@ Props of its root:
 - `isDateUnavailable?: (date: IsoDate) => boolean`: Days that cannot be picked in the calendar.
 - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one.
 - `fixedWeeks?: boolean`: Always six rows of days.
+- `months?: number`: How many months the calendar shows side by side (1 by default).
+- `pagedNavigation?: boolean`: With several `months`: whether Previous and Next turn them all rather than one month.
+- `month?: IsoDate`: The month the calendar shows (the first, with several), when the caller holds it.
+- `defaultMonth?: IsoDate`: The month the calendar starts on, when the caller does not hold `month`. Read once.
+- `onMonthChange?: (month: IsoDate, details: ChangeDetails) => void`: Heard as the calendar is about to show another month, a day typed or picked included: its first day. `details.cancel()` keeps the month as it was.
 - `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part of the field shows.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
@@ -1392,7 +1439,9 @@ Each part, and its own props:
 - `<DatePicker.Heading>` draws a `<div>`. Names the month shown. Read out when it changes.
 - `<DatePicker.Previous>` draws a `<button>`.
 - `<DatePicker.Next>` draws a `<button>`.
-- `<DatePicker.Grid>` draws a `<table>`. The table of days: a grid the arrows move in.
+- `<DatePicker.Months>` draws no element. The months shown, with several: each is given to draw its heading and its grid. It draws no element, and is left out for one month.
+    - `children: (month: CalendarMonth) => JSX.Element`: Required. Draws one month, once for each shown: its heading and its grid.
+- `<DatePicker.Grid>` draws a `<table>`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
 - `<DatePicker.Weekdays>` draws no element. The days of the week: each is given to draw its head cell.
     - `children: (weekday: CalendarWeekday) => JSX.Element`: Required. Draws one day of the week, once for each: its heading cell.
 - `<DatePicker.HeadCell>` draws a `<th>`. A column's heading: a day of the week.
@@ -1442,7 +1491,7 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -1450,7 +1499,7 @@ Attributes and CSS variables, by part:
     - `data-range-start`: Present on the first day of a range.
     - `data-range-end`: Present on the last day of a range.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -1632,7 +1681,7 @@ Props of its root:
 - `invalid?: boolean`: Invalid whatever the value: an error known from elsewhere.
 - `validate?: ( value: string ) => string | readonly string[] | null | Promise<string | readonly string[] | null>`: The field's own check, after the browser's: a message or several when the value is wrong, `null` when it is right. It may answer later, with a promise.
 - `validationMode?: ValidationMode`: When the value is checked; the form's by default, else `"onSubmit"`.
-- `validationDebounceTime?: number`: With `"onChange"`, how long the value must rest before it is checked, in milliseconds.
+- `validationDebounceTime?: number`: With `"onChange"`, how long the value must rest before it is checked, in milliseconds. Default `0`.
 
 Each part, and its own props:
 
@@ -1760,8 +1809,8 @@ Props of its root:
 - `open?: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
-- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
-- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
+- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds. Default `600`.
+- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds. Default `300`.
 - `disabled?: boolean`: Disabled: the pointer and focus do not open it.
 
 Each part, and its own props:
@@ -2172,8 +2221,8 @@ Props of its root:
 - `value?: Value | null`: The item whose content is shown; `null` is "none".
 - `defaultValue?: Value | null`: The item whose content it starts with, when the caller does not hold `value`. Read once.
 - `onValueChange?: (value: Value | null, details: ChangeDetails) => void`: Heard as another item's content is about to show, or none: `details.cancel()` keeps the value as it was.
-- `delay?: number`: How long the pointer rests on a trigger before its content shows, in milliseconds.
-- `closeDelay?: number`: How long after the pointer leaves the content goes, in milliseconds.
+- `delay?: number`: How long the pointer rests on a trigger before its content shows, in milliseconds. Default `50`.
+- `closeDelay?: number`: How long after the pointer leaves the content goes, in milliseconds. Default `50`.
 - `orientation?: Orientation`: Whether the triggers are laid out across (the default) or down: the arrows that move between them follow.
 
 Each part, and its own props:
@@ -2401,10 +2450,11 @@ Props of its root:
 
 - `length?: number`: How many characters the code has. Default: 6.
 - `value?: string`: The characters typed so far, when the caller holds them.
-- `defaultValue?: string`: The characters it starts with, when the caller does not hold `value`. Read once.
+- `defaultValue?: string`: The characters it starts with, when the caller does not hold `value`. Read once. Default `""`.
 - `onValueChange?: (value: string, details: ChangeDetails) => void`: Heard as the characters are about to change: `details.cancel()` keeps them as they were.
 - `onComplete?: (value: string) => void`: Every character is in: the moment to send the code.
-- `mode?: "numeric" | "alphanumeric" | "text"`: What a character may be. Default: `numeric`.
+- `mode?: "numeric" | "alphabetic" | "alphanumeric" | "text"`: What a character may be: a digit (`numeric`), a letter (`alphabetic`, `a` to `z` either case), either (`alphanumeric`), or anything but white space (`text`). It also says which keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`, on purpose: a one-time code is digits, and its keyboard is then the one to type them on.
+- `pattern?: string`: What else a character may be: a regular expression, as text, that one character must match whole (`"[A-F0-9]"`), in place of `mode`'s rule. Text, as an attribute can only be, so it is given the same way on every framework and on a custom element. With a pattern, `mode` only says the keyboard, and defaults to `text`.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, the code is submitted with the form around it.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
@@ -2455,7 +2505,7 @@ Anatomy:
 Props of its root:
 
 - `page?: number`: The page shown, from 1.
-- `defaultPage?: number`: The page it starts at, when the caller does not hold `page`. Read once.
+- `defaultPage?: number`: The page it starts at, when the caller does not hold `page`. Read once. Default `1`.
 - `onPageChange?: (page: number, details: ChangeDetails) => void`: Heard as another page is about to be shown: `details.cancel()` keeps the page as it was.
 - `count: number`: Required. How many items there are in all.
 - `pageSize?: number`: How many items a page holds. Default 10.
@@ -2696,7 +2746,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
-- item: One choice. It holds a hidden native radio, which a form and a label reach.
+- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
@@ -2746,13 +2796,13 @@ Each part, and its own props:
 
 Attributes and CSS variables, by part:
 
-- group: The panels and the bars between them. A design lays it out as a flex box.
+- group: The panels and the bars between them. A design lays it out as a flex box: `display: flex`, and `flex-direction: column` when it is vertical. A group in a panel that is a flex box itself takes `min-width: 0` and `min-height: 0`, or what it holds widens the panel.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `data-disabled`: Present when it is disabled.
-- panel: One panel. It carries its share of the group.
+- panel: One panel. It carries its share of the group, written as its `flex` with `min-width: 0` and `min-height: 0`, so what it holds cannot keep it past its share. Its `overflow` is the design's.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `--panel-size`: The panel's share, in hundredths of the group.
-- handle: The bar between two panels: dragged, or moved with the arrows.
+- handle: The bar between two panels: dragged, or moved with the arrows. A design gives it its thickness and `flex-shrink: 0`, so the panels do not squeeze it.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `data-dragging`: Present while the bar is dragged.
     - `data-disabled`: Present when it is disabled.
@@ -2770,7 +2820,8 @@ Anatomy:
 ```
 <ScrollArea.Root>
   <ScrollArea.Viewport>
-    <ScrollArea.Content>
+    <ScrollArea.Content> (optional)
+    <ScrollArea.Scrollbar> (repeated, as above)
   <ScrollArea.Scrollbar> (repeated)
     <ScrollArea.Thumb>
   <ScrollArea.Corner>
@@ -2780,7 +2831,7 @@ Each part, and its own props:
 
 - `<ScrollArea.Root>` draws a `<div>`.
 - `<ScrollArea.Viewport>` draws a `<div>`.
-- `<ScrollArea.Content>` draws a `<div>`. What is scrolled.
+- `<ScrollArea.Content>` draws a `<div>`. A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
 - `<ScrollArea.Scrollbar>` draws a `<div>`.
     - `orientation?: Orientation`: Which way it scrolls. Default: `vertical`.
     - `keepMounted?: boolean`: In the page even while there is nothing to scroll its way.
@@ -3338,8 +3389,8 @@ Props of its root:
 - `open?: boolean`: Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
-- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds.
-- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds.
+- `delay?: number`: How long the pointer rests on the trigger before the popup opens, in milliseconds. Default `600`.
+- `closeDelay?: number`: How long after the pointer leaves the popup closes, in milliseconds. Default `0`.
 - `disabled?: boolean`: Disabled: the pointer and focus do not open it.
 
 Each part, and its own props:

@@ -1,13 +1,23 @@
-import { Directive, effect, inject, input, untracked } from "@angular/core"
+import { Directive, TemplateRef, effect, inject, input, output, untracked } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { computed, signal } from "@kirana-ui/core"
 import { createAvatar } from "@kirana-ui/core/avatar"
-import type { Avatar } from "@kirana-ui/core/avatar"
+import type { Avatar, ImageStatus } from "@kirana-ui/core/avatar"
 
 import { hostPart, mounted, presentWhile } from "./runtime"
 
+/**
+ * `<span kuiAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either
+ * of the image's forms (a structural directive's own outputs cannot be bound from its element).
+ */
 @Directive({ selector: "[kuiAvatar]", exportAs: "kuiAvatar" })
 export class KuiAvatar implements OnInit {
+  /**
+   * Each time the picture's loading status changes: `loading` once it has an address, then
+   * `loaded` or `error`; `idle` again when its address is taken away. Base UI's
+   * `onLoadingStatusChange`; the root says the same in `data-image-loading-status`.
+   */
+  readonly loadingStatusChanged = output<ImageStatus>()
   controller!: Avatar
   private readonly part = hostPart()
   private readonly mount = mounted()
@@ -16,45 +26,71 @@ export class KuiAvatar implements OnInit {
     this.controller = createAvatar(signal({}))
     this.part(this.controller.root)
     this.mount(this.controller)
+    this.mount(
+      this.controller.statusReport(() => (status) => this.loadingStatusChanged.emit(status))
+    )
   }
 }
 
-/** `<img *kuiAvatarImage="address" alt="…">`: in the page once the picture has loaded. */
+/**
+ * The picture, in either of two forms. `<img *kuiAvatarImage="address" alt="…">` is in the page
+ * once the picture has loaded. `<img kuiAvatarImage [src]="address" alt="…">` is the caller's own
+ * element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself
+ * (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and
+ * until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to
+ * hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
+ */
 @Directive({ selector: "[kuiAvatarImage]" })
 export class KuiAvatarImage implements OnInit {
-  /** The picture's address: the element is in the page once it has loaded. */
+  /** The picture's address, in the structural form: the element is in the page once it has loaded. */
   readonly kuiAvatarImage = input<string | undefined>()
   private readonly root = inject(KuiAvatar)
-  private readonly present = presentWhile()
+  // On an `<ng-template>` (the `*` form) the part is drawn once loaded; on an element, it is
+  // that element, which says its own address.
+  private readonly structural = inject(TemplateRef, { optional: true }) !== null
+  private readonly present = this.structural ? presentWhile() : undefined
+  private readonly host = this.structural ? undefined : hostPart()
 
   constructor() {
     effect(() => {
       const address = this.kuiAvatarImage()
-      untracked(() => this.root.controller?.source.set(address))
+      if (this.structural) untracked(() => this.root.controller?.source.set(address))
     })
   }
 
   ngOnInit(): void {
     const { controller } = this.root
+    if (this.host) return this.host(controller.keptImage)
     controller.source.set(this.kuiAvatarImage())
-    this.present(
+    this.present?.(
       computed(() => controller.status.get() === "loaded"),
       controller.image
     )
   }
 }
 
-/** `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot. */
+/**
+ * `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot.
+ * `{ delay: 600 }` waits that many milliseconds first, so a picture that loads sooner never lets
+ * it be seen.
+ */
 @Directive({ selector: "[kuiAvatarFallback]" })
 export class KuiAvatarFallback implements OnInit {
+  /**
+   * Its options: `{ delay: 600 }` waits that many milliseconds before showing. Read once.
+   * Default: no wait.
+   */
+  readonly kuiAvatarFallback = input<{ delay?: number | undefined } | "">("")
   private readonly root = inject(KuiAvatar)
   private readonly present = presentWhile()
+  private readonly mount = mounted()
 
   ngOnInit(): void {
-    const { controller } = this.root
-    this.present(
-      computed(() => controller.status.get() !== "loaded"),
-      controller.fallback
+    const options = this.kuiAvatarFallback()
+    const presence = this.root.controller.fallbackPresence(
+      typeof options === "object" ? options : {}
     )
+    this.mount(presence)
+    this.present(presence.shown, this.root.controller.fallback)
   }
 }

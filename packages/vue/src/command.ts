@@ -40,6 +40,7 @@ const Root = defineComponent({
       default: undefined,
     },
     loop: Boolean,
+    autoHighlight: optional(Boolean),
     disabled: Boolean,
     id: String,
   },
@@ -53,6 +54,7 @@ const Root = defineComponent({
         defaultInputValue: props.defaultInputValue,
         filter: props.filter,
         loop: props.loop,
+        autoHighlight: props.autoHighlight,
         disabled: props.disabled,
         onInputValueChange(value: string, details: ChangeDetails) {
           emit("inputValueChange", value, details)

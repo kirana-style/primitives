@@ -1,5 +1,5 @@
 import { Directive, inject, input } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { createQrCode } from "@kirana-ui/core/qr-code"
 import type { QrCode, QrCorrection } from "@kirana-ui/core/qr-code"
 
@@ -15,11 +15,15 @@ export class KuiQrCode implements OnInit {
   controller!: QrCode
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     correction: this.correction(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createQrCode(this.props())

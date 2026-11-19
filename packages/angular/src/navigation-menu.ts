@@ -1,5 +1,5 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import { defined } from "@kirana-ui/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createNavigationMenu } from "@kirana-ui/core/navigation-menu"
@@ -23,7 +23,7 @@ export class KuiNavigationMenu<Value = unknown> implements OnInit {
   private readonly generated = inject(KuiIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
@@ -38,6 +38,10 @@ export class KuiNavigationMenu<Value = unknown> implements OnInit {
       }
     },
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createNavigationMenu(this.props(), { direction: this.around?.direction })
@@ -131,10 +135,14 @@ export class KuiNavigationMenuLink implements OnInit {
   })
   private readonly root = inject(KuiNavigationMenu)
   private readonly put = hostPart()
-  private readonly options = inputsSignal(() => ({
+  private readonly options = inputsSignal(this, () => ({
     active: this.active(),
     closeOnClick: this.closeOnClick(),
   }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
     const options = this.options()

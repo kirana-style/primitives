@@ -186,6 +186,35 @@ section[data-fixture="combobox-data"] {
 .scroll-corner {
   background: #ccc;
 }
+/* A row of pictures that load late, in an area with padding, as shadcn/ui's horizontal example:
+   the viewport keeps its size as the row grows. A picture not yet given its address takes no
+   room, in every browser. */
+.scroll-wide {
+  box-sizing: border-box;
+  width: 216px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #999;
+}
+.scroll-pictures {
+  display: flex;
+  gap: 8px;
+  width: max-content;
+}
+/* Three of them and two gaps fit the area while no picture has loaded: a server cannot know
+   that anything overflows, so the page at rest has nothing to scroll. */
+.scroll-figure {
+  display: flex;
+  min-width: 60px;
+  height: 40px;
+}
+.scroll-picture {
+  display: block;
+  height: 40px;
+}
+.scroll-picture:not([src]) {
+  width: 0;
+}
 
 .nav-list {
   display: flex;
@@ -273,6 +302,10 @@ section[data-fixture="combobox-data"] {
   width: 8px;
   height: 2px;
   background: #999;
+}
+.otp-row {
+  display: flex;
+  gap: 12px;
 }
 .split {
   display: flex;
@@ -630,6 +663,13 @@ section[data-fixture="container"] {
 }
 .calendar [data-outside-month] {
   opacity: 0.5;
+}
+.calendar.calendar-months {
+  width: auto;
+}
+.calendar-months .months {
+  display: flex;
+  gap: 16px;
 }
 
 .date-field {

@@ -50,7 +50,14 @@ export interface HoverPopup {
  */
 export function createHoverPopup(
   props: ReadonlySignal<HoverPopupProps>,
-  kind: { name: string; delay: number; closeDelay: number; describes: boolean }
+  kind: {
+    name: string
+    delay: number
+    closeDelay: number
+    describes: boolean
+    /** The trigger's element: a tooltip's is a button, a hover card's a link. */
+    trigger: "button" | "a"
+  }
 ): HoverPopup {
   const id = props.peek().id
   const popupId = `${id}-popup`
@@ -98,6 +105,8 @@ export function createHoverPopup(
     },
     trigger: {
       props: computed(() => ({
+        // A button with no type submits the form it is in; a link takes none.
+        type: kind.trigger === "button" ? "button" : undefined,
         // A tooltip is the trigger's description while it shows, and only then.
         "aria-describedby": kind.describes && popup.mounted.get() ? popupId : undefined,
         "data-popup-open": flag(open.get()),

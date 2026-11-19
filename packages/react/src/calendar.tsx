@@ -4,7 +4,10 @@ import { createCalendar } from "@kirana-ui/core/calendar"
 import type {
   Calendar as Controller,
   CalendarDay,
+  CalendarMode,
+  CalendarMonth,
   CalendarProps,
+  CalendarValue,
   CalendarWeekday,
 } from "@kirana-ui/core/calendar"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
@@ -25,25 +28,35 @@ const Context = createContext<Controller | null>(null)
 /** For a component made of this one's parts: a date picker. */
 export { Context as CalendarContext }
 
+/** The place of the month its parts are drawn in, inside `Calendar.Months`. */
+const MonthContext = createContext<number | undefined>(undefined)
+
 function useCalendar(part: string): Controller {
   const controller = useContext(Context)
   if (!controller) throw new Error(`<Calendar.${part}> must be inside <Calendar.Root>`)
   return controller
 }
 
-export type RootProps = PartComponentProps<
+/** `value` and `onValueChange` are typed by `mode`: a day, a range, or a list of days. */
+export type RootProps<Mode extends CalendarMode = "single"> = PartComponentProps<
   "div",
   StateOf<Parts["root"]>,
-  Omit<CalendarProps, "id"> & { id?: string }
+  Omit<CalendarProps<Mode>, "id"> & { id?: string }
 >
 
-function Root({
+function Root<Mode extends CalendarMode = "single">({
   value,
   defaultValue,
   onValueChange,
   mode,
-  defaultFocusedValue,
+  minDays,
+  maxDays,
+  months,
+  pagedNavigation,
+  month,
+  defaultMonth,
   onMonthChange,
+  defaultFocusedValue,
   locale,
   calendarSystem,
   min,
@@ -52,19 +65,28 @@ function Root({
   disabled,
   readOnly,
   fixedWeeks,
+  name,
+  form,
   id,
   ...rest
-}: RootProps): ReactElement {
+}: RootProps<Mode>): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
   const controller = useController<CalendarProps, Controller>(
     within(createCalendar, { direction }),
     {
-      value,
-      defaultValue,
-      onValueChange,
+      // The core holds any mode's value; the caller's is its mode's.
+      value: value as CalendarValue | undefined,
+      defaultValue: defaultValue as CalendarValue | undefined,
+      onValueChange: onValueChange as CalendarProps["onValueChange"],
       mode,
-      defaultFocusedValue,
+      minDays,
+      maxDays,
+      months,
+      pagedNavigation,
+      month,
+      defaultMonth,
       onMonthChange,
+      defaultFocusedValue,
       locale,
       calendarSystem,
       min,
@@ -73,6 +95,8 @@ function Root({
       disabled,
       readOnly,
       fixedWeeks,
+      name,
+      form,
       id,
     }
   )
@@ -83,11 +107,14 @@ function Root({
 
 export type HeadingProps = PartComponentProps<"div", StateOf<Parts["heading"]>>
 
+/** The month a part is drawn in: the one `Calendar.Months` gave, or the first. */
+const useMonth = (part: string) => useCalendar(part).monthAt(useContext(MonthContext) ?? 0)
+
 /** Names the month shown, unless it is given something else to say. */
 function Heading({ children, ...props }: HeadingProps): ReactElement {
-  const controller = useCalendar("Heading")
-  const title = useSignal(controller.title)
-  return usePart(controller.heading, "div", { ...props, children: children ?? title })
+  const month = useMonth("Heading")
+  const title = useSignal(month.title)
+  return usePart(month.heading, "div", { ...props, children: children ?? title })
 }
 
 export type PreviousProps = PartComponentProps<"button", StateOf<Parts["previous"]>>
@@ -99,7 +126,29 @@ export type NextProps = PartComponentProps<"button", StateOf<Parts["next"]>>
 const Next = (props: NextProps) => usePart(useCalendar("Next").next, "button", props)
 export type GridProps = PartComponentProps<"table", StateOf<Parts["grid"]>>
 
-const Grid = (props: GridProps) => usePart(useCalendar("Grid").grid, "table", props)
+const Grid = (props: GridProps) => usePart(useMonth("Grid").grid, "table", props)
+
+export interface MonthsProps {
+  /** Draws one month, once for each shown: its heading and its grid. */
+  children: (month: CalendarMonth) => ReactNode
+}
+
+/**
+ * Draws its child once for each month shown (`months` on the root), side by side: the parts
+ * inside each are that month's. Left out for one month.
+ */
+function Months({ children }: MonthsProps) {
+  const months = useSignal(useCalendar("Months").months)
+  return (
+    <>
+      {months.map((month) => (
+        <MonthContext.Provider key={month.index} value={month.index}>
+          {children(month)}
+        </MonthContext.Provider>
+      ))}
+    </>
+  )
+}
 
 export interface WeekdaysProps {
   /** Draws one day of the week, once for each: its heading cell. */
@@ -125,7 +174,7 @@ export interface WeeksProps {
 
 /** Draws its child once for each week of the month shown. */
 function Weeks({ children }: WeeksProps) {
-  const weeks = useSignal(useCalendar("Weeks").weeks)
+  const weeks = useSignal(useMonth("Weeks").weeks)
   return (
     <>
       {weeks.map((week) => (
@@ -160,7 +209,8 @@ export type CellProps = PartComponentProps<
 >
 
 function Cell({ date, ...props }: CellProps): ReactElement {
-  return usePart(useCalendar("Cell").cell(date), "td", props)
+  const index = useContext(MonthContext)
+  return usePart(useCalendar("Cell").cell(date, index), "td", props)
 }
 
 export type DayProps = PartComponentProps<
@@ -173,18 +223,26 @@ export type DayProps = PartComponentProps<
 >
 
 function Day({ date, ...props }: DayProps): ReactElement {
-  return usePart(useCalendar("Day").day(date), "button", props)
+  const index = useContext(MonthContext)
+  return usePart(useCalendar("Day").day(date, index), "button", props)
 }
+
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
+
+/** The hidden input the value is submitted by, when the root has a `name`. */
+const Input = (props: InputProps) => usePart(useCalendar("Input").input, "input", props)
 
 export const Calendar = /* @__PURE__ */ parts("Calendar", {
   Root,
   Heading,
   Previous,
   Next,
+  Months,
   Grid,
   Weekdays,
   HeadCell,
   Weeks,
   Cell,
   Day,
+  Input,
 })

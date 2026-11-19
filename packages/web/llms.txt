@@ -31,6 +31,11 @@ The attributes and CSS variables below are also data and typed selectors, for a 
 - A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.
 - A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.
 
+### For a design system
+
+- A design system's own element (a badge, a breadcrumb's link) is the page's own element, with its own classes and attributes: nothing of the library's is needed for it, and none is given, since a custom element's parts are the page's own elements too and are composed by writing them.
+- Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes). A design system whose tooltips open at once writes `delay="0"` on each `<kui-tooltip>`.
+
 ## Elements
 
 ### Accordion
@@ -309,17 +314,21 @@ Anatomy:
 import "@kirana-ui/web/avatar"
 ```
 
-`<kui-avatar>`: `<kui-avatar>` around `kui-part="root"`, an `image` (an `<img>`, in the page once the picture has loaded) and a `fallback`, in the page until then. `src`: the picture's address, on the component, since the image is not in the page to be given one.
+`<kui-avatar>`: `<kui-avatar>` around `kui-part="root"`, an `image` (an `<img>`, in the page once the picture has loaded) and a `fallback`, in the page until then; `kui-delay="600"` on the fallback waits that many milliseconds first. `src`: the picture's address, on the component, since the image is not in the page to be given one. With `kui-keep-mounted` the image stays in the page, as Base UI's `keepMounted` image: its own `src` is the address, it loads the picture itself, and it is `aria-hidden` until it has (`data-loading`, `data-error`). It tells `loading-status-change` (`detail.status`) as the picture loads.
 
 Attributes of the element (each also a property, in camel case):
 
 - `src` (string)
 
+Events:
+
+- `loading-status-change`: `event.detail.status`, with `event.detail.details`. It reports something that happened: there is nothing to keep.
+
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `root`
-- `image`
-- `fallback`
+- `image`: `kui-keep-mounted`
+- `fallback`: `kui-delay`
 
 Anatomy:
 
@@ -329,6 +338,14 @@ Anatomy:
     image
     fallback
 ```
+
+Attributes and CSS variables, by part:
+
+- root: The frame the image and its stand-in share.
+    - `data-image-loading-status="idle | loading | loaded | error"`: Where the picture is in its loading: `idle` while it has no address.
+- image: The picture. In the page once it has loaded; with `keepMounted` (on Angular, the attribute form) in the page all along, `aria-hidden` until it has loaded.
+    - `data-loading`: Present while the picture loads, on an image kept in the page.
+    - `data-error`: Present when the picture cannot load, on an image kept in the page.
 
 ### Button
 
@@ -366,14 +383,20 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/calendar"
 ```
 
-`<kui-calendar>`: `<kui-calendar>` around `kui-part="root"`, with `previous` and `next` buttons, a `heading` (it says the month) and a `grid` table. The table's head row holds a `<template kui-each="weekdays">` with a `head-cell` (`{short}`, `{narrow}`, `{long}`); its body a `<template kui-each="weeks">` with a row, which holds a `<template kui-each="days">` with a `cell` and its `day` button (`{date}`, `{label}`). `value` and `default-value` (a day as `2026-03-14`; several with commas between), `mode`, `default-focused-value`, `locale`, `calendar-system`, `min`, `max`, `disabled`, `read-only`, `fixed-weeks`; `isDateUnavailable` as a property; it tells `value-change` and `month-change`.
+`<kui-calendar>`: `<kui-calendar>` around `kui-part="root"`, with `previous` and `next` buttons, a `heading` (it says the month) and a `grid` table. The table's head row holds a `<template kui-each="weekdays">` with a `head-cell` (`{short}`, `{narrow}`, `{long}`); its body a `<template kui-each="weeks">` with a row, which holds a `<template kui-each="days">` with a `cell` and its `day` button (`{date}`, `{label}`). With several `months`, a `<template kui-each="months">` (`{index}`, `{month}`, `{title}`) holds each month's `heading` and `grid`. An `<input kui-part="input">` submits the value under `name`. `value` and `default-value` (a day as `2026-03-14`; a range's first and last, or a list's days, with commas between), `mode`, `min-days`, `max-days`, `months`, `paged-navigation`, `month`, `default-month`, `default-focused-value`, `locale`, `calendar-system`, `min`, `max`, `disabled`, `read-only`, `fixed-weeks`, `name`, `form`; `isDateUnavailable` as a property; it tells `value-change` and `month-change`.
 
 Attributes of the element (each also a property, in camel case):
 
-- `value` (string): One day, or with `mode: "range"` a first and a last day; `null` for none.
+- `value` (string): One day; with `mode: "range"` a first and a last day; with `mode: "multiple"` a list of days, in the order they were chosen. `null` (or an empty list) for none.
 - `default-value` (string): The value it starts with, when the caller does not hold `value`. Read once.
-- `mode` (string): Whether one day is chosen (the default) or a first and a last.
-- `default-focused-value` (string): The day it opens on, when it has no value: its month is the one shown.
+- `mode` (string): Whether one day is chosen (the default), a first and a last (`"range"`), or any number (`"multiple"`: a day pressed is added, and pressed again is taken away).
+- `min-days` (number): With `mode: "multiple"`: the fewest days that can be left chosen. A press that would leave fewer does nothing.
+- `max-days` (number): With `mode: "multiple"`: the most days that can be chosen. Once they are, the other days are disabled until one is taken away.
+- `months` (number): How many months are shown side by side (1 by default): one selection and one grid for the keys, which go from a month into the next. Each is drawn in `Calendar.Months`.
+- `paged-navigation` (boolean): With several `months`: whether Previous and Next turn them all (a page) rather than one month. Off by default, as in react-day-picker.
+- `month` (string): The month shown (the first of them, with several `months`), when the caller holds it: any day of it. A caption's month and year menus, or a "today" button, set it.
+- `default-month` (string): The month it starts on, when the caller does not hold `month`. Read once. Without it, the month of `defaultFocusedValue`, of the value, or of today.
+- `default-focused-value` (string): The day it opens on, focusable when Tab reaches the grid. It is also the month it opens on, unless `month` or `defaultMonth` says another: then the stop for Tab is a chosen day of the months shown, today, or their first day.
 - `locale` (string): The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
 - `calendar-system` (string): The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
 - `min` (string): The first and the last day that can be chosen.
@@ -381,6 +404,8 @@ Attributes of the element (each also a property, in camel case):
 - `disabled` (boolean): Disabled: no day can be chosen.
 - `read-only` (boolean): Shown as it is: the days can be moved through, and none can be chosen.
 - `fixed-weeks` (boolean): Always six rows, so the calendar is one height in every month.
+- `name` (string): The name its hidden input submits the value under: a day; the first and the last of a range, as two entries; each day of a list.
+- `form` (string): The id of the form it belongs to, when it is not inside it.
 
 Properties only:
 
@@ -389,11 +414,12 @@ Properties only:
 Events:
 
 - `value-change`: `event.detail.value`, with `event.detail.details`. `preventDefault()` keeps `value` as it was.
-- `month-change`: `event.detail.month`, with `event.detail.details`. It reports something that happened: there is nothing to keep.
+- `month-change`: `event.detail.month`, with `event.detail.details`. `preventDefault()` keeps `month` as it was.
 
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `root`
+- `input`
 - `heading`
 - `previous`
 - `next`
@@ -402,23 +428,25 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `cell`
 - `day`
 
-Lists (`<template kui-each="…">`): `weekdays`, `weeks`, `days`.
+Lists (`<template kui-each="…">`): `weekdays`, `months`, `weeks`, `days`.
 
 Anatomy:
 
 ```
 <kui-calendar>
   root
-    heading
+    <template kui-each="months"> (optional)
+      heading
+      grid
+        <template kui-each="weekdays">
+          head-cell (repeated)
+        <template kui-each="weeks">
+          <template kui-each="days">
+            cell (repeated)
+              day
     previous
     next
-    grid
-      <template kui-each="weekdays">
-        head-cell (repeated)
-      <template kui-each="weeks">
-        <template kui-each="days">
-          cell (repeated)
-            day
+    input
 ```
 
 Attributes and CSS variables, by part:
@@ -431,7 +459,7 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -439,7 +467,7 @@ Attributes and CSS variables, by part:
     - `data-range-start`: Present on the first day of a range.
     - `data-range-end`: Present on the last day of a range.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -785,13 +813,14 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/command"
 ```
 
-`<kui-command>`: `<kui-command>` around `kui-part="root"`, an `input` and a `list` of `item`s (`kui-value`, `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s with a `group-heading` and `separator`s (`kui-always-render`) if it has them, and an `empty` part drawn while nothing matches. What is typed filters the list; Enter or a press runs an item. `input-value`, `default-input-value`, `loop`, `disabled`; `filter` as a property; it tells `input-value-change` and `select`.
+`<kui-command>`: `<kui-command>` around `kui-part="root"`, an `input` and a `list` of `item`s (`kui-value`, `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s with a `group-heading` and `separator`s (`kui-always-render`) if it has them, and an `empty` part drawn while nothing matches. What is typed filters the list; Enter or a press runs an item. `input-value`, `default-input-value`, `loop`, `auto-highlight` (on unless `="false"`), `disabled`; `filter` as a property; it tells `input-value-change` and `select`.
 
 Attributes of the element (each also a property, in camel case):
 
 - `input-value` (string): What the input says.
 - `default-input-value` (string): The text the input starts with, when the caller does not hold `inputValue`. Read once.
 - `loop` (boolean): Whether a step past an end of the list goes round to the other.
+- `auto-highlight` (boolean): Whether the first item shown is highlighted from the start and again whenever the text changes, so Enter does it with no arrow key first, as a command palette is used. Default: `true`. With `false`, nothing is highlighted until the input has focus or an arrow or the pointer moves to an item.
 - `disabled` (boolean): Disabled: nothing can be typed or chosen.
 
 Properties only:
@@ -1010,7 +1039,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/date-picker"
 ```
 
-`<kui-date-picker>`: `<kui-date-picker>`: a date field and a calendar in a popover that are one value. A `kui-part="field"` with a date field's `segments` template and `input`; a `trigger` button; and a `portal` with a `positioner` around the `popup`, which holds the `calendar` with a calendar's parts and templates. `value`, `default-value`, `open`, `default-open`, `locale`, `min`, `max`, `calendar-system`, `fixed-weeks`, `disabled`, `read-only`, `required`, `name`, `form`; `isDateUnavailable` and `placeholders` as properties; it tells `value-change` and `open-change`.
+`<kui-date-picker>`: `<kui-date-picker>`: a date field and a calendar in a popover that are one value. A `kui-part="field"` with a date field's `segments` template and `input`; a `trigger` button; and a `portal` with a `positioner` around the `popup`, which holds the `calendar` with a calendar's parts and templates. `value`, `default-value`, `open`, `default-open`, `locale`, `min`, `max`, `calendar-system`, `fixed-weeks`, `months` (each drawn in a `<template kui-each="months">`), `paged-navigation`, `month`, `default-month`, `disabled`, `read-only`, `required`, `name`, `form`; `isDateUnavailable` and `placeholders` as properties; it tells `value-change`, `open-change` and `month-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -1023,6 +1052,10 @@ Attributes of the element (each also a property, in camel case):
 - `max` (string): The last day that can be typed or picked.
 - `calendar-system` (string): The calendar its months are laid out in, when it is not the Gregorian one.
 - `fixed-weeks` (boolean): Always six rows of days.
+- `months` (number): How many months the calendar shows side by side (1 by default).
+- `paged-navigation` (boolean): With several `months`: whether Previous and Next turn them all rather than one month.
+- `month` (string): The month the calendar shows (the first, with several), when the caller holds it.
+- `default-month` (string): The month the calendar starts on, when the caller does not hold `month`. Read once.
 - `disabled` (boolean): Disabled: it cannot be changed.
 - `read-only` (boolean): Shown as it is, focusable, not changeable.
 - `required` (boolean): Needed: in a `Field`, leaving it empty is then invalid.
@@ -1038,6 +1071,7 @@ Events:
 
 - `value-change`: `event.detail.value`, with `event.detail.details`. `preventDefault()` keeps `value` as it was.
 - `open-change`: `event.detail.open`, with `event.detail.details`. `preventDefault()` keeps `open` as it was.
+- `month-change`: `event.detail.month`, with `event.detail.details`. `preventDefault()` keeps `month` as it was.
 
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
@@ -1056,7 +1090,7 @@ Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 - `cell`
 - `day`
 
-Lists (`<template kui-each="…">`): `segments`, `weekdays`, `weeks`, `days`.
+Lists (`<template kui-each="…">`): `segments`, `weekdays`, `months`, `weeks`, `days`.
 
 Anatomy:
 
@@ -1071,16 +1105,17 @@ Anatomy:
     positioner
       popup
         calendar
-          heading
+          <template kui-each="months"> (optional)
+            heading
+            grid
+              <template kui-each="weekdays">
+                head-cell (repeated)
+              <template kui-each="weeks">
+                <template kui-each="days">
+                  cell (repeated)
+                    day
           previous
           next
-          grid
-            <template kui-each="weekdays">
-              head-cell (repeated)
-            <template kui-each="weeks">
-              <template kui-each="days">
-                cell (repeated)
-                  day
 ```
 
 Attributes and CSS variables, by part:
@@ -1121,7 +1156,7 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -1129,7 +1164,7 @@ Attributes and CSS variables, by part:
     - `data-range-start`: Present on the first day of a range.
     - `data-range-end`: Present on the last day of a range.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, and on every day of a chosen range.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
@@ -2088,14 +2123,15 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/otp"
 ```
 
-`<kui-otp>`: `<kui-otp>` around `kui-part="root"`, the one `input` that is typed in, and a `slot` for each character (`kui-index`, from 0), which says its character and may hold a `caret`, in the page while the next character goes there. Slots may be in `group`s with a `separator` between. `length`, `value`, `default-value`, `mode`, `disabled`, `name`, `form`; it tells `value-change` and `complete`.
+`<kui-otp>`: `<kui-otp>` around `kui-part="root"`, the one `input` that is typed in, and a `slot` for each character (`kui-index`, from 0), which says its character and may hold a `caret`, in the page while the next character goes there. Slots may be in `group`s with a `separator` between. `length`, `value`, `default-value`, `mode`, `pattern`, `disabled`, `name`, `form`; it tells `value-change` and `complete`.
 
 Attributes of the element (each also a property, in camel case):
 
 - `length` (number): How many characters the code has. Default: 6.
 - `value` (string): The characters typed so far, when the caller holds them.
 - `default-value` (string): The characters it starts with, when the caller does not hold `value`. Read once.
-- `mode` (string): What a character may be. Default: `numeric`.
+- `mode` (string): What a character may be: a digit (`numeric`), a letter (`alphabetic`, `a` to `z` either case), either (`alphanumeric`), or anything but white space (`text`). It also says which keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`, on purpose: a one-time code is digits, and its keyboard is then the one to type them on.
+- `pattern` (string): What else a character may be: a regular expression, as text, that one character must match whole (`"[A-F0-9]"`), in place of `mode`'s rule. Text, as an attribute can only be, so it is given the same way on every framework and on a custom element. With a pattern, `mode` only says the keyboard, and defaults to `text`.
 - `disabled` (boolean): Disabled: it cannot be changed.
 - `name` (string): With a name, the code is submitted with the form around it.
 - `form` (string): The id of the form the input belongs to, when it is not inside it.
@@ -2372,7 +2408,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/radio-group"
 ```
 
-`<kui-radio-group>`: `<kui-radio-group>` around `kui-part="root"` and an `item` button for each `value`, with an `indicator` inside that is in the page while its item is the chosen one. An item draws the hidden native radio a form and a label reach. `value`, `default-value`, `disabled`, `read-only`, `required`, `name`, `form`; it tells `value-change`.
+`<kui-radio-group>`: `<kui-radio-group>` around `kui-part="root"` and an `item` button for each `value`, with an `indicator` inside that is in the page while its item is the chosen one. An item draws the hidden native radio a form and a label reach; an item's `kui-id` is that radio's id, which a `<label for>` names. `value`, `default-value`, `disabled`, `read-only`, `required`, `name`, `form`; it tells `value-change`.
 
 Attributes of the element (each also a property, in camel case):
 
@@ -2391,7 +2427,7 @@ Events:
 Parts (`kui-part`), each with the `kui-` attributes its element is read for:
 
 - `root`
-- `item`: `kui-disabled`, `kui-value`
+- `item`: `kui-disabled`, `kui-id`, `kui-value`
 - `indicator`: `kui-value`
 
 Anatomy:
@@ -2409,7 +2445,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
-- item: One choice. It holds a hidden native radio, which a form and a label reach.
+- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
@@ -2459,13 +2495,13 @@ Anatomy:
 
 Attributes and CSS variables, by part:
 
-- group: The panels and the bars between them. A design lays it out as a flex box.
+- group: The panels and the bars between them. A design lays it out as a flex box: `display: flex`, and `flex-direction: column` when it is vertical. A group in a panel that is a flex box itself takes `min-width: 0` and `min-height: 0`, or what it holds widens the panel.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `data-disabled`: Present when it is disabled.
-- panel: One panel. It carries its share of the group.
+- panel: One panel. It carries its share of the group, written as its `flex` with `min-width: 0` and `min-height: 0`, so what it holds cannot keep it past its share. Its `overflow` is the design's.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `--panel-size`: The panel's share, in hundredths of the group.
-- handle: The bar between two panels: dragged, or moved with the arrows.
+- handle: The bar between two panels: dragged, or moved with the arrows. A design gives it its thickness and `flex-shrink: 0`, so the panels do not squeeze it.
     - `data-orientation="horizontal | vertical"`: Whether the panels are side by side or one over the other.
     - `data-dragging`: Present while the bar is dragged.
     - `data-disabled`: Present when it is disabled.
@@ -2493,7 +2529,8 @@ Anatomy:
 <kui-scroll-area>
   root
     viewport
-      content
+      content (optional)
+      scrollbar (repeated, as above)
     scrollbar (repeated)
       thumb
     corner

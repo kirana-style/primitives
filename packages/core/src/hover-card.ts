@@ -10,4 +10,10 @@ export type HoverCard = HoverPopup
 
 /** A preview of where a link goes, shown while the pointer rests on it. It can hold anything. */
 export const createHoverCard = (props: ReadonlySignal<HoverCardProps>): HoverCard =>
-  createHoverPopup(props, { name: "hover-card", delay: 600, closeDelay: 300, describes: false })
+  createHoverPopup(props, {
+    name: "hover-card",
+    delay: 600,
+    closeDelay: 300,
+    describes: false,
+    trigger: "a",
+  })

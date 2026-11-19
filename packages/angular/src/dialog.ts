@@ -8,7 +8,7 @@ import {
   model,
   output,
 } from "@angular/core"
-import type { OnInit } from "@angular/core"
+import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
@@ -50,7 +50,7 @@ export class KuiDialog implements OnInit {
   controller!: Dialog
   private readonly drawer = inject(new HostAttributeToken("kuiDrawer"), { optional: true }) !== null
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
@@ -78,6 +78,10 @@ export class KuiDialog implements OnInit {
   }))
   private readonly mount = mounted()
 
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
+
   ngOnInit(): void {
     this.controller = this.drawer ? createDrawer(this.props()) : createDialog(this.props())
     this.mount(this.controller)
@@ -103,7 +107,7 @@ export class KuiAlertDialog implements OnInit {
 
   controller!: Dialog
   private readonly generated = inject(KuiIds).make()
-  private readonly props = inputsSignal(() => ({
+  private readonly props = inputsSignal(this, () => ({
     id: this.kuiId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
@@ -116,6 +120,10 @@ export class KuiAlertDialog implements OnInit {
     },
   }))
   private readonly mount = mounted()
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.props.bound(changes)
+  }
 
   ngOnInit(): void {
     this.controller = createAlertDialog(this.props())

@@ -4,6 +4,7 @@
   // each under its `@ts-expect-error`, which fails the check once the line is accepted.
   import {
     Accordion,
+    Calendar,
     Checkbox,
     Collapsible,
     Combobox,
@@ -23,7 +24,10 @@
     ToggleGroup,
   } from "@kirana-ui/svelte"
   import type { ButtonProps } from "@kirana-ui/svelte"
+  import { Primitive, mergeProps } from "@kirana-ui/svelte/primitive"
+  import type { PrimitiveProps } from "@kirana-ui/svelte/primitive"
   import type { TriggerProps } from "@kirana-ui/svelte/collapsible"
+  import type { RootProps as CalendarProps } from "@kirana-ui/svelte/calendar"
   import type { RootProps as TabsProps } from "@kirana-ui/svelte/tabs"
   import type { ComponentProps } from "svelte"
 
@@ -47,6 +51,15 @@
 
   type PanelState = Parameters<NonNullable<Collapsible.PanelProps["child"]>>[0]["state"]
 
+  // A design system's own element takes its tag's attributes and its own state.
+  const badge: PrimitiveProps<"a", { active: boolean }> = { href: "/", state: { active: true } }
+  const merged = mergeProps({ class: "badge", title: "own" }, badge)
+  const titled: string | null | undefined = merged.title
+  // @ts-expect-error a `div`, the element when no `as` is given, has no `href`
+  const plainLink: PrimitiveProps = { href: "/" }
+  // @ts-expect-error the state is the component's own type
+  const wrongState: PrimitiveProps<"span", { active: boolean }> = { state: { active: "yes" } }
+  void [titled, plainLink, wrongState]
   // @ts-expect-error a class is text, a list or an object of conditions, never a number
   const number: ComponentProps<typeof Dialog.Trigger> = { class: 42 }
   // @ts-expect-error `keepMounted` is a boolean
@@ -71,7 +84,9 @@
   const side = (state: PanelState) => state.side
   // @ts-expect-error the values are text where the default is text
   const mixed: TabsProps<string> = { defaultValue: "top", value: 0 }
-  void [number, kept, tab, link, opened, ticked, slid, drawn, pressed, reached, side, mixed]
+  // @ts-expect-error a day where the mode chooses several
+  const several: CalendarProps<"multiple"> = { mode: "multiple", value: "2026-03-02" }
+  void [number, kept, tab, link, opened, ticked, slid, drawn, pressed, reached, side, mixed, several]
 
   // As the markup gives a component its props, the value's type read from them.
   function refused() {
@@ -156,6 +171,20 @@
     void text
   }}
 />
+<Calendar.Root
+  mode="multiple"
+  defaultValue={["2026-03-02"]}
+  onValueChange={(value) => {
+    const days: readonly string[] = value
+    void days
+  }}
+/>
+<Calendar.Root
+  onValueChange={(value) => {
+    const day: string | null = value
+    void day
+  }}
+/>
 <Select.Root multiple bind:values={basket} onValuesChange={(values) => void values.join()} />
 <Combobox.Root bind:value={fruit} bind:values={basket} bind:open />
 <Listbox.Root bind:value={basket} onValueChange={(value) => void value.join()} />
@@ -202,3 +231,8 @@
   <Field.Control type="email" oninput={(event) => void event.currentTarget.valueAsNumber} />
   <Field.Control as="textarea" rows={3} oninput={(event) => void event.currentTarget.textLength} />
 </Field.Root>
+
+<Primitive as="a" href="/x" onclick={(event) => void event.currentTarget.href}>Link</Primitive>
+<Primitive {...merged}>
+  {#snippet child({ props, state })}<a {...props}>{state.active ? "On" : "Off"}</a>{/snippet}
+</Primitive>

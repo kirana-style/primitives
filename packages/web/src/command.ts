@@ -17,7 +17,7 @@ const groupOf = (controller: Command, element: HTMLElement | null) =>
  * `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s
  * with a `group-heading` and `separator`s (`kui-always-render`) if it has them, and an
  * `empty` part drawn while nothing matches. What is typed filters the list; Enter or a press
- * runs an item. `input-value`, `default-input-value`, `loop`, `disabled`; `filter` as a
+ * runs an item. `input-value`, `default-input-value`, `loop`, `auto-highlight` (on unless `="false"`), `disabled`; `filter` as a
  * property; it tells `input-value-change` and `select`.
  */
 export const tag = defineElement<CommandProps, Command>({
@@ -26,6 +26,7 @@ export const tag = defineElement<CommandProps, Command>({
     "input-value": "string",
     "default-input-value": "string",
     loop: "boolean",
+    "auto-highlight": "boolean",
     disabled: "boolean",
   },
   properties: ["filter"],

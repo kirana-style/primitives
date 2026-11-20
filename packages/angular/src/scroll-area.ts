@@ -5,13 +5,13 @@ import { createScrollArea } from "@kirana-ui/core/scroll-area"
 import type { ScrollArea, ScrollAreaScrollbar } from "@kirana-ui/core/scroll-area"
 import { signal } from "@kirana-ui/core"
 
-import { KUI_DIRECTION } from "./direction-token"
+import { KP_DIRECTION } from "./direction-token"
 import { hostPart, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiScrollArea]", exportAs: "kuiScrollArea" })
-export class KuiScrollArea implements OnInit {
+@Directive({ selector: "[kpScrollArea]", exportAs: "kpScrollArea" })
+export class KpScrollArea implements OnInit {
   controller!: ScrollArea
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
+  private readonly around = inject(KP_DIRECTION, { optional: true })
   private readonly put = hostPart()
   private readonly mount = mounted()
 
@@ -22,9 +22,9 @@ export class KuiScrollArea implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiScrollAreaViewport]" })
-export class KuiScrollAreaViewport implements OnInit {
-  private readonly root = inject(KuiScrollArea)
+@Directive({ selector: "[kpScrollAreaViewport]" })
+export class KpScrollAreaViewport implements OnInit {
+  private readonly root = inject(KpScrollArea)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -32,9 +32,9 @@ export class KuiScrollAreaViewport implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiScrollAreaContent]" })
-export class KuiScrollAreaContent implements OnInit {
-  private readonly root = inject(KuiScrollArea)
+@Directive({ selector: "[kpScrollAreaContent]" })
+export class KpScrollAreaContent implements OnInit {
+  private readonly root = inject(KpScrollArea)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -43,31 +43,31 @@ export class KuiScrollAreaContent implements OnInit {
 }
 
 /**
- * `<div *kuiScrollAreaScrollbar="'horizontal'">`: in the page while there is something to scroll
+ * `<div *kpScrollAreaScrollbar="'horizontal'">`: in the page while there is something to scroll
  * its way (`vertical` when no orientation is given).
  */
-@Directive({ selector: "[kuiScrollAreaScrollbar]" })
-export class KuiScrollAreaScrollbar implements OnInit {
+@Directive({ selector: "[kpScrollAreaScrollbar]" })
+export class KpScrollAreaScrollbar implements OnInit {
   /** Which way it scrolls: `'horizontal'`, or `'vertical'` when none is given. */
-  readonly kuiScrollAreaScrollbar = input<Orientation | "">("")
+  readonly kpScrollAreaScrollbar = input<Orientation | "">("")
   readonly keepMounted = input(false, {
-    alias: "kuiScrollAreaScrollbarKeepMounted",
+    alias: "kpScrollAreaScrollbarKeepMounted",
     transform: booleanAttribute,
   })
   bar!: ScrollAreaScrollbar
-  private readonly root = inject(KuiScrollArea)
+  private readonly root = inject(KpScrollArea)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
-    this.bar = this.root.controller.scrollbar(this.kuiScrollAreaScrollbar() || "vertical")
+    this.bar = this.root.controller.scrollbar(this.kpScrollAreaScrollbar() || "vertical")
     const { shown } = this.bar
     this.present(() => shown.get() || this.keepMounted(), this.bar.part)
   }
 }
 
-@Directive({ selector: "[kuiScrollAreaThumb]" })
-export class KuiScrollAreaThumb implements OnInit {
-  private readonly scrollbar = inject(KuiScrollAreaScrollbar)
+@Directive({ selector: "[kpScrollAreaThumb]" })
+export class KpScrollAreaThumb implements OnInit {
+  private readonly scrollbar = inject(KpScrollAreaScrollbar)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -75,10 +75,10 @@ export class KuiScrollAreaThumb implements OnInit {
   }
 }
 
-/** `<div *kuiScrollAreaCorner>`: in the page while both scrollbars are. */
-@Directive({ selector: "[kuiScrollAreaCorner]" })
-export class KuiScrollAreaCorner implements OnInit {
-  private readonly root = inject(KuiScrollArea)
+/** `<div *kpScrollAreaCorner>`: in the page while both scrollbars are. */
+@Directive({ selector: "[kpScrollAreaCorner]" })
+export class KpScrollAreaCorner implements OnInit {
+  private readonly root = inject(KpScrollArea)
   private readonly present = presentWhile()
 
   ngOnInit(): void {

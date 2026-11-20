@@ -16,42 +16,42 @@ import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog } from "@kirana-ui/core/dialog"
 
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KpIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /**
- * On any element, or on `<ng-container>` to draw none. `kuiDrawer` in place of `kuiDialog` is a
+ * On any element, or on `<ng-container>` to draw none. `kpDrawer` in place of `kpDialog` is a
  * dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a
- * dialog's (`kuiDialogPopup` …). An alert dialog has a root of its own, `kuiAlertDialog`.
+ * dialog's (`kpDialogPopup` …). An alert dialog has a root of its own, `kpAlertDialog`.
  */
-@Directive({ selector: "[kuiDialog],[kuiDrawer]", exportAs: "kuiDialog" })
-export class KuiDialog implements OnInit {
+@Directive({ selector: "[kpDialog],[kpDrawer]", exportAs: "kpDialog" })
+export class KpDialog implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   /** Blocks the page behind it and traps focus. Default `true`. */
   readonly modal = input(true, { transform: booleanAttribute })
   /** Whether a press outside closes it. Default `true`. */
   readonly dismissible = input(true, { transform: booleanAttribute })
-  /** With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`. */
+  /** With `kpDrawer`: the way it is dragged to close it. Default: `"down"`. */
   readonly swipeDirection = input<DrawerSide>()
-  /** With `kuiDrawer`: places it rests at, each the share of itself that shows. */
+  /** With `kpDrawer`: places it rests at, each the share of itself that shows. */
   readonly snapPoints = input<readonly DrawerSnapPoint[]>()
-  /** With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`. */
+  /** With `kpDrawer`: which of them it rests at, `[(snapPoint)]`. */
   readonly snapPoint = model<DrawerSnapPoint | undefined>(undefined)
-  /** With `kuiDrawer`: where it opens. Default: the smallest. */
+  /** With `kpDrawer`: where it opens. Default: the smallest. */
   readonly defaultSnapPoint = input<DrawerSnapPoint>()
   /**
-   * With `kuiDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps
+   * With `kpDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps
    * it where it was.
    */
   readonly snapPointChanged = output<{ snapPoint: DrawerSnapPoint; details: ChangeDetails }>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Dialog
-  private readonly drawer = inject(new HostAttributeToken("kuiDrawer"), { optional: true }) !== null
-  private readonly generated = inject(KuiIds).make()
+  private readonly drawer = inject(new HostAttributeToken("kpDrawer"), { optional: true }) !== null
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     modal: this.modal(),
@@ -89,26 +89,26 @@ export class KuiDialog implements OnInit {
 }
 
 /**
- * `kuiAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer.
+ * `kpAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer.
  * It is always modal and a press outside it never closes it, so it takes neither `[modal]`
- * nor `[dismissible]`. Its parts are a dialog's (`kuiDialogTrigger`, `kuiDialogPopup` …), which
+ * nor `[dismissible]`. Its parts are a dialog's (`kpDialogTrigger`, `kpDialogPopup` …), which
  * find it as their root.
  */
 @Directive({
-  selector: "[kuiAlertDialog]",
-  exportAs: "kuiDialog",
-  providers: [{ provide: KuiDialog, useExisting: forwardRef(() => KuiAlertDialog) }],
+  selector: "[kpAlertDialog]",
+  exportAs: "kpDialog",
+  providers: [{ provide: KpDialog, useExisting: forwardRef(() => KpAlertDialog) }],
 })
-export class KuiAlertDialog implements OnInit {
+export class KpAlertDialog implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Dialog
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
@@ -131,10 +131,10 @@ export class KuiAlertDialog implements OnInit {
   }
 }
 
-/** `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open. */
-@Directive({ selector: "[kuiDialogPortal]" })
-export class KuiDialogPortal implements OnInit {
-  private readonly root = inject(KuiDialog)
+/** `<ng-template kpDialogPortal>` or `*kpDialogPortal`: its content at the end of the page while open. */
+@Directive({ selector: "[kpDialogPortal]" })
+export class KpDialogPortal implements OnInit {
+  private readonly root = inject(KpDialog)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -145,13 +145,13 @@ export class KuiDialogPortal implements OnInit {
 function part(
   name: "trigger" | "backdrop" | "viewport" | "popup" | "title" | "description" | "close"
 ) {
-  const root = inject(KuiDialog)
+  const root = inject(KpDialog)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiDialogTrigger]" })
-export class KuiDialogTrigger implements OnInit {
+@Directive({ selector: "[kpDialogTrigger]" })
+export class KpDialogTrigger implements OnInit {
   private readonly init = part("trigger")
 
   ngOnInit(): void {
@@ -159,8 +159,8 @@ export class KuiDialogTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiDialogBackdrop]" })
-export class KuiDialogBackdrop implements OnInit {
+@Directive({ selector: "[kpDialogBackdrop]" })
+export class KpDialogBackdrop implements OnInit {
   private readonly init = part("backdrop")
 
   ngOnInit(): void {
@@ -172,8 +172,8 @@ export class KuiDialogBackdrop implements OnInit {
  * What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert
  * dialog's; a drawer lies at an edge of the page and has none.
  */
-@Directive({ selector: "[kuiDialogViewport]" })
-export class KuiDialogViewport implements OnInit {
+@Directive({ selector: "[kpDialogViewport]" })
+export class KpDialogViewport implements OnInit {
   private readonly init = part("viewport")
 
   ngOnInit(): void {
@@ -181,8 +181,8 @@ export class KuiDialogViewport implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiDialogPopup]" })
-export class KuiDialogPopup implements OnInit {
+@Directive({ selector: "[kpDialogPopup]" })
+export class KpDialogPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -190,8 +190,8 @@ export class KuiDialogPopup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiDialogTitle]" })
-export class KuiDialogTitle implements OnInit {
+@Directive({ selector: "[kpDialogTitle]" })
+export class KpDialogTitle implements OnInit {
   private readonly init = part("title")
 
   ngOnInit(): void {
@@ -199,8 +199,8 @@ export class KuiDialogTitle implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiDialogDescription]" })
-export class KuiDialogDescription implements OnInit {
+@Directive({ selector: "[kpDialogDescription]" })
+export class KpDialogDescription implements OnInit {
   private readonly init = part("description")
 
   ngOnInit(): void {
@@ -208,8 +208,8 @@ export class KuiDialogDescription implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiDialogClose]" })
-export class KuiDialogClose implements OnInit {
+@Directive({ selector: "[kpDialogClose]" })
+export class KpDialogClose implements OnInit {
   private readonly init = part("close")
 
   ngOnInit(): void {

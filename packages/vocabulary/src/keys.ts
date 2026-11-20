@@ -2213,7 +2213,7 @@ export const RadioGroup = {
     /** Present when the form needs it. */
     required: "[data-required]",
   },
-  /** One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names. */
+  /** One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kpId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names. */
   Item: {
     /** Present when it is checked. */
     checked: "[data-checked]",

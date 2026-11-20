@@ -15,23 +15,23 @@ import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs } from "@kirana-ui/core/tabs"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiTabs]", exportAs: "kuiTabs" })
-export class KuiTabs<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpTabs]", exportAs: "kpTabs" })
+export class KpTabs<Value = unknown> implements OnInit {
   readonly value = model<Value | null | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly orientation = input<Orientation>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly valueChanged = output<{ value: Value; details: ChangeDetails }>()
 
   controller!: Tabs<Value>
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     orientation: this.orientation(),
@@ -57,13 +57,13 @@ export class KuiTabs<Value = unknown> implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTabsList]" })
-export class KuiTabsList implements OnInit {
+@Directive({ selector: "[kpTabsList]" })
+export class KpTabsList implements OnInit {
   readonly activateOnFocus = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
-  private readonly root = inject(KuiTabs)
+  private readonly root = inject(KpTabs)
   private readonly part = hostPart()
   private readonly options = () =>
     defined({ activateOnFocus: this.activateOnFocus(), loop: this.loop() })
@@ -81,11 +81,11 @@ export class KuiTabsList implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTabsTab]" })
-export class KuiTabsTab implements OnInit {
+@Directive({ selector: "[kpTabsTab]" })
+export class KpTabsTab implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
-  private readonly root = inject(KuiTabs)
+  private readonly root = inject(KpTabs)
   private readonly part = hostPart()
   private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
 
@@ -99,9 +99,9 @@ export class KuiTabsTab implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTabsIndicator]" })
-export class KuiTabsIndicator implements OnInit {
-  private readonly root = inject(KuiTabs)
+@Directive({ selector: "[kpTabsIndicator]" })
+export class KpTabsIndicator implements OnInit {
+  private readonly root = inject(KpTabs)
   private readonly part = hostPart()
 
   ngOnInit(): void {
@@ -110,21 +110,21 @@ export class KuiTabsIndicator implements OnInit {
 }
 
 /**
- * `<div *kuiTabsPanel="'account'">`: in the page while its tab is the active one;
- * `*kuiTabsPanel="'account'; keepMounted: true"` keeps it, hidden.
+ * `<div *kpTabsPanel="'account'">`: in the page while its tab is the active one;
+ * `*kpTabsPanel="'account'; keepMounted: true"` keeps it, hidden.
  */
-@Directive({ selector: "[kuiTabsPanel]" })
-export class KuiTabsPanel implements OnInit {
+@Directive({ selector: "[kpTabsPanel]" })
+export class KpTabsPanel implements OnInit {
   /** The value of the tab this is the panel of. */
-  readonly kuiTabsPanel = input.required<unknown>()
-  readonly kuiTabsPanelKeepMounted = input(false, { transform: booleanAttribute })
-  private readonly root = inject(KuiTabs)
+  readonly kpTabsPanel = input.required<unknown>()
+  readonly kpTabsPanelKeepMounted = input(false, { transform: booleanAttribute })
+  private readonly root = inject(KpTabs)
   private readonly destroy = inject(DestroyRef)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
-    const panel = this.root.controller.panel(this.kuiTabsPanel())
+    const panel = this.root.controller.panel(this.kpTabsPanel())
     this.destroy.onDestroy(panel.mount())
-    this.present(this.kuiTabsPanelKeepMounted() ? computed(() => true) : panel.mounted, panel.part)
+    this.present(this.kpTabsPanelKeepMounted() ? computed(() => true) : panel.mounted, panel.part)
   }
 }

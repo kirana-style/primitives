@@ -40,16 +40,17 @@ import type {
 
 /** Ids for parts whose caller gave none: one counter per application, so a server and its client agree. */
 @Injectable({ providedIn: "root" })
-export class KuiIds {
+export class KpIds {
   private next = 0
   make(): string {
+    // The library's id text, as the custom elements write it, not the directives' prefix.
     return `kui-${this.next++}`
   }
 }
 
 /**
  * The inputs of a directive, by the name its class gives each, and the value each reads (after
- * its transform): `InputsOf<KuiTooltip>["delay"]` is `number | undefined`.
+ * its transform): `InputsOf<KpTooltip>["delay"]` is `number | undefined`.
  */
 export type InputsOf<Directive> = {
   // oxlint-disable-next-line typescript/no-explicit-any
@@ -95,8 +96,8 @@ function withHosts<T extends Record<string, unknown>>(owner: object, own: T): T 
   const out: Record<string, unknown> = { ...own }
   for (const name of names) {
     if (binds.has(name)) continue
-    // An id is given as `kuiId` and read as `id`; one given as nothing keeps the one made.
-    const key = name === "kuiId" ? "id" : name
+    // An id is given as `kpId` and read as `id`; one given as nothing keeps the one made.
+    const key = name === "kpId" ? "id" : name
     if (!(key in own)) {
       throw new Error(
         `Kirana UI: \`${name}\` was given by a host directive, and this directive takes no such input from its host`
@@ -110,8 +111,8 @@ function withHosts<T extends Record<string, unknown>>(owner: object, own: T): T 
 }
 
 /**
- * Gives the inputs of a primitive this directive hosts (`hostDirectives: [KuiTooltip]`), as a
- * design system's directive gives its defaults: `hostInputs(KuiTooltip, { delay: () => 0 })`.
+ * Gives the inputs of a primitive this directive hosts (`hostDirectives: [KpTooltip]`), as a
+ * design system's directive gives its defaults: `hostInputs(KpTooltip, { delay: () => 0 })`.
  * Each value is a function read like a signal, so one worked out from the host's own inputs
  * (`{ disabled: computed(() => !this.collapsed()) }`) follows them. An input the element binds
  * (one the host exposes through `hostDirectives`' `inputs`, written on the element) wins over
@@ -223,7 +224,7 @@ function anchorOf(given: PositionerAnchor): PositionOptions["anchor"] {
  * component's positioner extends this and says which controller it is a part of.
  */
 @Directive()
-export abstract class KuiPositioner implements OnInit, OnChanges {
+export abstract class KpPositioner implements OnInit, OnChanges {
   readonly side = input<Side>()
   readonly align = input<Align>()
   readonly sideOffset = input<number | OffsetFunction>()
@@ -422,13 +423,13 @@ export function mounted(): (controller: { mount(): () => void }) => void {
   }
 }
 
-/** Where the popups inside are drawn, when a `kuiPortalProvider` around them says. */
-export const KUI_PORTAL_CONTAINER = new InjectionToken<() => HTMLElement | null | undefined>(
-  "KuiPortalContainer"
+/** Where the popups inside are drawn, when a `kpPortalProvider` around them says. */
+export const KP_PORTAL_CONTAINER = new InjectionToken<() => HTMLElement | null | undefined>(
+  "KpPortalContainer"
 )
 
 /**
- * For a structural directive (`*kuiCollapsiblePanel`): its template is in the page only while
+ * For a structural directive (`*kpCollapsiblePanel`): its template is in the page only while
  * `show` holds, so a closed panel is really gone, its content with it. `part` goes on the
  * template's element. With `portal`, the template is drawn in a container at the end of the page.
  * Returns a function to call in `ngOnInit`.
@@ -446,7 +447,7 @@ export function presentWhile(
   const server = onServer()
   const put = binder()
   const injector = inject(Injector)
-  const where = inject(KUI_PORTAL_CONTAINER, { optional: true })
+  const where = inject(KP_PORTAL_CONTAINER, { optional: true })
   return (
     show: ReadonlySignal<boolean> | (() => boolean),
     part?: Part,

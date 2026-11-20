@@ -27,10 +27,10 @@ import type {
   ComboboxShown,
 } from "@kirana-ui/core/combobox"
 
-import { KUI_FIELD } from "./field-token"
+import { KP_FIELD } from "./field-token"
 import {
-  KuiIds,
-  KuiPositioner,
+  KpIds,
+  KpPositioner,
   drawing,
   hostPart,
   inputsSignal,
@@ -40,14 +40,14 @@ import {
 } from "./runtime"
 
 /**
- * `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the
+ * `kpAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the
  * list only suggests. Its parts are the combobox's directives.
  */
-@Directive({ selector: "[kuiCombobox],[kuiAutocomplete]", exportAs: "kuiCombobox" })
-export class KuiCombobox<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpCombobox],[kpAutocomplete]", exportAs: "kpCombobox" })
+export class KpCombobox<Value = unknown> implements OnInit {
   readonly value = model<Value | null | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value> | null>(null)
-  /** What the input says, `[(inputValue)]`. With `kuiAutocomplete` the text is `[(value)]`. */
+  /** What the input says, `[(inputValue)]`. With `kpAutocomplete` the text is `[(value)]`. */
   readonly inputValue = model<string | undefined>(undefined)
   /** The text the input starts with, when the caller does not hold `inputValue`. Read once. */
   readonly defaultInputValue = input<string>()
@@ -65,7 +65,7 @@ export class KuiCombobox<Value = unknown> implements OnInit {
   readonly form = input<string>()
   /**
    * The values with their labels: a list of them, groups of them (`{ value, items }`), or the
-   * labels by value. With a `*kuiComboboxCollection` it is the list itself: the combobox
+   * labels by value. With a `*kpComboboxCollection` it is the list itself: the combobox
    * filters it, and the collection draws what is left.
    */
   readonly items = input<ComboboxProps<Value>["items"]>()
@@ -95,11 +95,11 @@ export class KuiCombobox<Value = unknown> implements OnInit {
    * Off by default.
    */
   readonly autoHighlight = input(false, { transform: booleanAttribute })
-  /** With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them. */
+  /** With `kpAutocomplete`: `"none"` shows the suggestions as the caller draws them. */
   readonly mode = input<AutocompleteProps["mode"]>()
-  /** With `kuiAutocomplete`: a press on the input opens the list. */
+  /** With `kpAutocomplete`: a press on the input opens the list. */
   readonly openOnInputClick = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
   /** Heard as the input's text is about to change; `details.cancel()` keeps it as it was. */
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
@@ -107,11 +107,11 @@ export class KuiCombobox<Value = unknown> implements OnInit {
 
   controller!: Combobox<Value>
   private readonly autocomplete =
-    inject(new HostAttributeToken("kuiAutocomplete"), { optional: true }) !== null
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+    inject(new HostAttributeToken("kpAutocomplete"), { optional: true }) !== null
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     inputValue: this.inputValue(),
@@ -204,9 +204,9 @@ export class KuiCombobox<Value = unknown> implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiComboboxPortal]" })
-export class KuiComboboxPortal implements OnInit {
-  private readonly root = inject(KuiCombobox)
+@Directive({ selector: "[kpComboboxPortal]" })
+export class KpComboboxPortal implements OnInit {
+  private readonly root = inject(KpCombobox)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -214,9 +214,9 @@ export class KuiComboboxPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiComboboxPositioner]" })
-export class KuiComboboxPositioner extends KuiPositioner {
-  private readonly root = inject(KuiCombobox)
+@Directive({ selector: "[kpComboboxPositioner]" })
+export class KpComboboxPositioner extends KpPositioner {
+  private readonly root = inject(KpCombobox)
 
   protected placed() {
     return this.root.controller
@@ -224,14 +224,14 @@ export class KuiComboboxPositioner extends KuiPositioner {
 }
 
 function part(name: "input" | "trigger" | "popup" | "list" | "hidden" | "chips" | "status") {
-  const root = inject(KuiCombobox)
+  const root = inject(KpCombobox)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-/** `<input kuiComboboxInput>`: what is typed filters the list, which is placed against it. */
-@Directive({ selector: "input[kuiComboboxInput]" })
-export class KuiComboboxInput implements OnInit {
+/** `<input kpComboboxInput>`: what is typed filters the list, which is placed against it. */
+@Directive({ selector: "input[kpComboboxInput]" })
+export class KpComboboxInput implements OnInit {
   private readonly init = part("input")
 
   ngOnInit(): void {
@@ -239,8 +239,8 @@ export class KuiComboboxInput implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiComboboxTrigger]" })
-export class KuiComboboxTrigger implements OnInit {
+@Directive({ selector: "[kpComboboxTrigger]" })
+export class KpComboboxTrigger implements OnInit {
   private readonly init = part("trigger")
 
   ngOnInit(): void {
@@ -248,8 +248,8 @@ export class KuiComboboxTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiComboboxPopup]" })
-export class KuiComboboxPopup implements OnInit {
+@Directive({ selector: "[kpComboboxPopup]" })
+export class KpComboboxPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -261,8 +261,8 @@ export class KuiComboboxPopup implements OnInit {
  * The items' own box inside the popup, when the popup holds more than items (an input): it is
  * then the listbox.
  */
-@Directive({ selector: "[kuiComboboxList]" })
-export class KuiComboboxList implements OnInit {
+@Directive({ selector: "[kpComboboxList]" })
+export class KpComboboxList implements OnInit {
   private readonly init = part("list")
 
   ngOnInit(): void {
@@ -270,9 +270,9 @@ export class KuiComboboxList implements OnInit {
   }
 }
 
-/** `<input kuiComboboxHiddenInput>`: submits the value with the form around it. */
-@Directive({ selector: "input[kuiComboboxHiddenInput]" })
-export class KuiComboboxHiddenInput implements OnInit {
+/** `<input kpComboboxHiddenInput>`: submits the value with the form around it. */
+@Directive({ selector: "input[kpComboboxHiddenInput]" })
+export class KpComboboxHiddenInput implements OnInit {
   private readonly init = part("hidden")
 
   ngOnInit(): void {
@@ -280,26 +280,26 @@ export class KuiComboboxHiddenInput implements OnInit {
   }
 }
 
-/** Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown. */
-@Directive({ selector: "[kuiComboboxGroup]" })
-export class KuiComboboxGroup implements OnInit {
-  readonly kuiId = input<string>()
+/** Items that belong together, named by their `kpComboboxGroupLabel`. Hidden while none is shown. */
+@Directive({ selector: "[kpComboboxGroup]" })
+export class KpComboboxGroup implements OnInit {
+  readonly kpId = input<string>()
   group!: ComboboxGroup
-  private readonly root = inject(KuiCombobox)
-  private readonly generated = inject(KuiIds).make()
+  private readonly root = inject(KpCombobox)
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.group = this.root.controller.group(this.kuiId() ?? this.generated)
+    this.group = this.root.controller.group(this.kpId() ?? this.generated)
     this.put(this.group.root)
   }
 }
 
 /** Names the group it is in. With no group around it, it is plain text. */
-@Directive({ selector: "[kuiComboboxGroupLabel]" })
-export class KuiComboboxGroupLabel implements OnInit {
-  private readonly root = inject(KuiCombobox)
-  private readonly around = inject(KuiComboboxGroup, { optional: true })
+@Directive({ selector: "[kpComboboxGroupLabel]" })
+export class KpComboboxGroupLabel implements OnInit {
+  private readonly root = inject(KpCombobox)
+  private readonly around = inject(KpComboboxGroup, { optional: true })
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -308,9 +308,9 @@ export class KuiComboboxGroupLabel implements OnInit {
 }
 
 /** A line between groups. */
-@Directive({ selector: "[kuiComboboxSeparator]" })
-export class KuiComboboxSeparator implements OnInit {
-  private readonly root = inject(KuiCombobox)
+@Directive({ selector: "[kpComboboxSeparator]" })
+export class KpComboboxSeparator implements OnInit {
+  private readonly root = inject(KpCombobox)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -318,24 +318,24 @@ export class KuiComboboxSeparator implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiComboboxItem]" })
-export class KuiComboboxItem implements OnInit {
+@Directive({ selector: "[kpComboboxItem]" })
+export class KpComboboxItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What is filtered and what the input shows; the item's text when left out. */
   readonly label = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** Its place among all the rows, in a virtualized list. */
   readonly index = input<number>()
-  readonly root = inject(KuiCombobox)
-  private readonly within = inject(KuiComboboxGroup, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  readonly root = inject(KpCombobox)
+  private readonly within = inject(KpComboboxGroup, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     index: this.index(),
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
   }))
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -348,10 +348,10 @@ export class KuiComboboxItem implements OnInit {
   }
 }
 
-/** `<span *kuiComboboxItemIndicator>`: in the page while its item is the chosen one. */
-@Directive({ selector: "[kuiComboboxItemIndicator]" })
-export class KuiComboboxItemIndicator implements OnInit {
-  private readonly item = inject(KuiComboboxItem)
+/** `<span *kpComboboxItemIndicator>`: in the page while its item is the chosen one. */
+@Directive({ selector: "[kpComboboxItemIndicator]" })
+export class KpComboboxItemIndicator implements OnInit {
+  private readonly item = inject(KpComboboxItem)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
@@ -362,8 +362,8 @@ export class KuiComboboxItemIndicator implements OnInit {
 }
 
 /** With `multiple`: what holds the chips and the input. */
-@Directive({ selector: "[kuiComboboxChips]" })
-export class KuiComboboxChips implements OnInit {
+@Directive({ selector: "[kpComboboxChips]" })
+export class KpComboboxChips implements OnInit {
   private readonly init = part("chips")
 
   ngOnInit(): void {
@@ -372,10 +372,10 @@ export class KuiComboboxChips implements OnInit {
 }
 
 /** With `multiple`: one chosen value. Its `value` is what its remove button takes away. */
-@Directive({ selector: "[kuiComboboxChip]" })
-export class KuiComboboxChip implements OnInit {
+@Directive({ selector: "[kpComboboxChip]" })
+export class KpComboboxChip implements OnInit {
   readonly value = input.required<unknown>()
-  readonly root = inject(KuiCombobox)
+  readonly root = inject(KpCombobox)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -383,9 +383,9 @@ export class KuiComboboxChip implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiComboboxChipRemove]" })
-export class KuiComboboxChipRemove implements OnInit {
-  private readonly chip = inject(KuiComboboxChip)
+@Directive({ selector: "[kpComboboxChipRemove]" })
+export class KpComboboxChipRemove implements OnInit {
+  private readonly chip = inject(KpComboboxChip)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -393,10 +393,10 @@ export class KuiComboboxChipRemove implements OnInit {
   }
 }
 
-/** `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear. */
-@Directive({ selector: "[kuiComboboxClear]" })
-export class KuiComboboxClear implements OnInit {
-  private readonly root = inject(KuiCombobox)
+/** `<button *kpComboboxClear>`: empties the input and the value; in the page while there is something to clear. */
+@Directive({ selector: "[kpComboboxClear]" })
+export class KpComboboxClear implements OnInit {
+  private readonly root = inject(KpCombobox)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
@@ -404,10 +404,10 @@ export class KuiComboboxClear implements OnInit {
   }
 }
 
-/** `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed. */
-@Directive({ selector: "[kuiComboboxEmpty]" })
-export class KuiComboboxEmpty implements OnInit {
-  private readonly root = inject(KuiCombobox)
+/** `<div *kpComboboxEmpty>`: in the page while no item is shown for what was typed. */
+@Directive({ selector: "[kpComboboxEmpty]" })
+export class KpComboboxEmpty implements OnInit {
+  private readonly root = inject(KpCombobox)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
@@ -420,8 +420,8 @@ export class KuiComboboxEmpty implements OnInit {
  * text changes. Keep it in the page and change what it holds: inside the popup, or beside the
  * input.
  */
-@Directive({ selector: "[kuiComboboxStatus]" })
-export class KuiComboboxStatus implements OnInit {
+@Directive({ selector: "[kpComboboxStatus]" })
+export class KpComboboxStatus implements OnInit {
   private readonly init = part("status")
 
   ngOnInit(): void {
@@ -430,16 +430,16 @@ export class KuiComboboxStatus implements OnInit {
 }
 
 /**
- * `<span kuiComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its
+ * `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its
  * placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between.
- * `<ng-container *kuiComboboxValue="let shown">` draws its own content instead, with what is
+ * `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is
  * chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`,
  * in the order they were chosen. For a button that is the combobox, its input inside the popup.
  */
-@Directive({ selector: "[kuiComboboxValue]" })
-export class KuiComboboxValue implements OnInit {
+@Directive({ selector: "[kpComboboxValue]" })
+export class KpComboboxValue implements OnInit {
   readonly placeholder = input("")
-  private readonly root = inject(KuiCombobox)
+  private readonly root = inject(KpCombobox)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly template = inject<TemplateRef<{ $implicit: ComboboxShown }>>(TemplateRef, {
     optional: true,
@@ -485,7 +485,7 @@ export class KuiComboboxValue implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiComboboxValue,
+    _directive: KpComboboxValue,
     _context: unknown
   ): _context is { $implicit: ComboboxShown } {
     return true
@@ -495,16 +495,16 @@ export class KuiComboboxValue implements OnInit {
 type Drawn = EmbeddedViewRef<{ $implicit: ComboboxEntry }>
 
 /**
- * `<ng-container *kuiComboboxCollection="let entry">` draws the list from the root's `items`:
+ * `<ng-container *kpComboboxCollection="let entry">` draws the list from the root's `items`:
  * once for each item left for what was typed, or for each group that has items left. With
- * `of` (`*kuiComboboxCollection="let item; of: group"`), for each of that group's items left.
+ * `of` (`*kpComboboxCollection="let item; of: group"`), for each of that group's items left.
  * The root then filters, and no item hides itself.
  */
-@Directive({ selector: "[kuiComboboxCollection]" })
-export class KuiComboboxCollection implements OnInit {
+@Directive({ selector: "[kpComboboxCollection]" })
+export class KpComboboxCollection implements OnInit {
   /** A group the root's `items` gave: its items left are then what is drawn. */
-  readonly kuiComboboxCollectionOf = input<ComboboxEntry>()
-  private readonly root = inject(KuiCombobox)
+  readonly kpComboboxCollectionOf = input<ComboboxEntry>()
+  private readonly root = inject(KpCombobox)
   private readonly template = inject<TemplateRef<{ $implicit: ComboboxEntry }>>(TemplateRef)
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
@@ -513,7 +513,7 @@ export class KuiComboboxCollection implements OnInit {
 
   ngOnInit(): void {
     // A group is known by its key, which is its own for as long as it is drawn.
-    const left = this.root.controller.entries(untracked(this.kuiComboboxCollectionOf))
+    const left = this.root.controller.entries(untracked(this.kpComboboxCollectionOf))
     const draw = (entries: readonly ComboboxEntry[]) => {
       // By key: an item that is left keeps its element.
       const wanted = new Set(entries.map((each) => each.key))
@@ -543,7 +543,7 @@ export class KuiComboboxCollection implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiComboboxCollection,
+    _directive: KpComboboxCollection,
     _context: unknown
   ): _context is { $implicit: ComboboxEntry } {
     return true

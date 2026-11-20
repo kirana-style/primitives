@@ -15,17 +15,17 @@ import { createField } from "@kirana-ui/core/field"
 import type { Field, FieldProps, FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 import type { ValidationMode } from "@kirana-ui/core/form"
 
-import { KUI_FIELD } from "./field-token"
-import { KuiFieldset } from "./fieldset"
-import { KuiForm } from "./form"
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_FIELD } from "./field-token"
+import { KpFieldset } from "./fieldset"
+import { KpForm } from "./form"
+import { KpIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 @Directive({
-  selector: "[kuiField]",
-  exportAs: "kuiField",
-  providers: [{ provide: KUI_FIELD, useExisting: forwardRef(() => KuiField) }],
+  selector: "[kpField]",
+  exportAs: "kpField",
+  providers: [{ provide: KP_FIELD, useExisting: forwardRef(() => KpField) }],
 })
-export class KuiField implements OnInit {
+export class KpField implements OnInit {
   readonly name = input<string>()
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly invalid = input(false, { transform: booleanAttribute })
@@ -34,14 +34,14 @@ export class KuiField implements OnInit {
   readonly validationDebounceTime = input(undefined, {
     transform: (value: unknown) => (value == null ? undefined : numberAttribute(value)),
   })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
 
   controller!: Field
-  private readonly form = inject(KuiForm, { optional: true })
-  private readonly fieldset = inject(KuiFieldset, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly form = inject(KpForm, { optional: true })
+  private readonly fieldset = inject(KpFieldset, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     name: this.name(),
     disabled: this.disabled(),
     invalid: this.invalid(),
@@ -67,13 +67,13 @@ export class KuiField implements OnInit {
 }
 
 function part(name: "label" | "control" | "description") {
-  const root = inject(KuiField)
+  const root = inject(KpField)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiFieldLabel]" })
-export class KuiFieldLabel implements OnInit {
+@Directive({ selector: "[kpFieldLabel]" })
+export class KpFieldLabel implements OnInit {
   private readonly init = part("label")
 
   ngOnInit(): void {
@@ -82,8 +82,8 @@ export class KuiFieldLabel implements OnInit {
 }
 
 /** On the control: an `<input>`, a `<textarea>` or a `<select>`. */
-@Directive({ selector: "[kuiFieldControl]" })
-export class KuiFieldControl implements OnInit {
+@Directive({ selector: "[kpFieldControl]" })
+export class KpFieldControl implements OnInit {
   private readonly init = part("control")
 
   ngOnInit(): void {
@@ -91,8 +91,8 @@ export class KuiFieldControl implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiFieldDescription]" })
-export class KuiFieldDescription implements OnInit {
+@Directive({ selector: "[kpFieldDescription]" })
+export class KpFieldDescription implements OnInit {
   private readonly init = part("description")
 
   ngOnInit(): void {
@@ -101,16 +101,16 @@ export class KuiFieldDescription implements OnInit {
 }
 
 /**
- * `<div *kuiFieldError>`: in the page while something is wrong, with the message as its text
- * unless it has content of its own. `*kuiFieldError="'valueMissing'"` shows for only that finding
- * of the browser's, `*kuiFieldError="true"` always.
+ * `<div *kpFieldError>`: in the page while something is wrong, with the message as its text
+ * unless it has content of its own. `*kpFieldError="'valueMissing'"` shows for only that finding
+ * of the browser's, `*kpFieldError="true"` always.
  */
-@Directive({ selector: "[kuiFieldError]" })
-export class KuiFieldError implements OnInit {
+@Directive({ selector: "[kpFieldError]" })
+export class KpFieldError implements OnInit {
   readonly match = input<ValidityKey | boolean | "" | undefined>(undefined, {
-    alias: "kuiFieldError",
+    alias: "kpFieldError",
   })
-  private readonly root = inject(KuiField)
+  private readonly root = inject(KpField)
   private readonly destroy = inject(DestroyRef)
   private readonly present = presentWhile()
   private readonly options = inputsSignal(this, () => ({ match: this.match() || undefined }))
@@ -133,10 +133,10 @@ export class KuiFieldError implements OnInit {
   }
 }
 
-/** `<ng-container *kuiFieldValidity="let validity">`: draws its template with the field's validity. */
-@Directive({ selector: "[kuiFieldValidity]" })
-export class KuiFieldValidity implements OnInit {
-  private readonly root = inject(KuiField)
+/** `<ng-container *kpFieldValidity="let validity">`: draws its template with the field's validity. */
+@Directive({ selector: "[kpFieldValidity]" })
+export class KpFieldValidity implements OnInit {
+  private readonly root = inject(KpField)
   private readonly template = inject<TemplateRef<{ $implicit: FieldValidity }>>(TemplateRef)
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
@@ -157,7 +157,7 @@ export class KuiFieldValidity implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiFieldValidity,
+    _directive: KpFieldValidity,
     _context: unknown
   ): _context is { $implicit: FieldValidity } {
     return true

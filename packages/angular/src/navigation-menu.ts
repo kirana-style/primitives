@@ -5,26 +5,26 @@ import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createNavigationMenu } from "@kirana-ui/core/navigation-menu"
 import type { NavigationMenu, NavigationMenuItem } from "@kirana-ui/core/navigation-menu"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, KpPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiNavigationMenu]", exportAs: "kuiNavigationMenu" })
-export class KuiNavigationMenu<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpNavigationMenu]", exportAs: "kpNavigationMenu" })
+export class KpNavigationMenu<Value = unknown> implements OnInit {
   readonly value = model<Value | null | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly delay = input<number>()
   readonly closeDelay = input<number>()
   readonly orientation = input<Orientation>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
 
   controller!: NavigationMenu<Value>
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     delay: this.delay(),
@@ -51,13 +51,13 @@ export class KuiNavigationMenu<Value = unknown> implements OnInit {
 }
 
 function part(name: "list" | "popup" | "viewport" | "arrow" | "backdrop") {
-  const root = inject(KuiNavigationMenu)
+  const root = inject(KpNavigationMenu)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiNavigationMenuList]" })
-export class KuiNavigationMenuList implements OnInit {
+@Directive({ selector: "[kpNavigationMenuList]" })
+export class KpNavigationMenuList implements OnInit {
   private readonly init = part("list")
 
   ngOnInit(): void {
@@ -66,12 +66,12 @@ export class KuiNavigationMenuList implements OnInit {
 }
 
 /** On an item's `<li>`. `value` tells it from the others; an item that is given none makes its own. */
-@Directive({ selector: "[kuiNavigationMenuItem]" })
-export class KuiNavigationMenuItem implements OnInit {
+@Directive({ selector: "[kpNavigationMenuItem]" })
+export class KpNavigationMenuItem implements OnInit {
   readonly value = input<unknown>()
-  readonly root = inject(KuiNavigationMenu)
+  readonly root = inject(KpNavigationMenu)
   item!: NavigationMenuItem
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly mount = mounted()
 
   ngOnInit(): void {
@@ -82,12 +82,12 @@ export class KuiNavigationMenuItem implements OnInit {
 }
 
 function useItem(): () => NavigationMenuItem {
-  const owner = inject(KuiNavigationMenuItem)
+  const owner = inject(KpNavigationMenuItem)
   return () => owner.item
 }
 
-@Directive({ selector: "[kuiNavigationMenuTrigger]" })
-export class KuiNavigationMenuTrigger implements OnInit {
+@Directive({ selector: "[kpNavigationMenuTrigger]" })
+export class KpNavigationMenuTrigger implements OnInit {
   private readonly item = useItem()
   private readonly put = hostPart()
 
@@ -96,8 +96,8 @@ export class KuiNavigationMenuTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuIcon]" })
-export class KuiNavigationMenuIcon implements OnInit {
+@Directive({ selector: "[kpNavigationMenuIcon]" })
+export class KpNavigationMenuIcon implements OnInit {
   private readonly item = useItem()
   private readonly put = hostPart()
 
@@ -107,13 +107,13 @@ export class KuiNavigationMenuIcon implements OnInit {
 }
 
 /**
- * `<div *kuiNavigationMenuContent>`: an item's content, drawn in `kuiNavigationMenuViewport`
+ * `<div *kpNavigationMenuContent>`: an item's content, drawn in `kpNavigationMenuViewport`
  * while it is shown.
  */
-@Directive({ selector: "[kuiNavigationMenuContent]" })
-export class KuiNavigationMenuContent implements OnInit {
+@Directive({ selector: "[kpNavigationMenuContent]" })
+export class KpNavigationMenuContent implements OnInit {
   private readonly item = useItem()
-  private readonly root = inject(KuiNavigationMenu)
+  private readonly root = inject(KpNavigationMenu)
   private readonly present = presentWhile({
     into: () => this.root.controller.viewportElement.peek(),
   })
@@ -125,15 +125,15 @@ export class KuiNavigationMenuContent implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuLink]" })
-export class KuiNavigationMenuLink implements OnInit {
+@Directive({ selector: "[kpNavigationMenuLink]" })
+export class KpNavigationMenuLink implements OnInit {
   /** The link is the page the reader is on. */
   readonly active = input(false, { transform: booleanAttribute })
   /** Whether following it closes the menu. Default: it does. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
-  private readonly root = inject(KuiNavigationMenu)
+  private readonly root = inject(KpNavigationMenu)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     active: this.active(),
@@ -150,9 +150,9 @@ export class KuiNavigationMenuLink implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuPortal]" })
-export class KuiNavigationMenuPortal implements OnInit {
-  private readonly root = inject(KuiNavigationMenu)
+@Directive({ selector: "[kpNavigationMenuPortal]" })
+export class KpNavigationMenuPortal implements OnInit {
+  private readonly root = inject(KpNavigationMenu)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -160,17 +160,17 @@ export class KuiNavigationMenuPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuPositioner]" })
-export class KuiNavigationMenuPositioner extends KuiPositioner {
-  private readonly root = inject(KuiNavigationMenu)
+@Directive({ selector: "[kpNavigationMenuPositioner]" })
+export class KpNavigationMenuPositioner extends KpPositioner {
+  private readonly root = inject(KpNavigationMenu)
 
   protected placed() {
     return this.root.controller
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuPopup]" })
-export class KuiNavigationMenuPopup implements OnInit {
+@Directive({ selector: "[kpNavigationMenuPopup]" })
+export class KpNavigationMenuPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -178,8 +178,8 @@ export class KuiNavigationMenuPopup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuViewport]" })
-export class KuiNavigationMenuViewport implements OnInit {
+@Directive({ selector: "[kpNavigationMenuViewport]" })
+export class KpNavigationMenuViewport implements OnInit {
   private readonly init = part("viewport")
 
   ngOnInit(): void {
@@ -187,8 +187,8 @@ export class KuiNavigationMenuViewport implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuArrow]" })
-export class KuiNavigationMenuArrow implements OnInit {
+@Directive({ selector: "[kpNavigationMenuArrow]" })
+export class KpNavigationMenuArrow implements OnInit {
   private readonly init = part("arrow")
 
   ngOnInit(): void {
@@ -196,8 +196,8 @@ export class KuiNavigationMenuArrow implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNavigationMenuBackdrop]" })
-export class KuiNavigationMenuBackdrop implements OnInit {
+@Directive({ selector: "[kpNavigationMenuBackdrop]" })
+export class KpNavigationMenuBackdrop implements OnInit {
   private readonly init = part("backdrop")
 
   ngOnInit(): void {

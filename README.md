@@ -124,9 +124,9 @@ An adapter reads `props` into its framework and calls `attach` when the element 
 
 ```html
 <!-- Angular -->
-<div kuiCollapsible>
-  <button kuiCollapsibleTrigger>Details</button>
-  <div *kuiCollapsiblePanel class="panel">…</div>
+<div kpCollapsible>
+  <button kpCollapsibleTrigger>Details</button>
+  <div *kpCollapsiblePanel class="panel">…</div>
 </div>
 ```
 

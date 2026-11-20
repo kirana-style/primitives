@@ -220,7 +220,7 @@ function positioning(container: string | undefined, file: string): boolean {
   if (!container) return false
   if (container === "PositionOptions" || container === "PositionerOptions") return true
   if (container === "Placement") return true
-  if (container === "KuiPositioner") return true
+  if (container === "KpPositioner") return true
   // Vue's are the popover's positioner's props, which every other positioner's extend.
   return container === "PositionerProps" && file.endsWith("/packages/vue/src/popover.ts")
 }
@@ -768,9 +768,9 @@ function signals(node: TS.ClassDeclaration, checker: TS.TypeChecker): Read {
     if (!kind) continue
     const owner = declaration.parent
     // The inputs every positioner has, from the class they all extend: listed once.
-    if (ts.isClassDeclaration(owner) && owner.name?.text === "KuiPositioner") {
+    if (ts.isClassDeclaration(owner) && owner.name?.text === "KpPositioner") {
       positioner = true
-      if (node.name!.text !== "KuiPositioner") continue
+      if (node.name!.text !== "KpPositioner") continue
     }
     const call = declaration.initializer
     const called = call && ts.isCallExpression(call) ? call : undefined
@@ -781,8 +781,8 @@ function signals(node: TS.ClassDeclaration, checker: TS.TypeChecker): Read {
     const first = called?.arguments[0]
     const options = called?.arguments.at(-1)?.getText() ?? ""
     const alias = /alias:\s*"([^"]+)"/.exec(options)?.[1]
-    // An id is `[kuiId]` on every directive that takes one: said once, as `id` is elsewhere.
-    if (member.name === "kuiId") continue
+    // An id is `[kpId]` on every directive that takes one: said once, as `id` is elsewhere.
+    if (member.name === "kpId") continue
     const initial =
       kind === "input" && !required && first && !ts.isObjectLiteralExpression(first)
         ? first.getText()
@@ -828,7 +828,7 @@ export function directives(): Map<string, Directive> {
       const text = decorator.expression.getText()
       // The class every positioner extends has no selector of its own: its inputs are theirs.
       const selector = /selector:\s*"([^"]+)"/.exec(text)?.[1] ?? ""
-      if (!selector && node.name.text !== "KuiPositioner") return
+      if (!selector && node.name.text !== "KpPositioner") return
       const body = node.getText()
       const { props, types, positioner } = signals(node, checker)
       // What a structural directive hands its template: its context guard's type.
@@ -884,7 +884,7 @@ export function directives(): Map<string, Directive> {
   return found
 }
 
-/** Angular: a part is a directive, `Kui<Component><Part>`; a component may be a selector of another's root. */
+/** Angular: a part is a directive, `Kp<Component><Part>`; a component may be a selector of another's root. */
 async function angular(): Promise<AdapterReference> {
   const all = await components()
   const every = directives()
@@ -897,17 +897,17 @@ async function angular(): Promise<AdapterReference> {
       const react = theirs.components.get(name)?.parts.find((each) => each.part === part)
       const borrowed = react?.declared
       const directive =
-        (part === "Root" ? every.get(`Kui${name}`) : undefined) ??
-        every.get(`Kui${name}${part}`) ??
+        (part === "Root" ? every.get(`Kp${name}`) : undefined) ??
+        every.get(`Kp${name}${part}`) ??
         // A component made of another's directives is a selector of that one's root.
         (part === "Root"
-          ? [...every.values()].find((each) => each.selector.split(/,\s*/).includes(`[kui${name}]`))
+          ? [...every.values()].find((each) => each.selector.split(/,\s*/).includes(`[kp${name}]`))
           : undefined) ??
         // A part React borrows from another component is that component's directive here.
-        (react?.from ? every.get(`Kui${pascal(react.from)}${part}`) : undefined) ??
+        (react?.from ? every.get(`Kp${pascal(react.from)}${part}`) : undefined) ??
         (borrowed
           ? every.get(
-              `Kui${pascal(borrowed.file)}${borrowed.name.replace(/Props$/, "").replace(/^Root$/, "")}`
+              `Kp${pascal(borrowed.file)}${borrowed.name.replace(/Props$/, "").replace(/^Root$/, "")}`
             )
           : undefined)
       if (!directive) continue
@@ -931,7 +931,7 @@ async function angular(): Promise<AdapterReference> {
     }
     found.set(name, { name, entry: ".", lone, parts: read })
   }
-  const positioner = every.get("KuiPositioner")
+  const positioner = every.get("KpPositioner")
   return {
     adapter: "angular",
     components: found,

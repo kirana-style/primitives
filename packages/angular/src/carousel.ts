@@ -12,11 +12,11 @@ import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createCarousel } from "@kirana-ui/core/carousel"
 import type { Carousel } from "@kirana-ui/core/carousel"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal, mounted } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, hostPart, inputsSignal, mounted } from "./runtime"
 
-@Directive({ selector: "[kuiCarousel]", exportAs: "kuiCarousel" })
-export class KuiCarousel implements OnInit {
+@Directive({ selector: "[kpCarousel]", exportAs: "kpCarousel" })
+export class KpCarousel implements OnInit {
   /** Which slide is at the start of the view: `[(index)]`. */
   readonly index = model<number | undefined>(undefined)
   readonly defaultIndex = input<number | undefined, unknown>(undefined, {
@@ -24,16 +24,16 @@ export class KuiCarousel implements OnInit {
   })
   readonly orientation = input<Orientation>()
   readonly loop = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly indexChanged = output<{ index: number; details: ChangeDetails }>()
 
   controller!: Carousel
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     index: this.index(),
     defaultIndex: this.defaultIndex(),
     orientation: this.orientation(),
@@ -60,13 +60,13 @@ export class KuiCarousel implements OnInit {
 }
 
 function part(name: "viewport" | "previous" | "next") {
-  const root = inject(KuiCarousel)
+  const root = inject(KpCarousel)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiCarouselViewport]" })
-export class KuiCarouselViewport implements OnInit {
+@Directive({ selector: "[kpCarouselViewport]" })
+export class KpCarouselViewport implements OnInit {
   private readonly init = part("viewport")
 
   ngOnInit(): void {
@@ -74,8 +74,8 @@ export class KuiCarouselViewport implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCarouselPrevious]" })
-export class KuiCarouselPrevious implements OnInit {
+@Directive({ selector: "[kpCarouselPrevious]" })
+export class KpCarouselPrevious implements OnInit {
   private readonly init = part("previous")
 
   ngOnInit(): void {
@@ -83,8 +83,8 @@ export class KuiCarouselPrevious implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCarouselNext]" })
-export class KuiCarouselNext implements OnInit {
+@Directive({ selector: "[kpCarouselNext]" })
+export class KpCarouselNext implements OnInit {
   private readonly init = part("next")
 
   ngOnInit(): void {
@@ -92,10 +92,10 @@ export class KuiCarouselNext implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCarouselItem]" })
-export class KuiCarouselItem implements OnInit {
+@Directive({ selector: "[kpCarouselItem]" })
+export class KpCarouselItem implements OnInit {
   readonly index = input.required<number, unknown>({ transform: numberAttribute })
-  private readonly root = inject(KuiCarousel)
+  private readonly root = inject(KpCarousel)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -103,10 +103,10 @@ export class KuiCarouselItem implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCarouselIndicator]" })
-export class KuiCarouselIndicator implements OnInit {
+@Directive({ selector: "[kpCarouselIndicator]" })
+export class KpCarouselIndicator implements OnInit {
   readonly index = input.required<number, unknown>({ transform: numberAttribute })
-  private readonly root = inject(KuiCarousel)
+  private readonly root = inject(KpCarousel)
   private readonly put = hostPart()
 
   ngOnInit(): void {

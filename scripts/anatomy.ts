@@ -121,7 +121,7 @@ export interface Placed {
   adapter: string
   /** Where it is written, for a message: `fixtures/react/src/App.tsx:565`. */
   at: string
-  /** As its framework writes it: `Select.Item`, `kuiSelectItem`, `item`. */
+  /** As its framework writes it: `Select.Item`, `kpSelectItem`, `item`. */
   written: string
   /** The parts it may be: a directive that is several components' part is each of them. */
   names: { component: string; part: string }[]
@@ -247,7 +247,7 @@ function svelte(file: string): Placed[] {
   return found
 }
 
-/** Angular's directives by the attribute a template writes: `kuiMenuItem` is a menu's item, and a context menu's. */
+/** Angular's directives by the attribute a template writes: `kpMenuItem` is a menu's item, and a context menu's. */
 async function selectors(): Promise<Map<string, Placed["names"]>> {
   const found = new Map<string, Placed["names"]>()
   const own = await reference("angular")
@@ -257,7 +257,7 @@ async function selectors(): Promise<Map<string, Placed["names"]>> {
     for (const part of component.parts) {
       const all = part.directive!.selector.split(/,\s*/)
       // A directive that is several components' root is each one's under its own name.
-      const mine = all.filter((one) => one.includes(`kui${component.name}]`))
+      const mine = all.filter((one) => one.includes(`kp${component.name}]`))
       for (const selector of mine.length > 0 ? mine : all) {
         const attribute = /\[(\w+)\]/.exec(selector)?.[1]
         if (!attribute) continue
@@ -281,13 +281,13 @@ interface NgNode {
   [key: string]: unknown
 }
 
-/** The attribute a directive is written as (`[kuiTooltip]` is `kuiTooltip`), by its class. */
+/** The attribute a directive is written as (`[kpTooltip]` is `kpTooltip`), by its class. */
 async function attributesByClass(): Promise<Map<string, string>> {
   const found = new Map<string, string>()
   for (const component of (await reference("angular")).components.values())
     for (const part of component.parts) {
       const all = part.directive!.selector.split(/,\s*/)
-      const mine = all.find((one) => one.includes(`kui${component.name}]`)) ?? all[0]!
+      const mine = all.find((one) => one.includes(`kp${component.name}]`)) ?? all[0]!
       const attribute = /\[(\w+)\]/.exec(mine)?.[1]
       if (attribute) found.set(part.directive!.name, attribute)
     }
@@ -313,7 +313,7 @@ async function designSystem(
       if (node.name === "ng-content") return chain
       const mine = [...(node.templateAttrs ?? []), ...(node.attributes ?? [])]
         .map((each) => each.name)
-        .filter((name) => name.startsWith("kui"))
+        .filter((name) => name.startsWith("kp"))
       const held = node.children
       const deeper = Array.isArray(held)
         ? wrapping(held as NgNode[], [...chain, ...mine])
@@ -545,7 +545,7 @@ export async function placed(adapter: string): Promise<Placed[]> {
     else found.push(...web(file))
   }
   // A directive that is several components' part is the part of the one whose own directive
-  // is around it: `kuiDialogPopup` inside `kuiAlertDialog` is an alert dialog's popup.
+  // is around it: `kpDialogPopup` inside `kpAlertDialog` is an alert dialog's popup.
   for (const one of found) {
     if (one.names.length < 2) continue
     for (let at = one.parent; at; at = at.parent) {

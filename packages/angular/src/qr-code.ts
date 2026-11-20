@@ -3,20 +3,20 @@ import type { OnInit, SimpleChanges } from "@angular/core"
 import { createQrCode } from "@kirana-ui/core/qr-code"
 import type { QrCode, QrCorrection } from "@kirana-ui/core/qr-code"
 
-import { KuiIds, hostPart, inputsSignal } from "./runtime"
+import { KpIds, hostPart, inputsSignal } from "./runtime"
 
-@Directive({ selector: "[kuiQrCode]", exportAs: "kuiQrCode" })
-export class KuiQrCode implements OnInit {
+@Directive({ selector: "[kpQrCode]", exportAs: "kpQrCode" })
+export class KpQrCode implements OnInit {
   /** What the code says: a link, a text. */
   readonly value = input("")
   readonly correction = input<QrCorrection>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
 
   controller!: QrCode
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     correction: this.correction(),
   }))
@@ -31,10 +31,10 @@ export class KuiQrCode implements OnInit {
   }
 }
 
-/** `<svg kuiQrCodeFrame>`: the drawing. */
-@Directive({ selector: "[kuiQrCodeFrame]" })
-export class KuiQrCodeFrame implements OnInit {
-  private readonly root = inject(KuiQrCode)
+/** `<svg kpQrCodeFrame>`: the drawing. */
+@Directive({ selector: "[kpQrCodeFrame]" })
+export class KpQrCodeFrame implements OnInit {
+  private readonly root = inject(KpQrCode)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -42,10 +42,10 @@ export class KuiQrCodeFrame implements OnInit {
   }
 }
 
-/** `<svg:path kuiQrCodePattern>`: the dark modules. */
-@Directive({ selector: "[kuiQrCodePattern]" })
-export class KuiQrCodePattern implements OnInit {
-  private readonly root = inject(KuiQrCode)
+/** `<svg:path kpQrCodePattern>`: the dark modules. */
+@Directive({ selector: "[kpQrCodePattern]" })
+export class KpQrCodePattern implements OnInit {
+  private readonly root = inject(KpQrCode)
   private readonly put = hostPart()
 
   ngOnInit(): void {

@@ -16,11 +16,11 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createDateField } from "@kirana-ui/core/date-field"
 import type { DateField, DateFieldProps, DateFieldSegment } from "@kirana-ui/core/date-field"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
 
-@Directive({ selector: "[kuiDateField]", exportAs: "kuiDateField" })
-export class KuiDateField implements OnInit {
+@Directive({ selector: "[kpDateField]", exportAs: "kpDateField" })
+export class KpDateField implements OnInit {
   /** The day typed, once all of it is: `[(value)]`. */
   readonly value = model<string | null | undefined>(undefined)
   readonly defaultValue = input<string | null>()
@@ -35,16 +35,16 @@ export class KuiDateField implements OnInit {
   readonly name = input<string>()
   /** The id of the form it belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: string | null; details: ChangeDetails }>()
 
   controller!: DateField
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     locale: this.locale(),
@@ -77,10 +77,10 @@ export class KuiDateField implements OnInit {
   }
 }
 
-/** `<span *kuiDateFieldSegments="let segment">`: once for each piece of the date. */
-@Directive({ selector: "[kuiDateFieldSegments]" })
-export class KuiDateFieldSegments implements OnInit {
-  private readonly root = inject(KuiDateField)
+/** `<span *kpDateFieldSegments="let segment">`: once for each piece of the date. */
+@Directive({ selector: "[kpDateFieldSegments]" })
+export class KpDateFieldSegments implements OnInit {
+  private readonly root = inject(KpDateField)
   private readonly template = inject<TemplateRef<{ $implicit: DateFieldSegment }>>(TemplateRef)
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
@@ -107,7 +107,7 @@ export class KuiDateFieldSegments implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiDateFieldSegments,
+    _directive: KpDateFieldSegments,
     _context: unknown
   ): _context is { $implicit: DateFieldSegment } {
     return true
@@ -115,10 +115,10 @@ export class KuiDateFieldSegments implements OnInit {
 }
 
 /** One piece: a part that is typed, or what stands between two. It writes its own text. */
-@Directive({ selector: "[kuiDateFieldSegment]" })
-export class KuiDateFieldSegment implements OnInit {
+@Directive({ selector: "[kpDateFieldSegment]" })
+export class KpDateFieldSegment implements OnInit {
   readonly segment = input.required<DateFieldSegment>()
-  private readonly root = inject(KuiDateField)
+  private readonly root = inject(KpDateField)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
   private readonly put = hostPart()
@@ -142,10 +142,10 @@ export class KuiDateFieldSegment implements OnInit {
   }
 }
 
-/** `<input kuiDateFieldInput>`: the hidden input it is submitted by. */
-@Directive({ selector: "input[kuiDateFieldInput]" })
-export class KuiDateFieldInput implements OnInit {
-  private readonly root = inject(KuiDateField)
+/** `<input kpDateFieldInput>`: the hidden input it is submitted by. */
+@Directive({ selector: "input[kpDateFieldInput]" })
+export class KpDateFieldInput implements OnInit {
+  private readonly root = inject(KpDateField)
   private readonly put = hostPart()
 
   ngOnInit(): void {

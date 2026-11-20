@@ -15,14 +15,14 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createPopover } from "@kirana-ui/core/popover"
 import type { Popover } from "@kirana-ui/core/popover"
 
-import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KpIds, KpPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** `modal` as an attribute writes it: there or not, or `"trap-focus"`. */
 const modalAttribute = (value: unknown): boolean | "trap-focus" =>
   value === "trap-focus" ? value : booleanAttribute(value)
 
-@Directive({ selector: "[kuiPopover]", exportAs: "kuiPopover" })
-export class KuiPopover implements OnInit {
+@Directive({ selector: "[kpPopover]", exportAs: "kpPopover" })
+export class KpPopover implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   /**
@@ -32,13 +32,13 @@ export class KuiPopover implements OnInit {
    * scrolled. A popover the pointer opened holds nothing until it is pressed. Read as it opens.
    */
   readonly modal = input<boolean | "trap-focus", unknown>(false, { transform: modalAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Popover
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     modal: this.modal(),
@@ -62,9 +62,9 @@ export class KuiPopover implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverPortal]" })
-export class KuiPopoverPortal implements OnInit {
-  private readonly root = inject(KuiPopover)
+@Directive({ selector: "[kpPopoverPortal]" })
+export class KpPopoverPortal implements OnInit {
+  private readonly root = inject(KpPopover)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -72,9 +72,9 @@ export class KuiPopoverPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverPositioner]" })
-export class KuiPopoverPositioner extends KuiPositioner {
-  private readonly root = inject(KuiPopover)
+@Directive({ selector: "[kpPopoverPositioner]" })
+export class KpPopoverPositioner extends KpPositioner {
+  private readonly root = inject(KpPopover)
 
   protected placed() {
     return this.root.controller
@@ -82,13 +82,13 @@ export class KuiPopoverPositioner extends KuiPositioner {
 }
 
 function part(name: "backdrop" | "popup" | "arrow" | "title" | "description" | "close") {
-  const root = inject(KuiPopover)
+  const root = inject(KpPopover)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiPopoverTrigger]" })
-export class KuiPopoverTrigger implements OnInit {
+@Directive({ selector: "[kpPopoverTrigger]" })
+export class KpPopoverTrigger implements OnInit {
   /**
    * Whether the pointer resting on the trigger opens the popover too. A press and the keyboard
    * still open it, and a press on one the pointer opened keeps it open. Default `false`.
@@ -102,7 +102,7 @@ export class KuiPopoverTrigger implements OnInit {
   readonly closeDelay = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
   })
-  private readonly root = inject(KuiPopover)
+  private readonly root = inject(KpPopover)
   private readonly put = hostPart()
   private readonly options = () =>
     defined({
@@ -124,8 +124,8 @@ export class KuiPopoverTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverBackdrop]" })
-export class KuiPopoverBackdrop implements OnInit {
+@Directive({ selector: "[kpPopoverBackdrop]" })
+export class KpPopoverBackdrop implements OnInit {
   private readonly init = part("backdrop")
 
   ngOnInit(): void {
@@ -133,8 +133,8 @@ export class KuiPopoverBackdrop implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverArrow]" })
-export class KuiPopoverArrow implements OnInit {
+@Directive({ selector: "[kpPopoverArrow]" })
+export class KpPopoverArrow implements OnInit {
   private readonly init = part("arrow")
 
   ngOnInit(): void {
@@ -142,8 +142,8 @@ export class KuiPopoverArrow implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverPopup]" })
-export class KuiPopoverPopup implements OnInit {
+@Directive({ selector: "[kpPopoverPopup]" })
+export class KpPopoverPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -151,8 +151,8 @@ export class KuiPopoverPopup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverTitle]" })
-export class KuiPopoverTitle implements OnInit {
+@Directive({ selector: "[kpPopoverTitle]" })
+export class KpPopoverTitle implements OnInit {
   private readonly init = part("title")
 
   ngOnInit(): void {
@@ -160,8 +160,8 @@ export class KuiPopoverTitle implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverDescription]" })
-export class KuiPopoverDescription implements OnInit {
+@Directive({ selector: "[kpPopoverDescription]" })
+export class KpPopoverDescription implements OnInit {
   private readonly init = part("description")
 
   ngOnInit(): void {
@@ -169,8 +169,8 @@ export class KuiPopoverDescription implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPopoverClose]" })
-export class KuiPopoverClose implements OnInit {
+@Directive({ selector: "[kpPopoverClose]" })
+export class KpPopoverClose implements OnInit {
   private readonly init = part("close")
 
   ngOnInit(): void {

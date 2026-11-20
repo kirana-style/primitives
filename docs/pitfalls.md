@@ -427,6 +427,17 @@ note. Three places hold them:
   `ngOnChanges` (an input never bound never appears there), and the values are functions so
   a `computed` follows. Held by the fixtures' `design` section and scenario, and by `ngc`
   over `fixtures/angular/src/typed.ts`.
+- **Angular: two directives with one selector both match, and say nothing.** The primitives'
+  directives were `kui…`, the prefix a design system built on them takes for its own brand.
+  Its `[kuiDialog]` hosting the primitive's `[kuiDialog]`, both in one template's `imports`,
+  made the part twice on the same element; a component whose own selector was the primitive's
+  matched again on the element its template wrote the primitive on, and recursed. A design
+  system had to write `:not(…)` selectors and a marker attribute to get out of the way. A base
+  layer takes a prefix of its own, as other headless Angular libraries do: the primitives are
+  `kp…` (`[kpDialog]`, `KpDialog`, `KP_FIELD`, `[kpId]`), and a design system names its own
+  as it likes, `kui…` included. Held by the fixtures' `design` section and scenario, where the
+  Angular page's design system is `kui…` (`kuiDialog` hosting `kpDialog`, both imported by
+  the page), and by `ngc` over the fixture.
 
 ## Browsers
 

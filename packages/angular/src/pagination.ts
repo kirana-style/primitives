@@ -16,13 +16,13 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createPagination } from "@kirana-ui/core/pagination"
 import type { Pagination, PaginationEntry } from "@kirana-ui/core/pagination"
 
-import { KuiIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
+import { KpIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
 /** On a `<nav>`. `[(page)]` is the page shown, from 1. */
-@Directive({ selector: "[kuiPagination]", exportAs: "kuiPagination" })
-export class KuiPagination implements OnInit {
+@Directive({ selector: "[kpPagination]", exportAs: "kpPagination" })
+export class KpPagination implements OnInit {
   readonly page = model<number | undefined>(undefined)
   readonly defaultPage = input(undefined, { transform: optionalNumber })
   /** How many items there are in all. */
@@ -31,13 +31,13 @@ export class KuiPagination implements OnInit {
   readonly siblingCount = input(undefined, { transform: optionalNumber })
   readonly boundaryCount = input(undefined, { transform: optionalNumber })
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly pageChanged = output<{ page: number; details: ChangeDetails }>()
 
   controller!: Pagination
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     page: this.page(),
     defaultPage: this.defaultPage(),
     count: this.count(),
@@ -70,12 +70,12 @@ export class KuiPagination implements OnInit {
 type Drawn = EmbeddedViewRef<{ $implicit: PaginationEntry }>
 
 /**
- * `<ng-container *kuiPaginationItems="let entry">`: once for each piece of the row, a page or
+ * `<ng-container *kpPaginationItems="let entry">`: once for each piece of the row, a page or
  * the mark for pages left out.
  */
-@Directive({ selector: "[kuiPaginationItems]" })
-export class KuiPaginationItems implements OnInit {
-  private readonly root = inject(KuiPagination)
+@Directive({ selector: "[kpPaginationItems]" })
+export class KpPaginationItems implements OnInit {
+  private readonly root = inject(KpPagination)
   private readonly template = inject<TemplateRef<{ $implicit: PaginationEntry }>>(TemplateRef)
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
@@ -112,17 +112,17 @@ export class KuiPaginationItems implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiPaginationItems,
+    _directive: KpPaginationItems,
     _context: unknown
   ): _context is { $implicit: PaginationEntry } {
     return true
   }
 }
 
-@Directive({ selector: "[kuiPaginationItem]" })
-export class KuiPaginationItem implements OnInit {
+@Directive({ selector: "[kpPaginationItem]" })
+export class KpPaginationItem implements OnInit {
   readonly page = input.required({ transform: numberAttribute })
-  private readonly root = inject(KuiPagination)
+  private readonly root = inject(KpPagination)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -131,14 +131,14 @@ export class KuiPaginationItem implements OnInit {
 }
 
 function part(name: "ellipsis" | "previous" | "next") {
-  const root = inject(KuiPagination)
+  const root = inject(KpPagination)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
 /** The mark for pages left out of the row. */
-@Directive({ selector: "[kuiPaginationEllipsis]" })
-export class KuiPaginationEllipsis implements OnInit {
+@Directive({ selector: "[kpPaginationEllipsis]" })
+export class KpPaginationEllipsis implements OnInit {
   private readonly init = part("ellipsis")
 
   ngOnInit(): void {
@@ -146,8 +146,8 @@ export class KuiPaginationEllipsis implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPaginationPrevious]" })
-export class KuiPaginationPrevious implements OnInit {
+@Directive({ selector: "[kpPaginationPrevious]" })
+export class KpPaginationPrevious implements OnInit {
   private readonly init = part("previous")
 
   ngOnInit(): void {
@@ -155,8 +155,8 @@ export class KuiPaginationPrevious implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiPaginationNext]" })
-export class KuiPaginationNext implements OnInit {
+@Directive({ selector: "[kpPaginationNext]" })
+export class KpPaginationNext implements OnInit {
   private readonly init = part("next")
 
   ngOnInit(): void {

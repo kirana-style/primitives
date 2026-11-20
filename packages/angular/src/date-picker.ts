@@ -12,40 +12,40 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createDatePicker } from "@kirana-ui/core/date-picker"
 import type { DatePicker, DatePickerProps } from "@kirana-ui/core/date-picker"
 
-import { KuiCalendar } from "./calendar"
-import { KuiDateField } from "./date-field"
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiPopover } from "./popover"
-import { KuiIds, hostPart, inputsSignal, mounted } from "./runtime"
+import { KpCalendar } from "./calendar"
+import { KpDateField } from "./date-field"
+import { KP_DIRECTION } from "./direction-token"
+import { KpPopover } from "./popover"
+import { KpIds, hostPart, inputsSignal, mounted } from "./runtime"
 
 /** What a date field's, a popover's or a calendar's directives find as their root. */
 const stands = (pick: (picker: DatePicker) => unknown) => ({
-  useFactory: (root: KuiDatePicker) => ({
+  useFactory: (root: KpDatePicker) => ({
     get controller() {
       return pick(root.controller)
     },
   }),
-  deps: [forwardRef(() => KuiDatePicker)],
+  deps: [forwardRef(() => KpDatePicker)],
 })
 
 /**
  * A date field, and a calendar in a popover, with one value between them. On any element, or
  * on `<ng-container>` to draw none. Inside it the date field's, the popover's and the
- * calendar's own directives are its parts (`kuiDateFieldSegments`, `kuiPopoverTrigger`,
- * `kuiCalendarGrid` …), with `kuiDatePickerField` and `kuiDatePickerCalendar` for the two
+ * calendar's own directives are its parts (`kpDateFieldSegments`, `kpPopoverTrigger`,
+ * `kpCalendarGrid` …), with `kpDatePickerField` and `kpDatePickerCalendar` for the two
  * elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows,
  * `[(month)]` the first day of the month it shows.
  */
 @Directive({
-  selector: "[kuiDatePicker]",
-  exportAs: "kuiDatePicker",
+  selector: "[kpDatePicker]",
+  exportAs: "kpDatePicker",
   providers: [
-    { provide: KuiDateField, ...stands((picker) => picker.field) },
-    { provide: KuiPopover, ...stands((picker) => picker.popover) },
-    { provide: KuiCalendar, ...stands((picker) => picker.calendar) },
+    { provide: KpDateField, ...stands((picker) => picker.field) },
+    { provide: KpPopover, ...stands((picker) => picker.popover) },
+    { provide: KpCalendar, ...stands((picker) => picker.calendar) },
   ],
 })
-export class KuiDatePicker implements OnInit {
+export class KpDatePicker implements OnInit {
   readonly value = model<string | null | undefined>(undefined)
   readonly defaultValue = input<string | null>()
   readonly open = model<boolean | undefined>(undefined)
@@ -71,18 +71,18 @@ export class KuiDatePicker implements OnInit {
   readonly name = input<string>()
   /** The id of the form it belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: string | null; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
   /** The calendar is about to show another month: its first day, and `details.cancel()`. */
   readonly monthChanged = output<{ month: string; details: ChangeDetails }>()
 
   controller!: DatePicker
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     open: this.open(),
@@ -137,9 +137,9 @@ export class KuiDatePicker implements OnInit {
 }
 
 /** The typed date: what holds its segments and its hidden input. */
-@Directive({ selector: "[kuiDatePickerField]" })
-export class KuiDatePickerField implements OnInit {
-  private readonly root = inject(KuiDatePicker)
+@Directive({ selector: "[kpDatePickerField]" })
+export class KpDatePickerField implements OnInit {
+  private readonly root = inject(KpDatePicker)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -148,9 +148,9 @@ export class KuiDatePickerField implements OnInit {
 }
 
 /** The calendar: what holds its heading, its buttons and its grid. */
-@Directive({ selector: "[kuiDatePickerCalendar]" })
-export class KuiDatePickerCalendar implements OnInit {
-  private readonly root = inject(KuiDatePicker)
+@Directive({ selector: "[kpDatePickerCalendar]" })
+export class KpDatePickerCalendar implements OnInit {
+  private readonly root = inject(KpDatePicker)
   private readonly put = hostPart()
 
   ngOnInit(): void {

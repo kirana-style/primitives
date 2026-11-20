@@ -94,16 +94,16 @@ function svelte(): Shape {
   return shape
 }
 
-/** Angular's parts are directives, `KuiAccordionItem`: named back into component and part. */
+/** Angular's parts are directives, `KpAccordionItem`: named back into component and part. */
 function angular(components: string[]): Shape {
   const shape: Shape = {}
   const byLength = [...components].sort((a, b) => b.length - a.length)
   for (const name of names(read("packages/angular/src/index.ts"))) {
-    if (!name.startsWith("Kui")) {
+    if (!name.startsWith("Kp")) {
       shape[name] = []
       continue
     }
-    const rest = name.slice(3)
+    const rest = name.slice(2)
     const component = byLength.find((each) => rest.startsWith(each))
     if (!component) {
       shape[rest] = []
@@ -125,7 +125,7 @@ const RUNTIME =
   "what a part's directive is made with, from the one entry an Angular package has: the others have `./runtime`"
 
 const DATE_PICKER =
-  "inside `kuiDatePicker` the date field's, the popover's and the calendar's own directives are its parts"
+  "inside `kpDatePicker` the date field's, the popover's and the calendar's own directives are its parts"
 
 const IDIOM: Record<
   string,
@@ -169,10 +169,9 @@ const IDIOM: Record<
     rename: { Direction: "DirectionProvider", injectDirection: "useDirection" },
     without: {
       AlertDialog:
-        "the dialog's directives under a root of its own, `kuiAlertDialog`, which takes neither `modal` nor `dismissible`",
-      Drawer: "the dialog's directives with another selector on the root: `kuiDrawer`",
-      Autocomplete:
-        "the combobox's directives with another selector on the root: `kuiAutocomplete`",
+        "the dialog's directives under a root of its own, `kpAlertDialog`, which takes neither `modal` nor `dismissible`",
+      Drawer: "the dialog's directives with another selector on the root: `kpDrawer`",
+      Autocomplete: "the combobox's directives with another selector on the root: `kpAutocomplete`",
       "DatePicker.Cell": DATE_PICKER,
       "DatePicker.Day": DATE_PICKER,
       "DatePicker.Grid": DATE_PICKER,
@@ -191,7 +190,7 @@ const IDIOM: Record<
       "DatePicker.Weekdays": DATE_PICKER,
       "DatePicker.Weeks": DATE_PICKER,
       ContextMenu:
-        "the menu's directives with another selector on the root, `kuiContextMenu`, and its own trigger, `kuiContextMenuTrigger`",
+        "the menu's directives with another selector on the root, `kpContextMenu`, and its own trigger, `kpContextMenuTrigger`",
     },
     extra: {
       Ids: RUNTIME,
@@ -292,7 +291,7 @@ for (const [adapter, given] of Object.entries(shapes)) {
 }
 // Each part takes the same props of its own on every adapter: React's, by name, in each
 // framework's idiom (`canonical` in `scripts/llms.ts`: Vue's `valueChange` and Angular's
-// `valueChanged` are `onValueChange`, a structural directive's `kuiTabsPanelKeepMounted` is
+// `valueChanged` are `onValueChange`, a structural directive's `kpTabsPanelKeepMounted` is
 // `keepMounted`). What an idiom really writes another way is in `PROPS`, with why.
 const ONE_DIALOG = "one directive is the root of a dialog and a drawer: its inputs are both's"
 const ONE_COMBOBOX =
@@ -354,33 +353,33 @@ const PROPS: Record<string, PropIdiom> = {
   solid: { extra: { "Avatar.Image.src": SRC } },
   angular: {
     rename: {
-      "Accordion.Panel.kuiAccordionPanel": [
+      "Accordion.Panel.kpAccordionPanel": [
         "keepMounted",
-        'the directive\'s own value is its options: `*kuiAccordionPanel="{ keepMounted: true }"`',
+        'the directive\'s own value is its options: `*kpAccordionPanel="{ keepMounted: true }"`',
       ],
-      "Collapsible.Panel.kuiCollapsiblePanel": [
+      "Collapsible.Panel.kpCollapsiblePanel": [
         "keepMounted",
-        'the directive\'s own value is its options: `*kuiCollapsiblePanel="{ keepMounted: true }"`',
+        'the directive\'s own value is its options: `*kpCollapsiblePanel="{ keepMounted: true }"`',
       ],
-      "ScrollArea.Scrollbar.kuiScrollAreaScrollbar": ["orientation", OWN_VALUE],
-      "Tabs.Panel.kuiTabsPanel": ["value", OWN_VALUE],
+      "ScrollArea.Scrollbar.kpScrollAreaScrollbar": ["orientation", OWN_VALUE],
+      "Tabs.Panel.kpTabsPanel": ["value", OWN_VALUE],
       "Command.Root.onItemSelected": [
         "onSelect",
         "a text input's own `select` event bubbles to the root: the output is `itemSelected`",
       ],
       "Otp.Root.onCompleted": ["onComplete", "an output is named for what happened: `completed`"],
-      "Avatar.Fallback.kuiAvatarFallback": [
+      "Avatar.Fallback.kpAvatarFallback": [
         "delay",
-        'the directive\'s own value is its options: `*kuiAvatarFallback="{ delay: 600 }"`',
+        'the directive\'s own value is its options: `*kpAvatarFallback="{ delay: 600 }"`',
       ],
     },
     without: {
       "Avatar.Image.onLoadingStatusChange": ON_ROOT,
       "Avatar.Image.keepMounted":
-        "the image kept in the page is the directive's attribute form, `<img kuiAvatarImage [src]>`",
+        "the image kept in the page is the directive's attribute form, `<img kpAvatarImage [src]>`",
     },
     extra: {
-      "Avatar.Image.kuiAvatarImage": SRC,
+      "Avatar.Image.kpAvatarImage": SRC,
       "Avatar.Root.onLoadingStatusChange": ON_ROOT,
       "Dialog.Root.swipeDirection": ONE_DIALOG,
       "Dialog.Root.snapPoints": ONE_DIALOG,

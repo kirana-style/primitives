@@ -5,8 +5,8 @@ import { createSeparator } from "@kirana-ui/core/separator"
 
 import { hostPart, inputsSignal } from "./runtime"
 
-@Directive({ selector: "[kuiSeparator]", exportAs: "kuiSeparator" })
-export class KuiSeparator implements OnInit {
+@Directive({ selector: "[kpSeparator]", exportAs: "kpSeparator" })
+export class KpSeparator implements OnInit {
   readonly orientation = input<Orientation>()
   private readonly props = inputsSignal(this, () => ({ orientation: this.orientation() }))
   private readonly part = hostPart()

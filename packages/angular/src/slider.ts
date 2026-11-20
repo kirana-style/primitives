@@ -20,14 +20,14 @@ import type {
   SliderValue,
 } from "@kirana-ui/core/slider"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, innerPart, inputsSignal, mounted } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KP_FIELD } from "./field-token"
+import { KpIds, hostPart, innerPart, inputsSignal, mounted } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
-@Directive({ selector: "[kuiSlider]", exportAs: "kuiSlider" })
-export class KuiSlider<Value extends SliderValue = SliderValue> implements OnInit, AfterViewInit {
+@Directive({ selector: "[kpSlider]", exportAs: "kpSlider" })
+export class KpSlider<Value extends SliderValue = SliderValue> implements OnInit, AfterViewInit {
   /** A number for one thumb, a list for a range: what is told back is the same kind. */
   readonly value = model<Value | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value>>()
@@ -48,18 +48,18 @@ export class KuiSlider<Value extends SliderValue = SliderValue> implements OnIni
   readonly format = input<Intl.NumberFormatOptions>()
   readonly locale = input<string>()
   readonly getAriaValueText = input<SliderProps["getAriaValueText"]>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** Each step of a drag and each key, with why; `details.cancel()` keeps the value. */
   readonly valueChanged = output<{ value: SliderTold<Value>; details: SliderChangeDetails }>()
   /** When the pointer lets go, and after each key. */
   readonly valueCommitted = output<{ value: SliderTold<Value>; details: SliderChangeDetails }>()
 
   controller!: Slider
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     min: this.min(),
@@ -126,13 +126,13 @@ export class KuiSlider<Value extends SliderValue = SliderValue> implements OnIni
 }
 
 function part(name: "control" | "track" | "indicator") {
-  const root = inject(KuiSlider)
+  const root = inject(KpSlider)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiSliderControl]" })
-export class KuiSliderControl implements OnInit {
+@Directive({ selector: "[kpSliderControl]" })
+export class KpSliderControl implements OnInit {
   private readonly init = part("control")
 
   ngOnInit(): void {
@@ -140,8 +140,8 @@ export class KuiSliderControl implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiSliderTrack]" })
-export class KuiSliderTrack implements OnInit {
+@Directive({ selector: "[kpSliderTrack]" })
+export class KpSliderTrack implements OnInit {
   private readonly init = part("track")
 
   ngOnInit(): void {
@@ -149,8 +149,8 @@ export class KuiSliderTrack implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiSliderIndicator]" })
-export class KuiSliderIndicator implements OnInit {
+@Directive({ selector: "[kpSliderIndicator]" })
+export class KpSliderIndicator implements OnInit {
   private readonly init = part("indicator")
 
   ngOnInit(): void {
@@ -159,16 +159,16 @@ export class KuiSliderIndicator implements OnInit {
 }
 
 /** On a thumb's element. It draws the hidden input inside it, which a form reads. */
-@Directive({ selector: "[kuiSliderThumb]" })
-export class KuiSliderThumb implements OnInit {
+@Directive({ selector: "[kpSliderThumb]" })
+export class KpSliderThumb implements OnInit {
   /**
    * Which value of a range the thumb is, from 0. A thumb that is given none takes its place
    * among the slider's thumbs, in the order they are written.
    */
   readonly index = input(undefined, { transform: optionalNumber })
-  private readonly root = inject(KuiSlider)
+  private readonly root = inject(KpSlider)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly part = hostPart()
   private readonly inner = innerPart("input")
 
@@ -182,9 +182,9 @@ export class KuiSliderThumb implements OnInit {
 }
 
 /** Shows the written value. */
-@Directive({ selector: "[kuiSliderValue]" })
-export class KuiSliderValue implements OnInit {
-  private readonly root = inject(KuiSlider)
+@Directive({ selector: "[kpSliderValue]" })
+export class KpSliderValue implements OnInit {
+  private readonly root = inject(KpSlider)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
   private readonly part = hostPart()

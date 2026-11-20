@@ -7,11 +7,11 @@ import type { Avatar, ImageStatus } from "@kirana-ui/core/avatar"
 import { hostPart, mounted, presentWhile } from "./runtime"
 
 /**
- * `<span kuiAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either
+ * `<span kpAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either
  * of the image's forms (a structural directive's own outputs cannot be bound from its element).
  */
-@Directive({ selector: "[kuiAvatar]", exportAs: "kuiAvatar" })
-export class KuiAvatar implements OnInit {
+@Directive({ selector: "[kpAvatar]", exportAs: "kpAvatar" })
+export class KpAvatar implements OnInit {
   /**
    * Each time the picture's loading status changes: `loading` once it has an address, then
    * `loaded` or `error`; `idle` again when its address is taken away. Base UI's
@@ -33,18 +33,18 @@ export class KuiAvatar implements OnInit {
 }
 
 /**
- * The picture, in either of two forms. `<img *kuiAvatarImage="address" alt="…">` is in the page
- * once the picture has loaded. `<img kuiAvatarImage [src]="address" alt="…">` is the caller's own
+ * The picture, in either of two forms. `<img *kpAvatarImage="address" alt="…">` is in the page
+ * once the picture has loaded. `<img kpAvatarImage [src]="address" alt="…">` is the caller's own
  * element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself
  * (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and
  * until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to
  * hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
  */
-@Directive({ selector: "[kuiAvatarImage]" })
-export class KuiAvatarImage implements OnInit {
+@Directive({ selector: "[kpAvatarImage]" })
+export class KpAvatarImage implements OnInit {
   /** The picture's address, in the structural form: the element is in the page once it has loaded. */
-  readonly kuiAvatarImage = input<string | undefined>()
-  private readonly root = inject(KuiAvatar)
+  readonly kpAvatarImage = input<string | undefined>()
+  private readonly root = inject(KpAvatar)
   // On an `<ng-template>` (the `*` form) the part is drawn once loaded; on an element, it is
   // that element, which says its own address.
   private readonly structural = inject(TemplateRef, { optional: true }) !== null
@@ -53,7 +53,7 @@ export class KuiAvatarImage implements OnInit {
 
   constructor() {
     effect(() => {
-      const address = this.kuiAvatarImage()
+      const address = this.kpAvatarImage()
       if (this.structural) untracked(() => this.root.controller?.source.set(address))
     })
   }
@@ -61,7 +61,7 @@ export class KuiAvatarImage implements OnInit {
   ngOnInit(): void {
     const { controller } = this.root
     if (this.host) return this.host(controller.keptImage)
-    controller.source.set(this.kuiAvatarImage())
+    controller.source.set(this.kpAvatarImage())
     this.present?.(
       computed(() => controller.status.get() === "loaded"),
       controller.image
@@ -70,23 +70,23 @@ export class KuiAvatarImage implements OnInit {
 }
 
 /**
- * `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot.
+ * `<span *kpAvatarFallback>`: what shows until the picture has loaded, or when it cannot.
  * `{ delay: 600 }` waits that many milliseconds first, so a picture that loads sooner never lets
  * it be seen.
  */
-@Directive({ selector: "[kuiAvatarFallback]" })
-export class KuiAvatarFallback implements OnInit {
+@Directive({ selector: "[kpAvatarFallback]" })
+export class KpAvatarFallback implements OnInit {
   /**
    * Its options: `{ delay: 600 }` waits that many milliseconds before showing. Read once.
    * Default: no wait.
    */
-  readonly kuiAvatarFallback = input<{ delay?: number | undefined } | "">("")
-  private readonly root = inject(KuiAvatar)
+  readonly kpAvatarFallback = input<{ delay?: number | undefined } | "">("")
+  private readonly root = inject(KpAvatar)
   private readonly present = presentWhile()
   private readonly mount = mounted()
 
   ngOnInit(): void {
-    const options = this.kuiAvatarFallback()
+    const options = this.kpAvatarFallback()
     const presence = this.root.controller.fallbackPresence(
       typeof options === "object" ? options : {}
     )

@@ -1,15 +1,15 @@
 import { Component, Directive, booleanAttribute, input, signal } from "@angular/core"
 import {
-  KuiDialog,
-  KuiDialogBackdrop,
-  KuiDialogClose,
-  KuiDialogPopup,
-  KuiDialogPortal,
-  KuiDialogTitle,
-  KuiDialogTrigger,
-  KuiOtp,
-  KuiTooltip,
-  KuiTooltipPositioner,
+  KpDialog,
+  KpDialogBackdrop,
+  KpDialogClose,
+  KpDialogPopup,
+  KpDialogPortal,
+  KpDialogTitle,
+  KpDialogTrigger,
+  KpOtp,
+  KpTooltip,
+  KpTooltipPositioner,
   hostInputs,
 } from "@kirana-ui/angular"
 
@@ -17,8 +17,11 @@ import {
  * A design system of the page's own, built on the primitives as an Angular component library
  * is: each of its directives hosts a primitive (`hostDirectives`), exposing the inputs and
  * outputs its callers set, and gives the primitive what the design system decides
- * (`hostInputs`). Its selectors are its own (`ds…`), apart from the primitives' (`kui…`): two
- * directives with one selector would both match, silently.
+ * (`hostInputs`). Its selectors are `kui…`, as a design system that brands itself so names
+ * them: `kuiDialog` hosts the primitives' `kpDialog`, and the page imports both. Were they one
+ * selector, both directives would match the element, silently, and a component whose template
+ * writes its host's selector would match itself there and recurse; the primitives' `kp…` is
+ * what keeps a design system's names free.
  */
 
 /**
@@ -27,8 +30,8 @@ import {
  * caller's, both handlers of a click run), its state written as a `data-*` attribute.
  */
 @Directive({
-  selector: "[dsMark]",
-  exportAs: "dsMark",
+  selector: "[kuiMark]",
+  exportAs: "kuiMark",
   host: {
     class: "mark",
     type: "button",
@@ -36,22 +39,22 @@ import {
     "(click)": "active.set(!active())",
   },
 })
-export class DsMark {
+export class KuiMark {
   readonly active = signal(false)
 }
 
 /** The dialog's root: the primitive's, with the inputs and the change its callers use. */
 @Directive({
-  selector: "[dsDialog]",
+  selector: "[kuiDialog]",
   hostDirectives: [
-    { directive: KuiDialog, inputs: ["kuiId", "open", "defaultOpen"], outputs: ["openChange"] },
+    { directive: KpDialog, inputs: ["kpId", "open", "defaultOpen"], outputs: ["openChange"] },
   ],
 })
-export class DsDialog {}
+export class KuiDialog {}
 
 /** What opens it. */
-@Directive({ selector: "[dsDialogTrigger]", hostDirectives: [KuiDialogTrigger] })
-export class DsDialogTrigger {}
+@Directive({ selector: "[kuiDialogTrigger]", hostDirectives: [KpDialogTrigger] })
+export class KuiDialogTrigger {}
 
 /**
  * What it shows: an attribute cannot put a structural part around its own element, so a
@@ -60,28 +63,28 @@ export class DsDialogTrigger {}
  * the place it is drawn: it is the dialog's, and it labels the popup.
  */
 @Component({
-  selector: "[dsDialogContent]",
-  imports: [KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup],
+  selector: "[kuiDialogContent]",
+  imports: [KpDialogPortal, KpDialogBackdrop, KpDialogPopup],
   template: `
-    <ng-template kuiDialogPortal>
-      <div kuiDialogBackdrop class="backdrop"></div>
-      <div kuiDialogPopup class="dialog" [attr.data-testid]="popupTestid()">
+    <ng-template kpDialogPortal>
+      <div kpDialogBackdrop class="backdrop"></div>
+      <div kpDialogPopup class="dialog" [attr.data-testid]="popupTestid()">
         <ng-content />
       </div>
     </ng-template>
   `,
 })
-export class DsDialogContent {
+export class KuiDialogContent {
   readonly popupTestid = input<string>()
 }
 
 /** The dialog's title. */
-@Directive({ selector: "[dsDialogTitle]", hostDirectives: [KuiDialogTitle] })
-export class DsDialogTitle {}
+@Directive({ selector: "[kuiDialogTitle]", hostDirectives: [KpDialogTitle] })
+export class KuiDialogTitle {}
 
 /** What closes it. */
-@Directive({ selector: "[dsDialogClose]", hostDirectives: [KuiDialogClose] })
-export class DsDialogClose {}
+@Directive({ selector: "[kuiDialogClose]", hostDirectives: [KpDialogClose] })
+export class KuiDialogClose {}
 
 /**
  * A tooltip that opens at once, as the design system decides, and that its caller turns off
@@ -89,35 +92,35 @@ export class DsDialogClose {}
  * signal it follows. A `[delay]` bound on the element still wins.
  */
 @Directive({
-  selector: "[dsTooltip]",
-  hostDirectives: [{ directive: KuiTooltip, inputs: ["kuiId", "delay"] }],
+  selector: "[kuiTooltip]",
+  hostDirectives: [{ directive: KpTooltip, inputs: ["kpId", "delay"] }],
 })
-export class DsTooltip {
+export class KuiTooltip {
   readonly off = input(false, { transform: booleanAttribute })
 
   constructor() {
-    hostInputs(KuiTooltip, { delay: () => 0, disabled: this.off })
+    hostInputs(KpTooltip, { delay: () => 0, disabled: this.off })
   }
 }
 
 /** Where its popup goes: eight pixels from its trigger unless said. */
 @Directive({
-  selector: "[dsTooltipPositioner]",
-  hostDirectives: [{ directive: KuiTooltipPositioner, inputs: ["side", "sideOffset"] }],
+  selector: "[kuiTooltipPositioner]",
+  hostDirectives: [{ directive: KpTooltipPositioner, inputs: ["side", "sideOffset"] }],
 })
-export class DsTooltipPositioner {
+export class KuiTooltipPositioner {
   constructor() {
-    hostInputs(KuiTooltipPositioner, { sideOffset: () => 8 })
+    hostInputs(KpTooltipPositioner, { sideOffset: () => 8 })
   }
 }
 
 /** A code input that takes any character unless its caller binds `[mode]`. */
 @Directive({
-  selector: "[dsCode]",
-  hostDirectives: [{ directive: KuiOtp, inputs: ["kuiId", "length", "mode"] }],
+  selector: "[kuiCode]",
+  hostDirectives: [{ directive: KpOtp, inputs: ["kpId", "length", "mode"] }],
 })
-export class DsCode {
+export class KuiCode {
   constructor() {
-    hostInputs(KuiOtp, { mode: () => "text" })
+    hostInputs(KpOtp, { mode: () => "text" })
   }
 }

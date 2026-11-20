@@ -13,12 +13,12 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createRadioGroup } from "@kirana-ui/core/radio-group"
 import type { RadioGroup } from "@kirana-ui/core/radio-group"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KP_FIELD } from "./field-token"
+import { KpIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiRadioGroup]", exportAs: "kuiRadioGroup" })
-export class KuiRadioGroup<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpRadioGroup]", exportAs: "kpRadioGroup" })
+export class KpRadioGroup<Value = unknown> implements OnInit {
   readonly value = model<Value | null | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly disabled = input(false, { transform: booleanAttribute })
@@ -27,16 +27,16 @@ export class KuiRadioGroup<Value = unknown> implements OnInit {
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
 
   controller!: RadioGroup<Value>
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     disabled: this.disabled(),
@@ -70,18 +70,18 @@ export class KuiRadioGroup<Value = unknown> implements OnInit {
 }
 
 /** On an item's element. It draws the hidden native radio inside it, which a form and a label reach. */
-@Directive({ selector: "[kuiRadioGroupItem]" })
-export class KuiRadioGroupItem implements OnInit {
+@Directive({ selector: "[kpRadioGroupItem]" })
+export class KpRadioGroupItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
   /** The id of the item's native radio, unique in the page: a `<label for>` names it. */
-  readonly kuiId = input<string>()
-  readonly group = inject(KuiRadioGroup)
+  readonly kpId = input<string>()
+  readonly group = inject(KpRadioGroup)
   private readonly part = hostPart()
   private readonly inner = innerPart("input")
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
-    id: this.kuiId(),
+    id: this.kpId(),
   }))
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -96,10 +96,10 @@ export class KuiRadioGroupItem implements OnInit {
   }
 }
 
-/** `<span *kuiRadioGroupIndicator>`: in the page while its item is the chosen one. */
-@Directive({ selector: "[kuiRadioGroupIndicator]" })
-export class KuiRadioGroupIndicator implements OnInit {
-  private readonly item = inject(KuiRadioGroupItem)
+/** `<span *kpRadioGroupIndicator>`: in the page while its item is the chosen one. */
+@Directive({ selector: "[kpRadioGroupIndicator]" })
+export class KpRadioGroupIndicator implements OnInit {
+  private readonly item = inject(KpRadioGroupItem)
   private readonly destroy = inject(DestroyRef)
   private readonly present = presentWhile()
 

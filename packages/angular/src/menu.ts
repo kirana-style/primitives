@@ -17,14 +17,14 @@ import type { Menu, MenuCheckboxItem, MenuGroup, MenuRadioGroup } from "@kirana-
 import { createMenubar } from "@kirana-ui/core/menubar"
 import type { Menubar } from "@kirana-ui/core/menubar"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, KpPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** The menu a part is in: the root's, or a submenu's. */
-const KUI_MENU = new InjectionToken<{ controller: Menu }>("KuiMenu")
+const KP_MENU = new InjectionToken<{ controller: Menu }>("KpMenu")
 
 /** The bar a menu is one of the menus of, if it is in one. */
-const KUI_MENUBAR = new InjectionToken<{ controller: Menubar } | null>("KuiMenubar")
+const KP_MENUBAR = new InjectionToken<{ controller: Menubar } | null>("KpMenubar")
 
 /** What a menu and a submenu share: their inputs, read into the core. */
 @Directive()
@@ -35,17 +35,17 @@ abstract class MenuRoot implements OnInit {
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   /** Holds the page while the menu is open. Not for a submenu. */
   readonly modal = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Menu
   protected abstract readonly parent: { controller: Menu } | null
   protected readonly bar: { controller: Menubar } | null = null
   protected readonly context: boolean = false
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     disabled: this.disabled(),
@@ -77,45 +77,45 @@ abstract class MenuRoot implements OnInit {
 }
 
 /**
- * `kuiContextMenu` in place of `kuiMenu` is a menu for an area of the page, opened at the
- * pointer: its trigger is `kuiContextMenuTrigger`, its other parts the menu's.
+ * `kpContextMenu` in place of `kpMenu` is a menu for an area of the page, opened at the
+ * pointer: its trigger is `kpContextMenuTrigger`, its other parts the menu's.
  */
 @Directive({
-  selector: "[kuiMenu],[kuiContextMenu]",
-  exportAs: "kuiMenu",
+  selector: "[kpMenu],[kpContextMenu]",
+  exportAs: "kpMenu",
   providers: [
-    { provide: KUI_MENU, useExisting: forwardRef(() => KuiMenu) },
+    { provide: KP_MENU, useExisting: forwardRef(() => KpMenu) },
     // A menu written inside a bar's menu is not one of the bar's.
-    { provide: KUI_MENUBAR, useValue: null },
+    { provide: KP_MENUBAR, useValue: null },
   ],
 })
-export class KuiMenu extends MenuRoot {
+export class KpMenu extends MenuRoot {
   protected readonly parent = null
   protected override readonly context =
-    inject(new HostAttributeToken("kuiContextMenu"), { optional: true }) !== null
+    inject(new HostAttributeToken("kpContextMenu"), { optional: true }) !== null
   protected override readonly bar = this.context
     ? null
-    : inject(KUI_MENUBAR, { optional: true, skipSelf: true })
+    : inject(KP_MENUBAR, { optional: true, skipSelf: true })
 }
 
-/** A row of menus that work as one. Each `kuiMenu` inside it is one of its items. */
+/** A row of menus that work as one. Each `kpMenu` inside it is one of its items. */
 @Directive({
-  selector: "[kuiMenubar]",
-  exportAs: "kuiMenubar",
-  providers: [{ provide: KUI_MENUBAR, useExisting: forwardRef(() => KuiMenubar) }],
+  selector: "[kpMenubar]",
+  exportAs: "kpMenubar",
+  providers: [{ provide: KP_MENUBAR, useExisting: forwardRef(() => KpMenubar) }],
 })
-export class KuiMenubar implements OnInit {
+export class KpMenubar implements OnInit {
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
 
   controller!: Menubar
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     loop: this.loop(),
     disabled: this.disabled(),
     orientation: this.orientation(),
@@ -131,19 +131,19 @@ export class KuiMenubar implements OnInit {
   }
 }
 
-/** A menu that one of this menu's items opens. Its trigger is `kuiMenuSubmenuTrigger`. */
+/** A menu that one of this menu's items opens. Its trigger is `kpMenuSubmenuTrigger`. */
 @Directive({
-  selector: "[kuiMenuSubmenuRoot]",
-  exportAs: "kuiMenuSubmenuRoot",
-  providers: [{ provide: KUI_MENU, useExisting: forwardRef(() => KuiMenuSubmenuRoot) }],
+  selector: "[kpMenuSubmenuRoot]",
+  exportAs: "kpMenuSubmenuRoot",
+  providers: [{ provide: KP_MENU, useExisting: forwardRef(() => KpMenuSubmenuRoot) }],
 })
-export class KuiMenuSubmenuRoot extends MenuRoot {
-  protected readonly parent = inject(KUI_MENU, { skipSelf: true })
+export class KpMenuSubmenuRoot extends MenuRoot {
+  protected readonly parent = inject(KP_MENU, { skipSelf: true })
 }
 
-@Directive({ selector: "[kuiMenuPortal]" })
-export class KuiMenuPortal implements OnInit {
-  private readonly root = inject(KUI_MENU)
+@Directive({ selector: "[kpMenuPortal]" })
+export class KpMenuPortal implements OnInit {
+  private readonly root = inject(KP_MENU)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -151,9 +151,9 @@ export class KuiMenuPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuPositioner]" })
-export class KuiMenuPositioner extends KuiPositioner {
-  private readonly root = inject(KUI_MENU)
+@Directive({ selector: "[kpMenuPositioner]" })
+export class KpMenuPositioner extends KpPositioner {
+  private readonly root = inject(KP_MENU)
 
   protected placed() {
     return this.root.controller
@@ -161,13 +161,13 @@ export class KuiMenuPositioner extends KuiPositioner {
 }
 
 function part(name: "trigger" | "popup" | "arrow" | "separator" | "area") {
-  const root = inject(KUI_MENU)
+  const root = inject(KP_MENU)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiMenuTrigger]" })
-export class KuiMenuTrigger implements OnInit {
+@Directive({ selector: "[kpMenuTrigger]" })
+export class KpMenuTrigger implements OnInit {
   private readonly init = part("trigger")
 
   ngOnInit(): void {
@@ -175,9 +175,9 @@ export class KuiMenuTrigger implements OnInit {
   }
 }
 
-/** The area a secondary press, or a long press on a touch screen, opens a `kuiContextMenu` in. */
-@Directive({ selector: "[kuiContextMenuTrigger]" })
-export class KuiContextMenuTrigger implements OnInit {
+/** The area a secondary press, or a long press on a touch screen, opens a `kpContextMenu` in. */
+@Directive({ selector: "[kpContextMenuTrigger]" })
+export class KpContextMenuTrigger implements OnInit {
   private readonly init = part("area")
 
   ngOnInit(): void {
@@ -185,9 +185,9 @@ export class KuiContextMenuTrigger implements OnInit {
   }
 }
 
-/** On the item of a menu that opens the submenu around it (`kuiMenuSubmenuRoot`). */
-@Directive({ selector: "[kuiMenuSubmenuTrigger]" })
-export class KuiMenuSubmenuTrigger implements OnInit {
+/** On the item of a menu that opens the submenu around it (`kpMenuSubmenuRoot`). */
+@Directive({ selector: "[kpMenuSubmenuTrigger]" })
+export class KpMenuSubmenuTrigger implements OnInit {
   private readonly init = part("trigger")
 
   ngOnInit(): void {
@@ -195,8 +195,8 @@ export class KuiMenuSubmenuTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuPopup]" })
-export class KuiMenuPopup implements OnInit {
+@Directive({ selector: "[kpMenuPopup]" })
+export class KpMenuPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -204,8 +204,8 @@ export class KuiMenuPopup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuArrow]" })
-export class KuiMenuArrow implements OnInit {
+@Directive({ selector: "[kpMenuArrow]" })
+export class KpMenuArrow implements OnInit {
   private readonly init = part("arrow")
 
   ngOnInit(): void {
@@ -213,8 +213,8 @@ export class KuiMenuArrow implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuSeparator]" })
-export class KuiMenuSeparator implements OnInit {
+@Directive({ selector: "[kpMenuSeparator]" })
+export class KpMenuSeparator implements OnInit {
   private readonly init = part("separator")
 
   ngOnInit(): void {
@@ -222,8 +222,8 @@ export class KuiMenuSeparator implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuItem]" })
-export class KuiMenuItem implements OnInit {
+@Directive({ selector: "[kpMenuItem]" })
+export class KpMenuItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What typing matches; the item's text when left out. */
   readonly label = input<string>()
@@ -231,7 +231,7 @@ export class KuiMenuItem implements OnInit {
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
-  private readonly root = inject(KUI_MENU)
+  private readonly root = inject(KP_MENU)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
@@ -249,16 +249,16 @@ export class KuiMenuItem implements OnInit {
   }
 }
 
-/** `<a kuiMenuLinkItem href="…">`: an item that is a link. */
-@Directive({ selector: "a[kuiMenuLinkItem]" })
-export class KuiMenuLinkItem implements OnInit {
+/** `<a kpMenuLinkItem href="…">`: an item that is a link. */
+@Directive({ selector: "a[kpMenuLinkItem]" })
+export class KpMenuLinkItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly label = input<string>()
   /** Whether choosing the item closes the menu. Default: it does. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
-  private readonly root = inject(KUI_MENU)
+  private readonly root = inject(KP_MENU)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
@@ -276,25 +276,25 @@ export class KuiMenuLinkItem implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuGroup]" })
-export class KuiMenuGroup implements OnInit {
-  readonly kuiId = input<string>()
-  readonly menu = inject(KUI_MENU)
+@Directive({ selector: "[kpMenuGroup]" })
+export class KpMenuGroup implements OnInit {
+  readonly kpId = input<string>()
+  readonly menu = inject(KP_MENU)
   group!: MenuGroup
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.group = this.menu.controller.group(this.kuiId() ?? this.generated)
+    this.group = this.menu.controller.group(this.kpId() ?? this.generated)
     this.put(this.group.root)
   }
 }
 
 /** Names the group it is in. With no group around it, it is plain text. */
-@Directive({ selector: "[kuiMenuGroupLabel]" })
-export class KuiMenuGroupLabel implements OnInit {
-  private readonly menu = inject(KUI_MENU)
-  private readonly around = inject(KuiMenuGroup, { optional: true })
+@Directive({ selector: "[kpMenuGroupLabel]" })
+export class KpMenuGroupLabel implements OnInit {
+  private readonly menu = inject(KP_MENU)
+  private readonly around = inject(KpMenuGroup, { optional: true })
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -304,8 +304,8 @@ export class KuiMenuGroupLabel implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuCheckboxItem]", exportAs: "kuiMenuCheckboxItem" })
-export class KuiMenuCheckboxItem implements OnInit {
+@Directive({ selector: "[kpMenuCheckboxItem]", exportAs: "kpMenuCheckboxItem" })
+export class KpMenuCheckboxItem implements OnInit {
   readonly checked = model<boolean | undefined>(undefined)
   readonly defaultChecked = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
@@ -317,7 +317,7 @@ export class KuiMenuCheckboxItem implements OnInit {
   readonly checkedChanged = output<{ checked: boolean; details: ChangeDetails }>()
 
   item!: MenuCheckboxItem
-  private readonly root = inject(KUI_MENU)
+  private readonly root = inject(KP_MENU)
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
     checked: this.checked(),
@@ -344,10 +344,10 @@ export class KuiMenuCheckboxItem implements OnInit {
   }
 }
 
-/** `<span *kuiMenuCheckboxItemIndicator>`: in the page while its item is checked. */
-@Directive({ selector: "[kuiMenuCheckboxItemIndicator]" })
-export class KuiMenuCheckboxItemIndicator implements OnInit {
-  private readonly owner = inject(KuiMenuCheckboxItem)
+/** `<span *kpMenuCheckboxItemIndicator>`: in the page while its item is checked. */
+@Directive({ selector: "[kpMenuCheckboxItemIndicator]" })
+export class KpMenuCheckboxItemIndicator implements OnInit {
+  private readonly owner = inject(KpMenuCheckboxItem)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
@@ -355,15 +355,15 @@ export class KuiMenuCheckboxItemIndicator implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuRadioGroup]", exportAs: "kuiMenuRadioGroup" })
-export class KuiMenuRadioGroup<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpMenuRadioGroup]", exportAs: "kpMenuRadioGroup" })
+export class KpMenuRadioGroup<Value = unknown> implements OnInit {
   readonly value = model<Value | null | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly valueChanged = output<{ value: Value; details: ChangeDetails }>()
 
   group!: MenuRadioGroup<Value>
-  private readonly root = inject(KUI_MENU)
+  private readonly root = inject(KP_MENU)
   private readonly put = hostPart()
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
@@ -390,8 +390,8 @@ export class KuiMenuRadioGroup<Value = unknown> implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMenuRadioItem]" })
-export class KuiMenuRadioItem implements OnInit {
+@Directive({ selector: "[kpMenuRadioItem]" })
+export class KpMenuRadioItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly label = input<string>()
@@ -399,7 +399,7 @@ export class KuiMenuRadioItem implements OnInit {
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
-  readonly owner = inject(KuiMenuRadioGroup)
+  readonly owner = inject(KpMenuRadioGroup)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
@@ -417,10 +417,10 @@ export class KuiMenuRadioItem implements OnInit {
   }
 }
 
-/** `<span *kuiMenuRadioItemIndicator>`: in the page while its item is the chosen one. */
-@Directive({ selector: "[kuiMenuRadioItemIndicator]" })
-export class KuiMenuRadioItemIndicator implements OnInit {
-  private readonly item = inject(KuiMenuRadioItem)
+/** `<span *kpMenuRadioItemIndicator>`: in the page while its item is the chosen one. */
+@Directive({ selector: "[kpMenuRadioItemIndicator]" })
+export class KpMenuRadioItemIndicator implements OnInit {
+  private readonly item = inject(KpMenuRadioItem)
   private readonly present = presentWhile()
 
   ngOnInit(): void {

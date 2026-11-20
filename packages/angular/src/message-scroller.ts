@@ -4,22 +4,22 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createMessageScroller } from "@kirana-ui/core/message-scroller"
 import type { MessageScroller } from "@kirana-ui/core/message-scroller"
 
-import { KuiIds, hostPart, inputsSignal } from "./runtime"
+import { KpIds, hostPart, inputsSignal } from "./runtime"
 
-@Directive({ selector: "[kuiMessageScroller]", exportAs: "kuiMessageScroller" })
-export class KuiMessageScroller implements OnInit {
+@Directive({ selector: "[kpMessageScroller]", exportAs: "kpMessageScroller" })
+export class KpMessageScroller implements OnInit {
   /** Where it begins: at the newest message (the default), or at the first. */
   readonly initial = input<"bottom" | "top">()
   readonly threshold = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** It came to the end, or left it. */
   readonly atBottomChanged = output<{ atBottom: boolean; details: ChangeDetails }>()
 
   controller!: MessageScroller
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     initial: this.initial(),
     threshold: this.threshold(),
     onAtBottomChange: (atBottom: boolean, details: ChangeDetails) =>
@@ -37,13 +37,13 @@ export class KuiMessageScroller implements OnInit {
 }
 
 function part(name: "viewport" | "content" | "button") {
-  const root = inject(KuiMessageScroller)
+  const root = inject(KpMessageScroller)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiMessageScrollerViewport]" })
-export class KuiMessageScrollerViewport implements OnInit {
+@Directive({ selector: "[kpMessageScrollerViewport]" })
+export class KpMessageScrollerViewport implements OnInit {
   private readonly init = part("viewport")
 
   ngOnInit(): void {
@@ -51,8 +51,8 @@ export class KuiMessageScrollerViewport implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMessageScrollerContent]" })
-export class KuiMessageScrollerContent implements OnInit {
+@Directive({ selector: "[kpMessageScrollerContent]" })
+export class KpMessageScrollerContent implements OnInit {
   private readonly init = part("content")
 
   ngOnInit(): void {
@@ -60,8 +60,8 @@ export class KuiMessageScrollerContent implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiMessageScrollerButton]" })
-export class KuiMessageScrollerButton implements OnInit {
+@Directive({ selector: "[kpMessageScrollerButton]" })
+export class KpMessageScrollerButton implements OnInit {
   private readonly init = part("button")
 
   ngOnInit(): void {

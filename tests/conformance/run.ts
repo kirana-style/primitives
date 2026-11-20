@@ -149,6 +149,7 @@ async function alone(run: () => Promise<void>): Promise<void> {
 }
 
 const only = option("--only")
+const sharing = option("--shard")
 const slow = Number(option("--slow") ?? 1)
 const adapters = (asked.length > 0 ? asked : ALL).filter((each) => {
   const built = existsSync(join(ROOT, "fixtures", each, "dist/index.html"))
@@ -163,7 +164,7 @@ if (adapters.length === 0) {
 // Each adapter's page, and the same page rendered on a server and hydrated, where it is built.
 // Then the second page (`src/Open.*`), the same two ways: no id is given on it, and a popover is
 // open when it is first drawn.
-const subjects = adapters.flatMap((adapter) => {
+const every = adapters.flatMap((adapter) => {
   const built = (file: string) => existsSync(join(ROOT, "fixtures", adapter, "dist", file))
   const all = [
     { adapter, label: adapter, path: "/", hydrated: false, second: false },
@@ -214,6 +215,25 @@ const subjects = adapters.flatMap((adapter) => {
   }
   return all.filter((each) => each.path === "/" || built(each.path.slice(1)))
 })
+// `--shard 2/4`: a share of the subjects, for a run split over several machines. Each page's
+// first subject is what the others are compared with, so every share plays it; the rest are
+// dealt out in turn. The shares together play every subject, and compare each with the same one.
+const subjects = (() => {
+  if (!sharing) return every
+  const [share = 0, shares = 0] = sharing.split("/").map(Number)
+  if (!(share >= 1 && share <= shares)) {
+    console.error(`--shard takes <i>/<n>, 1 <= i <= n: ${sharing}`)
+    process.exit(1)
+  }
+  // Dealt page by page: the first page's subjects are the long ones, and a share of the run
+  // is a share of them.
+  const dealt = new Map<boolean, number>()
+  return every.filter((each) => {
+    const place = dealt.get(each.second)
+    dealt.set(each.second, (place ?? -1) + 1)
+    return place === undefined || place % shares === share - 1
+  })
+})()
 
 /**
  * A serialized page without what only a browser adds: the geometry it measures, and the name a
@@ -298,10 +318,12 @@ function serialize(): string {
       return
     }
     const attributes = [...node.attributes]
-      // An Angular directive's selector stays on its element (`kuidialogtrigger`, and the
-      // fixture's own design system's `dsdialog`): how the adapter is written, the one
-      // difference an Angular page is allowed.
-      .filter((each) => !SKIP.has(each.name) && !/^(_ng|kui|ds[a-z])/.test(each.name))
+      // An Angular directive's selector stays on its element (the primitives' `kpdialogtrigger`,
+      // lowercased, and on an SVG element as written, `kpQrCodeFrame`; the fixture's own design
+      // system's `kuidialog`): how the adapter is written, the one difference an Angular page is
+      // allowed. A custom element's part says what it is with the page's own `kui-…`
+      // attributes (`kui-part`, `kui-id`), which no other page has: the same prefix, hyphened.
+      .filter((each) => !SKIP.has(each.name) && !/^(_ng|kp[a-zA-Z]|kui)/.test(each.name))
       .map((each) => {
         let value = each.value
         if (generated && REFERENCES.has(each.name)) {

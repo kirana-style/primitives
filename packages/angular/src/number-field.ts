@@ -15,8 +15,8 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createNumberField } from "@kirana-ui/core/number-field"
 import type { NumberField } from "@kirana-ui/core/number-field"
 
-import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_FIELD } from "./field-token"
+import { KpIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
@@ -24,8 +24,8 @@ const optionalNumber = (value: unknown) => (value == null ? undefined : numberAt
  * On the element that holds the field's parts. `[(value)]` is the number, `null` for none.
  * With a name, it draws the hidden input a form reads.
  */
-@Directive({ selector: "[kuiNumberField]", exportAs: "kuiNumberField" })
-export class KuiNumberField implements OnInit {
+@Directive({ selector: "[kpNumberField]", exportAs: "kpNumberField" })
+export class KpNumberField implements OnInit {
   readonly value = model<number | null | undefined>(undefined)
   readonly defaultValue = input<number | null>()
   readonly min = input(undefined, { transform: optionalNumber })
@@ -43,16 +43,16 @@ export class KuiNumberField implements OnInit {
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: number | null; details: ChangeDetails }>()
   /** A change that is done: focus left the input, a key or a button stepped it. */
   readonly valueCommitted = output<{ value: number | null; details: ChangeDetails }>()
 
   controller!: NumberField
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     min: this.min(),
@@ -97,13 +97,13 @@ export class KuiNumberField implements OnInit {
 }
 
 function part(name: "group" | "input" | "increment" | "decrement") {
-  const root = inject(KuiNumberField)
+  const root = inject(KpNumberField)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiNumberFieldGroup]" })
-export class KuiNumberFieldGroup implements OnInit {
+@Directive({ selector: "[kpNumberFieldGroup]" })
+export class KpNumberFieldGroup implements OnInit {
   private readonly init = part("group")
 
   ngOnInit(): void {
@@ -111,8 +111,8 @@ export class KuiNumberFieldGroup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNumberFieldInput]" })
-export class KuiNumberFieldInput implements OnInit {
+@Directive({ selector: "[kpNumberFieldInput]" })
+export class KpNumberFieldInput implements OnInit {
   private readonly init = part("input")
 
   ngOnInit(): void {
@@ -120,8 +120,8 @@ export class KuiNumberFieldInput implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNumberFieldIncrement]" })
-export class KuiNumberFieldIncrement implements OnInit {
+@Directive({ selector: "[kpNumberFieldIncrement]" })
+export class KpNumberFieldIncrement implements OnInit {
   private readonly init = part("increment")
 
   ngOnInit(): void {
@@ -129,8 +129,8 @@ export class KuiNumberFieldIncrement implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiNumberFieldDecrement]" })
-export class KuiNumberFieldDecrement implements OnInit {
+@Directive({ selector: "[kpNumberFieldDecrement]" })
+export class KpNumberFieldDecrement implements OnInit {
   private readonly init = part("decrement")
 
   ngOnInit(): void {
@@ -142,8 +142,8 @@ export class KuiNumberFieldDecrement implements OnInit {
  * On the element that is pressed and dragged to change the number: the field's label, as a
  * rule.
  */
-@Directive({ selector: "[kuiNumberFieldScrubArea]" })
-export class KuiNumberFieldScrubArea implements OnInit {
+@Directive({ selector: "[kpNumberFieldScrubArea]" })
+export class KpNumberFieldScrubArea implements OnInit {
   /**
    * The way the pointer is dragged: `"horizontal"`, where right is more, or `"vertical"`, where
    * up is more. Default `"horizontal"`.
@@ -156,7 +156,7 @@ export class KuiNumberFieldScrubArea implements OnInit {
    * side. Default: the edges of the window.
    */
   readonly teleportDistance = input(undefined, { transform: optionalNumber })
-  private readonly root = inject(KuiNumberField)
+  private readonly root = inject(KpNumberField)
   private readonly put = hostPart()
   private readonly options = () =>
     defined({
@@ -179,12 +179,12 @@ export class KuiNumberFieldScrubArea implements OnInit {
 }
 
 /**
- * `<span *kuiNumberFieldScrubAreaCursor>`: drawn in place of the pointer while it is locked for
+ * `<span *kpNumberFieldScrubAreaCursor>`: drawn in place of the pointer while it is locked for
  * a drag, at the end of the page.
  */
-@Directive({ selector: "[kuiNumberFieldScrubAreaCursor]" })
-export class KuiNumberFieldScrubAreaCursor implements OnInit {
-  private readonly root = inject(KuiNumberField)
+@Directive({ selector: "[kpNumberFieldScrubAreaCursor]" })
+export class KpNumberFieldScrubAreaCursor implements OnInit {
+  private readonly root = inject(KpNumberField)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {

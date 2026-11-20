@@ -79,7 +79,9 @@ jobs:
   conformance:
     runs-on: ubuntu-26.04
     name: build and conformance (${{ matrix.browser }} ${{ matrix.shard }})
-    timeout-minutes: 20
+    # A share takes six to eight minutes of this, measured; the rest is room for the browsers'
+    # install to be tried again.
+    timeout-minutes: 30
     strategy:
       # One engine's failure does not hide what the others would have said.
       fail-fast: false
@@ -109,9 +111,19 @@ jobs:
       - name: Build
         run: vp run build
 
-      # The browsers Playwright drives, at the versions the lockfile's Playwright asks for.
+      # The browsers Playwright drives, at the versions the lockfile's Playwright asks for. It
+      # takes half a minute, and stalls now and then when many jobs fetch at once (one sat here
+      # for twenty minutes until its job was stopped, three others for four to eleven): a try
+      # that has not finished in three minutes is stopped and made again.
       - name: Browsers
-        run: bunx playwright install --with-deps ${{ matrix.browser }}
+        run: |
+          for attempt in 1 2 3 4; do
+            if timeout --kill-after=10 180 bunx playwright install --with-deps ${{ matrix.browser }}; then
+              exit 0
+            fi
+            echo "::warning::installing ${{ matrix.browser }} did not finish, attempt $attempt"
+          done
+          exit 1
 
       # The core's services on their own, with no framework: focus, layers, presence, hover,
       # positioning, in this job's engine. Once for each engine, in its first share.

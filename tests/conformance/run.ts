@@ -2663,6 +2663,12 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       await page.waitForTimeout(50)
       after = await thumbAgainstArithmetic()
     }
+    // The first area's shrinking moved its scroll back, and it says so for a moment: how long the
+    // pictures took decides whether that moment is over, so it is waited out before the page is
+    // compared (one subject was still in it on a shared runner, and the others were not).
+    await page.waitForFunction(
+      () => document.querySelector('[data-fixture="scroll-area"] [data-scrolling]') === null
+    )
     await snapshot("pictures loaded late")
     expect(after.whole === 496, `the row is three pictures and two gaps wide (${after.whole})`)
     expect(

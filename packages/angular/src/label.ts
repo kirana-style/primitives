@@ -2,13 +2,13 @@ import { Directive, inject } from "@angular/core"
 import type { OnInit } from "@angular/core"
 import { createLabel } from "@kirana-ui/core/label"
 
-import { KUI_FIELD } from "./field-token"
+import { KP_FIELD } from "./field-token"
 import { hostPart } from "./runtime"
 
-/** `<label kuiLabel>`. Inside a `kuiField` it is the field's label. */
-@Directive({ selector: "[kuiLabel]", exportAs: "kuiLabel" })
-export class KuiLabel implements OnInit {
-  private readonly field = inject(KUI_FIELD, { optional: true })
+/** `<label kpLabel>`. Inside a `kpField` it is the field's label. */
+@Directive({ selector: "[kpLabel]", exportAs: "kpLabel" })
+export class KpLabel implements OnInit {
+  private readonly field = inject(KP_FIELD, { optional: true })
   private readonly part = hostPart()
 
   ngOnInit(): void {

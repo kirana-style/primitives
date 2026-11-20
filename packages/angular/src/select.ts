@@ -18,10 +18,10 @@ import type { ChangeDetails, ItemLabels, ListCollection } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select, SelectGroup, SelectShown } from "@kirana-ui/core/select"
 
-import { KUI_FIELD } from "./field-token"
+import { KP_FIELD } from "./field-token"
 import {
-  KuiIds,
-  KuiPositioner,
+  KpIds,
+  KpPositioner,
   binder,
   drawing,
   hostPart,
@@ -30,8 +30,8 @@ import {
   presentWhile,
 } from "./runtime"
 
-@Directive({ selector: "[kuiSelect]", exportAs: "kuiSelect" })
-export class KuiSelect<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpSelect]", exportAs: "kpSelect" })
+export class KpSelect<Value = unknown> implements OnInit {
   readonly value = model<Value | null | undefined>(undefined)
   readonly defaultValue = input<NoInfer<Value> | null>(null)
   readonly open = model<boolean | undefined>(undefined)
@@ -52,15 +52,15 @@ export class KuiSelect<Value = unknown> implements OnInit {
   readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Select<Value>
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     open: this.open(),
@@ -109,9 +109,9 @@ export class KuiSelect<Value = unknown> implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiSelectPortal]" })
-export class KuiSelectPortal implements OnInit {
-  private readonly root = inject(KuiSelect)
+@Directive({ selector: "[kpSelectPortal]" })
+export class KpSelectPortal implements OnInit {
+  private readonly root = inject(KpSelect)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -119,14 +119,14 @@ export class KuiSelectPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiSelectPositioner]" })
-export class KuiSelectPositioner extends KuiPositioner {
+@Directive({ selector: "[kpSelectPositioner]" })
+export class KpSelectPositioner extends KpPositioner {
   /**
    * The list opens over its trigger, the chosen item's text on the trigger's own, where
    * there is room and unless a finger opened it.
    */
   readonly alignItemWithTrigger = input(false, { transform: booleanAttribute })
-  private readonly root = inject(KuiSelect)
+  private readonly root = inject(KpSelect)
 
   protected placed() {
     return this.root.controller
@@ -147,13 +147,13 @@ export class KuiSelectPositioner extends KuiPositioner {
 }
 
 function part(name: "trigger" | "popup" | "input") {
-  const root = inject(KuiSelect)
+  const root = inject(KpSelect)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiSelectTrigger]" })
-export class KuiSelectTrigger implements OnInit {
+@Directive({ selector: "[kpSelectTrigger]" })
+export class KpSelectTrigger implements OnInit {
   private readonly init = part("trigger")
 
   ngOnInit(): void {
@@ -161,8 +161,8 @@ export class KuiSelectTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiSelectPopup]" })
-export class KuiSelectPopup implements OnInit {
+@Directive({ selector: "[kpSelectPopup]" })
+export class KpSelectPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -170,9 +170,9 @@ export class KuiSelectPopup implements OnInit {
   }
 }
 
-/** `<input kuiSelectInput>`: submits the value with the form around it. */
-@Directive({ selector: "input[kuiSelectInput]" })
-export class KuiSelectInput implements OnInit {
+/** `<input kpSelectInput>`: submits the value with the form around it. */
+@Directive({ selector: "input[kpSelectInput]" })
+export class KpSelectInput implements OnInit {
   private readonly init = part("input")
 
   ngOnInit(): void {
@@ -181,16 +181,16 @@ export class KuiSelectInput implements OnInit {
 }
 
 /**
- * `<span kuiSelectValue>` shows the chosen value's label, or `placeholder` while nothing is
+ * `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is
  * chosen; with `multiple`, the chosen labels with commas between.
- * `<span *kuiSelectValue="let shown">` draws its own content instead, with what is chosen:
+ * `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen:
  * `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the
  * items' order.
  */
-@Directive({ selector: "[kuiSelectValue]" })
-export class KuiSelectValue implements OnInit {
+@Directive({ selector: "[kpSelectValue]" })
+export class KpSelectValue implements OnInit {
   readonly placeholder = input("")
-  private readonly root = inject(KuiSelect)
+  private readonly root = inject(KpSelect)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly template = inject<TemplateRef<{ $implicit: SelectShown }>>(TemplateRef, {
     optional: true,
@@ -251,22 +251,22 @@ export class KuiSelectValue implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiSelectValue,
+    _directive: KpSelectValue,
     _context: unknown
   ): _context is { $implicit: SelectShown } {
     return true
   }
 }
 
-@Directive({ selector: "[kuiSelectItem]" })
-export class KuiSelectItem implements OnInit {
+@Directive({ selector: "[kpSelectItem]" })
+export class KpSelectItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What typeahead matches and the trigger shows; the item's text when left out. */
   readonly label = input<string>()
   /** Its place among all the rows, in a virtualized list. */
   readonly index = input<number>()
-  readonly root = inject(KuiSelect)
+  readonly root = inject(KpSelect)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
@@ -284,9 +284,9 @@ export class KuiSelectItem implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiSelectItemText]" })
-export class KuiSelectItemText implements OnInit {
-  private readonly item = inject(KuiSelectItem)
+@Directive({ selector: "[kpSelectItemText]" })
+export class KpSelectItemText implements OnInit {
+  private readonly item = inject(KpSelectItem)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -294,26 +294,26 @@ export class KuiSelectItemText implements OnInit {
   }
 }
 
-/** Items that belong together, named by their `kuiSelectGroupLabel`. */
-@Directive({ selector: "[kuiSelectGroup]" })
-export class KuiSelectGroup implements OnInit {
-  readonly kuiId = input<string>()
+/** Items that belong together, named by their `kpSelectGroupLabel`. */
+@Directive({ selector: "[kpSelectGroup]" })
+export class KpSelectGroup implements OnInit {
+  readonly kpId = input<string>()
   group!: SelectGroup
-  private readonly root = inject(KuiSelect)
-  private readonly generated = inject(KuiIds).make()
+  private readonly root = inject(KpSelect)
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.group = this.root.controller.group(this.kuiId() ?? this.generated)
+    this.group = this.root.controller.group(this.kpId() ?? this.generated)
     this.put(this.group.root)
   }
 }
 
 /** Names the group it is in. With no group around it, it is plain text. */
-@Directive({ selector: "[kuiSelectGroupLabel]" })
-export class KuiSelectGroupLabel implements OnInit {
-  private readonly root = inject(KuiSelect)
-  private readonly around = inject(KuiSelectGroup, { optional: true })
+@Directive({ selector: "[kpSelectGroupLabel]" })
+export class KpSelectGroupLabel implements OnInit {
+  private readonly root = inject(KpSelect)
+  private readonly around = inject(KpSelectGroup, { optional: true })
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -322,9 +322,9 @@ export class KuiSelectGroupLabel implements OnInit {
 }
 
 /** A line between groups. */
-@Directive({ selector: "[kuiSelectSeparator]" })
-export class KuiSelectSeparator implements OnInit {
-  private readonly root = inject(KuiSelect)
+@Directive({ selector: "[kpSelectSeparator]" })
+export class KpSelectSeparator implements OnInit {
+  private readonly root = inject(KpSelect)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -333,9 +333,9 @@ export class KuiSelectSeparator implements OnInit {
 }
 
 /** The items' own box inside the popup, when the popup also holds scroll arrows. */
-@Directive({ selector: "[kuiSelectList]" })
-export class KuiSelectList implements OnInit {
-  private readonly root = inject(KuiSelect)
+@Directive({ selector: "[kpSelectList]" })
+export class KpSelectList implements OnInit {
+  private readonly root = inject(KpSelect)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -344,7 +344,7 @@ export class KuiSelectList implements OnInit {
 }
 
 function scrollArrow(direction: "up" | "down") {
-  const root = inject(KuiSelect)
+  const root = inject(KpSelect)
   const present = presentWhile()
   const mount = mounted()
   return () => {
@@ -355,11 +355,11 @@ function scrollArrow(direction: "up" | "down") {
 }
 
 /**
- * `<div *kuiSelectScrollUpArrow>`: in the page while there is more of the list above. It
+ * `<div *kpSelectScrollUpArrow>`: in the page while there is more of the list above. It
  * scrolls the list while the pointer moves over it.
  */
-@Directive({ selector: "[kuiSelectScrollUpArrow]" })
-export class KuiSelectScrollUpArrow implements OnInit {
+@Directive({ selector: "[kpSelectScrollUpArrow]" })
+export class KpSelectScrollUpArrow implements OnInit {
   private readonly init = scrollArrow("up")
 
   ngOnInit(): void {
@@ -367,9 +367,9 @@ export class KuiSelectScrollUpArrow implements OnInit {
   }
 }
 
-/** `<div *kuiSelectScrollDownArrow>`: in the page while there is more of the list below. */
-@Directive({ selector: "[kuiSelectScrollDownArrow]" })
-export class KuiSelectScrollDownArrow implements OnInit {
+/** `<div *kpSelectScrollDownArrow>`: in the page while there is more of the list below. */
+@Directive({ selector: "[kpSelectScrollDownArrow]" })
+export class KpSelectScrollDownArrow implements OnInit {
   private readonly init = scrollArrow("down")
 
   ngOnInit(): void {
@@ -377,10 +377,10 @@ export class KuiSelectScrollDownArrow implements OnInit {
   }
 }
 
-/** `<span *kuiSelectItemIndicator>`: in the page while its item is the chosen one. */
-@Directive({ selector: "[kuiSelectItemIndicator]" })
-export class KuiSelectItemIndicator implements OnInit {
-  private readonly item = inject(KuiSelectItem)
+/** `<span *kpSelectItemIndicator>`: in the page while its item is the chosen one. */
+@Directive({ selector: "[kpSelectItemIndicator]" })
+export class KpSelectItemIndicator implements OnInit {
+  private readonly item = inject(KpSelectItem)
   private readonly present = presentWhile()
 
   ngOnInit(): void {

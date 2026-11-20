@@ -4,17 +4,17 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox } from "@kirana-ui/core/checkbox"
 
-import { KUI_CHECKBOX_GROUP } from "./checkbox-group-token"
-import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KP_CHECKBOX_GROUP } from "./checkbox-group-token"
+import { KP_FIELD } from "./field-token"
+import { KpIds, hostPart, innerPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** On the box's element. It draws the hidden native input inside it, which a form and a label reach. */
-@Directive({ selector: "[kuiCheckbox]", exportAs: "kuiCheckbox" })
-export class KuiCheckbox implements OnInit {
+@Directive({ selector: "[kpCheckbox]", exportAs: "kpCheckbox" })
+export class KpCheckbox implements OnInit {
   readonly checked = model<boolean | undefined>(undefined)
   readonly defaultChecked = input(false, { transform: booleanAttribute })
   readonly indeterminate = input(false, { transform: booleanAttribute })
-  /** In a `kuiCheckboxGroup` with `allValues`: the box that stands for them all. */
+  /** In a `kpCheckboxGroup` with `allValues`: the box that stands for them all. */
   readonly parent = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly readOnly = input(false, { transform: booleanAttribute })
@@ -23,16 +23,16 @@ export class KuiCheckbox implements OnInit {
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
   readonly value = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly checkedChanged = output<{ checked: boolean; details: ChangeDetails }>()
 
   controller!: Checkbox
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly group = inject(KUI_CHECKBOX_GROUP, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly group = inject(KP_CHECKBOX_GROUP, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     checked: this.checked(),
     defaultChecked: this.defaultChecked(),
     indeterminate: this.indeterminate(),
@@ -70,10 +70,10 @@ export class KuiCheckbox implements OnInit {
   }
 }
 
-/** `<span *kuiCheckboxIndicator>`: in the page while the box is checked or indeterminate. */
-@Directive({ selector: "[kuiCheckboxIndicator]" })
-export class KuiCheckboxIndicator implements OnInit {
-  private readonly root = inject(KuiCheckbox)
+/** `<span *kpCheckboxIndicator>`: in the page while the box is checked or indeterminate. */
+@Directive({ selector: "[kpCheckboxIndicator]" })
+export class KpCheckboxIndicator implements OnInit {
+  private readonly root = inject(KpCheckbox)
   private readonly present = presentWhile()
 
   ngOnInit(): void {

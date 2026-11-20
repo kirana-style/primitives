@@ -4,10 +4,10 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createCommand } from "@kirana-ui/core/command"
 import type { Command, CommandGroup, CommandProps } from "@kirana-ui/core/command"
 
-import { KuiIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KpIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiCommand]", exportAs: "kuiCommand" })
-export class KuiCommand implements OnInit {
+@Directive({ selector: "[kpCommand]", exportAs: "kpCommand" })
+export class KpCommand implements OnInit {
   readonly inputValue = model<string | undefined>(undefined)
   readonly defaultInputValue = input<string>()
   /** Whether an item is shown for what was typed; `null` shows every item. */
@@ -18,15 +18,15 @@ export class KuiCommand implements OnInit {
     transform: booleanAttribute,
   })
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
   /** An item was chosen. */
   readonly itemSelected = output<{ value: string; details: ChangeDetails }>()
 
   controller!: Command
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     inputValue: this.inputValue(),
     defaultInputValue: this.defaultInputValue(),
     filter: this.filter(),
@@ -56,13 +56,13 @@ export class KuiCommand implements OnInit {
 }
 
 function part(name: "input" | "list") {
-  const root = inject(KuiCommand)
+  const root = inject(KpCommand)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiCommandInput]" })
-export class KuiCommandInput implements OnInit {
+@Directive({ selector: "[kpCommandInput]" })
+export class KpCommandInput implements OnInit {
   private readonly init = part("input")
 
   ngOnInit(): void {
@@ -70,8 +70,8 @@ export class KuiCommandInput implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCommandList]" })
-export class KuiCommandList implements OnInit {
+@Directive({ selector: "[kpCommandList]" })
+export class KpCommandList implements OnInit {
   private readonly init = part("list")
 
   ngOnInit(): void {
@@ -79,10 +79,10 @@ export class KuiCommandList implements OnInit {
   }
 }
 
-/** `<div *kuiCommandEmpty>`: in the page while no item is shown for what was typed. */
-@Directive({ selector: "[kuiCommandEmpty]" })
-export class KuiCommandEmpty implements OnInit {
-  private readonly root = inject(KuiCommand)
+/** `<div *kpCommandEmpty>`: in the page while no item is shown for what was typed. */
+@Directive({ selector: "[kpCommandEmpty]" })
+export class KpCommandEmpty implements OnInit {
+  private readonly root = inject(KpCommand)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
@@ -90,25 +90,25 @@ export class KuiCommandEmpty implements OnInit {
   }
 }
 
-/** Items under a `kuiCommandGroupHeading`. Hidden while none of them is shown. */
-@Directive({ selector: "[kuiCommandGroup]" })
-export class KuiCommandGroup implements OnInit {
-  readonly kuiId = input<string>()
+/** Items under a `kpCommandGroupHeading`. Hidden while none of them is shown. */
+@Directive({ selector: "[kpCommandGroup]" })
+export class KpCommandGroup implements OnInit {
+  readonly kpId = input<string>()
   group!: CommandGroup
-  private readonly root = inject(KuiCommand)
-  private readonly generated = inject(KuiIds).make()
+  private readonly root = inject(KpCommand)
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.group = this.root.controller.group(this.kuiId() ?? this.generated)
+    this.group = this.root.controller.group(this.kpId() ?? this.generated)
     this.put(this.group.part)
   }
 }
 
-@Directive({ selector: "[kuiCommandGroupHeading]" })
-export class KuiCommandGroupHeading implements OnInit {
-  private readonly root = inject(KuiCommand)
-  private readonly within = inject(KuiCommandGroup, { optional: true })
+@Directive({ selector: "[kpCommandGroupHeading]" })
+export class KpCommandGroupHeading implements OnInit {
+  private readonly root = inject(KpCommand)
+  private readonly within = inject(KpCommandGroup, { optional: true })
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -117,8 +117,8 @@ export class KuiCommandGroupHeading implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCommandItem]" })
-export class KuiCommandItem implements OnInit {
+@Directive({ selector: "[kpCommandItem]" })
+export class KpCommandItem implements OnInit {
   /** What `itemSelected` is told. */
   readonly value = input.required<string>()
   readonly disabled = input(false, { transform: booleanAttribute })
@@ -126,16 +126,16 @@ export class KuiCommandItem implements OnInit {
   readonly label = input<string>()
   /** Other words the item answers to. */
   readonly keywords = input<readonly string[]>()
-  readonly kuiId = input<string>()
-  private readonly root = inject(KuiCommand)
-  private readonly within = inject(KuiCommandGroup, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  readonly kpId = input<string>()
+  private readonly root = inject(KpCommand)
+  private readonly within = inject(KpCommandGroup, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
     keywords: this.keywords(),
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
   }))
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -149,10 +149,10 @@ export class KuiCommandItem implements OnInit {
 }
 
 /** A line between groups: gone while something is typed, unless `alwaysRender`. */
-@Directive({ selector: "[kuiCommandSeparator]" })
-export class KuiCommandSeparator implements OnInit {
+@Directive({ selector: "[kpCommandSeparator]" })
+export class KpCommandSeparator implements OnInit {
   readonly alwaysRender = input(false, { transform: booleanAttribute })
-  private readonly root = inject(KuiCommand)
+  private readonly root = inject(KpCommand)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({ alwaysRender: this.alwaysRender() }))
 

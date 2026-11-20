@@ -6,9 +6,9 @@ import type { Autosize } from "@kirana-ui/core/autosize"
 
 import { hostPart } from "./runtime"
 
-/** `<textarea kuiAutosizeTextarea>`: as tall as its text. */
-@Directive({ selector: "textarea[kuiAutosizeTextarea]", exportAs: "kuiAutosizeTextarea" })
-export class KuiAutosizeTextarea implements OnInit, DoCheck {
+/** `<textarea kpAutosizeTextarea>`: as tall as its text. */
+@Directive({ selector: "textarea[kpAutosizeTextarea]", exportAs: "kpAutosizeTextarea" })
+export class KpAutosizeTextarea implements OnInit, DoCheck {
   controller!: Autosize
   private readonly element = inject<ElementRef<HTMLTextAreaElement>>(ElementRef).nativeElement
   private readonly put = hostPart()

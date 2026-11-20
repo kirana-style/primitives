@@ -233,18 +233,18 @@ What the entries export beside the components, their parts' props types and the 
 - `CalendarValue`, from `@kirana-ui/angular`: What a calendar holds: a day, a range of days in `mode: "range"`, a list of days in `mode: "multiple"`, or `null` for none.
 - `ComponentDefinition`, from `@kirana-ui/angular`: A component in the vocabulary: its parts by name.
 - `createToaster(options?: Core.ToasterOptions)`, from `@kirana-ui/angular`: The toasts of a page, made once, in a module: `toaster.add({ title })` from anywhere. A title, a description and an action's label are a string or a template, unless `Content` says otherwise.
-- `hostInputs(directive: ProviderToken<Directive>, given: NoInfer<HostInputs<Directive>>)`, from `@kirana-ui/angular`: Gives the inputs of a primitive this directive hosts (`hostDirectives: [KuiTooltip]`), as a design system's directive gives its defaults: `hostInputs(KuiTooltip, { delay: () => 0 })`. Each value is a function read like a signal, so one worked out from the host's own inputs (`{ disabled: computed(() => !this.collapsed()) }`) follows them. An input the element binds (one the host exposes through `hostDirectives`' `inputs`, written on the element) wins over what is given here. Call it where injection works (a field initialiser or the constructor): host directives are made before their host, and read their inputs after it is made.
+- `hostInputs(directive: ProviderToken<Directive>, given: NoInfer<HostInputs<Directive>>)`, from `@kirana-ui/angular`: Gives the inputs of a primitive this directive hosts (`hostDirectives: [KpTooltip]`), as a design system's directive gives its defaults: `hostInputs(KpTooltip, { delay: () => 0 })`. Each value is a function read like a signal, so one worked out from the host's own inputs (`{ disabled: computed(() => !this.collapsed()) }`) follows them. An input the element binds (one the host exposes through `hostDirectives`' `inputs`, written on the element) wins over what is given here. Call it where injection works (a field initialiser or the constructor): host directives are made before their host, and read their inputs after it is made.
 - `HostInputs`, from `@kirana-ui/angular`: What a directive hosting a primitive gives the primitive's inputs: each a function read like a signal (a signal, a `computed`, `() => 0`), so a value worked out from the host's own inputs follows them.
 - `hostPart()`, from `@kirana-ui/angular`: Puts a part on the directive's host element: the core writes its attributes and listens for its events itself, so nothing waits for change detection. Returns a function to call in `ngOnInit`, when the part's controller exists.
-- `injectDirection()`, from `@kirana-ui/angular`: The direction the nearest `kuiDirection` states; `ltr` outside one.
+- `injectDirection()`, from `@kirana-ui/angular`: The direction the nearest `kpDirection` states; `ltr` outside one.
 - `innerPart(tag: string)`, from `@kirana-ui/angular`: A part the directive draws itself, as the last child of its host: the hidden native input of a form control, which the caller does not write. Returns a function to call in `ngOnInit`.
-- `InputsOf`, from `@kirana-ui/angular`: The inputs of a directive, by the name its class gives each, and the value each reads (after its transform): `InputsOf<KuiTooltip>["delay"]` is `number | undefined`.
+- `InputsOf`, from `@kirana-ui/angular`: The inputs of a directive, by the name its class gives each, and the value each reads (after its transform): `InputsOf<KpTooltip>["delay"]` is `number | undefined`.
 - `inputsSignal(read: () => T)`, from `@kirana-ui/angular`: A core signal that follows a directive's inputs. Call it where injection works (a field initialiser or the constructor); `read` first runs when the directive's inputs are set. Given its directive (`inputsSignal(this, () => …)`), what a host gives it through `hostInputs` is laid over the inputs the element does not bind: the directive then calls `bound(changes)` from its `ngOnChanges`.
 - `InputsSignal`, from `@kirana-ui/angular`: What `inputsSignal` gives: the signal, and the two calls its directive makes.
-- `KuiDirection` (`[kuiDirection]`), from `@kirana-ui/angular`: States the reading direction for the components inside: `<div kuiDirection="rtl" dir="rtl">`. It writes nothing on its element: the `dir` attribute is set with it. Inputs: `kuiDirection: Direction | ""`.
-- `KuiIds`, from `@kirana-ui/angular`: Ids for parts whose caller gave none: one counter per application, so a server and its client agree.
-- `KuiPortalProvider` (`[kuiPortalProvider]`), from `@kirana-ui/angular`: `<ng-container kuiPortalProvider [container]="element">`: says where every popup inside it is drawn, the popups those open included: an element of the page (a shadow root's host, a full-screen element) in place of `<body>`. Inputs: `container: HTMLElement | null`.
-- `KuiPositioner` (a class a positioner's directive extends), from `@kirana-ui/angular`: A positioner: where its popup goes, as inputs. The one place they are named: each component's positioner extends this and says which controller it is a part of. Inputs: `side: Side`, `align: Align`, `sideOffset: number | OffsetFunction`, `alignOffset: number | OffsetFunction`, `collisionPadding: CollisionPadding`, `collisionBoundary: CollisionBoundary`, `collisionAvoidance: CollisionAvoidance`, `sticky: boolean`, `arrowPadding: number`, `positionMethod: "absolute" | "fixed"`, `anchor: PositionerAnchor`.
+- `KpDirection` (`[kpDirection]`), from `@kirana-ui/angular`: States the reading direction for the components inside: `<div kpDirection="rtl" dir="rtl">`. It writes nothing on its element: the `dir` attribute is set with it. Inputs: `kpDirection: Direction | ""`.
+- `KpIds`, from `@kirana-ui/angular`: Ids for parts whose caller gave none: one counter per application, so a server and its client agree.
+- `KpPortalProvider` (`[kpPortalProvider]`), from `@kirana-ui/angular`: `<ng-container kpPortalProvider [container]="element">`: says where every popup inside it is drawn, the popups those open included: an element of the page (a shadow root's host, a full-screen element) in place of `<body>`. Inputs: `container: HTMLElement | null`.
+- `KpPositioner` (a class a positioner's directive extends), from `@kirana-ui/angular`: A positioner: where its popup goes, as inputs. The one place they are named: each component's positioner extends this and says which controller it is a part of. Inputs: `side: Side`, `align: Align`, `sideOffset: number | OffsetFunction`, `alignOffset: number | OffsetFunction`, `collisionPadding: CollisionPadding`, `collisionBoundary: CollisionBoundary`, `collisionAvoidance: CollisionAvoidance`, `sticky: boolean`, `arrowPadding: number`, `positionMethod: "absolute" | "fixed"`, `anchor: PositionerAnchor`.
 - `mounted()`, from `@kirana-ui/angular`: Runs a controller's own effects for the directive's life.
 - `onServer()`, from `@kirana-ui/angular`: Whether this is a server's document: no layout, no observers, and nothing changes once written.
 - `Part`, from `@kirana-ui/angular`: One part of a component as the core gives it: the props for its element, and the DOM work that starts once the element is in the page. Its props are the type `PartProps`, from the same entries.
@@ -253,7 +253,7 @@ What the entries export beside the components, their parts' props types and the 
 - `PartState`, from `@kirana-ui/angular`: A part's state as its caller reads it: `true` for a flag, its value for a state that has one.
 - `PartStyle`, from `@kirana-ui/angular`: A part's `style`: property names as CSS writes them (`width`, `--thumb-offset`).
 - `PositionOptions`, from `@kirana-ui/angular`: How a popup is placed against its anchor: what every positioner takes.
-- `presentWhile(options: { portal?: boolean /** Drawn as children of this element instead, which is elsewhere in the page. */ into?: () => HTMLElement | undefined } = {})`, from `@kirana-ui/angular`: For a structural directive (`*kuiCollapsiblePanel`): its template is in the page only while `show` holds, so a closed panel is really gone, its content with it. `part` goes on the template's element. With `portal`, the template is drawn in a container at the end of the page. Returns a function to call in `ngOnInit`.
+- `presentWhile(options: { portal?: boolean /** Drawn as children of this element instead, which is elsewhere in the page. */ into?: () => HTMLElement | undefined } = {})`, from `@kirana-ui/angular`: For a structural directive (`*kpCollapsiblePanel`): its template is in the page only while `show` holds, so a closed panel is really gone, its content with it. `part` goes on the template's element. With `portal`, the template is drawn in a container at the end of the page. Returns a function to call in `ngOnInit`.
 - `Signal`, from `@kirana-ui/angular`: A value that is read and written, and that tells when it changes.
 - `StateDefinition`, from `@kirana-ui/angular`: A state of a part in the vocabulary: the attribute that marks it, and what it means.
 - `StateOf`, from `@kirana-ui/angular`: The state of a part, from its definition in the vocabulary: a state its attribute marks by being present is `true` or absent, one with values is one of them or absent. It is what `stateOf` reads from the part's props.
@@ -385,23 +385,23 @@ Its other types:
 
 ## Using it
 
-- Each part is a standalone directive on the caller's own element: `<button kuiDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).
+- Each part is a standalone directive on the caller's own element: `<button kpDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).
 - The package has one entry for the components: every directive is imported from `@kirana-ui/angular`.
-- Props are inputs. Bind them (`[defaultValue]="'a'"`): a static attribute stays on the element. An `id` is given as `[kuiId]`.
+- Props are inputs. Bind them (`[defaultValue]="'a'"`): a static attribute stays on the element. An `id` is given as `[kpId]`.
 - A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …). Below, `[(name)]` is such a model and `(name)` an output.
-- A part that draws a list is structural and gives each entry: `*kuiDateFieldSegments="let segment"`.
-- A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kuiTabsPanel="'account'; keepMounted: true"`.
-- A select's value written structurally draws its own content with what is chosen: `<span *kuiSelectValue="let shown">{{ shown.label }}</span>` (`shown.value`, `shown.label`; with `multiple`, `shown.values` and `shown.labels`, in the items' order).
+- A part that draws a list is structural and gives each entry: `*kpDateFieldSegments="let segment"`.
+- A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kpTabsPanel="'account'; keepMounted: true"`.
+- A select's value written structurally draws its own content with what is chosen: `<span *kpSelectValue="let shown">{{ shown.label }}</span>` (`shown.value`, `shown.label`; with `multiple`, `shown.values` and `shown.labels`, in the items' order).
 - A positioner's `[anchor]` is an element (a template variable, `#box`), an `ElementRef`, an object with `getBoundingClientRect`, or a function that gives one of those (a `viewChild` signal).
 - Angular 20 and later, with signals; it renders on a server and hydrates.
-- What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kuiPortalProvider` (`[container]`) and `kuiDirection` here, and `useDirection` is `injectDirection()`.
+- What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kpPortalProvider` (`[container]`) and `kpDirection` here, and `useDirection` is `injectDirection()`.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kuiAccordionPanel`, `*kuiDialogPortal`, `*kuiComboboxClear`, `*kuiComboboxPortal`, `*kuiComboboxCollection`, `*kuiComboboxEmpty`, `*kuiAvatarImage`, `*kuiAvatarFallback`, `*kuiCalendarMonths`, `*kuiCalendarWeekdays`, `*kuiCalendarWeeks`, `*kuiCheckboxIndicator`, `*kuiCollapsiblePanel`, `*kuiComboboxValue`, `*kuiComboboxItemIndicator`, `*kuiCommandEmpty`, `*kuiMenuPortal`, `*kuiMenuCheckboxItemIndicator`, `*kuiMenuRadioItemIndicator`, `*kuiDateFieldSegments`, `*kuiPopoverPortal`, `*kuiFieldError`, `*kuiFieldValidity`, `*kuiHoverCardPortal`, `*kuiListboxItemIndicator`, `*kuiNavigationMenuContent`, `*kuiNavigationMenuPortal`, `*kuiNumberFieldScrubAreaCursor`, `*kuiOtpCaret`, `*kuiPaginationItems`, `*kuiRadioGroupIndicator`, `*kuiScrollAreaScrollbar`, `*kuiScrollAreaCorner`, `*kuiSelectValue`, `*kuiSelectPortal`, `*kuiSelectScrollUpArrow`, `*kuiSelectScrollDownArrow`, `*kuiSelectItemIndicator`, `*kuiTabsPanel`, `*kuiToastList` and `*kuiTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>`).
-- A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kuiTabs"`.
+- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kpAccordionPanel`, `*kpDialogPortal`, `*kpComboboxClear`, `*kpComboboxPortal`, `*kpComboboxCollection`, `*kpComboboxEmpty`, `*kpAvatarImage`, `*kpAvatarFallback`, `*kpCalendarMonths`, `*kpCalendarWeekdays`, `*kpCalendarWeeks`, `*kpCheckboxIndicator`, `*kpCollapsiblePanel`, `*kpComboboxValue`, `*kpComboboxItemIndicator`, `*kpCommandEmpty`, `*kpMenuPortal`, `*kpMenuCheckboxItemIndicator`, `*kpMenuRadioItemIndicator`, `*kpDateFieldSegments`, `*kpPopoverPortal`, `*kpFieldError`, `*kpFieldValidity`, `*kpHoverCardPortal`, `*kpListboxItemIndicator`, `*kpNavigationMenuContent`, `*kpNavigationMenuPortal`, `*kpNumberFieldScrubAreaCursor`, `*kpOtpCaret`, `*kpPaginationItems`, `*kpRadioGroupIndicator`, `*kpScrollAreaScrollbar`, `*kpScrollAreaCorner`, `*kpSelectValue`, `*kpSelectPortal`, `*kpSelectScrollUpArrow`, `*kpSelectScrollDownArrow`, `*kpSelectItemIndicator`, `*kpTabsPanel`, `*kpToastList` and `*kpTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup>…</div></ng-container>`).
+- A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kpTabs"`.
 - A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
 - Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
 - Every change callback is an output whose event is `{ value, details }` under the value's own name (`$event.open`, `$event.values`): `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: `(clearErrors)`, `(completed)` and `(loadingStatusChanged)`.
-- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kuiAccordionPanel]`, `[kuiCollapsiblePanel]`, `[kuiScrollAreaScrollbar]` and `[kuiTabsPanel]`.
+- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kpAccordionPanel]`, `[kpCollapsiblePanel]`, `[kpScrollAreaScrollbar]` and `[kpTabsPanel]`.
 - `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
@@ -413,31 +413,31 @@ Its other types:
 
 ### For a design system
 
-- A design system's part is a directive of its own that hosts the primitive's: `@Directive({ selector: "[uiDialog]", hostDirectives: [{ directive: KuiDialog, inputs: ["kuiId", "open", "defaultOpen"], outputs: ["openChange", "openChanged"] }] })`. Angular binds a host directive's inputs and outputs only where the host exposes them (`inputs`, `outputs`, each `"name"` or `"name: alias"`): expose what its callers set, and give the rest yourself (below). Its own host bindings (`host: { class: "…", "[attr.data-size]": "size()" }`) join the element's: classes are joined, and both handlers of an event run. An element of the design system's own (a badge) is such a directive with no primitive: nothing of the library's is needed for it.
-- Keep the design system's selectors apart from the primitives' `kui…`: two directives with one selector in one template's `imports` both match the element, silently (Angular says nothing), and a part would then be made twice. Name your own `[ui…]`, `[my…]`, anything but `kui`.
+- A design system's part is a directive of its own that hosts the primitive's: `@Directive({ selector: "[uiDialog]", hostDirectives: [{ directive: KpDialog, inputs: ["kpId", "open", "defaultOpen"], outputs: ["openChange", "openChanged"] }] })`. Angular binds a host directive's inputs and outputs only where the host exposes them (`inputs`, `outputs`, each `"name"` or `"name: alias"`): expose what its callers set, and give the rest yourself (below). Its own host bindings (`host: { class: "…", "[attr.data-size]": "size()" }`) join the element's: classes are joined, and both handlers of an event run. An element of the design system's own (a badge) is such a directive with no primitive: nothing of the library's is needed for it.
+- The primitives' selectors, classes and tokens are `kp…` (`[kpDialog]`, `KpDialog`, `KP_FIELD`), the prefix of a base layer, so that a design system's own names never meet them: name yours as you like, `[ui…]`, `[my…]` or `kui…` (`[kuiDialog]` hosting `KpDialog`). What the prefix keeps out: two directives with one selector in one template's `imports` both match the element, silently (Angular says nothing), so a part would be made twice, and a design system's component whose selector is the primitive's matches again on the element its own template writes the primitive on, and recurses.
 - A model's output, `openChange` beside `[(open)]` (`valueChange`, `pageChange` …), carries the model's type, `boolean | undefined` for `open`: its first value can be the `undefined` the model starts with. Expose it with the model's input for a two-way `[(open)]` on the design system's directive, or expose `openChanged` for the change with its details.
-- A part that comes and goes is structural (`*kuiDialogPortal`), and an attribute cannot put a structural directive around its own element: draw it in a component's template around `<ng-content />`. `@Component({ selector: "[uiDialogContent]", imports: [KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup], template: `<ng-template kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup><ng-content /></div></ng-template>` })`. A part given to it (`<h2 uiDialogTitle>`) is made where it is written, so it finds its root there, inside the design system's `[uiDialog]`, not where it is drawn: the title labels the popup.
-- `hostInputs(directive, given)` gives a primitive the design system hosts its inputs, where its callers do not: call it in the hosting directive's constructor or a field initialiser, with each value a function read like a signal, so one worked out from the design system's own inputs follows them: `hostInputs(KuiTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })`, `hostInputs(KuiCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })`, `hostInputs(KuiTooltipPositioner, { sideOffset: () => 4 })`. An input the element binds, one the host exposes and its caller writes, wins over what is given. It is typed against the primitive's inputs (`HostInputs<KuiTooltip>`, `InputsOf<KuiTooltip>`), and an input that does not reach the component (a structural directive's own value) throws when the primitive starts. No subclass of a primitive is needed for any of this.
-- Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes). A design system whose tooltips open at once gives `delay` to the tooltip it hosts: `hostInputs(KuiTooltip, { delay: () => 0 })`, exposing `delay` so a caller can still set it.
+- A part that comes and goes is structural (`*kpDialogPortal`), and an attribute cannot put a structural directive around its own element: draw it in a component's template around `<ng-content />`. `@Component({ selector: "[uiDialogContent]", imports: [KpDialogPortal, KpDialogBackdrop, KpDialogPopup], template: `<ng-template kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup><ng-content /></div></ng-template>` })`. A part given to it (`<h2 uiDialogTitle>`) is made where it is written, so it finds its root there, inside the design system's `[uiDialog]`, not where it is drawn: the title labels the popup.
+- `hostInputs(directive, given)` gives a primitive the design system hosts its inputs, where its callers do not: call it in the hosting directive's constructor or a field initialiser, with each value a function read like a signal, so one worked out from the design system's own inputs follows them: `hostInputs(KpTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })`, `hostInputs(KpCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })`, `hostInputs(KpTooltipPositioner, { sideOffset: () => 4 })`. An input the element binds, one the host exposes and its caller writes, wins over what is given. It is typed against the primitive's inputs (`HostInputs<KpTooltip>`, `InputsOf<KpTooltip>`), and an input that does not reach the component (a structural directive's own value) throws when the primitive starts. No subclass of a primitive is needed for any of this.
+- Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes). A design system whose tooltips open at once gives `delay` to the tooltip it hosts: `hostInputs(KpTooltip, { delay: () => 0 })`, exposing `delay` so a caller can still set it.
 
 ## Components
 
 ### Accordion
 
 ```
-import { KuiAccordion, KuiAccordionItem, KuiAccordionHeader, KuiAccordionTrigger, KuiAccordionPanel } from "@kirana-ui/angular"
+import { KpAccordion, KpAccordionItem, KpAccordionHeader, KpAccordionTrigger, KpAccordionPanel } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiAccordion]`, `[kuiAccordionItem]`, `[kuiAccordionHeader]`, `[kuiAccordionTrigger]`, `[kuiAccordionPanel]`.
+Parts: `[kpAccordion]`, `[kpAccordionItem]`, `[kpAccordionHeader]`, `[kpAccordionTrigger]`, `[kpAccordionPanel]`.
 
 Anatomy:
 
 ```
-kuiAccordion
-  kuiAccordionItem (repeated)
-    kuiAccordionHeader
-      kuiAccordionTrigger
-    *kuiAccordionPanel
+kpAccordion
+  kpAccordionItem (repeated)
+    kpAccordionHeader
+      kpAccordionTrigger
+    *kpAccordionPanel
 ```
 
 Props of its root:
@@ -452,14 +452,14 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiAccordion]` is `KuiAccordion`. `exportAs: "kuiAccordion"`. Generic: `<Value = unknown>`. Its props are above.
-- `[kuiAccordionItem]` is `KuiAccordionItem`. `value` tells this item from the others; an item that is given none makes its own.
+- `[kpAccordion]` is `KpAccordion`. `exportAs: "kpAccordion"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kpAccordionItem]` is `KpAccordionItem`. `value` tells this item from the others; an item that is given none makes its own.
     - `value?: unknown`: What tells this item from the others: it is in the accordion's `value` while the item is open. An item that is given none makes its own.
     - `disabled?: boolean`: Disables this item: it cannot be opened or closed.
-- `[kuiAccordionHeader]` is `KuiAccordionHeader`.
-- `[kuiAccordionTrigger]` is `KuiAccordionTrigger`.
-- `[kuiAccordionPanel]` is `KuiAccordionPanel`. Structural: written `*kuiAccordionPanel`. `<div *kuiAccordionPanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden.
-    - `*kuiAccordionPanel: { keepMounted?: boolean } | ""`: The directive's own value: `*kuiAccordionPanel="…"`. Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while its item is closed.
+- `[kpAccordionHeader]` is `KpAccordionHeader`.
+- `[kpAccordionTrigger]` is `KpAccordionTrigger`.
+- `[kpAccordionPanel]` is `KpAccordionPanel`. Structural: written `*kpAccordionPanel`. `<div *kpAccordionPanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden.
+    - `*kpAccordionPanel: { keepMounted?: boolean } | ""`: The directive's own value: `*kpAccordionPanel="…"`. Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while its item is closed.
 
 Attributes and CSS variables, by part:
 
@@ -488,23 +488,23 @@ Attributes and CSS variables, by part:
 ### AlertDialog
 
 ```
-import { KuiAlertDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogViewport, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
+import { KpAlertDialog, KpDialogTrigger, KpDialogPortal, KpDialogBackdrop, KpDialogViewport, KpDialogPopup, KpDialogTitle, KpDialogDescription, KpDialogClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiAlertDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogViewport]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+Parts: `[kpAlertDialog]`, `[kpDialogTrigger]`, `[kpDialogPortal]`, `[kpDialogBackdrop]`, `[kpDialogViewport]`, `[kpDialogPopup]`, `[kpDialogTitle]`, `[kpDialogDescription]`, `[kpDialogClose]`.
 
 Anatomy:
 
 ```
-kuiAlertDialog
-  kuiDialogTrigger
-  *kuiDialogPortal
-    kuiDialogBackdrop
-    kuiDialogViewport (optional)
-      kuiDialogPopup
-        kuiDialogTitle
-        kuiDialogDescription
-        kuiDialogClose
+kpAlertDialog
+  kpDialogTrigger
+  *kpDialogPortal
+    kpDialogBackdrop
+    kpDialogViewport (optional)
+      kpDialogPopup
+        kpDialogTitle
+        kpDialogDescription
+        kpDialogClose
 ```
 
 Props of its root:
@@ -515,15 +515,15 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiAlertDialog]` is `KuiAlertDialog`. `exportAs: "kuiDialog"`. `kuiAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer. It is always modal and a press outside it never closes it, so it takes neither `[modal]` nor `[dismissible]`. Its parts are a dialog's (`kuiDialogTrigger`, `kuiDialogPopup` …), which find it as their root. Its props are above.
-- `[kuiDialogTrigger]` is `KuiDialogTrigger`.
-- `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
-- `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
-- `[kuiDialogViewport]` is `KuiDialogViewport`. What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert dialog's; a drawer lies at an edge of the page and has none.
-- `[kuiDialogPopup]` is `KuiDialogPopup`.
-- `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
-- `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
-- `[kuiDialogClose]` is `KuiDialogClose`. A button that closes the dialog.
+- `[kpAlertDialog]` is `KpAlertDialog`. `exportAs: "kpDialog"`. `kpAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer. It is always modal and a press outside it never closes it, so it takes neither `[modal]` nor `[dismissible]`. Its parts are a dialog's (`kpDialogTrigger`, `kpDialogPopup` …), which find it as their root. Its props are above.
+- `[kpDialogTrigger]` is `KpDialogTrigger`.
+- `[kpDialogPortal]` is `KpDialogPortal`. Structural: written `*kpDialogPortal`. `<ng-template kpDialogPortal>` or `*kpDialogPortal`: its content at the end of the page while open.
+- `[kpDialogBackdrop]` is `KpDialogBackdrop`.
+- `[kpDialogViewport]` is `KpDialogViewport`. What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert dialog's; a drawer lies at an edge of the page and has none.
+- `[kpDialogPopup]` is `KpDialogPopup`.
+- `[kpDialogTitle]` is `KpDialogTitle`. The heading that names the dialog.
+- `[kpDialogDescription]` is `KpDialogDescription`. The text that describes the dialog.
+- `[kpDialogClose]` is `KpDialogClose`. A button that closes the dialog.
 
 Attributes and CSS variables, by part:
 
@@ -552,42 +552,42 @@ Attributes and CSS variables, by part:
 ### Autocomplete
 
 ```
-import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxClear, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxCollection, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxEmpty, KuiComboboxStatus } from "@kirana-ui/angular"
+import { KpCombobox, KpComboboxInput, KpComboboxTrigger, KpComboboxClear, KpComboboxPortal, KpComboboxPositioner, KpComboboxPopup, KpComboboxList, KpComboboxCollection, KpComboboxGroup, KpComboboxGroupLabel, KpComboboxSeparator, KpComboboxItem, KpComboboxEmpty, KpComboboxStatus } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiAutocomplete]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxClear]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxCollection]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxEmpty]`, `[kuiComboboxStatus]`.
+Parts: `[kpAutocomplete]`, `input[kpComboboxInput]`, `[kpComboboxTrigger]`, `[kpComboboxClear]`, `[kpComboboxPortal]`, `[kpComboboxPositioner]`, `[kpComboboxPopup]`, `[kpComboboxList]`, `[kpComboboxCollection]`, `[kpComboboxGroup]`, `[kpComboboxGroupLabel]`, `[kpComboboxSeparator]`, `[kpComboboxItem]`, `[kpComboboxEmpty]`, `[kpComboboxStatus]`.
 
 Anatomy:
 
 ```
-kuiAutocomplete
-  input[kuiComboboxInput]
-  kuiComboboxTrigger
-  *kuiComboboxPortal
-    kuiComboboxPositioner
-      kuiComboboxPopup
-        kuiComboboxList (optional)
-          *kuiComboboxCollection (optional)
-            kuiComboboxItem (repeated, as above)
-            kuiComboboxGroup (optional, repeated, as above)
-          kuiComboboxGroup (optional, repeated)
-            *kuiComboboxCollection (optional, as above)
-            kuiComboboxItem (repeated)
-            kuiComboboxGroupLabel
-          kuiComboboxSeparator (repeated)
-        *kuiComboboxCollection (optional, as above)
-        *kuiComboboxEmpty
-        kuiComboboxStatus (optional)
-  kuiComboboxPopup (as above)
-  kuiComboboxStatus (optional, as above)
-  *kuiComboboxClear
+kpAutocomplete
+  input[kpComboboxInput]
+  kpComboboxTrigger
+  *kpComboboxPortal
+    kpComboboxPositioner
+      kpComboboxPopup
+        kpComboboxList (optional)
+          *kpComboboxCollection (optional)
+            kpComboboxItem (repeated, as above)
+            kpComboboxGroup (optional, repeated, as above)
+          kpComboboxGroup (optional, repeated)
+            *kpComboboxCollection (optional, as above)
+            kpComboboxItem (repeated)
+            kpComboboxGroupLabel
+          kpComboboxSeparator (repeated)
+        *kpComboboxCollection (optional, as above)
+        *kpComboboxEmpty
+        kpComboboxStatus (optional)
+  kpComboboxPopup (as above)
+  kpComboboxStatus (optional, as above)
+  *kpComboboxClear
 ```
 
 Props of its root:
 
 - `[(value)]: Value | null`: What the input says: the text is the value.
 - `defaultValue?: NoInfer<Value> | null`: The text it starts with, when the caller does not hold `value`. Read once.
-- `[(inputValue)]: string`: What the input says, `[(inputValue)]`. With `kuiAutocomplete` the text is `[(value)]`.
+- `[(inputValue)]: string`: What the input says, `[(inputValue)]`. With `kpAutocomplete` the text is `[(value)]`.
 - `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
 - `[(open)]: boolean`: Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
@@ -595,7 +595,7 @@ Props of its root:
 - `readOnly?: boolean`: Its value can be read and not changed: the list still opens and can be gone through, but no press and no Enter chooses, nothing typed is taken, and its clear and chip buttons do nothing. Its value is still submitted.
 - `name?: string`: The input's name in the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`), or the labels by value. With a `*kuiComboboxCollection` it is the list itself: the combobox filters it, and the collection draws what is left.
+- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`), or the labels by value. With a `*kpComboboxCollection` it is the list itself: the combobox filters it, and the collection draws what is left.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `multiple?: boolean`: Several values, each shown as a chip: they are `values`, not `value`.
@@ -605,34 +605,34 @@ Props of its root:
 - `inline?: boolean`: The list is always in the page, with no popup: a command palette.
 - `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
 - `autoHighlight?: boolean`: The first item shown for what was typed is highlighted as one types, so Enter chooses it. Off by default.
-- `mode?: "list" | "none"`: With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them.
-- `openOnInputClick?: boolean`: With `kuiAutocomplete`: a press on the input opens the list.
+- `mode?: "list" | "none"`: With `kpAutocomplete`: `"none"` shows the suggestions as the caller draws them.
+- `openOnInputClick?: boolean`: With `kpAutocomplete`: a press on the input opens the list.
 - `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as the text is about to change, typed or chosen: `details.cancel()` keeps it as it was.
 - `(inputValueChanged): { value: string; details: ChangeDetails }`: Heard as the input's text is about to change; `details.cancel()` keeps it as it was.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
-- `[kuiAutocomplete]` is `KuiCombobox`. `exportAs: "kuiCombobox"`. Generic: `<Value = unknown>`. `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
-- `input[kuiComboboxInput]` is `KuiComboboxInput`. `<input kuiComboboxInput>`: what is typed filters the list, which is placed against it.
-- `[kuiComboboxTrigger]` is `KuiComboboxTrigger`.
-- `[kuiComboboxClear]` is `KuiComboboxClear`. Structural: written `*kuiComboboxClear`. `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear.
-- `[kuiComboboxPortal]` is `KuiComboboxPortal`. Structural: written `*kuiComboboxPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiComboboxPositioner]` is `KuiComboboxPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiComboboxPopup]` is `KuiComboboxPopup`.
-- `[kuiComboboxList]` is `KuiComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
-- `[kuiComboboxCollection]` is `KuiComboboxCollection`. Structural: written `*kuiComboboxCollection`. Its template is given the entry: `let entry` is a `ComboboxEntry`. `<ng-container *kuiComboboxCollection="let entry">` draws the list from the root's `items`: once for each item left for what was typed, or for each group that has items left. With `of` (`*kuiComboboxCollection="let item; of: group"`), for each of that group's items left. The root then filters, and no item hides itself.
-    - `of?: ComboboxEntry`: Written after the directive's value: `*kuiComboboxCollection="…; of: …"`. A group the root's `items` gave: its items left are then what is drawn.
-- `[kuiComboboxGroup]` is `KuiComboboxGroup`. Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown.
-- `[kuiComboboxGroupLabel]` is `KuiComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
-- `[kuiComboboxSeparator]` is `KuiComboboxSeparator`. A line between groups.
-- `[kuiComboboxItem]` is `KuiComboboxItem`.
+- `[kpAutocomplete]` is `KpCombobox`. `exportAs: "kpCombobox"`. Generic: `<Value = unknown>`. `kpAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
+- `input[kpComboboxInput]` is `KpComboboxInput`. `<input kpComboboxInput>`: what is typed filters the list, which is placed against it.
+- `[kpComboboxTrigger]` is `KpComboboxTrigger`.
+- `[kpComboboxClear]` is `KpComboboxClear`. Structural: written `*kpComboboxClear`. `<button *kpComboboxClear>`: empties the input and the value; in the page while there is something to clear.
+- `[kpComboboxPortal]` is `KpComboboxPortal`. Structural: written `*kpComboboxPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpComboboxPositioner]` is `KpComboboxPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpComboboxPopup]` is `KpComboboxPopup`.
+- `[kpComboboxList]` is `KpComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+- `[kpComboboxCollection]` is `KpComboboxCollection`. Structural: written `*kpComboboxCollection`. Its template is given the entry: `let entry` is a `ComboboxEntry`. `<ng-container *kpComboboxCollection="let entry">` draws the list from the root's `items`: once for each item left for what was typed, or for each group that has items left. With `of` (`*kpComboboxCollection="let item; of: group"`), for each of that group's items left. The root then filters, and no item hides itself.
+    - `of?: ComboboxEntry`: Written after the directive's value: `*kpComboboxCollection="…; of: …"`. A group the root's `items` gave: its items left are then what is drawn.
+- `[kpComboboxGroup]` is `KpComboboxGroup`. Items that belong together, named by their `kpComboboxGroupLabel`. Hidden while none is shown.
+- `[kpComboboxGroupLabel]` is `KpComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kpComboboxSeparator]` is `KpComboboxSeparator`. A line between groups.
+- `[kpComboboxItem]` is `KpComboboxItem`.
     - `value: unknown`: Required. What the combobox's value is while this item is chosen.
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What is filtered and what the input shows; the item's text when left out.
     - `index?: number`: Its place among all the rows, in a virtualized list.
-- `[kuiComboboxEmpty]` is `KuiComboboxEmpty`. Structural: written `*kuiComboboxEmpty`. `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed.
-- `[kuiComboboxStatus]` is `KuiComboboxStatus`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. Keep it in the page and change what it holds: inside the popup, or beside the input.
+- `[kpComboboxEmpty]` is `KpComboboxEmpty`. Structural: written `*kpComboboxEmpty`. `<div *kpComboboxEmpty>`: in the page while no item is shown for what was typed.
+- `[kpComboboxStatus]` is `KpComboboxStatus`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. Keep it in the page and change what it holds: inside the popup, or beside the input.
 
 Attributes and CSS variables, by part:
 
@@ -674,35 +674,35 @@ Attributes and CSS variables, by part:
 ### Autosize
 
 ```
-import { KuiAutosizeTextarea } from "@kirana-ui/angular"
+import { KpAutosizeTextarea } from "@kirana-ui/angular"
 ```
 
-Parts: `textarea[kuiAutosizeTextarea]`.
+Parts: `textarea[kpAutosizeTextarea]`.
 
 Anatomy:
 
 ```
-textarea[kuiAutosizeTextarea]
+textarea[kpAutosizeTextarea]
 ```
 
 Each part, and its own props:
 
-- `textarea[kuiAutosizeTextarea]` is `KuiAutosizeTextarea`. `exportAs: "kuiAutosizeTextarea"`. `<textarea kuiAutosizeTextarea>`: as tall as its text.
+- `textarea[kpAutosizeTextarea]` is `KpAutosizeTextarea`. `exportAs: "kpAutosizeTextarea"`. `<textarea kpAutosizeTextarea>`: as tall as its text.
 
 ### Avatar
 
 ```
-import { KuiAvatar, KuiAvatarImage, KuiAvatarFallback } from "@kirana-ui/angular"
+import { KpAvatar, KpAvatarImage, KpAvatarFallback } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiAvatar]`, `[kuiAvatarImage]`, `[kuiAvatarFallback]`.
+Parts: `[kpAvatar]`, `[kpAvatarImage]`, `[kpAvatarFallback]`.
 
 Anatomy:
 
 ```
-kuiAvatar
-  *kuiAvatarImage
-  *kuiAvatarFallback
+kpAvatar
+  *kpAvatarImage
+  *kpAvatarFallback
 ```
 
 Props of its root:
@@ -711,11 +711,11 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiAvatar]` is `KuiAvatar`. `exportAs: "kuiAvatar"`. `<span kuiAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either of the image's forms (a structural directive's own outputs cannot be bound from its element). Its props are above.
-- `[kuiAvatarImage]` is `KuiAvatarImage`. Structural: written `*kuiAvatarImage`. The picture, in either of two forms. `<img *kuiAvatarImage="address" alt="…">` is in the page once the picture has loaded. `<img kuiAvatarImage [src]="address" alt="…">` is the caller's own element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
-    - `*kuiAvatarImage: string`: The directive's own value: `*kuiAvatarImage="…"`. The picture's address, in the structural form: the element is in the page once it has loaded.
-- `[kuiAvatarFallback]` is `KuiAvatarFallback`. Structural: written `*kuiAvatarFallback`. `<span *kuiAvatarFallback>`: what shows until the picture has loaded, or when it cannot. `{ delay: 600 }` waits that many milliseconds first, so a picture that loads sooner never lets it be seen.
-    - `*kuiAvatarFallback: { delay?: number | undefined } | ""`: The directive's own value: `*kuiAvatarFallback="…"`. Its options: `{ delay: 600 }` waits that many milliseconds before showing. Read once. Default: no wait.
+- `[kpAvatar]` is `KpAvatar`. `exportAs: "kpAvatar"`. `<span kpAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either of the image's forms (a structural directive's own outputs cannot be bound from its element). Its props are above.
+- `[kpAvatarImage]` is `KpAvatarImage`. Structural: written `*kpAvatarImage`. The picture, in either of two forms. `<img *kpAvatarImage="address" alt="…">` is in the page once the picture has loaded. `<img kpAvatarImage [src]="address" alt="…">` is the caller's own element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
+    - `*kpAvatarImage: string`: The directive's own value: `*kpAvatarImage="…"`. The picture's address, in the structural form: the element is in the page once it has loaded.
+- `[kpAvatarFallback]` is `KpAvatarFallback`. Structural: written `*kpAvatarFallback`. `<span *kpAvatarFallback>`: what shows until the picture has loaded, or when it cannot. `{ delay: 600 }` waits that many milliseconds first, so a picture that loads sooner never lets it be seen.
+    - `*kpAvatarFallback: { delay?: number | undefined } | ""`: The directive's own value: `*kpAvatarFallback="…"`. Its options: `{ delay: 600 }` waits that many milliseconds before showing. Read once. Default: no wait.
 
 Attributes and CSS variables, by part:
 
@@ -728,7 +728,7 @@ Attributes and CSS variables, by part:
 ### Button
 
 ```
-import { KuiButton } from "@kirana-ui/angular"
+import { KpButton } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -737,7 +737,7 @@ Props:
 - `focusableWhenDisabled?: boolean`: Keeps a disabled button in the tab order, so what it would do can still be read.
 - `nativeButton?: boolean`: `false` when the element is not a `<button>`: it is given a button's role and keyboard. Default `true`.
 
-`[kuiButton]` is `KuiButton`. `exportAs: "kuiButton"`. On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one.
+`[kpButton]` is `KpButton`. `exportAs: "kpButton"`. On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one.
 
 Attributes and CSS variables, by part:
 
@@ -747,26 +747,26 @@ Attributes and CSS variables, by part:
 ### Calendar
 
 ```
-import { KuiCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarMonths, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay, KuiCalendarInput } from "@kirana-ui/angular"
+import { KpCalendar, KpCalendarHeading, KpCalendarPrevious, KpCalendarNext, KpCalendarMonths, KpCalendarGrid, KpCalendarWeekdays, KpCalendarHeadCell, KpCalendarWeeks, KpCalendarCell, KpCalendarDay, KpCalendarInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarMonths]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`, `input[kuiCalendarInput]`.
+Parts: `[kpCalendar]`, `[kpCalendarHeading]`, `[kpCalendarPrevious]`, `[kpCalendarNext]`, `[kpCalendarMonths]`, `[kpCalendarGrid]`, `[kpCalendarWeekdays]`, `[kpCalendarHeadCell]`, `[kpCalendarWeeks]`, `[kpCalendarCell]`, `[kpCalendarDay]`, `input[kpCalendarInput]`.
 
 Anatomy:
 
 ```
-kuiCalendar
-  *kuiCalendarMonths (optional)
-    kuiCalendarHeading
-    kuiCalendarGrid
-      *kuiCalendarWeekdays
-        kuiCalendarHeadCell (repeated)
-      *kuiCalendarWeeks
-        kuiCalendarCell (repeated)
-          kuiCalendarDay
-  kuiCalendarPrevious
-  kuiCalendarNext
-  input[kuiCalendarInput]
+kpCalendar
+  *kpCalendarMonths (optional)
+    kpCalendarHeading
+    kpCalendarGrid
+      *kpCalendarWeekdays
+        kpCalendarHeadCell (repeated)
+      *kpCalendarWeeks
+        kpCalendarCell (repeated)
+          kpCalendarDay
+  kpCalendarPrevious
+  kpCalendarNext
+  input[kpCalendarInput]
 ```
 
 Props of its root:
@@ -776,7 +776,7 @@ Props of its root:
 - `mode?: Mode`: One day (the default), a first and a last (`"range"`), or any number (`"multiple"`).
 - `minDays?: number`: With `mode="multiple"`: the fewest days that can be left chosen.
 - `maxDays?: number`: With `mode="multiple"`: the most days that can be chosen.
-- `months?: number`: How many months are shown side by side, each drawn by `*kuiCalendarMonths`. Default `1`.
+- `months?: number`: How many months are shown side by side, each drawn by `*kpCalendarMonths`. Default `1`.
 - `pagedNavigation?: boolean`: With several `months`: Previous and Next turn them all rather than one month.
 - `[(month)]: string`: The first day of the month shown (any day of it): `[(month)]`.
 - `defaultMonth?: string`: The month it starts on, when the caller does not hold `month`. Read once.
@@ -789,28 +789,28 @@ Props of its root:
 - `disabled?: boolean`: Disabled: no day can be chosen.
 - `readOnly?: boolean`: Shown as it is: the days can be moved through, and none can be chosen.
 - `fixedWeeks?: boolean`: Always six rows, so the calendar is one height in every month.
-- `name?: string`: The name its hidden input (`kuiCalendarInput`) submits the value under.
+- `name?: string`: The name its hidden input (`kpCalendarInput`) submits the value under.
 - `form?: string`: The id of the form it belongs to, when it is not inside it.
 - `(valueChanged): { value: CalendarValueOf<Mode>; details: ChangeDetails }`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
 - `(monthChanged): { month: string; details: ChangeDetails }`: Another month is about to be shown: its first day, and `details.cancel()`.
 
 Each part, and its own props:
 
-- `[kuiCalendar]` is `KuiCalendar`. `exportAs: "kuiCalendar"`. Generic: `<Mode extends CalendarMode = CalendarMode>`. Its props are above.
-- `[kuiCalendarHeading]` is `KuiCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
-- `[kuiCalendarPrevious]` is `KuiCalendarPrevious`.
-- `[kuiCalendarNext]` is `KuiCalendarNext`.
-- `[kuiCalendarMonths]` is `KuiCalendarMonths`. Structural: written `*kuiCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kuiCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
-- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
-- `[kuiCalendarWeekdays]` is `KuiCalendarWeekdays`. Structural: written `*kuiCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week.
-- `[kuiCalendarHeadCell]` is `KuiCalendarHeadCell`. A column's heading: a day of the week.
+- `[kpCalendar]` is `KpCalendar`. `exportAs: "kpCalendar"`. Generic: `<Mode extends CalendarMode = CalendarMode>`. Its props are above.
+- `[kpCalendarHeading]` is `KpCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
+- `[kpCalendarPrevious]` is `KpCalendarPrevious`.
+- `[kpCalendarNext]` is `KpCalendarNext`.
+- `[kpCalendarMonths]` is `KpCalendarMonths`. Structural: written `*kpCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kpCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
+- `[kpCalendarGrid]` is `KpCalendarGrid`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
+- `[kpCalendarWeekdays]` is `KpCalendarWeekdays`. Structural: written `*kpCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kpCalendarWeekdays="let weekday">`: once for each day of the week.
+- `[kpCalendarHeadCell]` is `KpCalendarHeadCell`. A column's heading: a day of the week.
     - `weekday: CalendarWeekday`: Required. The day of the week it heads: an entry `Calendar.Weekdays` gave.
-- `[kuiCalendarWeeks]` is `KuiCalendarWeeks`. Structural: written `*kuiCalendarWeeks`. Its template is given the entry: `let entry` is a `readonly CalendarDay[]`. `<tr *kuiCalendarWeeks="let week">`: once for each week of the month shown.
-- `[kuiCalendarCell]` is `KuiCalendarCell`.
+- `[kpCalendarWeeks]` is `KpCalendarWeeks`. Structural: written `*kpCalendarWeeks`. Its template is given the entry: `let entry` is a `readonly CalendarDay[]`. `<tr *kpCalendarWeeks="let week">`: once for each week of the month shown.
+- `[kpCalendarCell]` is `KpCalendarCell`.
     - `date: string`: Required. The day it holds, as `Calendar.Weeks` gave it: `day.date`.
-- `[kuiCalendarDay]` is `KuiCalendarDay`.
+- `[kpCalendarDay]` is `KpCalendarDay`.
     - `date: string`: Required. The day it is the button of, as `Calendar.Weeks` gave it: `day.date`.
-- `input[kuiCalendarInput]` is `KuiCalendarInput`. `<input kuiCalendarInput>`: the hidden input the value is submitted by, with a `name`.
+- `input[kpCalendarInput]` is `KpCalendarInput`. `<input kpCalendarInput>`: the hidden input the value is submitted by, with a `name`.
 
 Attributes and CSS variables, by part:
 
@@ -841,20 +841,20 @@ Attributes and CSS variables, by part:
 ### Carousel
 
 ```
-import { KuiCarousel, KuiCarouselViewport, KuiCarouselItem, KuiCarouselPrevious, KuiCarouselNext, KuiCarouselIndicator } from "@kirana-ui/angular"
+import { KpCarousel, KpCarouselViewport, KpCarouselItem, KpCarouselPrevious, KpCarouselNext, KpCarouselIndicator } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCarousel]`, `[kuiCarouselViewport]`, `[kuiCarouselItem]`, `[kuiCarouselPrevious]`, `[kuiCarouselNext]`, `[kuiCarouselIndicator]`.
+Parts: `[kpCarousel]`, `[kpCarouselViewport]`, `[kpCarouselItem]`, `[kpCarouselPrevious]`, `[kpCarouselNext]`, `[kpCarouselIndicator]`.
 
 Anatomy:
 
 ```
-kuiCarousel
-  kuiCarouselViewport
-    kuiCarouselItem (repeated)
-  kuiCarouselPrevious
-  kuiCarouselNext
-  kuiCarouselIndicator (repeated)
+kpCarousel
+  kpCarouselViewport
+    kpCarouselItem (repeated)
+  kpCarouselPrevious
+  kpCarouselNext
+  kpCarouselIndicator (repeated)
 ```
 
 Props of its root:
@@ -867,13 +867,13 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiCarousel]` is `KuiCarousel`. `exportAs: "kuiCarousel"`. Its props are above.
-- `[kuiCarouselViewport]` is `KuiCarouselViewport`.
-- `[kuiCarouselItem]` is `KuiCarouselItem`.
+- `[kpCarousel]` is `KpCarousel`. `exportAs: "kpCarousel"`. Its props are above.
+- `[kpCarouselViewport]` is `KpCarouselViewport`.
+- `[kpCarouselItem]` is `KpCarouselItem`.
     - `index: number`: Required. Its place among the slides, from 0.
-- `[kuiCarouselPrevious]` is `KuiCarouselPrevious`.
-- `[kuiCarouselNext]` is `KuiCarouselNext`.
-- `[kuiCarouselIndicator]` is `KuiCarouselIndicator`.
+- `[kpCarouselPrevious]` is `KpCarouselPrevious`.
+- `[kpCarouselNext]` is `KpCarouselNext`.
+- `[kpCarouselIndicator]` is `KpCarouselIndicator`.
     - `index: number`: Required. The slide it goes to, from 0.
 
 Attributes and CSS variables, by part:
@@ -895,16 +895,16 @@ Attributes and CSS variables, by part:
 ### Checkbox
 
 ```
-import { KuiCheckbox, KuiCheckboxIndicator } from "@kirana-ui/angular"
+import { KpCheckbox, KpCheckboxIndicator } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCheckbox]`, `[kuiCheckboxIndicator]`.
+Parts: `[kpCheckbox]`, `[kpCheckboxIndicator]`.
 
 Anatomy:
 
 ```
-kuiCheckbox
-  *kuiCheckboxIndicator
+kpCheckbox
+  *kpCheckboxIndicator
 ```
 
 Props of its root:
@@ -912,7 +912,7 @@ Props of its root:
 - `[(checked)]: boolean`: Whether it is checked, when the caller holds it.
 - `defaultChecked?: boolean`: Read once.
 - `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
-- `parent?: boolean`: In a `kuiCheckboxGroup` with `allValues`: the box that stands for them all.
+- `parent?: boolean`: In a `kpCheckboxGroup` with `allValues`: the box that stands for them all.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
@@ -923,8 +923,8 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiCheckbox]` is `KuiCheckbox`. `exportAs: "kuiCheckbox"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
-- `[kuiCheckboxIndicator]` is `KuiCheckboxIndicator`. Structural: written `*kuiCheckboxIndicator`. `<span *kuiCheckboxIndicator>`: in the page while the box is checked or indeterminate.
+- `[kpCheckbox]` is `KpCheckbox`. `exportAs: "kpCheckbox"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
+- `[kpCheckboxIndicator]` is `KpCheckboxIndicator`. Structural: written `*kpCheckboxIndicator`. `<span *kpCheckboxIndicator>`: in the page while the box is checked or indeterminate.
 
 Attributes and CSS variables, by part:
 
@@ -949,7 +949,7 @@ Attributes and CSS variables, by part:
 ### CheckboxGroup
 
 ```
-import { KuiCheckboxGroup } from "@kirana-ui/angular"
+import { KpCheckboxGroup } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -960,7 +960,7 @@ Props:
 - `disabled?: boolean`: Disables every checkbox of the group.
 - `(valueChanged): { value: string[]; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 
-`[kuiCheckboxGroup]` is `KuiCheckboxGroup`. `exportAs: "kuiCheckboxGroup"`. Checkboxes that hold one list of values. Each `kuiCheckbox` with a `value` inside it is checked while the list has its value; with `allValues`, a `kuiCheckbox` marked `parent` stands for them all.
+`[kpCheckboxGroup]` is `KpCheckboxGroup`. `exportAs: "kpCheckboxGroup"`. Checkboxes that hold one list of values. Each `kpCheckbox` with a `value` inside it is checked while the list has its value; with `allValues`, a `kpCheckbox` marked `parent` stands for them all.
 
 Attributes and CSS variables, by part:
 
@@ -970,17 +970,17 @@ Attributes and CSS variables, by part:
 ### Collapsible
 
 ```
-import { KuiCollapsible, KuiCollapsibleTrigger, KuiCollapsiblePanel } from "@kirana-ui/angular"
+import { KpCollapsible, KpCollapsibleTrigger, KpCollapsiblePanel } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCollapsible]`, `[kuiCollapsibleTrigger]`, `[kuiCollapsiblePanel]`.
+Parts: `[kpCollapsible]`, `[kpCollapsibleTrigger]`, `[kpCollapsiblePanel]`.
 
 Anatomy:
 
 ```
-kuiCollapsible
-  kuiCollapsibleTrigger (repeated)
-  *kuiCollapsiblePanel
+kpCollapsible
+  kpCollapsibleTrigger (repeated)
+  *kpCollapsiblePanel
 ```
 
 Props of its root:
@@ -992,10 +992,10 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiCollapsible]` is `KuiCollapsible`. `exportAs: "kuiCollapsible"`. Its props are above.
-- `[kuiCollapsibleTrigger]` is `KuiCollapsibleTrigger`.
-- `[kuiCollapsiblePanel]` is `KuiCollapsiblePanel`. Structural: written `*kuiCollapsiblePanel`. `<div *kuiCollapsiblePanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden.
-    - `*kuiCollapsiblePanel: { keepMounted?: boolean } | ""`: The directive's own value: `*kuiCollapsiblePanel="…"`. Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while it is closed.
+- `[kpCollapsible]` is `KpCollapsible`. `exportAs: "kpCollapsible"`. Its props are above.
+- `[kpCollapsibleTrigger]` is `KpCollapsibleTrigger`.
+- `[kpCollapsiblePanel]` is `KpCollapsiblePanel`. Structural: written `*kpCollapsiblePanel`. `<div *kpCollapsiblePanel>`: in the page while open; `{ keepMounted: true }` keeps it, hidden.
+    - `*kpCollapsiblePanel: { keepMounted?: boolean } | ""`: The directive's own value: `*kpCollapsiblePanel="…"`. Its options: `{ keepMounted: true }` keeps the panel in the page, hidden, while it is closed.
 
 Attributes and CSS variables, by part:
 
@@ -1017,50 +1017,50 @@ Attributes and CSS variables, by part:
 ### Combobox
 
 ```
-import { KuiCombobox, KuiComboboxInput, KuiComboboxTrigger, KuiComboboxValue, KuiComboboxClear, KuiComboboxChips, KuiComboboxChip, KuiComboboxChipRemove, KuiComboboxPortal, KuiComboboxPositioner, KuiComboboxPopup, KuiComboboxList, KuiComboboxCollection, KuiComboboxGroup, KuiComboboxGroupLabel, KuiComboboxSeparator, KuiComboboxItem, KuiComboboxItemIndicator, KuiComboboxEmpty, KuiComboboxStatus, KuiComboboxHiddenInput } from "@kirana-ui/angular"
+import { KpCombobox, KpComboboxInput, KpComboboxTrigger, KpComboboxValue, KpComboboxClear, KpComboboxChips, KpComboboxChip, KpComboboxChipRemove, KpComboboxPortal, KpComboboxPositioner, KpComboboxPopup, KpComboboxList, KpComboboxCollection, KpComboboxGroup, KpComboboxGroupLabel, KpComboboxSeparator, KpComboboxItem, KpComboboxItemIndicator, KpComboboxEmpty, KpComboboxStatus, KpComboboxHiddenInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCombobox]`, `input[kuiComboboxInput]`, `[kuiComboboxTrigger]`, `[kuiComboboxValue]`, `[kuiComboboxClear]`, `[kuiComboboxChips]`, `[kuiComboboxChip]`, `[kuiComboboxChipRemove]`, `[kuiComboboxPortal]`, `[kuiComboboxPositioner]`, `[kuiComboboxPopup]`, `[kuiComboboxList]`, `[kuiComboboxCollection]`, `[kuiComboboxGroup]`, `[kuiComboboxGroupLabel]`, `[kuiComboboxSeparator]`, `[kuiComboboxItem]`, `[kuiComboboxItemIndicator]`, `[kuiComboboxEmpty]`, `[kuiComboboxStatus]`.
+Parts: `[kpCombobox]`, `input[kpComboboxInput]`, `[kpComboboxTrigger]`, `[kpComboboxValue]`, `[kpComboboxClear]`, `[kpComboboxChips]`, `[kpComboboxChip]`, `[kpComboboxChipRemove]`, `[kpComboboxPortal]`, `[kpComboboxPositioner]`, `[kpComboboxPopup]`, `[kpComboboxList]`, `[kpComboboxCollection]`, `[kpComboboxGroup]`, `[kpComboboxGroupLabel]`, `[kpComboboxSeparator]`, `[kpComboboxItem]`, `[kpComboboxItemIndicator]`, `[kpComboboxEmpty]`, `[kpComboboxStatus]`.
 
 Anatomy:
 
 ```
-kuiCombobox
-  input[kuiComboboxInput]
-  kuiComboboxTrigger
-    *kuiComboboxValue (optional)
-  *kuiComboboxPortal
-    kuiComboboxPositioner
-      kuiComboboxPopup
-        input[kuiComboboxInput] (as above)
-        kuiComboboxList (optional)
-          *kuiComboboxCollection (optional)
-            kuiComboboxItem (repeated, as above)
-            kuiComboboxGroup (optional, repeated, as above)
-          kuiComboboxGroup (optional, repeated)
-            *kuiComboboxCollection (optional, as above)
-            kuiComboboxItem (repeated)
-              *kuiComboboxItemIndicator
-            kuiComboboxGroupLabel
-          kuiComboboxSeparator (repeated)
-        *kuiComboboxCollection (optional, as above)
-        *kuiComboboxEmpty
-        kuiComboboxStatus (optional)
-  kuiComboboxPopup (as above)
-  kuiComboboxStatus (optional, as above)
-  *kuiComboboxClear
-  kuiComboboxChips
-    input[kuiComboboxInput] (as above)
-    kuiComboboxChip (repeated)
-      kuiComboboxChipRemove
-  input[kuiComboboxHiddenInput] (Angular only)
+kpCombobox
+  input[kpComboboxInput]
+  kpComboboxTrigger
+    *kpComboboxValue (optional)
+  *kpComboboxPortal
+    kpComboboxPositioner
+      kpComboboxPopup
+        input[kpComboboxInput] (as above)
+        kpComboboxList (optional)
+          *kpComboboxCollection (optional)
+            kpComboboxItem (repeated, as above)
+            kpComboboxGroup (optional, repeated, as above)
+          kpComboboxGroup (optional, repeated)
+            *kpComboboxCollection (optional, as above)
+            kpComboboxItem (repeated)
+              *kpComboboxItemIndicator
+            kpComboboxGroupLabel
+          kpComboboxSeparator (repeated)
+        *kpComboboxCollection (optional, as above)
+        *kpComboboxEmpty
+        kpComboboxStatus (optional)
+  kpComboboxPopup (as above)
+  kpComboboxStatus (optional, as above)
+  *kpComboboxClear
+  kpComboboxChips
+    input[kpComboboxInput] (as above)
+    kpComboboxChip (repeated)
+      kpComboboxChipRemove
+  input[kpComboboxHiddenInput] (Angular only)
 ```
 
 Props of its root:
 
 - `[(value)]: Value | null`: The chosen value; `null` is "none".
 - `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
-- `[(inputValue)]: string`: What the input says, `[(inputValue)]`. With `kuiAutocomplete` the text is `[(value)]`.
+- `[(inputValue)]: string`: What the input says, `[(inputValue)]`. With `kpAutocomplete` the text is `[(value)]`.
 - `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
 - `[(open)]: boolean`: Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
@@ -1068,7 +1068,7 @@ Props of its root:
 - `readOnly?: boolean`: Its value can be read and not changed: the list still opens and can be gone through, but no press and no Enter chooses, nothing typed is taken, and its clear and chip buttons do nothing. Its value is still submitted.
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
-- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`), or the labels by value. With a `*kuiComboboxCollection` it is the list itself: the combobox filters it, and the collection draws what is left.
+- `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`), or the labels by value. With a `*kpComboboxCollection` it is the list itself: the combobox filters it, and the collection draws what is left.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed; `null` shows every item.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `multiple?: boolean`: Several values, each shown as a chip: they are `values`, not `value`.
@@ -1078,42 +1078,42 @@ Props of its root:
 - `inline?: boolean`: The list is always in the page, with no popup: a command palette.
 - `virtualized?: ListCollection`: Every row, when only some are in the page: each item is then given its `index`.
 - `autoHighlight?: boolean`: The first item shown for what was typed is highlighted as one types, so Enter chooses it. Off by default.
-- `mode?: "list" | "none"`: With `kuiAutocomplete`: `"none"` shows the suggestions as the caller draws them.
-- `openOnInputClick?: boolean`: With `kuiAutocomplete`: a press on the input opens the list.
+- `mode?: "list" | "none"`: With `kpAutocomplete`: `"none"` shows the suggestions as the caller draws them.
+- `openOnInputClick?: boolean`: With `kpAutocomplete`: a press on the input opens the list.
 - `(valueChanged): { value: Value | null; details: ChangeDetails }`: Heard as a value is about to be chosen or cleared: `details.cancel()` keeps it as it was.
 - `(inputValueChanged): { value: string; details: ChangeDetails }`: Heard as the input's text is about to change; `details.cancel()` keeps it as it was.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
-- `[kuiCombobox]` is `KuiCombobox`. `exportAs: "kuiCombobox"`. Generic: `<Value = unknown>`. `kuiAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
-- `input[kuiComboboxInput]` is `KuiComboboxInput`. `<input kuiComboboxInput>`: what is typed filters the list, which is placed against it.
-- `[kuiComboboxTrigger]` is `KuiComboboxTrigger`.
-- `[kuiComboboxValue]` is `KuiComboboxValue`. Structural: written `*kuiComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kuiComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. `<ng-container *kuiComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
+- `[kpCombobox]` is `KpCombobox`. `exportAs: "kpCombobox"`. Generic: `<Value = unknown>`. `kpAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
+- `input[kpComboboxInput]` is `KpComboboxInput`. `<input kpComboboxInput>`: what is typed filters the list, which is placed against it.
+- `[kpComboboxTrigger]` is `KpComboboxTrigger`.
+- `[kpComboboxValue]` is `KpComboboxValue`. Structural: written `*kpComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
     - `placeholder?: string`: Shown while nothing is chosen.
-- `[kuiComboboxClear]` is `KuiComboboxClear`. Structural: written `*kuiComboboxClear`. `<button *kuiComboboxClear>`: empties the input and the value; in the page while there is something to clear.
-- `[kuiComboboxChips]` is `KuiComboboxChips`. With `multiple`: what holds the chips and the input.
-- `[kuiComboboxChip]` is `KuiComboboxChip`. With `multiple`: one chosen value. Its `value` is what its remove button takes away.
+- `[kpComboboxClear]` is `KpComboboxClear`. Structural: written `*kpComboboxClear`. `<button *kpComboboxClear>`: empties the input and the value; in the page while there is something to clear.
+- `[kpComboboxChips]` is `KpComboboxChips`. With `multiple`: what holds the chips and the input.
+- `[kpComboboxChip]` is `KpComboboxChip`. With `multiple`: one chosen value. Its `value` is what its remove button takes away.
     - `value: unknown`: Required. The chosen value this chip stands for.
-- `[kuiComboboxChipRemove]` is `KuiComboboxChipRemove`.
-- `[kuiComboboxPortal]` is `KuiComboboxPortal`. Structural: written `*kuiComboboxPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiComboboxPositioner]` is `KuiComboboxPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiComboboxPopup]` is `KuiComboboxPopup`.
-- `[kuiComboboxList]` is `KuiComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
-- `[kuiComboboxCollection]` is `KuiComboboxCollection`. Structural: written `*kuiComboboxCollection`. Its template is given the entry: `let entry` is a `ComboboxEntry`. `<ng-container *kuiComboboxCollection="let entry">` draws the list from the root's `items`: once for each item left for what was typed, or for each group that has items left. With `of` (`*kuiComboboxCollection="let item; of: group"`), for each of that group's items left. The root then filters, and no item hides itself.
-    - `of?: ComboboxEntry`: Written after the directive's value: `*kuiComboboxCollection="…; of: …"`. A group the root's `items` gave: its items left are then what is drawn.
-- `[kuiComboboxGroup]` is `KuiComboboxGroup`. Items that belong together, named by their `kuiComboboxGroupLabel`. Hidden while none is shown.
-- `[kuiComboboxGroupLabel]` is `KuiComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
-- `[kuiComboboxSeparator]` is `KuiComboboxSeparator`. A line between groups.
-- `[kuiComboboxItem]` is `KuiComboboxItem`.
+- `[kpComboboxChipRemove]` is `KpComboboxChipRemove`.
+- `[kpComboboxPortal]` is `KpComboboxPortal`. Structural: written `*kpComboboxPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpComboboxPositioner]` is `KpComboboxPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpComboboxPopup]` is `KpComboboxPopup`.
+- `[kpComboboxList]` is `KpComboboxList`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
+- `[kpComboboxCollection]` is `KpComboboxCollection`. Structural: written `*kpComboboxCollection`. Its template is given the entry: `let entry` is a `ComboboxEntry`. `<ng-container *kpComboboxCollection="let entry">` draws the list from the root's `items`: once for each item left for what was typed, or for each group that has items left. With `of` (`*kpComboboxCollection="let item; of: group"`), for each of that group's items left. The root then filters, and no item hides itself.
+    - `of?: ComboboxEntry`: Written after the directive's value: `*kpComboboxCollection="…; of: …"`. A group the root's `items` gave: its items left are then what is drawn.
+- `[kpComboboxGroup]` is `KpComboboxGroup`. Items that belong together, named by their `kpComboboxGroupLabel`. Hidden while none is shown.
+- `[kpComboboxGroupLabel]` is `KpComboboxGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kpComboboxSeparator]` is `KpComboboxSeparator`. A line between groups.
+- `[kpComboboxItem]` is `KpComboboxItem`.
     - `value: unknown`: Required. What the combobox's value is while this item is chosen.
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What is filtered and what the input shows; the item's text when left out.
     - `index?: number`: Its place among all the rows, in a virtualized list.
-- `[kuiComboboxItemIndicator]` is `KuiComboboxItemIndicator`. Structural: written `*kuiComboboxItemIndicator`. `<span *kuiComboboxItemIndicator>`: in the page while its item is the chosen one.
-- `[kuiComboboxEmpty]` is `KuiComboboxEmpty`. Structural: written `*kuiComboboxEmpty`. `<div *kuiComboboxEmpty>`: in the page while no item is shown for what was typed.
-- `[kuiComboboxStatus]` is `KuiComboboxStatus`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. Keep it in the page and change what it holds: inside the popup, or beside the input.
-- `input[kuiComboboxHiddenInput]` is `KuiComboboxHiddenInput`. `<input kuiComboboxHiddenInput>`: submits the value with the form around it. Angular only.
+- `[kpComboboxItemIndicator]` is `KpComboboxItemIndicator`. Structural: written `*kpComboboxItemIndicator`. `<span *kpComboboxItemIndicator>`: in the page while its item is the chosen one.
+- `[kpComboboxEmpty]` is `KpComboboxEmpty`. Structural: written `*kpComboboxEmpty`. `<div *kpComboboxEmpty>`: in the page while no item is shown for what was typed.
+- `[kpComboboxStatus]` is `KpComboboxStatus`. Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. Keep it in the page and change what it holds: inside the popup, or beside the input.
+- `input[kpComboboxHiddenInput]` is `KpComboboxHiddenInput`. `<input kpComboboxHiddenInput>`: submits the value with the form around it. Angular only.
 
 Attributes and CSS variables, by part:
 
@@ -1157,22 +1157,22 @@ Attributes and CSS variables, by part:
 ### Command
 
 ```
-import { KuiCommand, KuiCommandInput, KuiCommandList, KuiCommandEmpty, KuiCommandGroup, KuiCommandGroupHeading, KuiCommandItem, KuiCommandSeparator } from "@kirana-ui/angular"
+import { KpCommand, KpCommandInput, KpCommandList, KpCommandEmpty, KpCommandGroup, KpCommandGroupHeading, KpCommandItem, KpCommandSeparator } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiCommand]`, `[kuiCommandInput]`, `[kuiCommandList]`, `[kuiCommandEmpty]`, `[kuiCommandGroup]`, `[kuiCommandGroupHeading]`, `[kuiCommandItem]`, `[kuiCommandSeparator]`.
+Parts: `[kpCommand]`, `[kpCommandInput]`, `[kpCommandList]`, `[kpCommandEmpty]`, `[kpCommandGroup]`, `[kpCommandGroupHeading]`, `[kpCommandItem]`, `[kpCommandSeparator]`.
 
 Anatomy:
 
 ```
-kuiCommand
-  kuiCommandInput
-  kuiCommandList
-    *kuiCommandEmpty
-    kuiCommandGroup (optional, repeated)
-      kuiCommandGroupHeading
-      kuiCommandItem (repeated)
-    kuiCommandSeparator (repeated)
+kpCommand
+  kpCommandInput
+  kpCommandList
+    *kpCommandEmpty
+    kpCommandGroup (optional, repeated)
+      kpCommandGroupHeading
+      kpCommandItem (repeated)
+    kpCommandSeparator (repeated)
 ```
 
 Props of its root:
@@ -1188,18 +1188,18 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiCommand]` is `KuiCommand`. `exportAs: "kuiCommand"`. Its props are above.
-- `[kuiCommandInput]` is `KuiCommandInput`.
-- `[kuiCommandList]` is `KuiCommandList`.
-- `[kuiCommandEmpty]` is `KuiCommandEmpty`. Structural: written `*kuiCommandEmpty`. `<div *kuiCommandEmpty>`: in the page while no item is shown for what was typed.
-- `[kuiCommandGroup]` is `KuiCommandGroup`. Items under a `kuiCommandGroupHeading`. Hidden while none of them is shown.
-- `[kuiCommandGroupHeading]` is `KuiCommandGroupHeading`. A group's name.
-- `[kuiCommandItem]` is `KuiCommandItem`.
+- `[kpCommand]` is `KpCommand`. `exportAs: "kpCommand"`. Its props are above.
+- `[kpCommandInput]` is `KpCommandInput`.
+- `[kpCommandList]` is `KpCommandList`.
+- `[kpCommandEmpty]` is `KpCommandEmpty`. Structural: written `*kpCommandEmpty`. `<div *kpCommandEmpty>`: in the page while no item is shown for what was typed.
+- `[kpCommandGroup]` is `KpCommandGroup`. Items under a `kpCommandGroupHeading`. Hidden while none of them is shown.
+- `[kpCommandGroupHeading]` is `KpCommandGroupHeading`. A group's name.
+- `[kpCommandItem]` is `KpCommandItem`.
     - `value: string`: Required. What `itemSelected` is told.
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What is filtered; the item's text when left out.
     - `keywords?: readonly string[]`: Other words the item answers to.
-- `[kuiCommandSeparator]` is `KuiCommandSeparator`. A line between groups: gone while something is typed, unless `alwaysRender`.
+- `[kpCommandSeparator]` is `KpCommandSeparator`. A line between groups: gone while something is typed, unless `alwaysRender`.
     - `alwaysRender?: boolean`: Stays while something is typed.
 
 Attributes and CSS variables, by part:
@@ -1217,33 +1217,33 @@ Attributes and CSS variables, by part:
 ### ContextMenu
 
 ```
-import { KuiMenu, KuiContextMenuTrigger, KuiMenuPortal, KuiMenuPositioner, KuiMenuPopup, KuiMenuArrow, KuiMenuItem, KuiMenuLinkItem, KuiMenuGroup, KuiMenuGroupLabel, KuiMenuSeparator, KuiMenuCheckboxItem, KuiMenuCheckboxItemIndicator, KuiMenuRadioGroup, KuiMenuRadioItem, KuiMenuRadioItemIndicator, KuiMenuSubmenuRoot, KuiMenuSubmenuTrigger } from "@kirana-ui/angular"
+import { KpMenu, KpContextMenuTrigger, KpMenuPortal, KpMenuPositioner, KpMenuPopup, KpMenuArrow, KpMenuItem, KpMenuLinkItem, KpMenuGroup, KpMenuGroupLabel, KpMenuSeparator, KpMenuCheckboxItem, KpMenuCheckboxItemIndicator, KpMenuRadioGroup, KpMenuRadioItem, KpMenuRadioItemIndicator, KpMenuSubmenuRoot, KpMenuSubmenuTrigger } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiContextMenu]`, `[kuiContextMenuTrigger]`, `[kuiMenuPortal]`, `[kuiMenuPositioner]`, `[kuiMenuPopup]`, `[kuiMenuArrow]`, `[kuiMenuItem]`, `a[kuiMenuLinkItem]`, `[kuiMenuGroup]`, `[kuiMenuGroupLabel]`, `[kuiMenuSeparator]`, `[kuiMenuCheckboxItem]`, `[kuiMenuCheckboxItemIndicator]`, `[kuiMenuRadioGroup]`, `[kuiMenuRadioItem]`, `[kuiMenuRadioItemIndicator]`, `[kuiMenuSubmenuRoot]`, `[kuiMenuSubmenuTrigger]`.
+Parts: `[kpContextMenu]`, `[kpContextMenuTrigger]`, `[kpMenuPortal]`, `[kpMenuPositioner]`, `[kpMenuPopup]`, `[kpMenuArrow]`, `[kpMenuItem]`, `a[kpMenuLinkItem]`, `[kpMenuGroup]`, `[kpMenuGroupLabel]`, `[kpMenuSeparator]`, `[kpMenuCheckboxItem]`, `[kpMenuCheckboxItemIndicator]`, `[kpMenuRadioGroup]`, `[kpMenuRadioItem]`, `[kpMenuRadioItemIndicator]`, `[kpMenuSubmenuRoot]`, `[kpMenuSubmenuTrigger]`.
 
 Anatomy:
 
 ```
-kuiContextMenu
-  kuiContextMenuTrigger
-  *kuiMenuPortal
-    kuiMenuPositioner
-      kuiMenuPopup
-        kuiMenuArrow
-        kuiMenuGroup (optional, repeated)
-          kuiMenuItem (repeated)
-          a[kuiMenuLinkItem] (repeated)
-          kuiMenuGroupLabel
-          kuiMenuCheckboxItem (repeated)
-            *kuiMenuCheckboxItemIndicator
-          kuiMenuRadioGroup (repeated)
-            kuiMenuRadioItem (repeated)
-              *kuiMenuRadioItemIndicator
-          kuiMenuSubmenuRoot (repeated)
-            *kuiMenuPortal (as above)
-            kuiMenuSubmenuTrigger
-        kuiMenuSeparator (repeated)
+kpContextMenu
+  kpContextMenuTrigger
+  *kpMenuPortal
+    kpMenuPositioner
+      kpMenuPopup
+        kpMenuArrow
+        kpMenuGroup (optional, repeated)
+          kpMenuItem (repeated)
+          a[kpMenuLinkItem] (repeated)
+          kpMenuGroupLabel
+          kpMenuCheckboxItem (repeated)
+            *kpMenuCheckboxItemIndicator
+          kpMenuRadioGroup (repeated)
+            kpMenuRadioItem (repeated)
+              *kpMenuRadioItemIndicator
+          kpMenuSubmenuRoot (repeated)
+            *kpMenuPortal (as above)
+            kpMenuSubmenuTrigger
+        kpMenuSeparator (repeated)
 ```
 
 Props of its root:
@@ -1257,50 +1257,50 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiContextMenu]` is `KuiMenu`. `exportAs: "kuiMenu"`. `kuiContextMenu` in place of `kuiMenu` is a menu for an area of the page, opened at the pointer: its trigger is `kuiContextMenuTrigger`, its other parts the menu's. Its props are above.
-- `[kuiContextMenuTrigger]` is `KuiContextMenuTrigger`. The area a secondary press, or a long press on a touch screen, opens a `kuiContextMenu` in.
-- `[kuiMenuPortal]` is `KuiMenuPortal`. Structural: written `*kuiMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiMenuPositioner]` is `KuiMenuPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiMenuPopup]` is `KuiMenuPopup`.
-- `[kuiMenuArrow]` is `KuiMenuArrow`.
-- `[kuiMenuItem]` is `KuiMenuItem`.
+- `[kpContextMenu]` is `KpMenu`. `exportAs: "kpMenu"`. `kpContextMenu` in place of `kpMenu` is a menu for an area of the page, opened at the pointer: its trigger is `kpContextMenuTrigger`, its other parts the menu's. Its props are above.
+- `[kpContextMenuTrigger]` is `KpContextMenuTrigger`. The area a secondary press, or a long press on a touch screen, opens a `kpContextMenu` in.
+- `[kpMenuPortal]` is `KpMenuPortal`. Structural: written `*kpMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpMenuPositioner]` is `KpMenuPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpMenuPopup]` is `KpMenuPopup`.
+- `[kpMenuArrow]` is `KpMenuArrow`.
+- `[kpMenuItem]` is `KpMenuItem`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
-- `a[kuiMenuLinkItem]` is `KuiMenuLinkItem`. `<a kuiMenuLinkItem href="…">`: an item that is a link.
+- `a[kpMenuLinkItem]` is `KpMenuLinkItem`. `<a kpMenuLinkItem href="…">`: an item that is a link.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
-- `[kuiMenuGroup]` is `KuiMenuGroup`. Items that belong together, named by their label.
-- `[kuiMenuGroupLabel]` is `KuiMenuGroupLabel`. Names the group it is in. With no group around it, it is plain text.
-- `[kuiMenuSeparator]` is `KuiMenuSeparator`. A line between items.
-- `[kuiMenuCheckboxItem]` is `KuiMenuCheckboxItem`. `exportAs: "kuiMenuCheckboxItem"`.
+- `[kpMenuGroup]` is `KpMenuGroup`. Items that belong together, named by their label.
+- `[kpMenuGroupLabel]` is `KpMenuGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kpMenuSeparator]` is `KpMenuSeparator`. A line between items.
+- `[kpMenuCheckboxItem]` is `KpMenuCheckboxItem`. `exportAs: "kpMenuCheckboxItem"`.
     - `[(checked)]: boolean`: Whether the item is checked, when the caller holds it.
     - `defaultChecked?: boolean`: Whether the item starts checked, when the caller does not hold `checked`. Read once.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
     - `(checkedChanged): { checked: boolean; details: ChangeDetails }`: Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
-- `[kuiMenuCheckboxItemIndicator]` is `KuiMenuCheckboxItemIndicator`. Structural: written `*kuiMenuCheckboxItemIndicator`. `<span *kuiMenuCheckboxItemIndicator>`: in the page while its item is checked.
-- `[kuiMenuRadioGroup]` is `KuiMenuRadioGroup`. `exportAs: "kuiMenuRadioGroup"`. Generic: `<Value = unknown>`.
+- `[kpMenuCheckboxItemIndicator]` is `KpMenuCheckboxItemIndicator`. Structural: written `*kpMenuCheckboxItemIndicator`. `<span *kpMenuCheckboxItemIndicator>`: in the page while its item is checked.
+- `[kpMenuRadioGroup]` is `KpMenuRadioGroup`. `exportAs: "kpMenuRadioGroup"`. Generic: `<Value = unknown>`.
     - `[(value)]: Value | null`: The chosen value; `null` is "none".
     - `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
     - `disabled?: boolean`: Disables every item of the group.
     - `(valueChanged): { value: Value; details: ChangeDetails }`: Told an item's own value, never `null`: a press chooses, and nothing takes the choice back.
-- `[kuiMenuRadioItem]` is `KuiMenuRadioItem`.
+- `[kpMenuRadioItem]` is `KpMenuRadioItem`.
     - `value: unknown`: Required. What the radio group's value is while this item is the chosen one.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
-- `[kuiMenuRadioItemIndicator]` is `KuiMenuRadioItemIndicator`. Structural: written `*kuiMenuRadioItemIndicator`. `<span *kuiMenuRadioItemIndicator>`: in the page while its item is the chosen one.
-- `[kuiMenuSubmenuRoot]` is `KuiMenuSubmenuRoot`. `exportAs: "kuiMenuSubmenuRoot"`. A menu that one of this menu's items opens. Its trigger is `kuiMenuSubmenuTrigger`.
+- `[kpMenuRadioItemIndicator]` is `KpMenuRadioItemIndicator`. Structural: written `*kpMenuRadioItemIndicator`. `<span *kpMenuRadioItemIndicator>`: in the page while its item is the chosen one.
+- `[kpMenuSubmenuRoot]` is `KpMenuSubmenuRoot`. `exportAs: "kpMenuSubmenuRoot"`. A menu that one of this menu's items opens. Its trigger is `kpMenuSubmenuTrigger`.
     - `[(open)]: boolean`: Whether it is open, when the caller holds it.
     - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
     - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
     - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
     - `modal?: boolean`: Holds the page while the menu is open. Not for a submenu.
     - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
-- `[kuiMenuSubmenuTrigger]` is `KuiMenuSubmenuTrigger`. On the item of a menu that opens the submenu around it (`kuiMenuSubmenuRoot`).
+- `[kpMenuSubmenuTrigger]` is `KpMenuSubmenuTrigger`. On the item of a menu that opens the submenu around it (`kpMenuSubmenuRoot`).
 
 Attributes and CSS variables, by part:
 
@@ -1359,18 +1359,18 @@ Attributes and CSS variables, by part:
 ### DateField
 
 ```
-import { KuiDateField, KuiDateFieldSegments, KuiDateFieldSegment, KuiDateFieldInput } from "@kirana-ui/angular"
+import { KpDateField, KpDateFieldSegments, KpDateFieldSegment, KpDateFieldInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDateField]`, `[kuiDateFieldSegments]`, `[kuiDateFieldSegment]`, `input[kuiDateFieldInput]`.
+Parts: `[kpDateField]`, `[kpDateFieldSegments]`, `[kpDateFieldSegment]`, `input[kpDateFieldInput]`.
 
 Anatomy:
 
 ```
-kuiDateField
-  *kuiDateFieldSegments
-    kuiDateFieldSegment (repeated)
-  input[kuiDateFieldInput]
+kpDateField
+  *kpDateFieldSegments
+    kpDateFieldSegment (repeated)
+  input[kpDateFieldInput]
 ```
 
 Props of its root:
@@ -1390,11 +1390,11 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiDateField]` is `KuiDateField`. `exportAs: "kuiDateField"`. Its props are above.
-- `[kuiDateFieldSegments]` is `KuiDateFieldSegments`. Structural: written `*kuiDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kuiDateFieldSegments="let segment">`: once for each piece of the date.
-- `[kuiDateFieldSegment]` is `KuiDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
+- `[kpDateField]` is `KpDateField`. `exportAs: "kpDateField"`. Its props are above.
+- `[kpDateFieldSegments]` is `KpDateFieldSegments`. Structural: written `*kpDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kpDateFieldSegments="let segment">`: once for each piece of the date.
+- `[kpDateFieldSegment]` is `KpDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
     - `segment: DateFieldSegment`: Required. The piece it is: an entry `DateField.Segments` gave.
-- `input[kuiDateFieldInput]` is `KuiDateFieldInput`. `<input kuiDateFieldInput>`: the hidden input it is submitted by.
+- `input[kpDateFieldInput]` is `KpDateFieldInput`. `<input kpDateFieldInput>`: the hidden input it is submitted by.
 
 Attributes and CSS variables, by part:
 
@@ -1411,34 +1411,34 @@ Attributes and CSS variables, by part:
 ### DatePicker
 
 ```
-import { KuiDatePicker, KuiDatePickerField, KuiDateFieldSegments, KuiDateFieldSegment, KuiDateFieldInput, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverPositioner, KuiPopoverPopup, KuiDatePickerCalendar, KuiCalendarHeading, KuiCalendarPrevious, KuiCalendarNext, KuiCalendarMonths, KuiCalendarGrid, KuiCalendarWeekdays, KuiCalendarHeadCell, KuiCalendarWeeks, KuiCalendarCell, KuiCalendarDay } from "@kirana-ui/angular"
+import { KpDatePicker, KpDatePickerField, KpDateFieldSegments, KpDateFieldSegment, KpDateFieldInput, KpPopoverTrigger, KpPopoverPortal, KpPopoverPositioner, KpPopoverPopup, KpDatePickerCalendar, KpCalendarHeading, KpCalendarPrevious, KpCalendarNext, KpCalendarMonths, KpCalendarGrid, KpCalendarWeekdays, KpCalendarHeadCell, KpCalendarWeeks, KpCalendarCell, KpCalendarDay } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDatePicker]`, `[kuiDatePickerField]`, `[kuiDateFieldSegments]`, `[kuiDateFieldSegment]`, `input[kuiDateFieldInput]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiDatePickerCalendar]`, `[kuiCalendarHeading]`, `[kuiCalendarPrevious]`, `[kuiCalendarNext]`, `[kuiCalendarMonths]`, `[kuiCalendarGrid]`, `[kuiCalendarWeekdays]`, `[kuiCalendarHeadCell]`, `[kuiCalendarWeeks]`, `[kuiCalendarCell]`, `[kuiCalendarDay]`.
+Parts: `[kpDatePicker]`, `[kpDatePickerField]`, `[kpDateFieldSegments]`, `[kpDateFieldSegment]`, `input[kpDateFieldInput]`, `[kpPopoverTrigger]`, `[kpPopoverPortal]`, `[kpPopoverPositioner]`, `[kpPopoverPopup]`, `[kpDatePickerCalendar]`, `[kpCalendarHeading]`, `[kpCalendarPrevious]`, `[kpCalendarNext]`, `[kpCalendarMonths]`, `[kpCalendarGrid]`, `[kpCalendarWeekdays]`, `[kpCalendarHeadCell]`, `[kpCalendarWeeks]`, `[kpCalendarCell]`, `[kpCalendarDay]`.
 
 Anatomy:
 
 ```
-kuiDatePicker
-  kuiDatePickerField
-    *kuiDateFieldSegments
-      kuiDateFieldSegment (repeated)
-    input[kuiDateFieldInput]
-  kuiPopoverTrigger
-  *kuiPopoverPortal
-    kuiPopoverPositioner
-      kuiPopoverPopup
-        kuiDatePickerCalendar
-          *kuiCalendarMonths (optional)
-            kuiCalendarHeading
-            kuiCalendarGrid
-              *kuiCalendarWeekdays
-                kuiCalendarHeadCell (repeated)
-              *kuiCalendarWeeks
-                kuiCalendarCell (repeated)
-                  kuiCalendarDay
-          kuiCalendarPrevious
-          kuiCalendarNext
+kpDatePicker
+  kpDatePickerField
+    *kpDateFieldSegments
+      kpDateFieldSegment (repeated)
+    input[kpDateFieldInput]
+  kpPopoverTrigger
+  *kpPopoverPortal
+    kpPopoverPositioner
+      kpPopoverPopup
+        kpDatePickerCalendar
+          *kpCalendarMonths (optional)
+            kpCalendarHeading
+            kpCalendarGrid
+              *kpCalendarWeekdays
+                kpCalendarHeadCell (repeated)
+              *kpCalendarWeeks
+                kpCalendarCell (repeated)
+                  kpCalendarDay
+          kpCalendarPrevious
+          kpCalendarNext
 ```
 
 Props of its root:
@@ -1469,32 +1469,32 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiDatePicker]` is `KuiDatePicker`. `exportAs: "kuiDatePicker"`. A date field, and a calendar in a popover, with one value between them. On any element, or on `<ng-container>` to draw none. Inside it the date field's, the popover's and the calendar's own directives are its parts (`kuiDateFieldSegments`, `kuiPopoverTrigger`, `kuiCalendarGrid` …), with `kuiDatePickerField` and `kuiDatePickerCalendar` for the two elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows, `[(month)]` the first day of the month it shows. Its props are above.
-- `[kuiDatePickerField]` is `KuiDatePickerField`. The typed date: what holds its segments and its hidden input.
-- `[kuiDateFieldSegments]` is `KuiDateFieldSegments`. Structural: written `*kuiDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kuiDateFieldSegments="let segment">`: once for each piece of the date.
-- `[kuiDateFieldSegment]` is `KuiDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
+- `[kpDatePicker]` is `KpDatePicker`. `exportAs: "kpDatePicker"`. A date field, and a calendar in a popover, with one value between them. On any element, or on `<ng-container>` to draw none. Inside it the date field's, the popover's and the calendar's own directives are its parts (`kpDateFieldSegments`, `kpPopoverTrigger`, `kpCalendarGrid` …), with `kpDatePickerField` and `kpDatePickerCalendar` for the two elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows, `[(month)]` the first day of the month it shows. Its props are above.
+- `[kpDatePickerField]` is `KpDatePickerField`. The typed date: what holds its segments and its hidden input.
+- `[kpDateFieldSegments]` is `KpDateFieldSegments`. Structural: written `*kpDateFieldSegments`. Its template is given the entry: `let entry` is a `DateFieldSegment`. `<span *kpDateFieldSegments="let segment">`: once for each piece of the date.
+- `[kpDateFieldSegment]` is `KpDateFieldSegment`. One piece: a part that is typed, or what stands between two. It writes its own text.
     - `segment: DateFieldSegment`: Required. The piece it is: an entry `DateField.Segments` gave.
-- `input[kuiDateFieldInput]` is `KuiDateFieldInput`. `<input kuiDateFieldInput>`: the hidden input it is submitted by.
-- `[kuiPopoverTrigger]` is `KuiPopoverTrigger`.
+- `input[kpDateFieldInput]` is `KpDateFieldInput`. `<input kpDateFieldInput>`: the hidden input it is submitted by.
+- `[kpPopoverTrigger]` is `KpPopoverTrigger`.
     - `openOnHover?: boolean`: Whether the pointer resting on the trigger opens the popover too. A press and the keyboard still open it, and a press on one the pointer opened keeps it open. Default `false`.
     - `delay?: number`: How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300.
     - `closeDelay?: number`: How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0.
-- `[kuiPopoverPortal]` is `KuiPopoverPortal`. Structural: written `*kuiPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiPopoverPositioner]` is `KuiPopoverPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiPopoverPopup]` is `KuiPopoverPopup`.
-- `[kuiDatePickerCalendar]` is `KuiDatePickerCalendar`. The calendar: what holds its heading, its buttons and its grid.
-- `[kuiCalendarHeading]` is `KuiCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
-- `[kuiCalendarPrevious]` is `KuiCalendarPrevious`.
-- `[kuiCalendarNext]` is `KuiCalendarNext`.
-- `[kuiCalendarMonths]` is `KuiCalendarMonths`. Structural: written `*kuiCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kuiCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
-- `[kuiCalendarGrid]` is `KuiCalendarGrid`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
-- `[kuiCalendarWeekdays]` is `KuiCalendarWeekdays`. Structural: written `*kuiCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week.
-- `[kuiCalendarHeadCell]` is `KuiCalendarHeadCell`. A column's heading: a day of the week.
+- `[kpPopoverPortal]` is `KpPopoverPortal`. Structural: written `*kpPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpPopoverPositioner]` is `KpPopoverPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpPopoverPopup]` is `KpPopoverPopup`.
+- `[kpDatePickerCalendar]` is `KpDatePickerCalendar`. The calendar: what holds its heading, its buttons and its grid.
+- `[kpCalendarHeading]` is `KpCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
+- `[kpCalendarPrevious]` is `KpCalendarPrevious`.
+- `[kpCalendarNext]` is `KpCalendarNext`.
+- `[kpCalendarMonths]` is `KpCalendarMonths`. Structural: written `*kpCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kpCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
+- `[kpCalendarGrid]` is `KpCalendarGrid`. The table of a month's days: a grid the arrows move in, from one month shown into the next.
+- `[kpCalendarWeekdays]` is `KpCalendarWeekdays`. Structural: written `*kpCalendarWeekdays`. Its template is given the entry: `let entry` is a `CalendarWeekday`. `<th *kpCalendarWeekdays="let weekday">`: once for each day of the week.
+- `[kpCalendarHeadCell]` is `KpCalendarHeadCell`. A column's heading: a day of the week.
     - `weekday: CalendarWeekday`: Required. The day of the week it heads: an entry `Calendar.Weekdays` gave.
-- `[kuiCalendarWeeks]` is `KuiCalendarWeeks`. Structural: written `*kuiCalendarWeeks`. Its template is given the entry: `let entry` is a `readonly CalendarDay[]`. `<tr *kuiCalendarWeeks="let week">`: once for each week of the month shown.
-- `[kuiCalendarCell]` is `KuiCalendarCell`.
+- `[kpCalendarWeeks]` is `KpCalendarWeeks`. Structural: written `*kpCalendarWeeks`. Its template is given the entry: `let entry` is a `readonly CalendarDay[]`. `<tr *kpCalendarWeeks="let week">`: once for each week of the month shown.
+- `[kpCalendarCell]` is `KpCalendarCell`.
     - `date: string`: Required. The day it holds, as `Calendar.Weeks` gave it: `day.date`.
-- `[kuiCalendarDay]` is `KuiCalendarDay`.
+- `[kpCalendarDay]` is `KpCalendarDay`.
     - `date: string`: Required. The day it is the button of, as `Calendar.Weeks` gave it: `day.date`.
 
 Attributes and CSS variables, by part:
@@ -1554,23 +1554,23 @@ Attributes and CSS variables, by part:
 ### Dialog
 
 ```
-import { KuiDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogViewport, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
+import { KpDialog, KpDialogTrigger, KpDialogPortal, KpDialogBackdrop, KpDialogViewport, KpDialogPopup, KpDialogTitle, KpDialogDescription, KpDialogClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDialog]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogViewport]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+Parts: `[kpDialog]`, `[kpDialogTrigger]`, `[kpDialogPortal]`, `[kpDialogBackdrop]`, `[kpDialogViewport]`, `[kpDialogPopup]`, `[kpDialogTitle]`, `[kpDialogDescription]`, `[kpDialogClose]`.
 
 Anatomy:
 
 ```
-kuiDialog
-  kuiDialogTrigger
-  *kuiDialogPortal
-    kuiDialogBackdrop
-    kuiDialogViewport (optional)
-      kuiDialogPopup
-        kuiDialogTitle
-        kuiDialogDescription
-        kuiDialogClose
+kpDialog
+  kpDialogTrigger
+  *kpDialogPortal
+    kpDialogBackdrop
+    kpDialogViewport (optional)
+      kpDialogPopup
+        kpDialogTitle
+        kpDialogDescription
+        kpDialogClose
 ```
 
 Props of its root:
@@ -1579,24 +1579,24 @@ Props of its root:
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
-- `swipeDirection?: DrawerSide`: With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`.
-- `snapPoints?: readonly DrawerSnapPoint[]`: With `kuiDrawer`: places it rests at, each the share of itself that shows.
-- `[(snapPoint)]: DrawerSnapPoint`: With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`.
-- `defaultSnapPoint?: DrawerSnapPoint`: With `kuiDrawer`: where it opens. Default: the smallest.
-- `(snapPointChanged): { snapPoint: DrawerSnapPoint; details: ChangeDetails }`: With `kuiDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps it where it was.
+- `swipeDirection?: DrawerSide`: With `kpDrawer`: the way it is dragged to close it. Default: `"down"`.
+- `snapPoints?: readonly DrawerSnapPoint[]`: With `kpDrawer`: places it rests at, each the share of itself that shows.
+- `[(snapPoint)]: DrawerSnapPoint`: With `kpDrawer`: which of them it rests at, `[(snapPoint)]`.
+- `defaultSnapPoint?: DrawerSnapPoint`: With `kpDrawer`: where it opens. Default: the smallest.
+- `(snapPointChanged): { snapPoint: DrawerSnapPoint; details: ChangeDetails }`: With `kpDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps it where it was.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
-- `[kuiDialog]` is `KuiDialog`. `exportAs: "kuiDialog"`. On any element, or on `<ng-container>` to draw none. `kuiDrawer` in place of `kuiDialog` is a dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a dialog's (`kuiDialogPopup` …). An alert dialog has a root of its own, `kuiAlertDialog`. Its props are above.
-- `[kuiDialogTrigger]` is `KuiDialogTrigger`.
-- `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
-- `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
-- `[kuiDialogViewport]` is `KuiDialogViewport`. What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert dialog's; a drawer lies at an edge of the page and has none.
-- `[kuiDialogPopup]` is `KuiDialogPopup`.
-- `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
-- `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
-- `[kuiDialogClose]` is `KuiDialogClose`. A button that closes the dialog.
+- `[kpDialog]` is `KpDialog`. `exportAs: "kpDialog"`. On any element, or on `<ng-container>` to draw none. `kpDrawer` in place of `kpDialog` is a dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a dialog's (`kpDialogPopup` …). An alert dialog has a root of its own, `kpAlertDialog`. Its props are above.
+- `[kpDialogTrigger]` is `KpDialogTrigger`.
+- `[kpDialogPortal]` is `KpDialogPortal`. Structural: written `*kpDialogPortal`. `<ng-template kpDialogPortal>` or `*kpDialogPortal`: its content at the end of the page while open.
+- `[kpDialogBackdrop]` is `KpDialogBackdrop`.
+- `[kpDialogViewport]` is `KpDialogViewport`. What a long dialog scrolls in, around its popup: it may be left out. A dialog's and an alert dialog's; a drawer lies at an edge of the page and has none.
+- `[kpDialogPopup]` is `KpDialogPopup`.
+- `[kpDialogTitle]` is `KpDialogTitle`. The heading that names the dialog.
+- `[kpDialogDescription]` is `KpDialogDescription`. The text that describes the dialog.
+- `[kpDialogClose]` is `KpDialogClose`. A button that closes the dialog.
 
 Attributes and CSS variables, by part:
 
@@ -1625,22 +1625,22 @@ Attributes and CSS variables, by part:
 ### Drawer
 
 ```
-import { KuiDialog, KuiDialogTrigger, KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup, KuiDialogTitle, KuiDialogDescription, KuiDialogClose } from "@kirana-ui/angular"
+import { KpDialog, KpDialogTrigger, KpDialogPortal, KpDialogBackdrop, KpDialogPopup, KpDialogTitle, KpDialogDescription, KpDialogClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiDrawer]`, `[kuiDialogTrigger]`, `[kuiDialogPortal]`, `[kuiDialogBackdrop]`, `[kuiDialogPopup]`, `[kuiDialogTitle]`, `[kuiDialogDescription]`, `[kuiDialogClose]`.
+Parts: `[kpDrawer]`, `[kpDialogTrigger]`, `[kpDialogPortal]`, `[kpDialogBackdrop]`, `[kpDialogPopup]`, `[kpDialogTitle]`, `[kpDialogDescription]`, `[kpDialogClose]`.
 
 Anatomy:
 
 ```
-kuiDrawer
-  kuiDialogTrigger
-  *kuiDialogPortal
-    kuiDialogBackdrop
-    kuiDialogPopup
-      kuiDialogTitle
-      kuiDialogDescription
-      kuiDialogClose
+kpDrawer
+  kpDialogTrigger
+  *kpDialogPortal
+    kpDialogBackdrop
+    kpDialogPopup
+      kpDialogTitle
+      kpDialogDescription
+      kpDialogClose
 ```
 
 Props of its root:
@@ -1649,23 +1649,23 @@ Props of its root:
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
-- `swipeDirection?: DrawerSide`: With `kuiDrawer`: the way it is dragged to close it. Default: `"down"`.
-- `snapPoints?: readonly DrawerSnapPoint[]`: With `kuiDrawer`: places it rests at, each the share of itself that shows.
-- `[(snapPoint)]: DrawerSnapPoint`: With `kuiDrawer`: which of them it rests at, `[(snapPoint)]`.
-- `defaultSnapPoint?: DrawerSnapPoint`: With `kuiDrawer`: where it opens. Default: the smallest.
-- `(snapPointChanged): { snapPoint: DrawerSnapPoint; details: ChangeDetails }`: With `kuiDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps it where it was.
+- `swipeDirection?: DrawerSide`: With `kpDrawer`: the way it is dragged to close it. Default: `"down"`.
+- `snapPoints?: readonly DrawerSnapPoint[]`: With `kpDrawer`: places it rests at, each the share of itself that shows.
+- `[(snapPoint)]: DrawerSnapPoint`: With `kpDrawer`: which of them it rests at, `[(snapPoint)]`.
+- `defaultSnapPoint?: DrawerSnapPoint`: With `kpDrawer`: where it opens. Default: the smallest.
+- `(snapPointChanged): { snapPoint: DrawerSnapPoint; details: ChangeDetails }`: With `kpDrawer`: heard as it is about to rest at another snap point; `details.cancel()` keeps it where it was.
 - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
-- `[kuiDrawer]` is `KuiDialog`. `exportAs: "kuiDialog"`. On any element, or on `<ng-container>` to draw none. `kuiDrawer` in place of `kuiDialog` is a dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a dialog's (`kuiDialogPopup` …). An alert dialog has a root of its own, `kuiAlertDialog`. Its props are above.
-- `[kuiDialogTrigger]` is `KuiDialogTrigger`.
-- `[kuiDialogPortal]` is `KuiDialogPortal`. Structural: written `*kuiDialogPortal`. `<ng-template kuiDialogPortal>` or `*kuiDialogPortal`: its content at the end of the page while open.
-- `[kuiDialogBackdrop]` is `KuiDialogBackdrop`.
-- `[kuiDialogPopup]` is `KuiDialogPopup`.
-- `[kuiDialogTitle]` is `KuiDialogTitle`. The heading that names the dialog.
-- `[kuiDialogDescription]` is `KuiDialogDescription`. The text that describes the dialog.
-- `[kuiDialogClose]` is `KuiDialogClose`. A button that closes the dialog.
+- `[kpDrawer]` is `KpDialog`. `exportAs: "kpDialog"`. On any element, or on `<ng-container>` to draw none. `kpDrawer` in place of `kpDialog` is a dialog that comes from an edge and is dragged back to it (`swipeDirection`): its parts are a dialog's (`kpDialogPopup` …). An alert dialog has a root of its own, `kpAlertDialog`. Its props are above.
+- `[kpDialogTrigger]` is `KpDialogTrigger`.
+- `[kpDialogPortal]` is `KpDialogPortal`. Structural: written `*kpDialogPortal`. `<ng-template kpDialogPortal>` or `*kpDialogPortal`: its content at the end of the page while open.
+- `[kpDialogBackdrop]` is `KpDialogBackdrop`.
+- `[kpDialogPopup]` is `KpDialogPopup`.
+- `[kpDialogTitle]` is `KpDialogTitle`. The heading that names the dialog.
+- `[kpDialogDescription]` is `KpDialogDescription`. The text that describes the dialog.
+- `[kpDialogClose]` is `KpDialogClose`. A button that closes the dialog.
 
 Attributes and CSS variables, by part:
 
@@ -1707,20 +1707,20 @@ Attributes and CSS variables, by part:
 ### Field
 
 ```
-import { KuiField, KuiFieldLabel, KuiFieldControl, KuiFieldDescription, KuiFieldError, KuiFieldValidity } from "@kirana-ui/angular"
+import { KpField, KpFieldLabel, KpFieldControl, KpFieldDescription, KpFieldError, KpFieldValidity } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiField]`, `[kuiFieldLabel]`, `[kuiFieldControl]`, `[kuiFieldDescription]`, `[kuiFieldError]`, `[kuiFieldValidity]`.
+Parts: `[kpField]`, `[kpFieldLabel]`, `[kpFieldControl]`, `[kpFieldDescription]`, `[kpFieldError]`, `[kpFieldValidity]`.
 
 Anatomy:
 
 ```
-kuiField
-  kuiFieldLabel
-  kuiFieldControl
-  kuiFieldDescription
-  *kuiFieldError
-  *kuiFieldValidity
+kpField
+  kpFieldLabel
+  kpFieldControl
+  kpFieldDescription
+  *kpFieldError
+  *kpFieldValidity
 ```
 
 Props of its root:
@@ -1734,13 +1734,13 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiField]` is `KuiField`. `exportAs: "kuiField"`. Its props are above.
-- `[kuiFieldLabel]` is `KuiFieldLabel`.
-- `[kuiFieldControl]` is `KuiFieldControl`. On the control: an `<input>`, a `<textarea>` or a `<select>`.
-- `[kuiFieldDescription]` is `KuiFieldDescription`.
-- `[kuiFieldError]` is `KuiFieldError`. Structural: written `*kuiFieldError`. `<div *kuiFieldError>`: in the page while something is wrong, with the message as its text unless it has content of its own. `*kuiFieldError="'valueMissing'"` shows for only that finding of the browser's, `*kuiFieldError="true"` always.
-    - `*kuiFieldError: ValidityKey | boolean | ""`: The directive's own value: `*kuiFieldError="…"`. One of the browser's findings (`"valueMissing"`) to show for only that; `true` to show always.
-- `[kuiFieldValidity]` is `KuiFieldValidity`. Structural: written `*kuiFieldValidity`. Its template is given the entry: `let entry` is a `FieldValidity`. `<ng-container *kuiFieldValidity="let validity">`: draws its template with the field's validity.
+- `[kpField]` is `KpField`. `exportAs: "kpField"`. Its props are above.
+- `[kpFieldLabel]` is `KpFieldLabel`.
+- `[kpFieldControl]` is `KpFieldControl`. On the control: an `<input>`, a `<textarea>` or a `<select>`.
+- `[kpFieldDescription]` is `KpFieldDescription`.
+- `[kpFieldError]` is `KpFieldError`. Structural: written `*kpFieldError`. `<div *kpFieldError>`: in the page while something is wrong, with the message as its text unless it has content of its own. `*kpFieldError="'valueMissing'"` shows for only that finding of the browser's, `*kpFieldError="true"` always.
+    - `*kpFieldError: ValidityKey | boolean | ""`: The directive's own value: `*kpFieldError="…"`. One of the browser's findings (`"valueMissing"`) to show for only that; `true` to show always.
+- `[kpFieldValidity]` is `KpFieldValidity`. Structural: written `*kpFieldValidity`. Its template is given the entry: `let entry` is a `FieldValidity`. `<ng-container *kpFieldValidity="let validity">`: draws its template with the field's validity.
 
 Attributes and CSS variables, by part:
 
@@ -1790,16 +1790,16 @@ Attributes and CSS variables, by part:
 ### Fieldset
 
 ```
-import { KuiFieldset, KuiFieldsetLegend } from "@kirana-ui/angular"
+import { KpFieldset, KpFieldsetLegend } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiFieldset]`, `[kuiFieldsetLegend]`.
+Parts: `[kpFieldset]`, `[kpFieldsetLegend]`.
 
 Anatomy:
 
 ```
-kuiFieldset
-  kuiFieldsetLegend
+kpFieldset
+  kpFieldsetLegend
 ```
 
 Props of its root:
@@ -1808,8 +1808,8 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiFieldset]` is `KuiFieldset`. `exportAs: "kuiFieldset"`. Its props are above.
-- `[kuiFieldsetLegend]` is `KuiFieldsetLegend`.
+- `[kpFieldset]` is `KpFieldset`. `exportAs: "kpFieldset"`. Its props are above.
+- `[kpFieldsetLegend]` is `KpFieldsetLegend`.
 
 Attributes and CSS variables, by part:
 
@@ -1821,7 +1821,7 @@ Attributes and CSS variables, by part:
 ### Form
 
 ```
-import { KuiForm } from "@kirana-ui/angular"
+import { KpForm } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -1831,25 +1831,25 @@ Props:
 - `(formSubmit): { values: FormValues; details: ChangeDetails }`: Every field is valid. Given this, the page is not left: the values come as an object. Without it, the form submits as a form does.
 - `(clearErrors): FormErrors`: A field's value changed while it showed one of `errors`: what is left of them.
 
-`form[kuiForm]` is `KuiForm`. `exportAs: "kuiForm"`. On a `<form>`: its fields say what is wrong, and `(formSubmit)` gives the values once all are valid. As with Angular's own forms, the page is left only when the form has an `action`.
+`form[kpForm]` is `KpForm`. `exportAs: "kpForm"`. On a `<form>`: its fields say what is wrong, and `(formSubmit)` gives the values once all are valid. As with Angular's own forms, the page is left only when the form has an `action`.
 
 ### HoverCard
 
 ```
-import { KuiHoverCard, KuiHoverCardTrigger, KuiHoverCardPortal, KuiHoverCardPositioner, KuiHoverCardPopup, KuiHoverCardArrow } from "@kirana-ui/angular"
+import { KpHoverCard, KpHoverCardTrigger, KpHoverCardPortal, KpHoverCardPositioner, KpHoverCardPopup, KpHoverCardArrow } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiHoverCard]`, `[kuiHoverCardTrigger]`, `[kuiHoverCardPortal]`, `[kuiHoverCardPositioner]`, `[kuiHoverCardPopup]`, `[kuiHoverCardArrow]`.
+Parts: `[kpHoverCard]`, `[kpHoverCardTrigger]`, `[kpHoverCardPortal]`, `[kpHoverCardPositioner]`, `[kpHoverCardPopup]`, `[kpHoverCardArrow]`.
 
 Anatomy:
 
 ```
-kuiHoverCard
-  kuiHoverCardTrigger
-  *kuiHoverCardPortal
-    kuiHoverCardPositioner
-      kuiHoverCardPopup
-        kuiHoverCardArrow
+kpHoverCard
+  kpHoverCardTrigger
+  *kpHoverCardPortal
+    kpHoverCardPositioner
+      kpHoverCardPopup
+        kpHoverCardArrow
 ```
 
 Props of its root:
@@ -1863,14 +1863,14 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiHoverCard]` is `KuiHoverCard`. `exportAs: "kuiHoverCard"`. On any element, or on `<ng-container>` to draw none. Its props are above.
-- `[kuiHoverCardTrigger]` is `KuiHoverCardTrigger`.
+- `[kpHoverCard]` is `KpHoverCard`. `exportAs: "kpHoverCard"`. On any element, or on `<ng-container>` to draw none. Its props are above.
+- `[kpHoverCardTrigger]` is `KpHoverCardTrigger`.
     - `delay?: number`: Its own waits, which come before the root's.
     - `closeDelay?: number`: How long after the pointer leaves this trigger's popup closes, in milliseconds.
-- `[kuiHoverCardPortal]` is `KuiHoverCardPortal`. Structural: written `*kuiHoverCardPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiHoverCardPositioner]` is `KuiHoverCardPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiHoverCardPopup]` is `KuiHoverCardPopup`.
-- `[kuiHoverCardArrow]` is `KuiHoverCardArrow`.
+- `[kpHoverCardPortal]` is `KpHoverCardPortal`. Structural: written `*kpHoverCardPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpHoverCardPositioner]` is `KpHoverCardPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpHoverCardPopup]` is `KpHoverCardPopup`.
+- `[kpHoverCardArrow]` is `KpHoverCardArrow`.
 
 Attributes and CSS variables, by part:
 
@@ -1902,7 +1902,7 @@ Attributes and CSS variables, by part:
 ### Input
 
 ```
-import { KuiInput } from "@kirana-ui/angular"
+import { KpInput } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -1910,7 +1910,7 @@ Props:
 - `disabled?: boolean`: Disabled: nothing can be typed in it.
 - `(valueChanged): { value: string; details: ChangeDetails }`: What was typed, as text, each time it changes.
 
-`[kuiInput]` is `KuiInput`. `exportAs: "kuiInput"`. `<input kuiInput>` or `<textarea kuiInput>`: it says its state, and inside a `kuiField` it is the field's control. Its value is the element's own (`[value]`, `ngModel`).
+`[kpInput]` is `KpInput`. `exportAs: "kpInput"`. `<input kpInput>` or `<textarea kpInput>`: it says its state, and inside a `kpField` it is the field's control. Its value is the element's own (`[value]`, `ngModel`).
 
 Attributes and CSS variables, by part:
 
@@ -1926,10 +1926,10 @@ Attributes and CSS variables, by part:
 ### Label
 
 ```
-import { KuiLabel } from "@kirana-ui/angular"
+import { KpLabel } from "@kirana-ui/angular"
 ```
 
-`[kuiLabel]` is `KuiLabel`. `exportAs: "kuiLabel"`. `<label kuiLabel>`. Inside a `kuiField` it is the field's label.
+`[kpLabel]` is `KpLabel`. `exportAs: "kpLabel"`. `<label kpLabel>`. Inside a `kpField` it is the field's label.
 
 Attributes and CSS variables, by part:
 
@@ -1945,19 +1945,19 @@ Attributes and CSS variables, by part:
 ### Listbox
 
 ```
-import { KuiListbox, KuiListboxItem, KuiListboxItemIndicator, KuiListboxGroup, KuiListboxGroupLabel } from "@kirana-ui/angular"
+import { KpListbox, KpListboxItem, KpListboxItemIndicator, KpListboxGroup, KpListboxGroupLabel } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiListbox]`, `[kuiListboxItem]`, `[kuiListboxItemIndicator]`, `[kuiListboxGroup]`, `[kuiListboxGroupLabel]`.
+Parts: `[kpListbox]`, `[kpListboxItem]`, `[kpListboxItemIndicator]`, `[kpListboxGroup]`, `[kpListboxGroupLabel]`.
 
 Anatomy:
 
 ```
-kuiListbox
-  kuiListboxGroup (optional, repeated)
-    kuiListboxItem (repeated)
-      *kuiListboxItemIndicator
-    kuiListboxGroupLabel
+kpListbox
+  kpListboxGroup (optional, repeated)
+    kpListboxItem (repeated)
+      *kpListboxItemIndicator
+    kpListboxGroupLabel
 ```
 
 Props of its root:
@@ -1974,15 +1974,15 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiListbox]` is `KuiListbox`. `exportAs: "kuiListbox"`. Generic: `<Value = unknown>`. Its props are above.
-- `[kuiListboxItem]` is `KuiListboxItem`.
+- `[kpListbox]` is `KpListbox`. `exportAs: "kpListbox"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kpListboxItem]` is `KpListboxItem`.
     - `value: unknown`: Required. What is in the listbox's value while this item is chosen.
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `index?: number`: Its place among all the rows, in a virtualized list.
-- `[kuiListboxItemIndicator]` is `KuiListboxItemIndicator`. Structural: written `*kuiListboxItemIndicator`. `<span *kuiListboxItemIndicator>`: in the page while its item is chosen.
-- `[kuiListboxGroup]` is `KuiListboxGroup`. Items that belong together, named by their label.
-- `[kuiListboxGroupLabel]` is `KuiListboxGroupLabel`. The name of a group.
+- `[kpListboxItemIndicator]` is `KpListboxItemIndicator`. Structural: written `*kpListboxItemIndicator`. `<span *kpListboxItemIndicator>`: in the page while its item is chosen.
+- `[kpListboxGroup]` is `KpListboxGroup`. Items that belong together, named by their label.
+- `[kpListboxGroupLabel]` is `KpListboxGroupLabel`. The name of a group.
 
 Attributes and CSS variables, by part:
 
@@ -1998,33 +1998,33 @@ Attributes and CSS variables, by part:
 ### Menu
 
 ```
-import { KuiMenu, KuiMenuTrigger, KuiMenuPortal, KuiMenuPositioner, KuiMenuPopup, KuiMenuArrow, KuiMenuItem, KuiMenuLinkItem, KuiMenuGroup, KuiMenuGroupLabel, KuiMenuSeparator, KuiMenuCheckboxItem, KuiMenuCheckboxItemIndicator, KuiMenuRadioGroup, KuiMenuRadioItem, KuiMenuRadioItemIndicator, KuiMenuSubmenuRoot, KuiMenuSubmenuTrigger } from "@kirana-ui/angular"
+import { KpMenu, KpMenuTrigger, KpMenuPortal, KpMenuPositioner, KpMenuPopup, KpMenuArrow, KpMenuItem, KpMenuLinkItem, KpMenuGroup, KpMenuGroupLabel, KpMenuSeparator, KpMenuCheckboxItem, KpMenuCheckboxItemIndicator, KpMenuRadioGroup, KpMenuRadioItem, KpMenuRadioItemIndicator, KpMenuSubmenuRoot, KpMenuSubmenuTrigger } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiMenu]`, `[kuiMenuTrigger]`, `[kuiMenuPortal]`, `[kuiMenuPositioner]`, `[kuiMenuPopup]`, `[kuiMenuArrow]`, `[kuiMenuItem]`, `a[kuiMenuLinkItem]`, `[kuiMenuGroup]`, `[kuiMenuGroupLabel]`, `[kuiMenuSeparator]`, `[kuiMenuCheckboxItem]`, `[kuiMenuCheckboxItemIndicator]`, `[kuiMenuRadioGroup]`, `[kuiMenuRadioItem]`, `[kuiMenuRadioItemIndicator]`, `[kuiMenuSubmenuRoot]`, `[kuiMenuSubmenuTrigger]`.
+Parts: `[kpMenu]`, `[kpMenuTrigger]`, `[kpMenuPortal]`, `[kpMenuPositioner]`, `[kpMenuPopup]`, `[kpMenuArrow]`, `[kpMenuItem]`, `a[kpMenuLinkItem]`, `[kpMenuGroup]`, `[kpMenuGroupLabel]`, `[kpMenuSeparator]`, `[kpMenuCheckboxItem]`, `[kpMenuCheckboxItemIndicator]`, `[kpMenuRadioGroup]`, `[kpMenuRadioItem]`, `[kpMenuRadioItemIndicator]`, `[kpMenuSubmenuRoot]`, `[kpMenuSubmenuTrigger]`.
 
 Anatomy:
 
 ```
-kuiMenu
-  kuiMenuTrigger
-  *kuiMenuPortal
-    kuiMenuPositioner
-      kuiMenuPopup
-        kuiMenuArrow
-        kuiMenuGroup (optional, repeated)
-          kuiMenuItem (repeated)
-          a[kuiMenuLinkItem] (repeated)
-          kuiMenuGroupLabel
-          kuiMenuCheckboxItem (repeated)
-            *kuiMenuCheckboxItemIndicator
-          kuiMenuRadioGroup (repeated)
-            kuiMenuRadioItem (repeated)
-              *kuiMenuRadioItemIndicator
-          kuiMenuSubmenuRoot (repeated)
-            *kuiMenuPortal (as above)
-            kuiMenuSubmenuTrigger
-        kuiMenuSeparator (repeated)
+kpMenu
+  kpMenuTrigger
+  *kpMenuPortal
+    kpMenuPositioner
+      kpMenuPopup
+        kpMenuArrow
+        kpMenuGroup (optional, repeated)
+          kpMenuItem (repeated)
+          a[kpMenuLinkItem] (repeated)
+          kpMenuGroupLabel
+          kpMenuCheckboxItem (repeated)
+            *kpMenuCheckboxItemIndicator
+          kpMenuRadioGroup (repeated)
+            kpMenuRadioItem (repeated)
+              *kpMenuRadioItemIndicator
+          kpMenuSubmenuRoot (repeated)
+            *kpMenuPortal (as above)
+            kpMenuSubmenuTrigger
+        kpMenuSeparator (repeated)
 ```
 
 Props of its root:
@@ -2038,50 +2038,50 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiMenu]` is `KuiMenu`. `exportAs: "kuiMenu"`. `kuiContextMenu` in place of `kuiMenu` is a menu for an area of the page, opened at the pointer: its trigger is `kuiContextMenuTrigger`, its other parts the menu's. Its props are above.
-- `[kuiMenuTrigger]` is `KuiMenuTrigger`.
-- `[kuiMenuPortal]` is `KuiMenuPortal`. Structural: written `*kuiMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiMenuPositioner]` is `KuiMenuPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiMenuPopup]` is `KuiMenuPopup`.
-- `[kuiMenuArrow]` is `KuiMenuArrow`.
-- `[kuiMenuItem]` is `KuiMenuItem`.
+- `[kpMenu]` is `KpMenu`. `exportAs: "kpMenu"`. `kpContextMenu` in place of `kpMenu` is a menu for an area of the page, opened at the pointer: its trigger is `kpContextMenuTrigger`, its other parts the menu's. Its props are above.
+- `[kpMenuTrigger]` is `KpMenuTrigger`.
+- `[kpMenuPortal]` is `KpMenuPortal`. Structural: written `*kpMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpMenuPositioner]` is `KpMenuPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpMenuPopup]` is `KpMenuPopup`.
+- `[kpMenuArrow]` is `KpMenuArrow`.
+- `[kpMenuItem]` is `KpMenuItem`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
-- `a[kuiMenuLinkItem]` is `KuiMenuLinkItem`. `<a kuiMenuLinkItem href="…">`: an item that is a link.
+- `a[kpMenuLinkItem]` is `KpMenuLinkItem`. `<a kpMenuLinkItem href="…">`: an item that is a link.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does.
-- `[kuiMenuGroup]` is `KuiMenuGroup`. Items that belong together, named by their label.
-- `[kuiMenuGroupLabel]` is `KuiMenuGroupLabel`. Names the group it is in. With no group around it, it is plain text.
-- `[kuiMenuSeparator]` is `KuiMenuSeparator`. A line between items.
-- `[kuiMenuCheckboxItem]` is `KuiMenuCheckboxItem`. `exportAs: "kuiMenuCheckboxItem"`.
+- `[kpMenuGroup]` is `KpMenuGroup`. Items that belong together, named by their label.
+- `[kpMenuGroupLabel]` is `KpMenuGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kpMenuSeparator]` is `KpMenuSeparator`. A line between items.
+- `[kpMenuCheckboxItem]` is `KpMenuCheckboxItem`. `exportAs: "kpMenuCheckboxItem"`.
     - `[(checked)]: boolean`: Whether the item is checked, when the caller holds it.
     - `defaultChecked?: boolean`: Whether the item starts checked, when the caller does not hold `checked`. Read once.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
     - `(checkedChanged): { checked: boolean; details: ChangeDetails }`: Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
-- `[kuiMenuCheckboxItemIndicator]` is `KuiMenuCheckboxItemIndicator`. Structural: written `*kuiMenuCheckboxItemIndicator`. `<span *kuiMenuCheckboxItemIndicator>`: in the page while its item is checked.
-- `[kuiMenuRadioGroup]` is `KuiMenuRadioGroup`. `exportAs: "kuiMenuRadioGroup"`. Generic: `<Value = unknown>`.
+- `[kpMenuCheckboxItemIndicator]` is `KpMenuCheckboxItemIndicator`. Structural: written `*kpMenuCheckboxItemIndicator`. `<span *kpMenuCheckboxItemIndicator>`: in the page while its item is checked.
+- `[kpMenuRadioGroup]` is `KpMenuRadioGroup`. `exportAs: "kpMenuRadioGroup"`. Generic: `<Value = unknown>`.
     - `[(value)]: Value | null`: The chosen value; `null` is "none".
     - `defaultValue?: NoInfer<Value> | null`: The value it starts with, when the caller does not hold `value`. Read once.
     - `disabled?: boolean`: Disables every item of the group.
     - `(valueChanged): { value: Value; details: ChangeDetails }`: Told an item's own value, never `null`: a press chooses, and nothing takes the choice back.
-- `[kuiMenuRadioItem]` is `KuiMenuRadioItem`.
+- `[kpMenuRadioItem]` is `KpMenuRadioItem`.
     - `value: unknown`: Required. What the radio group's value is while this item is the chosen one.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
     - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does not.
-- `[kuiMenuRadioItemIndicator]` is `KuiMenuRadioItemIndicator`. Structural: written `*kuiMenuRadioItemIndicator`. `<span *kuiMenuRadioItemIndicator>`: in the page while its item is the chosen one.
-- `[kuiMenuSubmenuRoot]` is `KuiMenuSubmenuRoot`. `exportAs: "kuiMenuSubmenuRoot"`. A menu that one of this menu's items opens. Its trigger is `kuiMenuSubmenuTrigger`.
+- `[kpMenuRadioItemIndicator]` is `KpMenuRadioItemIndicator`. Structural: written `*kpMenuRadioItemIndicator`. `<span *kpMenuRadioItemIndicator>`: in the page while its item is the chosen one.
+- `[kpMenuSubmenuRoot]` is `KpMenuSubmenuRoot`. `exportAs: "kpMenuSubmenuRoot"`. A menu that one of this menu's items opens. Its trigger is `kpMenuSubmenuTrigger`.
     - `[(open)]: boolean`: Whether it is open, when the caller holds it.
     - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
     - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
     - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
     - `modal?: boolean`: Holds the page while the menu is open. Not for a submenu.
     - `(openChanged): { open: boolean; details: ChangeDetails }`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
-- `[kuiMenuSubmenuTrigger]` is `KuiMenuSubmenuTrigger`. On the item of a menu that opens the submenu around it (`kuiMenuSubmenuRoot`).
+- `[kpMenuSubmenuTrigger]` is `KpMenuSubmenuTrigger`. On the item of a menu that opens the submenu around it (`kpMenuSubmenuRoot`).
 
 Attributes and CSS variables, by part:
 
@@ -2141,7 +2141,7 @@ Attributes and CSS variables, by part:
 ### Menubar
 
 ```
-import { KuiMenubar } from "@kirana-ui/angular"
+import { KpMenubar } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -2150,7 +2150,7 @@ Props:
 - `disabled?: boolean`: No menu of the bar opens.
 - `orientation?: Orientation`: A row (the default) or a column of menus. In a column a menu opens beside its trigger.
 
-`[kuiMenubar]` is `KuiMenubar`. `exportAs: "kuiMenubar"`. A row of menus that work as one. Each `kuiMenu` inside it is one of its items.
+`[kpMenubar]` is `KpMenubar`. `exportAs: "kpMenubar"`. A row of menus that work as one. Each `kpMenu` inside it is one of its items.
 
 Attributes and CSS variables, by part:
 
@@ -2161,18 +2161,18 @@ Attributes and CSS variables, by part:
 ### MessageScroller
 
 ```
-import { KuiMessageScroller, KuiMessageScrollerViewport, KuiMessageScrollerContent, KuiMessageScrollerButton } from "@kirana-ui/angular"
+import { KpMessageScroller, KpMessageScrollerViewport, KpMessageScrollerContent, KpMessageScrollerButton } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiMessageScroller]`, `[kuiMessageScrollerViewport]`, `[kuiMessageScrollerContent]`, `[kuiMessageScrollerButton]`.
+Parts: `[kpMessageScroller]`, `[kpMessageScrollerViewport]`, `[kpMessageScrollerContent]`, `[kpMessageScrollerButton]`.
 
 Anatomy:
 
 ```
-kuiMessageScroller
-  kuiMessageScrollerViewport
-    kuiMessageScrollerContent
-  kuiMessageScrollerButton
+kpMessageScroller
+  kpMessageScrollerViewport
+    kpMessageScrollerContent
+  kpMessageScrollerButton
 ```
 
 Props of its root:
@@ -2183,10 +2183,10 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiMessageScroller]` is `KuiMessageScroller`. `exportAs: "kuiMessageScroller"`. Its props are above.
-- `[kuiMessageScrollerViewport]` is `KuiMessageScrollerViewport`.
-- `[kuiMessageScrollerContent]` is `KuiMessageScrollerContent`. The messages: what grows as one is written.
-- `[kuiMessageScrollerButton]` is `KuiMessageScrollerButton`.
+- `[kpMessageScroller]` is `KpMessageScroller`. `exportAs: "kpMessageScroller"`. Its props are above.
+- `[kpMessageScrollerViewport]` is `KpMessageScrollerViewport`.
+- `[kpMessageScrollerContent]` is `KpMessageScrollerContent`. The messages: what grows as one is written.
+- `[kpMessageScrollerButton]` is `KpMessageScrollerButton`.
 
 Attributes and CSS variables, by part:
 
@@ -2200,19 +2200,19 @@ Attributes and CSS variables, by part:
 ### Meter
 
 ```
-import { KuiMeter, KuiMeterTrack, KuiMeterIndicator, KuiMeterValue, KuiMeterLabel } from "@kirana-ui/angular"
+import { KpMeter, KpMeterTrack, KpMeterIndicator, KpMeterValue, KpMeterLabel } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiMeter]`, `[kuiMeterTrack]`, `[kuiMeterIndicator]`, `[kuiMeterValue]`, `[kuiMeterLabel]`.
+Parts: `[kpMeter]`, `[kpMeterTrack]`, `[kpMeterIndicator]`, `[kpMeterValue]`, `[kpMeterLabel]`.
 
 Anatomy:
 
 ```
-kuiMeter
-  kuiMeterTrack
-    kuiMeterIndicator
-  kuiMeterValue
-  kuiMeterLabel
+kpMeter
+  kpMeterTrack
+    kpMeterIndicator
+  kpMeterValue
+  kpMeterLabel
 ```
 
 Props of its root:
@@ -2226,38 +2226,38 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiMeter]` is `KuiMeter`. `exportAs: "kuiMeter"`. The meter: it says the value to assistive technology. Its props are above.
-- `[kuiMeterTrack]` is `KuiMeterTrack`. The whole range.
-- `[kuiMeterIndicator]` is `KuiMeterIndicator`. The filled part: its width is the value's share of the range.
-- `[kuiMeterValue]` is `KuiMeterValue`. Shows the written value.
-- `[kuiMeterLabel]` is `KuiMeterLabel`. The meter's name.
+- `[kpMeter]` is `KpMeter`. `exportAs: "kpMeter"`. The meter: it says the value to assistive technology. Its props are above.
+- `[kpMeterTrack]` is `KpMeterTrack`. The whole range.
+- `[kpMeterIndicator]` is `KpMeterIndicator`. The filled part: its width is the value's share of the range.
+- `[kpMeterValue]` is `KpMeterValue`. Shows the written value.
+- `[kpMeterLabel]` is `KpMeterLabel`. The meter's name.
 
 ### NavigationMenu
 
 ```
-import { KuiNavigationMenu, KuiNavigationMenuList, KuiNavigationMenuItem, KuiNavigationMenuTrigger, KuiNavigationMenuIcon, KuiNavigationMenuContent, KuiNavigationMenuLink, KuiNavigationMenuPortal, KuiNavigationMenuPositioner, KuiNavigationMenuPopup, KuiNavigationMenuViewport, KuiNavigationMenuArrow, KuiNavigationMenuBackdrop } from "@kirana-ui/angular"
+import { KpNavigationMenu, KpNavigationMenuList, KpNavigationMenuItem, KpNavigationMenuTrigger, KpNavigationMenuIcon, KpNavigationMenuContent, KpNavigationMenuLink, KpNavigationMenuPortal, KpNavigationMenuPositioner, KpNavigationMenuPopup, KpNavigationMenuViewport, KpNavigationMenuArrow, KpNavigationMenuBackdrop } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiNavigationMenu]`, `[kuiNavigationMenuList]`, `[kuiNavigationMenuItem]`, `[kuiNavigationMenuTrigger]`, `[kuiNavigationMenuIcon]`, `[kuiNavigationMenuContent]`, `[kuiNavigationMenuLink]`, `[kuiNavigationMenuPortal]`, `[kuiNavigationMenuPositioner]`, `[kuiNavigationMenuPopup]`, `[kuiNavigationMenuViewport]`, `[kuiNavigationMenuArrow]`, `[kuiNavigationMenuBackdrop]`.
+Parts: `[kpNavigationMenu]`, `[kpNavigationMenuList]`, `[kpNavigationMenuItem]`, `[kpNavigationMenuTrigger]`, `[kpNavigationMenuIcon]`, `[kpNavigationMenuContent]`, `[kpNavigationMenuLink]`, `[kpNavigationMenuPortal]`, `[kpNavigationMenuPositioner]`, `[kpNavigationMenuPopup]`, `[kpNavigationMenuViewport]`, `[kpNavigationMenuArrow]`, `[kpNavigationMenuBackdrop]`.
 
 Anatomy:
 
 ```
-kuiNavigationMenu
-  kuiNavigationMenuList
-    kuiNavigationMenuItem (repeated)
-      kuiNavigationMenuTrigger
-        kuiNavigationMenuIcon
-      *kuiNavigationMenuContent
-        kuiNavigationMenuLink (repeated)
-      kuiNavigationMenuLink (repeated, as above)
-    kuiNavigationMenuLink (repeated, as above)
-  *kuiNavigationMenuPortal
-    kuiNavigationMenuPositioner
-      kuiNavigationMenuPopup
-        kuiNavigationMenuViewport
-        kuiNavigationMenuArrow
-    kuiNavigationMenuBackdrop
+kpNavigationMenu
+  kpNavigationMenuList
+    kpNavigationMenuItem (repeated)
+      kpNavigationMenuTrigger
+        kpNavigationMenuIcon
+      *kpNavigationMenuContent
+        kpNavigationMenuLink (repeated)
+      kpNavigationMenuLink (repeated, as above)
+    kpNavigationMenuLink (repeated, as above)
+  *kpNavigationMenuPortal
+    kpNavigationMenuPositioner
+      kpNavigationMenuPopup
+        kpNavigationMenuViewport
+        kpNavigationMenuArrow
+    kpNavigationMenuBackdrop
 ```
 
 Props of its root:
@@ -2271,22 +2271,22 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiNavigationMenu]` is `KuiNavigationMenu`. `exportAs: "kuiNavigationMenu"`. Generic: `<Value = unknown>`. Its props are above.
-- `[kuiNavigationMenuList]` is `KuiNavigationMenuList`.
-- `[kuiNavigationMenuItem]` is `KuiNavigationMenuItem`. On an item's `<li>`. `value` tells it from the others; an item that is given none makes its own.
+- `[kpNavigationMenu]` is `KpNavigationMenu`. `exportAs: "kpNavigationMenu"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kpNavigationMenuList]` is `KpNavigationMenuList`.
+- `[kpNavigationMenuItem]` is `KpNavigationMenuItem`. On an item's `<li>`. `value` tells it from the others; an item that is given none makes its own.
     - `value?: unknown`: What tells this item from the others: the menu's `value` while its content is shown. An item that is given none makes its own.
-- `[kuiNavigationMenuTrigger]` is `KuiNavigationMenuTrigger`.
-- `[kuiNavigationMenuIcon]` is `KuiNavigationMenuIcon`.
-- `[kuiNavigationMenuContent]` is `KuiNavigationMenuContent`. Structural: written `*kuiNavigationMenuContent`. `<div *kuiNavigationMenuContent>`: an item's content, drawn in `kuiNavigationMenuViewport` while it is shown.
-- `[kuiNavigationMenuLink]` is `KuiNavigationMenuLink`.
+- `[kpNavigationMenuTrigger]` is `KpNavigationMenuTrigger`.
+- `[kpNavigationMenuIcon]` is `KpNavigationMenuIcon`.
+- `[kpNavigationMenuContent]` is `KpNavigationMenuContent`. Structural: written `*kpNavigationMenuContent`. `<div *kpNavigationMenuContent>`: an item's content, drawn in `kpNavigationMenuViewport` while it is shown.
+- `[kpNavigationMenuLink]` is `KpNavigationMenuLink`.
     - `active?: boolean`: The link is the page the reader is on.
     - `closeOnClick?: boolean`: Whether following it closes the menu. Default: it does.
-- `[kuiNavigationMenuPortal]` is `KuiNavigationMenuPortal`. Structural: written `*kuiNavigationMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiNavigationMenuPositioner]` is `KuiNavigationMenuPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiNavigationMenuPopup]` is `KuiNavigationMenuPopup`.
-- `[kuiNavigationMenuViewport]` is `KuiNavigationMenuViewport`. Where the contents are drawn, inside the popup.
-- `[kuiNavigationMenuArrow]` is `KuiNavigationMenuArrow`.
-- `[kuiNavigationMenuBackdrop]` is `KuiNavigationMenuBackdrop`.
+- `[kpNavigationMenuPortal]` is `KpNavigationMenuPortal`. Structural: written `*kpNavigationMenuPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpNavigationMenuPositioner]` is `KpNavigationMenuPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpNavigationMenuPopup]` is `KpNavigationMenuPopup`.
+- `[kpNavigationMenuViewport]` is `KpNavigationMenuViewport`. Where the contents are drawn, inside the popup.
+- `[kpNavigationMenuArrow]` is `KpNavigationMenuArrow`.
+- `[kpNavigationMenuBackdrop]` is `KpNavigationMenuBackdrop`.
 
 Attributes and CSS variables, by part:
 
@@ -2340,21 +2340,21 @@ Attributes and CSS variables, by part:
 ### NumberField
 
 ```
-import { KuiNumberField, KuiNumberFieldGroup, KuiNumberFieldInput, KuiNumberFieldIncrement, KuiNumberFieldDecrement, KuiNumberFieldScrubArea, KuiNumberFieldScrubAreaCursor } from "@kirana-ui/angular"
+import { KpNumberField, KpNumberFieldGroup, KpNumberFieldInput, KpNumberFieldIncrement, KpNumberFieldDecrement, KpNumberFieldScrubArea, KpNumberFieldScrubAreaCursor } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiNumberField]`, `[kuiNumberFieldGroup]`, `[kuiNumberFieldInput]`, `[kuiNumberFieldIncrement]`, `[kuiNumberFieldDecrement]`, `[kuiNumberFieldScrubArea]`, `[kuiNumberFieldScrubAreaCursor]`.
+Parts: `[kpNumberField]`, `[kpNumberFieldGroup]`, `[kpNumberFieldInput]`, `[kpNumberFieldIncrement]`, `[kpNumberFieldDecrement]`, `[kpNumberFieldScrubArea]`, `[kpNumberFieldScrubAreaCursor]`.
 
 Anatomy:
 
 ```
-kuiNumberField
-  kuiNumberFieldGroup
-    kuiNumberFieldInput
-    kuiNumberFieldIncrement
-    kuiNumberFieldDecrement
-  kuiNumberFieldScrubArea
-    *kuiNumberFieldScrubAreaCursor
+kpNumberField
+  kpNumberFieldGroup
+    kpNumberFieldInput
+    kpNumberFieldIncrement
+    kpNumberFieldDecrement
+  kpNumberFieldScrubArea
+    *kpNumberFieldScrubAreaCursor
 ```
 
 Props of its root:
@@ -2380,16 +2380,16 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiNumberField]` is `KuiNumberField`. `exportAs: "kuiNumberField"`. On the element that holds the field's parts. `[(value)]` is the number, `null` for none. With a name, it draws the hidden input a form reads. Its props are above.
-- `[kuiNumberFieldGroup]` is `KuiNumberFieldGroup`.
-- `[kuiNumberFieldInput]` is `KuiNumberFieldInput`.
-- `[kuiNumberFieldIncrement]` is `KuiNumberFieldIncrement`.
-- `[kuiNumberFieldDecrement]` is `KuiNumberFieldDecrement`.
-- `[kuiNumberFieldScrubArea]` is `KuiNumberFieldScrubArea`. On the element that is pressed and dragged to change the number: the field's label, as a rule.
+- `[kpNumberField]` is `KpNumberField`. `exportAs: "kpNumberField"`. On the element that holds the field's parts. `[(value)]` is the number, `null` for none. With a name, it draws the hidden input a form reads. Its props are above.
+- `[kpNumberFieldGroup]` is `KpNumberFieldGroup`.
+- `[kpNumberFieldInput]` is `KpNumberFieldInput`.
+- `[kpNumberFieldIncrement]` is `KpNumberFieldIncrement`.
+- `[kpNumberFieldDecrement]` is `KpNumberFieldDecrement`.
+- `[kpNumberFieldScrubArea]` is `KpNumberFieldScrubArea`. On the element that is pressed and dragged to change the number: the field's label, as a rule.
     - `direction?: "horizontal" | "vertical"`: The way the pointer is dragged: `"horizontal"`, where right is more, or `"vertical"`, where up is more. Default `"horizontal"`.
     - `pixelSensitivity?: number`: How many pixels the pointer moves before the number changes. Default 2.
     - `teleportDistance?: number`: How far past the area's edges the drawn cursor goes before it comes back in at the other side. Default: the edges of the window.
-- `[kuiNumberFieldScrubAreaCursor]` is `KuiNumberFieldScrubAreaCursor`. Structural: written `*kuiNumberFieldScrubAreaCursor`. `<span *kuiNumberFieldScrubAreaCursor>`: drawn in place of the pointer while it is locked for a drag, at the end of the page.
+- `[kpNumberFieldScrubAreaCursor]` is `KpNumberFieldScrubAreaCursor`. Structural: written `*kpNumberFieldScrubAreaCursor`. `<span *kpNumberFieldScrubAreaCursor>`: drawn in place of the pointer while it is locked for a drag, at the end of the page.
 
 Attributes and CSS variables, by part:
 
@@ -2474,20 +2474,20 @@ Attributes and CSS variables, by part:
 ### Otp
 
 ```
-import { KuiOtp, KuiOtpInput, KuiOtpGroup, KuiOtpSlot, KuiOtpSeparator, KuiOtpCaret } from "@kirana-ui/angular"
+import { KpOtp, KpOtpInput, KpOtpGroup, KpOtpSlot, KpOtpSeparator, KpOtpCaret } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiOtp]`, `input[kuiOtpInput]`, `[kuiOtpGroup]`, `[kuiOtpSlot]`, `[kuiOtpSeparator]`, `[kuiOtpCaret]`.
+Parts: `[kpOtp]`, `input[kpOtpInput]`, `[kpOtpGroup]`, `[kpOtpSlot]`, `[kpOtpSeparator]`, `[kpOtpCaret]`.
 
 Anatomy:
 
 ```
-kuiOtp
-  input[kuiOtpInput]
-  kuiOtpGroup (repeated)
-    kuiOtpSlot (repeated)
-      *kuiOtpCaret
-  kuiOtpSeparator (repeated)
+kpOtp
+  input[kpOtpInput]
+  kpOtpGroup (repeated)
+    kpOtpSlot (repeated)
+      *kpOtpCaret
+  kpOtpSeparator (repeated)
 ```
 
 Props of its root:
@@ -2505,13 +2505,13 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiOtp]` is `KuiOtp`. `exportAs: "kuiOtp"`. Its props are above.
-- `input[kuiOtpInput]` is `KuiOtpInput`. `<input kuiOtpInput>`: the one input the code is typed in.
-- `[kuiOtpGroup]` is `KuiOtpGroup`. Cells that are drawn together.
-- `[kuiOtpSlot]` is `KuiOtpSlot`. One cell. It writes its character before whatever is inside it (a caret), and leaves that alone.
+- `[kpOtp]` is `KpOtp`. `exportAs: "kpOtp"`. Its props are above.
+- `input[kpOtpInput]` is `KpOtpInput`. `<input kpOtpInput>`: the one input the code is typed in.
+- `[kpOtpGroup]` is `KpOtpGroup`. Cells that are drawn together.
+- `[kpOtpSlot]` is `KpOtpSlot`. One cell. It writes its character before whatever is inside it (a caret), and leaves that alone.
     - `index: number`: Required. Which character of the code it shows, from 0.
-- `[kuiOtpSeparator]` is `KuiOtpSeparator`. A mark between groups of cells.
-- `[kuiOtpCaret]` is `KuiOtpCaret`. Structural: written `*kuiOtpCaret`. `<div *kuiOtpCaret>`: in its cell while the cell is the active one and empty.
+- `[kpOtpSeparator]` is `KpOtpSeparator`. A mark between groups of cells.
+- `[kpOtpCaret]` is `KpOtpCaret`. Structural: written `*kpOtpCaret`. `<div *kpOtpCaret>`: in its cell while the cell is the active one and empty.
 
 Attributes and CSS variables, by part:
 
@@ -2530,20 +2530,20 @@ Attributes and CSS variables, by part:
 ### Pagination
 
 ```
-import { KuiPagination, KuiPaginationItems, KuiPaginationItem, KuiPaginationEllipsis, KuiPaginationPrevious, KuiPaginationNext } from "@kirana-ui/angular"
+import { KpPagination, KpPaginationItems, KpPaginationItem, KpPaginationEllipsis, KpPaginationPrevious, KpPaginationNext } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiPagination]`, `[kuiPaginationItems]`, `[kuiPaginationItem]`, `[kuiPaginationEllipsis]`, `[kuiPaginationPrevious]`, `[kuiPaginationNext]`.
+Parts: `[kpPagination]`, `[kpPaginationItems]`, `[kpPaginationItem]`, `[kpPaginationEllipsis]`, `[kpPaginationPrevious]`, `[kpPaginationNext]`.
 
 Anatomy:
 
 ```
-kuiPagination
-  *kuiPaginationItems
-    kuiPaginationItem (repeated)
-    kuiPaginationEllipsis (repeated)
-  kuiPaginationPrevious
-  kuiPaginationNext
+kpPagination
+  *kpPaginationItems
+    kpPaginationItem (repeated)
+    kpPaginationEllipsis (repeated)
+  kpPaginationPrevious
+  kpPaginationNext
 ```
 
 Props of its root:
@@ -2559,13 +2559,13 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiPagination]` is `KuiPagination`. `exportAs: "kuiPagination"`. On a `<nav>`. `[(page)]` is the page shown, from 1. Its props are above.
-- `[kuiPaginationItems]` is `KuiPaginationItems`. Structural: written `*kuiPaginationItems`. Its template is given the entry: `let entry` is a `PaginationEntry`. `<ng-container *kuiPaginationItems="let entry">`: once for each piece of the row, a page or the mark for pages left out.
-- `[kuiPaginationItem]` is `KuiPaginationItem`.
+- `[kpPagination]` is `KpPagination`. `exportAs: "kpPagination"`. On a `<nav>`. `[(page)]` is the page shown, from 1. Its props are above.
+- `[kpPaginationItems]` is `KpPaginationItems`. Structural: written `*kpPaginationItems`. Its template is given the entry: `let entry` is a `PaginationEntry`. `<ng-container *kpPaginationItems="let entry">`: once for each piece of the row, a page or the mark for pages left out.
+- `[kpPaginationItem]` is `KpPaginationItem`.
     - `page: number`: Required. The page it goes to, from 1.
-- `[kuiPaginationEllipsis]` is `KuiPaginationEllipsis`. The mark for pages left out of the row.
-- `[kuiPaginationPrevious]` is `KuiPaginationPrevious`.
-- `[kuiPaginationNext]` is `KuiPaginationNext`.
+- `[kpPaginationEllipsis]` is `KpPaginationEllipsis`. The mark for pages left out of the row.
+- `[kpPaginationPrevious]` is `KpPaginationPrevious`.
+- `[kpPaginationNext]` is `KpPaginationNext`.
 
 Attributes and CSS variables, by part:
 
@@ -2582,24 +2582,24 @@ Attributes and CSS variables, by part:
 ### Popover
 
 ```
-import { KuiPopover, KuiPopoverTrigger, KuiPopoverPortal, KuiPopoverBackdrop, KuiPopoverPositioner, KuiPopoverPopup, KuiPopoverArrow, KuiPopoverTitle, KuiPopoverDescription, KuiPopoverClose } from "@kirana-ui/angular"
+import { KpPopover, KpPopoverTrigger, KpPopoverPortal, KpPopoverBackdrop, KpPopoverPositioner, KpPopoverPopup, KpPopoverArrow, KpPopoverTitle, KpPopoverDescription, KpPopoverClose } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiPopover]`, `[kuiPopoverTrigger]`, `[kuiPopoverPortal]`, `[kuiPopoverBackdrop]`, `[kuiPopoverPositioner]`, `[kuiPopoverPopup]`, `[kuiPopoverArrow]`, `[kuiPopoverTitle]`, `[kuiPopoverDescription]`, `[kuiPopoverClose]`.
+Parts: `[kpPopover]`, `[kpPopoverTrigger]`, `[kpPopoverPortal]`, `[kpPopoverBackdrop]`, `[kpPopoverPositioner]`, `[kpPopoverPopup]`, `[kpPopoverArrow]`, `[kpPopoverTitle]`, `[kpPopoverDescription]`, `[kpPopoverClose]`.
 
 Anatomy:
 
 ```
-kuiPopover
-  kuiPopoverTrigger
-  *kuiPopoverPortal
-    kuiPopoverBackdrop
-    kuiPopoverPositioner
-      kuiPopoverPopup
-        kuiPopoverTitle
-        kuiPopoverDescription
-        kuiPopoverClose
-        kuiPopoverArrow
+kpPopover
+  kpPopoverTrigger
+  *kpPopoverPortal
+    kpPopoverBackdrop
+    kpPopoverPositioner
+      kpPopoverPopup
+        kpPopoverTitle
+        kpPopoverDescription
+        kpPopoverClose
+        kpPopoverArrow
 ```
 
 Props of its root:
@@ -2611,19 +2611,19 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiPopover]` is `KuiPopover`. `exportAs: "kuiPopover"`. Holds the popover: whether it is open. Its props are above.
-- `[kuiPopoverTrigger]` is `KuiPopoverTrigger`.
+- `[kpPopover]` is `KpPopover`. `exportAs: "kpPopover"`. Holds the popover: whether it is open. Its props are above.
+- `[kpPopoverTrigger]` is `KpPopoverTrigger`.
     - `openOnHover?: boolean`: Whether the pointer resting on the trigger opens the popover too. A press and the keyboard still open it, and a press on one the pointer opened keeps it open. Default `false`.
     - `delay?: number`: How long the pointer rests on the trigger before the popover opens, in milliseconds. Default 300.
     - `closeDelay?: number`: How long after the pointer leaves a popover it opened closes, in milliseconds. Default 0.
-- `[kuiPopoverPortal]` is `KuiPopoverPortal`. Structural: written `*kuiPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiPopoverBackdrop]` is `KuiPopoverBackdrop`.
-- `[kuiPopoverPositioner]` is `KuiPopoverPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiPopoverPopup]` is `KuiPopoverPopup`.
-- `[kuiPopoverArrow]` is `KuiPopoverArrow`.
-- `[kuiPopoverTitle]` is `KuiPopoverTitle`. The heading that names the popover.
-- `[kuiPopoverDescription]` is `KuiPopoverDescription`. The text that describes the popover.
-- `[kuiPopoverClose]` is `KuiPopoverClose`. A button that closes the popover.
+- `[kpPopoverPortal]` is `KpPopoverPortal`. Structural: written `*kpPopoverPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpPopoverBackdrop]` is `KpPopoverBackdrop`.
+- `[kpPopoverPositioner]` is `KpPopoverPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpPopoverPopup]` is `KpPopoverPopup`.
+- `[kpPopoverArrow]` is `KpPopoverArrow`.
+- `[kpPopoverTitle]` is `KpPopoverTitle`. The heading that names the popover.
+- `[kpPopoverDescription]` is `KpPopoverDescription`. The text that describes the popover.
+- `[kpPopoverClose]` is `KpPopoverClose`. A button that closes the popover.
 
 Attributes and CSS variables, by part:
 
@@ -2659,19 +2659,19 @@ Attributes and CSS variables, by part:
 ### Progress
 
 ```
-import { KuiProgress, KuiProgressTrack, KuiProgressIndicator, KuiProgressValue, KuiProgressLabel } from "@kirana-ui/angular"
+import { KpProgress, KpProgressTrack, KpProgressIndicator, KpProgressValue, KpProgressLabel } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiProgress]`, `[kuiProgressTrack]`, `[kuiProgressIndicator]`, `[kuiProgressValue]`, `[kuiProgressLabel]`.
+Parts: `[kpProgress]`, `[kpProgressTrack]`, `[kpProgressIndicator]`, `[kpProgressValue]`, `[kpProgressLabel]`.
 
 Anatomy:
 
 ```
-kuiProgress
-  kuiProgressTrack
-    kuiProgressIndicator
-  kuiProgressValue
-  kuiProgressLabel
+kpProgress
+  kpProgressTrack
+    kpProgressIndicator
+  kpProgressValue
+  kpProgressLabel
 ```
 
 Props of its root:
@@ -2685,11 +2685,11 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiProgress]` is `KuiProgress`. `exportAs: "kuiProgress"`. Its props are above.
-- `[kuiProgressTrack]` is `KuiProgressTrack`.
-- `[kuiProgressIndicator]` is `KuiProgressIndicator`.
-- `[kuiProgressValue]` is `KuiProgressValue`. Shows the written value.
-- `[kuiProgressLabel]` is `KuiProgressLabel`.
+- `[kpProgress]` is `KpProgress`. `exportAs: "kpProgress"`. Its props are above.
+- `[kpProgressTrack]` is `KpProgressTrack`.
+- `[kpProgressIndicator]` is `KpProgressIndicator`.
+- `[kpProgressValue]` is `KpProgressValue`. Shows the written value.
+- `[kpProgressLabel]` is `KpProgressLabel`.
 
 Attributes and CSS variables, by part:
 
@@ -2717,17 +2717,17 @@ Attributes and CSS variables, by part:
 ### QrCode
 
 ```
-import { KuiQrCode, KuiQrCodeFrame, KuiQrCodePattern } from "@kirana-ui/angular"
+import { KpQrCode, KpQrCodeFrame, KpQrCodePattern } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiQrCode]`, `[kuiQrCodeFrame]`, `[kuiQrCodePattern]`.
+Parts: `[kpQrCode]`, `[kpQrCodeFrame]`, `[kpQrCodePattern]`.
 
 Anatomy:
 
 ```
-kuiQrCode
-  kuiQrCodeFrame
-    kuiQrCodePattern
+kpQrCode
+  kpQrCodeFrame
+    kpQrCodePattern
 ```
 
 Props of its root:
@@ -2737,9 +2737,9 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiQrCode]` is `KuiQrCode`. `exportAs: "kuiQrCode"`. Its props are above.
-- `[kuiQrCodeFrame]` is `KuiQrCodeFrame`. `<svg kuiQrCodeFrame>`: the drawing.
-- `[kuiQrCodePattern]` is `KuiQrCodePattern`. `<svg:path kuiQrCodePattern>`: the dark modules.
+- `[kpQrCode]` is `KpQrCode`. `exportAs: "kpQrCode"`. Its props are above.
+- `[kpQrCodeFrame]` is `KpQrCodeFrame`. `<svg kpQrCodeFrame>`: the drawing.
+- `[kpQrCodePattern]` is `KpQrCodePattern`. `<svg:path kpQrCodePattern>`: the dark modules.
 
 Attributes and CSS variables, by part:
 
@@ -2749,17 +2749,17 @@ Attributes and CSS variables, by part:
 ### RadioGroup
 
 ```
-import { KuiRadioGroup, KuiRadioGroupItem, KuiRadioGroupIndicator } from "@kirana-ui/angular"
+import { KpRadioGroup, KpRadioGroupItem, KpRadioGroupIndicator } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiRadioGroup]`, `[kuiRadioGroupItem]`, `[kuiRadioGroupIndicator]`.
+Parts: `[kpRadioGroup]`, `[kpRadioGroupItem]`, `[kpRadioGroupIndicator]`.
 
 Anatomy:
 
 ```
-kuiRadioGroup
-  kuiRadioGroupItem (repeated)
-    *kuiRadioGroupIndicator
+kpRadioGroup
+  kpRadioGroupItem (repeated)
+    *kpRadioGroupIndicator
 ```
 
 Props of its root:
@@ -2775,11 +2775,11 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiRadioGroup]` is `KuiRadioGroup`. `exportAs: "kuiRadioGroup"`. Generic: `<Value = unknown>`. Its props are above.
-- `[kuiRadioGroupItem]` is `KuiRadioGroupItem`. On an item's element. It draws the hidden native radio inside it, which a form and a label reach.
+- `[kpRadioGroup]` is `KpRadioGroup`. `exportAs: "kpRadioGroup"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kpRadioGroupItem]` is `KpRadioGroupItem`. On an item's element. It draws the hidden native radio inside it, which a form and a label reach.
     - `value: unknown`: Required. What the group's value is while this item is the chosen one.
     - `disabled?: boolean`: Disables this item: it cannot be chosen.
-- `[kuiRadioGroupIndicator]` is `KuiRadioGroupIndicator`. Structural: written `*kuiRadioGroupIndicator`. `<span *kuiRadioGroupIndicator>`: in the page while its item is the chosen one.
+- `[kpRadioGroupIndicator]` is `KpRadioGroupIndicator`. Structural: written `*kpRadioGroupIndicator`. `<span *kpRadioGroupIndicator>`: in the page while its item is the chosen one.
 
 Attributes and CSS variables, by part:
 
@@ -2787,7 +2787,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
-- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
+- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kpId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
@@ -2805,17 +2805,17 @@ Attributes and CSS variables, by part:
 ### Resizable
 
 ```
-import { KuiResizableGroup, KuiResizablePanel, KuiResizableHandle } from "@kirana-ui/angular"
+import { KpResizableGroup, KpResizablePanel, KpResizableHandle } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiResizableGroup]`, `[kuiResizablePanel]`, `[kuiResizableHandle]`.
+Parts: `[kpResizableGroup]`, `[kpResizablePanel]`, `[kpResizableHandle]`.
 
 Anatomy:
 
 ```
-kuiResizableGroup
-  kuiResizablePanel (repeated)
-  kuiResizableHandle (repeated)
+kpResizableGroup
+  kpResizablePanel (repeated)
+  kpResizableHandle (repeated)
 ```
 
 Props of its root:
@@ -2827,12 +2827,12 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiResizableGroup]` is `KuiResizableGroup`. `exportAs: "kuiResizableGroup"`. Its props are above.
-- `[kuiResizablePanel]` is `KuiResizablePanel`.
+- `[kpResizableGroup]` is `KpResizableGroup`. `exportAs: "kpResizableGroup"`. Its props are above.
+- `[kpResizablePanel]` is `KpResizablePanel`.
     - `defaultSize?: number`: Its share to begin with, in hundredths of the group. Either every panel gives one or none does (they are then equal).
     - `minSize?: number`: The least it can be made. Default: 0.
     - `maxSize?: number`: The most it can be made. Default: 100.
-- `[kuiResizableHandle]` is `KuiResizableHandle`.
+- `[kpResizableHandle]` is `KpResizableHandle`.
     - `disabled?: boolean`: Disables this handle: it cannot be dragged or moved with the keyboard.
 
 Attributes and CSS variables, by part:
@@ -2851,33 +2851,33 @@ Attributes and CSS variables, by part:
 ### ScrollArea
 
 ```
-import { KuiScrollArea, KuiScrollAreaViewport, KuiScrollAreaContent, KuiScrollAreaScrollbar, KuiScrollAreaThumb, KuiScrollAreaCorner } from "@kirana-ui/angular"
+import { KpScrollArea, KpScrollAreaViewport, KpScrollAreaContent, KpScrollAreaScrollbar, KpScrollAreaThumb, KpScrollAreaCorner } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiScrollArea]`, `[kuiScrollAreaViewport]`, `[kuiScrollAreaContent]`, `[kuiScrollAreaScrollbar]`, `[kuiScrollAreaThumb]`, `[kuiScrollAreaCorner]`.
+Parts: `[kpScrollArea]`, `[kpScrollAreaViewport]`, `[kpScrollAreaContent]`, `[kpScrollAreaScrollbar]`, `[kpScrollAreaThumb]`, `[kpScrollAreaCorner]`.
 
 Anatomy:
 
 ```
-kuiScrollArea
-  kuiScrollAreaViewport
-    kuiScrollAreaContent (optional)
-    *kuiScrollAreaScrollbar (repeated, as above)
-  *kuiScrollAreaScrollbar (repeated)
-    kuiScrollAreaThumb
-  *kuiScrollAreaCorner
+kpScrollArea
+  kpScrollAreaViewport
+    kpScrollAreaContent (optional)
+    *kpScrollAreaScrollbar (repeated, as above)
+  *kpScrollAreaScrollbar (repeated)
+    kpScrollAreaThumb
+  *kpScrollAreaCorner
 ```
 
 Each part, and its own props:
 
-- `[kuiScrollArea]` is `KuiScrollArea`. `exportAs: "kuiScrollArea"`.
-- `[kuiScrollAreaViewport]` is `KuiScrollAreaViewport`.
-- `[kuiScrollAreaContent]` is `KuiScrollAreaContent`. A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
-- `[kuiScrollAreaScrollbar]` is `KuiScrollAreaScrollbar`. Structural: written `*kuiScrollAreaScrollbar`. `<div *kuiScrollAreaScrollbar="'horizontal'">`: in the page while there is something to scroll its way (`vertical` when no orientation is given).
-    - `*kuiScrollAreaScrollbar: Orientation | ""`: The directive's own value: `*kuiScrollAreaScrollbar="…"`. Which way it scrolls: `'horizontal'`, or `'vertical'` when none is given.
-    - `keepMounted?: boolean`: Written after the directive's value: `*kuiScrollAreaScrollbar="…; keepMounted: …"`. In the page even while there is nothing to scroll its way.
-- `[kuiScrollAreaThumb]` is `KuiScrollAreaThumb`.
-- `[kuiScrollAreaCorner]` is `KuiScrollAreaCorner`. Structural: written `*kuiScrollAreaCorner`. `<div *kuiScrollAreaCorner>`: in the page while both scrollbars are.
+- `[kpScrollArea]` is `KpScrollArea`. `exportAs: "kpScrollArea"`.
+- `[kpScrollAreaViewport]` is `KpScrollAreaViewport`.
+- `[kpScrollAreaContent]` is `KpScrollAreaContent`. A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
+- `[kpScrollAreaScrollbar]` is `KpScrollAreaScrollbar`. Structural: written `*kpScrollAreaScrollbar`. `<div *kpScrollAreaScrollbar="'horizontal'">`: in the page while there is something to scroll its way (`vertical` when no orientation is given).
+    - `*kpScrollAreaScrollbar: Orientation | ""`: The directive's own value: `*kpScrollAreaScrollbar="…"`. Which way it scrolls: `'horizontal'`, or `'vertical'` when none is given.
+    - `keepMounted?: boolean`: Written after the directive's value: `*kpScrollAreaScrollbar="…; keepMounted: …"`. In the page even while there is nothing to scroll its way.
+- `[kpScrollAreaThumb]` is `KpScrollAreaThumb`.
+- `[kpScrollAreaCorner]` is `KpScrollAreaCorner`. Structural: written `*kpScrollAreaCorner`. `<div *kpScrollAreaCorner>`: in the page while both scrollbars are.
 
 Attributes and CSS variables, by part:
 
@@ -2904,30 +2904,30 @@ Attributes and CSS variables, by part:
 ### Select
 
 ```
-import { KuiSelect, KuiSelectTrigger, KuiSelectValue, KuiSelectPortal, KuiSelectPositioner, KuiSelectPopup, KuiSelectList, KuiSelectScrollUpArrow, KuiSelectScrollDownArrow, KuiSelectGroup, KuiSelectGroupLabel, KuiSelectSeparator, KuiSelectItem, KuiSelectItemText, KuiSelectItemIndicator, KuiSelectInput } from "@kirana-ui/angular"
+import { KpSelect, KpSelectTrigger, KpSelectValue, KpSelectPortal, KpSelectPositioner, KpSelectPopup, KpSelectList, KpSelectScrollUpArrow, KpSelectScrollDownArrow, KpSelectGroup, KpSelectGroupLabel, KpSelectSeparator, KpSelectItem, KpSelectItemText, KpSelectItemIndicator, KpSelectInput } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiSelect]`, `[kuiSelectTrigger]`, `[kuiSelectValue]`, `[kuiSelectPortal]`, `[kuiSelectPositioner]`, `[kuiSelectPopup]`, `[kuiSelectList]`, `[kuiSelectScrollUpArrow]`, `[kuiSelectScrollDownArrow]`, `[kuiSelectGroup]`, `[kuiSelectGroupLabel]`, `[kuiSelectSeparator]`, `[kuiSelectItem]`, `[kuiSelectItemText]`, `[kuiSelectItemIndicator]`.
+Parts: `[kpSelect]`, `[kpSelectTrigger]`, `[kpSelectValue]`, `[kpSelectPortal]`, `[kpSelectPositioner]`, `[kpSelectPopup]`, `[kpSelectList]`, `[kpSelectScrollUpArrow]`, `[kpSelectScrollDownArrow]`, `[kpSelectGroup]`, `[kpSelectGroupLabel]`, `[kpSelectSeparator]`, `[kpSelectItem]`, `[kpSelectItemText]`, `[kpSelectItemIndicator]`.
 
 Anatomy:
 
 ```
-kuiSelect
-  kuiSelectTrigger
-    *kuiSelectValue
-  *kuiSelectPortal
-    kuiSelectPositioner
-      kuiSelectPopup
-        *kuiSelectScrollUpArrow
-        kuiSelectList (optional)
-          kuiSelectGroup (optional, repeated)
-            kuiSelectGroupLabel
-            kuiSelectItem (repeated)
-              kuiSelectItemText
-              *kuiSelectItemIndicator
-          kuiSelectSeparator (repeated)
-        *kuiSelectScrollDownArrow
-  input[kuiSelectInput] (Angular only)
+kpSelect
+  kpSelectTrigger
+    *kpSelectValue
+  *kpSelectPortal
+    kpSelectPositioner
+      kpSelectPopup
+        *kpSelectScrollUpArrow
+        kpSelectList (optional)
+          kpSelectGroup (optional, repeated)
+            kpSelectGroupLabel
+            kpSelectItem (repeated)
+              kpSelectItemText
+              *kpSelectItemIndicator
+          kpSelectSeparator (repeated)
+        *kpSelectScrollDownArrow
+  input[kpSelectInput] (Angular only)
 ```
 
 Props of its root:
@@ -2952,28 +2952,28 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiSelect]` is `KuiSelect`. `exportAs: "kuiSelect"`. Generic: `<Value = unknown>`. Holds the select: its value and whether the list is open. Its props are above.
-- `[kuiSelectTrigger]` is `KuiSelectTrigger`.
-- `[kuiSelectValue]` is `KuiSelectValue`. Structural: written `*kuiSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kuiSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. `<span *kuiSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
+- `[kpSelect]` is `KpSelect`. `exportAs: "kpSelect"`. Generic: `<Value = unknown>`. Holds the select: its value and whether the list is open. Its props are above.
+- `[kpSelectTrigger]` is `KpSelectTrigger`.
+- `[kpSelectValue]` is `KpSelectValue`. Structural: written `*kpSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
     - `placeholder?: string`: Shown while nothing is chosen.
-- `[kuiSelectPortal]` is `KuiSelectPortal`. Structural: written `*kuiSelectPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiSelectPositioner]` is `KuiSelectPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpSelectPortal]` is `KpSelectPortal`. Structural: written `*kpSelectPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpSelectPositioner]` is `KpSelectPositioner`. Takes the positioner options ("Positioner options", above).
     - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it.
-- `[kuiSelectPopup]` is `KuiSelectPopup`.
-- `[kuiSelectList]` is `KuiSelectList`. The items' own box inside the popup, when the popup also holds scroll arrows.
-- `[kuiSelectScrollUpArrow]` is `KuiSelectScrollUpArrow`. Structural: written `*kuiSelectScrollUpArrow`. `<div *kuiSelectScrollUpArrow>`: in the page while there is more of the list above. It scrolls the list while the pointer moves over it.
-- `[kuiSelectScrollDownArrow]` is `KuiSelectScrollDownArrow`. Structural: written `*kuiSelectScrollDownArrow`. `<div *kuiSelectScrollDownArrow>`: in the page while there is more of the list below.
-- `[kuiSelectGroup]` is `KuiSelectGroup`. Items that belong together, named by their `kuiSelectGroupLabel`.
-- `[kuiSelectGroupLabel]` is `KuiSelectGroupLabel`. Names the group it is in. With no group around it, it is plain text.
-- `[kuiSelectSeparator]` is `KuiSelectSeparator`. A line between groups.
-- `[kuiSelectItem]` is `KuiSelectItem`.
+- `[kpSelectPopup]` is `KpSelectPopup`.
+- `[kpSelectList]` is `KpSelectList`. The items' own box inside the popup, when the popup also holds scroll arrows.
+- `[kpSelectScrollUpArrow]` is `KpSelectScrollUpArrow`. Structural: written `*kpSelectScrollUpArrow`. `<div *kpSelectScrollUpArrow>`: in the page while there is more of the list above. It scrolls the list while the pointer moves over it.
+- `[kpSelectScrollDownArrow]` is `KpSelectScrollDownArrow`. Structural: written `*kpSelectScrollDownArrow`. `<div *kpSelectScrollDownArrow>`: in the page while there is more of the list below.
+- `[kpSelectGroup]` is `KpSelectGroup`. Items that belong together, named by their `kpSelectGroupLabel`.
+- `[kpSelectGroupLabel]` is `KpSelectGroupLabel`. Names the group it is in. With no group around it, it is plain text.
+- `[kpSelectSeparator]` is `KpSelectSeparator`. A line between groups.
+- `[kpSelectItem]` is `KpSelectItem`.
     - `value: unknown`: Required. What the select's value is while this item is chosen.
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What typeahead matches and the trigger shows; the item's text when left out.
     - `index?: number`: Its place among all the rows, in a virtualized list.
-- `[kuiSelectItemText]` is `KuiSelectItemText`. The item's name: what the trigger shows once it is chosen.
-- `[kuiSelectItemIndicator]` is `KuiSelectItemIndicator`. Structural: written `*kuiSelectItemIndicator`. `<span *kuiSelectItemIndicator>`: in the page while its item is the chosen one.
-- `input[kuiSelectInput]` is `KuiSelectInput`. `<input kuiSelectInput>`: submits the value with the form around it. Angular only.
+- `[kpSelectItemText]` is `KpSelectItemText`. The item's name: what the trigger shows once it is chosen.
+- `[kpSelectItemIndicator]` is `KpSelectItemIndicator`. Structural: written `*kpSelectItemIndicator`. `<span *kpSelectItemIndicator>`: in the page while its item is the chosen one.
+- `input[kpSelectInput]` is `KpSelectInput`. `<input kpSelectInput>`: submits the value with the form around it. Angular only.
 
 Attributes and CSS variables, by part:
 
@@ -3021,14 +3021,14 @@ Attributes and CSS variables, by part:
 ### Separator
 
 ```
-import { KuiSeparator } from "@kirana-ui/angular"
+import { KpSeparator } from "@kirana-ui/angular"
 ```
 
 Props:
 
 - `orientation?: Orientation`: Whether the line lies across (the default) or stands upright: what a screen reader is told.
 
-`[kuiSeparator]` is `KuiSeparator`. `exportAs: "kuiSeparator"`.
+`[kpSeparator]` is `KpSeparator`. `exportAs: "kpSeparator"`.
 
 Attributes and CSS variables, by part:
 
@@ -3038,20 +3038,20 @@ Attributes and CSS variables, by part:
 ### Slider
 
 ```
-import { KuiSlider, KuiSliderValue, KuiSliderControl, KuiSliderTrack, KuiSliderIndicator, KuiSliderThumb } from "@kirana-ui/angular"
+import { KpSlider, KpSliderValue, KpSliderControl, KpSliderTrack, KpSliderIndicator, KpSliderThumb } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiSlider]`, `[kuiSliderValue]`, `[kuiSliderControl]`, `[kuiSliderTrack]`, `[kuiSliderIndicator]`, `[kuiSliderThumb]`.
+Parts: `[kpSlider]`, `[kpSliderValue]`, `[kpSliderControl]`, `[kpSliderTrack]`, `[kpSliderIndicator]`, `[kpSliderThumb]`.
 
 Anatomy:
 
 ```
-kuiSlider
-  kuiSliderValue
-  kuiSliderControl
-    kuiSliderTrack
-      kuiSliderIndicator
-      kuiSliderThumb (repeated)
+kpSlider
+  kpSliderValue
+  kpSliderControl
+    kpSliderTrack
+      kpSliderIndicator
+      kpSliderThumb (repeated)
 ```
 
 Props of its root:
@@ -3077,12 +3077,12 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiSlider]` is `KuiSlider`. `exportAs: "kuiSlider"`. Generic: `<Value extends SliderValue = SliderValue>`. Its props are above.
-- `[kuiSliderValue]` is `KuiSliderValue`. Shows the written value.
-- `[kuiSliderControl]` is `KuiSliderControl`.
-- `[kuiSliderTrack]` is `KuiSliderTrack`.
-- `[kuiSliderIndicator]` is `KuiSliderIndicator`.
-- `[kuiSliderThumb]` is `KuiSliderThumb`. On a thumb's element. It draws the hidden input inside it, which a form reads.
+- `[kpSlider]` is `KpSlider`. `exportAs: "kpSlider"`. Generic: `<Value extends SliderValue = SliderValue>`. Its props are above.
+- `[kpSliderValue]` is `KpSliderValue`. Shows the written value.
+- `[kpSliderControl]` is `KpSliderControl`.
+- `[kpSliderTrack]` is `KpSliderTrack`.
+- `[kpSliderIndicator]` is `KpSliderIndicator`.
+- `[kpSliderThumb]` is `KpSliderThumb`. On a thumb's element. It draws the hidden input inside it, which a form reads.
     - `index?: number`: Which value of a range the thumb is, from 0. A thumb that is given none takes its place among the slider's thumbs, in the order they are written.
 
 Attributes and CSS variables, by part:
@@ -3125,16 +3125,16 @@ Attributes and CSS variables, by part:
 ### Switch
 
 ```
-import { KuiSwitch, KuiSwitchThumb } from "@kirana-ui/angular"
+import { KpSwitch, KpSwitchThumb } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiSwitch]`, `[kuiSwitchThumb]`.
+Parts: `[kpSwitch]`, `[kpSwitchThumb]`.
 
 Anatomy:
 
 ```
-kuiSwitch
-  kuiSwitchThumb
+kpSwitch
+  kpSwitchThumb
 ```
 
 Props of its root:
@@ -3151,8 +3151,8 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiSwitch]` is `KuiSwitch`. `exportAs: "kuiSwitch"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
-- `[kuiSwitchThumb]` is `KuiSwitchThumb`.
+- `[kpSwitch]` is `KpSwitch`. `exportAs: "kpSwitch"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
+- `[kpSwitchThumb]` is `KpSwitchThumb`.
 
 Attributes and CSS variables, by part:
 
@@ -3172,19 +3172,19 @@ Attributes and CSS variables, by part:
 ### Tabs
 
 ```
-import { KuiTabs, KuiTabsList, KuiTabsTab, KuiTabsIndicator, KuiTabsPanel } from "@kirana-ui/angular"
+import { KpTabs, KpTabsList, KpTabsTab, KpTabsIndicator, KpTabsPanel } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiTabs]`, `[kuiTabsList]`, `[kuiTabsTab]`, `[kuiTabsIndicator]`, `[kuiTabsPanel]`.
+Parts: `[kpTabs]`, `[kpTabsList]`, `[kpTabsTab]`, `[kpTabsIndicator]`, `[kpTabsPanel]`.
 
 Anatomy:
 
 ```
-kuiTabs
-  kuiTabsList
-    kuiTabsTab (repeated)
-    kuiTabsIndicator
-  *kuiTabsPanel (repeated)
+kpTabs
+  kpTabsList
+    kpTabsTab (repeated)
+    kpTabsIndicator
+  *kpTabsPanel (repeated)
 ```
 
 Props of its root:
@@ -3196,17 +3196,17 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiTabs]` is `KuiTabs`. `exportAs: "kuiTabs"`. Generic: `<Value = unknown>`. Its props are above.
-- `[kuiTabsList]` is `KuiTabsList`.
+- `[kpTabs]` is `KpTabs`. `exportAs: "kpTabs"`. Generic: `<Value = unknown>`. Its props are above.
+- `[kpTabsList]` is `KpTabsList`.
     - `activateOnFocus?: boolean`: Whether moving focus onto a tab with the arrows activates it. Default `false`.
     - `loop?: boolean`: Whether the arrows wrap from the last tab to the first. Default `true`.
-- `[kuiTabsTab]` is `KuiTabsTab`.
+- `[kpTabsTab]` is `KpTabsTab`.
     - `value: unknown`: Required. What the tabs' value is while this tab is the active one.
     - `disabled?: boolean`: Disables this tab: it cannot be chosen.
-- `[kuiTabsIndicator]` is `KuiTabsIndicator`.
-- `[kuiTabsPanel]` is `KuiTabsPanel`. Structural: written `*kuiTabsPanel`. `<div *kuiTabsPanel="'account'">`: in the page while its tab is the active one; `*kuiTabsPanel="'account'; keepMounted: true"` keeps it, hidden.
-    - `*kuiTabsPanel: unknown`: The directive's own value: `*kuiTabsPanel="…"`. Required. The value of the tab this is the panel of.
-    - `keepMounted?: boolean`: Written after the directive's value: `*kuiTabsPanel="…; keepMounted: …"`. Keeps the panel in the page, `hidden`, while its tab is not the active one.
+- `[kpTabsIndicator]` is `KpTabsIndicator`.
+- `[kpTabsPanel]` is `KpTabsPanel`. Structural: written `*kpTabsPanel`. `<div *kpTabsPanel="'account'">`: in the page while its tab is the active one; `*kpTabsPanel="'account'; keepMounted: true"` keeps it, hidden.
+    - `*kpTabsPanel: unknown`: The directive's own value: `*kpTabsPanel="…"`. Required. The value of the tab this is the panel of.
+    - `keepMounted?: boolean`: Written after the directive's value: `*kpTabsPanel="…; keepMounted: …"`. Keeps the panel in the page, `hidden`, while its tab is not the active one.
 
 Attributes and CSS variables, by part:
 
@@ -3239,42 +3239,42 @@ Attributes and CSS variables, by part:
 ### Toast
 
 ```
-import { KuiToastViewport, KuiToastList, KuiToastRoot, KuiToastContent, KuiToastTitle, KuiToastDescription, KuiToastClose, KuiToastAction } from "@kirana-ui/angular"
+import { KpToastViewport, KpToastList, KpToastRoot, KpToastContent, KpToastTitle, KpToastDescription, KpToastClose, KpToastAction } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiToastViewport]`, `[kuiToastList]`, `[kuiToastRoot]`, `[kuiToastContent]`, `[kuiToastTitle]`, `[kuiToastDescription]`, `[kuiToastClose]`, `[kuiToastAction]`.
+Parts: `[kpToastViewport]`, `[kpToastList]`, `[kpToastRoot]`, `[kpToastContent]`, `[kpToastTitle]`, `[kpToastDescription]`, `[kpToastClose]`, `[kpToastAction]`.
 
 Anatomy:
 
 ```
-kuiToastViewport
-  *kuiToastList
-    kuiToastRoot (repeated)
-      kuiToastContent (optional)
-        kuiToastTitle
-        kuiToastDescription
-      kuiToastClose
-      kuiToastAction
+kpToastViewport
+  *kpToastList
+    kpToastRoot (repeated)
+      kpToastContent (optional)
+        kpToastTitle
+        kpToastDescription
+      kpToastClose
+      kpToastAction
 ```
 
 Props of its root:
 
-- `toast: ToastRecord`: Required. The toast it draws: the one `*kuiToastList` gave its template (`let toast`).
+- `toast: ToastRecord`: Required. The toast it draws: the one `*kpToastList` gave its template (`let toast`).
 
 Each part, and its own props:
 
-- `[kuiToastViewport]` is `KuiToastViewport`. `exportAs: "kuiToastViewport"`. Where a toaster's toasts are drawn. Always in the page: put it once, near the root.
+- `[kpToastViewport]` is `KpToastViewport`. `exportAs: "kpToastViewport"`. Where a toaster's toasts are drawn. Always in the page: put it once, near the root.
     - `toaster: Toaster`: Required. The page's toaster: one is made with `createToaster()`, once, in a module.
     - `label?: string`: What the region of toasts is called, for assistive technology.
     - `hotkey?: string`: The key that takes focus to the toasts. Default: `"F6"`.
     - `swipeDirection?: "left" | "right" | "up" | "down"`: The way a toast is dragged to close it. Default: `"right"`.
-- `[kuiToastList]` is `KuiToastList`. Structural: written `*kuiToastList`. Its template is given the entry: `let entry` is a `ToastRecord`. `<div *kuiToastList="let toast">`: its template once for each toast, the newest first.
-- `[kuiToastRoot]` is `KuiToastRoot`. One toast, on the element `*kuiToastList` draws for it. Its props are above.
-- `[kuiToastContent]` is `KuiToastContent`. What holds a toast's contents, when the design sizes the toast itself.
-- `[kuiToastTitle]` is `KuiToastTitle`. The toast's title, unless something is written in its element.
-- `[kuiToastDescription]` is `KuiToastDescription`. The toast's description, unless something is written in its element.
-- `[kuiToastClose]` is `KuiToastClose`. Closes the toast.
-- `[kuiToastAction]` is `KuiToastAction`. The toast's action, its label unless something is written in its element. A press tells the action (`onAction`), then closes the toast unless the action called `details.cancel()`.
+- `[kpToastList]` is `KpToastList`. Structural: written `*kpToastList`. Its template is given the entry: `let entry` is a `ToastRecord`. `<div *kpToastList="let toast">`: its template once for each toast, the newest first.
+- `[kpToastRoot]` is `KpToastRoot`. One toast, on the element `*kpToastList` draws for it. Its props are above.
+- `[kpToastContent]` is `KpToastContent`. What holds a toast's contents, when the design sizes the toast itself.
+- `[kpToastTitle]` is `KpToastTitle`. The toast's title, unless something is written in its element.
+- `[kpToastDescription]` is `KpToastDescription`. The toast's description, unless something is written in its element.
+- `[kpToastClose]` is `KpToastClose`. Closes the toast.
+- `[kpToastAction]` is `KpToastAction`. The toast's action, its label unless something is written in its element. A press tells the action (`onAction`), then closes the toast unless the action called `details.cancel()`.
 
 A page's toasts are a toaster's, made once in a module: `import { createToaster } from "@kirana-ui/angular"`, then `export const toaster = createToaster(options)` (`ToasterOptions`, under "Types"). The viewport is given it, and anything on the page adds to it: `toaster.add({ title, description, action, priority })`, `toaster.update(id, options)`, `toaster.dismiss(id)`, `toaster.promise(promise, { loading, success, error })`. What each takes and gives back is `Toaster`, `ToastOptions`, `ToastActionOptions` and `ToastRecord` under "Types".
 
@@ -3303,7 +3303,7 @@ Attributes and CSS variables, by part:
 ### Toggle
 
 ```
-import { KuiToggle } from "@kirana-ui/angular"
+import { KpToggle } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -3314,7 +3314,7 @@ Props:
 - `value?: unknown`: In a toggle group: what the group's value holds while this one is pressed.
 - `(pressedChanged): { pressed: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 
-`[kuiToggle]` is `KuiToggle`. `exportAs: "kuiToggle"`. Inside a `kuiToggleGroup`, `value` makes it one of the group's toggles.
+`[kpToggle]` is `KpToggle`. `exportAs: "kpToggle"`. Inside a `kpToggleGroup`, `value` makes it one of the group's toggles.
 
 Attributes and CSS variables, by part:
 
@@ -3325,7 +3325,7 @@ Attributes and CSS variables, by part:
 ### ToggleGroup
 
 ```
-import { KuiToggleGroup } from "@kirana-ui/angular"
+import { KpToggleGroup } from "@kirana-ui/angular"
 ```
 
 Props:
@@ -3338,7 +3338,7 @@ Props:
 - `loop?: boolean`: Whether the arrows go round from the last toggle to the first. Default: they do.
 - `(valueChanged): { value: Value[]; details: ChangeDetails }`: Heard as a toggle is about to be pressed or released, with the values that would then be pressed: `details.cancel()` keeps them as they were.
 
-`[kuiToggleGroup]` is `KuiToggleGroup`. `exportAs: "kuiToggleGroup"`. Generic: `<Value = unknown>`. Toggles that are one control. Each `kuiToggle` with a `value` inside it is one of its toggles.
+`[kpToggleGroup]` is `KpToggleGroup`. `exportAs: "kpToggleGroup"`. Generic: `<Value = unknown>`. Toggles that are one control. Each `kpToggle` with a `value` inside it is one of its toggles.
 
 Attributes and CSS variables, by part:
 
@@ -3350,20 +3350,20 @@ Attributes and CSS variables, by part:
 ### Toolbar
 
 ```
-import { KuiToolbar, KuiToolbarButton, KuiToolbarLink, KuiToolbarInput, KuiToolbarGroup, KuiToolbarSeparator } from "@kirana-ui/angular"
+import { KpToolbar, KpToolbarButton, KpToolbarLink, KpToolbarInput, KpToolbarGroup, KpToolbarSeparator } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiToolbar]`, `[kuiToolbarButton]`, `[kuiToolbarLink]`, `[kuiToolbarInput]`, `[kuiToolbarGroup]`, `[kuiToolbarSeparator]`.
+Parts: `[kpToolbar]`, `[kpToolbarButton]`, `[kpToolbarLink]`, `[kpToolbarInput]`, `[kpToolbarGroup]`, `[kpToolbarSeparator]`.
 
 Anatomy:
 
 ```
-kuiToolbar
-  kuiToolbarGroup (optional, repeated)
-    kuiToolbarButton (repeated)
-    kuiToolbarLink (repeated)
-    kuiToolbarInput (repeated)
-  kuiToolbarSeparator (repeated)
+kpToolbar
+  kpToolbarGroup (optional, repeated)
+    kpToolbarButton (repeated)
+    kpToolbarLink (repeated)
+    kpToolbarInput (repeated)
+  kpToolbarSeparator (repeated)
 ```
 
 Props of its root:
@@ -3374,15 +3374,15 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiToolbar]` is `KuiToolbar`. `exportAs: "kuiToolbar"`. Its props are above.
-- `[kuiToolbarButton]` is `KuiToolbarButton`.
+- `[kpToolbar]` is `KpToolbar`. `exportAs: "kpToolbar"`. Its props are above.
+- `[kpToolbarButton]` is `KpToolbarButton`.
     - `disabled?: boolean`: Disables this control.
-- `[kuiToolbarLink]` is `KuiToolbarLink`.
-- `[kuiToolbarInput]` is `KuiToolbarInput`. `<input kuiToolbarInput>`: the arrows are its own until the caret is at an end.
+- `[kpToolbarLink]` is `KpToolbarLink`.
+- `[kpToolbarInput]` is `KpToolbarInput`. `<input kpToolbarInput>`: the arrows are its own until the caret is at an end.
     - `disabled?: boolean`: Disables this control.
-- `[kuiToolbarGroup]` is `KuiToolbarGroup`.
+- `[kpToolbarGroup]` is `KpToolbarGroup`.
     - `disabled?: boolean`: Disables this control.
-- `[kuiToolbarSeparator]` is `KuiToolbarSeparator`.
+- `[kpToolbarSeparator]` is `KpToolbarSeparator`.
 
 Attributes and CSS variables, by part:
 
@@ -3407,20 +3407,20 @@ Attributes and CSS variables, by part:
 ### Tooltip
 
 ```
-import { KuiTooltip, KuiTooltipTrigger, KuiTooltipPortal, KuiTooltipPositioner, KuiTooltipPopup, KuiTooltipArrow } from "@kirana-ui/angular"
+import { KpTooltip, KpTooltipTrigger, KpTooltipPortal, KpTooltipPositioner, KpTooltipPopup, KpTooltipArrow } from "@kirana-ui/angular"
 ```
 
-Parts: `[kuiTooltip]`, `[kuiTooltipTrigger]`, `[kuiTooltipPortal]`, `[kuiTooltipPositioner]`, `[kuiTooltipPopup]`, `[kuiTooltipArrow]`.
+Parts: `[kpTooltip]`, `[kpTooltipTrigger]`, `[kpTooltipPortal]`, `[kpTooltipPositioner]`, `[kpTooltipPopup]`, `[kpTooltipArrow]`.
 
 Anatomy:
 
 ```
-kuiTooltip
-  kuiTooltipTrigger
-  *kuiTooltipPortal
-    kuiTooltipPositioner
-      kuiTooltipPopup
-        kuiTooltipArrow
+kpTooltip
+  kpTooltipTrigger
+  *kpTooltipPortal
+    kpTooltipPositioner
+      kpTooltipPopup
+        kpTooltipArrow
 ```
 
 Props of its root:
@@ -3434,14 +3434,14 @@ Props of its root:
 
 Each part, and its own props:
 
-- `[kuiTooltip]` is `KuiTooltip`. `exportAs: "kuiTooltip"`. On any element, or on `<ng-container>` to draw none. Its props are above.
-- `[kuiTooltipTrigger]` is `KuiTooltipTrigger`.
+- `[kpTooltip]` is `KpTooltip`. `exportAs: "kpTooltip"`. On any element, or on `<ng-container>` to draw none. Its props are above.
+- `[kpTooltipTrigger]` is `KpTooltipTrigger`.
     - `delay?: number`: Its own waits, which come before the root's.
     - `closeDelay?: number`: How long after the pointer leaves this trigger's popup closes, in milliseconds.
-- `[kuiTooltipPortal]` is `KuiTooltipPortal`. Structural: written `*kuiTooltipPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
-- `[kuiTooltipPositioner]` is `KuiTooltipPositioner`. Takes the positioner options ("Positioner options", above).
-- `[kuiTooltipPopup]` is `KuiTooltipPopup`.
-- `[kuiTooltipArrow]` is `KuiTooltipArrow`.
+- `[kpTooltipPortal]` is `KpTooltipPortal`. Structural: written `*kpTooltipPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
+- `[kpTooltipPositioner]` is `KpTooltipPositioner`. Takes the positioner options ("Positioner options", above).
+- `[kpTooltipPopup]` is `KpTooltipPopup`.
+- `[kpTooltipArrow]` is `KpTooltipArrow`.
 
 Attributes and CSS variables, by part:
 

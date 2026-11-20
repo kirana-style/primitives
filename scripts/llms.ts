@@ -139,16 +139,16 @@ const IDIOM: Record<Adapter, string[]> = {
     "Each part's props are a type of the same entry, named for the part: `import type { TabProps } from \"@kirana-ui/solid/tabs\"`. They are the part's own props listed below, `as`, `render`, and the attributes of the element it draws.",
   ],
   angular: [
-    "Each part is a standalone directive on the caller's own element: `<button kuiDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).",
+    "Each part is a standalone directive on the caller's own element: `<button kpDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).",
     "The package has one entry for the components: every directive is imported from `@kirana-ui/angular`.",
-    "Props are inputs. Bind them (`[defaultValue]=\"'a'\"`): a static attribute stays on the element. An `id` is given as `[kuiId]`.",
+    "Props are inputs. Bind them (`[defaultValue]=\"'a'\"`): a static attribute stays on the element. An `id` is given as `[kpId]`.",
     'A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …). Below, `[(name)]` is such a model and `(name)` an output.',
-    'A part that draws a list is structural and gives each entry: `*kuiDateFieldSegments="let segment"`.',
-    "A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kuiTabsPanel=\"'account'; keepMounted: true\"`.",
-    "A select's value written structurally draws its own content with what is chosen: `<span *kuiSelectValue=\"let shown\">{{ shown.label }}</span>` (`shown.value`, `shown.label`; with `multiple`, `shown.values` and `shown.labels`, in the items' order).",
+    'A part that draws a list is structural and gives each entry: `*kpDateFieldSegments="let segment"`.',
+    "A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kpTabsPanel=\"'account'; keepMounted: true\"`.",
+    "A select's value written structurally draws its own content with what is chosen: `<span *kpSelectValue=\"let shown\">{{ shown.label }}</span>` (`shown.value`, `shown.label`; with `multiple`, `shown.values` and `shown.labels`, in the items' order).",
     "A positioner's `[anchor]` is an element (a template variable, `#box`), an `ElementRef`, an object with `getBoundingClientRect`, or a function that gives one of those (a `viewChild` signal).",
     "Angular 20 and later, with signals; it renders on a server and hydrates.",
-    "What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kuiPortalProvider` (`[container]`) and `kuiDirection` here, and `useDirection` is `injectDirection()`.",
+    "What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kpPortalProvider` (`[container]`) and `kpDirection` here, and `useDirection` is `injectDirection()`.",
   ],
 }
 
@@ -175,12 +175,12 @@ const DESIGN: Record<Adapter, string[]> = {
     `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`<Tooltip.Root delay={0} {...props} />\` in its own component (its caller's \`delay\` still wins).`,
   ],
   angular: [
-    'A design system\'s part is a directive of its own that hosts the primitive\'s: `@Directive({ selector: "[uiDialog]", hostDirectives: [{ directive: KuiDialog, inputs: ["kuiId", "open", "defaultOpen"], outputs: ["openChange", "openChanged"] }] })`. Angular binds a host directive\'s inputs and outputs only where the host exposes them (`inputs`, `outputs`, each `"name"` or `"name: alias"`): expose what its callers set, and give the rest yourself (below). Its own host bindings (`host: { class: "…", "[attr.data-size]": "size()" }`) join the element\'s: classes are joined, and both handlers of an event run. An element of the design system\'s own (a badge) is such a directive with no primitive: nothing of the library\'s is needed for it.',
-    "Keep the design system's selectors apart from the primitives' `kui…`: two directives with one selector in one template's `imports` both match the element, silently (Angular says nothing), and a part would then be made twice. Name your own `[ui…]`, `[my…]`, anything but `kui`.",
+    'A design system\'s part is a directive of its own that hosts the primitive\'s: `@Directive({ selector: "[uiDialog]", hostDirectives: [{ directive: KpDialog, inputs: ["kpId", "open", "defaultOpen"], outputs: ["openChange", "openChanged"] }] })`. Angular binds a host directive\'s inputs and outputs only where the host exposes them (`inputs`, `outputs`, each `"name"` or `"name: alias"`): expose what its callers set, and give the rest yourself (below). Its own host bindings (`host: { class: "…", "[attr.data-size]": "size()" }`) join the element\'s: classes are joined, and both handlers of an event run. An element of the design system\'s own (a badge) is such a directive with no primitive: nothing of the library\'s is needed for it.',
+    "The primitives' selectors, classes and tokens are `kp…` (`[kpDialog]`, `KpDialog`, `KP_FIELD`), the prefix of a base layer, so that a design system's own names never meet them: name yours as you like, `[ui…]`, `[my…]` or `kui…` (`[kuiDialog]` hosting `KpDialog`). What the prefix keeps out: two directives with one selector in one template's `imports` both match the element, silently (Angular says nothing), so a part would be made twice, and a design system's component whose selector is the primitive's matches again on the element its own template writes the primitive on, and recurses.",
     "A model's output, `openChange` beside `[(open)]` (`valueChange`, `pageChange` …), carries the model's type, `boolean | undefined` for `open`: its first value can be the `undefined` the model starts with. Expose it with the model's input for a two-way `[(open)]` on the design system's directive, or expose `openChanged` for the change with its details.",
-    "A part that comes and goes is structural (`*kuiDialogPortal`), and an attribute cannot put a structural directive around its own element: draw it in a component's template around `<ng-content />`. `@Component({ selector: \"[uiDialogContent]\", imports: [KuiDialogPortal, KuiDialogBackdrop, KuiDialogPopup], template: `<ng-template kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup><ng-content /></div></ng-template>` })`. A part given to it (`<h2 uiDialogTitle>`) is made where it is written, so it finds its root there, inside the design system's `[uiDialog]`, not where it is drawn: the title labels the popup.",
-    "`hostInputs(directive, given)` gives a primitive the design system hosts its inputs, where its callers do not: call it in the hosting directive's constructor or a field initialiser, with each value a function read like a signal, so one worked out from the design system's own inputs follows them: `hostInputs(KuiTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })`, `hostInputs(KuiCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })`, `hostInputs(KuiTooltipPositioner, { sideOffset: () => 4 })`. An input the element binds, one the host exposes and its caller writes, wins over what is given. It is typed against the primitive's inputs (`HostInputs<KuiTooltip>`, `InputsOf<KuiTooltip>`), and an input that does not reach the component (a structural directive's own value) throws when the primitive starts. No subclass of a primitive is needed for any of this.",
-    `${TOOLTIP_WAIT} A design system whose tooltips open at once gives \`delay\` to the tooltip it hosts: \`hostInputs(KuiTooltip, { delay: () => 0 })\`, exposing \`delay\` so a caller can still set it.`,
+    "A part that comes and goes is structural (`*kpDialogPortal`), and an attribute cannot put a structural directive around its own element: draw it in a component's template around `<ng-content />`. `@Component({ selector: \"[uiDialogContent]\", imports: [KpDialogPortal, KpDialogBackdrop, KpDialogPopup], template: `<ng-template kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup><ng-content /></div></ng-template>` })`. A part given to it (`<h2 uiDialogTitle>`) is made where it is written, so it finds its root there, inside the design system's `[uiDialog]`, not where it is drawn: the title labels the popup.",
+    "`hostInputs(directive, given)` gives a primitive the design system hosts its inputs, where its callers do not: call it in the hosting directive's constructor or a field initialiser, with each value a function read like a signal, so one worked out from the design system's own inputs follows them: `hostInputs(KpTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })`, `hostInputs(KpCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })`, `hostInputs(KpTooltipPositioner, { sideOffset: () => 4 })`. An input the element binds, one the host exposes and its caller writes, wins over what is given. It is typed against the primitive's inputs (`HostInputs<KpTooltip>`, `InputsOf<KpTooltip>`), and an input that does not reach the component (a structural directive's own value) throws when the primitive starts. No subclass of a primitive is needed for any of this.",
+    `${TOOLTIP_WAIT} A design system whose tooltips open at once gives \`delay\` to the tooltip it hosts: \`hostInputs(KpTooltip, { delay: () => 0 })\`, exposing \`delay\` so a caller can still set it.`,
   ],
 }
 
@@ -202,7 +202,7 @@ const list = (names: string[]) =>
   names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`
 const code = (text: string) => `\`${text}\``
 
-/** A part as its framework writes it: `<Tabs.Tab>`, `<Button>`, `[kuiTabsTab]`. */
+/** A part as its framework writes it: `<Tabs.Tab>`, `<Button>`, `[kpTabsTab]`. */
 function written(adapter: Adapter, component: ComponentReference, part: PartReference): string {
   if (adapter !== "angular") {
     return component.parts.length === 1 && part.part === "Root" && component.lone
@@ -211,10 +211,10 @@ function written(adapter: Adapter, component: ComponentReference, part: PartRefe
   }
   const selectors = part.directive!.selector.split(/,\s*/)
   // A directive that is several components' root is written as this one's.
-  return selectors.find((each) => each.includes(`kui${component.name}]`)) ?? selectors[0]!
+  return selectors.find((each) => each.includes(`kp${component.name}]`)) ?? selectors[0]!
 }
 
-/** The attribute a directive is written as: `[kuiTabsPanel]` is `kuiTabsPanel`. */
+/** The attribute a directive is written as: `[kpTabsPanel]` is `kpTabsPanel`. */
 const attribute = (selector: string) => /\[(\w+)\]/.exec(selector)?.[1] ?? selector
 
 /**
@@ -714,10 +714,10 @@ function rules(adapter: Adapter, own: AdapterReference, react: AdapterReference)
       }
     }
     out.push(
-      `A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with \`*\` on the element it draws: ${list(structural.map(code))}. No other directive is written with \`*\`: a popup, a positioner and a backdrop are plain directives inside their structural portal (\`<ng-container *kuiDialogPortal><div kuiDialogBackdrop></div><div kuiDialogPopup>…</div></ng-container>\`).`
+      `A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with \`*\` on the element it draws: ${list(structural.map(code))}. No other directive is written with \`*\`: a popup, a positioner and a backdrop are plain directives inside their structural portal (\`<ng-container *kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup>…</div></ng-container>\`).`
     )
     out.push(
-      'A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kuiTabs"`.'
+      'A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kpTabs"`.'
     )
   }
   // The popup anatomy, by what parts a component has.
@@ -845,8 +845,8 @@ const marks = (branch: Branch, more: string[] = []) => {
  * the hidden input React's root draws itself, which a directive on an `<ng-container>` cannot.
  */
 const ANGULAR_ONLY: Record<string, string> = {
-  KuiSelectInput: "root",
-  KuiComboboxHiddenInput: "root",
+  KpSelectInput: "root",
+  KpComboboxHiddenInput: "root",
 }
 
 /**
@@ -1165,9 +1165,9 @@ async function fileFor(adapter: Adapter, problems: Problem[]): Promise<string> {
       for (const part of component.parts) used.add(part.directive!.name)
     const byLength = [...own.components.keys()].sort((a, b) => b.length - a.length)
     for (const directive of every.values()) {
-      if (used.has(directive.name) || directive.name === "KuiPositioner") continue
+      if (used.has(directive.name) || directive.name === "KpPositioner") continue
       const owner = byLength.find(
-        (each) => directive.name.startsWith(`Kui${each}`) && directive.name !== `Kui${each}`
+        (each) => directive.name.startsWith(`Kp${each}`) && directive.name !== `Kp${each}`
       )
       if (!owner) continue
       extras.set(owner, [...(extras.get(owner) ?? []), directive])

@@ -208,13 +208,13 @@ assert.match(written, /aria-expanded="true"/)
 const { Component, provideZonelessChangeDetection } = await import("@angular/core")
 const { bootstrapApplication } = await import("@angular/platform-browser")
 const { provideServerRendering, renderApplication } = await import("@angular/platform-server")
-const kui = await import("@kirana-ui/angular")
+const kp = await import("@kirana-ui/angular")
 const App = Component({
   selector: "app-root",
-  imports: [kui.KuiCollapsible, kui.KuiCollapsibleTrigger, kui.KuiCollapsiblePanel],
+  imports: [kp.KpCollapsible, kp.KpCollapsibleTrigger, kp.KpCollapsiblePanel],
   template:
-    '<div kuiCollapsible [defaultOpen]="true"><button kuiCollapsibleTrigger>Details</button>' +
-    '<div *kuiCollapsiblePanel>Content</div></div>',
+    '<div kpCollapsible [defaultOpen]="true"><button kpCollapsibleTrigger>Details</button>' +
+    '<div *kpCollapsiblePanel>Content</div></div>',
 })(class {})
 const page = await renderApplication(
   (context) =>
@@ -360,17 +360,17 @@ export const wrong: ComponentProps<typeof Slider.Root> = { defaultValue: "forty"
   writeFileSync(
     path.join(project, "use-angular.ts"),
     `
-import { KuiSlider, injectDirection } from "@kirana-ui/angular"
+import { KpSlider, injectDirection } from "@kirana-ui/angular"
 import type { Signal } from "@angular/core"
 
 export const direction: () => Signal<"ltr" | "rtl"> = injectDirection
-export const minimum = (slider: KuiSlider): number | undefined => slider.min()
+export const minimum = (slider: KpSlider): number | undefined => slider.min()
 // A directive's value is the caller's: a slider given a number holds a number.
-export const level = (slider: KuiSlider<number>): number | undefined => slider.value()
+export const level = (slider: KpSlider<number>): number | undefined => slider.value()
 // @ts-expect-error a range's list is not a number
-export const range = (slider: KuiSlider<number[]>): number | undefined => slider.value()
+export const range = (slider: KpSlider<number[]>): number | undefined => slider.value()
 // @ts-expect-error a slider has no such input
-export const nothing = (slider: KuiSlider) => slider.nonsense
+export const nothing = (slider: KpSlider) => slider.nonsense
 `
   )
   writeFileSync(

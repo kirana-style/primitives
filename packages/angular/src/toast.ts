@@ -12,7 +12,7 @@ import { effect } from "@kirana-ui/core"
 import { createToast, createToaster as createCoreToaster } from "@kirana-ui/core/toast"
 import type * as Core from "@kirana-ui/core/toast"
 
-import { KuiIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
+import { KpIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
 
 /**
  * What a toast's title, description and action's label may be here: a string, or a template
@@ -40,22 +40,22 @@ type ToastParts = Core.ToastParts<ToastContent>
 type ToastProps = Core.ToastProps<ToastContent>
 
 /** Where a toaster's toasts are drawn. Always in the page: put it once, near the root. */
-@Directive({ selector: "[kuiToastViewport]", exportAs: "kuiToastViewport" })
-export class KuiToastViewport implements OnInit {
+@Directive({ selector: "[kpToastViewport]", exportAs: "kpToastViewport" })
+export class KpToastViewport implements OnInit {
   /** The page's toaster: one is made with `createToaster()`, once, in a module. */
   readonly toaster = input.required<Toaster>()
   /** What the region of toasts is called, for assistive technology. */
   readonly label = input<string>()
   readonly hotkey = input<string>()
   readonly swipeDirection = input<ToastProps["swipeDirection"]>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
 
   controller!: Toast
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     toaster: this.toaster(),
     label: this.label(),
     hotkey: this.hotkey(),
@@ -77,10 +77,10 @@ interface ListContext {
   $implicit: ToastRecord
 }
 
-/** `<div *kuiToastList="let toast">`: its template once for each toast, the newest first. */
-@Directive({ selector: "[kuiToastList]" })
-export class KuiToastList implements OnInit {
-  private readonly owner = inject(KuiToastViewport)
+/** `<div *kpToastList="let toast">`: its template once for each toast, the newest first. */
+@Directive({ selector: "[kpToastList]" })
+export class KpToastList implements OnInit {
+  private readonly owner = inject(KpToastViewport)
   private readonly template = inject<TemplateRef<ListContext>>(TemplateRef)
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
@@ -116,20 +116,20 @@ export class KuiToastList implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiToastList,
+    _directive: KpToastList,
     _context: unknown
   ): _context is { $implicit: ToastRecord } {
     return true
   }
 }
 
-/** One toast, on the element `*kuiToastList` draws for it. */
-@Directive({ selector: "[kuiToastRoot]" })
-export class KuiToastRoot implements OnInit {
-  /** The toast it draws: the one `*kuiToastList` gave its template (`let toast`). */
+/** One toast, on the element `*kpToastList` draws for it. */
+@Directive({ selector: "[kpToastRoot]" })
+export class KpToastRoot implements OnInit {
+  /** The toast it draws: the one `*kpToastList` gave its template (`let toast`). */
   readonly toast = input.required<ToastRecord>()
   parts!: ToastParts
-  private readonly owner = inject(KuiToastViewport)
+  private readonly owner = inject(KpToastViewport)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -139,14 +139,14 @@ export class KuiToastRoot implements OnInit {
 }
 
 function part(name: "content" | "close") {
-  const root = inject(KuiToastRoot)
+  const root = inject(KpToastRoot)
   const put = hostPart()
   return () => put(root.parts[name])
 }
 
 /** What holds a toast's contents, when the design sizes the toast itself. */
-@Directive({ selector: "[kuiToastContent]" })
-export class KuiToastContent implements OnInit {
+@Directive({ selector: "[kpToastContent]" })
+export class KpToastContent implements OnInit {
   private readonly init = part("content")
 
   ngOnInit(): void {
@@ -161,7 +161,7 @@ export class KuiToastContent implements OnInit {
  * for a toast that has nothing to say there.
  */
 function said(name: "title" | "description" | "action") {
-  const root = inject(KuiToastRoot)
+  const root = inject(KpToastRoot)
   const element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   const container = inject(ViewContainerRef)
   const destroy = inject(DestroyRef)
@@ -197,8 +197,8 @@ function said(name: "title" | "description" | "action") {
 }
 
 /** The toast's title, unless something is written in its element. */
-@Directive({ selector: "[kuiToastTitle]" })
-export class KuiToastTitle implements OnInit {
+@Directive({ selector: "[kpToastTitle]" })
+export class KpToastTitle implements OnInit {
   private readonly init = said("title")
 
   ngOnInit(): void {
@@ -207,8 +207,8 @@ export class KuiToastTitle implements OnInit {
 }
 
 /** The toast's description, unless something is written in its element. */
-@Directive({ selector: "[kuiToastDescription]" })
-export class KuiToastDescription implements OnInit {
+@Directive({ selector: "[kpToastDescription]" })
+export class KpToastDescription implements OnInit {
   private readonly init = said("description")
 
   ngOnInit(): void {
@@ -216,8 +216,8 @@ export class KuiToastDescription implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiToastClose]" })
-export class KuiToastClose implements OnInit {
+@Directive({ selector: "[kpToastClose]" })
+export class KpToastClose implements OnInit {
   private readonly init = part("close")
 
   ngOnInit(): void {
@@ -229,8 +229,8 @@ export class KuiToastClose implements OnInit {
  * The toast's action, its label unless something is written in its element. A press tells the
  * action (`onAction`), then closes the toast unless the action called `details.cancel()`.
  */
-@Directive({ selector: "[kuiToastAction]" })
-export class KuiToastAction implements OnInit {
+@Directive({ selector: "[kpToastAction]" })
+export class KpToastAction implements OnInit {
   private readonly init = said("action")
 
   ngOnInit(): void {

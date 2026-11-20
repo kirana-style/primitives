@@ -1,6 +1,6 @@
 import { ApplicationRef, Component, provideZonelessChangeDetection, signal } from "@angular/core"
 import { bootstrapApplication } from "@angular/platform-browser"
-import { KuiCollapsible, KuiCollapsiblePanel, KuiCollapsibleTrigger } from "@kirana-ui/angular"
+import { KpCollapsible, KpCollapsiblePanel, KpCollapsibleTrigger } from "@kirana-ui/angular"
 import {
   NgpCollapsible,
   NgpCollapsibleContent,
@@ -19,9 +19,9 @@ const count = Number(params.get("n") ?? 1000)
 @Component({
   selector: "app-root",
   imports: [
-    KuiCollapsible,
-    KuiCollapsiblePanel,
-    KuiCollapsibleTrigger,
+    KpCollapsible,
+    KpCollapsiblePanel,
+    KpCollapsibleTrigger,
     NgpCollapsible,
     NgpCollapsibleContent,
     NgpCollapsibleTrigger,
@@ -37,9 +37,9 @@ const count = Number(params.get("n") ?? 1000)
         }
       } @else {
         @for (index of rows; track index) {
-          <div kuiCollapsible>
-            <button kuiCollapsibleTrigger>Row {{ index }}</button>
-            <div *kuiCollapsiblePanel>Content {{ index }}</div>
+          <div kpCollapsible>
+            <button kpCollapsibleTrigger>Row {{ index }}</button>
+            <div *kpCollapsiblePanel>Content {{ index }}</div>
           </div>
         }
       }

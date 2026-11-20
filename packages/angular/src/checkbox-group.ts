@@ -12,36 +12,36 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createCheckboxGroup } from "@kirana-ui/core/checkbox-group"
 import type { CheckboxGroup } from "@kirana-ui/core/checkbox-group"
 
-import { KUI_CHECKBOX_GROUP } from "./checkbox-group-token"
-import { KUI_FIELD } from "./field-token"
-import { KuiIds, hostPart, inputsSignal } from "./runtime"
+import { KP_CHECKBOX_GROUP } from "./checkbox-group-token"
+import { KP_FIELD } from "./field-token"
+import { KpIds, hostPart, inputsSignal } from "./runtime"
 
 /**
- * Checkboxes that hold one list of values. Each `kuiCheckbox` with a `value` inside it is
- * checked while the list has its value; with `allValues`, a `kuiCheckbox` marked `parent`
+ * Checkboxes that hold one list of values. Each `kpCheckbox` with a `value` inside it is
+ * checked while the list has its value; with `allValues`, a `kpCheckbox` marked `parent`
  * stands for them all.
  */
 @Directive({
-  selector: "[kuiCheckboxGroup]",
-  exportAs: "kuiCheckboxGroup",
-  providers: [{ provide: KUI_CHECKBOX_GROUP, useExisting: forwardRef(() => KuiCheckboxGroup) }],
+  selector: "[kpCheckboxGroup]",
+  exportAs: "kpCheckboxGroup",
+  providers: [{ provide: KP_CHECKBOX_GROUP, useExisting: forwardRef(() => KpCheckboxGroup) }],
 })
-export class KuiCheckboxGroup implements OnInit {
+export class KpCheckboxGroup implements OnInit {
   readonly value = model<readonly string[] | undefined>(undefined)
   readonly defaultValue = input<readonly string[]>()
   /** The value of every checkbox of the group, for a parent checkbox. */
   readonly allValues = input<readonly string[]>()
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly valueChanged = output<{ value: string[]; details: ChangeDetails }>()
 
   controller!: CheckboxGroup
-  private readonly field = inject(KUI_FIELD, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     allValues: this.allValues(),

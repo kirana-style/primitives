@@ -61,8 +61,8 @@ from one core. The package for a framework is all a project installs.
 Per framework: React takes `render` for another element; Vue takes `as` / `as-child`, binds
 with `v-model:value` and names props in kebab case; Svelte takes a `child` snippet and
 `bind:value`; Solid takes `as` and `render`; Angular's parts are directives on your own
-elements (`<button kuiDialogTrigger>`), bound with `[(value)]`, with `[kuiId]` for an id, and
-a part that comes and goes is structural (`*kuiDialogPortal`, `*kuiTabsPanel`: the list is in
+elements (`<button kpDialogTrigger>`), bound with `[(value)]`, with `[kpId]` for an id, and
+a part that comes and goes is structural (`*kpDialogPortal`, `*kpTabsPanel`: the list is in
 `llms.txt`); custom elements name each part with `kui-part` inside `<kui-dialog>`.
 
 Composing a part with another element: with React's `render={<a … />}` and Vue's `as-child`
@@ -86,13 +86,15 @@ another merge. On Angular such an element is a directive of your own with host b
 custom elements need nothing: the page writes its own element.
 
 A design system on Angular hosts each primitive in a directive of its own
-(`hostDirectives: [{ directive: KuiDialog, inputs: [...], outputs: [...] }]`), exposing what
-its callers set; gives the primitive the rest with `hostInputs(KuiTooltip, { delay: () => 0 })`
+(`hostDirectives: [{ directive: KpDialog, inputs: [...], outputs: [...] }]`), exposing what
+its callers set; gives the primitive the rest with `hostInputs(KpTooltip, { delay: () => 0 })`
 in its constructor (each value a function read like a signal, so `computed` values follow;
 an input the element binds wins), never a subclass of the primitive; draws a structural part
-(`kuiDialogPortal`) in a component's template around `<ng-content />` (a part given to it finds
-its root where it is written); and keeps its selectors apart from `kui…`, since two
-directives with one selector both match, silently. Tooltips need no provider on any
+(`kpDialogPortal`) in a component's template around `<ng-content />` (a part given to it finds
+its root where it is written); and names its own directives as it likes, `kui…` included:
+the primitives are `kp…` so that no design system's selector is theirs (two directives with
+one selector both match, silently, and a component whose selector is its host's recurses).
+Tooltips need no provider on any
 framework: a design system passes `delay` on its own tooltip root (`hostInputs` on Angular).
 
 ## When something is wrong

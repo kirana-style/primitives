@@ -3,17 +3,17 @@ import type { OnInit, SimpleChanges } from "@angular/core"
 import { createFieldset } from "@kirana-ui/core/fieldset"
 import type { Fieldset } from "@kirana-ui/core/fieldset"
 
-import { KuiIds, hostPart, inputsSignal, mounted } from "./runtime"
+import { KpIds, hostPart, inputsSignal, mounted } from "./runtime"
 
-@Directive({ selector: "[kuiFieldset]", exportAs: "kuiFieldset" })
-export class KuiFieldset implements OnInit {
+@Directive({ selector: "[kpFieldset]", exportAs: "kpFieldset" })
+export class KpFieldset implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
 
   controller!: Fieldset
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     disabled: this.disabled(),
   }))
   private readonly part = hostPart()
@@ -30,9 +30,9 @@ export class KuiFieldset implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiFieldsetLegend]" })
-export class KuiFieldsetLegend implements OnInit {
-  private readonly root = inject(KuiFieldset)
+@Directive({ selector: "[kpFieldsetLegend]" })
+export class KpFieldsetLegend implements OnInit {
+  private readonly root = inject(KpFieldset)
   private readonly part = hostPart()
 
   ngOnInit(): void {

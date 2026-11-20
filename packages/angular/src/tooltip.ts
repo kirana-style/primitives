@@ -15,11 +15,11 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createTooltip } from "@kirana-ui/core/tooltip"
 import type { HoverPopup } from "@kirana-ui/core/tooltip"
 
-import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KpIds, KpPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** On any element, or on `<ng-container>` to draw none. */
-@Directive({ selector: "[kuiTooltip]", exportAs: "kuiTooltip" })
-export class KuiTooltip implements OnInit {
+@Directive({ selector: "[kpTooltip]", exportAs: "kpTooltip" })
+export class KpTooltip implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly delay = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
@@ -27,14 +27,14 @@ export class KuiTooltip implements OnInit {
     transform: numberAttribute,
   })
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: HoverPopup
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     delay: this.delay(),
@@ -60,9 +60,9 @@ export class KuiTooltip implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTooltipPortal]" })
-export class KuiTooltipPortal implements OnInit {
-  private readonly root = inject(KuiTooltip)
+@Directive({ selector: "[kpTooltipPortal]" })
+export class KpTooltipPortal implements OnInit {
+  private readonly root = inject(KpTooltip)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -70,9 +70,9 @@ export class KuiTooltipPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTooltipPositioner]" })
-export class KuiTooltipPositioner extends KuiPositioner {
-  private readonly root = inject(KuiTooltip)
+@Directive({ selector: "[kpTooltipPositioner]" })
+export class KpTooltipPositioner extends KpPositioner {
+  private readonly root = inject(KpTooltip)
 
   protected placed() {
     return this.root.controller
@@ -80,13 +80,13 @@ export class KuiTooltipPositioner extends KuiPositioner {
 }
 
 function part(name: "popup" | "arrow") {
-  const root = inject(KuiTooltip)
+  const root = inject(KpTooltip)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiTooltipTrigger]" })
-export class KuiTooltipTrigger implements OnInit {
+@Directive({ selector: "[kpTooltipTrigger]" })
+export class KpTooltipTrigger implements OnInit {
   /** Its own waits, which come before the root's. */
   readonly delay = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
@@ -94,7 +94,7 @@ export class KuiTooltipTrigger implements OnInit {
   readonly closeDelay = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
   })
-  private readonly root = inject(KuiTooltip)
+  private readonly root = inject(KpTooltip)
   private readonly put = hostPart()
 
   constructor() {
@@ -110,8 +110,8 @@ export class KuiTooltipTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTooltipPopup]" })
-export class KuiTooltipPopup implements OnInit {
+@Directive({ selector: "[kpTooltipPopup]" })
+export class KpTooltipPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -119,8 +119,8 @@ export class KuiTooltipPopup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiTooltipArrow]" })
-export class KuiTooltipArrow implements OnInit {
+@Directive({ selector: "[kpTooltipArrow]" })
+export class KpTooltipArrow implements OnInit {
   private readonly init = part("arrow")
 
   ngOnInit(): void {

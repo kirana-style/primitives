@@ -27,14 +27,14 @@ import type {
   CalendarWeekday,
 } from "@kirana-ui/core/calendar"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, drawing, hostPart, inputsSignal, onServer } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, drawing, hostPart, inputsSignal, onServer } from "./runtime"
 
-/** The place of the month the parts inside are drawn in: `*kuiCalendarMonths` gives it. */
-const KUI_CALENDAR_MONTH = new InjectionToken<number>("KuiCalendarMonth")
+/** The place of the month the parts inside are drawn in: `*kpCalendarMonths` gives it. */
+const KP_CALENDAR_MONTH = new InjectionToken<number>("KpCalendarMonth")
 
-@Directive({ selector: "[kuiCalendar]", exportAs: "kuiCalendar" })
-export class KuiCalendar<Mode extends CalendarMode = CalendarMode> implements OnInit {
+@Directive({ selector: "[kpCalendar]", exportAs: "kpCalendar" })
+export class KpCalendar<Mode extends CalendarMode = CalendarMode> implements OnInit {
   /**
    * One day; with `mode="range"` a first and a last; with `mode="multiple"` a list: `[(value)]`.
    * Typed by `mode`.
@@ -47,7 +47,7 @@ export class KuiCalendar<Mode extends CalendarMode = CalendarMode> implements On
   readonly minDays = input<number>()
   /** With `mode="multiple"`: the most days that can be chosen. */
   readonly maxDays = input<number>()
-  /** How many months are shown side by side, each drawn by `*kuiCalendarMonths`. */
+  /** How many months are shown side by side, each drawn by `*kpCalendarMonths`. */
   readonly months = input<number>()
   /** With several `months`: Previous and Next turn them all rather than one month. */
   readonly pagedNavigation = input(false, { transform: booleanAttribute })
@@ -66,21 +66,21 @@ export class KuiCalendar<Mode extends CalendarMode = CalendarMode> implements On
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly readOnly = input(false, { transform: booleanAttribute })
   readonly fixedWeeks = input(false, { transform: booleanAttribute })
-  /** The name its hidden input (`kuiCalendarInput`) submits the value under. */
+  /** The name its hidden input (`kpCalendarInput`) submits the value under. */
   readonly name = input<string>()
   /** The id of the form it belongs to, when it is not inside it. */
   readonly form = input<string>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: CalendarValueOf<Mode>; details: ChangeDetails }>()
   /** Another month is about to be shown: its first day, and `details.cancel()`. */
   readonly monthChanged = output<{ month: string; details: ChangeDetails }>()
 
   controller!: Calendar
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     // The core holds any mode's value; the caller's is its mode's.
     value: this.value() as CalendarValue | undefined,
     defaultValue: this.defaultValue() as CalendarValue | undefined,
@@ -131,19 +131,19 @@ export class KuiCalendar<Mode extends CalendarMode = CalendarMode> implements On
 }
 
 function part(name: "previous" | "next" | "grid" | "input") {
-  const root = inject(KuiCalendar)
-  const index = inject(KUI_CALENDAR_MONTH, { optional: true }) ?? 0
+  const root = inject(KpCalendar)
+  const index = inject(KP_CALENDAR_MONTH, { optional: true }) ?? 0
   const put = hostPart()
   return () => put(name === "grid" ? root.controller.monthAt(index).grid : root.controller[name])
 }
 
-/** The place of the month a part is drawn in, inside `*kuiCalendarMonths`. */
-const monthIndex = () => inject(KUI_CALENDAR_MONTH, { optional: true }) ?? undefined
+/** The place of the month a part is drawn in, inside `*kpCalendarMonths`. */
+const monthIndex = () => inject(KP_CALENDAR_MONTH, { optional: true }) ?? undefined
 
 /** Names the month shown: it writes the name before whatever is inside it. */
-@Directive({ selector: "[kuiCalendarHeading]" })
-export class KuiCalendarHeading implements OnInit {
-  private readonly root = inject(KuiCalendar)
+@Directive({ selector: "[kpCalendarHeading]" })
+export class KpCalendarHeading implements OnInit {
+  private readonly root = inject(KpCalendar)
   private readonly index = monthIndex() ?? 0
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
@@ -172,8 +172,8 @@ export class KuiCalendarHeading implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCalendarPrevious]" })
-export class KuiCalendarPrevious implements OnInit {
+@Directive({ selector: "[kpCalendarPrevious]" })
+export class KpCalendarPrevious implements OnInit {
   private readonly init = part("previous")
 
   ngOnInit(): void {
@@ -181,8 +181,8 @@ export class KuiCalendarPrevious implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCalendarNext]" })
-export class KuiCalendarNext implements OnInit {
+@Directive({ selector: "[kpCalendarNext]" })
+export class KpCalendarNext implements OnInit {
   private readonly init = part("next")
 
   ngOnInit(): void {
@@ -190,8 +190,8 @@ export class KuiCalendarNext implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCalendarGrid]" })
-export class KuiCalendarGrid implements OnInit {
+@Directive({ selector: "[kpCalendarGrid]" })
+export class KpCalendarGrid implements OnInit {
   private readonly init = part("grid")
 
   ngOnInit(): void {
@@ -249,10 +249,10 @@ function each<T>(
   }
 }
 
-/** `<th *kuiCalendarWeekdays="let weekday">`: once for each day of the week. */
-@Directive({ selector: "[kuiCalendarWeekdays]" })
-export class KuiCalendarWeekdays implements OnInit {
-  private readonly root = inject(KuiCalendar)
+/** `<th *kpCalendarWeekdays="let weekday">`: once for each day of the week. */
+@Directive({ selector: "[kpCalendarWeekdays]" })
+export class KpCalendarWeekdays implements OnInit {
+  private readonly root = inject(KpCalendar)
   private readonly draw = each<CalendarWeekday>((weekday) => weekday.index)
 
   ngOnInit(): void {
@@ -260,7 +260,7 @@ export class KuiCalendarWeekdays implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiCalendarWeekdays,
+    _directive: KpCalendarWeekdays,
     _context: unknown
   ): _context is { $implicit: CalendarWeekday } {
     return true
@@ -268,17 +268,17 @@ export class KuiCalendarWeekdays implements OnInit {
 }
 
 /**
- * `<div *kuiCalendarMonths="let month">`: once for each month shown, side by side. The parts
+ * `<div *kpCalendarMonths="let month">`: once for each month shown, side by side. The parts
  * inside each are that month's. Left out for one month.
  */
-@Directive({ selector: "[kuiCalendarMonths]" })
-export class KuiCalendarMonths implements OnInit {
-  private readonly root = inject(KuiCalendar)
+@Directive({ selector: "[kpCalendarMonths]" })
+export class KpCalendarMonths implements OnInit {
+  private readonly root = inject(KpCalendar)
   private readonly draw = each<CalendarMonth>(
     (month) => month.index,
     (month, parent) =>
       Injector.create({
-        providers: [{ provide: KUI_CALENDAR_MONTH, useValue: month.index }],
+        providers: [{ provide: KP_CALENDAR_MONTH, useValue: month.index }],
         parent,
       })
   )
@@ -288,17 +288,17 @@ export class KuiCalendarMonths implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiCalendarMonths,
+    _directive: KpCalendarMonths,
     _context: unknown
   ): _context is { $implicit: CalendarMonth } {
     return true
   }
 }
 
-/** `<tr *kuiCalendarWeeks="let week">`: once for each week of the month shown. */
-@Directive({ selector: "[kuiCalendarWeeks]" })
-export class KuiCalendarWeeks implements OnInit {
-  private readonly root = inject(KuiCalendar)
+/** `<tr *kpCalendarWeeks="let week">`: once for each week of the month shown. */
+@Directive({ selector: "[kpCalendarWeeks]" })
+export class KpCalendarWeeks implements OnInit {
+  private readonly root = inject(KpCalendar)
   private readonly index = monthIndex() ?? 0
   private readonly draw = each<readonly CalendarDay[]>((week) => week[0]!.date)
 
@@ -307,17 +307,17 @@ export class KuiCalendarWeeks implements OnInit {
   }
 
   static ngTemplateContextGuard(
-    _directive: KuiCalendarWeeks,
+    _directive: KpCalendarWeeks,
     _context: unknown
   ): _context is { $implicit: readonly CalendarDay[] } {
     return true
   }
 }
 
-@Directive({ selector: "[kuiCalendarHeadCell]" })
-export class KuiCalendarHeadCell implements OnInit {
+@Directive({ selector: "[kpCalendarHeadCell]" })
+export class KpCalendarHeadCell implements OnInit {
   readonly weekday = input.required<CalendarWeekday>()
-  private readonly root = inject(KuiCalendar)
+  private readonly root = inject(KpCalendar)
   private readonly put = hostPart()
 
   ngOnInit(): void {
@@ -325,10 +325,10 @@ export class KuiCalendarHeadCell implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCalendarCell]" })
-export class KuiCalendarCell implements OnInit {
+@Directive({ selector: "[kpCalendarCell]" })
+export class KpCalendarCell implements OnInit {
   readonly date = input.required<string>()
-  private readonly root = inject(KuiCalendar)
+  private readonly root = inject(KpCalendar)
   private readonly index = monthIndex()
   private readonly put = hostPart()
 
@@ -337,10 +337,10 @@ export class KuiCalendarCell implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiCalendarDay]" })
-export class KuiCalendarDay implements OnInit {
+@Directive({ selector: "[kpCalendarDay]" })
+export class KpCalendarDay implements OnInit {
   readonly date = input.required<string>()
-  private readonly root = inject(KuiCalendar)
+  private readonly root = inject(KpCalendar)
   private readonly index = monthIndex()
   private readonly put = hostPart()
 
@@ -349,9 +349,9 @@ export class KuiCalendarDay implements OnInit {
   }
 }
 
-/** `<input kuiCalendarInput>`: the hidden input the value is submitted by, with a `name`. */
-@Directive({ selector: "input[kuiCalendarInput]" })
-export class KuiCalendarInput implements OnInit {
+/** `<input kpCalendarInput>`: the hidden input the value is submitted by, with a `name`. */
+@Directive({ selector: "input[kpCalendarInput]" })
+export class KpCalendarInput implements OnInit {
   private readonly init = part("input")
 
   ngOnInit(): void {

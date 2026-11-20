@@ -2,48 +2,48 @@ import { Component, Directive, booleanAttribute, computed, input, signal } from 
 import type { ChangeDetails } from "@kirana-ui/core"
 import type { DateRange } from "@kirana-ui/core/calendar"
 import {
-  KuiAccordion,
-  KuiAccordionItem,
-  KuiAccordionPanel,
-  KuiCalendar,
-  KuiCalendarWeekdays,
-  KuiCalendarWeeks,
-  KuiCollapsible,
-  KuiCollapsiblePanel,
-  KuiCombobox,
-  KuiDateField,
-  KuiDateFieldSegments,
-  KuiField,
-  KuiFieldError,
-  KuiFieldValidity,
-  KuiListbox,
-  KuiMenu,
-  KuiMenuPopup,
-  KuiMenuRadioGroup,
-  KuiNavigationMenu,
-  KuiPagination,
-  KuiPaginationItems,
-  KuiRadioGroup,
-  KuiScrollArea,
-  KuiScrollAreaScrollbar,
-  KuiSelect,
-  KuiSelectValue,
-  KuiSlider,
-  KuiTabs,
-  KuiTabsPanel,
-  KuiTabsTab,
-  KuiToastList,
-  KuiToastViewport,
-  KuiToggleGroup,
+  KpAccordion,
+  KpAccordionItem,
+  KpAccordionPanel,
+  KpCalendar,
+  KpCalendarWeekdays,
+  KpCalendarWeeks,
+  KpCollapsible,
+  KpCollapsiblePanel,
+  KpCombobox,
+  KpDateField,
+  KpDateFieldSegments,
+  KpField,
+  KpFieldError,
+  KpFieldValidity,
+  KpListbox,
+  KpMenu,
+  KpMenuPopup,
+  KpMenuRadioGroup,
+  KpNavigationMenu,
+  KpPagination,
+  KpPaginationItems,
+  KpRadioGroup,
+  KpScrollArea,
+  KpScrollAreaScrollbar,
+  KpSelect,
+  KpSelectValue,
+  KpSlider,
+  KpTabs,
+  KpTabsPanel,
+  KpTabsTab,
+  KpToastList,
+  KpToastViewport,
+  KpToggleGroup,
   createToaster,
-  KuiCommand,
-  KuiComboboxItem,
-  KuiTooltip,
+  KpCommand,
+  KpComboboxItem,
+  KpTooltip,
   hostInputs,
 } from "@kirana-ui/angular"
 import type { ToastRecord, InputsOf } from "@kirana-ui/angular"
 
-import { DsDialog } from "./design-system"
+import { KuiDialog } from "./design-system"
 
 /** What a change tells: the value as its caller holds it, and why. */
 interface Told<Value> {
@@ -60,114 +60,114 @@ interface Told<Value> {
 @Component({
   selector: "typed-usages",
   imports: [
-    KuiAccordion,
-    KuiAccordionItem,
-    KuiAccordionPanel,
-    KuiCalendar,
-    KuiCalendarWeekdays,
-    KuiCalendarWeeks,
-    KuiCollapsible,
-    KuiCollapsiblePanel,
-    KuiCombobox,
-    KuiDateField,
-    KuiDateFieldSegments,
-    KuiField,
-    KuiFieldError,
-    KuiFieldValidity,
-    KuiListbox,
-    KuiMenu,
-    KuiMenuPopup,
-    KuiMenuRadioGroup,
-    KuiNavigationMenu,
-    KuiPagination,
-    KuiPaginationItems,
-    KuiRadioGroup,
-    KuiScrollArea,
-    KuiScrollAreaScrollbar,
-    KuiSelect,
-    KuiSelectValue,
-    KuiSlider,
-    KuiTabs,
-    KuiTabsPanel,
-    KuiTabsTab,
-    KuiToastList,
-    KuiToastViewport,
-    KuiToggleGroup,
+    KpAccordion,
+    KpAccordionItem,
+    KpAccordionPanel,
+    KpCalendar,
+    KpCalendarWeekdays,
+    KpCalendarWeeks,
+    KpCollapsible,
+    KpCollapsiblePanel,
+    KpCombobox,
+    KpDateField,
+    KpDateFieldSegments,
+    KpField,
+    KpFieldError,
+    KpFieldValidity,
+    KpListbox,
+    KpMenu,
+    KpMenuPopup,
+    KpMenuRadioGroup,
+    KpNavigationMenu,
+    KpPagination,
+    KpPaginationItems,
+    KpRadioGroup,
+    KpScrollArea,
+    KpScrollAreaScrollbar,
+    KpSelect,
+    KpSelectValue,
+    KpSlider,
+    KpTabs,
+    KpTabsPanel,
+    KpTabsTab,
+    KpToastList,
+    KpToastViewport,
+    KpToggleGroup,
   ],
   template: `
     <!-- One value, never "none": the caller's own signal, and a change that tells its type. -->
-    <div kuiTabs [(value)]="position" (valueChanged)="text($event)">
-      <button kuiTabsTab [value]="'top'">Top</button>
-      <div *kuiTabsPanel="'top'">Top</div>
-      <div *kuiTabsPanel="'bottom'; keepMounted: true">Bottom</div>
+    <div kpTabs [(value)]="position" (valueChanged)="text($event)">
+      <button kpTabsTab [value]="'top'">Top</button>
+      <div *kpTabsPanel="'top'">Top</div>
+      <div *kpTabsPanel="'bottom'; keepMounted: true">Bottom</div>
     </div>
     <!-- Bound one way, the same. With only a default the compiler gives up: the change is any. -->
-    <div kuiTabs [value]="position()" (valueChanged)="text($event)"></div>
-    <div kuiTabs [defaultValue]="1" (valueChanged)="count($event)"></div>
-    <div kuiMenu>
-      <div *kuiMenuPopup>
-        <div kuiMenuRadioGroup [(value)]="position" (valueChanged)="text($event)"></div>
+    <div kpTabs [value]="position()" (valueChanged)="text($event)"></div>
+    <div kpTabs [defaultValue]="1" (valueChanged)="count($event)"></div>
+    <div kpMenu>
+      <div *kpMenuPopup>
+        <div kpMenuRadioGroup [(value)]="position" (valueChanged)="text($event)"></div>
       </div>
     </div>
 
     <!-- A slider tells what it was given: a number, or a range's list. -->
-    <div kuiSlider [(value)]="level" (valueChanged)="count($event)"></div>
-    <div kuiSlider [(value)]="sizes" (valueCommitted)="counts($event)"></div>
+    <div kpSlider [(value)]="level" (valueChanged)="count($event)"></div>
+    <div kpSlider [(value)]="sizes" (valueCommitted)="counts($event)"></div>
 
     <!-- One value that can be "none": the caller holds the value or null. -->
-    <div kuiRadioGroup [(value)]="plan" (valueChanged)="textOrNone($event)"></div>
-    <ng-container kuiSelect [(value)]="plan" [items]="plans" (valueChanged)="textOrNone($event)">
-      <span *kuiSelectValue="let shown">{{ known(shown.label) }} {{ known(shown.labels) }}</span>
+    <div kpRadioGroup [(value)]="plan" (valueChanged)="textOrNone($event)"></div>
+    <ng-container kpSelect [(value)]="plan" [items]="plans" (valueChanged)="textOrNone($event)">
+      <span *kpSelectValue="let shown">{{ known(shown.label) }} {{ known(shown.labels) }}</span>
     </ng-container>
-    <ng-container kuiCombobox [(value)]="plan" (valueChanged)="textOrNone($event)" />
-    <nav kuiNavigationMenu [(value)]="plan" (valueChanged)="textOrNone($event)"></nav>
+    <ng-container kpCombobox [(value)]="plan" (valueChanged)="textOrNone($event)" />
+    <nav kpNavigationMenu [(value)]="plan" (valueChanged)="textOrNone($event)"></nav>
 
     <!-- Several values. -->
-    <div kuiAccordion [(value)]="open" (valueChanged)="texts($event)">
-      <div kuiAccordionItem [value]="'a'">
-        <div *kuiAccordionPanel>A</div>
-        <div *kuiAccordionPanel="{ keepMounted: true }">A</div>
+    <div kpAccordion [(value)]="open" (valueChanged)="texts($event)">
+      <div kpAccordionItem [value]="'a'">
+        <div *kpAccordionPanel>A</div>
+        <div *kpAccordionPanel="{ keepMounted: true }">A</div>
       </div>
     </div>
-    <div kuiToggleGroup [(value)]="open" (valueChanged)="texts($event)"></div>
-    <div kuiListbox [(value)]="sizes" [defaultValue]="[1, 2]" (valueChanged)="counts($event)"></div>
-    <ng-container kuiSelect multiple [(values)]="sizes" (valuesChanged)="known($event.values)" />
-    <ng-container kuiCombobox multiple [(values)]="open" (valuesChanged)="known($event.values)" />
+    <div kpToggleGroup [(value)]="open" (valueChanged)="texts($event)"></div>
+    <div kpListbox [(value)]="sizes" [defaultValue]="[1, 2]" (valueChanged)="counts($event)"></div>
+    <ng-container kpSelect multiple [(values)]="sizes" (valuesChanged)="known($event.values)" />
+    <ng-container kpCombobox multiple [(values)]="open" (valuesChanged)="known($event.values)" />
 
     <!-- A calendar's value is its mode's: a day, a range, or a list of days. -->
-    <div kuiCalendar [mode]="'multiple'" (valueChanged)="days($event)"></div>
-    <div kuiCalendar [mode]="'range'" (valueChanged)="stay($event)"></div>
-    <div kuiCalendar [mode]="'single'" (valueChanged)="textOrNone($event)"></div>
+    <div kpCalendar [mode]="'multiple'" (valueChanged)="days($event)"></div>
+    <div kpCalendar [mode]="'range'" (valueChanged)="stay($event)"></div>
+    <div kpCalendar [mode]="'single'" (valueChanged)="textOrNone($event)"></div>
 
     <!-- What a template is handed. -->
-    <div kuiCalendar>
-      <span *kuiCalendarWeekdays="let weekday">{{ known(weekday).short }}</span>
-      <span *kuiCalendarWeeks="let week">{{ known(week)[0]?.date }}</span>
+    <div kpCalendar>
+      <span *kpCalendarWeekdays="let weekday">{{ known(weekday).short }}</span>
+      <span *kpCalendarWeeks="let week">{{ known(week)[0]?.date }}</span>
     </div>
-    <div kuiDateField>
-      <span *kuiDateFieldSegments="let segment">{{ known(segment).literal }}</span>
+    <div kpDateField>
+      <span *kpDateFieldSegments="let segment">{{ known(segment).literal }}</span>
     </div>
-    <nav kuiPagination [count]="40">
-      <ng-container *kuiPaginationItems="let entry">{{ known(entry).key }}</ng-container>
+    <nav kpPagination [count]="40">
+      <ng-container *kpPaginationItems="let entry">{{ known(entry).key }}</ng-container>
     </nav>
-    <div kuiToastViewport [toaster]="toaster">
-      <div *kuiToastList="let toast">{{ record(toast).id }}</div>
+    <div kpToastViewport [toaster]="toaster">
+      <div *kpToastList="let toast">{{ record(toast).id }}</div>
     </div>
-    <div kuiField>
-      <ng-container *kuiFieldValidity="let validity">{{ known(validity).valid }}</ng-container>
-      <div *kuiFieldError></div>
-      <div *kuiFieldError="'valueMissing'"></div>
-      <div *kuiFieldError="true"></div>
+    <div kpField>
+      <ng-container *kpFieldValidity="let validity">{{ known(validity).valid }}</ng-container>
+      <div *kpFieldError></div>
+      <div *kpFieldError="'valueMissing'"></div>
+      <div *kpFieldError="true"></div>
     </div>
 
     <!-- The bare attribute, and what it takes when it is given something. -->
-    <div kuiCollapsible>
-      <div *kuiCollapsiblePanel></div>
-      <div *kuiCollapsiblePanel="{ keepMounted: true }"></div>
+    <div kpCollapsible>
+      <div *kpCollapsiblePanel></div>
+      <div *kpCollapsiblePanel="{ keepMounted: true }"></div>
     </div>
-    <div kuiScrollArea>
-      <div *kuiScrollAreaScrollbar></div>
-      <div *kuiScrollAreaScrollbar="'horizontal'"></div>
+    <div kpScrollArea>
+      <div *kpScrollAreaScrollbar></div>
+      <div *kpScrollAreaScrollbar="'horizontal'"></div>
     </div>
   `,
 })
@@ -205,17 +205,17 @@ export class TypedUsages {
 
 /** A combobox whose items are the design system's, given as labels, and its one default value. */
 @Directive({
-  selector: "[dsCombobox]",
-  hostDirectives: [{ directive: KuiCombobox, inputs: ["multiple", "disabled"] }],
+  selector: "[kuiCombobox]",
+  hostDirectives: [{ directive: KpCombobox, inputs: ["multiple", "disabled"] }],
 })
-export class DsCombobox {
+export class KuiCombobox {
   readonly options = input<readonly { value: string; label: string }[]>([])
   readonly initial = input<string | readonly string[]>()
 
   constructor() {
     const many = (value: string | readonly string[] | undefined) =>
       typeof value === "string" ? [value] : value
-    hostInputs(KuiCombobox, {
+    hostInputs(KpCombobox, {
       items: computed(() => this.options()),
       defaultValue: computed(() => {
         const value = this.initial()
@@ -228,53 +228,53 @@ export class DsCombobox {
 
 /** Its item, named by the design system's own way of naming a value. */
 @Directive({
-  selector: "[dsComboboxItem]",
-  hostDirectives: [{ directive: KuiComboboxItem, inputs: ["value", "disabled"] }],
+  selector: "[kuiComboboxItem]",
+  hostDirectives: [{ directive: KpComboboxItem, inputs: ["value", "disabled"] }],
 })
-export class DsComboboxItem {
+export class KuiComboboxItem {
   readonly named = input<string>()
 
   constructor() {
-    hostInputs(KuiComboboxItem, { label: this.named })
+    hostInputs(KpComboboxItem, { label: this.named })
   }
 }
 
 /** A command menu that leaves the filtering to its caller while `shouldFilter` is false. */
-@Directive({ selector: "[dsCommand]", hostDirectives: [KuiCommand] })
-export class DsCommand {
+@Directive({ selector: "[kuiCommand]", hostDirectives: [KpCommand] })
+export class KuiCommand {
   readonly shouldFilter = input(true, { transform: booleanAttribute })
 
   constructor() {
-    hostInputs(KuiCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })
+    hostInputs(KpCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })
   }
 }
 
 /** A slider whose thumbs stay inside its track at the ends. */
 @Directive({
-  selector: "[dsSlider]",
-  hostDirectives: [{ directive: KuiSlider, inputs: ["value", "defaultValue", "min", "max"] }],
+  selector: "[kuiSlider]",
+  hostDirectives: [{ directive: KpSlider, inputs: ["value", "defaultValue", "min", "max"] }],
 })
-export class DsSlider {
+export class KuiSlider {
   constructor() {
-    hostInputs(KuiSlider, { thumbAlignment: () => "edge" })
+    hostInputs(KpSlider, { thumbAlignment: () => "edge" })
   }
 }
 
 /** A tooltip shown only while its sidebar is collapsed. */
-@Directive({ selector: "[dsSidebarTip]", hostDirectives: [KuiTooltip] })
-export class DsSidebarTip {
+@Directive({ selector: "[kuiSidebarTip]", hostDirectives: [KpTooltip] })
+export class KuiSidebarTip {
   readonly collapsed = input(false, { transform: booleanAttribute })
 
   constructor() {
-    hostInputs(KuiTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })
+    hostInputs(KpTooltip, { delay: () => 0, disabled: computed(() => !this.collapsed()) })
   }
 }
 
 /** A design system's dialog, its change heard through the primitive's model. */
 @Component({
   selector: "typed-design",
-  imports: [DsDialog],
-  template: `<ng-container dsDialog (openChange)="heard($event)"></ng-container>`,
+  imports: [KuiDialog],
+  template: `<ng-container kuiDialog (openChange)="heard($event)"></ng-container>`,
 })
 export class TypedDesign {
   /** A model's change output carries its type: `boolean | undefined` for a dialog's `open`. */
@@ -287,17 +287,17 @@ export class TypedDesign {
 type Expect<Type extends true> = Type
 type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
 export type InputTypes = [
-  Expect<Same<InputsOf<KuiTooltip>["delay"], number | undefined>>,
-  Expect<Same<InputsOf<KuiTooltip>["disabled"], boolean>>,
-  Expect<Same<InputsOf<KuiTooltip>["open"], boolean | undefined>>,
+  Expect<Same<InputsOf<KpTooltip>["delay"], number | undefined>>,
+  Expect<Same<InputsOf<KpTooltip>["disabled"], boolean>>,
+  Expect<Same<InputsOf<KpTooltip>["open"], boolean | undefined>>,
 ]
 // @ts-expect-error what is not an input is not given: a directive's controller is its own
-export const notAnInput: Expect<Same<keyof InputsOf<KuiTooltip>, keyof KuiTooltip>> = true
+export const notAnInput: Expect<Same<keyof InputsOf<KpTooltip>, keyof KpTooltip>> = true
 
 /** Never called: what `hostInputs` refuses. */
 export function refusedInputs(): void {
   // @ts-expect-error a tooltip's delay is a number
-  hostInputs(KuiTooltip, { delay: () => "soon" })
+  hostInputs(KpTooltip, { delay: () => "soon" })
   // @ts-expect-error a command has no such input
-  hostInputs(KuiCommand, { delay: () => 0 })
+  hostInputs(KpCommand, { delay: () => 0 })
 }

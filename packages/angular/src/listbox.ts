@@ -5,10 +5,10 @@ import type { ChangeDetails, ListCollection } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
 import type { Listbox, ListboxGroup } from "@kirana-ui/core/listbox"
 
-import { KuiIds, hostPart, inputsSignal, presentWhile } from "./runtime"
+import { KpIds, hostPart, inputsSignal, presentWhile } from "./runtime"
 
-@Directive({ selector: "[kuiListbox]", exportAs: "kuiListbox" })
-export class KuiListbox<Value = unknown> implements OnInit {
+@Directive({ selector: "[kpListbox]", exportAs: "kpListbox" })
+export class KpListbox<Value = unknown> implements OnInit {
   readonly value = model<readonly Value[] | undefined>(undefined)
   readonly defaultValue = input<readonly Value[]>()
   readonly multiple = input(false, { transform: booleanAttribute })
@@ -20,14 +20,14 @@ export class KuiListbox<Value = unknown> implements OnInit {
   readonly form = input<string>()
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   readonly valueChanged = output<{ value: Value[]; details: ChangeDetails }>()
 
   controller!: Listbox<Value>
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     defaultValue: this.defaultValue(),
     multiple: this.multiple(),
@@ -55,15 +55,15 @@ export class KuiListbox<Value = unknown> implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiListboxItem]" })
-export class KuiListboxItem implements OnInit {
+@Directive({ selector: "[kpListboxItem]" })
+export class KpListboxItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What typing matches; the item's text when left out. */
   readonly label = input<string>()
   /** Its place among all the rows, in a virtualized list. */
   readonly index = input<number>()
-  readonly root = inject(KuiListbox)
+  readonly root = inject(KpListbox)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
@@ -81,10 +81,10 @@ export class KuiListboxItem implements OnInit {
   }
 }
 
-/** `<span *kuiListboxItemIndicator>`: in the page while its item is chosen. */
-@Directive({ selector: "[kuiListboxItemIndicator]" })
-export class KuiListboxItemIndicator implements OnInit {
-  private readonly item = inject(KuiListboxItem)
+/** `<span *kpListboxItemIndicator>`: in the page while its item is chosen. */
+@Directive({ selector: "[kpListboxItemIndicator]" })
+export class KpListboxItemIndicator implements OnInit {
+  private readonly item = inject(KpListboxItem)
   private readonly present = presentWhile()
 
   ngOnInit(): void {
@@ -94,23 +94,23 @@ export class KuiListboxItemIndicator implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiListboxGroup]" })
-export class KuiListboxGroup implements OnInit {
-  readonly kuiId = input<string>()
+@Directive({ selector: "[kpListboxGroup]" })
+export class KpListboxGroup implements OnInit {
+  readonly kpId = input<string>()
   group!: ListboxGroup
-  private readonly root = inject(KuiListbox)
-  private readonly generated = inject(KuiIds).make()
+  private readonly root = inject(KpListbox)
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.group = this.root.controller.group(this.kuiId() ?? this.generated)
+    this.group = this.root.controller.group(this.kpId() ?? this.generated)
     this.put(this.group.root)
   }
 }
 
-@Directive({ selector: "[kuiListboxGroupLabel]" })
-export class KuiListboxGroupLabel implements OnInit {
-  private readonly around = inject(KuiListboxGroup)
+@Directive({ selector: "[kpListboxGroupLabel]" })
+export class KpListboxGroupLabel implements OnInit {
+  private readonly around = inject(KpListboxGroup)
   private readonly put = hostPart()
 
   ngOnInit(): void {

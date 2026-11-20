@@ -4,22 +4,22 @@ import { effect } from "@kirana-ui/core"
 import { createProgress } from "@kirana-ui/core/progress"
 import type { ValueBar, ValueBarProps } from "@kirana-ui/core/progress"
 
-import { KuiIds, hostPart, inputsSignal } from "./runtime"
+import { KpIds, hostPart, inputsSignal } from "./runtime"
 
-@Directive({ selector: "[kuiProgress]", exportAs: "kuiProgress" })
-export class KuiProgress implements OnInit {
+@Directive({ selector: "[kpProgress]", exportAs: "kpProgress" })
+export class KpProgress implements OnInit {
   readonly value = input.required<number | null>()
   readonly min = input<number>()
   readonly max = input<number>()
   readonly format = input<Intl.NumberFormatOptions>()
   readonly locale = input<string>()
   readonly getAriaValueText = input<ValueBarProps["getAriaValueText"]>()
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
 
   controller!: ValueBar
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     value: this.value(),
     min: this.min(),
     max: this.max(),
@@ -40,13 +40,13 @@ export class KuiProgress implements OnInit {
 }
 
 function part(name: "track" | "indicator" | "label") {
-  const root = inject(KuiProgress)
+  const root = inject(KpProgress)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiProgressTrack]" })
-export class KuiProgressTrack implements OnInit {
+@Directive({ selector: "[kpProgressTrack]" })
+export class KpProgressTrack implements OnInit {
   private readonly init = part("track")
 
   ngOnInit(): void {
@@ -54,8 +54,8 @@ export class KuiProgressTrack implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiProgressIndicator]" })
-export class KuiProgressIndicator implements OnInit {
+@Directive({ selector: "[kpProgressIndicator]" })
+export class KpProgressIndicator implements OnInit {
   private readonly init = part("indicator")
 
   ngOnInit(): void {
@@ -63,8 +63,8 @@ export class KuiProgressIndicator implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiProgressLabel]" })
-export class KuiProgressLabel implements OnInit {
+@Directive({ selector: "[kpProgressLabel]" })
+export class KpProgressLabel implements OnInit {
   private readonly init = part("label")
 
   ngOnInit(): void {
@@ -73,9 +73,9 @@ export class KuiProgressLabel implements OnInit {
 }
 
 /** Shows the written value. */
-@Directive({ selector: "[kuiProgressValue]" })
-export class KuiProgressValue implements OnInit {
-  private readonly root = inject(KuiProgress)
+@Directive({ selector: "[kpProgressValue]" })
+export class KpProgressValue implements OnInit {
+  private readonly root = inject(KpProgress)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
   private readonly part = hostPart()

@@ -5,26 +5,26 @@ import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createResizable } from "@kirana-ui/core/resizable"
 import type { Resizable } from "@kirana-ui/core/resizable"
 
-import { KUI_DIRECTION } from "./direction-token"
-import { KuiIds, hostPart, inputsSignal } from "./runtime"
+import { KP_DIRECTION } from "./direction-token"
+import { KpIds, hostPart, inputsSignal } from "./runtime"
 
-@Directive({ selector: "[kuiResizableGroup]", exportAs: "kuiResizableGroup" })
-export class KuiResizableGroup implements OnInit {
+@Directive({ selector: "[kpResizableGroup]", exportAs: "kpResizableGroup" })
+export class KpResizableGroup implements OnInit {
   readonly orientation = input<Orientation>()
   readonly keyboardStep = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
   })
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** Each panel's share as the panels are resized, with why. */
   readonly sizesChanged = output<{ sizes: number[]; details: ChangeDetails }>()
 
   controller!: Resizable
-  private readonly around = inject(KUI_DIRECTION, { optional: true })
-  private readonly generated = inject(KuiIds).make()
+  private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     orientation: this.orientation(),
     keyboardStep: this.keyboardStep(),
     disabled: this.disabled(),
@@ -42,14 +42,14 @@ export class KuiResizableGroup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiResizablePanel]" })
-export class KuiResizablePanel implements OnInit {
+@Directive({ selector: "[kpResizablePanel]" })
+export class KpResizablePanel implements OnInit {
   readonly defaultSize = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
   })
   readonly minSize = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
   readonly maxSize = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
-  private readonly root = inject(KuiResizableGroup)
+  private readonly root = inject(KpResizableGroup)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     defaultSize: this.defaultSize(),
@@ -67,10 +67,10 @@ export class KuiResizablePanel implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiResizableHandle]" })
-export class KuiResizableHandle implements OnInit {
+@Directive({ selector: "[kpResizableHandle]" })
+export class KpResizableHandle implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
-  private readonly root = inject(KuiResizableGroup)
+  private readonly root = inject(KpResizableGroup)
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
 

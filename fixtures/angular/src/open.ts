@@ -1,31 +1,31 @@
 import { Component, afterNextRender, signal } from "@angular/core"
 import {
-  KuiAccordion,
-  KuiAccordionHeader,
-  KuiAccordionItem,
-  KuiAccordionPanel,
-  KuiAccordionTrigger,
-  KuiCheckbox,
-  KuiCheckboxIndicator,
-  KuiCollapsible,
-  KuiCollapsiblePanel,
-  KuiCollapsibleTrigger,
-  KuiField,
-  KuiFieldControl,
-  KuiFieldDescription,
-  KuiFieldLabel,
-  KuiPopover,
-  KuiPopoverClose,
-  KuiPopoverDescription,
-  KuiPopoverPopup,
-  KuiPopoverPortal,
-  KuiPopoverPositioner,
-  KuiPopoverTitle,
-  KuiPopoverTrigger,
-  KuiTabs,
-  KuiTabsList,
-  KuiTabsPanel,
-  KuiTabsTab,
+  KpAccordion,
+  KpAccordionHeader,
+  KpAccordionItem,
+  KpAccordionPanel,
+  KpAccordionTrigger,
+  KpCheckbox,
+  KpCheckboxIndicator,
+  KpCollapsible,
+  KpCollapsiblePanel,
+  KpCollapsibleTrigger,
+  KpField,
+  KpFieldControl,
+  KpFieldDescription,
+  KpFieldLabel,
+  KpPopover,
+  KpPopoverClose,
+  KpPopoverDescription,
+  KpPopoverPopup,
+  KpPopoverPortal,
+  KpPopoverPositioner,
+  KpPopoverTitle,
+  KpPopoverTrigger,
+  KpTabs,
+  KpTabsList,
+  KpTabsPanel,
+  KpTabsTab,
 } from "@kirana-ui/angular"
 
 // The second page: no part is given an id, and a popover is open when the page is first drawn.
@@ -36,64 +36,64 @@ import {
 @Component({
   selector: "app-root",
   imports: [
-    KuiAccordion,
-    KuiAccordionHeader,
-    KuiAccordionItem,
-    KuiAccordionPanel,
-    KuiAccordionTrigger,
-    KuiCheckbox,
-    KuiCheckboxIndicator,
-    KuiCollapsible,
-    KuiCollapsiblePanel,
-    KuiCollapsibleTrigger,
-    KuiField,
-    KuiFieldControl,
-    KuiFieldDescription,
-    KuiFieldLabel,
-    KuiPopover,
-    KuiPopoverClose,
-    KuiPopoverDescription,
-    KuiPopoverPopup,
-    KuiPopoverPortal,
-    KuiPopoverPositioner,
-    KuiPopoverTitle,
-    KuiPopoverTrigger,
-    KuiTabs,
-    KuiTabsList,
-    KuiTabsPanel,
-    KuiTabsTab,
+    KpAccordion,
+    KpAccordionHeader,
+    KpAccordionItem,
+    KpAccordionPanel,
+    KpAccordionTrigger,
+    KpCheckbox,
+    KpCheckboxIndicator,
+    KpCollapsible,
+    KpCollapsiblePanel,
+    KpCollapsibleTrigger,
+    KpField,
+    KpFieldControl,
+    KpFieldDescription,
+    KpFieldLabel,
+    KpPopover,
+    KpPopoverClose,
+    KpPopoverDescription,
+    KpPopoverPopup,
+    KpPopoverPortal,
+    KpPopoverPositioner,
+    KpPopoverTitle,
+    KpPopoverTrigger,
+    KpTabs,
+    KpTabsList,
+    KpTabsPanel,
+    KpTabsTab,
   ],
   template: `
     <main data-generated-ids="">
       <section data-fixture="ids">
-        <div kuiCollapsible [defaultOpen]="true">
-          <button kuiCollapsibleTrigger data-testid="o-c-trigger">Details</button>
-          <div *kuiCollapsiblePanel class="panel" data-testid="o-c-panel">
+        <div kpCollapsible [defaultOpen]="true">
+          <button kpCollapsibleTrigger data-testid="o-c-trigger">Details</button>
+          <div *kpCollapsiblePanel class="panel" data-testid="o-c-panel">
             <p>Panel content</p>
           </div>
         </div>
-        <div kuiTabs [defaultValue]="'one'">
-          <div kuiTabsList class="tabs">
-            <button kuiTabsTab [value]="'one'" data-testid="o-t-one">One</button>
-            <button kuiTabsTab [value]="'two'" data-testid="o-t-two">Two</button>
+        <div kpTabs [defaultValue]="'one'">
+          <div kpTabsList class="tabs">
+            <button kpTabsTab [value]="'one'" data-testid="o-t-one">One</button>
+            <button kpTabsTab [value]="'two'" data-testid="o-t-two">Two</button>
           </div>
-          <div *kuiTabsPanel="'one'" data-testid="o-t-panel-one">First</div>
-          <div *kuiTabsPanel="'two'" data-testid="o-t-panel-two">Second</div>
+          <div *kpTabsPanel="'one'" data-testid="o-t-panel-one">First</div>
+          <div *kpTabsPanel="'two'" data-testid="o-t-panel-two">Second</div>
         </div>
-        <div kuiField [name]="'email'">
-          <label kuiFieldLabel data-testid="o-f-label">Email</label>
-          <input kuiFieldControl type="email" data-testid="o-f-control" />
-          <p kuiFieldDescription data-testid="o-f-description">Your work address</p>
+        <div kpField [name]="'email'">
+          <label kpFieldLabel data-testid="o-f-label">Email</label>
+          <input kpFieldControl type="email" data-testid="o-f-control" />
+          <p kpFieldDescription data-testid="o-f-description">Your work address</p>
         </div>
-        <div kuiAccordion>
+        <div kpAccordion>
           @for (each of ["first", "second"]; track each) {
-            <div kuiAccordionItem [attr.data-testid]="'o-a-' + each">
-              <h3 kuiAccordionHeader>
-                <button kuiAccordionTrigger [attr.data-testid]="'o-a-' + each + '-trigger'">
+            <div kpAccordionItem [attr.data-testid]="'o-a-' + each">
+              <h3 kpAccordionHeader>
+                <button kpAccordionTrigger [attr.data-testid]="'o-a-' + each + '-trigger'">
                   Item {{ each }}
                 </button>
               </h3>
-              <div *kuiAccordionPanel class="fold" [attr.data-testid]="'o-a-' + each + '-panel'">
+              <div *kpAccordionPanel class="fold" [attr.data-testid]="'o-a-' + each + '-panel'">
                 <p>Content {{ each }}</p>
               </div>
             </div>
@@ -101,41 +101,41 @@ import {
         </div>
       </section>
       <section data-fixture="open-popup">
-        <ng-container kuiPopover [defaultOpen]="true">
-          <button kuiPopoverTrigger data-testid="o-p-trigger">Open popover</button>
-          <ng-template kuiPopoverPortal>
+        <ng-container kpPopover [defaultOpen]="true">
+          <button kpPopoverTrigger data-testid="o-p-trigger">Open popover</button>
+          <ng-template kpPopoverPortal>
             <div
-              kuiPopoverPositioner
+              kpPopoverPositioner
               [sideOffset]="8"
               [align]="'start'"
               data-testid="o-p-positioner"
             >
-              <div kuiPopoverPopup class="popup" data-testid="o-p-popup">
-                <h2 kuiPopoverTitle>Notifications</h2>
-                <p kuiPopoverDescription>You are all caught up.</p>
-                <button kuiPopoverClose data-testid="o-p-close">Close</button>
+              <div kpPopoverPopup class="popup" data-testid="o-p-popup">
+                <h2 kpPopoverTitle>Notifications</h2>
+                <p kpPopoverDescription>You are all caught up.</p>
+                <button kpPopoverClose data-testid="o-p-close">Close</button>
               </div>
             </div>
           </ng-template>
         </ng-container>
       </section>
       <section data-fixture="late">
-        <div kuiCollapsible [(open)]="late">
-          <button kuiCollapsibleTrigger data-testid="o-l-trigger">Late</button>
-          <div *kuiCollapsiblePanel class="panel" data-testid="o-l-panel">
+        <div kpCollapsible [(open)]="late">
+          <button kpCollapsibleTrigger data-testid="o-l-trigger">Late</button>
+          <div *kpCollapsiblePanel class="panel" data-testid="o-l-panel">
             <p>Opened as the page mounted</p>
           </div>
         </div>
         <fieldset [disabled]="!unlocked()" data-testid="o-s-set">
-          <span kuiCheckbox [name]="'terms'" class="box" data-testid="o-s-box">
-            <span *kuiCheckboxIndicator class="mark">✓</span>
+          <span kpCheckbox [name]="'terms'" class="box" data-testid="o-s-box">
+            <span *kpCheckboxIndicator class="mark">✓</span>
           </span>
         </fieldset>
         <button data-testid="o-s-unlock" (click)="unlocked.set(!unlocked())">Unlock</button>
-        <div kuiField [name]="'nick'">
-          <label kuiFieldLabel>Nickname</label>
+        <div kpField [name]="'nick'">
+          <label kpFieldLabel>Nickname</label>
           <input
-            kuiFieldControl
+            kpFieldControl
             [value]="nick()"
             (input)="nick.set($any($event.currentTarget).value.toUpperCase())"
             data-testid="o-h-control"

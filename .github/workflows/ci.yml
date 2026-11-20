@@ -71,19 +71,31 @@ jobs:
       - name: Release rehearsal
         run: vp run rehearse
 
-  # Once for each engine, side by side: the three used to follow each other in one job, which
-  # was most of the wait for a pull request.
+  # Once for each engine, side by side, and the two slow engines in four shares each: Firefox and
+  # WebKit play one subject at a time, and took 24 and 34 minutes whole, which was the wait for a
+  # pull request. A share plays the subject the others are compared with and a quarter of the
+  # rest (`--shard`), so the shares together are the whole run. Chromium plays six at once and
+  # stays whole.
   conformance:
     runs-on: ubuntu-26.04
-    name: build and conformance (${{ matrix.browser }})
-    # Firefox plays one subject at a time, the slowest of the three: at 20 minutes it was stopped
-    # in the eleventh of thirteen subjects with nothing failed, once the run gained five scenarios.
-    timeout-minutes: 35
+    name: build and conformance (${{ matrix.browser }} ${{ matrix.shard }})
+    # A share takes six to eight minutes of this, measured; the rest is room for the browsers'
+    # install to be tried again.
+    timeout-minutes: 30
     strategy:
       # One engine's failure does not hide what the others would have said.
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        include:
+          - { browser: chromium, shard: 1/1, part: 1 }
+          - { browser: firefox, shard: 1/4, part: 1 }
+          - { browser: firefox, shard: 2/4, part: 2 }
+          - { browser: firefox, shard: 3/4, part: 3 }
+          - { browser: firefox, shard: 4/4, part: 4 }
+          - { browser: webkit, shard: 1/4, part: 1 }
+          - { browser: webkit, shard: 2/4, part: 2 }
+          - { browser: webkit, shard: 3/4, part: 3 }
+          - { browser: webkit, shard: 4/4, part: 4 }
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -99,32 +111,45 @@ jobs:
       - name: Build
         run: vp run build
 
-      # The browsers Playwright drives, at the versions the lockfile's Playwright asks for.
+      # The browsers Playwright drives, at the versions the lockfile's Playwright asks for. It
+      # takes half a minute, and stalls now and then when many jobs fetch at once (one sat here
+      # for twenty minutes until its job was stopped, three others for four to eleven): a try
+      # that has not finished in three minutes is stopped and made again.
       - name: Browsers
-        run: bunx playwright install --with-deps ${{ matrix.browser }}
+        run: |
+          for attempt in 1 2 3 4; do
+            if timeout --kill-after=10 180 bunx playwright install --with-deps ${{ matrix.browser }}; then
+              exit 0
+            fi
+            echo "::warning::installing ${{ matrix.browser }} did not finish, attempt $attempt"
+          done
+          exit 1
 
       # The core's services on their own, with no framework: focus, layers, presence, hover,
-      # positioning, in this job's engine.
+      # positioning, in this job's engine. Once for each engine, in its first share.
       - name: Core services
+        if: matrix.part == 1
         env:
           BROWSERS: ${{ matrix.browser }}
         run: vp run browser
 
-      # The whole run in this job's engine, on the fixtures built above. Chromium plays several
-      # pages at once; Firefox and WebKit one at a time (the run's own defaults).
+      # This job's share of the run in its engine, on the fixtures built above. Chromium plays
+      # several pages at once; Firefox and WebKit one at a time (the run's own defaults).
       - name: Conformance
-        run: bun tests/conformance/run.ts --browser ${{ matrix.browser }}
+        run: bun tests/conformance/run.ts --browser ${{ matrix.browser }} --shard ${{ matrix.shard }}
 
       # What each adapter drew, state by state, when the comparison fails.
       - name: Keep the recorded states
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: conformance-${{ matrix.browser }}
+          name: conformance-${{ matrix.browser }}-${{ matrix.part }}
           path: tests/conformance/out
           retention-days: 7
 
+      # Sizes do not depend on the engine: once.
       - name: Budgets
+        if: matrix.browser == 'chromium'
         run: vp run budgets
 
   # The one check branch protection requires from this workflow, so adding or renaming a job never

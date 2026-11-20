@@ -10,8 +10,8 @@ import { hostPart, inputsSignal, mounted } from "./runtime"
  * On a `<form>`: its fields say what is wrong, and `(formSubmit)` gives the values once all are
  * valid. As with Angular's own forms, the page is left only when the form has an `action`.
  */
-@Directive({ selector: "form[kuiForm]", exportAs: "kuiForm" })
-export class KuiForm implements OnInit {
+@Directive({ selector: "form[kpForm]", exportAs: "kpForm" })
+export class KpForm implements OnInit {
   readonly errors = input<FormErrors>()
   readonly validationMode = input<ValidationMode>()
   readonly formSubmit = output<{ values: FormValues; details: ChangeDetails }>()

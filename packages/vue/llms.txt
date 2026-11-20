@@ -2754,7 +2754,7 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
-- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kuiId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
+- item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kpId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.

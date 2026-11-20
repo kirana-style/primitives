@@ -15,11 +15,11 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createHoverCard } from "@kirana-ui/core/hover-card"
 import type { HoverPopup } from "@kirana-ui/core/hover-card"
 
-import { KuiIds, KuiPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KpIds, KpPositioner, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /** On any element, or on `<ng-container>` to draw none. */
-@Directive({ selector: "[kuiHoverCard]", exportAs: "kuiHoverCard" })
-export class KuiHoverCard implements OnInit {
+@Directive({ selector: "[kpHoverCard]", exportAs: "kpHoverCard" })
+export class KpHoverCard implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly delay = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
@@ -27,14 +27,14 @@ export class KuiHoverCard implements OnInit {
     transform: numberAttribute,
   })
   readonly disabled = input(false, { transform: booleanAttribute })
-  readonly kuiId = input<string>()
+  readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: HoverPopup
-  private readonly generated = inject(KuiIds).make()
+  private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
-    id: this.kuiId() ?? this.generated,
+    id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     delay: this.delay(),
@@ -60,9 +60,9 @@ export class KuiHoverCard implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiHoverCardPortal]" })
-export class KuiHoverCardPortal implements OnInit {
-  private readonly root = inject(KuiHoverCard)
+@Directive({ selector: "[kpHoverCardPortal]" })
+export class KpHoverCardPortal implements OnInit {
+  private readonly root = inject(KpHoverCard)
   private readonly present = presentWhile({ portal: true })
 
   ngOnInit(): void {
@@ -70,9 +70,9 @@ export class KuiHoverCardPortal implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiHoverCardPositioner]" })
-export class KuiHoverCardPositioner extends KuiPositioner {
-  private readonly root = inject(KuiHoverCard)
+@Directive({ selector: "[kpHoverCardPositioner]" })
+export class KpHoverCardPositioner extends KpPositioner {
+  private readonly root = inject(KpHoverCard)
 
   protected placed() {
     return this.root.controller
@@ -80,13 +80,13 @@ export class KuiHoverCardPositioner extends KuiPositioner {
 }
 
 function part(name: "popup" | "arrow") {
-  const root = inject(KuiHoverCard)
+  const root = inject(KpHoverCard)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kuiHoverCardTrigger]" })
-export class KuiHoverCardTrigger implements OnInit {
+@Directive({ selector: "[kpHoverCardTrigger]" })
+export class KpHoverCardTrigger implements OnInit {
   /** Its own waits, which come before the root's. */
   readonly delay = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
@@ -94,7 +94,7 @@ export class KuiHoverCardTrigger implements OnInit {
   readonly closeDelay = input<number | undefined, unknown>(undefined, {
     transform: numberAttribute,
   })
-  private readonly root = inject(KuiHoverCard)
+  private readonly root = inject(KpHoverCard)
   private readonly put = hostPart()
 
   constructor() {
@@ -110,8 +110,8 @@ export class KuiHoverCardTrigger implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiHoverCardPopup]" })
-export class KuiHoverCardPopup implements OnInit {
+@Directive({ selector: "[kpHoverCardPopup]" })
+export class KpHoverCardPopup implements OnInit {
   private readonly init = part("popup")
 
   ngOnInit(): void {
@@ -119,8 +119,8 @@ export class KuiHoverCardPopup implements OnInit {
   }
 }
 
-@Directive({ selector: "[kuiHoverCardArrow]" })
-export class KuiHoverCardArrow implements OnInit {
+@Directive({ selector: "[kpHoverCardArrow]" })
+export class KpHoverCardArrow implements OnInit {
   private readonly init = part("arrow")
 
   ngOnInit(): void {

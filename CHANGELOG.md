@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0](https://github.com/kirana-style/primitives/compare/v0.2.0...v0.3.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* calendar modes, a design system's composition, and fixes from the port ([#56](https://github.com/kirana-style/primitives/issues/56))
+* calendar modes, a design system's composition, and fixes from the port ([#55](https://github.com/kirana-style/primitives/issues/55))
+
+### Features
+
+* calendar modes, a design system's composition, and fixes from the port ([#55](https://github.com/kirana-style/primitives/issues/55)) ([e2afd38](https://github.com/kirana-style/primitives/commit/e2afd38d6d024499cc28bdf4fe8a6aee4ae1dbd7))
+* calendar modes, a design system's composition, and fixes from the port ([#56](https://github.com/kirana-style/primitives/issues/56)) ([bb560d7](https://github.com/kirana-style/primitives/commit/bb560d7dc182a82211f9e8fbb6754f3577c04d61))
+* the parts and props base ui has and the primitives lacked ([#53](https://github.com/kirana-style/primitives/issues/53)) ([3d90131](https://github.com/kirana-style/primitives/commit/3d901312b5cd81555e7c278e5424e4dfc83b90cc))
+
+
+### Dependencies
+
+* bump the minor-and-patch group with 9 updates ([#51](https://github.com/kirana-style/primitives/issues/51)) ([43e1727](https://github.com/kirana-style/primitives/commit/43e17270b52f80479ef5fa869ef8a02813d04f19))
+
 ## [0.2.0](https://github.com/kirana-style/primitives/compare/v0.1.1...v0.2.0) (2026-11-18)
 
 

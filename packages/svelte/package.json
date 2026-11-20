@@ -1,6 +1,6 @@
 {
   "name": "@kirana-ui/svelte",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Kirana UI Primitives for Svelte",
   "license": "MIT",

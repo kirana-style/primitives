@@ -11,9 +11,11 @@ export interface CheckboxProps extends CheckedProps {
   /** Neither checked nor unchecked: a parent of boxes that disagree. */
   indeterminate?: boolean | undefined
   /**
-   * In a checkbox group with `allValues`: the box that stands for them all. It is checked when
-   * every one is, mixed when some are, a press on it sets them all, and it is not submitted.
-   * Read once.
+   * In a checkbox group with `allValues`: the box that stands for them all, written anywhere
+   * inside the group. It is checked when every one is, mixed when some are, and it is not
+   * submitted; its `aria-controls` names the boxes. A press from mixed checks them all, the next
+   * unchecks them all, and the next brings back the set they were left in (left all checked or
+   * none, a press goes between all and none); a disabled box keeps its state. Read once.
    */
   parent?: boolean | undefined
 }

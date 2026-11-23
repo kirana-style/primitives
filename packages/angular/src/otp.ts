@@ -28,6 +28,7 @@ export class KpOtp implements OnInit {
   readonly name = input<string>()
   /** The id of the form the input belongs to, when it is not inside it. */
   readonly form = input<string>()
+  /** The id of its input, not of the root: a `<label for>` names it. */
   readonly kpId = input<string>()
   readonly valueChanged = output<{ value: string; details: ChangeDetails }>()
   /** Every character is in: the moment to send the code. */

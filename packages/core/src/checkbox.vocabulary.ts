@@ -24,7 +24,8 @@ export const checkboxVocabulary = defineComponent({
   },
   indicator: {
     inside: "root",
-    description: "The mark. In the page while the box is checked or indeterminate.",
+    description:
+      "The mark. In the page while the box is checked or indeterminate. `data-indeterminate` and `data-checked` say which mark to draw, a dash or a tick: in CSS (`[data-indeterminate]`), or from the part's state. Through its exit the box is already unchecked, and both are absent.",
     states: {
       ...CHECKED,
       indeterminate: INDETERMINATE,

@@ -23,7 +23,10 @@ function useSwitch(part: string): Controller {
 export type RootProps = PartComponentProps<
   "span",
   StateOf<Parts["root"]>,
-  Omit<SwitchProps, "id"> & { id?: string }
+  Omit<SwitchProps, "id"> & {
+    /** The id of the switch's hidden native checkbox, not of the switch: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead. */
+    id?: string
+  }
 >
 
 function Root({

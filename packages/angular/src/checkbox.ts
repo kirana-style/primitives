@@ -14,7 +14,13 @@ export class KpCheckbox implements OnInit {
   readonly checked = model<boolean | undefined>(undefined)
   readonly defaultChecked = input(false, { transform: booleanAttribute })
   readonly indeterminate = input(false, { transform: booleanAttribute })
-  /** In a `kpCheckboxGroup` with `allValues`: the box that stands for them all. */
+  /**
+   * In a `kpCheckboxGroup` with `allValues`: the box that stands for them all, written anywhere
+   * inside the group. It is checked when every one is, mixed when some are, and it is not
+   * submitted; its `aria-controls` names the boxes. A press from mixed checks them all, the next
+   * unchecks them all, and the next brings back the set they were left in (left all checked or
+   * none, a press goes between all and none); a disabled box keeps its state. Read once.
+   */
   readonly parent = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly readOnly = input(false, { transform: booleanAttribute })
@@ -23,6 +29,7 @@ export class KpCheckbox implements OnInit {
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
   readonly value = input<string>()
+  /** The id of the box's hidden native checkbox, not of the box: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead. */
   readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly checkedChanged = output<{ checked: boolean; details: ChangeDetails }>()
@@ -70,7 +77,12 @@ export class KpCheckbox implements OnInit {
   }
 }
 
-/** `<span *kpCheckboxIndicator>`: in the page while the box is checked or indeterminate. */
+/**
+ * `<span *kpCheckboxIndicator>`: in the page while the box is checked or indeterminate. Its
+ * template is given nothing: a dash while mixed and a tick while checked are both written in it
+ * and chosen in CSS by the element's `data-indeterminate` (`[data-indeterminate] .tick`,
+ * `:not([data-indeterminate]) > .dash`, each `display: none`).
+ */
 @Directive({ selector: "[kpCheckboxIndicator]" })
 export class KpCheckboxIndicator implements OnInit {
   private readonly root = inject(KpCheckbox)

@@ -79,6 +79,10 @@ const IndicatorElement = partComponent(
   () => scope.use().indicator
 )
 
+/**
+ * A dash while mixed and a tick while checked, from the slot's state: `<Checkbox.Indicator
+ * v-slot="{ state }">{{ state.indeterminate ? "–" : "✓" }}</Checkbox.Indicator>`.
+ */
 export interface IndicatorProps extends PartComponentProps {
   /** Keeps the mark in the page while the box is unchecked. */
   keepMounted?: boolean | undefined

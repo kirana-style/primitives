@@ -4,6 +4,8 @@
 
 Generated from the library's own source (`bun scripts/llms.ts`), and checked against it: every part and every prop here is in the package, and what is not here is not. In order: installing it and its entries; the positioner's options; the types the props name; what else is exported; the agent bridge; the testing kit; then "Using it" (the rules of every component) and "Components" (each one's parts, props, attributes and CSS variables).
 
+This file describes the version it ships with. What changed in each release, the breaking changes first with what to write instead, is `CHANGELOG.md` in the package: `node_modules/@kirana-ui/solid/CHANGELOG.md`.
+
 ## Install and entries
 
 Install `@kirana-ui/solid`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/solid/agent`, `@kirana-ui/solid/testing`), so nothing is imported from a package the project did not install.
@@ -861,18 +863,19 @@ Props of its root:
 - `defaultChecked?: boolean`: Read once.
 - `onCheckedChange?: (checked: boolean, details: ChangeDetails) => void`: Heard as it is about to be checked or unchecked: `details.cancel()` keeps it as it was.
 - `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
-- `parent?: boolean`: In a checkbox group with `allValues`: the box that stands for them all. It is checked when every one is, mixed when some are, a press on it sets them all, and it is not submitted. Read once.
+- `parent?: boolean`: In a checkbox group with `allValues`: the box that stands for them all, written anywhere inside the group. It is checked when every one is, mixed when some are, and it is not submitted; its `aria-controls` names the boxes. A press from mixed checks them all, the next unchecks them all, and the next brings back the set they were left in (left all checked or none, a press goes between all and none); a disabled box keeps its state. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
 - `name?: string`: With a name, the control is submitted with the form around it when it is checked.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+- `id?: string`: The id of the box's hidden native checkbox, not of the box: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead.
 
 Each part, and its own props:
 
 - `<Checkbox.Root>` draws a `<span>`. Its props are above.
-- `<Checkbox.Indicator>` draws a `<span>`.
+- `<Checkbox.Indicator>` draws a `<span>`. A dash while mixed and a tick while checked, from the part's state: `<Checkbox.Indicator render={(props, state) => <span {...props()}>{state().indeterminate ? "–" : "✓"}</span>} />`.
     - `keepMounted?: boolean`: Keeps the mark in the page while the box is unchecked.
 
 Attributes and CSS variables, by part:
@@ -885,7 +888,7 @@ Attributes and CSS variables, by part:
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
     - `data-parent`: Present on the checkbox that stands for every box of its group.
-- indicator: The mark. In the page while the box is checked or indeterminate.
+- indicator: The mark. In the page while the box is checked or indeterminate. `data-indeterminate` and `data-checked` say which mark to draw, a dash or a tick: in CSS (`[data-indeterminate]`), or from the part's state. Through its exit the box is already unchecked, and both are absent.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-indeterminate`: Present when it is neither checked nor unchecked.
@@ -906,14 +909,15 @@ Props:
 - `value?: readonly string[]`: The values of the checked checkboxes, when the caller holds them.
 - `defaultValue?: readonly string[]`: The values checked at the start, when the caller does not hold `value`. Read once.
 - `onValueChange?: (value: string[], details: ChangeDetails) => void`: Heard as a checkbox of the group is about to be checked or unchecked, with the values that would then be checked: `details.cancel()` keeps them as they were.
-- `allValues?: readonly string[]`: The value of every checkbox of the group, for a checkbox marked `parent`: it is checked when all of them are, mixed when some are, and a press on it sets them all.
+- `allValues?: readonly string[]`: The value of every checkbox of the group, for a checkbox marked `parent`: it is checked when all of them are, mixed when some are, and a press on it goes from the set they were left in to all, then none, then back. Its order names the boxes' elements (`<id>-0` …).
 - `disabled?: boolean`: Disables every checkbox of the group.
+- `id?: string`: The group's own id, and what its boxes' elements are named from (`<id>-0`, `<id>-1` …, by their place in `allValues`), which a parent box's `aria-controls` names. Inside a `Field`, the group takes the field's id instead.
 
 `<CheckboxGroup>` draws a `<div>`.
 
 Attributes and CSS variables, by part:
 
-- root: The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.
+- root: The group: `role="group"`, with its `id`. Name it with `aria-label`, or `aria-labelledby` naming a heading of your own; inside a `Field`, the field's label names it and its description describes it. A checkbox anywhere inside it with a `value` is checked while the group's value holds it; one marked `parent`, anywhere inside it too, stands for every value of `allValues`, and its `aria-controls` names their boxes.
     - `data-disabled`: Present when it is disabled.
 
 ### Collapsible
@@ -2333,6 +2337,7 @@ Props of its root:
 - `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
 - `name?: string`: With a name, the number is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `id?: string`: What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead.
 
 Each part, and its own props:
 
@@ -2458,6 +2463,7 @@ Props of its root:
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, the code is submitted with the form around it.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
+- `id?: string`: The id of its input, not of the root: a `<label for>` names it.
 
 Each part, and its own props:
 
@@ -2737,6 +2743,7 @@ Each part, and its own props:
 - `<RadioGroup.Item>` draws a `<span>`.
     - `value: unknown`: Required. What the group's value is while this item is the chosen one.
     - `disabled?: boolean`: Disables this item: it cannot be chosen.
+    - `id?: string`: The id of the item's native radio, unique in the page: a `<label for>` names it.
 - `<RadioGroup.Indicator>` draws a `<span>`.
     - `keepMounted?: boolean`: Keeps the mark in the page while its item is not the chosen one.
 
@@ -3108,6 +3115,7 @@ Props of its root:
 - `name?: string`: With a name, the control is submitted with the form around it when it is checked.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+- `id?: string`: The id of the switch's hidden native checkbox, not of the switch: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead.
 
 Each part, and its own props:
 

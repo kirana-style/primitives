@@ -27,7 +27,10 @@ function useNumberField(part: string): Controller {
 export type RootProps = PartComponentProps<
   "div",
   StateOf<Parts["root"]>,
-  Omit<NumberFieldProps, "id"> & { id?: string }
+  Omit<NumberFieldProps, "id"> & {
+    /** What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead. */
+    id?: string
+  }
 >
 
 function Root({

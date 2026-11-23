@@ -24,7 +24,10 @@ function useCheckbox(part: string): Controller {
 export type RootProps = PartComponentProps<
   "span",
   StateOf<Parts["root"]>,
-  Omit<CheckboxProps, "id"> & { id?: string }
+  Omit<CheckboxProps, "id"> & {
+    /** The id of the box's hidden native checkbox, not of the box: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead. */
+    id?: string
+  }
 >
 
 function Root({
@@ -76,6 +79,10 @@ const withInput = (content: ReactNode) => (
 
 const Input = () => usePart(useCheckbox("Root").input, "input", {})
 
+/**
+ * A dash while mixed and a tick while checked, from the part's state: `<Checkbox.Indicator
+ * render={(props, state) => <span {...props}>{state.indeterminate ? "–" : "✓"}</span>} />`.
+ */
 export type IndicatorProps = PartComponentProps<
   "span",
   StateOf<Parts["indicator"]>,

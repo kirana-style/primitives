@@ -19,6 +19,7 @@ export class KpSwitch implements OnInit {
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
   readonly value = input<string>()
+  /** The id of the switch's hidden native checkbox, not of the switch: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead. */
   readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly checkedChanged = output<{ checked: boolean; details: ChangeDetails }>()

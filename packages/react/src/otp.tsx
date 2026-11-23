@@ -22,7 +22,10 @@ function useOtp(part: string): Controller {
 export type RootProps = PartComponentProps<
   "div",
   StateOf<Parts["root"]>,
-  Omit<OtpProps, "id"> & { id?: string }
+  Omit<OtpProps, "id"> & {
+    /** The id of its input, not of the root: a `<label for>` names it. */
+    id?: string
+  }
 >
 
 function Root({

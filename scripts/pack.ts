@@ -151,6 +151,9 @@ function finish(
     }
   }
   cpSync(path.join(root, "LICENSE"), path.join(stage, "LICENSE"))
+  // The repository's changelog, the same in every package: they share one version, and what
+  // a project upgrading reads is in what it installed (each `llms.txt` names it at its top).
+  cpSync(path.join(root, "CHANGELOG.md"), path.join(stage, "CHANGELOG.md"))
   const { private: _private, devDependencies: _dev, scripts: _scripts, ...kept } = manifest
   const published: Manifest = {
     ...kept,
@@ -162,7 +165,15 @@ function finish(
     },
     bugs: { url: "https://github.com/kirana-style/primitives/issues" },
     publishConfig: { access: "public" },
-    files: [...shipped, "README.md", "REFERENCE.md", "llms.txt", "skills", "LICENSE"],
+    files: [
+      ...shipped,
+      "README.md",
+      "REFERENCE.md",
+      "llms.txt",
+      "skills",
+      "LICENSE",
+      "CHANGELOG.md",
+    ],
     ...extra,
     exports: { ...exports, "./package.json": "./package.json" },
     dependencies: resolved(manifest.dependencies, manifest.version),

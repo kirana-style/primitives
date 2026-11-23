@@ -84,6 +84,10 @@ function Root(props: RootProps): JSX.Element {
   )
 }
 
+/**
+ * A dash while mixed and a tick while checked, from the part's state: `<Checkbox.Indicator
+ * render={(props, state) => <span {...props()}>{state().indeterminate ? "–" : "✓"}</span>} />`.
+ */
 export type IndicatorProps = PartComponentProps<
   "span",
   StateOf<Parts["indicator"]>,

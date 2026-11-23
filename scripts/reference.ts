@@ -81,6 +81,8 @@ export interface PartReference {
     selector: string
     exportAs: string | undefined
     structural: boolean
+    /** A structural directive that is also written as a plain attribute (`kpAvatarImage`). */
+    attribute: boolean
     /** What a structural directive hands its template: `let segment`. */
     context: Prop[]
   }
@@ -273,9 +275,8 @@ interface Read {
   types: Named[]
 }
 
-/** A prop that is the element's own, or its content as any element has it: said once, not per part. */
+/** A part's content as any element has it: said once, not per part. (An `id`: `withIds`.) */
 function plain(name: string, type: string): boolean {
-  if (name === "id") return /^string( \| undefined)?$/.test(type)
   if (name === "children") return !type.includes("=>") && !/Snippet<\[/.test(type)
   return false
 }
@@ -724,6 +725,8 @@ export interface Directive {
   selector: string
   exportAs: string | undefined
   structural: boolean
+  /** A structural directive that is also written as a plain attribute: its template optional. */
+  attribute: boolean
   doc: string
   generics: string[]
   props: Prop[]
@@ -781,8 +784,9 @@ function signals(node: TS.ClassDeclaration, checker: TS.TypeChecker): Read {
     const first = called?.arguments[0]
     const options = called?.arguments.at(-1)?.getText() ?? ""
     const alias = /alias:\s*"([^"]+)"/.exec(options)?.[1]
-    // An id is `[kpId]` on every directive that takes one: said once, as `id` is elsewhere.
-    if (member.name === "kpId") continue
+    // An id is `[kpId]` on every directive that takes one: said once, as `id` is elsewhere,
+    // unless its comment says where it goes instead (`withIds`).
+    if (member.name === "kpId" && !docOf(member, checker)) continue
     const initial =
       kind === "input" && !required && first && !ts.isObjectLiteralExpression(first)
         ? first.getText()
@@ -872,6 +876,7 @@ export function directives(): Map<string, Directive> {
           /\bpresentWhile\(|inject<TemplateRef<|inject\(TemplateRef|\beach<|\bscrollArrow\(/.test(
             body
           ),
+        attribute: /\(TemplateRef,\s*\{\s*optional:\s*true,?\s*\}/.test(body),
         doc: docOf(checker.getSymbolAtLocation(node.name), checker),
         generics: (node.typeParameters ?? []).map((each) => oneLine(each.getText())),
         props,
@@ -925,6 +930,7 @@ async function angular(): Promise<AdapterReference> {
           selector: directive.selector,
           exportAs: directive.exportAs,
           structural: directive.structural,
+          attribute: directive.attribute,
           context: directive.context,
         },
       })
@@ -950,6 +956,19 @@ const references = new Map<string, Promise<AdapterReference>>()
 export function reference(adapter: string): Promise<AdapterReference> {
   let found = references.get(adapter)
   if (!found) {
+    found = Promise.all([built(adapter), built("react")]).then(([own, react]) =>
+      withIds(own, react)
+    )
+    references.set(adapter, found)
+  }
+  return found
+}
+
+/** Each adapter as its source has it, every `id` included. */
+const read = new Map<string, Promise<AdapterReference>>()
+function built(adapter: string): Promise<AdapterReference> {
+  let found = read.get(adapter)
+  if (!found) {
     found =
       adapter === "react" || adapter === "solid"
         ? jsx(adapter)
@@ -958,9 +977,29 @@ export function reference(adapter: string): Promise<AdapterReference> {
           : adapter === "vue"
             ? vue()
             : angular()
-    references.set(adapter, found)
+    read.set(adapter, found)
   }
   return found
+}
+
+/** An `id` written as a string, as any element's (`kpId` on Angular). */
+const anId = (prop: Prop) =>
+  (prop.name === "id" || prop.name === "kpId") && /^string( \| undefined)?$/.test(prop.type)
+
+/**
+ * An `id` goes on the part's element, as any element's does: said once, not per part. It is
+ * listed where React's same part gives its `id` a comment, which says where it goes instead (a
+ * checkbox's on its hidden input), so that every adapter lists the same ones.
+ */
+function withIds(own: AdapterReference, react: AdapterReference): AdapterReference {
+  for (const component of own.components.values()) {
+    for (const part of component.parts) {
+      const theirs = react.components.get(component.name)?.parts.find((p) => p.part === part.part)
+      if (!theirs?.props.some((each) => anId(each) && each.doc))
+        part.props = part.props.filter((each) => !anId(each))
+    }
+  }
+  return own
 }
 
 /** A named type as a reader needs it: what it is, its fields with their comments. */

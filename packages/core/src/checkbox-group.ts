@@ -19,8 +19,9 @@ export interface CheckboxGroupProps {
    */
   onValueChange?: ((value: string[], details: ChangeDetails) => void) | undefined
   /**
-   * The value of every checkbox of the group, for a checkbox marked `parent`: it
-   * is checked when all of them are, mixed when some are, and a press on it sets them all.
+   * The value of every checkbox of the group, for a checkbox marked `parent`: it is checked
+   * when all of them are, mixed when some are, and a press on it goes from the set they were
+   * left in to all, then none, then back. Its order names the boxes' elements (`<id>-0` …).
    */
   allValues?: readonly string[] | undefined
   /** Disables every checkbox of the group. */

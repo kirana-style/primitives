@@ -7,6 +7,11 @@
 
 * calendar modes, a design system's composition, and fixes from the port ([#56](https://github.com/kirana-style/primitives/pull/56))
 * calendar modes, a design system's composition, and fixes from the port ([#55](https://github.com/kirana-style/primitives/pull/55))
+* **angular:** the prefix is `kp`, so that a design system's own `kui…` names never meet the primitives': selectors and inputs `kui…` are `kp…` (`[kpDialog]`, `kpId`, `exportAs: "kpDialog"`), classes `Kui…` are `Kp…` (`KpDialog`), and tokens `KUI_…` are `KP_…` (`KP_FIELD`, `KP_DIRECTION`).
+* **angular:** a calendar's `monthChanged` emits `{ month, details }` instead of the month alone: read `event.month`.
+* an `id` given to `RadioGroup.Item` (`kpId` on Angular) goes on the item's native radio, where a `<label for>` finds it, instead of on the item's element.
+* a command highlights the first item shown from the start, and again as the text changes: set `autoHighlight` to `false` for no highlight until a key or the pointer moves it.
+* a placed popup leaves with its anchor once the anchor is scrolled out of view, instead of staying in view: set `sticky` on the `Positioner` to keep it there.
 
 ### Features
 

@@ -739,7 +739,7 @@ Props of its root:
 - `defaultMonth?: IsoDate`: The month it starts on, when the caller does not hold `month`. Read once. Without it, the month of `defaultFocusedValue`, of the value, or of today.
 - `onMonthChange?: (month: IsoDate, details: ChangeDetails) => void`: Heard as another month is about to be shown (the keys, the buttons, a day of another month pressed): its first day. `details.cancel()` keeps the month as it was.
 - `defaultFocusedValue?: IsoDate`: The day it opens on, focusable when Tab reaches the grid. It is also the month it opens on, unless `month` or `defaultMonth` says another: then the stop for Tab is a chosen day of the months shown, today, or their first day.
-- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. Default `"en-US"`.
+- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. Another first day of the week is the tag's `fw` extension: `"en-US-u-fw-mon"` begins each week on Monday. Default `"en-US"`.
 - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
 - `min?: IsoDate`: The first and the last day that can be chosen.
 - `max?: IsoDate`: The last day that can be chosen.

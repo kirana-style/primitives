@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { OffsetFunction, PartEvent } from "@kirana-ui/vue"
+import type { DateRange, OffsetFunction, PartEvent } from "@kirana-ui/vue"
 import {
   Calendar,
   Autocomplete,
@@ -170,6 +170,9 @@ const named = ref("")
 const did = ref("none")
 const dated = ref("none")
 const stay = ref("none")
+// The two calendars' values, held by their caller: what it gives back must keep the days.
+const pickedDay = ref<string | null>(null)
+const pickedRange = ref<DateRange | null>(null)
 const chosenDays = ref("none")
 const shownMonth = ref("2026-03-01")
 const rests = ref("0.5")
@@ -1355,6 +1358,7 @@ function press(event: PartEvent<MouseEvent>) {
         default-focused-value="2026-03-15"
         class="calendar"
         data-testid="cal1"
+        v-model:value="pickedDay"
         @value-change="(next: unknown) => (dated = String(next))"
       >
         <Calendar.Previous aria-label="Previous month" data-testid="cal1-previous">
@@ -1415,6 +1419,7 @@ function press(event: PartEvent<MouseEvent>) {
         default-focused-value="2026-03-15"
         class="calendar calendar-months"
         data-testid="cal2"
+        v-model:value="pickedRange"
         @value-change="(next: unknown) => (stay = JSON.stringify(next))"
       >
         <Calendar.Previous aria-label="Previous month" data-testid="cal2-previous">

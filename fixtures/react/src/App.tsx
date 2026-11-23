@@ -52,7 +52,7 @@ import {
   Toolbar,
   Tooltip,
 } from "@kirana-ui/react"
-import type { OffsetFunction } from "@kirana-ui/react"
+import type { DateRange, OffsetFunction } from "@kirana-ui/react"
 import { mergeProps, useRender } from "@kirana-ui/react/use-render"
 import type { RenderProp } from "@kirana-ui/react/use-render"
 import { Fragment, useRef, useState } from "react"
@@ -200,6 +200,9 @@ export function App() {
   const [did, setDid] = useState("none")
   const [dated, setDated] = useState("none")
   const [stay, setStay] = useState("none")
+  // The two calendars' values, held by their caller: what it gives back must keep the days.
+  const [pickedDay, setPickedDay] = useState<string | null>(null)
+  const [pickedRange, setPickedRange] = useState<DateRange | null>(null)
   const [chosenDays, setChosenDays] = useState("none")
   const [shownMonth, setShownMonth] = useState("2026-03-01")
   const [rests, setRests] = useState("0.5")
@@ -1627,7 +1630,11 @@ export function App() {
           defaultFocusedValue="2026-03-15"
           className="calendar"
           data-testid="cal1"
-          onValueChange={(next: unknown) => setDated(String(next))}
+          value={pickedDay}
+          onValueChange={(next) => {
+            setPickedDay(next)
+            setDated(String(next))
+          }}
         >
           <Calendar.Previous aria-label="Previous month" data-testid="cal1-previous">
             Previous
@@ -1697,7 +1704,11 @@ export function App() {
           defaultFocusedValue="2026-03-15"
           className="calendar calendar-months"
           data-testid="cal2"
-          onValueChange={(next: unknown) => setStay(JSON.stringify(next))}
+          value={pickedRange}
+          onValueChange={(next) => {
+            setPickedRange(next)
+            setStay(JSON.stringify(next))
+          }}
         >
           <Calendar.Previous aria-label="Previous month" data-testid="cal2-previous">
             Previous

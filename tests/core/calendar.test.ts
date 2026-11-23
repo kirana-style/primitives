@@ -98,6 +98,10 @@ describe("a calendar", () => {
     expect(french.rows()[0]).toBe("2324252627281")
     const arabic = calendar({ locale: "ar-EG" })
     expect(arabic.rows()[1]!.startsWith("٧")).toBe(true)
+    // Another first day is the locale's `fw` extension.
+    const mondays = calendar({ locale: "en-US-u-fw-mon" })
+    expect(mondays.head.textContent!.startsWith("Mon")).toBe(true)
+    expect(mondays.rows()[0]).toBe("2324252627281")
   })
 
   it("is laid out in the calendar it is given, and its values stay ISO", async () => {
@@ -137,6 +141,29 @@ describe("a calendar", () => {
     await userEvent.click(held.day("2026-03-10"))
     expect(held.made.value.peek()).toBe("2026-03-05")
     expect(held.heard).toEqual([["2026-03-10", "day-press"]])
+  })
+
+  it("keeps its weeks when the value its caller holds changes, so the day pressed keeps focus", async () => {
+    // The page above draws its rows again whenever the weeks are new entries, as a list keyed by
+    // entry does.
+    let give = (_value: CalendarValue) => {}
+    const { day, made, props } = calendar({ value: null, onValueChange: (value) => give(value) })
+    give = (value) => props.set({ ...props.peek(), value })
+    const weeks = made.weeks.peek()
+    const pressed = day("2026-03-10")
+    await userEvent.click(pressed)
+    expect(made.value.peek()).toBe("2026-03-10")
+    expect(made.weeks.peek()).toBe(weeks)
+    expect(day("2026-03-10")).toBe(pressed)
+    expect(document.activeElement).toBe(pressed)
+    expect(pressed.hasAttribute("data-selected")).toBe(true)
+    // A prop that does not move the days keeps them too; one that does lays them out again,
+    // keeping each week that comes out the same.
+    props.set({ ...props.peek(), readOnly: true })
+    expect(made.weeks.peek()).toBe(weeks)
+    props.set({ ...props.peek(), fixedWeeks: true })
+    expect(made.weeks.peek()).not.toBe(weeks)
+    expect(made.weeks.peek()[0]).toBe(weeks[0])
   })
 
   it("has one day as its stop for Tab, and moves by the keys of a grid", async () => {
@@ -526,6 +553,24 @@ describe("several months", () => {
     expect(day("2026-04-01", 1).hasAttribute("data-selected")).toBe(true)
     expect(day("2026-04-03", 1).hasAttribute("data-range-end")).toBe(true)
     expect(day("2026-04-03", 0).hasAttribute("data-range-end")).toBe(false)
+  })
+
+  it("keeps its months when the range its caller holds changes", async () => {
+    let give = (_value: CalendarValue) => {}
+    const { day, made, props } = sideBySide({
+      mode: "range",
+      value: null,
+      onValueChange: (value) => give(value),
+    })
+    give = (value) => props.set({ ...props.peek(), value })
+    const months = made.months.peek()
+    await userEvent.click(day("2026-03-28"))
+    const pressed = day("2026-04-03", 1)
+    await userEvent.click(pressed)
+    expect(made.value.peek()).toEqual({ start: "2026-03-28", end: "2026-04-03" })
+    expect(made.months.peek()).toBe(months)
+    expect(day("2026-04-03", 1)).toBe(pressed)
+    expect(document.activeElement).toBe(pressed)
   })
 
   it("turns by one month with its buttons, or by all of them when paged", async () => {

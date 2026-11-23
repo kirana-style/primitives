@@ -104,7 +104,8 @@ export interface CalendarProps<Mode extends CalendarMode = CalendarMode> {
   defaultFocusedValue?: IsoDate | undefined
   /**
    * The language and region its names, numbers, first day of the week and calendar follow
-   * (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's.
+   * (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. Another first day of
+   * the week is the tag's `fw` extension: `"en-US-u-fw-mon"` begins each week on Monday.
    */
   locale?: string | undefined
   /**
@@ -257,6 +258,14 @@ const same = (a: CalendarValue, b: CalendarValue): boolean => {
   return x.start === y.start && x.end === y.end
 }
 
+/** Whether two weeks laid out say the same days the same way. */
+const sameWeek = (a: readonly CalendarDay[], b: readonly CalendarDay[]): boolean =>
+  a.length === b.length &&
+  a.every(
+    (day, at) =>
+      day.date === b[at]!.date && day.label === b[at]!.label && day.outside === b[at]!.outside
+  )
+
 /**
  * A month of days to choose one from, a first and a last, or several; or a few months side by
  * side. It is laid out with the locale's names, numerals and first day of the week, in the
@@ -369,7 +378,36 @@ export function createCalendar(
     })
   })
 
+  const fixed = computed(() => Boolean(props.get().fixedWeeks))
+  // The months last laid out: a month and a week that come out the same are those entries
+  // again, so a list keyed by entry keeps its elements (and focus) when a value or a
+  // prop that does not move the days changes.
+  let laidOut: readonly CalendarMonth[] = []
   const months = computed((): readonly CalendarMonth[] => {
+    const next = layOut()
+    const before = new Map(laidOut.map((each) => [each.month, each]))
+    const reused = next.map((each) => {
+      const old = before.get(each.month)
+      if (!old) return each
+      const weeks = each.weeks.map((week, at) => {
+        const was = old.weeks[at]
+        return was && sameWeek(was, week) ? was : week
+      })
+      const allKept =
+        old.weeks.length === weeks.length && weeks.every((week, at) => week === old.weeks[at])
+      const unchanged =
+        old.index === each.index && old.title === each.title && old.weekdays === each.weekdays
+      if (allKept && unchanged) return old
+      return { ...each, weeks: allKept ? old.weeks : weeks }
+    })
+    laidOut =
+      reused.length === laidOut.length && reused.every((each, at) => each === laidOut[at])
+        ? laidOut
+        : reused
+    return laidOut
+  })
+
+  function layOut(): readonly CalendarMonth[] {
     const first = shown.get()
     const named = new DateFormatter(locale.get(), {
       month: "long",
@@ -382,11 +420,10 @@ export function createCalendar(
       calendar: system.get().identifier,
       timeZone: "UTC",
     })
-    const fixed = Boolean(props.get().fixedWeeks)
     const names = weekdays.get()
     return Array.from({ length: count.get() }, (_, index): CalendarMonth => {
       const each = first.add({ months: index })
-      const rows = fixed ? 6 : getWeeksInMonth(each, locale.get())
+      const rows = fixed.get() ? 6 : getWeeksInMonth(each, locale.get())
       const begin = startOfWeek(each, locale.get())
       return {
         index,
@@ -405,7 +442,7 @@ export function createCalendar(
         ),
       }
     })
-  })
+  }
 
   /** What is chosen, with a range that is being chosen shown as far as the pointer. */
   const span = computed((): DateRange | undefined => {

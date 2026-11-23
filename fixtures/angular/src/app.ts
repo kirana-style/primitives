@@ -245,7 +245,7 @@ import {
   KpTooltipPositioner,
   KpTooltipTrigger,
 } from "@kirana-ui/angular"
-import type { OffsetFunction } from "@kirana-ui/angular"
+import type { DateRange, OffsetFunction } from "@kirana-ui/angular"
 
 import {
   KuiCode,
@@ -1857,6 +1857,7 @@ import {
           [defaultFocusedValue]="'2026-03-15'"
           class="calendar"
           data-testid="cal1"
+          [(value)]="pickedDay"
           (valueChanged)="dated.set('' + $event.value)"
         >
           <button kpCalendarPrevious aria-label="Previous month" data-testid="cal1-previous">
@@ -1919,6 +1920,7 @@ import {
           [defaultFocusedValue]="'2026-03-15'"
           class="calendar calendar-months"
           data-testid="cal2"
+          [(value)]="pickedRange"
           (valueChanged)="stay.set(json($event.value))"
         >
           <button kpCalendarPrevious aria-label="Previous month" data-testid="cal2-previous">
@@ -2891,6 +2893,9 @@ export class App {
   protected readonly did = signal("none")
   protected readonly dated = signal("none")
   protected readonly stay = signal("none")
+  // The two calendars' values, held by their caller: what it gives back must keep the days.
+  protected readonly pickedDay = signal<string | null>(null)
+  protected readonly pickedRange = signal<DateRange | null>(null)
   protected readonly chosenDays = signal("none")
   protected readonly shownMonth = signal<string | undefined>("2026-03-01")
   protected readonly rests = signal("0.5")

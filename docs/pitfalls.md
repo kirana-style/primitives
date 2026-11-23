@@ -172,6 +172,16 @@ note. Three places hold them:
   decided from the month asked for, not from the month read back after asking: until the
   caller gives it, the old month is still the one shown (`calendar.test.ts`, "follows the
   keys into a month the caller has not shown yet").
+- **A list laid out again is a list drawn again.** The months and weeks were laid out anew
+  whenever any prop changed, so a caller who held the value and gave it back after a press
+  handed every list new entries. A list kept by entry (Solid's `<For>`) then replaced every
+  row, and the day just pressed lost focus to the page; adapters that key by date kept their
+  elements, and a comparison of the DOM state by state cannot see an element replaced by its
+  twin. The months are laid out only when what they show changes, and a month or a week that
+  comes out the same is the entry it was (`calendar.test.ts`, "keeps its weeks when the
+  value its caller holds changes" and "keeps its months when the range its caller holds
+  changes"; scenarios `calendar` and `calendars` hold the pressed element itself across the
+  press, on calendars whose caller holds the value).
 
 ## Toolbars, toggle groups and scroll areas
 

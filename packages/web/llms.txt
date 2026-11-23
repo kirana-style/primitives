@@ -813,7 +813,7 @@ Attributes and CSS variables, by part:
 import "@kirana-ui/web/command"
 ```
 
-`<kui-command>`: `<kui-command>` around `kui-part="root"`, an `input` and a `list` of `item`s (`kui-value`, `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s with a `group-heading` and `separator`s (`kui-always-render`) if it has them, and an `empty` part drawn while nothing matches. What is typed filters the list; Enter or a press runs an item. `input-value`, `default-input-value`, `loop`, `auto-highlight` (on unless `="false"`), `disabled`; `filter` as a property; it tells `input-value-change` and `select`.
+`<kui-command>`: `<kui-command>` around `kui-part="root"`, an `input` and a `list` of `item`s (`kui-value`, its `kui-label` or its text when left out, `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s with a `group-heading` and `separator`s (`kui-always-render`) if it has them, and an `empty` part drawn while nothing matches. What is typed filters the list; Enter or a press runs an item. `input-value`, `default-input-value`, `loop`, `auto-highlight` (on unless `="false"`), `disabled`; `filter` as a property; it tells `input-value-change` and `select`.
 
 Attributes of the element (each also a property, in camel case):
 

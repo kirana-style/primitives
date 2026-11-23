@@ -119,8 +119,8 @@ export class KpCommandGroupHeading implements OnInit {
 
 @Directive({ selector: "[kpCommandItem]" })
 export class KpCommandItem implements OnInit {
-  /** What `itemSelected` is told. */
-  readonly value = input.required<string>()
+  /** What `itemSelected` is told; its `label`, or its text, when left out. */
+  readonly value = input<string>()
   readonly disabled = input(false, { transform: booleanAttribute })
   /** What is filtered; the item's text when left out. */
   readonly label = input<string>()
@@ -132,6 +132,7 @@ export class KpCommandItem implements OnInit {
   private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
+    value: this.value(),
     disabled: this.disabled(),
     label: this.label(),
     keywords: this.keywords(),
@@ -144,7 +145,9 @@ export class KpCommandItem implements OnInit {
 
   ngOnInit(): void {
     const options = this.options()
-    this.put(this.root.controller.item(this.value(), () => options.get(), this.within?.group))
+    // An item is its value for as long as it is in the page; a host may give it (`hostInputs`).
+    const { value } = options.get()
+    this.put(this.root.controller.item(value, () => options.get(), this.within?.group))
   }
 }
 

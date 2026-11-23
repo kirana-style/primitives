@@ -4,7 +4,8 @@
   `as` for another tag (a `div` unless said), or `child` for the caller's own element, given the
   props to spread and the state. `state` is written as `data-*` attributes under the attributes
   given. Merge the component's own props with its caller's through `mergeProps`, as a part's
-  are merged.
+  are merged. Its element is reached with an attachment, `{@attach (element) => …}`, as a
+  part's is: it goes on the element drawn, or with `child` in `props`, to the caller's own.
 -->
 <script
   lang="ts"
@@ -33,7 +34,8 @@
     "track",
     "wbr",
   ])
-  const given = $derived({ ...stateAttributes(state ?? {}), ...rest })
+  // An attachment is kept under its symbol: a spread carries it to the element.
+  const given: Record<string, unknown> = $derived({ ...stateAttributes(state ?? {}), ...rest })
   const tag = $derived(as ?? "div")
 </script>
 

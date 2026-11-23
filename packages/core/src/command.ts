@@ -15,7 +15,10 @@ export interface CommandProps {
   defaultInputValue?: string | undefined
   /** Heard as the input's text is about to change: `details.cancel()` keeps it as it was. */
   onInputValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
-  /** An item was chosen: pressed, or Enter while it was highlighted. */
+  /**
+   * An item was chosen: pressed, or Enter while it was highlighted. Told the item's `value`, or
+   * when it was given none, its `label`, or its text.
+   */
   onSelect?: ((value: string, details: ChangeDetails) => void) | undefined
   /**
    * Whether an item is shown for what was typed. Default: its label or one of its keywords
@@ -67,7 +70,11 @@ export interface Command {
   group(id: string): CommandGroup
   /** A heading with no group around it: a line of text, and nothing more. */
   readonly heading: Part
-  item(value: string, options: () => CommandItemOptions, group?: CommandGroup): Part
+  /**
+   * An item: `value` is what `onSelect` is told, and when it is `undefined` the item's `label`
+   * stands for it, or its text, read from the page when it is chosen.
+   */
+  item(value: string | undefined, options: () => CommandItemOptions, group?: CommandGroup): Part
   /** A line between groups: gone while something is typed, unless `always` says to stay. */
   separator(always?: () => boolean | undefined): Part
 }
@@ -314,7 +321,7 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
         if (filter === null || text === "") return true
         const element = row.element()
         return (filter ?? holds)(
-          options().label ?? (element ? textOf(element) : value),
+          options().label ?? (element ? textOf(element) : (value ?? "")),
           text,
           options().keywords ?? []
         )
@@ -343,7 +350,10 @@ export function createCommand(props: ReadonlySignal<CommandProps>): Command {
               if (pointerMoved(event) && !off && !row.active.peek()) list.highlight(row)
             },
             onClick(event: Event) {
-              if (!off) props.peek().onSelect?.(value, details("item-press", event))
+              if (off) return
+              // An item given no value is named by its label, or by its text, as it reads now.
+              const named = value ?? options().label ?? textOf(event.currentTarget as Element)
+              props.peek().onSelect?.(named, details("item-press", event))
             },
           }
         }),

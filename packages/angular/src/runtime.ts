@@ -70,9 +70,12 @@ export type HostInputs<Directive> = {
   [Name in keyof InputsOf<Directive>]?: () => InputsOf<Directive>[Name]
 }
 
-/** What a directive's hosts gave it, and which of its inputs the element binds. */
+/**
+ * What a directive's hosts gave it, each input's givers in the order they were made (the
+ * innermost host first), and which of its inputs the element binds.
+ */
 interface Hosted {
-  given: Record<string, () => unknown>
+  given: Record<string, (() => unknown)[]>
   bound: ReturnType<typeof angularSignal<ReadonlySet<string>>>
 }
 
@@ -87,7 +90,12 @@ function hostedOf(owner: object): Hosted {
   return record
 }
 
-/** A directive's own values with what its hosts gave laid over each the element does not bind. */
+/**
+ * A directive's own values with what its hosts gave laid over each the element does not bind.
+ * Of hosts nested in one another, the outermost wins: Angular makes a host directive before
+ * the directive that hosts it, so the outermost gives last. A host that gives `undefined` says
+ * nothing: the next host inward decides, and the directive's own input when none does.
+ */
 function withHosts<T extends Record<string, unknown>>(owner: object, own: T): T {
   const { given, bound } = hostedOf(owner)
   const names = Object.keys(given)
@@ -96,16 +104,21 @@ function withHosts<T extends Record<string, unknown>>(owner: object, own: T): T 
   const out: Record<string, unknown> = { ...own }
   for (const name of names) {
     if (binds.has(name)) continue
-    // An id is given as `kpId` and read as `id`; one given as nothing keeps the one made.
+    // An id is given as `kpId` and read as `id`.
     const key = name === "kpId" ? "id" : name
     if (!(key in own)) {
       throw new Error(
         `Kirana UI: \`${name}\` was given by a host directive, and this directive takes no such input from its host`
       )
     }
-    const value = given[name]!()
-    if (key === "id" && value === undefined) continue
-    out[key] = value
+    const givers = given[name]!
+    // Each is read, outermost first, until one says something: a signal read is followed.
+    for (let at = givers.length - 1; at >= 0; at--) {
+      const value = givers[at]!()
+      if (value === undefined) continue
+      out[key] = value
+      break
+    }
   }
   return out as T
 }
@@ -116,7 +129,10 @@ function withHosts<T extends Record<string, unknown>>(owner: object, own: T): T 
  * Each value is a function read like a signal, so one worked out from the host's own inputs
  * (`{ disabled: computed(() => !this.collapsed()) }`) follows them. An input the element binds
  * (one the host exposes through `hostDirectives`' `inputs`, written on the element) wins over
- * what is given here. Call it where injection works (a field initialiser or the constructor):
+ * what is given here. A value of `undefined` gives nothing: the primitive's own input stands,
+ * so a model given `undefined` is the primitive's to hold. Of hosts nested in one another that
+ * give the same input, the outermost wins, and one that gives `undefined` leaves it to the
+ * host inside it. Call it where injection works (a field initialiser or the constructor):
  * host directives are made before their host, and read their inputs after it is made.
  */
 export function hostInputs<Directive extends object>(
@@ -130,7 +146,9 @@ export function hostInputs<Directive extends object>(
       "Kirana UI: hostInputs() names a directive that takes no inputs from its host (its inputs are not read through inputsSignal)"
     )
   }
-  Object.assign(own.given, given)
+  for (const [name, read] of Object.entries(given) as [string, (() => unknown) | undefined][]) {
+    if (read) (own.given[name] ??= []).push(read)
+  }
 }
 
 /** What `inputsSignal` gives: the signal, and the two calls its directive makes. */

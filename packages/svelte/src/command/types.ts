@@ -24,8 +24,8 @@ export type ItemProps = PartAttributes<
   "div",
   StateFor<"command", "item">,
   {
-    /** What `onSelect` is told when the item is chosen. */
-    value: string
+    /** What `onSelect` is told when the item is chosen; its `label`, or its text, when left out. */
+    value?: string | undefined
     disabled?: boolean | undefined
     /** What is filtered; the item's text when left out. */
     label?: string | undefined

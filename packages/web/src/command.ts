@@ -1,7 +1,7 @@
 import { createCommand } from "@kirana-ui/core/command"
 import type { Command, CommandGroup, CommandProps } from "@kirana-ui/core/command"
 
-import { list, once, valueOf } from "./around.ts"
+import { list, once } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
 
@@ -13,8 +13,8 @@ const groupOf = (controller: Command, element: HTMLElement | null) =>
   )
 
 /**
- * `<kui-command>` around `kui-part="root"`, an `input` and a `list` of `item`s (`kui-value`,
- * `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s
+ * `<kui-command>` around `kui-part="root"`, an `input` and a `list` of `item`s (`kui-value`, its
+ * `kui-label` or its text when left out, `kui-disabled`, `kui-label`, `kui-keywords` with commas between, `kui-id`), in `group`s
  * with a `group-heading` and `separator`s (`kui-always-render`) if it has them, and an
  * `empty` part drawn while nothing matches. What is typed filters the list; Enter or a press
  * runs an item. `input-value`, `default-input-value`, `loop`, `auto-highlight` (on unless `="false"`), `disabled`; `filter` as a
@@ -46,7 +46,7 @@ export const tag = defineElement<CommandProps, Command>({
     item(controller, element) {
       const id = element.getAttribute("kui-id") ?? `kui-command-item-${++made}`
       return controller.item(
-        valueOf(element),
+        element.getAttribute("kui-value") ?? undefined,
         () => ({
           id,
           ...(element.hasAttribute("kui-disabled") ? { disabled: true } : {}),

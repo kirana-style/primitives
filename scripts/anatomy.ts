@@ -322,6 +322,8 @@ async function designSystem(
     }
     return undefined
   }
+  // A directive's chain by its class, for a directive of the design system hosted by another.
+  const byOwnClass = new Map<string, string[]>()
   const visit = (node: TS.Node) => {
     if (ts.isObjectLiteralExpression(node)) {
       const property = (name: string) =>
@@ -345,14 +347,22 @@ async function designSystem(
                     ts.isPropertyAssignment(one) && one.name.getText(source) === "directive"
                 )?.initializer
               : each
-            const hosted = host && byClass.get(host.getText(source))
+            const name = host?.getText(source)
+            const hosted = name && byClass.get(name)
             if (hosted) chain.push(hosted)
+            // A host inside a host: what the inner one stands for (declared above it).
+            else if (name && byOwnClass.has(name)) chain.push(...byOwnClass.get(name)!)
           }
         }
         const template = property("template")
         if (template && ts.isNoSubstitutionTemplateLiteral(template))
           chain.push(...(wrapping(parseTemplate(template.text, path).nodes, []) ?? []))
-        if (chain.length > 0) found.set(attribute, chain)
+        if (chain.length > 0) {
+          found.set(attribute, chain)
+          const decorated = node.parent?.parent?.parent
+          if (decorated && ts.isClassDeclaration(decorated) && decorated.name)
+            byOwnClass.set(decorated.name.text, chain)
+        }
       }
     }
     ts.forEachChild(node, visit)

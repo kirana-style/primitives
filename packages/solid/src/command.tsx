@@ -78,7 +78,8 @@ export type ItemProps = PartComponentProps<
   "div",
   StateOf<Parts["item"]>,
   {
-    value: string
+    /** What `onSelect` is told; its `label`, or its text, when left out. */
+    value?: string
     disabled?: boolean
     label?: string
     keywords?: readonly string[]

@@ -1401,7 +1401,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("a plain element of one's own pressed")
     expect(
       (await text("k4-mark")) === "On 1",
-      "both handlers ran, and the caller reads the new state"
+      "both handlers ran (Svelte's counting only once it reached both elements), and the caller reads the new state"
     )
     expect(
       (await attribute("k4-mark", "data-active")) === "",
@@ -1424,6 +1424,22 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       (await attribute("ds3b-input", "inputmode")) === "numeric",
       "and the one bound on its element over that"
     )
+    // A host inside a host (Angular): the outermost's input wins, its `undefined` leaves it to
+    // the one inside, and a model given `undefined` is the primitive's to hold.
+    expect(
+      (await attribute("ds3c-input", "inputmode")) === "numeric",
+      "a code input takes the mode its outer design system gives over the inner's"
+    )
+    expect((await id("ds3c-input").inputValue()) === "42", "and the code it gives")
+    expect(
+      (await attribute("ds3d-input", "inputmode")) === "text",
+      "given nothing by the outer, it takes the inner's"
+    )
+    await id("ds3d-input").click()
+    await page.keyboard.type("ab")
+    await settled(page)
+    expect((await id("ds3d-input").inputValue()) === "ab", "and holds the code typed in it")
+    await snapshot("a code typed in a design system's own")
 
     await id("ds1-trigger").click()
     await shown("ds1-popup")
@@ -4007,7 +4023,10 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(!(await hidden("cm1-edit")), "with its group")
     await id("cm1-copy").click()
     await settled(page)
-    expect((await id("cm1-output").textContent()) === "copy", "a press chooses an item")
+    expect(
+      (await id("cm1-output").textContent()) === "Copy",
+      "a press chooses an item, one given no value named by its text"
+    )
     await snapshot("a command list emptied again")
   },
   async "combobox-data"({ page, snapshot, id, present, attribute, focused }) {

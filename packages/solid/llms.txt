@@ -1144,7 +1144,7 @@ Each part, and its own props:
 - `<Command.Group>` draws a `<div>`. Items under a heading. Hidden while none of them is shown.
 - `<Command.GroupHeading>` draws a `<div>`. A group's name.
 - `<Command.Item>` draws a `<div>`.
-    - `value: string`: Required. What `onSelect` is told.
+    - `value?: string`: What `onSelect` is told; its `label`, or its text, when left out.
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What is filtered; the item's text when left out.
     - `keywords?: readonly string[]`: Other words the item answers to.

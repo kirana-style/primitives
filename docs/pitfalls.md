@@ -427,6 +427,25 @@ note. Three places hold them:
   `ngOnChanges` (an input never bound never appears there), and the values are functions so
   a `computed` follows. Held by the fixtures' `design` section and scenario, and by `ngc`
   over `fixtures/angular/src/typed.ts`.
+- **Svelte: a design system's own element is reached as a part is, by an attachment.**
+  `Primitive` had no `bind:ref`, and its docs did not say how its element is reached; no part
+  has `bind:ref` either. `{@attach}` on a `Primitive` or a part goes on the element it draws,
+  or through `child`'s `props` to the caller's own, and a wrapper that spreads its props
+  passes its caller's attachments on. Held by the Svelte page's `k3` and `k4` (the count goes
+  up only when both elements were reached) and the type test in `fixtures/svelte/src/Types.svelte`.
+- **Angular: a required input cannot be given by a host.** Angular makes a host expose a
+  host directive's required input, and every caller of the host then binds it, so a design
+  system could not work a command item's `value` out of its own inputs: it drew the primitive
+  on an inner element instead. Where something honest stands in for an input, it is not
+  required: a command item given no `value` is named by its `label`, or its text, on every
+  adapter. Held by `tests/core/command.test.ts`, the `command` scenario (`cm1-copy` has no
+  value) and `ngc` over `typed.ts` (`kuiCommandItem` gives `value` without exposing it).
+- **Angular: hosts inside hosts gave one input in the order they were called.** The last
+  `hostInputs` call won, `undefined` included, so an outer host that meant "nothing to say"
+  wiped the inner one's default. Angular makes a host directive before the directive that
+  hosts it, so the outermost now wins by rule, and a host that gives `undefined` leaves the
+  input to the one inside it, then to the primitive's own. Held by the `design` scenario
+  (`ds3c`, `ds3d`: `kuiPin` hosting `kuiCode`).
 - **Angular: two directives with one selector both match, and say nothing.** The primitives'
   directives were `kui…`, the prefix a design system built on them takes for its own brand.
   Its `[kuiDialog]` hosting the primitive's `[kuiDialog]`, both in one template's `imports`,

@@ -403,6 +403,14 @@ export function App() {
             <Otp.Input aria-label="Number code" data-testid="ds3b-input" />
           </Otp.Root>
         </div>
+        <div className="item">
+          <Otp.Root id="ds3c" length={2} mode="numeric" value="42">
+            <Otp.Input aria-label="Given code" data-testid="ds3c-input" />
+          </Otp.Root>
+          <Otp.Root id="ds3d" length={2} mode="text">
+            <Otp.Input aria-label="Own code" data-testid="ds3d-input" />
+          </Otp.Root>
+        </div>
       </section>
 
       <section data-fixture="controls">
@@ -1859,7 +1867,7 @@ export function App() {
             <Command.Separator className="separator" data-testid="cm1-separator" />
             <Command.Group id="cm1-edit" data-testid="cm1-edit">
               <Command.GroupHeading data-testid="cm1-edit-heading">Edit</Command.GroupHeading>
-              <Command.Item value="copy" id="cm1-copy" className="item" data-testid="cm1-copy">
+              <Command.Item id="cm1-copy" className="item" data-testid="cm1-copy">
                 Copy
               </Command.Item>
               <Command.Item

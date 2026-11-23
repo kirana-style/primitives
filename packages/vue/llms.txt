@@ -1163,7 +1163,7 @@ Each part, and its own props:
     - `disabled?: boolean`: Disables this item: it cannot be chosen, and the arrows pass over it.
     - `label?: string`: What is filtered; the item's text when left out.
     - `keywords?: readonly string[]`: Other words the item answers to.
-    - `value: string`: Required. What `@select` is told when this item is chosen.
+    - `value?: string`: What `@select` is told when this item is chosen; its `label`, or its text, when left out.
 - `<Command.Separator>` draws a `<div>`. A line between groups. Hidden while something is typed.
     - `alwaysRender?: boolean`: Keeps the line while something is typed.
 

@@ -37,6 +37,7 @@ import {
   KpToggleGroup,
   createToaster,
   KpCommand,
+  KpCommandItem,
   KpComboboxItem,
   KpTooltip,
   hostInputs,
@@ -246,6 +247,22 @@ export class KuiCommand {
 
   constructor() {
     hostInputs(KpCommand, { filter: computed(() => (this.shouldFilter() ? undefined : null)) })
+  }
+}
+
+/**
+ * A command item named by the design system's own input: a command item's `value` is not
+ * required (its label or its text stands for it), so a host gives it without exposing it.
+ */
+@Directive({
+  selector: "[kuiCommandItem]",
+  hostDirectives: [{ directive: KpCommandItem, inputs: ["disabled"] }],
+})
+export class KuiCommandItem {
+  readonly command = input<string>()
+
+  constructor() {
+    hostInputs(KpCommandItem, { value: this.command })
   }
 }
 

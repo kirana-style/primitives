@@ -139,6 +139,37 @@ describe("a command list", () => {
     expect(lit()).toBe("d-banana")
   })
 
+  it("names an item given no value by its label, or by its text as it reads then", async () => {
+    const root = mount(
+      `<div id="list"><div id="a">Shown</div><div id="b"> Plain  <i>text</i><span hidden>no</span></div></div>`
+    )
+    const heard: string[] = []
+    const made = createCommand(
+      signal<CommandProps>({ id: "v", onSelect: (value) => void heard.push(value) })
+    )
+    // An item writes its id: found first.
+    const [list, labelled, plain] = ["list", "a", "b"].map((id) => find(root, id))
+    onTestFinished(bind(list!, made.list))
+    onTestFinished(
+      bind(
+        labelled!,
+        made.item(undefined, () => ({ id: "v-a", label: "Given" }))
+      )
+    )
+    onTestFinished(
+      bind(
+        plain!,
+        made.item(undefined, () => ({ id: "v-b" }))
+      )
+    )
+    await settled()
+    labelled!.click()
+    plain!.click()
+    plain!.querySelector("i")!.textContent = "words"
+    plain!.click()
+    expect(heard).toEqual(["Given", "Plain text", "Plain words"])
+  })
+
   it("draws its first item highlighted before any element is known, as a server does", () => {
     const made = createCommand(signal<CommandProps>({ id: "s" }))
     const one = made.item("one", () => ({ id: "s-one", disabled: true }))

@@ -928,6 +928,15 @@ note. Three places hold them:
   while its wait ran, was still "current": the next tooltip skipped its wait for ever
   after, and the wait still running opened the popover a second time, as the pointer's
   (`hover.forget()`; `hover.test.ts`, "forgets a popup that was taken over").
+- **A popup that leaves the page open gives up being the page's open one.** The "current"
+  popup is module state, shared with no provider, and nothing closes a popup whose page or
+  section is unmounted. A tooltip taken away while open stayed "current": the next page's
+  hover card, reached by the pointer, closed the dead tooltip (telling a page that was gone)
+  and opened at once with `data-instant="delay"`, before a press on its trigger could land;
+  opened over its own trigger, it took that press and stayed open. Stopping a hover
+  controller releases "current" without closing it (`createHover`'s `start()`). Held by
+  `tests/core/hover-teardown.test.ts` (every pair of tooltip, hover card and popover on
+  hover) and the `hover` scenario, which removes the open tooltip `h3` on each adapter.
 - **A backdrop under a popup the pointer opened would take the pointer.** The trigger is
   under it: the pointer has "left", and a press cannot reach the trigger. While the
   pointer holds the popover its backdrop lets the pointer through (`pointer-events: none`

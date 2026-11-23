@@ -224,6 +224,7 @@ export function App() {
   const [toppings, setToppings] = useState<string[]>(["ham"])
   const [count, setCount] = useState(0)
   const [done, setDone] = useState(40)
+  const [tipKept, setTipKept] = useState(true)
   const [pictures, setPictures] = useState(false)
   const [heard, setHeard] = useState("none")
   const [sent, setSent] = useState("")
@@ -580,6 +581,21 @@ export function App() {
             </HoverCard.Positioner>
           </HoverCard.Portal>
         </HoverCard.Root>
+        {tipKept && (
+          <Tooltip.Root id="h3" delay={100} closeDelay={2000}>
+            <Tooltip.Trigger data-testid="h3-trigger">Share</Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner sideOffset={8} data-testid="h3-positioner">
+                <Tooltip.Popup className="tip" data-testid="h3-popup">
+                  Share the file
+                </Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        )}
+        <button data-testid="h3-remove" onClick={() => setTipKept(false)}>
+          Remove
+        </button>
       </section>
 
       <section data-fixture="simple">

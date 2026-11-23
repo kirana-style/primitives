@@ -137,6 +137,7 @@ const alerts = ref(false)
 const toppings = ref<string[]>(["ham"])
 const count = ref(0)
 const done = ref(40)
+const tipKept = ref(true)
 const pictures = ref(false)
 const heard = ref("none")
 const sent = ref("")
@@ -478,6 +479,15 @@ function press(event: PartEvent<MouseEvent>) {
           </HoverCard.Positioner>
         </HoverCard.Portal>
       </HoverCard.Root>
+      <Tooltip.Root v-if="tipKept" id="h3" :delay="100" :close-delay="2000">
+        <Tooltip.Trigger data-testid="h3-trigger">Share</Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner :side-offset="8" data-testid="h3-positioner">
+            <Tooltip.Popup class="tip" data-testid="h3-popup">Share the file</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+      <button data-testid="h3-remove" @click="tipKept = false">Remove</button>
     </section>
 
     <section data-fixture="simple">

@@ -205,6 +205,7 @@ export function App() {
   const [toppings, setToppings] = createSignal<string[]>(["ham"])
   const [count, setCount] = createSignal(0)
   const [done, setDone] = createSignal<number | null>(40)
+  const [tipKept, setTipKept] = createSignal(true)
   const [pictures, setPictures] = createSignal(false)
   const [heard, setHeard] = createSignal<string>("none")
   const [sent, setSent] = createSignal("")
@@ -566,6 +567,21 @@ export function App() {
             </HoverCard.Positioner>
           </HoverCard.Portal>
         </HoverCard.Root>
+        <Show when={tipKept()}>
+          <Tooltip.Root id="h3" delay={100} closeDelay={2000}>
+            <Tooltip.Trigger data-testid="h3-trigger">Share</Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner sideOffset={8} data-testid="h3-positioner">
+                <Tooltip.Popup class="tip" data-testid="h3-popup">
+                  Share the file
+                </Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Show>
+        <button data-testid="h3-remove" onClick={() => setTipKept(false)}>
+          Remove
+        </button>
       </section>
 
       <section data-fixture="simple">

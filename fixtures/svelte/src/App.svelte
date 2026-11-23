@@ -137,6 +137,7 @@
   let toppings = $state<string[]>(["ham"])
   let count = $state(0)
   let done = $state(40)
+  let tipKept = $state(true)
   let pictures = $state(false)
   let heard = $state("none")
   let sent = $state("")
@@ -457,6 +458,17 @@
         </HoverCard.Positioner>
       </HoverCard.Portal>
     </HoverCard.Root>
+    {#if tipKept}
+      <Tooltip.Root id="h3" delay={100} closeDelay={2000}>
+        <Tooltip.Trigger data-testid="h3-trigger">Share</Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner sideOffset={8} data-testid="h3-positioner">
+            <Tooltip.Popup class="tip" data-testid="h3-popup">Share the file</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    {/if}
+    <button data-testid="h3-remove" onclick={() => (tipKept = false)}>Remove</button>
   </section>
 
   <section data-fixture="simple">

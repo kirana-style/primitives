@@ -34,6 +34,8 @@ for (const each of ["b1", "b3"]) {
     find("b1").textContent = `Count ${++count}`
   })
 }
+// A tooltip taken out of the page, open or not.
+find("h3-remove").addEventListener("click", () => element("kui-tooltip", "h3").remove())
 find("pr1-more").addEventListener("click", () => {
   element<{ value: number }>("kui-progress", "pr1").value = 100
 })

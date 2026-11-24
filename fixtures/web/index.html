@@ -247,6 +247,14 @@
               </div>
             </div>
           </kui-tooltip>
+          <kui-tooltip kui-id="h4" delay="100">
+            <a kui-part="trigger" href="#guide" data-testid="h4-trigger">Guide</a>
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="8">
+                <div kui-part="popup" class="tip">Read the guide</div>
+              </div>
+            </div>
+          </kui-tooltip>
           <kui-hover-card kui-id="v1" delay="100" close-delay="100">
             <a kui-part="trigger" href="#profile" data-testid="v1-trigger">@kirana</a>
             <div kui-part="portal">
@@ -283,6 +291,11 @@
           <kui-button native-button="false">
             <span kui-part="root" data-testid="b3">Not a button element</span>
           </kui-button>
+          <form data-testid="b4-form">
+            <kui-button>
+              <button kui-part="root" type="submit" data-testid="b4">Sent 0</button>
+            </kui-button>
+          </form>
           <kui-toggle>
             <button kui-part="root" aria-label="Bold" data-testid="g1">B</button>
           </kui-toggle>

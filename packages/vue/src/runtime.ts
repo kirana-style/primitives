@@ -1,4 +1,4 @@
-import { sameProps, signal, stateOf } from "@kirana-ui/core"
+import { sameProps, signal, stateOf, untype } from "@kirana-ui/core"
 import type {
   ChangeDetails,
   Part,
@@ -278,6 +278,7 @@ export function partComponent<Tag extends string, State = PartState>(
         if (wanted === element) return
         detach?.()
         element = wanted
+        if (wanted) untype(wanted)
         detach = wanted ? part.attach(wanted) : undefined
       }
       const attach = (target: unknown) => {

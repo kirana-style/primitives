@@ -788,6 +788,12 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await settled(page)
     expect((await id("b1").textContent())?.trim() === "Count 3", "Space presses it")
 
+    // The part's `type="button"` is a default: a caller's own type wins.
+    expect((await attribute("b4", "type")) === "submit", "a caller's `type` wins over the part's")
+    await id("b4").click()
+    await settled(page)
+    expect((await id("b4").textContent())?.trim() === "Sent 1", "a submit button submits its form")
+
     expect((await attribute("g1", "aria-pressed")) === "false", "a toggle starts off")
     await id("g1").click()
     await snapshot("buttons pressed")
@@ -1227,6 +1233,11 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("at rest")
     expect(!(await present("h1-popup")), "a closed tooltip is not in the page")
     expect((await attribute("h1-trigger", "aria-describedby")) === null, "and describes nothing")
+    expect(
+      (await attribute("h4-trigger", "type")) === null,
+      "a trigger drawn as a link has no type"
+    )
+    expect((await attribute("h4-trigger", "href")) === "#guide", "and stays a link")
 
     await id("h1-trigger").hover()
     expect(!(await present("h1-popup")), "a tooltip waits before it opens")
@@ -1332,9 +1343,10 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
   // directive on the caller's element on Angular.
   async composition({ page, snapshot, id, present, attribute }) {
     await snapshot("at rest")
+    // Its `type="button"` is a default, not its identity: the caller's element says `submit`.
     expect(
-      (await attribute("k1-trigger", "type")) === "button",
-      "the part's `type` wins over the caller's"
+      (await attribute("k1-trigger", "type")) === "submit",
+      "the caller's `type` wins over the part's"
     )
     expect((await attribute("k1-trigger", "aria-expanded")) === "false", "the part's ARIA wins")
     expect(

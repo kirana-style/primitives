@@ -207,6 +207,7 @@ export function App() {
   const [alerts, setAlerts] = createSignal(false)
   const [toppings, setToppings] = createSignal<string[]>(["ham"])
   const [count, setCount] = createSignal(0)
+  const [submits, setSubmits] = createSignal(0)
   const [done, setDone] = createSignal<number | null>(40)
   const [tipKept, setTipKept] = createSignal(true)
   const [pictures, setPictures] = createSignal(false)
@@ -563,6 +564,22 @@ export function App() {
             </Tooltip.Positioner>
           </Tooltip.Portal>
         </Tooltip.Root>
+        <Tooltip.Root id="h4" delay={100}>
+          {/* `render` draws an element the part cannot know on a server: it leaves the type out. */}
+          <Tooltip.Trigger
+            data-testid="h4-trigger"
+            render={(props) => (
+              <a {...(({ type: _type, ...rest }) => rest)(props())} href="#guide">
+                Guide
+              </a>
+            )}
+          />
+          <Tooltip.Portal>
+            <Tooltip.Positioner sideOffset={8}>
+              <Tooltip.Popup class="tip">Read the guide</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
         <HoverCard.Root id="v1" delay={100} closeDelay={100}>
           <HoverCard.Trigger href="#profile" data-testid="v1-trigger">
             @kirana
@@ -610,6 +627,17 @@ export function App() {
         >
           Not a button element
         </Button>
+        <form
+          data-testid="b4-form"
+          onSubmit={(event) => {
+            event.preventDefault()
+            setSubmits((value) => value + 1)
+          }}
+        >
+          <Button type="submit" data-testid="b4">
+            Sent {submits()}
+          </Button>
+        </form>
         <Toggle aria-label="Bold" data-testid="g1">
           B
         </Toggle>

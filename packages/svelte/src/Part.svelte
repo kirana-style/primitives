@@ -33,7 +33,9 @@
 
   const merged = partProps(
     () => of,
-    () => rest
+    () => rest,
+    // A `child` snippet draws an element of its own choosing.
+    () => (child ? undefined : tag)
   )
 </script>
 

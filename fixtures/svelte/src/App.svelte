@@ -136,6 +136,7 @@
   let alerts = $state(false)
   let toppings = $state<string[]>(["ham"])
   let count = $state(0)
+  let submits = $state(0)
   let done = $state(40)
   let tipKept = $state(true)
   let pictures = $state(false)
@@ -473,6 +474,19 @@
         </Tooltip.Positioner>
       </Tooltip.Portal>
     </Tooltip.Root>
+    <Tooltip.Root id="h4" delay={100}>
+      <!-- A snippet draws an element the part cannot know on a server: it says it takes no type. -->
+      <Tooltip.Trigger>
+        {#snippet child({ props })}
+          <a {...props} type={undefined} href="#guide" data-testid="h4-trigger">Guide</a>
+        {/snippet}
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Positioner sideOffset={8}>
+          <Tooltip.Popup class="tip">Read the guide</Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
     <HoverCard.Root id="v1" delay={100} closeDelay={100}>
       <HoverCard.Trigger href="#profile" data-testid="v1-trigger">@kirana</HoverCard.Trigger>
       <HoverCard.Portal>
@@ -505,6 +519,15 @@
         <span {...props} data-testid="b3">Not a button element</span>
       {/snippet}
     </Button>
+    <form
+      data-testid="b4-form"
+      onsubmit={(event) => {
+        event.preventDefault()
+        submits += 1
+      }}
+    >
+      <Button type="submit" data-testid="b4">Sent {submits}</Button>
+    </form>
     <Toggle aria-label="Bold" data-testid="g1">B</Toggle>
     <Separator data-testid="sp1" />
     <Separator orientation="vertical" data-testid="sp2" />

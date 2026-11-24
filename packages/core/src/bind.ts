@@ -1,5 +1,5 @@
 import { effect } from "./reactivity.ts"
-import { isPrevented, preventable, styleText } from "./part.ts"
+import { isPrevented, preventable, styleText, takesType } from "./part.ts"
 import type { Part, PartProps, PartStyle } from "./part.ts"
 import { clearGeometry, setGeometry } from "./services/geometry.ts"
 
@@ -17,11 +17,22 @@ export function eventType(key: string): string {
 }
 
 /**
+ * `"type"` when a part's `type` does not go on this element: one of the caller's own is there
+ * (`type="submit"` wins over the part's `type="button"`), or the element takes no button type
+ * (a link, where `type` is a MIME type). The element's own attributes are read before the part
+ * writes any.
+ */
+function untyped(element: HTMLElement): string | undefined {
+  return element.hasAttribute("type") || !takesType(element.localName) ? "type" : undefined
+}
+
+/**
  * Puts a part on an element with no framework: writes its attributes as they change, listens for
  * its events and runs its DOM work. This is the whole adapter for plain DOM, and what an adapter
  * uses when its framework renders the element but should not re-render for the part (Angular).
  */
 export function bind(element: HTMLElement, part: Part): () => void {
+  const skip = untyped(element)
   let current: PartProps = {}
   let styled: PartStyle = {}
   const listeners = new Map<string, EventListener>()
@@ -37,6 +48,7 @@ export function bind(element: HTMLElement, part: Part): () => void {
     }
     for (const key in next) {
       const value = next[key]
+      if (key === skip) continue
       if (key === "style") {
         // Property by property, kept there: the element's other styles are the caller's.
         const style = (value ?? {}) as PartStyle
@@ -88,9 +100,10 @@ export function bind(element: HTMLElement, part: Part): () => void {
  */
 export function write(element: HTMLElement, part: Part): void {
   const props = part.props.peek()
+  const skip = untyped(element)
   for (const key in props) {
     const value = props[key]
-    if (value === undefined || HANDLER.test(key)) continue
+    if (value === undefined || key === skip || HANDLER.test(key)) continue
     if (key === "style") {
       const own = element.getAttribute("style")
       const text = styleText(value as PartStyle)

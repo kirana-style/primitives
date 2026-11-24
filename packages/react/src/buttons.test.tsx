@@ -34,7 +34,8 @@ vi.mock("./runtime.tsx", async (original) => ({
 
 const { App } = await import("../../../fixtures/react/src/App.tsx")
 const { Open } = await import("../../../fixtures/react/src/Open.tsx")
-const { AlertDialog, Dialog, Drawer, HoverCard, Popover, Tooltip } = await import("./index.ts")
+const { AlertDialog, Button, Dialog, Drawer, HoverCard, Menu, Popover, Tooltip } =
+  await import("./index.ts")
 
 const called = (props: Record<string, unknown>) =>
   String(props["data-testid"] ?? props.id ?? props["aria-label"] ?? JSON.stringify(props))
@@ -113,6 +114,57 @@ describe("every button a part draws", () => {
     )
     expect(drawn.buttons).toEqual([])
     expect(html).toMatch(/^<a [^>]*href="#card"/)
+    expect(html).not.toContain("type=")
+  })
+
+  it("is the caller's type when it gives one: a submit button submits its form", () => {
+    drawn.buttons.length = 0
+    const html = renderToString(
+      <form>
+        <Button type="submit" data-testid="send">
+          Send
+        </Button>
+        <Button type="reset" data-testid="clear">
+          Clear
+        </Button>
+        <Tooltip.Root>
+          <Tooltip.Trigger type="submit" data-testid="save">
+            Save
+          </Tooltip.Trigger>
+        </Tooltip.Root>
+      </form>
+    )
+    const typeOf = (testid: string) =>
+      drawn.buttons.find((props) => props["data-testid"] === testid)?.type
+    expect(typeOf("send")).toBe("submit")
+    expect(typeOf("clear")).toBe("reset")
+    expect(typeOf("save")).toBe("submit")
+    expect(html).not.toContain('type="button"')
+  })
+
+  it("is not written on a part drawn as a link", () => {
+    drawn.buttons.length = 0
+    const html = renderToString(
+      <>
+        <Tooltip.Root>
+          <Tooltip.Trigger render={<a href="#tooltip" />}>t</Tooltip.Trigger>
+        </Tooltip.Root>
+        <Dialog.Root>
+          <Dialog.Trigger render={<a href="#dialog" />}>d</Dialog.Trigger>
+        </Dialog.Root>
+        <Popover.Root>
+          <Popover.Trigger render={<a href="#popover" />}>p</Popover.Trigger>
+        </Popover.Root>
+        <Menu.Root>
+          <Menu.Trigger render={<a href="#menu" />}>m</Menu.Trigger>
+        </Menu.Root>
+        <Button nativeButton={false} render={<a href="#button" />}>
+          b
+        </Button>
+      </>
+    )
+    expect(drawn.buttons).toEqual([])
+    expect(html.match(/<a /g)).toHaveLength(5)
     expect(html).not.toContain("type=")
   })
 })

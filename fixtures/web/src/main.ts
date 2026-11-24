@@ -36,6 +36,12 @@ for (const each of ["b1", "b3"]) {
 }
 // A tooltip taken out of the page, open or not.
 find("h3-remove").addEventListener("click", () => element("kui-tooltip", "h3").remove())
+// A submit button in a form: what the form heard.
+let submits = 0
+find("b4-form").addEventListener("submit", (event) => {
+  event.preventDefault()
+  find("b4").textContent = `Sent ${++submits}`
+})
 find("pr1-more").addEventListener("click", () => {
   element<{ value: number }>("kui-progress", "pr1").value = 100
 })

@@ -30,7 +30,13 @@ vi.mock("react", async (original) => {
 const element = () =>
   new Proxy({} as HTMLElement, {
     get: (_target, key) =>
-      key === "isConnected" ? false : key === "ownerDocument" ? undefined : () => undefined,
+      key === "isConnected"
+        ? false
+        : key === "ownerDocument"
+          ? undefined
+          : key === "localName"
+            ? "button"
+            : () => undefined,
   })
 
 function handed(page: ReactElement): (given: HTMLElement) => void {

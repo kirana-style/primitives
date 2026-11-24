@@ -191,9 +191,47 @@ function layer(under: PartProps | undefined, over: PartProps, stoppable: boolean
   return merged
 }
 
+/** Whether an element of this tag takes a button's `type`: a `<button>` or an `<input>`. */
+export function takesType(tag: string): boolean {
+  const name = tag.toLowerCase()
+  return name === "button" || name === "input"
+}
+
+/**
+ * A part's own props as they go on an element, before `mergeProps` lays them over the
+ * caller's. A part's `type` is a default, not its identity: a `<button>` it draws says
+ * `type="button"` so that it never submits a form by accident, but a caller's `type`
+ * (`"submit"`, `"reset"`) wins, and an element that takes no button type (a link, where `type`
+ * is a MIME type) is given none. `tag` is the element's tag name, or `undefined` when the
+ * adapter cannot know it before the element is drawn (a `render` function, a component): the
+ * part's `type` is then kept, and `untype` takes it off once the element is known.
+ */
+export function forElement(
+  own: PartProps,
+  caller: PartProps | undefined,
+  tag: string | undefined
+): PartProps {
+  if (own.type === undefined) return own
+  if (caller?.type === undefined && (tag === undefined || takesType(tag))) return own
+  const { type: _type, ...rest } = own
+  return rest
+}
+
+/**
+ * Takes a part's `type="button"` off an element that takes no button type, for an element its
+ * adapter could not name before it was drawn (`forElement` with no tag). Each adapter's runtime
+ * calls it once the element is known; on a `<button>` it does nothing.
+ */
+export function untype(element: Element): void {
+  if (!takesType(element.localName) && element.getAttribute("type") === "button")
+    element.removeAttribute("type")
+}
+
 /**
  * Merges a caller's props with a part's, the one rule every adapter uses: the part's attributes
- * win (its identity survives composition) and an `undefined` of the part's leaves the caller's;
+ * win (its identity survives composition; its `type` is not identity, and `forElement` takes it
+ * out of the part's props first where the caller gave one) and an `undefined` of the part's
+ * leaves the caller's;
  * classes join (`class` with `class`, `className` with `className`); a style is merged property
  * by property, the part's winning one; and for an event the caller's handler runs first and
  * the part's follows unless the caller called `event.preventKiranaHandler()`.

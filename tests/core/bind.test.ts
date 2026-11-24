@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test"
 
 import { bind, write } from "../../packages/core/src/bind.ts"
-import { PREVENT } from "../../packages/core/src/part.ts"
+import { PREVENT, forElement, untype } from "../../packages/core/src/part.ts"
 import type { Part, PartProps } from "../../packages/core/src/part.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { find, mount } from "./page.ts"
@@ -160,5 +160,68 @@ describe("a part written once, for a server", () => {
     expect(element.getAttribute("style")).toBe("color: red;width: 40%")
     expect(element.hasAttribute("onclick")).toBe(false)
     expect(log).toEqual([])
+  })
+})
+
+// A part's `type="button"` keeps a `<button>` from submitting its form by accident: it is a
+// default, which a caller's own type overrides, and a link (where `type` is a MIME type) never
+// takes it.
+describe("a part's button type", () => {
+  const typed = () => part({ type: "button", "aria-haspopup": "dialog" }).part
+
+  it("goes on a button with no type of its own, bound or written", () => {
+    const root = mount(`<button id="a">A</button><button id="b">B</button>`)
+    bind(find(root, "a"), typed())
+    write(find(root, "b"), typed())
+    expect(find(root, "a").getAttribute("type")).toBe("button")
+    expect(find(root, "b").getAttribute("type")).toBe("button")
+  })
+
+  it("leaves the caller's own type: a submit button submits", () => {
+    const root = mount(
+      `<form id="f"><button id="a" type="submit">A</button><button id="b" type="reset">B</button></form>`
+    )
+    const form = find(root, "f") as HTMLFormElement
+    let submits = 0
+    form.addEventListener("submit", (event) => {
+      event.preventDefault()
+      submits++
+    })
+    bind(find(root, "a"), typed())
+    write(find(root, "b"), typed())
+    expect(find(root, "a").getAttribute("type")).toBe("submit")
+    expect(find(root, "b").getAttribute("type")).toBe("reset")
+    find(root, "a").click()
+    expect(submits).toBe(1)
+  })
+
+  it("is not written on a link, bound or written", () => {
+    const root = mount(`<a id="a" href="#a">A</a><a id="b" href="#b">B</a>`)
+    bind(find(root, "a"), typed())
+    write(find(root, "b"), typed())
+    for (const id of ["a", "b"]) {
+      expect(find(root, id).hasAttribute("type")).toBe(false)
+      expect(find(root, id).getAttribute("aria-haspopup")).toBe("dialog")
+    }
+  })
+
+  it("is fitted to the element and the caller before a framework draws it", () => {
+    const own = { type: "button", id: "x" }
+    expect(forElement(own, {}, "button")).toBe(own)
+    expect(forElement(own, { type: "submit" }, "button")).toEqual({ id: "x" })
+    expect(forElement(own, {}, "a")).toEqual({ id: "x" })
+    expect(forElement({ type: "checkbox" }, {}, "input")).toEqual({ type: "checkbox" })
+    // An element the adapter cannot name yet keeps it, until `untype` sees the element.
+    expect(forElement(own, {}, undefined)).toBe(own)
+  })
+
+  it("is taken off an element that turned out not to be a button", () => {
+    const root = mount(
+      `<a id="a" href="#a" type="button">A</a><button id="b" type="button">B</button><a id="c" type="text/html">C</a>`
+    )
+    for (const id of ["a", "b", "c"]) untype(find(root, id))
+    expect(find(root, "a").hasAttribute("type")).toBe(false)
+    expect(find(root, "b").getAttribute("type")).toBe("button")
+    expect(find(root, "c").getAttribute("type")).toBe("text/html")
   })
 })

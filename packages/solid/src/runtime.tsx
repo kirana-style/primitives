@@ -1,4 +1,4 @@
-import { mergeProps, sameProps, signal, stateOf } from "@kirana-ui/core"
+import { forElement, mergeProps, sameProps, signal, stateOf, untype } from "@kirana-ui/core"
 import type {
   Part as CorePart,
   PartEvent,
@@ -146,7 +146,12 @@ export function Part(props: { of: CorePart; tag: string } & Record<string, unkno
     if (element === attached) return
     attached = element
     const part = untrack(() => local.of)
-    runWithOwner(owner, () => onMount(() => onCleanup(part.attach(element))))
+    runWithOwner(owner, () =>
+      onMount(() => {
+        untype(element)
+        onCleanup(part.attach(element))
+      })
+    )
     // The caller's own `ref` (Solid hands a component a function, whatever was written).
     const theirs = untrack(() => caller.ref)
     if (typeof theirs === "function") (theirs as (element: HTMLElement) => void)(element)
@@ -154,7 +159,9 @@ export function Part(props: { of: CorePart; tag: string } & Record<string, unkno
   const merged = createMemo(() => {
     const theirs: PartProps = {}
     for (const key of Object.keys(caller)) theirs[key] = caller[key]
-    return { ...mergeProps(theirs, toSolid(own())), ref: attach }
+    // The element's tag, where it is known before it is drawn: `render` draws its own.
+    const tag = local.render ? undefined : (local.as ?? local.tag)
+    return { ...mergeProps(theirs, toSolid(forElement(own(), theirs, tag))), ref: attach }
   })
   const state = () => stateOf(own())
   return (

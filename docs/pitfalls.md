@@ -57,6 +57,20 @@ note. Three places hold them:
   the hover card, whose trigger is a link and takes no type. Held by
   `packages/react/src/buttons.test.tsx`, which catches every element React's parts make on both
   fixture pages and in open popups, and fails on a button with no type.
+- **A part's `type="button"` is a default, not its identity, and only a button takes it.**
+  Merged as one of the part's attributes, it won over a caller's `type="submit"`, so a submit
+  button built on `Button` could not submit; and a trigger drawn on a link wrote
+  `type="button"` there, where `type` is a MIME type. A part's `type` now goes through
+  `forElement` (`part.ts`) before the merge: left out where the caller gave a type, or where
+  the adapter knows the element is not a `<button>` or an `<input>`. `bind` and `write` read
+  the element itself (its own `type`, its tag). Where the element cannot be known before it is
+  drawn (a `render` function, a `child` snippet, a component), the props keep it and each
+  runtime calls `untype` once the element is in the page; a server draws it there unless the
+  caller leaves it out (Svelte: `type={undefined}` after the spread; Solid: out of the spread,
+  since its `mergeProps` passes over a later `undefined`). Held by `packages/react/src/buttons.test.tsx` (a submit
+  button, a reset button, triggers rendered as links), `tests/core/bind.test.ts` ("a part's
+  button type") and the conformance run (`simple`: `b4` submits its form; `hover`: `h3`'s link
+  has no type).
 - **A control's `id` is its native input's.** A `<label for>` reaches only a labelable element,
   so a radio item's `id` goes on its hidden radio, as a checkbox's and a switch's do. Held by
   the `controls` scenario, which presses a label `for` a radio item.

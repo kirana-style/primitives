@@ -221,6 +221,23 @@ if (warned.length) {
 process.stdout.write(body)
 `
 
+/**
+ * Markup without its comments, which are the marks a framework writes for its own hydration.
+ * Read from end to end, so that no comment can be left by what is taken out around it.
+ */
+function uncommented(html: string): string {
+  let out = ""
+  let at = 0
+  while (at < html.length) {
+    const start = html.indexOf("<!--", at)
+    const end = start < 0 ? -1 : html.indexOf("-->", start + 4)
+    if (end < 0) return out + html.slice(at, start < 0 ? undefined : start)
+    out += html.slice(at, start)
+    at = end + 3
+  }
+  return out
+}
+
 function rendered(page = PAGE, dev = false): string {
   const html = execFileSync("bun", ["--conditions", "svelte", "-e", RENDER], {
     cwd: path.join(import.meta.dirname, ".."),
@@ -229,7 +246,7 @@ function rendered(page = PAGE, dev = false): string {
     stdio: ["ignore", "pipe", "pipe"],
   })
   // Svelte's own marks for hydration are not the page's.
-  return html.replace(/<!--[^>]*-->/g, "")
+  return uncommented(html)
 }
 
 describe("on the server", () => {

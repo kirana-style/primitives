@@ -64,7 +64,7 @@ async function served(version: string) {
     const unserved: string[] = []
     await Promise.all(
       names.map(async ({ name }) => {
-        const response = await fetch(`${registry}/${name.replace("/", "%2f")}`, {
+        const response = await fetch(`${registry}/${name.replaceAll("/", "%2f")}`, {
           headers: { Accept: "application/vnd.npm.install-v1+json" },
           signal: AbortSignal.timeout(15_000),
         }).catch(() => undefined)

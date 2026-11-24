@@ -26,6 +26,23 @@ import {
 import type { ToastRecord } from "./index.ts"
 import { Primitive } from "./primitive.ts"
 
+/**
+ * Markup without its comments, which are the marks a framework writes for its own hydration.
+ * Read from end to end, so that no comment can be left by what is taken out around it.
+ */
+function uncommented(html: string): string {
+  let out = ""
+  let at = 0
+  while (at < html.length) {
+    const start = html.indexOf("<!--", at)
+    const end = start < 0 ? -1 : html.indexOf("-->", start + 4)
+    if (end < 0) return out + html.slice(at, start < 0 ? undefined : start)
+    out += html.slice(at, start)
+    at = end + 3
+  }
+  return out
+}
+
 // Rendered with no DOM at all: making a controller and reading its parts touches no document.
 describe("on the server", () => {
   it("draws what a toast was added with, whatever a render function returns, unless the caller draws its own", async () => {
@@ -51,7 +68,7 @@ describe("on the server", () => {
           })
         ),
     })
-    const html = (await renderToString(app)).replace(/<!--[^>]*-->/g, "")
+    const html = uncommented(await renderToString(app))
     expect(html).toContain('<div class="title" id="ts-rich-title"><b>Saved</b> to the cloud</div>')
     expect(html).toContain(
       '<div id="ts-rich-description"><a href="/log">See what changed</a></div>'
@@ -352,14 +369,14 @@ describe("a part that keeps a native input in its element", () => {
         part({ asChild: true }, () => h("label", { class: "mine" }, "text"))
       )
       expect(out.split(kept)).toHaveLength(2)
-      expect(out.replace(/<!--[^>]*-->/g, "")).toContain(`text${kept}</label>`)
+      expect(uncommented(out)).toContain(`text${kept}</label>`)
       expect(out).toContain('<label class="mine"')
     })
 
     it(`${name}: holds its input once, last, in what a component of its caller's draws`, async () => {
       const out = await html(() => part({ asChild: true }, () => h(Box, null, () => "text")))
       expect(out.split(kept)).toHaveLength(2)
-      expect(out.replace(/<!--[^>]*-->/g, "")).toContain(`text${kept}</label>`)
+      expect(uncommented(out)).toContain(`text${kept}</label>`)
       expect(out).toContain('<label class="box"')
     })
   }
@@ -369,7 +386,7 @@ describe("a part that keeps a native input in its element", () => {
       h(NumberField.Root, { id: "n", defaultValue: 2, ...given }, content)
     expect(await html(() => unnamed({}))).toBe("<div data-filled><!----><!----></div>")
     const out = await html(() => unnamed({ asChild: true }, () => h("label", "text")))
-    expect(out.replace(/<!--[^>]*-->/g, "")).toBe("<label data-filled>text</label>")
+    expect(uncommented(out)).toBe("<label data-filled>text</label>")
   })
 
   it("a code cell shows its character first, whichever element it is", async () => {
@@ -381,18 +398,16 @@ describe("a part that keeps a native input in its element", () => {
       '<div><div data-index="0" data-filled>7<!--[--><i></i><!--]--></div></div>'
     )
     const out = await html(() => cell({ asChild: true }, () => h("b", { class: "mine" }, "x")))
-    expect(out.replace(/<!--[^>]*-->/g, "")).toBe(
-      '<div><b class="mine" data-index="0" data-filled>7x</b></div>'
-    )
+    expect(uncommented(out)).toBe('<div><b class="mine" data-index="0" data-filled>7x</b></div>')
     const boxed = await html(() => cell({ asChild: true }, () => h(Box, null, () => "x")))
-    expect(boxed.replace(/<!--[^>]*-->/g, "")).toBe(
+    expect(uncommented(boxed)).toBe(
       '<div><label class="box" data-index="0" data-filled>7x</label></div>'
     )
   })
 })
 
 describe("a part that writes its own text", () => {
-  const plain = (out: string) => out.replace(/<!--[^>]*-->/g, "")
+  const plain = uncommented
 
   it("writes it in the caller's own element (as-child), unless that element writes its own", async () => {
     const own = { asChild: true }

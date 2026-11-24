@@ -34,7 +34,9 @@ function group(
   const markup = `<div id="group">${names
     .map((each) => `<span id="${each}"><input id="${each}-input" /></span>`)
     .join("")}</div>`
-  const root = mount(`<form id="form">${(options.around ?? "$").replace("$", markup)}</form>`)
+  const root = mount(
+    `<form id="form">${(options.around ?? "$").replaceAll("$", () => markup)}</form>`
+  )
   const heard: string[][] = []
   const reasons: string[] = []
   const props = signal<CheckboxGroupProps>({

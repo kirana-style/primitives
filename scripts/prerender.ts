@@ -35,7 +35,8 @@ for (const [file, which] of [
   if (!template.includes("<!--app-->")) throw new Error(`${fixture}: ${file} has no <!--app-->`)
   writeFileSync(
     page,
-    template.replace("<!--app-->", html).replace("<!--head-->", server.head?.() ?? "")
+    // Given as functions: in a string, a "$" of the page's own would be read as a pattern.
+    template.replace("<!--app-->", () => html).replace("<!--head-->", () => server.head?.() ?? "")
   )
   console.log(`${fixture}: ${file} holds ${html.length} bytes rendered on the server`)
 }

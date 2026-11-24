@@ -1101,6 +1101,11 @@ note. Three places hold them:
   and "the release installs and works" passed on packages nobody had just published: a new
   type-checked line found declarations that were days old. `scripts/consume.ts` gives an
   install from a registry that is not npm's its own cache.
+- **A version a registry lists is not yet a version it serves.** The check after a release
+  waited until every package listed the new version, then installed, and the install met a 404
+  on one package's file: the list and the file reach an edge apart. The check now asks for each
+  file too before it installs, and the rehearsal's registry answers the first asking for a file
+  with a 404, which fails the earlier check (`scripts/consume.ts`, `scripts/rehearse.ts`).
 - **Stop what you start, by its process id.** A server left running holds a port and memory
   for the next run.
 - **A dependency change is checked in a fresh clone** with a frozen lockfile: links of removed

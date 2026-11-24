@@ -15,7 +15,8 @@
  *     is found there;
  *   - a second run publishes nothing, and a run after a release that stopped halfway continues it,
  *     waiting only for what is left of the cache's age;
- *   - the release then installs from the registry and works (`scripts/consume.ts --version`).
+ *   - the release then installs from the registry and works (`scripts/consume.ts --version`),
+ *     though the registry lists a version before it serves its file, as npm's edges do.
  *
  * What it cannot rehearse is npm itself accepting the workflow: that is the first step of a real
  * release, before anything is published.
@@ -50,6 +51,8 @@ function registry() {
   // answers with an error.
   const faults = new Map<string, "lost" | "stored">()
   const refused = new Set<string>()
+  /** The files asked for once already: the first asking is answered 404. */
+  const asked = new Set<string>()
   const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
     new Response(JSON.stringify(body), {
       status,
@@ -74,6 +77,12 @@ function registry() {
           // npm names the file with its scope (`-/@kirana-ui/core-0.1.0.tgz`).
           (each) => each.file === file[2]!.split("/").pop()
         )
+        // Listed before it is served: the first asking for a file is answered as an edge
+        // that does not have it yet.
+        if (found && !asked.has(found.file)) {
+          asked.add(found.file)
+          return json({}, 404)
+        }
         return found ? new Response(found.tarball as unknown as BodyInit) : json({}, 404)
       }
       const [, name, version] = /^(@[^/]+\/[^/]+)(?:\/(.+))?$/.exec(parts) ?? []

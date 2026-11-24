@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { OffsetFunction, PartEvent } from "@kirana-ui/svelte"
+  import type { DateRange, OffsetFunction, PartEvent } from "@kirana-ui/svelte"
 
   import Mark from "./Mark.svelte"
   import Tag from "./Tag.svelte"
@@ -170,6 +170,9 @@
   let did = $state("none")
   let dated = $state("none")
   let stay = $state("none")
+  // The two calendars' values, held by their caller: what it gives back must keep the days.
+  let pickedDay = $state<string | null>(null)
+  let pickedRange = $state<DateRange | null>(null)
   let chosenDays = $state("none")
   let shownMonth = $state("2026-03-01")
   let rests = $state("0.5")
@@ -1397,6 +1400,7 @@
       defaultFocusedValue="2026-03-15"
       class="calendar"
       data-testid="cal1"
+      bind:value={pickedDay}
       onValueChange={(next: unknown) => (dated = String(next))}
     >
       <Calendar.Previous aria-label="Previous month" data-testid="cal1-previous">
@@ -1462,6 +1466,7 @@
       defaultFocusedValue="2026-03-15"
       class="calendar calendar-months"
       data-testid="cal2"
+      bind:value={pickedRange}
       onValueChange={(next: unknown) => (stay = JSON.stringify(next))}
     >
       <Calendar.Previous aria-label="Previous month" data-testid="cal2-previous">

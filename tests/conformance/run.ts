@@ -16,7 +16,7 @@ import { availableParallelism } from "node:os"
 import { join } from "node:path"
 
 import { chromium, firefox, webkit } from "playwright"
-import type { Page } from "playwright"
+import type { Locator, Page } from "playwright"
 
 import type { PartDefinition } from "../../packages/core/src/part.ts"
 import { vocabulary } from "../../packages/core/src/vocabulary.ts"
@@ -60,6 +60,8 @@ const WEB = [
   "command",
   "toast",
   "dates",
+  // The scenario that plays the "dates" section's calendar.
+  "calendar",
   "calendars",
   "picking",
   "placing",
@@ -412,6 +414,22 @@ async function settled(page: Page) {
     undefined,
     { timeout: 5000 }
   )
+}
+
+/**
+ * Holds the element `target` is before `act`, and asserts it is still in the page and has focus
+ * after: a list that draws an entry again replaces its element, which a comparison of the DOM
+ * state by state cannot see.
+ */
+async function keepsItself(target: Locator, act: () => Promise<unknown>) {
+  const before = await target.elementHandle()
+  await act()
+  const [connected, active] = await before!.evaluate((node) => [
+    node.isConnected,
+    node === document.activeElement,
+  ])
+  expect(connected, "the element pressed is the same one after, not one drawn again")
+  expect(active, "and focus is still on it")
 }
 
 const scenarios: Record<string, (run: Run) => Promise<void>> = {
@@ -3342,7 +3360,9 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     )
     await snapshot("a calendar at rest")
 
-    await id("cal1-2026-03-10").click()
+    // The value is its caller's, given back: the day pressed is the same element after it, and
+    // keeps focus, where a list drawn again from new entries would drop it to the page.
+    await keepsItself(id("cal1-2026-03-10"), () => id("cal1-2026-03-10").click())
     await settled(page)
     expect((await output()) === "2026-03-10", "a press chooses a day")
     expect((await attribute("cal1-2026-03-10", "data-selected")) === "", "which says so")
@@ -3401,7 +3421,8 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("two months at rest")
 
     await press("cal2-0-2026-03-28")
-    await press("cal2-1-2026-04-03")
+    // The range is its caller's, given back: the month's days are kept, and focus with them.
+    await keepsItself(id("cal2-1-2026-04-03"), () => press("cal2-1-2026-04-03"))
     expect(
       (await text("cal2-output")) === '{"start":"2026-03-28","end":"2026-04-03"}',
       `a range is chosen across the months (${await text("cal2-output")})`

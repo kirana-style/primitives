@@ -575,6 +575,12 @@ note. Three places hold them:
 - **Run the task, not the script, when a build stands between them.** `bun
   tests/conformance/run.ts` plays whatever the fixtures were last built from; `vp run
   conformance` builds them first. Three identical failures in a row were a stale build.
+- **Never stop apt from outside.** CI's browser install was one command under a three-minute
+  limit, tried four times. The limit stopped the try, not the `apt-get` it had started as root,
+  which went on holding the package lock: every later try failed on that lock, and the job
+  with it. The libraries (`playwright install-deps`) are now a step of their own that nothing
+  stops, with apt told to time out a silent mirror, fetch again and wait for the lock; only
+  the browser's download, the job's own process, is stopped and tried again.
 - **Several pages at once is for Chromium.** The conformance run plays six subjects at a time
   there (352 s one at a time, 120 s with six and its timed scenarios alone, the same results). Firefox gained nothing from
   three and failed one run in two, each time on a scenario that times a press or looks for

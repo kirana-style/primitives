@@ -111,14 +111,35 @@ jobs:
       - name: Build
         run: vp run build
 
-      # The browsers Playwright drives, at the versions the lockfile's Playwright asks for. It
-      # takes half a minute, and stalls now and then when many jobs fetch at once (one sat here
-      # for twenty minutes until its job was stopped, three others for four to eleven): a try
-      # that has not finished in three minutes is stopped and made again.
+      # The system libraries the browser needs, from the runner's package mirror. apt is never
+      # stopped from outside: it runs as root, so a stopped try left its `apt-get` behind holding
+      # the package lock, and every later try failed on that lock. It is told instead to give up
+      # on a mirror that goes silent, to fetch again, and to wait for the lock.
+      - name: Browser libraries
+        run: |
+          printf '%s\n' \
+            'Acquire::Retries "3";' \
+            'Acquire::http::Timeout "30";' \
+            'Acquire::https::Timeout "30";' \
+            'DPkg::Lock::Timeout "300";' | sudo tee /etc/apt/apt.conf.d/80-ci > /dev/null
+          for attempt in 1 2 3; do
+            if bunx playwright install-deps ${{ matrix.browser }}; then
+              exit 0
+            fi
+            echo "::warning::installing ${{ matrix.browser }}'s libraries failed, attempt $attempt"
+            sleep 15
+          done
+          exit 1
+
+      # The browser Playwright drives, at the version the lockfile's Playwright asks for: a
+      # download of half a minute that stalls now and then when many jobs fetch at once (one sat
+      # here for twenty minutes until its job was stopped, three others for four to eleven). A
+      # try that has not finished in three minutes is stopped and made again; it is the job's
+      # own process, so stopping it leaves nothing behind.
       - name: Browsers
         run: |
           for attempt in 1 2 3 4; do
-            if timeout --kill-after=10 180 bunx playwright install --with-deps ${{ matrix.browser }}; then
+            if timeout --kill-after=10 180 bunx playwright install ${{ matrix.browser }}; then
               exit 0
             fi
             echo "::warning::installing ${{ matrix.browser }} did not finish, attempt $attempt"

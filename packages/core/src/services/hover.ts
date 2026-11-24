@@ -175,6 +175,10 @@ export function createHover(config: {
       return () => {
         stop()
         clear()
+        // Stopped while it is the page's open one (its page went away with it open): it gives
+        // that up, unclosed. The next popup's trigger is not its sibling's, so it neither closes
+        // this one (telling a page that is gone) nor opens at once as if the pointer came from it.
+        if (current === self) current = undefined
       }
     },
   }

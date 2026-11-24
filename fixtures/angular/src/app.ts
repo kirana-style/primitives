@@ -819,6 +819,17 @@ import {
             </div>
           </ng-template>
         </ng-container>
+        @if (tipKept()) {
+          <ng-container kpTooltip [kpId]="'h3'" [delay]="100" [closeDelay]="2000">
+            <button kpTooltipTrigger data-testid="h3-trigger">Share</button>
+            <ng-template kpTooltipPortal>
+              <div kpTooltipPositioner [sideOffset]="8" data-testid="h3-positioner">
+                <div kpTooltipPopup class="tip" data-testid="h3-popup">Share the file</div>
+              </div>
+            </ng-template>
+          </ng-container>
+        }
+        <button data-testid="h3-remove" (click)="tipKept.set(false)">Remove</button>
       </section>
 
       <section data-fixture="simple">
@@ -2966,6 +2977,7 @@ export class App {
   protected readonly layered = signal<boolean | undefined>(false)
   protected readonly count = signal(0)
   protected readonly done = signal<number | null>(40)
+  protected readonly tipKept = signal(true)
   protected readonly pictures = signal(false)
   protected readonly heard = signal<string>("none")
   protected readonly sent = signal("")

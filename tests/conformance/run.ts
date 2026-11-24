@@ -1309,6 +1309,23 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(await present("v1-popup"), "a hover card waits before it closes")
     await gone("v1-popup")
     await snapshot("hover card closed")
+
+    // A tooltip taken out of the page while it is open (its page or section left) is nobody's
+    // sibling: the next popup waits its own wait, and a press on its trigger lands first.
+    await page.waitForTimeout(450)
+    await id("h3-trigger").hover()
+    await shown("h3-popup")
+    // Its long close delay keeps it open while the pointer goes to the button that removes it.
+    await id("h3-remove").click()
+    await gone("h3-popup")
+    await id("v1-trigger").hover()
+    await shown("v1-popup")
+    expect(
+      (await attribute("v1-popup", "data-instant")) === null,
+      "after a tooltip that left the page open, a hover card waits: not instant"
+    )
+    await away()
+    await gone("v1-popup")
   },
 
   // A part drawn as the caller's own element: `render` on React, `child` on Svelte, the

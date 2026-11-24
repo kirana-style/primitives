@@ -7,7 +7,10 @@ import type { PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
 
 export interface ButtonProps extends CoreProps, PartComponentProps {}
 
-/** A `<button>`, or with `as` and `:native-button="false"` another element that acts as one. */
+/**
+ * A `<button>`, or with `as` and `:native-button="false"` another element that acts as one; a
+ * link that navigates (`as="a" href="/x"`, `as-child` on an `<a href>`) stays a link.
+ */
 export const Button = defineComponent({
   name: "Button",
   inheritAttrs: false,

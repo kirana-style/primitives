@@ -29,7 +29,7 @@ const element = <T>(tag: string, id: string) =>
 
 // Buttons that count.
 let count = 0
-for (const each of ["b1", "b3"]) {
+for (const each of ["b1", "b3", "bl1"]) {
   find(each).addEventListener("click", () => {
     find("b1").textContent = `Count ${++count}`
   })

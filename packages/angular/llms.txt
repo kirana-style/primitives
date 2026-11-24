@@ -395,7 +395,7 @@ Its other types:
 - Props are inputs. Bind them (`[defaultValue]="'a'"`): a static attribute stays on the element. An `id` is given as `[kpId]`.
 - A part writes its role, ARIA and state attributes on its element over the element's own, as a part's own win on the other frameworks: `<button kpCollapsibleTrigger aria-expanded="true">` says the part's `aria-expanded`. An attribute the part has no value for is the element's (`aria-controls="note"` while the panel is not in the page), and the element's own comes back when the part stops giving one. Do not bind an attribute a part writes (`[attr.data-selected]`): Angular writes a binding again only when its value changes, and the part then no longer wins. A design system that wants other values writes attributes of its own names (`data-day-selected="true"`), or styles the library's (`[data-selected]`).
 - A part that writes its own text (`kpCalendarHeading`, `kpMeterValue`, `kpProgressValue`, `kpSliderValue`, `kpSelectValue`, `kpComboboxValue`, `kpFieldError`, a toast's title, description and action) writes it only while its element has no content of its own: `<h2 kpCalendarHeading>{{ caption() }}</h2>` says the caption, and the heading is still the live region read out as the month changes.
-- A part on a `<button>` writes `type="button"`, so that it never submits a form by accident, unless the element has a `type` of its own (`<button kpButton type="submit">`); a part on an element that is not a button (`<a kpTooltipTrigger href="/x">`) writes none.
+- A part on a `<button>` writes `type="button"`, so that it never submits a form by accident, unless the element has a `type` of its own (`<button kpButton type="submit">`); a part on an element that is not a button (`<a kpTooltipTrigger href="/x">`) writes none. A button on a link that navigates stays a link: `<a kpButton [nativeButton]="false" href="/x">` is given no `role`, no `tabindex` and none of the button's keys (its Enter is its own, and Space does not press it); a disabled one still has `tabindex="-1"` and `aria-disabled`.
 - A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …). Below, `[(name)]` is such a model and `(name)` an output.
 - A part that draws a list is structural and gives each entry: `*kpDateFieldSegments="let segment"`.
 - A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kpTabsPanel="'account'; keepMounted: true"`.
@@ -746,9 +746,9 @@ Props:
 
 - `disabled?: boolean`: Disabled: a press does nothing.
 - `focusableWhenDisabled?: boolean`: Keeps a disabled button in the tab order, so what it would do can still be read.
-- `nativeButton?: boolean`: `false` when the element is not a `<button>`: it is given a button's role and keyboard. Default `true`.
+- `nativeButton?: boolean`: `false` when the element is not a `<button>`: it is given a button's role, a place in the tab order and its keys (Enter, Space). A link that navigates (an `<a>` or `<area>` with an `href`) stays a link: no role is written over its own, it keeps its own place in the tab order and its own Enter, and Space does not press it; disabled, it is still blocked. Default `true`.
 
-`[kpButton]` is `KpButton`. `exportAs: "kpButton"`. On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one.
+`[kpButton]` is `KpButton`. `exportAs: "kpButton"`. On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one; on a link that navigates (`<a href>`), it stays a link.
 
 Attributes and CSS variables, by part:
 

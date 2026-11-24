@@ -4,7 +4,10 @@ import { createButton } from "@kirana-ui/core/button"
 
 import { hostPart, inputsSignal } from "./runtime"
 
-/** On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one. */
+/**
+ * On a `<button>`, or with `[nativeButton]="false"` on another element that acts as one; on a
+ * link that navigates (`<a href>`), it stays a link.
+ */
 @Directive({ selector: "[kpButton]", exportAs: "kpButton" })
 export class KpButton implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })

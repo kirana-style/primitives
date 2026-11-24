@@ -789,6 +789,22 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await settled(page)
     expect((await id("b1").textContent())?.trim() === "Count 3", "Space presses it")
 
+    // A button drawn as a link that navigates stays a link: no role, no tab stop of its own, no
+    // keys of the part's. The server's page is compared with this one at rest, so it says so too.
+    expect((await attribute("bl1", "role")) === null, "a link button is given no button role")
+    expect((await attribute("bl1", "tabindex")) === null, "nor a tab stop: a link has its own")
+    expect((await attribute("bl1", "href")) === "#bl1-docs", "and stays a link")
+    await id("bl1").focus()
+    await page.keyboard.press("Enter")
+    await settled(page)
+    expect((await id("b1").textContent())?.trim() === "Count 4", "Enter follows the link once")
+    // Space is the page's on a link: it scrolls, and is put back for what follows.
+    const scrolled = await page.evaluate(() => window.scrollY)
+    await page.keyboard.press("Space")
+    await settled(page)
+    expect((await id("b1").textContent())?.trim() === "Count 4", "and Space does not press it")
+    await page.evaluate((top) => window.scrollTo(0, top), scrolled)
+
     // The part's `type="button"` is a default: a caller's own type wins.
     expect((await attribute("b4", "type")) === "submit", "a caller's `type` wins over the part's")
     await id("b4").click()

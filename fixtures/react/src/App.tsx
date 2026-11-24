@@ -661,6 +661,14 @@ export function App() {
         >
           Not a button element
         </Button>
+        <Button
+          nativeButton={false}
+          render={<a href="#bl1-docs" />}
+          data-testid="bl1"
+          onClick={() => setCount((value) => value + 1)}
+        >
+          Docs
+        </Button>
         <form
           data-testid="b4-form"
           onSubmit={(event) => {

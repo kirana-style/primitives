@@ -28,6 +28,8 @@ const released = option("version")
 const registry = (option("registry") ?? "https://registry.npmjs.org").replace(/\/$/, "")
 const rehearsed = registry !== "https://registry.npmjs.org"
 const ADAPTERS = ["react", "vue", "svelte", "solid", "angular", "web"]
+// The releases published before every package carried `CHANGELOG.md`.
+const SHIPPED_NO_CHANGELOG = ["0.1.0", "0.1.1", "0.2.0", "0.3.0"]
 const tarballs = released ? [] : readdirSync(packed).filter((file) => file.endsWith(".tgz"))
 if (!released && tarballs.length === 0)
   throw new Error("nothing is packed: run `bun scripts/pack.ts` first")
@@ -445,6 +447,18 @@ export const mistyped = new Collapsible.Trigger({ href: "/more" })
       throw new Error(`@kirana-ui/${adapter}'s skill names <framework>, not ${adapter}`)
   }
   console.log(`the skill is in each of the ${ADAPTERS.length} adapters, naming its own entries`)
+
+  // The changelog is in every package, as the repository has it: a project upgrading reads it
+  // there. Releases before it was shipped are passed over (a release published again by hand).
+  if (!(released && SHIPPED_NO_CHANGELOG.includes(released))) {
+    for (const { name } of names) {
+      const file = path.join(project, "node_modules", name, "CHANGELOG.md")
+      if (!existsSync(file)) throw new Error(`${name} has no CHANGELOG.md`)
+      if (!readFileSync(file, "utf8").startsWith("# Changelog"))
+        throw new Error(`${name}'s CHANGELOG.md is not the repository's changelog`)
+    }
+    console.log(`the changelog is in each of the ${names.length} packages`)
+  }
 } finally {
   rmSync(project, { recursive: true, force: true })
 }

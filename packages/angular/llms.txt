@@ -4,6 +4,8 @@
 
 Generated from the library's own source (`bun scripts/llms.ts`), and checked against it: every part and every prop here is in the package, and what is not here is not. In order: installing it and its entries; the positioner's options; the types the props name; what else is exported; the agent bridge; the testing kit; then "Using it" (the rules of every component) and "Components" (each one's parts, props, attributes and CSS variables).
 
+This file describes the version it ships with. What changed in each release, the breaking changes first with what to write instead, is `CHANGELOG.md` in the package: `node_modules/@kirana-ui/angular/CHANGELOG.md`.
+
 ## Install and entries
 
 Install `@kirana-ui/angular`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/angular/agent`, `@kirana-ui/angular/testing`), so nothing is imported from a package the project did not install.
@@ -396,12 +398,12 @@ Its other types:
 - Angular 20 and later, with signals; it renders on a server and hydrates.
 - What the other frameworks call `PortalProvider` and `DirectionProvider` are the directives `kpPortalProvider` (`[container]`) and `kpDirection` here, and `useDirection` is `injectDirection()`.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kpAccordionPanel`, `*kpDialogPortal`, `*kpComboboxClear`, `*kpComboboxPortal`, `*kpComboboxCollection`, `*kpComboboxEmpty`, `*kpAvatarImage`, `*kpAvatarFallback`, `*kpCalendarMonths`, `*kpCalendarWeekdays`, `*kpCalendarWeeks`, `*kpCheckboxIndicator`, `*kpCollapsiblePanel`, `*kpComboboxValue`, `*kpComboboxItemIndicator`, `*kpCommandEmpty`, `*kpMenuPortal`, `*kpMenuCheckboxItemIndicator`, `*kpMenuRadioItemIndicator`, `*kpDateFieldSegments`, `*kpPopoverPortal`, `*kpFieldError`, `*kpFieldValidity`, `*kpHoverCardPortal`, `*kpListboxItemIndicator`, `*kpNavigationMenuContent`, `*kpNavigationMenuPortal`, `*kpNumberFieldScrubAreaCursor`, `*kpOtpCaret`, `*kpPaginationItems`, `*kpRadioGroupIndicator`, `*kpScrollAreaScrollbar`, `*kpScrollAreaCorner`, `*kpSelectValue`, `*kpSelectPortal`, `*kpSelectScrollUpArrow`, `*kpSelectScrollDownArrow`, `*kpSelectItemIndicator`, `*kpTabsPanel`, `*kpToastList` and `*kpTooltipPortal`. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup>…</div></ng-container>`).
+- A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with `*` on the element it draws: `*kpAccordionPanel`, `*kpDialogPortal`, `*kpComboboxClear`, `*kpComboboxPortal`, `*kpComboboxCollection`, `*kpComboboxEmpty`, `*kpAvatarImage`, `*kpAvatarFallback`, `*kpCalendarMonths`, `*kpCalendarWeekdays`, `*kpCalendarWeeks`, `*kpCheckboxIndicator`, `*kpCollapsiblePanel`, `*kpComboboxValue`, `*kpComboboxItemIndicator`, `*kpCommandEmpty`, `*kpMenuPortal`, `*kpMenuCheckboxItemIndicator`, `*kpMenuRadioItemIndicator`, `*kpDateFieldSegments`, `*kpPopoverPortal`, `*kpFieldError`, `*kpFieldValidity`, `*kpHoverCardPortal`, `*kpListboxItemIndicator`, `*kpNavigationMenuContent`, `*kpNavigationMenuPortal`, `*kpNumberFieldScrubAreaCursor`, `*kpOtpCaret`, `*kpPaginationItems`, `*kpRadioGroupIndicator`, `*kpScrollAreaScrollbar`, `*kpScrollAreaCorner`, `*kpSelectValue`, `*kpSelectPortal`, `*kpSelectScrollUpArrow`, `*kpSelectScrollDownArrow`, `*kpSelectItemIndicator`, `*kpTabsPanel`, `*kpToastList` and `*kpTooltipPortal`. `kpAvatarImage`, `kpComboboxValue` and `kpSelectValue` are also written as plain attributes, on an element of the caller's own that then stays in the page: each part says what each form does and when to write which. No other directive is written with `*`: a popup, a positioner and a backdrop are plain directives inside their structural portal (`<ng-container *kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup>…</div></ng-container>`).
 - A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kpTabs"`.
 - A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
 - Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
 - Every change callback is an output whose event is `{ value, details }` under the value's own name (`$event.open`, `$event.values`): `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: `(clearErrors)`, `(completed)` and `(loadingStatusChanged)`.
-- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kpAccordionPanel]`, `[kpCollapsiblePanel]`, `[kpScrollAreaScrollbar]` and `[kpTabsPanel]`.
+- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `[kpAccordionPanel]`, `[kpAvatarImage]` written as an attribute, `[kpCollapsiblePanel]`, `[kpScrollAreaScrollbar]` and `[kpTabsPanel]`.
 - `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
@@ -701,7 +703,7 @@ Anatomy:
 
 ```
 kpAvatar
-  *kpAvatarImage
+  *kpAvatarImage (or kpAvatarImage as an attribute)
   *kpAvatarFallback
 ```
 
@@ -712,7 +714,7 @@ Props of its root:
 Each part, and its own props:
 
 - `[kpAvatar]` is `KpAvatar`. `exportAs: "kpAvatar"`. `<span kpAvatar>`: the frame. `(loadingStatusChanged)` hears its picture's loading, in either of the image's forms (a structural directive's own outputs cannot be bound from its element). Its props are above.
-- `[kpAvatarImage]` is `KpAvatarImage`. Structural: written `*kpAvatarImage`. The picture, in either of two forms. `<img *kpAvatarImage="address" alt="…">` is in the page once the picture has loaded. `<img kpAvatarImage [src]="address" alt="…">` is the caller's own element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
+- `[kpAvatarImage]` is `KpAvatarImage`. Structural or not: written `*kpAvatarImage`, or as an attribute, `kpAvatarImage`. The picture, in either of two forms. `<img *kpAvatarImage="address" alt="…">` is in the page once the picture has loaded. `<img kpAvatarImage [src]="address" alt="…">` is the caller's own element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way. Write the structural form when the picture only has to appear once it is there; the attribute form when the element must be in the page from the start: to fade the picture in, to load it lazily, or to keep its attributes and place while it loads.
     - `*kpAvatarImage: string`: The directive's own value: `*kpAvatarImage="…"`. The picture's address, in the structural form: the element is in the page once it has loaded.
 - `[kpAvatarFallback]` is `KpAvatarFallback`. Structural: written `*kpAvatarFallback`. `<span *kpAvatarFallback>`: what shows until the picture has loaded, or when it cannot. `{ delay: 600 }` waits that many milliseconds first, so a picture that loads sooner never lets it be seen.
     - `*kpAvatarFallback: { delay?: number | undefined } | ""`: The directive's own value: `*kpAvatarFallback="…"`. Its options: `{ delay: 600 }` waits that many milliseconds before showing. Read once. Default: no wait.
@@ -912,19 +914,20 @@ Props of its root:
 - `[(checked)]: boolean`: Whether it is checked, when the caller holds it.
 - `defaultChecked?: boolean`: Read once.
 - `indeterminate?: boolean`: Neither checked nor unchecked: a parent of boxes that disagree.
-- `parent?: boolean`: In a `kpCheckboxGroup` with `allValues`: the box that stands for them all.
+- `parent?: boolean`: In a `kpCheckboxGroup` with `allValues`: the box that stands for them all, written anywhere inside the group. It is checked when every one is, mixed when some are, and it is not submitted; its `aria-controls` names the boxes. A press from mixed checks them all, the next unchecks them all, and the next brings back the set they were left in (left all checked or none, a press goes between all and none); a disabled box keeps its state. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it unchecked is then invalid.
 - `name?: string`: With a name, the control is submitted with the form around it when it is checked.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+- `kpId?: string`: The id of the box's hidden native checkbox, not of the box: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead.
 - `(checkedChanged): { checked: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 
 Each part, and its own props:
 
 - `[kpCheckbox]` is `KpCheckbox`. `exportAs: "kpCheckbox"`. On the box's element. It draws the hidden native input inside it, which a form and a label reach. Its props are above.
-- `[kpCheckboxIndicator]` is `KpCheckboxIndicator`. Structural: written `*kpCheckboxIndicator`. `<span *kpCheckboxIndicator>`: in the page while the box is checked or indeterminate.
+- `[kpCheckboxIndicator]` is `KpCheckboxIndicator`. Structural: written `*kpCheckboxIndicator`. `<span *kpCheckboxIndicator>`: in the page while the box is checked or indeterminate. Its template is given nothing: a dash while mixed and a tick while checked are both written in it and chosen in CSS by the element's `data-indeterminate` (`[data-indeterminate] .tick`, `:not([data-indeterminate]) > .dash`, each `display: none`).
 
 Attributes and CSS variables, by part:
 
@@ -936,7 +939,7 @@ Attributes and CSS variables, by part:
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
     - `data-parent`: Present on the checkbox that stands for every box of its group.
-- indicator: The mark. In the page while the box is checked or indeterminate.
+- indicator: The mark. In the page while the box is checked or indeterminate. `data-indeterminate` and `data-checked` say which mark to draw, a dash or a tick: in CSS (`[data-indeterminate]`), or from the part's state. Through its exit the box is already unchecked, and both are absent.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-indeterminate`: Present when it is neither checked nor unchecked.
@@ -956,15 +959,16 @@ Props:
 
 - `[(value)]: readonly string[]`: The values of the checked checkboxes, when the caller holds them.
 - `defaultValue?: readonly string[]`: The values checked at the start, when the caller does not hold `value`. Read once.
-- `allValues?: readonly string[]`: The value of every checkbox of the group, for a parent checkbox.
+- `allValues?: readonly string[]`: The value of every checkbox of the group, for a parent checkbox: it is checked when all of them are, mixed when some are, and a press on it goes from the set they were left in to all, then none, then back. Its order names the boxes' elements (`<id>-0` …).
 - `disabled?: boolean`: Disables every checkbox of the group.
+- `kpId?: string`: The group's own id, and what its boxes' elements are named from (`<id>-0`, `<id>-1` …, by their place in `allValues`), which a parent box's `aria-controls` names. Inside a `Field`, the group takes the field's id instead.
 - `(valueChanged): { value: string[]; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 
 `[kpCheckboxGroup]` is `KpCheckboxGroup`. `exportAs: "kpCheckboxGroup"`. Checkboxes that hold one list of values. Each `kpCheckbox` with a `value` inside it is checked while the list has its value; with `allValues`, a `kpCheckbox` marked `parent` stands for them all.
 
 Attributes and CSS variables, by part:
 
-- root: The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.
+- root: The group: `role="group"`, with its `id`. Name it with `aria-label`, or `aria-labelledby` naming a heading of your own; inside a `Field`, the field's label names it and its description describes it. A checkbox anywhere inside it with a `value` is checked while the group's value holds it; one marked `parent`, anywhere inside it too, stands for every value of `allValues`, and its `aria-controls` names their boxes.
     - `data-disabled`: Present when it is disabled.
 
 ### Collapsible
@@ -1028,7 +1032,7 @@ Anatomy:
 kpCombobox
   input[kpComboboxInput]
   kpComboboxTrigger
-    *kpComboboxValue (optional)
+    *kpComboboxValue (optional, or kpComboboxValue as an attribute)
   *kpComboboxPortal
     kpComboboxPositioner
       kpComboboxPopup
@@ -1089,7 +1093,7 @@ Each part, and its own props:
 - `[kpCombobox]` is `KpCombobox`. `exportAs: "kpCombobox"`. Generic: `<Value = unknown>`. `kpAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
 - `input[kpComboboxInput]` is `KpComboboxInput`. `<input kpComboboxInput>`: what is typed filters the list, which is placed against it.
 - `[kpComboboxTrigger]` is `KpComboboxTrigger`.
-- `[kpComboboxValue]` is `KpComboboxValue`. Structural: written `*kpComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
+- `[kpComboboxValue]` is `KpComboboxValue`. Structural or not: written `*kpComboboxValue`, or as an attribute, `kpComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
     - `placeholder?: string`: Shown while nothing is chosen.
 - `[kpComboboxClear]` is `KpComboboxClear`. Structural: written `*kpComboboxClear`. `<button *kpComboboxClear>`: empties the input and the value; in the page while there is something to clear.
 - `[kpComboboxChips]` is `KpComboboxChips`. With `multiple`: what holds the chips and the input.
@@ -2375,6 +2379,7 @@ Props of its root:
 - `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
 - `name?: string`: With a name, the number is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
+- `kpId?: string`: What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead.
 - `(valueChanged): { value: number | null; details: ChangeDetails }`: Heard as the number is about to change, typed or stepped: `details.cancel()` keeps it as it was.
 - `(valueCommitted): { value: number | null; details: ChangeDetails }`: A change that is done: focus left the input, a key or a button stepped it.
 
@@ -2500,6 +2505,7 @@ Props of its root:
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `name?: string`: With a name, the code is submitted with the form around it.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
+- `kpId?: string`: The id of its input, not of the root: a `<label for>` names it.
 - `(valueChanged): { value: string; details: ChangeDetails }`: Heard as the characters are about to change: `details.cancel()` keeps them as they were.
 - `(completed): string`: Every character is in: the moment to send the code.
 
@@ -2779,6 +2785,7 @@ Each part, and its own props:
 - `[kpRadioGroupItem]` is `KpRadioGroupItem`. On an item's element. It draws the hidden native radio inside it, which a form and a label reach.
     - `value: unknown`: Required. What the group's value is while this item is the chosen one.
     - `disabled?: boolean`: Disables this item: it cannot be chosen.
+    - `kpId?: string`: The id of the item's native radio, unique in the page: a `<label for>` names it.
 - `[kpRadioGroupIndicator]` is `KpRadioGroupIndicator`. Structural: written `*kpRadioGroupIndicator`. `<span *kpRadioGroupIndicator>`: in the page while its item is the chosen one.
 
 Attributes and CSS variables, by part:
@@ -2914,7 +2921,7 @@ Anatomy:
 ```
 kpSelect
   kpSelectTrigger
-    *kpSelectValue
+    *kpSelectValue (or kpSelectValue as an attribute)
   *kpSelectPortal
     kpSelectPositioner
       kpSelectPopup
@@ -2954,7 +2961,7 @@ Each part, and its own props:
 
 - `[kpSelect]` is `KpSelect`. `exportAs: "kpSelect"`. Generic: `<Value = unknown>`. Holds the select: its value and whether the list is open. Its props are above.
 - `[kpSelectTrigger]` is `KpSelectTrigger`.
-- `[kpSelectValue]` is `KpSelectValue`. Structural: written `*kpSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
+- `[kpSelectValue]` is `KpSelectValue`. Structural or not: written `*kpSelectValue`, or as an attribute, `kpSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
     - `placeholder?: string`: Shown while nothing is chosen.
 - `[kpSelectPortal]` is `KpSelectPortal`. Structural: written `*kpSelectPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `[kpSelectPositioner]` is `KpSelectPositioner`. Takes the positioner options ("Positioner options", above).
@@ -3147,6 +3154,7 @@ Props of its root:
 - `name?: string`: With a name, the control is submitted with the form around it when it is checked.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `value?: string`: What is submitted. Default `"on"`, as a native checkbox's.
+- `kpId?: string`: The id of the switch's hidden native checkbox, not of the switch: a `<label for>` names it. Inside a `Field`, that input takes the field's id instead.
 - `(checkedChanged): { checked: boolean; details: ChangeDetails }`: The change with why it happened; `details.cancel()` keeps the value.
 
 Each part, and its own props:

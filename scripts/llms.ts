@@ -227,6 +227,7 @@ export function canonical(adapter: string, prop: Prop, directive?: string): stri
     return `on${prop.name[0]!.toUpperCase()}${prop.name.slice(1)}`
   }
   if (adapter === "angular") {
+    if (prop.name === "kpId") return "id"
     if (prop.kind === "output") {
       const name = prop.name.replace(/Changed$/, "Change")
       return `on${name[0]!.toUpperCase()}${name.slice(1)}`
@@ -704,17 +705,19 @@ function rules(adapter: Adapter, own: AdapterReference, react: AdapterReference)
     )
   } else {
     const structural: string[] = []
+    const both: string[] = []
     for (const component of own.components.values()) {
       for (const part of component.parts) {
-        if (
-          part.directive?.structural &&
-          !structural.includes(`*${attribute(part.directive.selector)}`)
-        )
-          structural.push(`*${attribute(part.directive.selector)}`)
+        const directive = part.directive
+        if (!directive?.structural) continue
+        if (!structural.includes(`*${attribute(directive.selector)}`))
+          structural.push(`*${attribute(directive.selector)}`)
+        if (directive.attribute && !both.includes(attribute(directive.selector)))
+          both.push(attribute(directive.selector))
       }
     }
     out.push(
-      `A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with \`*\` on the element it draws: ${list(structural.map(code))}. No other directive is written with \`*\`: a popup, a positioner and a backdrop are plain directives inside their structural portal (\`<ng-container *kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup>…</div></ng-container>\`).`
+      `A part that is in the page only some of the time, or that is drawn once for each entry of a list, is a structural directive, written with \`*\` on the element it draws: ${list(structural.map(code))}. ${list(both.map(code))} ${both.length > 1 ? "are also written as plain attributes" : "is also written as a plain attribute"}, on an element of the caller's own that then stays in the page: each part says what each form does and when to write which. No other directive is written with \`*\`: a popup, a positioner and a backdrop are plain directives inside their structural portal (\`<ng-container *kpDialogPortal><div kpDialogBackdrop></div><div kpDialogPopup>…</div></ng-container>\`).`
     )
     out.push(
       'A root that draws nothing can sit on `<ng-container>`. A directive with an `exportAs` is reached from the template: `#tabs="kpTabs"`.'
@@ -755,13 +758,21 @@ function rules(adapter: Adapter, own: AdapterReference, react: AdapterReference)
         names.includes("keepMounted") ||
         part.props.some((each) => /\bkeepMounted\b/.test(each.type))
       )
-        kept.push(name(component, part))
+        kept.push(code(name(component, part)))
+      // Angular: a part kept in the page by its attribute form instead (the avatar's image).
+      const theirs = react.components.get(component.name)?.parts.find((p) => p.part === part.part)
+      if (
+        part.directive?.attribute &&
+        !names.includes("keepMounted") &&
+        theirs?.props.some((each) => each.name === "keepMounted")
+      )
+        kept.push(`${code(name(component, part))} written as an attribute`)
       if (names.includes("readOnly") && !readOnly.includes(component.name))
         readOnly.push(component.name)
     }
   }
   out.push(
-    `A part that is in the page only while it is open, chosen or checked leaves it otherwise. \`keepMounted\` keeps it in the page, hidden, on the parts that take it and no others: ${list([...new Set(kept)].map(code))}.`
+    `A part that is in the page only while it is open, chosen or checked leaves it otherwise. \`keepMounted\` keeps it in the page, hidden, on the parts that take it and no others: ${list([...new Set(kept)])}.`
   )
   out.push(
     `\`readOnly\` (shown, focusable, not changeable) is a prop of ${list(readOnly.map(code))} and of no other component.`
@@ -875,13 +886,18 @@ function anatomyLines(
     const bare = /^\[(\w+)\]$/.exec(selector)?.[1] ?? selector
     return `${part.directive!.structural ? "*" : ""}${bare}`
   }
+  // A structural directive also written as a plain attribute says so where it goes.
+  const also = (part: PartReference | undefined) =>
+    part?.directive?.attribute
+      ? [`or ${/^\[(\w+)\]$/.exec(written(adapter, component, part))?.[1]} as an attribute`]
+      : []
   const lines: string[] = []
   const drawn = new Set<string>()
   const draw = (branch: Branch, depth: number) => {
     const part = component.parts.find((each) => key(each) === branch.part)
     if (part) {
       drawn.add(part.part)
-      lines.push(`${"  ".repeat(depth)}${spelled(part)}${marks(branch)}`)
+      lines.push(`${"  ".repeat(depth)}${spelled(part)}${marks(branch, also(part))}`)
     }
     const next = part ? depth + 1 : depth
     for (const each of branch.branches) draw(each, next)
@@ -977,7 +993,11 @@ function componentSection(
     if (adapter === "angular") {
       const directive = part.directive!
       said.push(`- \`${as}\` is \`${directive.name}\`.`)
-      if (directive.structural)
+      if (directive.attribute)
+        said.push(
+          `Structural or not: written \`*${attribute(directive.selector)}\`, or as an attribute, \`${attribute(directive.selector)}\`.`
+        )
+      else if (directive.structural)
         said.push(`Structural: written \`*${attribute(directive.selector)}\`.`)
       if (directive.exportAs) said.push(`\`exportAs: "${directive.exportAs}"\`.`)
       const given = directive.context.find((each) => each.name === "$implicit")
@@ -1149,6 +1169,10 @@ function installSection(adapter: Adapter, own: AdapterReference): string[] {
   return out
 }
 
+/** Where an upgrade is read: the changelog every package ships, at the root of the package. */
+const changes = (adapter: string) =>
+  `This file describes the version it ships with. What changed in each release, the breaking changes first with what to write instead, is \`CHANGELOG.md\` in the package: \`node_modules/@kirana-ui/${adapter}/CHANGELOG.md\`.`
+
 const pascal = (name: string) =>
   name.replace(/(^|-)([a-z])/g, (_whole, _dash, letter: string) => letter.toUpperCase())
 
@@ -1233,6 +1257,8 @@ async function fileFor(adapter: Adapter, problems: Problem[]): Promise<string> {
     `> Kirana UI Primitives for ${TITLES[adapter]}: headless, accessible components with no styles of their own. The same components, parts, attributes and behaviour as on the other four frameworks, from one core.`,
     "",
     'Generated from the library\'s own source (`bun scripts/llms.ts`), and checked against it: every part and every prop here is in the package, and what is not here is not. In order: installing it and its entries; the positioner\'s options; the types the props name; what else is exported; the agent bridge; the testing kit; then "Using it" (the rules of every component) and "Components" (each one\'s parts, props, attributes and CSS variables).',
+    "",
+    changes(adapter),
     "",
     "## Install and entries",
     "",
@@ -1480,6 +1506,8 @@ async function web(problems: Problem[]): Promise<string> {
     "",
     "Generated from the library's own source (`bun scripts/llms.ts`), and checked against it: every element, attribute, event and part here is in the package, and what is not here is not.",
     "",
+    changes("web"),
+    "",
     "## Install and entries",
     "",
     "Install `@kirana-ui/web`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/web/agent`, `@kirana-ui/web/testing`).",
@@ -1522,6 +1550,9 @@ async function web(problems: Problem[]): Promise<string> {
         const said = doc(camel(pascal(each.name)))
         out.push(`- \`${each.name}\` (${each.kind})${said ? `: ${said}` : ""}`)
       }
+      // The component's id, where React's root says it goes somewhere else than its element.
+      const id = doc("id")
+      if (id) out.push(`- \`kui-id\` (string): ${id}`)
       out.push("")
     }
     if (element.properties.length > 0) {

@@ -29,9 +29,14 @@ import { KpIds, hostPart, inputsSignal } from "./runtime"
 export class KpCheckboxGroup implements OnInit {
   readonly value = model<readonly string[] | undefined>(undefined)
   readonly defaultValue = input<readonly string[]>()
-  /** The value of every checkbox of the group, for a parent checkbox. */
+  /**
+   * The value of every checkbox of the group, for a parent checkbox: it is checked when all of
+   * them are, mixed when some are, and a press on it goes from the set they were left in to
+   * all, then none, then back. Its order names the boxes' elements (`<id>-0` …).
+   */
   readonly allValues = input<readonly string[]>()
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** The group's own id, and what its boxes' elements are named from (`<id>-0`, `<id>-1` …, by their place in `allValues`), which a parent box's `aria-controls` names. Inside a `Field`, the group takes the field's id instead. */
   readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
   readonly valueChanged = output<{ value: string[]; details: ChangeDetails }>()

@@ -499,7 +499,7 @@ export const vocabulary = {
           "repeated": false
         },
         "indicator": {
-          "description": "The mark. In the page while the box is checked or indeterminate.",
+          "description": "The mark. In the page while the box is checked or indeterminate. `data-indeterminate` and `data-checked` say which mark to draw, a dash or a tick: in CSS (`[data-indeterminate]`), or from the part's state. Through its exit the box is already unchecked, and both are absent.",
           "states": {
             "checked": {
               "attribute": "data-checked",
@@ -564,7 +564,7 @@ export const vocabulary = {
     "checkboxGroup": {
       "parts": {
         "root": {
-          "description": "The group. A checkbox inside it with a `value` is checked while the group's value holds it; one marked `parent` stands for every value of `allValues`.",
+          "description": "The group: `role=\"group\"`, with its `id`. Name it with `aria-label`, or `aria-labelledby` naming a heading of your own; inside a `Field`, the field's label names it and its description describes it. A checkbox anywhere inside it with a `value` is checked while the group's value holds it; one marked `parent`, anywhere inside it too, stands for every value of `allValues`, and its `aria-controls` names their boxes.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",

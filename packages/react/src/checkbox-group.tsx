@@ -17,7 +17,10 @@ import type { PartComponentProps } from "./runtime.tsx"
 export type CheckboxGroupProps = PartComponentProps<
   "div",
   StateOf<Vocabulary["checkboxGroup"]["root"]>,
-  Omit<CoreProps, "id"> & { id?: string }
+  Omit<CoreProps, "id"> & {
+    /** The group's own id, and what its boxes' elements are named from (`<id>-0`, `<id>-1` …, by their place in `allValues`), which a parent box's `aria-controls` names. Inside a `Field`, the group takes the field's id instead. */
+    id?: string
+  }
 >
 
 /**

@@ -38,7 +38,10 @@ export class KpAvatar implements OnInit {
  * element, kept in the page as Base UI's `keepMounted` image: it loads the picture itself
  * (`loading="lazy"` works), its own `src` is the address and is followed as it changes, and
  * until it has loaded it is `aria-hidden`, with `data-loading` or `data-error` for the design to
- * hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way.
+ * hide or fade it by. The root's `(loadingStatusChanged)` hears the loading either way. Write the
+ * structural form when the picture only has to appear once it is there; the attribute form when
+ * the element must be in the page from the start: to fade the picture in, to load it lazily, or
+ * to keep its attributes and place while it loads.
  */
 @Directive({ selector: "[kpAvatarImage]" })
 export class KpAvatarImage implements OnInit {

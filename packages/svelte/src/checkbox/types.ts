@@ -10,6 +10,10 @@ export type RootProps = PartAttributes<
   HeldInput
 >
 
+/**
+ * A dash while mixed and a tick while checked, from the snippet's state: `<Checkbox.Indicator>{#snippet
+ * child({ props, state })}<span {...props}>{state.indeterminate ? "–" : "✓"}</span>{/snippet}</Checkbox.Indicator>`.
+ */
 export type IndicatorProps = PartAttributes<
   "span",
   StateFor<"checkbox", "indicator">,

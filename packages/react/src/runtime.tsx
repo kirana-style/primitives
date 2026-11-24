@@ -174,8 +174,14 @@ function reactStyle(style: Record<string, string>): Record<string, string> {
   return out
 }
 
-function toReact(props: PartProps): Record<string, unknown> {
+function toReact(props: PartProps, own: PartProps): Record<string, unknown> {
   const out: Record<string, unknown> = {}
+  // A boolean the part has a key for is always given: the merge leaves out one that no layer
+  // has a value for, and `checked` would then come and go.
+  for (const key in own) {
+    if (BOOLEAN.has(key) && !(key in props) && (key !== "inert" || REF_IS_A_PROP))
+      out[RENAMED[key] ?? key] = false
+  }
   for (const key in props) {
     const value = props[key]
     if (BOOLEAN.has(key)) {
@@ -342,8 +348,9 @@ export function usePart<Tag extends PartTag, State = PartState>(
     : typeof render === "function"
       ? undefined
       : tag
+  const placed = forElement(own, under, drawnAs)
   const drawn: Record<string, unknown> = {
-    ...toReact(mergeProps(under, forElement(own, under, drawnAs))),
+    ...toReact(mergeProps(under, placed), placed),
     ref: attach,
   }
   if (hold) drawn.children = hold(drawn.children as ReactNode)

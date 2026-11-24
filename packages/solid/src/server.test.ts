@@ -146,6 +146,16 @@ describe("on the server", () => {
     )
   })
 
+  it("leaves what the caller's element writes before the props where the part has nothing to say", () => {
+    const ordered = html(cases.content.ordered!)
+    const before = ordered.match(/<td[^>]*data-kind="before"[^>]*>/)![0]
+    expect(before).toContain('data-selected=""')
+    expect(before).toContain('data-disabled="true"')
+    const after = ordered.match(/<td[^>]*data-kind="after"[^>]*>/)![0]
+    expect(after).toContain('data-selected="true"')
+    expect(after).toContain('data-disabled="true"')
+  })
+
   it("leaves a caller's `part` attribute on the element, for `::part()`", () => {
     const named = html(cases.content.named!)
     expect(named).toMatch(/<div [^>]*part="root"/)

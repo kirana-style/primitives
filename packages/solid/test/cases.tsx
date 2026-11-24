@@ -147,6 +147,28 @@ export const content = {
       </>
     )
   },
+  // A chosen day's cell, not disabled, whose element writes attributes of its own before the
+  // props and after them.
+  ordered: () => (
+    <Calendar.Root id="o" defaultValue="2026-03-09" locale="en-US">
+      <Calendar.Cell
+        date="2026-03-09"
+        render={(props) => (
+          <td data-disabled="true" data-selected="true" {...props()} data-kind="before">
+            9
+          </td>
+        )}
+      />
+      <Calendar.Cell
+        date="2026-03-09"
+        render={(props) => (
+          <td {...props()} data-disabled="true" data-selected="true" data-kind="after">
+            9
+          </td>
+        )}
+      />
+    </Calendar.Root>
+  ),
   // The element's own `part` attribute, for `::part()`, is the caller's to write.
   named: () => (
     <Collapsible.Root id="n" part="root">

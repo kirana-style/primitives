@@ -30,6 +30,7 @@ const ALL = ["react", "vue", "svelte", "solid", "angular", "web"]
 const WEB = [
   "collapsible",
   "collapsible-controlled",
+  "own-attributes",
   "controls",
   "tabs",
   "accordion",
@@ -1454,6 +1455,50 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       (await attribute("k4-mark", "data-active")) === "",
       "the state is written on the element"
     )
+  },
+
+  // The element a part is drawn as writes attributes of its own (a component's root, an
+  // element written before the props it spreads, an Angular template's, the page's own): those
+  // the part has a value for are the part's, and the others stay the element's, coming back
+  // when the part has nothing more to say.
+  async "own-attributes"({ snapshot, id, present, attribute }) {
+    await snapshot("at rest")
+    expect(
+      (await attribute("k5-trigger", "aria-controls")) === "k5-note",
+      "an attribute the part has nothing to say about is the element's own"
+    )
+    expect(
+      (await attribute("k5-trigger", "aria-expanded")) === "false",
+      "the part's state wins over the element's"
+    )
+
+    await id("k5-trigger").click()
+    await id("k5-panel").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("opened")
+    const panel = await attribute("k5-panel", "id")
+    expect(
+      !!panel && (await attribute("k5-trigger", "aria-controls")) === panel,
+      "the part's reference wins while it has one"
+    )
+    expect((await attribute("k5-trigger", "aria-expanded")) === "true", "and its state follows")
+
+    await id("k5-trigger").click()
+    await id("k5-panel").waitFor({ state: "detached", timeout: 3000 })
+    await snapshot("closed again")
+    expect(!(await present("k5-panel")), "the panel is gone")
+    expect(
+      (await attribute("k5-trigger", "aria-controls")) === "k5-note",
+      "the element's own is back once the part has nothing to say"
+    )
+
+    // A part that writes its own text says what its element holds instead, when it holds
+    // something: a calendar's caption formatted by the page, still the live region.
+    const caption = async () => (await id("k6-heading").textContent())?.trim()
+    expect((await caption()) === "A caption of its own", "the element's content replaces the name")
+    expect((await attribute("k6-heading", "aria-live")) === "polite", "and is read out")
+    await id("k6-next").click()
+    await snapshot("the month turned under a caption of its own")
+    expect((await caption()) === "A caption of its own", "the month's name is not written over it")
   },
 
   // A design system built on the parts: on Angular its own directives host the primitives

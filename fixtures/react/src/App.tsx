@@ -56,6 +56,7 @@ import type { DateRange, OffsetFunction } from "@kirana-ui/react"
 import { mergeProps, useRender } from "@kirana-ui/react/use-render"
 import type { RenderProp } from "@kirana-ui/react/use-render"
 import { Fragment, useRef, useState } from "react"
+import type { ComponentProps } from "react"
 
 // A page's toasts are made once, apart from any component: a long time, so a test reads them.
 const toaster = createToaster({ duration: 600_000 })
@@ -98,6 +99,12 @@ function Mark({
       props
     ),
   })
+}
+
+// A component of the page's own that a part is drawn as, writing attributes on its root before
+// the props it is given: those the part has a value for are the part's, the others its own.
+function OwnTrigger(props: ComponentProps<"button">) {
+  return <button aria-controls="k5-note" aria-expanded="true" {...props} />
 }
 
 // A picture of one pixel, and an address that is not a picture.
@@ -366,6 +373,25 @@ export function App() {
             )}
           />
         </div>
+      </section>
+
+      <section data-fixture="own-attributes">
+        <Collapsible.Root id="k5">
+          <Collapsible.Trigger
+            render={<OwnTrigger data-testid="k5-trigger">Own trigger</OwnTrigger>}
+          />
+          <span id="k5-note">Note</span>
+          <Collapsible.Panel className="panel" data-testid="k5-panel">
+            <p>Own content</p>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+        <Calendar.Root id="k6" locale="en-US" defaultMonth="2026-04-01" className="item">
+          <Calendar.Heading data-testid="k6-heading">A caption of its own</Calendar.Heading>
+          <Calendar.Next aria-label="Next month" data-testid="k6-next">
+            Next
+          </Calendar.Next>
+          <Calendar.Grid data-testid="k6-grid" />
+        </Calendar.Root>
       </section>
 
       <section data-fixture="design">

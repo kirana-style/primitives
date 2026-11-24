@@ -45,6 +45,32 @@
             </div>
           </kui-collapsible>
         </section>
+        <section data-fixture="own-attributes">
+          <kui-collapsible kui-id="k5">
+            <div kui-part="root">
+              <!-- The page's own attributes: those the part has a value for are the part's. -->
+              <button
+                kui-part="trigger"
+                aria-controls="k5-note"
+                aria-expanded="true"
+                data-testid="k5-trigger"
+              >
+                Own trigger
+              </button>
+              <span id="k5-note">Note</span>
+              <div kui-part="panel" class="panel" data-testid="k5-panel">
+                <p>Own content</p>
+              </div>
+            </div>
+          </kui-collapsible>
+          <kui-calendar kui-id="k6" locale="en-US" default-month="2026-04-01">
+            <div kui-part="root" class="item">
+              <div kui-part="heading" data-testid="k6-heading">A caption of its own</div>
+              <button kui-part="next" aria-label="Next month" data-testid="k6-next">Next</button>
+              <table kui-part="grid" data-testid="k6-grid"></table>
+            </div>
+          </kui-calendar>
+        </section>
         <section data-fixture="controls">
           <form data-testid="f1-form">
             <label data-testid="x1-label">

@@ -4,7 +4,7 @@ import { effect } from "@kirana-ui/core"
 import { createMeter } from "@kirana-ui/core/meter"
 import type { ValueBar, ValueBarProps } from "@kirana-ui/core/meter"
 
-import { KpIds, hostPart, inputsSignal } from "./runtime"
+import { KpIds, hostPart, inputsSignal, onServer, ownText } from "./runtime"
 
 @Directive({ selector: "[kpMeter]", exportAs: "kpMeter" })
 export class KpMeter implements OnInit {
@@ -72,19 +72,23 @@ export class KpMeterLabel implements OnInit {
   }
 }
 
-/** Shows the written value. */
+/** Shows the written value, unless the element has content of its own. */
 @Directive({ selector: "[kpMeterValue]" })
 export class KpMeterValue implements OnInit {
   private readonly root = inject(KpMeter)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
   private readonly part = hostPart()
+  private readonly server = onServer()
 
   ngOnInit(): void {
     this.part(this.root.controller.value)
+    // Content of the element's own is what it says.
+    const text = ownText(this.element, this.server)
+    if (!text) return
     this.destroy.onDestroy(
       effect(() => {
-        this.element.textContent = this.root.controller.text.get() ?? ""
+        text.data = this.root.controller.text.get() ?? ""
       })
     )
   }

@@ -55,12 +55,22 @@ import {
   Tooltip,
 } from "@kirana-ui/vue"
 import { Primitive } from "@kirana-ui/vue/primitive"
-import { ref } from "vue"
+import { defineComponent, h, ref } from "vue"
 
 // The page every adapter draws, element for element: the conformance run walks it and compares
 // the DOM of each state across adapters. Change it in every fixture at once.
 // A gap as tall as the anchor: what a positioner asks a function for.
 const anchorHigh: OffsetFunction = ({ anchor }) => anchor.height
+
+// A component of the page's own that a part is drawn as, writing attributes on its root: Vue
+// lays the attributes it is given over them, so those the part has a value for are the part's,
+// the others its own.
+const OwnTrigger = defineComponent({
+  setup:
+    (_, { slots }) =>
+    () =>
+      h("button", { "aria-controls": "k5-note", "aria-expanded": "true" }, slots.default?.()),
+})
 
 const FRUITS = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Grape"]
 // A combobox's items as data, in groups: the combobox filters them, and a collection draws them.
@@ -306,6 +316,23 @@ function press(event: PartEvent<MouseEvent>) {
           </button>
         </Primitive>
       </div>
+    </section>
+
+    <section data-fixture="own-attributes">
+      <Collapsible.Root id="k5">
+        <Collapsible.Trigger as-child>
+          <OwnTrigger data-testid="k5-trigger">Own trigger</OwnTrigger>
+        </Collapsible.Trigger>
+        <span id="k5-note">Note</span>
+        <Collapsible.Panel class="panel" data-testid="k5-panel">
+          <p>Own content</p>
+        </Collapsible.Panel>
+      </Collapsible.Root>
+      <Calendar.Root id="k6" locale="en-US" default-month="2026-04-01" class="item">
+        <Calendar.Heading data-testid="k6-heading">A caption of its own</Calendar.Heading>
+        <Calendar.Next aria-label="Next month" data-testid="k6-next">Next</Calendar.Next>
+        <Calendar.Grid data-testid="k6-grid" />
+      </Calendar.Root>
     </section>
 
     <section data-fixture="design">

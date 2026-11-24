@@ -353,6 +353,34 @@ export function App() {
         </div>
       </section>
 
+      <section data-fixture="own-attributes">
+        <Collapsible.Root id="k5">
+          {/* Handed to the part, under its own: Solid writes an attribute written before a spread
+              into the element's template, which does not come back once the part has given that
+              attribute and stops. */}
+          <Collapsible.Trigger
+            aria-controls="k5-note"
+            aria-expanded="true"
+            render={(props) => (
+              <button {...props()} data-testid="k5-trigger">
+                Own trigger
+              </button>
+            )}
+          />
+          <span id="k5-note">Note</span>
+          <Collapsible.Panel class="panel" data-testid="k5-panel">
+            <p>Own content</p>
+          </Collapsible.Panel>
+        </Collapsible.Root>
+        <Calendar.Root id="k6" locale="en-US" defaultMonth="2026-04-01" class="item">
+          <Calendar.Heading data-testid="k6-heading">A caption of its own</Calendar.Heading>
+          <Calendar.Next aria-label="Next month" data-testid="k6-next">
+            Next
+          </Calendar.Next>
+          <Calendar.Grid data-testid="k6-grid" />
+        </Calendar.Root>
+      </section>
+
       <section data-fixture="design">
         <Dialog.Root id="ds1">
           <Dialog.Trigger data-testid="ds1-trigger">Wrapped dialog</Dialog.Trigger>

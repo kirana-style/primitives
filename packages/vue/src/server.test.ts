@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test"
-import { createSSRApp, defineComponent, h } from "vue"
+import { createSSRApp, defineComponent, h, mergeProps } from "vue"
 import type { Component, VNode } from "vue"
 import { renderToString } from "vue/server-renderer"
 
@@ -149,6 +149,52 @@ describe("a part drawn as its caller's own element (as-child)", () => {
     heard.length = 0
     click({ type: "element", preventDefault() {} })
     expect(heard).toEqual(["handed", "also handed", "element"])
+  })
+})
+
+describe("a part drawn onto a component of its caller's (as-child)", () => {
+  // A day's cell as a design system draws it: a component whose root writes attributes of its
+  // own beside the ones it is given.
+  const day = (
+    options: { inheritAttrs?: boolean },
+    root: (given: Record<string, unknown>) => Record<string, unknown>
+  ) =>
+    defineComponent({
+      ...options,
+      setup:
+        (_, { attrs }) =>
+        () =>
+          h("td", root(attrs), "15"),
+    })
+  const cell = async (Day: Component) => {
+    const out = await html(() =>
+      h(
+        Calendar.Root as Component,
+        { id: "c", defaultValue: "2026-04-15", month: "2026-04-01" },
+        () => h(Calendar.Cell as Component, { date: "2026-04-15", asChild: true }, () => h(Day))
+      )
+    )
+    return out.match(/<td[^>]*>/)![0]
+  }
+  const own = { "data-disabled": "true", "data-selected": "true" }
+
+  it("keeps the component's own attribute where the part has nothing to say", async () => {
+    // Vue lays a component's attributes over its root's own: the part's state wins there, and
+    // an attribute the part leaves out (the cell is not disabled) is not handed on to take
+    // the component's away.
+    const drawn = await cell(day({}, (given) => mergeProps(given, own)))
+    expect(drawn).toContain('data-disabled="true"')
+    expect(drawn).toMatch(/data-selected(?!=)/)
+    expect(drawn).toContain('role="gridcell"')
+    expect(await cell(day({}, () => own))).toContain('data-disabled="true"')
+  })
+
+  it("lets a component that takes its attributes itself write its own over them", async () => {
+    // As a React component that spreads its props first: what it writes after them is its own.
+    const drawn = await cell(day({ inheritAttrs: false }, (given) => mergeProps(given, own)))
+    expect(drawn).toContain('data-disabled="true"')
+    expect(drawn).toContain('data-selected="true"')
+    expect(drawn).toContain('role="gridcell"')
   })
 })
 

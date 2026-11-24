@@ -163,15 +163,18 @@ function joinClass(under: unknown, over: unknown): unknown {
 }
 
 function layer(under: PartProps | undefined, over: PartProps, stoppable: boolean): PartProps {
-  if (!under) return over
-  const merged: PartProps = { ...under }
+  // An attribute nobody has a value for is left out, not handed on as `undefined`: the element
+  // or component it reaches then keeps its own, whichever order it spreads them in (a Vue
+  // component's attributes fall through over its root's own; a spread after an attribute in
+  // JSX or Svelte replaces it with whatever the props hold).
+  const merged: PartProps = {}
+  for (const key in under) if (under[key] !== undefined) merged[key] = under[key]
   for (const key in over) {
     const top = over[key]
-    const below = under[key]
-    if (top === undefined) {
-      // Nothing to say: what is under it stays.
-      if (!(key in under)) merged[key] = top
-    } else if (below === undefined) {
+    const below = merged[key]
+    // Nothing to say: what is under it stays.
+    if (top === undefined) continue
+    if (below === undefined) {
       merged[key] = top
     } else if (
       // By value, not by name: an adapter merges after renaming handlers to its framework's.
@@ -231,7 +234,8 @@ export function untype(element: Element): void {
  * Merges a caller's props with a part's, the one rule every adapter uses: the part's attributes
  * win (its identity survives composition; its `type` is not identity, and `forElement` takes it
  * out of the part's props first where the caller gave one) and an `undefined` of the part's
- * leaves the caller's;
+ * leaves the caller's
+ * (an attribute neither gives a value is left out of the result, never handed on as `undefined`);
  * classes join (`class` with `class`, `className` with `className`); a style is merged property
  * by property, the part's winning one; and for an event the caller's handler runs first and
  * the part's follows unless the caller called `event.preventKiranaHandler()`.

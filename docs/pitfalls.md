@@ -1087,3 +1087,7 @@ note. Three places hold them:
   it in, one pixel, before anything had opened. A scenario that asserts the page stays still
   leaves room over what it presses (`placing`). It showed once the section stopped being the
   page's last, where the page could not scroll that far.
+- **A test's document may have no Web Animations.** `whenSettled` called `getAnimations()` on
+  the element, which jsdom does not have: a dialog or a select closed in a jsdom test threw, and
+  stayed in the page. With no such method nothing animates, and the element is settled at once
+  (`tests/core/presence.test.ts`, "an element in a document with no Web Animations").

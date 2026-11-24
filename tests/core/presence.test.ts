@@ -5,7 +5,7 @@ import { flag } from "../../packages/core/src/part.ts"
 import type { Part } from "../../packages/core/src/part.ts"
 import { computed, effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
 import { createPanelPresence } from "../../packages/core/src/services/panel.ts"
-import { createPresence } from "../../packages/core/src/services/presence.ts"
+import { createPresence, whenSettled } from "../../packages/core/src/services/presence.ts"
 import type { Presence, PresenceHooks } from "../../packages/core/src/services/presence.ts"
 import { mount, style } from "./page.ts"
 
@@ -213,5 +213,17 @@ describe("a panel that opens by growing", () => {
     expect(element()?.style.getPropertyValue("--panel-height")).toBe("120px")
     expect(presence.mounted.peek()).toBe(true)
     await expect.poll(() => presence.mounted.peek()).toBe(false)
+  })
+})
+
+describe("an element in a document with no Web Animations", () => {
+  it("is settled at once, so what waits for its motion goes on", () => {
+    // jsdom has no `getAnimations`: a popup closed there has to leave the page all the same.
+    const root = mount("<div></div>")
+    const element = root.querySelector<HTMLElement>("div")!
+    Object.defineProperty(element, "getAnimations", { value: undefined })
+    let settled = false
+    whenSettled(element, () => void (settled = true))
+    expect(settled).toBe(true)
   })
 })

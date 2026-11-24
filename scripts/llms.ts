@@ -1345,6 +1345,8 @@ async function fileFor(adapter: Adapter, problems: Problem[]): Promise<string> {
       exportLine("core", "./testing", each, problems, adapter)
     ),
     "",
+    "The components also run where there is no layout and no Web Animations, as in jsdom: a popup opens and closes at once there, with no wait for a transition, so a test of what a press changes needs no polyfill for `getAnimations`. Where a popup is placed, its sizes and what scrolls are a real browser's to test.",
+    "",
     "`faults(root, known(definition), options)`: `known()` alone is the library's vocabulary, `known(definition)` adds a component of your own (`defineComponent`), and `options` (`FaultOptions`) are:",
     "",
     ...membersOf("./testing", "FaultOptions"),

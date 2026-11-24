@@ -152,6 +152,8 @@ export function whenWritten(
  */
 export function whenSettled(target: HTMLElement, then: () => void): void {
   const timeline = target.ownerDocument.timeline
+  // A document with no Web Animations (jsdom, for one) animates nothing: settled at once.
+  if (typeof target.getAnimations !== "function") return then()
   const animations = target
     .getAnimations()
     .filter(

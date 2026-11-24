@@ -331,6 +331,8 @@ For a model, and for a browser's own agent:
 - `settled(page: Document = document, timeout = 5000)`: Resolves once nothing is moving: a framework has had its turn, no part is in the first or last frame of its way in or out, and no animation is running. Rejects after `timeout` milliseconds, saying what was still moving.
 - `recorder()`: Records what a change callback hears, and can refuse what it is asked.
 
+The components also run where there is no layout and no Web Animations, as in jsdom: a popup opens and closes at once there, with no wait for a transition, so a test of what a press changes needs no polyfill for `getAnimations`. Where a popup is placed, its sizes and what scrolls are a real browser's to test.
+
 `faults(root, known(definition), options)`: `known()` alone is the library's vocabulary, `known(definition)` adds a component of your own (`defineComponent`), and `options` (`FaultOptions`) are:
 
 - `allow?: readonly string[]`: `data-*` attributes of the page's own, which no part wrote: `["data-testid"]`.

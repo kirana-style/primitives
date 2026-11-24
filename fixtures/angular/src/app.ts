@@ -624,6 +624,29 @@ import {
         </div>
       </section>
 
+      <section data-fixture="own-attributes">
+        <div kpCollapsible [kpId]="'k5'">
+          <!-- The element's own attributes, one bound: those the part has a value for are the part's. -->
+          <button
+            kpCollapsibleTrigger
+            aria-controls="k5-note"
+            [attr.aria-expanded]="'true'"
+            data-testid="k5-trigger"
+          >
+            Own trigger
+          </button>
+          <span id="k5-note">Note</span>
+          <div *kpCollapsiblePanel class="panel" data-testid="k5-panel">
+            <p>Own content</p>
+          </div>
+        </div>
+        <div kpCalendar [kpId]="'k6'" [locale]="'en-US'" [defaultMonth]="'2026-04-01'" class="item">
+          <div kpCalendarHeading data-testid="k6-heading">A caption of its own</div>
+          <button kpCalendarNext aria-label="Next month" data-testid="k6-next">Next</button>
+          <table kpCalendarGrid data-testid="k6-grid"></table>
+        </div>
+      </section>
+
       <section data-fixture="design">
         <ng-container kuiDialog [kpId]="'ds1'">
           <button kuiDialogTrigger data-testid="ds1-trigger">Wrapped dialog</button>

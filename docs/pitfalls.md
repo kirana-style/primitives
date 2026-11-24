@@ -408,6 +408,33 @@ note. Three places hold them:
   attribute as a boolean, so "not disabled by the part" was written as `disabled={false}`
   over the `disabled` of the element the part was drawn as. The layers are merged before the
   props are turned into a framework's form, where `undefined` still means "nothing to say".
+- **An attribute nobody has a value for is not handed on.** The merge kept a part's
+  `undefined` as a key, and wherever the props met an element's own attribute after it, it took
+  that attribute away: a Vue component's attributes fall through over its root's own, and a
+  spread written after an attribute in Svelte or Solid replaces it. A design system's day cell
+  lost the `data-disabled` it wrote, though the part had nothing to say about it. React's adapter
+  had dropped them all along (a boolean the part has a key for it still gives React as `false`,
+  or `checked` would come and go). The merge leaves such a key out, on every adapter, and a
+  component's own root is the component's: what it writes after the props it is given wins, as
+  in React. Solid writes a literal attribute before a spread into the element's template, so
+  one the part has given and stops giving does not come back there: give it to the part
+  instead. Held by `packages/core/src/part.test.ts`, the adapters' `server.test` files (a
+  calendar cell drawn onto a component or an element writing its own) and the conformance
+  run's `own-attributes` scenario.
+- **A part that binds the element itself gives back what it wrote over.** Angular's and the
+  custom elements' parts write on an element the page draws, with its own attributes:
+  `aria-controls="note"` written over by a trigger whose panel opened was gone once the panel
+  closed, where a framework that draws the element from both layers shows the element's again.
+  `bind` keeps the element's own value of an attribute it writes over and puts it back; one
+  that already says what the part says is the part's (a server wrote it). Held by
+  `tests/core/bind.test.ts` and the `own-attributes` scenario.
+- **On Angular, the text a part writes is not the element's content.** A calendar's heading
+  wrote its month's name before whatever its element held, and a meter's, a progress bar's, a
+  slider's, a select's and a combobox's value replaced it, where every other adapter lets the
+  caller's content stand in. They write only into an element with no content of its own
+  (`ownText` in the adapter's runtime), and a server marks the text it wrote with a comment,
+  since the page it hydrates cannot tell its text node from a caller's. Held by the
+  `own-attributes` scenario (`k6`).
 - **A cloned element already has its props.** Vue lays the props given to a clone over the
   element's own: handed the merged props, it joined the element's class to itself and ran its
   listener twice. The clone is made with the element's props taken off. Several listeners of

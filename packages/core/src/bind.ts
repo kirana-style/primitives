@@ -36,6 +36,10 @@ export function bind(element: HTMLElement, part: Part): () => void {
   let current: PartProps = {}
   let styled: PartStyle = {}
   const listeners = new Map<string, EventListener>()
+  // The element's own value of each attribute the part writes over: the part's is over it while
+  // it has one, and the element's is back once it has none, as a framework that draws the
+  // element again from both would show.
+  const own = new Map<string, string>()
 
   const stop = effect(() => {
     const next = part.props.get()
@@ -44,7 +48,11 @@ export function bind(element: HTMLElement, part: Part): () => void {
       if (PROPERTIES.has(key) && key in element) continue
       // Only what the part wrote is the part's to take away: an attribute it has no value for
       // may be the caller's own.
-      if (next[key] === undefined && current[key] !== undefined) element.removeAttribute(key)
+      if (next[key] !== undefined || current[key] === undefined) continue
+      const kept = own.get(key)
+      if (kept === undefined) element.removeAttribute(key)
+      else element.setAttribute(key, kept)
+      own.delete(key)
     }
     for (const key in next) {
       const value = next[key]
@@ -76,7 +84,14 @@ export function bind(element: HTMLElement, part: Part): () => void {
         if (key === "checked") control.checked = value !== undefined
         else if (value !== undefined) control[key] = value
       } else if (value !== undefined && value !== current[key]) {
-        element.setAttribute(key, String(value))
+        const text = String(value)
+        if (current[key] === undefined) {
+          // Over a value of the element's own, kept to give back. One that already says what
+          // the part says is taken for the part's: a server wrote it there.
+          const before = element.getAttribute(key)
+          if (before !== null && before !== text) own.set(key, before)
+        }
+        element.setAttribute(key, text)
       }
     }
     current = next

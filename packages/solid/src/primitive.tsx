@@ -116,12 +116,16 @@ function mergedValue(sets: readonly (Props | undefined)[], key: string): unknown
 export function mergeProps<const Sets extends readonly (object | undefined)[]>(
   ...sets: Sets
 ): Merged<Sets> {
+  const given = sets as readonly (Props | undefined)[]
+  // An attribute no set has a value for is not among the keys: spread after an element's own
+  // attribute, it would take it away. (Children are not read here: reading them draws them.)
   const keys = () => {
     const all = new Set<string>()
     for (const set of sets) if (set) for (const key of Object.keys(set)) all.add(key)
-    return [...all]
+    return [...all].filter(
+      (key) => key === "children" || key === "ref" || mergedValue(given, key) !== undefined
+    )
   }
-  const given = sets as readonly (Props | undefined)[]
   return new Proxy({} as Merged<Sets>, {
     get: (_, key) => (typeof key === "string" ? mergedValue(given, key) : undefined),
     has: (_, key) => typeof key === "string" && keys().includes(key),

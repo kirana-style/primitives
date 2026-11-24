@@ -28,7 +28,7 @@ import type {
 } from "@kirana-ui/core/calendar"
 
 import { KP_DIRECTION } from "./direction-token"
-import { KpIds, drawing, hostPart, inputsSignal, onServer } from "./runtime"
+import { KpIds, drawing, hostPart, inputsSignal, onServer, ownText } from "./runtime"
 
 /** The place of the month the parts inside are drawn in: `*kpCalendarMonths` gives it. */
 const KP_CALENDAR_MONTH = new InjectionToken<number>("KpCalendarMonth")
@@ -150,7 +150,10 @@ function part(name: "previous" | "next" | "grid" | "input") {
 /** The place of the month a part is drawn in, inside `*kpCalendarMonths`. */
 const monthIndex = () => inject(KP_CALENDAR_MONTH, { optional: true }) ?? undefined
 
-/** Names the month shown: it writes the name before whatever is inside it. */
+/**
+ * Names the month shown, unless the element has content of its own: then that is what it says,
+ * and the live region reads it as the month changes.
+ */
 @Directive({ selector: "[kpCalendarHeading]" })
 export class KpCalendarHeading implements OnInit {
   private readonly root = inject(KpCalendar)
@@ -163,16 +166,10 @@ export class KpCalendarHeading implements OnInit {
   ngOnInit(): void {
     const month = this.root.controller.monthAt(this.index)
     this.put(month.heading)
+    const text = ownText(this.element, this.server)
+    if (!text) return
     const title = month.title
-    // The name a server wrote is the one kept: a second beside it would say the month twice.
-    const written = this.element.firstChild
-    const text =
-      written?.nodeType === 3
-        ? (written as Text)
-        : this.element.insertBefore(
-            this.element.ownerDocument.createTextNode(title.peek()),
-            written
-          )
+    text.data = title.peek()
     if (this.server) return
     this.destroy.onDestroy(
       effect(() => {

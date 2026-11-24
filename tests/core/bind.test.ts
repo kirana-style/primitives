@@ -42,10 +42,33 @@ describe("a part on an element, with no framework", () => {
     expect(button.id).toBe("b")
     expect(button.title).toBe("mine")
     expect(button.hasAttribute("data-open")).toBe(false)
-    // What it did write, it takes away.
-    props.set({ id: undefined, title: "part's", "data-open": undefined })
+    // What it did write, it takes away, and the element's own is back under it.
+    props.set({ id: undefined, title: "part's", "data-open": "" })
     props.set({ id: undefined, title: undefined, "data-open": undefined })
-    expect(button.hasAttribute("title")).toBe(false)
+    expect(button.title).toBe("mine")
+    expect(button.hasAttribute("data-open")).toBe(false)
+  })
+
+  it("gives an attribute it wrote over back to the element when it has nothing to say", () => {
+    // The element's own, written in its page or by its framework: the part's is over it only
+    // while the part has a value, as where a framework draws the element from both.
+    const root = mount(`<button id="b" aria-controls="note" data-state="mine">B</button>`)
+    const button = find(root, "b")
+    const { props, part: own } = part({ "aria-controls": undefined, "data-state": "part's" })
+    bind(button, own)
+    expect(button.getAttribute("aria-controls")).toBe("note")
+    expect(button.getAttribute("data-state")).toBe("part's")
+    props.set({ "aria-controls": "panel", "data-state": "part's again" })
+    expect(button.getAttribute("aria-controls")).toBe("panel")
+    props.set({ "aria-controls": undefined, "data-state": undefined })
+    expect(button.getAttribute("aria-controls")).toBe("note")
+    expect(button.getAttribute("data-state")).toBe("mine")
+    // A value that already said what the part says is the part's own (a server wrote it).
+    const sent = find(mount(`<div id="sent" data-open=""></div>`), "sent")
+    const open = part({ "data-open": "" })
+    bind(sent, open.part)
+    open.props.set({ "data-open": undefined })
+    expect(sent.hasAttribute("data-open")).toBe(false)
   })
 
   it("calls the handler the part has now", () => {

@@ -21,6 +21,19 @@ describe("a caller's props under a part's", () => {
     expect(merged).toEqual({ role: "button", id: "mine", title: "kept", "data-open": "" })
   })
 
+  it("hands on no attribute as `undefined`, so the element keeps its own in any order", () => {
+    // A component the part is drawn as writes `data-disabled` on its root: spread after it
+    // (JSX, Svelte), or laid over it (a Vue component's attributes), an `undefined` would take
+    // it away though neither the part nor its caller had anything to say about it.
+    const merged = mergeProps(
+      { title: undefined, "data-slot": "day" },
+      { "data-selected": "", "data-disabled": undefined, title: undefined }
+    )
+    expect(Object.keys(merged).sort()).toEqual(["data-selected", "data-slot"])
+    expect("data-disabled" in mergeProps(undefined, { "data-disabled": undefined })).toBe(false)
+    expect("title" in composeProps({ title: undefined }, { lang: "en" })).toBe(false)
+  })
+
   it("joins classes, under either name, the caller's first", () => {
     expect(mergeProps({ class: "a" }, { class: "b" }).class).toBe("a b")
     expect(mergeProps({ className: "a" }, { className: "b" }).className).toBe("a b")

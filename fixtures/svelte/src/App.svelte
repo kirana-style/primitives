@@ -311,6 +311,28 @@
     </div>
   </section>
 
+  <section data-fixture="own-attributes">
+    <Collapsible.Root id="k5">
+      <Collapsible.Trigger>
+        {#snippet child({ props })}
+          <!-- Its own attributes before the props: those the part has a value for are the part's. -->
+          <button aria-controls="k5-note" aria-expanded="true" {...props} data-testid="k5-trigger">
+            Own trigger
+          </button>
+        {/snippet}
+      </Collapsible.Trigger>
+      <span id="k5-note">Note</span>
+      <Collapsible.Panel class="panel" data-testid="k5-panel">
+        <p>Own content</p>
+      </Collapsible.Panel>
+    </Collapsible.Root>
+    <Calendar.Root id="k6" locale="en-US" defaultMonth="2026-04-01" class="item">
+      <Calendar.Heading data-testid="k6-heading">A caption of its own</Calendar.Heading>
+      <Calendar.Next aria-label="Next month" data-testid="k6-next">Next</Calendar.Next>
+      <Calendar.Grid data-testid="k6-grid" />
+    </Calendar.Root>
+  </section>
+
   <section data-fixture="design">
     <Dialog.Root id="ds1">
       <Dialog.Trigger data-testid="ds1-trigger">Wrapped dialog</Dialog.Trigger>

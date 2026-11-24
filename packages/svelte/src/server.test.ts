@@ -88,6 +88,12 @@ const PAGE = `
   <Calendar.Heading>
     {#snippet child({ props, text })}<h2 {...props}>{@render text()}</h2>{/snippet}
   </Calendar.Heading>
+  <Calendar.Cell date="2026-03-09">
+    {#snippet child({ props })}<td data-disabled="true" data-selected="true" {...props} data-kind="before">9</td>{/snippet}
+  </Calendar.Cell>
+  <Calendar.Cell date="2026-03-09">
+    {#snippet child({ props })}<td {...props} data-disabled="true" data-selected="true" data-kind="after">9</td>{/snippet}
+  </Calendar.Cell>
 </Calendar.Root>
 <DateField.Root id="date" defaultValue="2026-03-09" locale="en-US">
   <DateField.Segments>
@@ -262,6 +268,17 @@ describe("on the server", () => {
     expect(html).toContain('<a data-active="" class="badge mine" title="own" href="/new">On</a>')
     // An element that holds nothing holds nothing.
     expect(html).toContain('<input class="void" value="kept">')
+  })
+
+  it("leaves what the caller's element writes before the props where the part has nothing to say", () => {
+    // The cell is chosen and not disabled: written before the props, the element's chosen
+    // state is the part's and its `data-disabled` its own; written after them, both its own.
+    const before = html.match(/<td[^>]*data-kind="before"[^>]*>/)![0]
+    expect(before).toContain('data-selected=""')
+    expect(before).toContain('data-disabled="true"')
+    const after = html.match(/<td[^>]*data-kind="after"[^>]*>/)![0]
+    expect(after).toContain('data-selected="true"')
+    expect(after).toContain('data-disabled="true"')
   })
 
   it("draws no input a snippet did not render, and none for a number field with no name", () => {

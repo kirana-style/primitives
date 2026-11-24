@@ -36,6 +36,7 @@ import {
   inputsSignal,
   mounted,
   onServer,
+  ownText,
   presentWhile,
 } from "./runtime"
 
@@ -432,6 +433,7 @@ export class KpComboboxStatus implements OnInit {
 /**
  * `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its
  * placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between.
+ * An element with content of its own says that instead.
  * `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is
  * chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`,
  * in the order they were chosen. For a button that is the combobox, its input inside the popup.
@@ -446,6 +448,9 @@ export class KpComboboxValue implements OnInit {
   })
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
+  private readonly server = onServer()
+  // Where the label is written: nowhere with a template, or with content of the element's own.
+  private text: Text | null = null
 
   constructor() {
     effect(() => {
@@ -455,15 +460,14 @@ export class KpComboboxValue implements OnInit {
   }
 
   private write(): void {
-    // With a template, the content is the caller's.
-    if (!this.root.controller || this.template) return
-    this.element.textContent =
-      this.root.controller.shown.peek().label ?? untracked(this.placeholder)
+    if (!this.text) return
+    this.text.data = this.root.controller.shown.peek().label ?? untracked(this.placeholder)
   }
 
   ngOnInit(): void {
     const { controller } = this.root
     if (!this.template) {
+      this.text = ownText(this.element, this.server)
       this.destroy.onDestroy(
         coreEffect(() => {
           controller.shown.get()

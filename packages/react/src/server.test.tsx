@@ -8,6 +8,7 @@ import {
   Accordion,
   Avatar,
   Button,
+  Calendar,
   Checkbox,
   Collapsible,
   Combobox,
@@ -270,6 +271,28 @@ const Slotted = (props: ComponentProps<typeof Button>) => (
 )
 
 describe("a part drawn as the element its caller asked for", () => {
+  it("leaves what a component of the caller's writes on its root as the component orders it", () => {
+    // A day's cell as a design system draws it, writing attributes of its own beside the ones
+    // it is given: those it writes after them are its own, and those before them stay where
+    // the part has nothing to say (the cell is not disabled).
+    const own = { "data-disabled": "true", "data-selected": "true" }
+    const After = (props: ComponentProps<"td">) => <td {...props} {...own} />
+    const Before = (props: ComponentProps<"td">) => <td {...own} {...props} />
+    const cell = (day: ReactElement<Record<string, unknown>>) =>
+      renderToString(
+        <Calendar.Root id="c" defaultValue="2026-04-15" month="2026-04-01">
+          <Calendar.Cell date="2026-04-15" render={day} />
+        </Calendar.Root>
+      ).match(/<td[^>]*>/)![0]
+    const after = cell(<After />)
+    expect(after).toContain('data-selected="true"')
+    expect(after).toContain('data-disabled="true"')
+    expect(after).toContain('role="gridcell"')
+    const before = cell(<Before />)
+    expect(before).toContain('data-selected=""')
+    expect(before).toContain('data-disabled="true"')
+  })
+
   it("lets the element's own props win over what the part was handed", () => {
     const html = renderToString(
       <Slotted

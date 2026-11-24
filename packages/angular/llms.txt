@@ -391,6 +391,8 @@ Its other types:
 - Each part is a standalone directive on the caller's own element: `<button kpDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).
 - The package has one entry for the components: every directive is imported from `@kirana-ui/angular`.
 - Props are inputs. Bind them (`[defaultValue]="'a'"`): a static attribute stays on the element. An `id` is given as `[kpId]`.
+- A part writes its role, ARIA and state attributes on its element over the element's own, as a part's own win on the other frameworks: `<button kpCollapsibleTrigger aria-expanded="true">` says the part's `aria-expanded`. An attribute the part has no value for is the element's (`aria-controls="note"` while the panel is not in the page), and the element's own comes back when the part stops giving one. Do not bind an attribute a part writes (`[attr.data-selected]`): Angular writes a binding again only when its value changes, and the part then no longer wins. A design system that wants other values writes attributes of its own names (`data-day-selected="true"`), or styles the library's (`[data-selected]`).
+- A part that writes its own text (`kpCalendarHeading`, `kpMeterValue`, `kpProgressValue`, `kpSliderValue`, `kpSelectValue`, `kpComboboxValue`, `kpFieldError`, a toast's title, description and action) writes it only while its element has no content of its own: `<h2 kpCalendarHeading>{{ caption() }}</h2>` says the caption, and the heading is still the live region read out as the month changes.
 - A part on a `<button>` writes `type="button"`, so that it never submits a form by accident, unless the element has a `type` of its own (`<button kpButton type="submit">`); a part on an element that is not a button (`<a kpTooltipTrigger href="/x">`) writes none.
 - A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …). Below, `[(name)]` is such a model and `(name)` an output.
 - A part that draws a list is structural and gives each entry: `*kpDateFieldSegments="let segment"`.
@@ -805,7 +807,7 @@ Props of its root:
 Each part, and its own props:
 
 - `[kpCalendar]` is `KpCalendar`. `exportAs: "kpCalendar"`. Generic: `<Mode extends CalendarMode = CalendarMode>`. Its props are above.
-- `[kpCalendarHeading]` is `KpCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
+- `[kpCalendarHeading]` is `KpCalendarHeading`. Names the month shown, unless the element has content of its own: then that is what it says, and the live region reads it as the month changes.
 - `[kpCalendarPrevious]` is `KpCalendarPrevious`.
 - `[kpCalendarNext]` is `KpCalendarNext`.
 - `[kpCalendarMonths]` is `KpCalendarMonths`. Structural: written `*kpCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kpCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
@@ -1099,7 +1101,7 @@ Each part, and its own props:
 - `[kpCombobox]` is `KpCombobox`. `exportAs: "kpCombobox"`. Generic: `<Value = unknown>`. `kpAutocomplete` is a combobox whose text is the value: `[(value)]` is the text, and the list only suggests. Its parts are the combobox's directives. Its props are above.
 - `input[kpComboboxInput]` is `KpComboboxInput`. `<input kpComboboxInput>`: what is typed filters the list, which is placed against it.
 - `[kpComboboxTrigger]` is `KpComboboxTrigger`.
-- `[kpComboboxValue]` is `KpComboboxValue`. Structural or not: written `*kpComboboxValue`, or as an attribute, `kpComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
+- `[kpComboboxValue]` is `KpComboboxValue`. Structural or not: written `*kpComboboxValue`, or as an attribute, `kpComboboxValue`. Its template is given the entry: `let entry` is a `ComboboxShown`. `<span kpComboboxValue [placeholder]="'Pick one'">` says the chosen value's label, or its placeholder while nothing is chosen; with `multiple`, the chosen labels with commas between. An element with content of its own says that instead. `<ng-container *kpComboboxValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the order they were chosen. For a button that is the combobox, its input inside the popup.
     - `placeholder?: string`: Shown while nothing is chosen.
 - `[kpComboboxClear]` is `KpComboboxClear`. Structural: written `*kpComboboxClear`. `<button *kpComboboxClear>`: empties the input and the value; in the page while there is something to clear.
 - `[kpComboboxChips]` is `KpComboboxChips`. With `multiple`: what holds the chips and the input.
@@ -1493,7 +1495,7 @@ Each part, and its own props:
 - `[kpPopoverPositioner]` is `KpPopoverPositioner`. Takes the positioner options ("Positioner options", above).
 - `[kpPopoverPopup]` is `KpPopoverPopup`.
 - `[kpDatePickerCalendar]` is `KpDatePickerCalendar`. The calendar: what holds its heading, its buttons and its grid.
-- `[kpCalendarHeading]` is `KpCalendarHeading`. Names the month shown: it writes the name before whatever is inside it.
+- `[kpCalendarHeading]` is `KpCalendarHeading`. Names the month shown, unless the element has content of its own: then that is what it says, and the live region reads it as the month changes.
 - `[kpCalendarPrevious]` is `KpCalendarPrevious`.
 - `[kpCalendarNext]` is `KpCalendarNext`.
 - `[kpCalendarMonths]` is `KpCalendarMonths`. Structural: written `*kpCalendarMonths`. Its template is given the entry: `let entry` is a `CalendarMonth`. `<div *kpCalendarMonths="let month">`: once for each month shown, side by side. The parts inside each are that month's. Left out for one month.
@@ -2239,7 +2241,7 @@ Each part, and its own props:
 - `[kpMeter]` is `KpMeter`. `exportAs: "kpMeter"`. The meter: it says the value to assistive technology. Its props are above.
 - `[kpMeterTrack]` is `KpMeterTrack`. The whole range.
 - `[kpMeterIndicator]` is `KpMeterIndicator`. The filled part: its width is the value's share of the range.
-- `[kpMeterValue]` is `KpMeterValue`. Shows the written value.
+- `[kpMeterValue]` is `KpMeterValue`. Shows the written value, unless the element has content of its own.
 - `[kpMeterLabel]` is `KpMeterLabel`. The meter's name.
 
 ### NavigationMenu
@@ -2700,7 +2702,7 @@ Each part, and its own props:
 - `[kpProgress]` is `KpProgress`. `exportAs: "kpProgress"`. Its props are above.
 - `[kpProgressTrack]` is `KpProgressTrack`.
 - `[kpProgressIndicator]` is `KpProgressIndicator`.
-- `[kpProgressValue]` is `KpProgressValue`. Shows the written value.
+- `[kpProgressValue]` is `KpProgressValue`. Shows the written value, unless the element has content of its own.
 - `[kpProgressLabel]` is `KpProgressLabel`.
 
 Attributes and CSS variables, by part:
@@ -2967,7 +2969,7 @@ Each part, and its own props:
 
 - `[kpSelect]` is `KpSelect`. `exportAs: "kpSelect"`. Generic: `<Value = unknown>`. Holds the select: its value and whether the list is open. Its props are above.
 - `[kpSelectTrigger]` is `KpSelectTrigger`.
-- `[kpSelectValue]` is `KpSelectValue`. Structural or not: written `*kpSelectValue`, or as an attribute, `kpSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
+- `[kpSelectValue]` is `KpSelectValue`. Structural or not: written `*kpSelectValue`, or as an attribute, `kpSelectValue`. Its template is given the entry: `let entry` is a `SelectShown`. `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is chosen; with `multiple`, the chosen labels with commas between. An element with content of its own says that instead. `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen: `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the items' order.
     - `placeholder?: string`: Shown while nothing is chosen.
 - `[kpSelectPortal]` is `KpSelectPortal`. Structural: written `*kpSelectPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `[kpSelectPositioner]` is `KpSelectPositioner`. Takes the positioner options ("Positioner options", above).
@@ -3091,7 +3093,7 @@ Props of its root:
 Each part, and its own props:
 
 - `[kpSlider]` is `KpSlider`. `exportAs: "kpSlider"`. Generic: `<Value extends SliderValue = SliderValue>`. Its props are above.
-- `[kpSliderValue]` is `KpSliderValue`. Shows the written value.
+- `[kpSliderValue]` is `KpSliderValue`. Shows the written value, unless the element has content of its own.
 - `[kpSliderControl]` is `KpSliderControl`.
 - `[kpSliderTrack]` is `KpSliderTrack`.
 - `[kpSliderIndicator]` is `KpSliderIndicator`.

@@ -27,6 +27,8 @@ import {
   hostPart,
   inputsSignal,
   mounted,
+  onServer,
+  ownText,
   presentWhile,
 } from "./runtime"
 
@@ -182,7 +184,8 @@ export class KpSelectInput implements OnInit {
 
 /**
  * `<span kpSelectValue>` shows the chosen value's label, or `placeholder` while nothing is
- * chosen; with `multiple`, the chosen labels with commas between.
+ * chosen; with `multiple`, the chosen labels with commas between. An element with content of
+ * its own says that instead.
  * `<span *kpSelectValue="let shown">` draws its own content instead, with what is chosen:
  * `shown.value` and `shown.label`, with `multiple` `shown.values` and `shown.labels`, in the
  * items' order.
@@ -198,6 +201,9 @@ export class KpSelectValue implements OnInit {
   private readonly container = inject(ViewContainerRef)
   private readonly destroy = inject(DestroyRef)
   private readonly put = binder()
+  private readonly server = onServer()
+  // Where the label is written: nowhere with a template, or with content of the element's own.
+  private text: Text | null = null
 
   constructor() {
     effect(() => {
@@ -207,15 +213,15 @@ export class KpSelectValue implements OnInit {
   }
 
   private write(): void {
-    // With a template, the content is the caller's.
-    if (!this.root.controller || this.template) return
-    this.element.textContent = this.root.controller.label.peek() ?? untracked(this.placeholder)
+    if (!this.text) return
+    this.text.data = this.root.controller.label.peek() ?? untracked(this.placeholder)
   }
 
   ngOnInit(): void {
     const { controller } = this.root
     if (!this.template) {
       this.destroy.onDestroy(this.put(this.element, controller.valuePart))
+      this.text = ownText(this.element, this.server)
       this.destroy.onDestroy(
         coreEffect(() => {
           controller.label.get()

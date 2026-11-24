@@ -22,7 +22,7 @@ import type {
 
 import { KP_DIRECTION } from "./direction-token"
 import { KP_FIELD } from "./field-token"
-import { KpIds, hostPart, innerPart, inputsSignal, mounted } from "./runtime"
+import { KpIds, hostPart, innerPart, inputsSignal, mounted, onServer, ownText } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
@@ -181,19 +181,23 @@ export class KpSliderThumb implements OnInit {
   }
 }
 
-/** Shows the written value. */
+/** Shows the written value, unless the element has content of its own. */
 @Directive({ selector: "[kpSliderValue]" })
 export class KpSliderValue implements OnInit {
   private readonly root = inject(KpSlider)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
   private readonly part = hostPart()
+  private readonly server = onServer()
 
   ngOnInit(): void {
     this.part(this.root.controller.value)
+    // Content of the element's own is what it says.
+    const text = ownText(this.element, this.server)
+    if (!text) return
     this.destroy.onDestroy(
       effect(() => {
-        this.element.textContent = this.root.controller.text.get()
+        text.data = this.root.controller.text.get()
       })
     )
   }

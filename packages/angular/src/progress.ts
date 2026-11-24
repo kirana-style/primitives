@@ -4,7 +4,7 @@ import { effect } from "@kirana-ui/core"
 import { createProgress } from "@kirana-ui/core/progress"
 import type { ValueBar, ValueBarProps } from "@kirana-ui/core/progress"
 
-import { KpIds, hostPart, inputsSignal } from "./runtime"
+import { KpIds, hostPart, inputsSignal, onServer, ownText } from "./runtime"
 
 @Directive({ selector: "[kpProgress]", exportAs: "kpProgress" })
 export class KpProgress implements OnInit {
@@ -72,19 +72,23 @@ export class KpProgressLabel implements OnInit {
   }
 }
 
-/** Shows the written value. */
+/** Shows the written value, unless the element has content of its own. */
 @Directive({ selector: "[kpProgressValue]" })
 export class KpProgressValue implements OnInit {
   private readonly root = inject(KpProgress)
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement
   private readonly destroy = inject(DestroyRef)
   private readonly part = hostPart()
+  private readonly server = onServer()
 
   ngOnInit(): void {
     this.part(this.root.controller.value)
+    // Content of the element's own is what it says.
+    const text = ownText(this.element, this.server)
+    if (!text) return
     this.destroy.onDestroy(
       effect(() => {
-        this.element.textContent = this.root.controller.text.get() ?? ""
+        text.data = this.root.controller.text.get() ?? ""
       })
     )
   }

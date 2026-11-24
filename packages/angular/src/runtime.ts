@@ -308,6 +308,33 @@ const NOTHING = () => {}
 // The platform's id is the word itself; `@angular/common` only wraps the comparison.
 export const onServer = (): boolean => (inject(PLATFORM_ID) as unknown) === "server"
 
+// What a server writes before a part's own text, so the page it hydrates tells that text from
+// content of the caller's own, which is a text node too.
+const OWN_TEXT = "kp-text"
+
+/**
+ * Where a part that writes its own text (a calendar's heading, a meter's value) writes it: a text
+ * node of its own in its element, or `null` when the element has content of its own, which then
+ * stays, as a caller's children replace the text on the other adapters. Call it in `ngOnInit`,
+ * when the element's own content is in it. On a server the text is marked, so that the page it
+ * hydrates keeps writing into it.
+ */
+export function ownText(element: HTMLElement, server: boolean): Text | null {
+  const document = element.ownerDocument
+  const first = element.firstChild
+  if (first?.nodeType === 8 && (first as Comment).data === OWN_TEXT) {
+    // What a server wrote: its text is the one kept.
+    const sent = first.nextSibling
+    element.removeChild(first)
+    return sent?.nodeType === 3
+      ? (sent as Text)
+      : element.insertBefore(document.createTextNode(""), sent)
+  }
+  if (first) return null
+  if (server) element.appendChild(document.createComment(OWN_TEXT))
+  return element.appendChild(document.createTextNode(""))
+}
+
 // The DOM work of the parts being made: what each attaches, and what each controller mounts, in
 // the order they were asked for.
 let pending: (() => void)[] | undefined

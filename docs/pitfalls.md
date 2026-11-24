@@ -125,6 +125,15 @@ note. Three places hold them:
   rows' as the page has them, read while the list is in it. Closed, a letter chooses nothing:
   it would have to add or take away. Held by `tests/core/select.test.ts` ("a select of
   several values") and the `select-multiple` scenario.
+- **A list laid over its trigger is placed once, so what moves the trigger must not happen.**
+  It is `fixed` where it was measured, and does not follow its anchor as a list beside it
+  does: a page scrolled while it was open took the trigger away and left the list where it
+  was. While it is open over its trigger the page's scroll is held (the counted
+  `lockScroll`, so a modal dialog underneath keeps its own hold when the select closes), and
+  a box around the trigger that scrolls, which that hold does not reach, closes it
+  (`"ancestor-scroll"`), as a resize does; the list's own scroll is not around the trigger.
+  Held by `tests/core/select.test.ts` ("a select's list over its trigger, in a page that
+  scrolls") and the `measures` scenario.
 - **Labels by value are looked up by own keys of a text.** `items` given as a record names
   only values that are text and its own: `toString` is not a label, and `1` is not `"1"`
   (`services/items.ts`; "a select's items given as a record").

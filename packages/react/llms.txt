@@ -2940,7 +2940,7 @@ Each part, and its own props:
     - `children?: ReactNode | (( value: Chosen, label: Chosen extends readonly unknown[] ? readonly string[] : string | undefined ) => ReactNode)`: What to show in place of the label. A function is given the value and its label (`null` and `undefined` while nothing is chosen); with `multiple`, the values and their labels, in the items' order. Its first parameter's type says which: `(values: string[], labels) => …`.
 - `<Select.Portal>` draws no element. Draws no element of its own: its children at the end of `<body>`, or where a `PortalProvider` says.
 - `<Select.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
-    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it.
+    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it. While it lies there the page's scroll is held (its scrollbar's room kept), and a scroll of a box around the trigger closes the list (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
 - `<Select.Popup>` draws a `<div>`.
 - `<Select.List>` draws a `<div>`. The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.
 - `<Select.ScrollUpArrow>` draws a `<div>`.

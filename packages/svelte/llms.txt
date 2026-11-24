@@ -2947,7 +2947,7 @@ Each part, and its own props:
     - `children?: Snippet<[shown: SelectShown]>`: Draws something else than the label: it is given what is chosen (`value` and `label`; with `multiple`, `values` and `labels`, in the items' order).
 - `<Select.Portal>` draws no element. Draws nothing itself: its content at the end of `<body>`, or where a `<PortalProvider>` says.
 - `<Select.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
-    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it.
+    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it. While it lies there the page's scroll is held (its scrollbar's room kept), and a scroll of a box around the trigger closes the list (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
 - `<Select.Popup>` draws a `<div>`.
 - `<Select.List>` draws a `<div>`. The items' own box inside the popup, when the popup also holds scroll arrows.
 - `<Select.ScrollUpArrow>` draws a `<div>`. In the page while there is more of the list its way: it scrolls it under a moving pointer.

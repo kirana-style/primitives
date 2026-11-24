@@ -124,8 +124,10 @@ export class KpSelectPortal implements OnInit {
 @Directive({ selector: "[kpSelectPositioner]" })
 export class KpSelectPositioner extends KpPositioner {
   /**
-   * The list opens over its trigger, the chosen item's text on the trigger's own, where
-   * there is room and unless a finger opened it.
+   * The list opens over its trigger, the chosen item's text on the trigger's own, where there is
+   * room and unless a finger opened it. While it lies there the page's scroll is held (its
+   * scrollbar's room kept), and a scroll of a box around the trigger closes the list
+   * (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
    */
   readonly alignItemWithTrigger = input(false, { transform: booleanAttribute })
   private readonly root = inject(KpSelect)

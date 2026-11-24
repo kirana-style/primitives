@@ -3723,11 +3723,29 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     )
     expect(Math.abs(item.left - shown.left) < 1, `from the same edge (${item.left - shown.left})`)
     await snapshot("a select open over its trigger")
+    // The wheel turned over the page's corner, clear of the list: the page is held while the
+    // list lies over its trigger, and scrolls again once it has closed.
+    const scrolled = () => page.evaluate(() => window.scrollY)
+    const before = await scrolled()
+    await page.mouse.move(4, 4)
+    await page.mouse.wheel(0, -200)
+    await page.waitForTimeout(150)
+    expect((await scrolled()) === before, `the page stays still while it is open (${before})`)
+    const over = await box("s3-Cherry-text")
+    expect(
+      Math.abs(over.middle - (await box("s3-value")).middle) < 2,
+      "and the list stays on its trigger"
+    )
     await page.keyboard.press("Escape")
     const closing = Date.now()
     while ((await present("s3-popup")) && Date.now() - closing < 3000) await page.waitForTimeout(25)
     await settled(page)
     expect(!(await present("s3-popup")), "Escape closes it")
+    await page.mouse.wheel(0, -200)
+    const turning = Date.now()
+    while ((await scrolled()) === before && Date.now() - turning < 3000)
+      await page.waitForTimeout(25)
+    expect((await scrolled()) < before, "and the page scrolls again")
   },
   async entry({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {

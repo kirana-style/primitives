@@ -9,9 +9,11 @@
  *   bun scripts/consume.ts --version 0.1.0          # that release, from the registry
  *   … --version <version> --registry <url>          # from another registry (a rehearsal)
  *
- * From the registry it first waits until the edge it reaches lists the version for every package:
- * a release ends when the registry has accepted it, and an edge may serve its older list for
- * as long as the registry's own `max-age` says. The wait is bounded by that age.
+ * From the registry it first waits until the edge it reaches lists the version for every package
+ * and serves its file: a release ends when the registry has accepted it, an edge may serve its
+ * older list for as long as the registry's own `max-age` says, and a version it lists is not yet
+ * one whose file it has (a release was listed everywhere while one package's file still answered
+ * 404). The wait is bounded by that age.
  */
 import { spawnSync } from "node:child_process"
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
@@ -50,12 +52,16 @@ const names = released
       spec: `file:${path.join(packed, file)}`,
     }))
 
-/** Waits until this edge lists the released version of every package, for the cache's age at most. */
+/**
+ * Waits until this edge lists the released version of every package and serves its file, for the
+ * cache's age at most.
+ */
 async function served(version: string) {
   const started = Date.now()
   for (;;) {
     let maxAge = 0
     const missing: string[] = []
+    const unserved: string[] = []
     await Promise.all(
       names.map(async ({ name }) => {
         const response = await fetch(`${registry}/${name.replace("/", "%2f")}`, {
@@ -65,19 +71,38 @@ async function served(version: string) {
         const age = /max-age=(\d+)/.exec(response?.headers.get("cache-control") ?? "")
         if (age) maxAge = Math.max(maxAge, Number(age[1]))
         const json = response?.ok
-          ? ((await response.json()) as { versions?: Record<string, unknown> })
+          ? ((await response.json()) as {
+              versions?: Record<string, { dist?: { tarball?: string } } | undefined>
+            })
           : undefined
-        if (!json?.versions?.[version]) missing.push(name)
+        const listed = json?.versions?.[version]
+        if (!listed) return void missing.push(name)
+        // Listed is not served: the list and the file reach an edge apart.
+        const file =
+          listed.dist?.tarball ?? `${registry}/${name}/-/${name.split("/")[1]}-${version}.tgz`
+        const held = await fetch(file, {
+          method: "HEAD",
+          signal: AbortSignal.timeout(15_000),
+        }).catch(() => undefined)
+        if (!held?.ok) unserved.push(name)
       })
     )
-    if (missing.length === 0) return
+    if (missing.length === 0 && unserved.length === 0) return
     if (Date.now() - started > (maxAge + 120) * 1000) {
       throw new Error(
-        `${missing.join(", ")} did not list ${version} within the cache's age (${maxAge} s) and two minutes`
+        missing.length > 0
+          ? `${missing.join(", ")} did not list ${version} within the cache's age (${maxAge} s) and two minutes`
+          : `${unserved.join(", ")} listed ${version} and did not serve its file within the cache's age (${maxAge} s) and two minutes`
       )
     }
-    console.log(`waiting  not listed here yet: ${missing.sort().join(", ")}`)
-    await new Promise((resolve) => setTimeout(resolve, 15_000))
+    if (missing.length > 0) {
+      console.log(`waiting  not listed here yet: ${missing.sort().join(", ")}`)
+    }
+    if (unserved.length > 0) {
+      console.log(`waiting  listed, its file not served here yet: ${unserved.sort().join(", ")}`)
+    }
+    // A rehearsal's registry is in this machine: nothing there takes a quarter of a minute.
+    await new Promise((resolve) => setTimeout(resolve, rehearsed ? 1_000 : 15_000))
   }
 }
 if (released) await served(released)

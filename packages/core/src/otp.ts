@@ -195,6 +195,9 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
         return {
           id: props.get().id,
           type: "text",
+          // The code it holds, so a server draws it. In a page the core writes it too: a
+          // framework writes in its own time, after what was typed since.
+          value: value.get(),
           inputmode: mode === "numeric" ? "numeric" : "text",
           // What a phone offers from the message the code came in.
           autocomplete: "one-time-code",

@@ -1,4 +1,4 @@
-import { Component, Directive, booleanAttribute, input, signal } from "@angular/core"
+import { Component, Directive, booleanAttribute, computed, input, signal } from "@angular/core"
 import {
   KpDialog,
   KpDialogBackdrop,
@@ -122,5 +122,30 @@ export class KuiTooltipPositioner {
 export class KuiCode {
   constructor() {
     hostInputs(KpOtp, { mode: () => "text" })
+  }
+}
+
+/**
+ * A code input of digits, built on the design system's own code input (a host inside a host):
+ * where it asks for digits its `mode` wins over the one `kuiCode` gives, the outermost host
+ * winning, and where it gives `undefined` the host inside it decides. It also gives the code
+ * itself, a model: `undefined` leaves the code to the primitive, which then holds what is typed.
+ * What `kuiCode` exposes is not exposed again through it (Angular exposes a host directive's
+ * own inputs only), so it takes the id and the length itself and gives them.
+ */
+@Directive({ selector: "[kuiPin]", hostDirectives: [KuiCode] })
+export class KuiPin {
+  readonly kpId = input<string>()
+  readonly length = input<number>()
+  readonly digits = input(false, { transform: booleanAttribute })
+  readonly code = input<string>()
+
+  constructor() {
+    hostInputs(KpOtp, {
+      kpId: this.kpId,
+      length: this.length,
+      mode: computed(() => (this.digits() ? "numeric" : undefined)),
+      value: this.code,
+    })
   }
 }

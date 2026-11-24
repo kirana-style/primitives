@@ -195,6 +195,8 @@
   let handed = $state(0)
   let asked = $state(0)
   let marks = $state(0)
+  let plain: Element | undefined
+  let mark: Element | undefined
   let tipOff = $state(false)
   function pressLayered(event: PartEvent<MouseEvent>) {
     handed += 1
@@ -284,10 +286,23 @@
           <a {...props} class={[props.class, "asked"]} href="#k2" data-testid="k3-tag">Tag</a>
         {/snippet}
       </Tag>
-      <Tag data-testid="k3-plain">Plain</Tag>
+      <Tag
+        data-testid="k3-plain"
+        {@attach (element) => {
+          plain = element
+        }}>Plain</Tag
+      >
     </div>
     <div class="item">
-      <Mark class="mine" onclick={() => (marks += 1)}>
+      <!-- Each element is reached through an attachment, the plain one's and the one drawn
+           through `child`: the count goes up only once both are the elements on the page. -->
+      <Mark
+        class="mine"
+        onclick={(event) => (marks += event.currentTarget === mark && plain?.localName === "span" ? 1 : 0)}
+        {@attach (element) => {
+          mark = element
+        }}
+      >
         {#snippet child({ props, state })}
           <button {...props} data-testid="k4-mark">{state.active ? "On" : "Off"} {marks}</button>
         {/snippet}
@@ -326,6 +341,14 @@
       </Otp.Root>
       <Otp.Root id="ds3b" length={2} mode="numeric">
         <Otp.Input aria-label="Number code" data-testid="ds3b-input" />
+      </Otp.Root>
+    </div>
+    <div class="item">
+      <Otp.Root id="ds3c" length={2} mode="numeric" value="42">
+        <Otp.Input aria-label="Given code" data-testid="ds3c-input" />
+      </Otp.Root>
+      <Otp.Root id="ds3d" length={2} mode="text">
+        <Otp.Input aria-label="Own code" data-testid="ds3d-input" />
       </Otp.Root>
     </div>
   </section>
@@ -1631,7 +1654,7 @@
           <Command.Separator class="separator" data-testid="cm1-separator" />
           <Command.Group id="cm1-edit" data-testid="cm1-edit">
             <Command.GroupHeading data-testid="cm1-edit-heading">Edit</Command.GroupHeading>
-            <Command.Item value="copy" id="cm1-copy" class="item" data-testid="cm1-copy">
+            <Command.Item id="cm1-copy" class="item" data-testid="cm1-copy">
               Copy
             </Command.Item>
             <Command.Item

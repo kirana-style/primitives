@@ -1,4 +1,5 @@
 import type { Snippet } from "svelte"
+import type { Attachment } from "svelte/attachments"
 
 import type { ChildGiven, ElementAttributes, Tag } from "../types.ts"
 
@@ -31,4 +32,19 @@ export type PrimitiveProps<
       ? never
       : Each
   ]: ElementAttributes<Name>[Each]
-} & { as?: Name | undefined }
+} & {
+  as?: Name | undefined
+  /**
+   * An attachment (`{@attach (element) => …}`): it is given the element drawn, or with `child`
+   * the caller's own, whose `{...props}` carries it. Written here as well as in the element's
+   * attributes, so the element's type reaches it while `Name` is still being inferred.
+   */
+  [attachment: symbol]: Attachment<ElementOf<Name>> | false | null | undefined
+}
+
+/** The element a tag draws: `HTMLAnchorElement` for `"a"`. */
+type ElementOf<Name extends Tag> = Name extends keyof HTMLElementTagNameMap
+  ? HTMLElementTagNameMap[Name]
+  : Name extends keyof SVGElementTagNameMap
+    ? SVGElementTagNameMap[Name]
+    : Element

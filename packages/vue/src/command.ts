@@ -112,8 +112,8 @@ const GroupHeading = defineComponent({
 }) as unknown as PartComponent<"div", State["groupHeading"], GroupHeadingProps>
 
 export interface ItemProps extends Omit<CommandItemOptions, "id">, PartComponentProps {
-  /** What `@select` is told when this item is chosen. */
-  value: string
+  /** What `@select` is told when this item is chosen; its `label`, or its text, when left out. */
+  value?: string | undefined
   id?: string | undefined
 }
 
@@ -122,7 +122,7 @@ const Item = defineComponent({
   name: "CommandItem",
   inheritAttrs: false,
   props: {
-    value: { type: String, required: true },
+    value: { type: String, default: undefined },
     disabled: optional(Boolean),
     label: String,
     keywords: Array as PropType<readonly string[]>,

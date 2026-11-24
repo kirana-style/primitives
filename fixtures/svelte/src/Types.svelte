@@ -41,6 +41,8 @@
   let level = $state(40)
   let range = $state([20, 80])
   let element: HTMLButtonElement | undefined = $state()
+  let anchor: HTMLAnchorElement | undefined = $state()
+  let box: HTMLElement | undefined = $state()
 
   // A wrapper's props are the part's, by name or from the component: the same type.
   let { wrapped }: { wrapped: TriggerProps } = $props()
@@ -233,6 +235,21 @@
 </Field.Root>
 
 <Primitive as="a" href="/x" onclick={(event) => void event.currentTarget.href}>Link</Primitive>
+<!-- Its element is reached with an attachment, typed by its tag, as a part's is. -->
+<Primitive
+  as="a"
+  href="/x"
+  {@attach (node) => {
+    anchor = node
+  }}>Link</Primitive
+>
+<Primitive
+  {@attach (node) => {
+    // @ts-expect-error a `div` is not a link
+    anchor = node
+    box = node
+  }}
+/>
 <Primitive {...merged}>
   {#snippet child({ props, state })}<a {...props}>{state.active ? "On" : "Off"}</a>{/snippet}
 </Primitive>

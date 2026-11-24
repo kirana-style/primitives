@@ -249,6 +249,7 @@ import type { DateRange, OffsetFunction } from "@kirana-ui/angular"
 
 import {
   KuiCode,
+  KuiPin,
   KuiDialog,
   KuiDialogClose,
   KuiDialogContent,
@@ -270,6 +271,7 @@ import {
   selector: "app-root",
   imports: [
     KuiCode,
+    KuiPin,
     KuiDialog,
     KuiDialogClose,
     KuiDialogContent,
@@ -653,6 +655,14 @@ import {
           </div>
           <div kuiCode [kpId]="'ds3b'" [length]="2" [mode]="'numeric'">
             <input kpOtpInput aria-label="Number code" data-testid="ds3b-input" />
+          </div>
+        </div>
+        <div class="item">
+          <div kuiPin [kpId]="'ds3c'" [length]="2" [digits]="true" [code]="'42'">
+            <input kpOtpInput aria-label="Given code" data-testid="ds3c-input" />
+          </div>
+          <div kuiPin [kpId]="'ds3d'" [length]="2">
+            <input kpOtpInput aria-label="Own code" data-testid="ds3d-input" />
           </div>
         </div>
       </section>
@@ -2082,15 +2092,7 @@ import {
             <div kpCommandSeparator class="separator" data-testid="cm1-separator"></div>
             <div kpCommandGroup [kpId]="'cm1-edit'" data-testid="cm1-edit">
               <div kpCommandGroupHeading data-testid="cm1-edit-heading">Edit</div>
-              <div
-                kpCommandItem
-                [value]="'copy'"
-                [kpId]="'cm1-copy'"
-                class="item"
-                data-testid="cm1-copy"
-              >
-                Copy
-              </div>
+              <div kpCommandItem [kpId]="'cm1-copy'" class="item" data-testid="cm1-copy">Copy</div>
               <div
                 kpCommandItem
                 [value]="'paste'"

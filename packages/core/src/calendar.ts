@@ -64,6 +64,15 @@ export interface CalendarProps<Mode extends CalendarMode = CalendarMode> {
    * (`"multiple"`: a day pressed is added, and pressed again is taken away).
    */
   mode?: Mode | undefined
+  /**
+   * Whether a day, once chosen, stays chosen. Off by default, as in react-day-picker: the
+   * chosen day pressed again is taken away and the value is `null`, heard with the reason
+   * `"day-deselect"` (cancellable). Given, the chosen day pressed again stays, and with
+   * `mode: "multiple"` the last day cannot be taken away. With `mode: "range"` a press always
+   * begins a range again, so a press never clears a range. It does not make a form ask for a
+   * value.
+   */
+  required?: boolean | undefined
   /** With `mode: "multiple"`: the fewest days that can be left chosen. A press that would leave fewer does nothing. */
   minDays?: number | undefined
   /**
@@ -104,8 +113,10 @@ export interface CalendarProps<Mode extends CalendarMode = CalendarMode> {
   defaultFocusedValue?: IsoDate | undefined
   /**
    * The language and region its names, numbers, first day of the week and calendar follow
-   * (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. Another first day of
-   * the week is the tag's `fw` extension: `"en-US-u-fw-mon"` begins each week on Monday.
+   * (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. The week begins on
+   * the day the region begins it on (Sunday in `"en-US"`, Monday in `"fr-FR"`), or on the day
+   * a `-u-fw-` extension names: `"en-US-u-fw-mon"` is American English with weeks from Monday
+   * (`sun`, `mon`, `tue`, `wed`, `thu`, `fri`, `sat`).
    */
   locale?: string | undefined
   /**
@@ -207,7 +218,8 @@ export interface Calendar {
   /**
    * A day's `<td>`, and the button in it. `index` is the month it is drawn in, with several:
    * a day of the month before or after that is shown in its own month too is a copy there,
-   * never the stop for Tab nor said to be chosen.
+   * never the stop for Tab nor said to be chosen (no `aria-selected`), though it is drawn as
+   * chosen (`data-selected`, `data-range-start`, `data-range-end`) as the day itself is.
    */
   cell(date: IsoDate, index?: number): Part
   day(date: IsoDate, index?: number): Part
@@ -527,6 +539,7 @@ export function createCalendar(
       const { minDays, maxDays } = props.peek()
       if (chosen.includes(date)) {
         if (minDays !== undefined && chosen.length <= minDays) return
+        if (props.peek().required && chosen.length <= 1) return
         value.set(
           chosen.filter((each) => each !== date),
           details("day-press", event)
@@ -538,6 +551,11 @@ export function createCalendar(
       return show(date, false, "day-press", event)
     }
     if (!range.peek()) {
+      // Pressed again, the chosen day is taken away, unless it is required.
+      if (value.peek() === date) {
+        if (!props.peek().required) value.set(null, details("day-deselect", event))
+        return show(date, false, "day-press", event)
+      }
       value.set(date, details("day-press", event))
       return show(date, false, "day-press", event)
     }
@@ -582,18 +600,17 @@ export function createCalendar(
     const day = read(date)
     const copy = index !== undefined && copyAt(date, index)
     const chosen = span.get()
-    const inside = copy
-      ? false
-      : multiple.get()
-        ? chosenDays.get().includes(date)
-        : chosen !== undefined && date >= chosen.start && date <= chosen.end
+    // A copy is drawn as the day itself is; only the day itself is said to be chosen.
+    const inside = multiple.get()
+      ? chosenDays.get().includes(date)
+      : chosen !== undefined && date >= chosen.start && date <= chosen.end
     const unavailable = Boolean(props.get().isDateUnavailable?.(date))
     const disabled = day ? off(day) || full(date) : true
     const outside =
       day !== undefined && !isSameMonth(local(date), shown.get().add({ months: index ?? 0 }))
     return {
       copy,
-      selected: inside,
+      selected: inside && !copy,
       disabled,
       unavailable,
       attributes: {
@@ -602,8 +619,8 @@ export function createCalendar(
         "data-outside-month": flag(outside),
         "data-disabled": flag(disabled),
         "data-unavailable": flag(unavailable),
-        "data-range-start": flag(!copy && range.get() && chosen?.start === date),
-        "data-range-end": flag(!copy && range.get() && chosen?.end === date),
+        "data-range-start": flag(range.get() && chosen?.start === date),
+        "data-range-end": flag(range.get() && chosen?.end === date),
       },
     }
   }

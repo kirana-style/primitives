@@ -3473,7 +3473,21 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       `a range is chosen across the months (${await text("cal2-output")})`
     )
     expect((await attribute("cal2-1-2026-04-01", "data-selected")) === "", "the days between")
-    expect((await attribute("cal2-0-2026-04-01", "data-selected")) === null, "but not their copies")
+    expect(
+      (await attribute("cal2-0-2026-04-01", "data-selected")) === "" &&
+        (await attribute("cal2-0-2026-04-03", "data-range-end")) === "" &&
+        (await id("cal2-0-2026-04-03").evaluate((day) => day.parentElement!.dataset.rangeEnd)) ===
+          "",
+      "their copies are drawn as they are"
+    )
+    expect(
+      (await id("cal2-0-2026-04-01").evaluate((day) =>
+        day.parentElement!.hasAttribute("aria-selected")
+      )) === false &&
+        (await attribute("cal2-0-2026-04-03", "tabindex")) === "-1" &&
+        (await attribute("cal2-1-2026-03-31", "data-selected")) === "",
+      "but never said to be chosen, nor the stop for Tab"
+    )
     expect((await focused()) === "cal2-1-2026-04-03", "focus is on the last day pressed")
     await key("ArrowLeft")
     await key("ArrowLeft")
@@ -3528,6 +3542,12 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await press("cal3-reset")
     expect((await text("cal3-output")) === "2026-03-02", "a form's reset puts the first days back")
     expect((await sent()).join(",") === "2026-03-02", "and only they are sent")
+    await press("cal3-2026-03-02")
+    expect(
+      (await attribute("cal3-2026-03-02", "data-selected")) === "" &&
+        (await sent()).join(",") === "2026-03-02",
+      "required, its last day cannot be taken away"
+    )
 
     // The month its caller holds.
     await id("cal4").evaluate((element) => element.scrollIntoView({ block: "center" }))
@@ -3535,6 +3555,13 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await press("cal4-next")
     expect((await text("cal4-output")) === "2026-04-01", "it asks for the next month")
     expect((await text("cal4-heading")) === "April 2026", "which its caller gives")
+    await press("cal4-2026-04-10")
+    expect((await attribute("cal4-2026-04-10", "data-selected")) === "", "a press chooses a day")
+    await press("cal4-2026-04-10")
+    expect(
+      (await attribute("cal4-2026-04-10", "data-selected")) === null,
+      "and a second press takes it away"
+    )
     await press("cal4-jump")
     expect((await text("cal4-heading")) === "December 2030", "the caller's own button sets it")
     expect((await stops("cal4")) === 1, "Tab still has one day to reach")

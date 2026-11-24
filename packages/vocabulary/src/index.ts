@@ -4986,7 +4986,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5011,12 +5011,12 @@ export const vocabulary = {
             },
             "rangeStart": {
               "attribute": "data-range-start",
-              "description": "Present on the first day of a range.",
+              "description": "Present on the first day of a range, and on a copy of it.",
               "selector": "[data-range-start]"
             },
             "rangeEnd": {
               "attribute": "data-range-end",
-              "description": "Present on the last day of a range.",
+              "description": "Present on the last day of a range, and on a copy of it.",
               "selector": "[data-range-end]"
             }
           },
@@ -5033,7 +5033,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5058,12 +5058,12 @@ export const vocabulary = {
             },
             "rangeStart": {
               "attribute": "data-range-start",
-              "description": "Present on the first day of a range.",
+              "description": "Present on the first day of a range, and on a copy of it.",
               "selector": "[data-range-start]"
             },
             "rangeEnd": {
               "attribute": "data-range-end",
-              "description": "Present on the last day of a range.",
+              "description": "Present on the last day of a range, and on a copy of it.",
               "selector": "[data-range-end]"
             }
           },
@@ -5204,7 +5204,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5229,12 +5229,12 @@ export const vocabulary = {
             },
             "rangeStart": {
               "attribute": "data-range-start",
-              "description": "Present on the first day of a range.",
+              "description": "Present on the first day of a range, and on a copy of it.",
               "selector": "[data-range-start]"
             },
             "rangeEnd": {
               "attribute": "data-range-end",
-              "description": "Present on the last day of a range.",
+              "description": "Present on the last day of a range, and on a copy of it.",
               "selector": "[data-range-end]"
             }
           },
@@ -5251,7 +5251,7 @@ export const vocabulary = {
           "states": {
             "selected": {
               "attribute": "data-selected",
-              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.",
+              "description": "Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.",
               "selector": "[data-selected]"
             },
             "today": {
@@ -5276,12 +5276,12 @@ export const vocabulary = {
             },
             "rangeStart": {
               "attribute": "data-range-start",
-              "description": "Present on the first day of a range.",
+              "description": "Present on the first day of a range, and on a copy of it.",
               "selector": "[data-range-start]"
             },
             "rangeEnd": {
               "attribute": "data-range-end",
-              "description": "Present on the last day of a range.",
+              "description": "Present on the last day of a range, and on a copy of it.",
               "selector": "[data-range-end]"
             }
           },

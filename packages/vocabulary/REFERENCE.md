@@ -1960,13 +1960,13 @@ A day's cell.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
 | `data-unavailable` | Present on a day that cannot be chosen. |
-| `data-range-start` | Present on the first day of a range. |
-| `data-range-end` | Present on the last day of a range. |
+| `data-range-start` | Present on the first day of a range, and on a copy of it. |
+| `data-range-end` | Present on the last day of a range, and on a copy of it. |
 
 ### DatePicker.Day
 
@@ -1974,13 +1974,13 @@ The button for a day.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
 | `data-unavailable` | Present on a day that cannot be chosen. |
-| `data-range-start` | Present on the first day of a range. |
-| `data-range-end` | Present on the last day of a range. |
+| `data-range-start` | Present on the first day of a range, and on a copy of it. |
+| `data-range-end` | Present on the last day of a range, and on a copy of it. |
 
 ## Calendar
 
@@ -2054,13 +2054,13 @@ A day's cell.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
 | `data-unavailable` | Present on a day that cannot be chosen. |
-| `data-range-start` | Present on the first day of a range. |
-| `data-range-end` | Present on the last day of a range. |
+| `data-range-start` | Present on the first day of a range, and on a copy of it. |
+| `data-range-end` | Present on the last day of a range, and on a copy of it. |
 
 ### Calendar.Day
 
@@ -2068,13 +2068,13 @@ The button for a day.
 
 | Attribute | When |
 | --- | --- |
-| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. |
+| `data-selected` | Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. |
 | `data-today` | Present on today. |
 | `data-outside-month` | Present on the days of the month before and after that fill the first and last weeks. |
 | `data-disabled` | Present when it is disabled. |
 | `data-unavailable` | Present on a day that cannot be chosen. |
-| `data-range-start` | Present on the first day of a range. |
-| `data-range-end` | Present on the last day of a range. |
+| `data-range-start` | Present on the first day of a range, and on a copy of it. |
+| `data-range-end` | Present on the last day of a range, and on a copy of it. |
 
 ### Calendar.Input
 

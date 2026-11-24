@@ -4,7 +4,7 @@ import { DISABLED, state } from "./states.ts"
 const DAY = {
   selected: state(
     "data-selected",
-    "Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too."
+    "Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected."
   ),
   today: state("data-today", "Present on today."),
   outsideMonth: state(
@@ -13,8 +13,11 @@ const DAY = {
   ),
   disabled: DISABLED,
   unavailable: state("data-unavailable", "Present on a day that cannot be chosen."),
-  rangeStart: state("data-range-start", "Present on the first day of a range."),
-  rangeEnd: state("data-range-end", "Present on the last day of a range."),
+  rangeStart: state(
+    "data-range-start",
+    "Present on the first day of a range, and on a copy of it."
+  ),
+  rangeEnd: state("data-range-end", "Present on the last day of a range, and on a copy of it."),
 }
 
 export const calendarVocabulary = defineComponent({

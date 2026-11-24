@@ -3,17 +3,17 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createCheckbox } from "@kirana-ui/core/checkbox"
 import type { Checkbox as Controller } from "@kirana-ui/core/checkbox"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { CheckboxGroupContext } from "./checkbox-group-context.ts"
 import { FieldContext } from "./field-context.ts"
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["checkbox"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useCheckbox(): Controller {
   const made = useContext(Context)
@@ -41,7 +41,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "checked",
     "defaultChecked",
     "onCheckedChange",
@@ -57,7 +57,7 @@ function Root(props: RootProps): JSX.Element {
     "children",
   ])
   const generated = createUniqueId()
-  const field = useContext(FieldContext)
+  const field = useContext(FieldContext) ?? undefined
   const group = useContext(CheckboxGroupContext) ?? undefined
   const made = controller(within(createCheckbox, { field, group }), () => ({
     id: local.id ?? generated,
@@ -75,12 +75,12 @@ function Root(props: RootProps): JSX.Element {
       local.onCheckedChange?.(checked, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="span" {...rest}>
         {local.children}
         <Part of={made.input} tag="input" />
       </Part>
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -96,7 +96,7 @@ export type IndicatorProps = PartComponentProps<
 
 /** `keepMounted` keeps the mark in the page while the box is unchecked. */
 function Indicator(props: IndicatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
+  const [local, rest] = split(props, ["keepMounted"])
   const made = useCheckbox()
   const mounted = fromSignal(made.indicatorMounted)
   return (

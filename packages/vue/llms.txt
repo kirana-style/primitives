@@ -8,7 +8,7 @@ This file describes the version it ships with. What changed in each release, the
 
 ## Install and entries
 
-Install `@kirana-ui/vue`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/vue/agent`, `@kirana-ui/vue/testing`), so nothing is imported from a package the project did not install.
+Install `@kirana-ui/vue`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/vue/agent`, `@kirana-ui/vue/testing`), so nothing is imported from a package the project did not install. It runs on the project's own `vue` ^3.5.0.
 
 Its entries: an entry per component (`@kirana-ui/vue/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/vue` (every component at once, for a bundler that shakes trees), and `@kirana-ui/vue/runtime`, `@kirana-ui/vue/agent`, `@kirana-ui/vue/testing`, `@kirana-ui/vue/primitive` and `@kirana-ui/vue/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/vue/direction`, `PortalProvider` in the package root.
 

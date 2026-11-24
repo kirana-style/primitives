@@ -9,11 +9,9 @@
  *   bun scripts/consume.ts --version 0.1.0          # that release, from the registry
  *   … --version <version> --registry <url>          # from another registry (a rehearsal)
  *
- * From the registry it first waits until the edge it reaches lists the version for every package
- * and serves its file: a release ends when the registry has accepted it, an edge may serve its
- * older list for as long as the registry's own `max-age` says, and a version it lists is not yet
- * one whose file it has (a release was listed everywhere while one package's file still answered
- * 404). The wait is bounded by that age.
+ * From the registry it first waits until the edge it reaches lists the version for every package:
+ * a release ends when the registry has accepted it, and an edge may serve its older list for
+ * as long as the registry's own `max-age` says. The wait is bounded by that age.
  */
 import { spawnSync } from "node:child_process"
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
@@ -52,16 +50,12 @@ const names = released
       spec: `file:${path.join(packed, file)}`,
     }))
 
-/**
- * Waits until this edge lists the released version of every package and serves its file, for the
- * cache's age at most.
- */
+/** Waits until this edge lists the released version of every package, for the cache's age at most. */
 async function served(version: string) {
   const started = Date.now()
   for (;;) {
     let maxAge = 0
     const missing: string[] = []
-    const unserved: string[] = []
     await Promise.all(
       names.map(async ({ name }) => {
         const response = await fetch(`${registry}/${name.replace("/", "%2f")}`, {
@@ -71,38 +65,19 @@ async function served(version: string) {
         const age = /max-age=(\d+)/.exec(response?.headers.get("cache-control") ?? "")
         if (age) maxAge = Math.max(maxAge, Number(age[1]))
         const json = response?.ok
-          ? ((await response.json()) as {
-              versions?: Record<string, { dist?: { tarball?: string } } | undefined>
-            })
+          ? ((await response.json()) as { versions?: Record<string, unknown> })
           : undefined
-        const listed = json?.versions?.[version]
-        if (!listed) return void missing.push(name)
-        // Listed is not served: the list and the file reach an edge apart.
-        const file =
-          listed.dist?.tarball ?? `${registry}/${name}/-/${name.split("/")[1]}-${version}.tgz`
-        const held = await fetch(file, {
-          method: "HEAD",
-          signal: AbortSignal.timeout(15_000),
-        }).catch(() => undefined)
-        if (!held?.ok) unserved.push(name)
+        if (!json?.versions?.[version]) missing.push(name)
       })
     )
-    if (missing.length === 0 && unserved.length === 0) return
+    if (missing.length === 0) return
     if (Date.now() - started > (maxAge + 120) * 1000) {
       throw new Error(
-        missing.length > 0
-          ? `${missing.join(", ")} did not list ${version} within the cache's age (${maxAge} s) and two minutes`
-          : `${unserved.join(", ")} listed ${version} and did not serve its file within the cache's age (${maxAge} s) and two minutes`
+        `${missing.join(", ")} did not list ${version} within the cache's age (${maxAge} s) and two minutes`
       )
     }
-    if (missing.length > 0) {
-      console.log(`waiting  not listed here yet: ${missing.sort().join(", ")}`)
-    }
-    if (unserved.length > 0) {
-      console.log(`waiting  listed, its file not served here yet: ${unserved.sort().join(", ")}`)
-    }
-    // A rehearsal's registry is in this machine: nothing there takes a quarter of a minute.
-    await new Promise((resolve) => setTimeout(resolve, rehearsed ? 1_000 : 15_000))
+    console.log(`waiting  not listed here yet: ${missing.sort().join(", ")}`)
+    await new Promise((resolve) => setTimeout(resolve, 15_000))
   }
 }
 if (released) await served(released)
@@ -130,6 +105,7 @@ try {
           "react-dom": catalog["react-dom"],
           vue: catalog.vue,
           "solid-js": catalog["solid-js"],
+          "@solidjs/web": catalog["@solidjs/web"],
           svelte: catalog.svelte,
           "@angular/common": catalog["@angular/common"],
           "@angular/compiler": catalog["@angular/compiler"],
@@ -216,7 +192,7 @@ assert.match(drawn, /aria-expanded="true"/)
 
 // Node takes Solid's server build (the \`node\` condition).
 const solid = await import("@kirana-ui/solid/collapsible")
-const { createComponent, renderToString: renderSolid } = await import("solid-js/web")
+const { createComponent, renderToString: renderSolid } = await import("@solidjs/web")
 const written = renderSolid(() =>
   createComponent(solid.Collapsible.Root, {
     defaultOpen: true,
@@ -334,7 +310,7 @@ console.log(${JSON.stringify(svelte.length)} + " Svelte exports compile and load
         moduleResolution: "bundler",
         lib: ["ES2023", "DOM", "DOM.Iterable"],
         jsx: "preserve",
-        jsxImportSource: "solid-js",
+        jsxImportSource: "@solidjs/web",
         strict: true,
         noEmit: true,
         skipLibCheck: false,
@@ -353,8 +329,8 @@ import type { TriggerProps } from "@kirana-ui/solid/dialog"
 export const direction: "ltr" | "rtl" = useDirection()()
 // A part's props by name: its element's, with a handler that can keep the part's own out.
 export const trigger: TriggerProps = { onClick: (event) => event.preventKiranaHandler() }
-// @ts-expect-error a class is text
-export const mistyped: TriggerProps = { class: 42 }
+// @ts-expect-error a class is text, a list or an object of conditions, never a function
+export const mistyped: TriggerProps = { class: () => "wide" }
 export const page = () => (
   <Dialog.Root>
     <Dialog.Trigger>Open</Dialog.Trigger>

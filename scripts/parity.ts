@@ -14,11 +14,11 @@ import { declaredIn, entries as entriesOf, exportsOf, programOf, reference } fro
 const ROOT = join(import.meta.dirname, "..")
 type Shape = Record<string, string[]>
 
-// Solid's JSX is compiled by Solid's own Babel preset, which its Vite plugin brings: the same
-// transform here, so its modules load and their exports can be read.
-const solid = createRequire(
-  createRequire(join(ROOT, "fixtures/solid/package.json")).resolve("vite-plugin-solid")
-)
+// Solid's JSX is compiled by Solid's own compiler, as a project's build would: the same
+// transform here, for a server, so its modules load and their exports can be read.
+const compiler = createRequire(join(ROOT, "packages/solid/package.json"))("@solidjs/compiler") as {
+  transform(code: string, options: object): { code: string }
+}
 // The workspace's TypeScript 7 has no JavaScript API; the Angular fixture's own TypeScript has.
 const typescript = createRequire(join(ROOT, "fixtures/angular/package.json"))("typescript") as {
   transpileModule(
@@ -26,25 +26,20 @@ const typescript = createRequire(join(ROOT, "fixtures/angular/package.json"))("t
     options: { compilerOptions: Record<string, unknown> }
   ): { outputText: string }
 }
-const babel = solid("@babel/core") as {
-  transformAsync(code: string, options: object): Promise<{ code: string } | null>
-}
 Bun.plugin({
   name: "solid-jsx",
   setup(build) {
-    build.onLoad({ filter: /\/packages\/solid\/src\/.*\.tsx$/ }, async (args) => {
-      // TypeScript takes the types off and leaves the JSX for Solid's preset.
+    build.onLoad({ filter: /\/packages\/solid\/src\/.*\.tsx$/ }, (args) => {
+      // TypeScript takes the types off and leaves the JSX for Solid's compiler.
       const plain = typescript.transpileModule(readFileSync(args.path, "utf8"), {
         // Its enums by their numbers: JSX preserved, ES2022, ES modules.
         compilerOptions: { jsx: 1, target: 9, module: 99, verbatimModuleSyntax: true },
       }).outputText
-      const built = await babel.transformAsync(plain, {
+      const built = compiler.transform(plain, {
         filename: args.path.replace(/\.tsx$/, ".jsx"),
-        babelrc: false,
-        configFile: false,
-        presets: [[solid.resolve("babel-preset-solid"), { generate: "ssr" }]],
+        generate: "ssr",
       })
-      return { contents: built!.code, loader: "js" }
+      return { contents: built.code, loader: "js" }
     })
   },
 })

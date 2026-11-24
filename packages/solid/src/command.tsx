@@ -2,16 +2,16 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createCommand } from "@kirana-ui/core/command"
 import type { CommandGroup, CommandProps, Command as Controller } from "@kirana-ui/core/command"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, toSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["command"]
 
-const Context = createContext<Controller>()
-const GroupContext = createContext<CommandGroup>()
+const Context = createContext<Controller | null>(null)
+const GroupContext = createContext<CommandGroup | null>(null)
 
 function useCommand(): Controller {
   const made = useContext(Context)
@@ -38,7 +38,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "inputValue",
     "defaultInputValue",
     "onInputValueChange",
@@ -63,9 +63,9 @@ function Root(props: RootProps): JSX.Element {
     onSelect: (value: string, details: ChangeDetails) => local.onSelect?.(value, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -108,24 +108,24 @@ function Empty(props: EmptyProps): JSX.Element {
 
 /** Items under a `<Command.GroupHeading>`. Hidden while none of them is shown. */
 function Group(props: GroupProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["id"])
+  const [local, rest] = split(props, ["id"])
   const generated = createUniqueId()
   const group = useCommand().group(untrack(() => local.id) ?? generated)
   return (
-    <GroupContext.Provider value={group}>
+    <GroupContext value={group}>
       <Part of={group.part} tag="div" {...rest} />
-    </GroupContext.Provider>
+    </GroupContext>
   )
 }
 
 function GroupHeading(props: GroupHeadingProps): JSX.Element {
-  const part = useContext(GroupContext)?.heading ?? useCommand().heading
+  const part = (useContext(GroupContext) ?? undefined)?.heading ?? useCommand().heading
   return <Part of={part} tag="div" {...props} />
 }
 
 /** `label` is what is filtered, the item's text when left out; `keywords` are other words for it. */
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "label", "keywords", "id"])
+  const [local, rest] = split(props, ["value", "disabled", "label", "keywords", "id"])
   const generated = createUniqueId()
   const options = toSignal(() => ({
     disabled: local.disabled,
@@ -136,14 +136,14 @@ function Item(props: ItemProps): JSX.Element {
   const part = useCommand().item(
     untrack(() => local.value),
     () => options.get(),
-    useContext(GroupContext)
+    useContext(GroupContext) ?? undefined
   )
   return <Part of={part} tag="div" {...rest} />
 }
 
 /** A line between groups: gone while something is typed, unless `alwaysRender`. */
 function Separator(props: SeparatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["alwaysRender"])
+  const [local, rest] = split(props, ["alwaysRender"])
   const options = toSignal(() => ({ alwaysRender: local.alwaysRender }))
   const part = useCommand().separator(() => options.get().alwaysRender)
   return <Part of={part} tag="div" {...rest} />

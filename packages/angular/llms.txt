@@ -8,7 +8,7 @@ This file describes the version it ships with. What changed in each release, the
 
 ## Install and entries
 
-Install `@kirana-ui/angular`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/angular/agent`, `@kirana-ui/angular/testing`), so nothing is imported from a package the project did not install.
+Install `@kirana-ui/angular`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/angular/agent`, `@kirana-ui/angular/testing`), so nothing is imported from a package the project did not install. It runs on the project's own `@angular/core` >=20.0.0.
 
 Its entries: `@kirana-ui/angular` (every directive, and what a directive of your own is made with), `@kirana-ui/angular/agent` and `@kirana-ui/angular/testing`. There is no entry per component: Angular's packager writes one module, which a project's build takes apart.
 

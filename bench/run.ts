@@ -1,7 +1,8 @@
 /**
  * The bench: each fixture's bench page mounts N closed collapsibles (a root, a trigger, a panel
  * that is not in the page), with this library and with the one its framework is measured against
- * (Base UI on React, Ark UI on Vue, Svelte and Solid, ng-primitives on Angular), and reports the time to mount,
+ * (Base UI on React, Ark UI on Vue and Svelte, ng-primitives on Angular; Solid is measured alone,
+ * as Ark UI has no release for Solid 2), and reports the time to mount,
  * the memory the mounted parts hold, the time to open a hundred of them and the time to unmount.
  *
  *   bun bench/run.ts [adapter…] [--n 1000,10000] [--runs 5]
@@ -16,11 +17,11 @@ import { chromium } from "playwright"
 
 const ROOT = join(import.meta.dirname, "..")
 const OUT = join(import.meta.dirname, "out")
-const OTHER: Record<string, string> = {
+const OTHER: Record<string, string | null> = {
   react: "Base UI",
   vue: "Ark UI",
   svelte: "Ark UI",
-  solid: "Ark UI",
+  solid: null,
   angular: "ng-primitives",
 }
 
@@ -54,7 +55,7 @@ try {
     })
     try {
       for (const n of sizes) {
-        for (const lib of ["kirana", "other"]) {
+        for (const lib of OTHER[adapter] ? ["kirana", "other"] : ["kirana"]) {
           const samples = {
             mount: [] as number[],
             heap: [] as number[],

@@ -3,26 +3,16 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createTabs } from "@kirana-ui/core/tabs"
 import type { Tabs as Controller, TabsProps } from "@kirana-ui/core/tabs"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  Show,
-  createComputed,
-  createContext,
-  createUniqueId,
-  onCleanup,
-  onMount,
-  splitProps,
-  untrack,
-  useContext,
-} from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, toSignal, split, follow } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["tabs"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useTabs(): Controller {
   const made = useContext(Context)
@@ -38,7 +28,7 @@ export type RootProps<Value = unknown> = PartComponentProps<
 >
 
 function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -46,7 +36,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createTabs<Value>, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
@@ -55,9 +45,9 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     onValueChange: (value: Value, details: ChangeDetails) => local.onValueChange?.(value, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -68,9 +58,12 @@ export type ListProps = PartComponentProps<
 >
 
 function List(props: ListProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["activateOnFocus", "loop"])
+  const [local, rest] = split(props, ["activateOnFocus", "loop"])
   const made = useTabs()
-  createComputed(() => made.listOptions.set(defined({ ...local })))
+  follow(
+    () => defined({ ...local }),
+    (options) => made.listOptions.set(options)
+  )
   return <Part of={made.list} tag="div" {...rest} />
 }
 
@@ -81,7 +74,7 @@ export type TabProps = PartComponentProps<
 >
 
 function Tab(props: TabProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled"])
+  const [local, rest] = split(props, ["value", "disabled"])
   const options = toSignal(() => ({ disabled: local.disabled }))
   // A tab is its value for as long as it is in the page.
   const part = useTabs().tab(
@@ -103,9 +96,9 @@ export type PanelProps = PartComponentProps<
 
 /** `keepMounted` keeps the panel in the page, `hidden`, while its tab is not the active one. */
 function Panel(props: PanelProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "keepMounted"])
+  const [local, rest] = split(props, ["value", "keepMounted"])
   const panel = useTabs().panel(untrack(() => local.value))
-  onMount(() => onCleanup(panel.mount()))
+  onSettled(() => panel.mount())
   const mounted = fromSignal(panel.mounted)
   return (
     <Show when={mounted() || local.keepMounted}>

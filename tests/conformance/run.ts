@@ -269,16 +269,10 @@ function serve(adapter: string) {
 
 /** The page as a stylesheet, a test or a tool sees it, without what only a framework writes. */
 function serialize(): string {
-  // `data-hk` is Solid's hydration key, on what a server rendered; `ngh`, `ng-server-context` and
-  // `jsaction` are Angular's (the last marks a listener whose events it replays after hydration).
-  const SKIP = new Set([
-    "ng-version",
-    "data-testid",
-    "data-hk",
-    "ngh",
-    "ng-server-context",
-    "jsaction",
-  ])
+  // `_hk` is Solid's hydration key, on what a server rendered; `ngh`,
+  // `ng-server-context` and `jsaction` are Angular's (the last marks a listener whose events it
+  // replays after hydration).
+  const SKIP = new Set(["ng-version", "data-testid", "_hk", "ngh", "ng-server-context", "jsaction"])
   const lines: string[] = []
   // A page whose ids are generated: each framework writes its own (`_r_1_`, `v-0`, `kui-3`), so
   // an id is named by where it first stands in the page, and one that is not in the page (a
@@ -4670,7 +4664,7 @@ const second: Record<string, (run: Run) => Promise<void>> = {
   },
 }
 
-const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal", "data-hk"])
+const DECLARED = new Set<string>(["data-testid", "data-fixture", "data-kirana-portal"])
 const VARIABLES = new Set<string>()
 // States whose value is the caller's own: a row's place, the kind a toast was added as.
 const FREE = ["data-index", "data-type"]

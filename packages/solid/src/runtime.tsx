@@ -9,34 +9,61 @@ import type {
 import {
   Show,
   children,
-  createComputed,
   createContext,
   createRenderEffect,
   createMemo,
   createSignal,
   getOwner,
+  omit,
   onCleanup,
-  onMount,
+  onSettled,
   runWithOwner,
-  splitProps,
   untrack,
   useContext,
 } from "solid-js"
-import type { JSX } from "solid-js"
-import { Dynamic, Portal as SolidPortal, isServer } from "solid-js/web"
+import { Dynamic, Portal as SolidPortal, isServer } from "@solidjs/web"
+import type { JSX } from "@solidjs/web"
 
 /** A core signal as a Solid accessor: tracked by whatever calls it. */
 export function fromSignal<T>(source: ReadonlySignal<T>): () => T {
-  const [read, write] = createSignal(source.peek(), { equals: false })
-  if (!isServer) onCleanup(source.subscribe(() => write(() => source.peek())))
-  return read
+  // The core changes inside Solid's own work too (a prop it hears, a mount): the write is this
+  // bridge's, so it is allowed wherever it happens.
+  // Boxed: Solid takes a function given to a signal as a computation.
+  const [read, write] = createSignal({ value: source.peek() }, { equals: false, ownedWrite: true })
+  if (!isServer) onCleanup(source.subscribe(() => write({ value: source.peek() })))
+  return () => read().value
+}
+
+/** Hands `write` each value of `read`, before the page's own bindings run. */
+export function follow<T>(read: () => T, write: (value: T) => void): void {
+  createRenderEffect(read, (value) => {
+    write(value)
+  })
 }
 
 /** A core signal that follows Solid state: the core hears a changed prop before anything renders. */
 export function toSignal<T extends Record<string, unknown>>(read: () => T): ReadonlySignal<T> {
   const source = signal(untrack(read), sameProps as (a: T, b: T) => boolean)
-  createComputed(() => source.set(read()))
+  follow(read, (value) => source.set(value))
   return source
+}
+
+/**
+ * `keys` of a component's props, and the rest of them: both follow the props as they change,
+ * and neither reads a prop before it is asked for.
+ */
+export function split<T extends object, K extends keyof T>(
+  props: T,
+  keys: readonly K[]
+): [Pick<T, K>, Omit<T, K>] {
+  const local = {} as Pick<T, K>
+  for (const key of keys) {
+    Object.defineProperty(local, key, { get: () => props[key], enumerable: true })
+  }
+  return [
+    local,
+    omit(props as Record<PropertyKey, unknown>, ...(keys as readonly PropertyKey[])) as Omit<T, K>,
+  ]
 }
 
 /** A component's controller, made once, following its props. */
@@ -45,7 +72,7 @@ export function controller<P extends Record<string, unknown>, C extends { mount(
   read: () => P
 ): C {
   const made = create(toSignal(read))
-  onMount(() => onCleanup(made.mount()))
+  onSettled(() => made.mount())
   return made
 }
 
@@ -126,6 +153,11 @@ type Drawn = {
   [attribute: string]: unknown
 }
 
+function handOver(ref: unknown, element: HTMLElement): void {
+  if (typeof ref === "function") (ref as (element: HTMLElement) => void)(element)
+  else if (Array.isArray(ref)) for (const each of ref) handOver(each, element)
+}
+
 /**
  * The element of a part (`of`), or the caller's through `render`, with the caller's props merged under the
  * part's and the part's DOM work attached once the element is in the page. What the part holds
@@ -134,27 +166,41 @@ type Drawn = {
  * keeps the native input a form and a label reach.
  */
 export function Part(props: { of: CorePart; tag: string } & Record<string, unknown>): JSX.Element {
-  const [local, caller] = splitProps(props as Drawn, ["of", "tag", "as", "render", "children"])
+  const [local, caller] = split(props as Drawn, ["of", "tag", "as", "render", "children"])
   const own = fromSignal(untrack(() => local.of).props)
   // Solid hands over an element before it is in the page: the part's DOM work (focus, measures,
-  // the starting style) waits for the mount that follows. It belongs to this component, not to
-  // the effect that spreads the props (which hands the ref over again, and is torn down, each time
-  // they change): attached once per element, detached when the component goes.
+  // the starting style) waits until the page has settled. It belongs to this component: attached
+  // once per element, detached when the component goes. The wait is made here, as the component
+  // is drawn, never in the ref: a server hands no element over, and a computation the client
+  // alone made would shift the keys hydration finds the server's elements by.
   const owner = getOwner()
+  const part = untrack(() => local.of)
+  const detach: (() => void)[] = []
   let attached: HTMLElement | undefined
+  let settled = false
+  const begin = (element: HTMLElement) => {
+    untype(element)
+    detach.push(part.attach(element))
+  }
+  onSettled(() => {
+    settled = true
+    if (attached) begin(attached)
+    return () => {
+      for (const each of detach.splice(0)) each()
+    }
+  })
   const attach = (element: HTMLElement) => {
     if (element === attached) return
     attached = element
-    const part = untrack(() => local.of)
-    runWithOwner(owner, () =>
-      onMount(() => {
-        untype(element)
-        onCleanup(part.attach(element))
-      })
+    // Another element once the page is up (`as` or `render` changed): it waits for the next
+    // settling, when it is in the page.
+    if (settled) runWithOwner(owner, () => onSettled(() => begin(element)))
+    // The caller's own `ref`: a function, or several in an array (Solid hands a component a
+    // function, whatever was written).
+    handOver(
+      untrack(() => caller.ref),
+      element
     )
-    // The caller's own `ref` (Solid hands a component a function, whatever was written).
-    const theirs = untrack(() => caller.ref)
-    if (typeof theirs === "function") (theirs as (element: HTMLElement) => void)(element)
   }
   const merged = createMemo(() => {
     const theirs: PartProps = {}
@@ -167,6 +213,8 @@ export function Part(props: { of: CorePart; tag: string } & Record<string, unkno
   return (
     <Show
       when={local.render}
+      // Keyed: another function draws the part afresh.
+      keyed
       fallback={
         <Dynamic component={local.as ?? local.tag} {...merged()}>
           {local.children}
@@ -178,31 +226,33 @@ export function Part(props: { of: CorePart; tag: string } & Record<string, unkno
         // the element keeps them.
         const held = children(() => local.children)
         const handed = createMemo(() => ({ ...merged(), children: held() }))
-        return render()(handed, state as () => never)
+        return render(handed, state as () => never)
       }}
     </Show>
   )
 }
 
 /**
- * Its children as children of `target`, an element drawn elsewhere: with no element of its own
- * around them (Solid's `Portal` adds one), so the page is the same as on the other adapters.
+ * Its children as children of `target`, an element drawn elsewhere: with nothing of its own
+ * around them (Solid's `Portal` adds marks), so the page is the same as on the other adapters.
  */
 export function Into(props: { target: HTMLElement; children?: JSX.Element }): JSX.Element {
   const resolved = children(() => props.children)
   // Before any mount work of the children: their elements are in the page by then.
-  createRenderEffect(() => {
-    const target = props.target
-    const nodes = resolved.toArray().filter((each): each is Node => each instanceof Node)
-    for (const node of nodes) target.appendChild(node)
-    onCleanup(() => {
-      for (const node of nodes) if (node.parentNode === target) target.removeChild(node)
-    })
-  })
+  createRenderEffect(
+    () => [props.target, resolved.toArray()] as const,
+    ([target, all]) => {
+      const nodes = all.filter((each): each is Node => each instanceof Node)
+      for (const node of nodes) target.appendChild(node)
+      return () => {
+        for (const node of nodes) if (node.parentNode === target) target.removeChild(node)
+      }
+    }
+  )
   return null
 }
 
-const PortalContainer = createContext<() => HTMLElement | null | undefined>()
+const PortalContainer = createContext<(() => HTMLElement | null | undefined) | null>(null)
 
 /** What `PortalProvider` takes. */
 export interface PortalProviderProps {
@@ -216,11 +266,7 @@ export interface PortalProviderProps {
  * the page (a shadow root's host, a full-screen element) in place of `<body>`.
  */
 export function PortalProvider(props: PortalProviderProps): JSX.Element {
-  return (
-    <PortalContainer.Provider value={() => props.container}>
-      {props.children}
-    </PortalContainer.Provider>
-  )
+  return <PortalContainer value={() => props.container}>{props.children}</PortalContainer>
 }
 
 /** Its children in a container at the end of the page, while `mounted`. */
@@ -229,11 +275,9 @@ export function Portal(props: { mounted: ReadonlySignal<boolean>; children?: JSX
   const container = useContext(PortalContainer)
   return (
     <Show when={shown()}>
-      <SolidPortal
-        mount={container?.() ?? undefined}
-        ref={(outlet) => outlet.setAttribute("data-kirana-portal", "")}
-      >
-        {props.children}
+      {/* Solid's portal draws no element of its own: the outlet is the same as on the others. */}
+      <SolidPortal mount={container?.() ?? undefined}>
+        <div data-kirana-portal="">{props.children}</div>
       </SolidPortal>
     </Show>
   )

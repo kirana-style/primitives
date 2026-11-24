@@ -3,16 +3,16 @@ import type { ChangeDetails, Orientation, StateOf } from "@kirana-ui/core"
 import { createCarousel } from "@kirana-ui/core/carousel"
 import type { Carousel as Controller } from "@kirana-ui/core/carousel"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["carousel"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useCarousel(): Controller {
   const made = useContext(Context)
@@ -34,7 +34,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "index",
     "defaultIndex",
     "onIndexChange",
@@ -43,7 +43,7 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createCarousel, { direction }), () => ({
     id: local.id ?? generated,
     index: local.index,
@@ -53,9 +53,9 @@ function Root(props: RootProps): JSX.Element {
     onIndexChange: (index: number, details: ChangeDetails) => local.onIndexChange?.(index, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -71,7 +71,7 @@ export type IndicatorProps = PartComponentProps<
 
 const Viewport = (props: ViewportProps) => <Part of={useCarousel().viewport} tag="div" {...props} />
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["index"])
+  const [local, rest] = split(props, ["index"])
   // A slide is its place for as long as it is in the page.
   const part = useCarousel().item(local.index)
   return <Part of={part} tag="div" {...rest} />
@@ -82,7 +82,7 @@ const Previous = (props: PreviousProps) => (
 const Next = (props: NextProps) => <Part of={useCarousel().next} tag="button" {...props} />
 
 function Indicator(props: IndicatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["index"])
+  const [local, rest] = split(props, ["index"])
   // A button is its slide for as long as it is in the page.
   const part = useCarousel().indicator(local.index)
   return <Part of={part} tag="button" {...rest} />

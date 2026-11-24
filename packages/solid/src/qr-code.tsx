@@ -2,15 +2,15 @@ import type { StateOf } from "@kirana-ui/core"
 import { createQrCode } from "@kirana-ui/core/qr-code"
 import type { QrCode as Controller, QrCorrection } from "@kirana-ui/core/qr-code"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["qrCode"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useQrCode(): Controller {
   const made = useContext(Context)
@@ -25,7 +25,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "correction", "id"])
+  const [local, rest] = split(props, ["value", "correction", "id"])
   const generated = createUniqueId()
   const made = controller(createQrCode, () => ({
     id: local.id ?? generated,
@@ -33,9 +33,9 @@ function Root(props: RootProps): JSX.Element {
     correction: local.correction,
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 

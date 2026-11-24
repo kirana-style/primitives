@@ -7,26 +7,17 @@ import type {
   Accordion as Controller,
 } from "@kirana-ui/core/accordion"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  Show,
-  createContext,
-  createUniqueId,
-  onCleanup,
-  onMount,
-  splitProps,
-  untrack,
-  useContext,
-} from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, toSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["accordion"]
 
-const Context = createContext<Controller>()
-const ItemContext = createContext<AccordionItem>()
+const Context = createContext<Controller | null>(null)
+const ItemContext = createContext<AccordionItem | null>(null)
 
 function useAccordion(): Controller {
   const made = useContext(Context)
@@ -48,7 +39,7 @@ export type RootProps<Value = unknown> = PartComponentProps<
 >
 
 function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -59,7 +50,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createAccordion<Value>, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
@@ -72,9 +63,9 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
       local.onValueChange?.(value, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -86,7 +77,7 @@ export type ItemProps = PartComponentProps<
 
 /** `value` tells this item from the others; an item that is given none makes its own. */
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled"])
+  const [local, rest] = split(props, ["value", "disabled"])
   const options = toSignal(() => ({ disabled: local.disabled }))
   const generated = createUniqueId()
   // An item is its value for as long as it is in the page.
@@ -94,11 +85,11 @@ function Item(props: ItemProps): JSX.Element {
   const item = useAccordion().item(value === undefined ? generated : value, () =>
     defined(options.get())
   )
-  onMount(() => onCleanup(item.mount()))
+  onSettled(() => item.mount())
   return (
-    <ItemContext.Provider value={item}>
+    <ItemContext value={item}>
       <Part of={item.root} tag="div" {...rest} />
-    </ItemContext.Provider>
+    </ItemContext>
   )
 }
 
@@ -116,7 +107,7 @@ export type PanelProps = PartComponentProps<
 
 /** `keepMounted` keeps the closed panel in the page, `hidden`. */
 function Panel(props: PanelProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
+  const [local, rest] = split(props, ["keepMounted"])
   const item = useItem()
   const mounted = fromSignal(item.mounted)
   return (

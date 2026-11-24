@@ -258,10 +258,9 @@ async function solid(): Promise<string> {
       options: { compilerOptions: Record<string, unknown>; fileName: string }
     ): { outputText: string }
   }
-  const babel = need("@babel/core") as {
-    transformAsync(code: string, options: object): Promise<{ code: string } | null>
+  const compiler = need("@solidjs/compiler") as {
+    transform(code: string, options: object): { code: string }
   }
-  const preset = need.resolve("babel-preset-solid")
   const write = (file: string, text: string) => {
     mkdirSync(path.dirname(file), { recursive: true })
     writeFileSync(file, text)
@@ -287,12 +286,7 @@ async function solid(): Promise<string> {
       ["server", "ssr"],
     ] as const) {
       const built = jsx
-        ? (await babel.transformAsync(code, {
-            filename: emitted,
-            babelrc: false,
-            configFile: false,
-            presets: [[preset, { generate, hydratable: true }]],
-          }))!.code
+        ? compiler.transform(code, { filename: emitted, generate, hydratable: true }).code
         : code
       write(
         path.join(stage, directory, emitted.replace(/\.jsx$/, ".js")),

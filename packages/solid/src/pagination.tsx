@@ -6,15 +6,15 @@ import type {
   PaginationProps,
 } from "@kirana-ui/core/pagination"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { For, createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { For, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["pagination"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function usePagination(): Controller {
   const made = useContext(Context)
@@ -29,7 +29,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "page",
     "defaultPage",
     "onPageChange",
@@ -53,9 +53,9 @@ function Root(props: RootProps): JSX.Element {
     onPageChange: (page: number, details: ChangeDetails) => local.onPageChange?.(page, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="nav" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -67,13 +67,14 @@ function Items(props: ItemsProps): JSX.Element {
   // By key: a page that stays in the row keeps its element.
   const keys = () => entries().map((each) => each.key)
   const of = (key: string) => entries().find((each) => each.key === key)!
-  return <For each={keys()}>{(key) => props.children(of(key))}</For>
+  // Each key's piece once, as it comes into the row.
+  return <For each={keys()}>{(key) => props.children(untrack(() => of(key)))}</For>
 }
 
 export type ItemProps = PartComponentProps<"button", StateOf<Parts["item"]>, { page: number }>
 
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["page"])
+  const [local, rest] = split(props, ["page"])
   const made = usePagination()
   return <Part of={made.item(local.page)} tag="button" {...rest} />
 }

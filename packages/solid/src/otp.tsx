@@ -2,16 +2,16 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp as Controller, OtpProps, OtpSlot } from "@kirana-ui/core/otp"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["otp"]
 
-const Context = createContext<Controller>()
-const SlotContext = createContext<OtpSlot>()
+const Context = createContext<Controller | null>(null)
+const SlotContext = createContext<OtpSlot | null>(null)
 
 function useOtp(): Controller {
   const made = useContext(Context)
@@ -38,7 +38,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "length",
     "value",
     "defaultValue",
@@ -66,9 +66,9 @@ function Root(props: RootProps): JSX.Element {
     onComplete: (value: string) => local.onComplete?.(value),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -76,16 +76,16 @@ export type SlotProps = PartComponentProps<"div", StateOf<Parts["slot"]>, { inde
 
 /** One cell: it shows its character, then whatever it is given (a caret). */
 function Slot(props: SlotProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["index", "children"])
+  const [local, rest] = split(props, ["index", "children"])
   const slot = useOtp().slot(untrack(() => local.index))
   const char = fromSignal(slot.char)
   return (
-    <SlotContext.Provider value={slot}>
+    <SlotContext value={slot}>
       <Part of={slot.part} tag="div" {...rest}>
         {char()}
         {local.children}
       </Part>
-    </SlotContext.Provider>
+    </SlotContext>
   )
 }
 

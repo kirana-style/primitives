@@ -287,7 +287,7 @@ note. Three places hold them:
 
 - **One popup for every item.** Each item's content is drawn in a viewport they share, as a
   child of it with nothing around it (React's portal, Vue's teleport, a mount in Svelte, the
-  nodes themselves in Solid, whose own portal adds an element, and in Angular). The popup is
+  nodes themselves in Solid, whose own portal adds marks around them, and in Angular). The popup is
   placed against the open item's trigger and given the open content's size
   (`--popup-width`, `--popup-height`).
 - **Content drawn elsewhere is still next in Tab's order.** Tab on an open trigger goes to
@@ -405,6 +405,26 @@ note. Three places hold them:
   drawn as an `input` or an `img` with Svelte's warnings as failures. React throws on a void
   element with children, Solid's server leaves them out and Vue passes none, so the fault is
   Svelte's alone.
+- **Solid hydrates by keys made from its owner tree**, so the client must make exactly the
+  computations the server made, in the same order. A ref runs on the client alone: a wait for
+  the page to settle, made inside a part's ref, shifted every key after it, and most parts of
+  the hydrated page were drawn as new elements that never reached it, while the server's
+  stayed with no listener and no attach. The wait is made as the part's component is drawn;
+  only an element handed over once the page is up makes its own. Held by the conformance run
+  on `solid+ssr`: the panel of `collapsible` that is open from the start has its size written
+  only once it is attached.
+- **Solid 2 shows a write on the next microtask**, and refuses a write inside its own
+  computations. The core's signals stay the source of truth: the adapter's bridge signal is
+  boxed (Solid takes a function given to a signal as a computation) and allowed to be written
+  wherever the core changes. A context with no provider throws, so the adapter's contexts start
+  at `null`.
+- **A list an adapter draws keeps an entry by what it is, not by the object.** Solid 1 drew a
+  caller's held month in the same turn, so a calendar's weeks kept by reference were already
+  the new month's when focus moved; Solid 2 draws it a microtask later, and the day focus had
+  just moved to (the next month's first day, shown outside the old month) was drawn afresh and
+  focus fell to the page. `Calendar.Weeks` keeps a week by its first day, as the other adapters
+  key it, and hands its child days that read the week now there. Held by the conformance run's
+  `calendars` scenario ("and focus follows into it").
 
 ## Composition
 
@@ -494,7 +514,7 @@ note. Three places hold them:
   vocabulary to the name its attribute reads as.
 - **A design system's own element is composed by the same rule, on every framework.** React
   had `useRender` and Vue `Primitive`; on Solid and Svelte a badge drawn as a link had to
-  write its own `render` or `child` and its own merge, where solid-js's `mergeProps` and a
+  write its own `render` or `child` and its own merge, where solid-js's `merge` and a
   Svelte spread let a later class replace an earlier one and run one handler of two. Each
   now has `Primitive` and `mergeProps` (`@kirana-ui/solid/primitive`,
   `@kirana-ui/svelte/primitive`); Solid's `mergeProps` reads its sets as each prop is read,
@@ -1101,11 +1121,6 @@ note. Three places hold them:
   and "the release installs and works" passed on packages nobody had just published: a new
   type-checked line found declarations that were days old. `scripts/consume.ts` gives an
   install from a registry that is not npm's its own cache.
-- **A version a registry lists is not yet a version it serves.** The check after a release
-  waited until every package listed the new version, then installed, and the install met a 404
-  on one package's file: the list and the file reach an edge apart. The check now asks for each
-  file too before it installs, and the rehearsal's registry answers the first asking for a file
-  with a 404, which fails the earlier check (`scripts/consume.ts`, `scripts/rehearse.ts`).
 - **Stop what you start, by its process id.** A server left running holds a port and memory
   for the next run.
 - **A dependency change is checked in a fresh clone** with a frozen lockfile: links of removed

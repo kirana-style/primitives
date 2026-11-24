@@ -180,7 +180,7 @@ const DESIGN: Record<Adapter, string[]> = {
     `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`<Tooltip.Root delay={0} {...rest}>\` in its own component (its caller's \`delay\` in \`rest\` still wins).`,
   ],
   solid: [
-    "For an element of your own that takes `as` and `render` as a part does (a badge, a breadcrumb's link): `import { Primitive, mergeProps } from \"@kirana-ui/solid/primitive\"`. `<Primitive as=\"span\" {...mergeProps({ class: \"badge\" }, props)} state={{ active: active() }} />` draws that element (a `div` by default) with the attributes it is given; with `render={(props, state) => <a {...props()} />}` it draws the caller's own instead, given the props and the state as accessors, as a part's `render` is (`props().children` is what it holds). `state` is written on the element as `data-*` attributes, under the attributes given: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's, by a part's rule: a later set wins an attribute (one it leaves `undefined` stays), classes are joined, styles merged, the handlers of an event run in order and `event.preventKiranaHandler()` stops those after it, and every `ref` gets the element. It reads its sets when a prop is read, so the props stay reactive. It is not solid-js's `mergeProps`, where a later class replaces an earlier one: import one under another name where both are used. Its props type is `PrimitiveProps<Tag, State>`.",
+    "For an element of your own that takes `as` and `render` as a part does (a badge, a breadcrumb's link): `import { Primitive, mergeProps } from \"@kirana-ui/solid/primitive\"`. `<Primitive as=\"span\" {...mergeProps({ class: \"badge\" }, props)} state={{ active: active() }} />` draws that element (a `div` by default) with the attributes it is given; with `render={(props, state) => <a {...props()} />}` it draws the caller's own instead, given the props and the state as accessors, as a part's `render` is (`props().children` is what it holds). `state` is written on the element as `data-*` attributes, under the attributes given: `true` is present and empty, `false`, `null` and `undefined` are absent, anything else is its text, and `isActive` is `data-is-active`. `mergeProps(...props)` is for a component's own props and its caller's, by a part's rule: a later set wins an attribute (one it leaves `undefined` stays), classes are joined, styles merged, the handlers of an event run in order and `event.preventKiranaHandler()` stops those after it, and every `ref` gets the element. It reads its sets when a prop is read, so the props stay reactive. It is not solid-js's `merge`, where a later class replaces an earlier one. Its props type is `PrimitiveProps<Tag, State>`.",
     `${TOOLTIP_WAIT} A design system whose tooltips open at once passes \`delay\` on its own root: \`<Tooltip.Root delay={0} {...props} />\` in its own component (its caller's \`delay\` still wins).`,
   ],
   angular: [
@@ -1159,8 +1159,16 @@ function installSection(adapter: Adapter, own: AdapterReference): string[] {
   const all = [...own.exports.keys()]
   const component = all.filter((each) => own.components.has(pascal(each.slice(2))))
   const other = all.filter((each) => !component.includes(each) && each !== ".")
+  // The framework it runs on is the project's own: its versions, from the manifest.
+  const peers = Object.entries(
+    (
+      JSON.parse(read(`packages/${adapter}/package.json`)) as {
+        peerDependencies?: Record<string, string>
+      }
+    ).peerDependencies ?? {}
+  )
   const out = [
-    `Install \`@kirana-ui/${adapter}\`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (\`@kirana-ui/${adapter}/agent\`, \`@kirana-ui/${adapter}/testing\`), so nothing is imported from a package the project did not install.`,
+    `Install \`@kirana-ui/${adapter}\`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (\`@kirana-ui/${adapter}/agent\`, \`@kirana-ui/${adapter}/testing\`), so nothing is imported from a package the project did not install. It runs on the project's own ${list(peers.map(([name, range]) => `${code(name)} ${range}`))}.`,
     "",
   ]
   if (adapter === "angular") {

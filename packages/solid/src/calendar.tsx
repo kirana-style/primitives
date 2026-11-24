@@ -12,11 +12,11 @@ import type {
   CalendarWeekday,
 } from "@kirana-ui/core/calendar"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { For, Index, createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { For, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["calendar"]
@@ -25,7 +25,7 @@ type Parts = Vocabulary["calendar"]
  * The calendar its parts are inside. Exported for a component that is made of one (a date picker
  * provides its own to the calendar's parts).
  */
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 /** For a component made of this one's parts: a date picker. */
 export { Context as CalendarContext }
 
@@ -36,7 +36,7 @@ function useCalendar(): Controller {
 }
 
 /** The place of the month its parts are drawn in, inside `Calendar.Months`. */
-const MonthContext = createContext<number>()
+const MonthContext = createContext<number | null>(null)
 /** The month a part is drawn in: the one `Calendar.Months` gave, or the first. */
 const useMonth = () => useCalendar().monthAt(useContext(MonthContext) ?? 0)
 
@@ -48,7 +48,7 @@ export type RootProps<Mode extends CalendarMode = "single"> = PartComponentProps
 >
 
 function Root<Mode extends CalendarMode = "single">(props: RootProps<Mode>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -75,7 +75,7 @@ function Root<Mode extends CalendarMode = "single">(props: RootProps<Mode>): JSX
     "id",
   ])
   const generated = createUniqueId()
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createCalendar, { direction }), () => ({
     id: local.id ?? generated,
     // The core holds any mode's value; the caller's is its mode's.
@@ -105,9 +105,9 @@ function Root<Mode extends CalendarMode = "single">(props: RootProps<Mode>): JSX
     onMonthChange: (month: string, details: ChangeDetails) => local.onMonthChange?.(month, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -144,9 +144,9 @@ function Months(props: MonthsProps): JSX.Element {
   const months = fromSignal(useCalendar().months)
   // Kept by place: the month given reads the one now there, as props do.
   return (
-    <Index each={months()}>
+    <For each={months()} keyed={false}>
       {(month, index) => (
-        <MonthContext.Provider value={index}>
+        <MonthContext value={index}>
           {props.children({
             index,
             get month() {
@@ -162,9 +162,9 @@ function Months(props: MonthsProps): JSX.Element {
               return month().weeks
             },
           })}
-        </MonthContext.Provider>
+        </MonthContext>
       )}
-    </Index>
+    </For>
   )
 }
 
@@ -178,10 +178,33 @@ function Weekdays(props: WeekdaysProps): JSX.Element {
 
 export type WeeksProps = { children: (week: readonly CalendarDay[]) => JSX.Element }
 
-/** Draws its child once for each week of the month shown. */
+/**
+ * Draws its child once for each week of the month shown. A week is kept by its first day, as on
+ * the other adapters, and each of its days is kept by its place, reading the week now there: a
+ * day still shown when the month changes keeps its element, and focus, whether the list drawn
+ * inside is keyed or not.
+ */
 function Weeks(props: WeeksProps): JSX.Element {
   const weeks = fromSignal(useMonth().weeks)
-  return <For each={weeks()}>{(week) => props.children(week)}</For>
+  return (
+    <For each={weeks()} keyed={(week) => week[0]!.date}>
+      {(week) =>
+        props.children(
+          untrack(week).map((_, at) => ({
+            get date() {
+              return week()[at]!.date
+            },
+            get label() {
+              return week()[at]!.label
+            },
+            get outside() {
+              return week()[at]!.outside
+            },
+          }))
+        )
+      }
+    </For>
+  )
 }
 
 export type HeadCellProps = PartComponentProps<
@@ -191,7 +214,7 @@ export type HeadCellProps = PartComponentProps<
 >
 
 function HeadCell(props: HeadCellProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["weekday"])
+  const [local, rest] = split(props, ["weekday"])
   const part = useCalendar().headCell(local.weekday)
   return <Part of={part} tag="th" {...rest} />
 }
@@ -199,17 +222,17 @@ function HeadCell(props: HeadCellProps): JSX.Element {
 export type CellProps = PartComponentProps<"td", StateOf<Parts["cell"]>, { date: string }>
 
 function Cell(props: CellProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["date"])
+  const [local, rest] = split(props, ["date"])
   // A cell is its day for as long as it is in the page.
-  const part = useCalendar().cell(local.date, useContext(MonthContext))
+  const part = useCalendar().cell(local.date, useContext(MonthContext) ?? undefined)
   return <Part of={part} tag="td" {...rest} />
 }
 
 export type DayProps = PartComponentProps<"button", StateOf<Parts["day"]>, { date: string }>
 
 function Day(props: DayProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["date"])
-  const part = useCalendar().day(local.date, useContext(MonthContext))
+  const [local, rest] = split(props, ["date"])
+  const part = useCalendar().day(local.date, useContext(MonthContext) ?? undefined)
   return <Part of={part} tag="button" {...rest} />
 }
 

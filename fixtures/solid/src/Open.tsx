@@ -1,5 +1,5 @@
 import { Accordion, Checkbox, Collapsible, Field, Popover, Tabs } from "@kirana-ui/solid"
-import { For, createSignal, onMount } from "solid-js"
+import { For, createSignal, onSettled } from "solid-js"
 
 // The second page: no part is given an id, and a popover is open when the page is first drawn.
 // What a server and a client must agree on without help: an accordion's items are given no
@@ -10,7 +10,9 @@ export function Open() {
   const [late, setLate] = createSignal(false)
   const [unlocked, setUnlocked] = createSignal(false)
   const [nick, setNick] = createSignal("")
-  onMount(() => setLate(true))
+  onSettled(() => {
+    setLate(true)
+  })
   return (
     <main data-generated-ids="">
       <section data-fixture="ids">

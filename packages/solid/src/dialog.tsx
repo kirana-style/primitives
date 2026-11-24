@@ -6,7 +6,7 @@ import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller } from "@kirana-ui/core/dialog"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
@@ -14,7 +14,7 @@ import type { PartComponentProps } from "./runtime.tsx"
 type Parts = Vocabulary["dialog"]
 type DrawerParts = Vocabulary["drawer"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useDialog(): Controller {
   const made = useContext(Context)
@@ -42,7 +42,7 @@ function Root(props: RootProps): JSX.Element {
     dismissible: props.dismissible,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
-  return <Context.Provider value={made}>{props.children}</Context.Provider>
+  return <Context value={made}>{props.children}</Context>
 }
 
 export type PortalProps = { children?: JSX.Element }
@@ -76,7 +76,7 @@ function AlertRoot(props: AlertRootProps): JSX.Element {
     defaultOpen: props.defaultOpen,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
-  return <Context.Provider value={made}>{props.children}</Context.Provider>
+  return <Context value={made}>{props.children}</Context>
 }
 
 export const Dialog = {
@@ -119,7 +119,7 @@ function DrawerRoot(props: DrawerRootProps): JSX.Element {
       props.onSnapPointChange?.(snapPoint, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
-  return <Context.Provider value={made}>{props.children}</Context.Provider>
+  return <Context value={made}>{props.children}</Context>
 }
 
 /** A drawer's backdrop and popup say more than a dialog's: how they are being dragged. */

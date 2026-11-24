@@ -3,17 +3,17 @@ import type { Orientation, StateOf } from "@kirana-ui/core"
 import { createScrollArea } from "@kirana-ui/core/scroll-area"
 import type { ScrollArea as Controller, ScrollAreaScrollbar } from "@kirana-ui/core/scroll-area"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["scrollArea"]
 
-const Context = createContext<Controller>()
-const ScrollbarContext = createContext<ScrollAreaScrollbar>()
+const Context = createContext<Controller | null>(null)
+const ScrollbarContext = createContext<ScrollAreaScrollbar | null>(null)
 
 function useScrollArea(): Controller {
   const made = useContext(Context)
@@ -24,12 +24,12 @@ function useScrollArea(): Controller {
 export type RootProps = PartComponentProps<"div", StateOf<Parts["root"]>>
 
 function Root(props: RootProps): JSX.Element {
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createScrollArea, { direction }), () => ({}))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...props} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -41,15 +41,15 @@ export type ScrollbarProps = PartComponentProps<
 
 /** `orientation` is which way it scrolls (`vertical` by default). */
 function Scrollbar(props: ScrollbarProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["orientation", "keepMounted"])
+  const [local, rest] = split(props, ["orientation", "keepMounted"])
   const bar = useScrollArea().scrollbar(untrack(() => local.orientation) ?? "vertical")
   const shown = fromSignal(bar.shown)
   return (
-    <ScrollbarContext.Provider value={bar}>
+    <ScrollbarContext value={bar}>
       <Show when={shown() || local.keepMounted}>
         <Part of={bar.part} tag="div" {...rest} />
       </Show>
-    </ScrollbarContext.Provider>
+    </ScrollbarContext>
   )
 }
 

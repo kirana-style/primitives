@@ -1,48 +1,34 @@
-import { Collapsible as Ark } from "@ark-ui/solid/collapsible"
 import { Collapsible } from "@kirana-ui/solid"
-import { For, Show } from "solid-js"
-import { render } from "solid-js/web"
+import { For, flush } from "solid-js"
+import { render } from "@solidjs/web"
 
 /**
- * The bench page: `?lib=kirana|other&n=1000` mounts that many closed collapsibles and times it.
- * `other` is Ark UI (Zag), the library Solid is measured against.
+ * The bench page: `?n=1000` mounts that many closed collapsibles and times it. Solid is measured
+ * alone: Ark UI, which the other adapters are measured against, has no release for Solid 2.
  */
 const params = new URLSearchParams(location.search)
-const lib = params.get("lib") ?? "kirana"
 const count = Number(params.get("n") ?? 1000)
 const rows = Array.from({ length: count }, (_, index) => index)
 let dispose: (() => void) | undefined
 
 function List() {
   return (
-    <Show
-      when={lib === "other"}
-      fallback={
-        <For each={rows}>
-          {(index) => (
-            <Collapsible.Root>
-              <Collapsible.Trigger>Row {index}</Collapsible.Trigger>
-              <Collapsible.Panel>Content {index}</Collapsible.Panel>
-            </Collapsible.Root>
-          )}
-        </For>
-      }
-    >
-      <For each={rows}>
-        {(index) => (
-          <Ark.Root lazyMount unmountOnExit>
-            <Ark.Trigger>Row {index}</Ark.Trigger>
-            <Ark.Content>Content {index}</Ark.Content>
-          </Ark.Root>
-        )}
-      </For>
-    </Show>
+    <For each={rows}>
+      {(index) => (
+        <Collapsible.Root>
+          <Collapsible.Trigger>Row {index}</Collapsible.Trigger>
+          <Collapsible.Panel>Content {index}</Collapsible.Panel>
+        </Collapsible.Root>
+      )}
+    </For>
   )
 }
 
 function timed(work: () => void): number {
   const start = performance.now()
   work()
+  // Solid 2 draws what changed on the next microtask: drawn here, so it is in what is timed.
+  flush()
   void document.body.offsetHeight
   return performance.now() - start
 }

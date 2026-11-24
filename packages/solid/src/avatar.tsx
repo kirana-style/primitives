@@ -6,24 +6,15 @@ import type {
   Avatar as Controller,
 } from "@kirana-ui/core/avatar"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  Show,
-  createComputed,
-  createContext,
-  onCleanup,
-  onMount,
-  splitProps,
-  untrack,
-  useContext,
-} from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, onSettled, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split, follow } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["avatar"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useAvatar(): Controller {
   const made = useContext(Context)
@@ -36,9 +27,9 @@ export type RootProps = PartComponentProps<"span", StateOf<Parts["root"]>>
 function Root(props: RootProps): JSX.Element {
   const made = controller(createAvatar, () => ({}))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="span" {...props} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -53,11 +44,14 @@ export type ImageProps = PartComponentProps<
 
 /** The picture: in the page once `src` has loaded, or all along with `keepMounted`. */
 function Image(props: ImageProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["src", "onLoadingStatusChange", "keepMounted"])
+  const [local, rest] = split(props, ["src", "onLoadingStatusChange", "keepMounted"])
   const made = useAvatar()
-  createComputed(() => made.source.set(local.src))
+  follow(
+    () => local.src,
+    (src) => made.source.set(src)
+  )
   const report = made.statusReport(() => local.onLoadingStatusChange)
-  onMount(() => onCleanup(report.mount()))
+  onSettled(() => report.mount())
   const status = fromSignal(made.status)
   return (
     <Show
@@ -79,10 +73,10 @@ export type FallbackProps = PartComponentProps<
 
 /** What shows until the picture has loaded, or when it cannot; after `delay`, when given one. */
 function Fallback(props: FallbackProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["delay"])
+  const [local, rest] = split(props, ["delay"])
   const made = useAvatar()
   const presence = made.fallbackPresence({ delay: untrack(() => local.delay) })
-  onMount(() => onCleanup(presence.mount()))
+  onSettled(() => presence.mount())
   const shown = fromSignal(presence.shown)
   return (
     <Show when={shown()}>

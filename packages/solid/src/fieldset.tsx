@@ -2,14 +2,14 @@ import type { StateOf } from "@kirana-ui/core"
 import { createFieldset } from "@kirana-ui/core/fieldset"
 import type { Fieldset as Controller } from "@kirana-ui/core/fieldset"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 /** The fieldset a field is in, if it is in one. */
-export const FieldsetContext = createContext<Controller>()
+export const FieldsetContext = createContext<Controller | null>(null)
 
 type Parts = Vocabulary["fieldset"]
 
@@ -26,16 +26,16 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["disabled", "id"])
+  const [local, rest] = split(props, ["disabled", "id"])
   const generated = createUniqueId()
   const made = controller(createFieldset, () => ({
     id: local.id ?? generated,
     disabled: local.disabled,
   }))
   return (
-    <FieldsetContext.Provider value={made}>
+    <FieldsetContext value={made}>
       <Part of={made.root} tag="fieldset" {...rest} />
-    </FieldsetContext.Provider>
+    </FieldsetContext>
   )
 }
 

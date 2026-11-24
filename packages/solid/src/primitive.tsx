@@ -1,9 +1,10 @@
 import { mergeProps as layer, stateAttributes } from "@kirana-ui/core"
 import type { PartProps } from "@kirana-ui/core"
-import { Show, children, createMemo, splitProps } from "solid-js"
-import type { JSX } from "solid-js"
-import { Dynamic } from "solid-js/web"
+import { Show, children, createMemo } from "solid-js"
+import { Dynamic } from "@solidjs/web"
+import type { JSX } from "@solidjs/web"
 
+import { split } from "./runtime.tsx"
 import type { PartTag } from "./runtime.tsx"
 
 /** What a `Primitive` reads of its props; the rest are its element's. */
@@ -46,7 +47,7 @@ export function Primitive<
   Tag extends PartTag = "div",
   State extends Record<string, unknown> = Record<string, never>,
 >(props: PrimitiveProps<Tag, State>): JSX.Element {
-  const [local, rest] = splitProps(props as PrimitiveOwnProps<State> & Record<string, unknown>, [
+  const [local, rest] = split(props as PrimitiveOwnProps<State> & Record<string, unknown>, [
     "as",
     "render",
     "state",
@@ -56,6 +57,8 @@ export function Primitive<
   return (
     <Show
       when={local.render}
+      // Keyed: another function draws the element afresh.
+      keyed
       fallback={
         <Dynamic component={local.as ?? "div"} {...marks()} {...rest}>
           {local.children}
@@ -70,7 +73,7 @@ export function Primitive<
           for (const key of Object.keys(rest)) given[key] = rest[key]
           return { ...given, children: held() }
         })
-        return render()(handed, () => local.state ?? ({} as State))
+        return render(handed, () => local.state ?? ({} as State))
       }}
     </Show>
   )
@@ -91,16 +94,23 @@ export type Merged<Sets extends readonly unknown[]> = Sets extends readonly [
 /** One key of several sets, by a part's rule. */
 function mergedValue(sets: readonly (Props | undefined)[], key: string): unknown {
   if (key === "ref") {
-    // Solid hands a component a function whatever was written: each set's gets the element.
-    const refs = sets.map((set) => set?.ref).filter((ref) => typeof ref === "function")
+    // A function, or several in an array, as Solid's own elements take them: each set's gets
+    // the element.
+    const refs = sets
+      .map((set) => set?.ref)
+      .filter((ref) => typeof ref === "function" || Array.isArray(ref))
     if (refs.length < 2) return refs[0]
-    return (element: unknown) => {
-      for (const ref of refs) (ref as (element: unknown) => void)(element)
-    }
+    return (element: unknown) => handOver(refs, element)
   }
   let merged: PartProps = {}
   for (const set of sets) if (set && key in set) merged = layer(merged, { [key]: set[key] })
   return merged[key]
+}
+
+/** Hands `element` to a ref: a function, or each of several in an array. */
+function handOver(ref: unknown, element: unknown): void {
+  if (typeof ref === "function") (ref as (element: unknown) => void)(element)
+  else if (Array.isArray(ref)) for (const each of ref) handOver(each, element)
 }
 
 /**
@@ -109,9 +119,8 @@ function mergedValue(sets: readonly (Props | undefined)[], key: string): unknown
  * merged property by property, the handlers of an event run in order until one calls
  * `event.preventKiranaHandler()`, which stops those after it, and every `ref` gets the
  * element. It reads its sets when a prop is read, so a component's props stay reactive: spread
- * it (`<Primitive {...mergeProps({ class: "badge" }, props)} />`). Not solid-js's
- * `mergeProps`, where a later class replaces an earlier one: import one under another name
- * where both are used.
+ * it (`<Primitive {...mergeProps({ class: "badge" }, props)} />`). Not solid-js's `merge`,
+ * where a later class replaces an earlier one.
  */
 export function mergeProps<const Sets extends readonly (object | undefined)[]>(
   ...sets: Sets

@@ -4,7 +4,7 @@ import { createDatePicker } from "@kirana-ui/core/date-picker"
 import type { DatePicker as Controller, DatePickerProps } from "@kirana-ui/core/date-picker"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { Calendar, CalendarContext } from "./calendar.tsx"
 import { DateField, DateFieldContext } from "./date-field.tsx"
@@ -31,7 +31,7 @@ export type {
 export type { InputProps, SegmentProps, SegmentsProps } from "./date-field.tsx"
 export type { PopupProps, PortalProps, PositionerProps, TriggerProps } from "./popover.tsx"
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useDatePicker(): Controller {
   const made = useContext(Context)
@@ -45,7 +45,7 @@ export type RootProps = Omit<DatePickerProps, "id"> & { id?: string; children?: 
 function Root(props: RootProps): JSX.Element {
   const generated = createUniqueId()
   const made = controller(
-    within(createDatePicker, { direction: useContext(DirectionContext) }),
+    within(createDatePicker, { direction: useContext(DirectionContext) ?? undefined }),
     () => ({
       id: props.id ?? generated,
       value: props.value,
@@ -76,15 +76,13 @@ function Root(props: RootProps): JSX.Element {
     })
   )
   return (
-    <Context.Provider value={made}>
-      <DateFieldContext.Provider value={made.field}>
-        <PopoverContext.Provider value={made.popover}>
-          <CalendarContext.Provider value={made.calendar}>
-            {props.children}
-          </CalendarContext.Provider>
-        </PopoverContext.Provider>
-      </DateFieldContext.Provider>
-    </Context.Provider>
+    <Context value={made}>
+      <DateFieldContext value={made.field}>
+        <PopoverContext value={made.popover}>
+          <CalendarContext value={made.calendar}>{props.children}</CalendarContext>
+        </PopoverContext>
+      </DateFieldContext>
+    </Context>
   )
 }
 

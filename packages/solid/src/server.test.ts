@@ -71,9 +71,26 @@ beforeAll(async () => {
 
 afterAll(() => server?.close())
 
+/**
+ * Markup without its comments, which are the marks a framework writes for its own hydration.
+ * Read from end to end, so that no comment can be left by what is taken out around it.
+ */
+function uncommented(html: string): string {
+  let out = ""
+  let at = 0
+  while (at < html.length) {
+    const start = html.indexOf("<!--", at)
+    const end = start < 0 ? -1 : html.indexOf("-->", start + 4)
+    if (end < 0) return out + html.slice(at, start < 0 ? undefined : start)
+    out += html.slice(at, start)
+    at = end + 3
+  }
+  return out
+}
+
 /** What a server sends, without the keys and marks Solid writes for its own hydration. */
 const html = (draw: () => unknown) =>
-  renderToString(draw).replace(/ _hk="?[\w-]+"?|<!--[^>]*-->/g, "")
+  uncommented(renderToString(draw)).replace(/ _hk="?[\w-]+"?/g, "")
 
 /** The inputs an element holds, by the element's tag. */
 function inputsIn(text: string, tag: string): string[] {

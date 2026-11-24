@@ -2,7 +2,7 @@ import { signal } from "@kirana-ui/core"
 import type { Direction } from "@kirana-ui/core"
 import { createDirection } from "@kirana-ui/core/direction"
 import { useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
 import { controller, fromSignal } from "./runtime.tsx"
@@ -20,9 +20,7 @@ export interface DirectionProviderProps {
  */
 export function DirectionProvider(props: DirectionProviderProps): JSX.Element {
   const made = controller(createDirection, () => ({ direction: props.direction }))
-  return (
-    <DirectionContext.Provider value={made.direction}>{props.children}</DirectionContext.Provider>
-  )
+  return <DirectionContext value={made.direction}>{props.children}</DirectionContext>
 }
 
 /** The direction the nearest provider states; `ltr` outside one. */

@@ -1,7 +1,7 @@
 import type { StateOf } from "@kirana-ui/core"
 import { createAutosize } from "@kirana-ui/core/autosize"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import type { JSX } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { Part, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"

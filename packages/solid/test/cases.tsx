@@ -1,6 +1,6 @@
 // What `src/server.test.ts` renders on a server: Solid's JSX is compiled there, with Solid's
 // own preset, as a project's build would.
-import type { JSX } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { Calendar } from "../src/calendar.tsx"
 import { Checkbox } from "../src/checkbox.tsx"

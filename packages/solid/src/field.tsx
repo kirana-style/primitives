@@ -7,13 +7,13 @@ import type {
   ValidityKey,
 } from "@kirana-ui/core/field"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createUniqueId, onCleanup, onMount, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createUniqueId, onSettled, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { FieldContext } from "./field-context.ts"
 import { FieldsetContext } from "./fieldset.tsx"
 import { FormContext } from "./form.tsx"
-import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, toSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["field"]
@@ -31,7 +31,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "name",
     "disabled",
     "invalid",
@@ -41,7 +41,10 @@ function Root(props: RootProps): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const around = { form: useContext(FormContext), fieldset: useContext(FieldsetContext) }
+  const around = {
+    form: useContext(FormContext) ?? undefined,
+    fieldset: useContext(FieldsetContext) ?? undefined,
+  }
   const made = controller(
     (source: ReadonlySignal<FieldProps>) => createField(source, around),
     () => ({
@@ -51,9 +54,9 @@ function Root(props: RootProps): JSX.Element {
     })
   )
   return (
-    <FieldContext.Provider value={made}>
+    <FieldContext value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </FieldContext.Provider>
+    </FieldContext>
   )
 }
 
@@ -68,10 +71,10 @@ export type ErrorProps = PartComponentProps<
  * the browser's findings (`"valueMissing"`) to show for only that, or `true` to show always.
  */
 function FieldError(props: ErrorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["match", "children"])
+  const [local, rest] = split(props, ["match", "children"])
   const options = toSignal(() => ({ match: local.match }))
   const error = useField().error(() => options.get().match)
-  onMount(() => onCleanup(error.mount()))
+  onSettled(() => error.mount())
   const mounted = fromSignal(error.mounted)
   const text = fromSignal(error.text)
   return (

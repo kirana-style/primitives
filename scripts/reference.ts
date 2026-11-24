@@ -130,7 +130,7 @@ const OPTIONS: TS.CompilerOptions = {
 
 const JSX: Record<string, TS.CompilerOptions> = {
   react: { jsx: 4 },
-  solid: { jsx: 1, jsxImportSource: "solid-js" },
+  solid: { jsx: 1, jsxImportSource: "@solidjs/web" },
   angular: { experimentalDecorators: true, useDefineForClassFields: false },
 }
 

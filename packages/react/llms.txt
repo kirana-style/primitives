@@ -8,7 +8,7 @@ This file describes the version it ships with. What changed in each release, the
 
 ## Install and entries
 
-Install `@kirana-ui/react`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/react/agent`, `@kirana-ui/react/testing`), so nothing is imported from a package the project did not install.
+Install `@kirana-ui/react`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/react/agent`, `@kirana-ui/react/testing`), so nothing is imported from a package the project did not install. It runs on the project's own `react` ^18.0.0 || ^19.0.0 and `react-dom` ^18.0.0 || ^19.0.0.
 
 Its entries: an entry per component (`@kirana-ui/react/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/react` (every component at once, for a bundler that shakes trees), and `@kirana-ui/react/runtime`, `@kirana-ui/react/agent`, `@kirana-ui/react/testing`, `@kirana-ui/react/use-render` and `@kirana-ui/react/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/react/direction`, `PortalProvider` in the package root.
 

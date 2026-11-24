@@ -1,5 +1,5 @@
 import "../../shared/styles.css"
-import { hydrate } from "solid-js/web"
+import { hydrate } from "@solidjs/web"
 
 import { App } from "./App.tsx"
 import { Open } from "./Open.tsx"

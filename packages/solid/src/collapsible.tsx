@@ -2,15 +2,15 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createCollapsible } from "@kirana-ui/core/collapsible"
 import type { Collapsible as Controller } from "@kirana-ui/core/collapsible"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["collapsible"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useCollapsible(): Controller {
   const made = useContext(Context)
@@ -31,7 +31,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["open", "defaultOpen", "onOpenChange", "disabled", "id"])
+  const [local, rest] = split(props, ["open", "defaultOpen", "onOpenChange", "disabled", "id"])
   const generated = createUniqueId()
   const made = controller(createCollapsible, () => ({
     id: local.id ?? generated,
@@ -41,9 +41,9 @@ function Root(props: RootProps): JSX.Element {
     onOpenChange: (open: boolean, details: ChangeDetails) => local.onOpenChange?.(open, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -61,7 +61,7 @@ export type PanelProps = PartComponentProps<
 
 /** `keepMounted` keeps the closed panel in the page, `hidden`. */
 function Panel(props: PanelProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
+  const [local, rest] = split(props, ["keepMounted"])
   const made = useCollapsible()
   const mounted = fromSignal(made.mounted)
   return (

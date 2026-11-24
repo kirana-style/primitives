@@ -60,7 +60,7 @@ from one core. The package for a framework is all a project installs.
 
 Per framework: React takes `render` for another element; Vue takes `as` / `as-child`, binds
 with `v-model:value` and names props in kebab case; Svelte takes a `child` snippet and
-`bind:value`; Solid takes `as` and `render`; Angular's parts are directives on your own
+`bind:value`; Solid (2, with `@solidjs/web`) takes `as` and `render`; Angular's parts are directives on your own
 elements (`<button kpDialogTrigger>`), bound with `[(value)]`, with `[kpId]` for an id, and
 a part that comes and goes is structural (`*kpDialogPortal`, `*kpTabsPanel`: the list is in
 `llms.txt`); custom elements name each part with `kui-part` inside `<kui-dialog>`.

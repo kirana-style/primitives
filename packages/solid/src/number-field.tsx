@@ -7,23 +7,16 @@ import type {
   NumberFieldScrubOptions,
 } from "@kirana-ui/core/number-field"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  Show,
-  createComputed,
-  createContext,
-  createUniqueId,
-  splitProps,
-  useContext,
-} from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { FieldContext } from "./field-context.ts"
-import { Part, Portal, controller, fromSignal } from "./runtime.tsx"
+import { Part, Portal, controller, fromSignal, split, follow } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["numberField"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useNumberField(): Controller {
   const made = useContext(Context)
@@ -38,7 +31,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -61,39 +54,42 @@ function Root(props: RootProps): JSX.Element {
     "children",
   ])
   const generated = createUniqueId()
-  const made = controller(within(createNumberField, { field: useContext(FieldContext) }), () => ({
-    id: local.id ?? generated,
-    value: local.value,
-    defaultValue: local.defaultValue,
-    min: local.min,
-    max: local.max,
-    step: local.step,
-    smallStep: local.smallStep,
-    largeStep: local.largeStep,
-    snapOnStep: local.snapOnStep,
-    allowWheelScrub: local.allowWheelScrub,
-    format: local.format,
-    locale: local.locale,
-    disabled: local.disabled,
-    readOnly: local.readOnly,
-    required: local.required,
-    name: local.name,
-    form: local.form,
-    onValueChange: (value: number | null, details: ChangeDetails) =>
-      local.onValueChange?.(value, details),
-    onValueCommitted: (value: number | null, details: ChangeDetails) =>
-      local.onValueCommitted?.(value, details),
-  }))
+  const made = controller(
+    within(createNumberField, { field: useContext(FieldContext) ?? undefined }),
+    () => ({
+      id: local.id ?? generated,
+      value: local.value,
+      defaultValue: local.defaultValue,
+      min: local.min,
+      max: local.max,
+      step: local.step,
+      smallStep: local.smallStep,
+      largeStep: local.largeStep,
+      snapOnStep: local.snapOnStep,
+      allowWheelScrub: local.allowWheelScrub,
+      format: local.format,
+      locale: local.locale,
+      disabled: local.disabled,
+      readOnly: local.readOnly,
+      required: local.required,
+      name: local.name,
+      form: local.form,
+      onValueChange: (value: number | null, details: ChangeDetails) =>
+        local.onValueChange?.(value, details),
+      onValueCommitted: (value: number | null, details: ChangeDetails) =>
+        local.onValueCommitted?.(value, details),
+    })
+  )
   const named = fromSignal(made.named)
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest}>
         {local.children}
         <Show when={named()}>
           <Part of={made.hidden} tag="input" />
         </Show>
       </Part>
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -118,13 +114,16 @@ export type ScrubAreaCursorProps = PartComponentProps<"span", StateOf<Parts["scr
 
 /** Pressed and dragged to change the number; `direction`, `pixelSensitivity`, `teleportDistance`. */
 function ScrubArea(props: ScrubAreaProps): JSX.Element {
-  const [local, rest] = splitProps(props as NumberFieldScrubOptions, [
+  const [local, rest] = split(props as NumberFieldScrubOptions, [
     "direction",
     "pixelSensitivity",
     "teleportDistance",
   ])
   const made = useNumberField()
-  createComputed(() => made.scrub.set(defined({ ...local })))
+  follow(
+    () => defined({ ...local }),
+    (scrub) => made.scrub.set(scrub)
+  )
   return <Part of={made.scrubArea} tag="span" {...rest} />
 }
 

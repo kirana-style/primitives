@@ -3,16 +3,16 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createSwitch } from "@kirana-ui/core/switch"
 import type { Switch as Controller } from "@kirana-ui/core/switch"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { FieldContext } from "./field-context.ts"
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["switch"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useSwitch(): Controller {
   const made = useContext(Context)
@@ -38,7 +38,7 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "checked",
     "defaultChecked",
     "onCheckedChange",
@@ -52,7 +52,7 @@ function Root(props: RootProps): JSX.Element {
     "children",
   ])
   const generated = createUniqueId()
-  const field = useContext(FieldContext)
+  const field = useContext(FieldContext) ?? undefined
   const made = controller(within(createSwitch, { field }), () => ({
     id: local.id ?? generated,
     checked: local.checked,
@@ -67,12 +67,12 @@ function Root(props: RootProps): JSX.Element {
       local.onCheckedChange?.(checked, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="span" {...rest}>
         {local.children}
         <Part of={made.input} tag="input" />
       </Part>
-    </Context.Provider>
+    </Context>
   )
 }
 

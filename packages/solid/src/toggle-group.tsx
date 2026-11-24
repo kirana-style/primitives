@@ -3,11 +3,11 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createToggleGroup } from "@kirana-ui/core/toggle-group"
 import type { ToggleGroupProps as CoreProps } from "@kirana-ui/core/toggle-group"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 import { ToggleGroupContext, ToolbarContext } from "./toolbar-context.ts"
 
@@ -20,7 +20,7 @@ export type ToggleGroupProps<Value = unknown> = PartComponentProps<
 
 /** Toggles that are one control. Each `<Toggle value>` inside it is one of its toggles. */
 export function ToggleGroup<Value = unknown>(props: ToggleGroupProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -29,7 +29,7 @@ export function ToggleGroup<Value = unknown>(props: ToggleGroupProps<Value>): JS
     "orientation",
     "loop",
   ])
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const toolbar = useContext(ToolbarContext) ?? undefined
   const made = controller(within(createToggleGroup<Value>, { direction, toolbar }), () => ({
     value: local.value,
@@ -42,8 +42,8 @@ export function ToggleGroup<Value = unknown>(props: ToggleGroupProps<Value>): JS
       local.onValueChange?.(value, details),
   }))
   return (
-    <ToggleGroupContext.Provider value={made}>
+    <ToggleGroupContext value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </ToggleGroupContext.Provider>
+    </ToggleGroupContext>
   )
 }

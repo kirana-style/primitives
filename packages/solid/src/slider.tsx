@@ -9,17 +9,17 @@ import type {
   SliderValue,
 } from "@kirana-ui/core/slider"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["slider"]
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 
 function useSlider(): Controller {
   const made = useContext(Context)
@@ -39,7 +39,7 @@ export type RootProps<Value extends SliderValue = SliderValue> = PartComponentPr
 
 // Given neither `value` nor `defaultValue`, a slider has one thumb: its value is a number.
 function Root<Value extends SliderValue = number>(props: RootProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -61,9 +61,9 @@ function Root<Value extends SliderValue = number>(props: RootProps<Value>): JSX.
     "id",
   ])
   const generated = createUniqueId()
-  const field = useContext(FieldContext)
+  const field = useContext(FieldContext) ?? undefined
   const made = controller(
-    within(createSlider<Value>, { field, direction: useContext(DirectionContext) }),
+    within(createSlider<Value>, { field, direction: useContext(DirectionContext) ?? undefined }),
     () => ({
       ...local,
       id: local.id ?? generated,
@@ -74,9 +74,9 @@ function Root<Value extends SliderValue = number>(props: RootProps<Value>): JSX.
     })
   )
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -84,7 +84,7 @@ export type ThumbProps = PartComponentProps<"div", StateOf<Parts["thumb"]>, { in
 
 /** `index` is which value of a range the thumb is, from 0. */
 function Thumb(props: ThumbProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["index", "children"])
+  const [local, rest] = split(props, ["index", "children"])
   // A thumb is its index for as long as it is in the page. Given none, it takes its place
   // among the slider's thumbs, in the order they are written.
   const generated = createUniqueId()
@@ -106,7 +106,7 @@ export type ValueProps = PartComponentProps<
 
 /** The written value, or what its child, a function, makes of it and of the values. */
 function Value(props: ValueProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["children"])
+  const [local, rest] = split(props, ["children"])
   const made = useSlider()
   const text = fromSignal(made.text)
   const values = fromSignal(made.values)

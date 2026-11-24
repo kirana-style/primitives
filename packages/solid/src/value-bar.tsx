@@ -1,9 +1,9 @@
 import type { ReadonlySignal } from "@kirana-ui/core"
 import type { ValueBar, ValueBarProps } from "@kirana-ui/core/progress"
-import { createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 
 /** A value bar's own props: its value, its range and how the value is written. */
 export type RootOptions = Omit<ValueBarProps, "id"> & { id?: string }
@@ -24,7 +24,7 @@ export function valueBar<Props extends PartsProps>(
   name: string,
   create: (props: ReadonlySignal<ValueBarProps>) => ValueBar
 ) {
-  const Context = createContext<ValueBar>()
+  const Context = createContext<ValueBar | null>(null)
 
   function use(): ValueBar {
     const made = useContext(Context)
@@ -33,7 +33,7 @@ export function valueBar<Props extends PartsProps>(
   }
 
   function Root(props: Props["Root"]): JSX.Element {
-    const [local, rest] = splitProps(props as RootOptions, [
+    const [local, rest] = split(props as RootOptions, [
       "value",
       "min",
       "max",
@@ -45,15 +45,15 @@ export function valueBar<Props extends PartsProps>(
     const generated = createUniqueId()
     const made = controller(create, () => ({ ...local, id: local.id ?? generated }))
     return (
-      <Context.Provider value={made}>
+      <Context value={made}>
         <Part of={made.root} tag="div" {...rest} />
-      </Context.Provider>
+      </Context>
     )
   }
 
   /** The written value, or what its child, a function, makes of it. */
   function Value(props: Props["Value"]): JSX.Element {
-    const [local, rest] = splitProps(props as ValueOptions, ["children"])
+    const [local, rest] = split(props as ValueOptions, ["children"])
     const made = use()
     const text = fromSignal(made.text)
     return (

@@ -8,14 +8,14 @@
     "build": "vp build && vp build --ssr src/server.tsx --outDir dist-server && bun ../../scripts/prerender.ts solid"
   },
   "dependencies": {
-    "@ark-ui/solid": "catalog:",
     "@kirana-ui/core": "workspace:*",
     "@kirana-ui/solid": "workspace:*",
+    "@solidjs/web": "catalog:",
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@solidjs/vite-plugin": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-solid": "catalog:",
     "vite-plus": "catalog:"
   }
 }

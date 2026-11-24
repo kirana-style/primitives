@@ -2,18 +2,11 @@ import { createToast, createToaster as createCoreToaster } from "@kirana-ui/core
 import type * as Core from "@kirana-ui/core/toast"
 import type { StateOf } from "@kirana-ui/core"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  For,
-  Show,
-  createContext,
-  createMemo,
-  createUniqueId,
-  splitProps,
-  useContext,
-} from "solid-js"
-import type { Accessor, JSX } from "solid-js"
+import { For, Show, createContext, createMemo, createUniqueId, useContext } from "solid-js"
+import type { Accessor } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps, PartTag } from "./runtime.tsx"
 
 /** What a toast's title, description and action's label may be here: anything Solid draws. */
@@ -40,8 +33,8 @@ type ToastProps = Core.ToastProps<JSX.Element>
 
 type Parts = Vocabulary["toast"]
 
-const Context = createContext<Controller>()
-const ToastContext = createContext<ToastParts>()
+const Context = createContext<Controller | null>(null)
+const ToastContext = createContext<ToastParts | null>(null)
 
 function useToast(): Controller {
   const made = useContext(Context)
@@ -69,7 +62,7 @@ export type ViewportProps = PartComponentProps<
 
 /** Where a toaster's toasts are drawn. Always in the page: put it once, near the root. */
 function Viewport(props: ViewportProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["toaster", "label", "hotkey", "swipeDirection", "id"])
+  const [local, rest] = split(props, ["toaster", "label", "hotkey", "swipeDirection", "id"])
   const generated = createUniqueId()
   const made = controller(createToast, () => ({
     id: local.id ?? generated,
@@ -79,9 +72,9 @@ function Viewport(props: ViewportProps): JSX.Element {
     swipeDirection: local.swipeDirection,
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.viewport} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -93,7 +86,7 @@ export type ListProps = { children: (toast: Accessor<ToastRecord>) => JSX.Elemen
  */
 function List(props: ListProps): JSX.Element {
   const toasts = fromSignal(useToast().toasts)
-  const ids = createMemo(() => toasts().map((each) => each.id), undefined, {
+  const ids = createMemo(() => toasts().map((each) => each.id), {
     equals: (a, b) => a.length === b.length && a.every((each, at) => each === b[at]),
   })
   return (
@@ -104,13 +97,13 @@ function List(props: ListProps): JSX.Element {
 export type RootProps = PartComponentProps<"div", StateOf<Parts["root"]>, { toast: ToastRecord }>
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["toast"])
+  const [local, rest] = split(props, ["toast"])
   // A root is its toast for as long as it is in the page.
   const parts = useToast().toast(local.toast.id)
   return (
-    <ToastContext.Provider value={parts}>
+    <ToastContext value={parts}>
       <Part of={parts.root} tag="div" {...rest} />
-    </ToastContext.Provider>
+    </ToastContext>
   )
 }
 
@@ -129,7 +122,7 @@ const Content = (props: ContentProps) => <Part of={useParts().content} tag="div"
 function Said(
   props: PartComponentProps<PartTag> & { said: "title" | "description" | "action"; tag: string }
 ): JSX.Element {
-  const [local, rest] = splitProps(props, ["said", "tag", "children"])
+  const [local, rest] = split(props, ["said", "tag", "children"])
   const parts = useParts()
   const toast = fromSignal(parts.record)
   const children = createMemo(

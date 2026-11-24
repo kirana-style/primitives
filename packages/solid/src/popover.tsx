@@ -3,10 +3,10 @@ import type { Anchor, ChangeDetails, PositionOptions, Signal, StateOf } from "@k
 import { createPopover } from "@kirana-ui/core/popover"
 import type { Popover as Controller, PopoverTriggerOptions } from "@kirana-ui/core/popover"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createComputed, createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
+import { Part, Portal as BodyPortal, controller, split, follow } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["popover"]
@@ -15,7 +15,7 @@ type Parts = Vocabulary["popover"]
  * The popover its parts are inside. Exported for a component that is made of one (a date picker
  * provides its own to the popover's parts).
  */
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 /** For a component made of this one's parts: a date picker. */
 export { Context as PopoverContext }
 
@@ -49,7 +49,7 @@ function Root(props: RootProps): JSX.Element {
     defaultOpen: props.defaultOpen,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
-  return <Context.Provider value={made}>{props.children}</Context.Provider>
+  return <Context value={made}>{props.children}</Context>
 }
 
 export type PortalProps = { children?: JSX.Element }
@@ -83,7 +83,7 @@ export function positioned<P extends PositionerOptions>(
   props: P,
   positioning: Signal<Partial<PositionOptions>>
 ): Omit<P, keyof PositionerOptions> {
-  const [local, rest] = splitProps(props as PositionerOptions, [
+  const [local, rest] = split(props as PositionerOptions, [
     "side",
     "align",
     "sideOffset",
@@ -96,17 +96,18 @@ export function positioned<P extends PositionerOptions>(
     "positionMethod",
     "anchor",
   ])
-  createComputed(() => {
-    const anchor = local.anchor
-    positioning.set(
-      defined({
+  follow(
+    () => {
+      const anchor = local.anchor
+      return defined({
         ...local,
         // A function is asked here, so a change of the signal it reads is followed; and given
         // whole while it has nothing, to be asked again as the popup is placed.
         anchor: typeof anchor === "function" ? (anchor() ?? anchor) : anchor,
       })
-    )
-  })
+    },
+    (options) => positioning.set(options)
+  )
   return rest as Omit<P, keyof PositionerOptions>
 }
 
@@ -134,9 +135,12 @@ const part =
   (props: Props): JSX.Element => <Part of={usePopover()[name]} tag={tag} {...props} />
 
 function Trigger(props: TriggerProps): JSX.Element {
-  const [local, rest] = splitProps(props as TriggerOptions, ["openOnHover", "delay", "closeDelay"])
+  const [local, rest] = split(props as TriggerOptions, ["openOnHover", "delay", "closeDelay"])
   const made = usePopover()
-  createComputed(() => made.hovering.set(defined({ ...local })))
+  follow(
+    () => defined({ ...local }),
+    (options) => made.hovering.set(options)
+  )
   return <Part of={made.trigger} tag="button" {...rest} />
 }
 

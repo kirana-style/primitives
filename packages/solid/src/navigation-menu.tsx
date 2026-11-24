@@ -7,30 +7,29 @@ import type {
   NavigationMenuProps,
 } from "@kirana-ui/core/navigation-menu"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  Show,
-  createContext,
-  createUniqueId,
-  onCleanup,
-  onMount,
-  splitProps,
-  untrack,
-  useContext,
-} from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
 import { positioned } from "./popover.tsx"
 import type { PortalProps, PositionerOptions } from "./popover.tsx"
-import { Into, Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
+import {
+  Into,
+  Part,
+  Portal as BodyPortal,
+  controller,
+  fromSignal,
+  toSignal,
+  split,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["navigationMenu"]
 
 export type { PortalProps }
 
-const Context = createContext<Controller>()
-const ItemContext = createContext<NavigationMenuItem>()
+const Context = createContext<Controller | null>(null)
+const ItemContext = createContext<NavigationMenuItem | null>(null)
 
 function useNavigation(): Controller {
   const made = useContext(Context)
@@ -52,7 +51,7 @@ export type RootProps<Value = unknown> = PartComponentProps<
 >
 
 function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -62,7 +61,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     "id",
   ])
   const generated = createUniqueId()
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createNavigationMenu<Value>, { direction }), () => ({
     id: local.id ?? generated,
     value: local.value,
@@ -74,9 +73,9 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
       local.onValueChange?.(value, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="nav" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -84,16 +83,16 @@ export type ItemProps = PartComponentProps<"li", StateOf<Parts["item"]>, { value
 
 /** `value` tells this item from the others; an item that is given none makes its own. */
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value"])
+  const [local, rest] = split(props, ["value"])
   const made = useNavigation()
   const generated = createUniqueId()
   const value = untrack(() => local.value)
   const item = made.item(value === undefined ? generated : value)
-  onMount(() => onCleanup(item.mount()))
+  onSettled(() => item.mount())
   return (
-    <ItemContext.Provider value={item}>
+    <ItemContext value={item}>
       <Part of={made.itemPart} tag="li" {...rest} />
-    </ItemContext.Provider>
+    </ItemContext>
   )
 }
 
@@ -122,7 +121,7 @@ export type LinkProps = PartComponentProps<
 >
 
 function Link(props: LinkProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["active", "closeOnClick"])
+  const [local, rest] = split(props, ["active", "closeOnClick"])
   const options = toSignal(() => ({ ...local }))
   const part = useNavigation().link(() => defined(options.get()))
   return <Part of={part} tag="a" {...rest} />

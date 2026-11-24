@@ -3,8 +3,9 @@
 // `tsc -p packages/solid`), and a `@ts-expect-error` line fails once what it refuses is taken.
 import type { StateOf } from "@kirana-ui/core"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createSignal, splitProps } from "solid-js"
-import type { Accessor, ComponentProps, JSX } from "solid-js"
+import type { ComponentProps, JSX } from "@solidjs/web"
+import { createSignal, omit } from "solid-js"
+import type { Accessor } from "solid-js"
 import { expectTypeOf } from "vite-plus/test"
 
 import { Accordion } from "../src/accordion.tsx"
@@ -46,18 +47,21 @@ export function elements(button: HTMLButtonElement, division: HTMLDivElement): J
       <Dialog.Root>
         <Dialog.Trigger
           data-testid="open"
-          classList={{ wide: true }}
-          on:click={(event) => expectTypeOf(event.currentTarget).toExtend<HTMLButtonElement>()}
+          class={{ wide: true }}
           type="submit"
           ref={(element) => expectTypeOf(element).toEqualTypeOf<HTMLButtonElement>()}
+        />
+        {/* Several refs at once, as Solid's own elements take them. */}
+        <Dialog.Trigger
+          ref={[(element) => expectTypeOf(element).toEqualTypeOf<HTMLButtonElement>()]}
         />
         <Dialog.Trigger ref={button} />
         {/* The element's own `part` attribute, for `::part()`. */}
         <Dialog.Trigger part="trigger" />
         {/* @ts-expect-error the `part` attribute is text */}
         <Dialog.Trigger part={42} />
-        {/* @ts-expect-error a class is text */}
-        <Dialog.Trigger class={42} />
+        {/* @ts-expect-error a class is text, a list or a map, never a function */}
+        <Dialog.Trigger class={() => "wide"} />
         {/* @ts-expect-error a button's ref is not a div's */}
         <Dialog.Trigger ref={division} />
         <Dialog.Popup ref={(element) => expectTypeOf(element).toEqualTypeOf<HTMLDivElement>()} />
@@ -83,11 +87,10 @@ export function elements(button: HTMLButtonElement, division: HTMLDivElement): J
 /** A wrapper has the element's props and the part's own, and hands the rest back. */
 export function Mine(props: ComponentProps<typeof Checkbox.Root>): JSX.Element {
   expectTypeOf(props).toEqualTypeOf<CheckboxRootProps>()
-  expectTypeOf(props.class).toEqualTypeOf<string | undefined>()
+  expectTypeOf(props.class).toEqualTypeOf<JSX.IntrinsicElements["span"]["class"]>()
   expectTypeOf(props.checked).toEqualTypeOf<boolean | undefined>()
-  expectTypeOf(props.tabIndex).toEqualTypeOf<number | string | undefined>()
-  const [local, rest] = splitProps(props, ["class"])
-  return <Checkbox.Root class={`mine ${local.class ?? ""}`} {...rest} />
+  expectTypeOf(props.tabindex).toEqualTypeOf<number | string | false | undefined>()
+  return <Checkbox.Root class={["mine", props.class]} {...omit(props, "class")} />
 }
 
 /** Each part's props are a named export of its entry, and what `ComponentProps` gives. */
@@ -96,20 +99,18 @@ export function named(): void {
   expectTypeOf<ComponentProps<typeof Dialog.Trigger>>().toEqualTypeOf<TriggerProps>()
   expectTypeOf<ComponentProps<typeof Dialog.Popup>>().toEqualTypeOf<PopupProps>()
   expectTypeOf<ComponentProps<typeof Drawer.Root>>().toEqualTypeOf<DrawerRootProps>()
-  // Every prop of the element is the part's: each `on:`, and each `prop:`, `attr:` and
-  // `bool:` an application declares, and `part`, the element's own attribute. Each has the
-  // element's type but a handler, whose event has `preventKiranaHandler()` too.
+  // Every prop of the element is the part's: each `prop:` an application declares, and `part`,
+  // the element's own attribute. Each has the element's type but a handler, whose event has
+  // `preventKiranaHandler()` too.
   expectTypeOf<
     Exclude<keyof JSX.IntrinsicElements["button"], keyof TriggerProps>
   >().toEqualTypeOf<never>()
-  expectTypeOf<Pick<TriggerProps, "classList" | "style" | "part">>().toEqualTypeOf<
-    Pick<JSX.IntrinsicElements["button"], "classList" | "style" | "part">
+  expectTypeOf<Pick<TriggerProps, "class" | "style" | "part">>().toEqualTypeOf<
+    Pick<JSX.IntrinsicElements["button"], "class" | "style" | "part">
   >()
   expectTypeOf<JSX.IntrinsicElements["button"]["onClick"]>().toExtend<TriggerProps["onClick"]>()
   // With no arguments it is a `<div>`'s, with any state: what it was before it took a tag.
-  expectTypeOf<PartComponentProps["ref"]>().toEqualTypeOf<
-    HTMLDivElement | ((element: HTMLDivElement) => void) | undefined
-  >()
+  expectTypeOf<PartComponentProps["ref"]>().toEqualTypeOf<JSX.IntrinsicElements["div"]["ref"]>()
 }
 
 /** `render` is handed the part's props, to spread, and its state as the vocabulary has it. */

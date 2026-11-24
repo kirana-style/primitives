@@ -1,5 +1,5 @@
 import { defineConfig } from "vite-plus"
-import solid from "vite-plugin-solid"
+import solid from "@solidjs/vite-plugin"
 
 // The Solid fixture: the page every adapter draws, and the bench page beside it.
 export default defineConfig({

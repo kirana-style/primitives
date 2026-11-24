@@ -3,31 +3,30 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select as Controller, SelectGroup, SelectProps } from "@kirana-ui/core/select"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import {
-  Show,
-  createComputed,
-  createContext,
-  createUniqueId,
-  onCleanup,
-  onMount,
-  splitProps,
-  untrack,
-  useContext,
-} from "solid-js"
-import type { Accessor, JSX } from "solid-js"
+import { Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
+import type { Accessor } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { positioned } from "./popover.tsx"
 import type { PortalProps, PositionerOptions } from "./popover.tsx"
 import { FieldContext } from "./field-context.ts"
-import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
+import {
+  Part,
+  Portal as BodyPortal,
+  controller,
+  fromSignal,
+  toSignal,
+  split,
+  follow,
+} from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["select"]
 
 export type { PortalProps }
 
-const Context = createContext<Controller>()
-const ItemContext = createContext<unknown>()
+const Context = createContext<Controller | null>(null)
+const ItemContext = createContext<unknown>(null)
 
 function useSelect(): Controller {
   const made = useContext(Context)
@@ -46,7 +45,7 @@ export type RootProps<Value = unknown> = Omit<SelectProps<Value>, "id"> & {
 
 function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const generated = createUniqueId()
-  const field = useContext(FieldContext)
+  const field = useContext(FieldContext) ?? undefined
   const made = controller(within(createSelect<Value>, { field }), () => ({
     id: props.id ?? generated,
     value: props.value,
@@ -71,12 +70,12 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   }))
   const named = fromSignal(made.named)
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       {props.children}
       <Show when={named()}>
         <Part of={made.input} tag="input" />
       </Show>
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -98,8 +97,11 @@ export type PositionerProps = PartComponentProps<
  */
 function Positioner(props: PositionerProps): JSX.Element {
   const made = useSelect()
-  const [local, rest] = splitProps(props, ["alignItemWithTrigger"])
-  createComputed(() => made.alignItemWithTrigger.set(Boolean(local.alignItemWithTrigger)))
+  const [local, rest] = split(props, ["alignItemWithTrigger"])
+  follow(
+    () => Boolean(local.alignItemWithTrigger),
+    (align) => made.alignItemWithTrigger.set(align)
+  )
   return <Part of={made.positioner} tag="div" {...positioned(rest, made.positioning)} />
 }
 
@@ -127,7 +129,7 @@ export type ValueProps<Chosen = unknown> = PartComponentProps<
 >
 
 function Value<Chosen = unknown>(props: ValueProps<Chosen>): JSX.Element {
-  const [local, rest] = splitProps(props, ["placeholder", "children"])
+  const [local, rest] = split(props, ["placeholder", "children"])
   const made = useSelect()
   const shown = fromSignal(made.shown)
   const drawn = () => {
@@ -167,7 +169,7 @@ export type ItemProps = PartComponentProps<
 
 /** `label` is what typeahead matches and the trigger shows; the item's text when left out. */
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "label", "index"])
+  const [local, rest] = split(props, ["value", "disabled", "label", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
   const options = toSignal(() => ({
@@ -177,16 +179,16 @@ function Item(props: ItemProps): JSX.Element {
   }))
   const part = useSelect().item(value, () => defined(options.get()))
   return (
-    <ItemContext.Provider value={value}>
+    <ItemContext value={value}>
       <Part of={part} tag="div" {...rest} />
-    </ItemContext.Provider>
+    </ItemContext>
   )
 }
 
 export type ItemTextProps = PartComponentProps<"span", StateOf<Parts["itemText"]>>
 
 const ItemText = (props: ItemTextProps) => (
-  <Part of={useSelect().itemText(useContext(ItemContext))} tag="span" {...props} />
+  <Part of={useSelect().itemText(useContext(ItemContext) ?? undefined)} tag="span" {...props} />
 )
 
 export type ItemIndicatorProps = PartComponentProps<
@@ -196,9 +198,9 @@ export type ItemIndicatorProps = PartComponentProps<
 >
 
 function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
+  const [local, rest] = split(props, ["keepMounted"])
   const made = useSelect()
-  const value = useContext(ItemContext)
+  const value = useContext(ItemContext) ?? undefined
   const selected = fromSignal(made.selected(value))
   return (
     <Show when={selected() || local.keepMounted}>
@@ -207,19 +209,19 @@ function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
   )
 }
 
-const GroupContext = createContext<SelectGroup>()
+const GroupContext = createContext<SelectGroup | null>(null)
 
 export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
 
 /** Items that belong together, named by their `<Select.GroupLabel>`. */
 function Group(props: GroupProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["id"])
+  const [local, rest] = split(props, ["id"])
   const generated = createUniqueId()
   const group = useSelect().group(untrack(() => local.id) ?? generated)
   return (
-    <GroupContext.Provider value={group}>
+    <GroupContext value={group}>
       <Part of={group.root} tag="div" {...rest} />
-    </GroupContext.Provider>
+    </GroupContext>
   )
 }
 
@@ -227,7 +229,11 @@ export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabe
 
 /** Names the group it is in. With no group around it, it is plain text. */
 const GroupLabel = (props: GroupLabelProps) => (
-  <Part of={useContext(GroupContext)?.label ?? useSelect().groupLabel} tag="div" {...props} />
+  <Part
+    of={(useContext(GroupContext) ?? undefined)?.label ?? useSelect().groupLabel}
+    tag="div"
+    {...props}
+  />
 )
 
 export type ScrollUpArrowProps = PartComponentProps<"div", StateOf<Parts["scrollUpArrow"]>>
@@ -236,7 +242,7 @@ export type ScrollDownArrowProps = PartComponentProps<"div", StateOf<Parts["scro
 function scrollArrow<Props extends Record<string, unknown>>(direction: "up" | "down") {
   return (props: Props): JSX.Element => {
     const arrow = useSelect().scrollArrow(direction)
-    onMount(() => onCleanup(arrow.mount()))
+    onSettled(() => arrow.mount())
     const mounted = fromSignal(arrow.mounted)
     return (
       <Show when={mounted()}>

@@ -3,11 +3,11 @@ import type { Orientation, StateOf } from "@kirana-ui/core"
 import { createToolbar } from "@kirana-ui/core/toolbar"
 import type { Toolbar as Controller } from "@kirana-ui/core/toolbar"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, controller, toSignal } from "./runtime.tsx"
+import { Part, controller, toSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 import { ToggleGroupContext, ToolbarContext } from "./toolbar-context.ts"
 
@@ -26,20 +26,20 @@ export type RootProps = PartComponentProps<
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["orientation", "loop", "disabled"])
-  const direction = useContext(DirectionContext)
+  const [local, rest] = split(props, ["orientation", "loop", "disabled"])
+  const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createToolbar, { direction }), () => ({
     orientation: local.orientation,
     loop: local.loop,
     disabled: local.disabled,
   }))
   return (
-    <ToolbarContext.Provider value={made}>
+    <ToolbarContext value={made}>
       {/* A toggle group around the toolbar is not the group of the toolbar's toggles. */}
-      <ToggleGroupContext.Provider value={null}>
+      <ToggleGroupContext value={null}>
         <Part of={made.root} tag="div" {...rest} />
-      </ToggleGroupContext.Provider>
-    </ToolbarContext.Provider>
+      </ToggleGroupContext>
+    </ToolbarContext>
   )
 }
 
@@ -54,7 +54,7 @@ export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"
 const item =
   <Props extends ItemOptions>(name: "button" | "input" | "group", tag: string) =>
   (props: Props): JSX.Element => {
-    const [local, rest] = splitProps(props as ItemOptions, ["disabled"])
+    const [local, rest] = split(props as ItemOptions, ["disabled"])
     const options = toSignal(() => ({ disabled: local.disabled }))
     const part = useToolbar()[name](() => defined(options.get()))
     return <Part of={part} tag={tag} {...rest} />

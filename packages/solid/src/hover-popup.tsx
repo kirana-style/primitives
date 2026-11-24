@@ -1,12 +1,12 @@
 import type { ChangeDetails, ReadonlySignal } from "@kirana-ui/core"
 import type { HoverPopup, HoverPopupProps } from "@kirana-ui/core/tooltip"
 import { defined } from "@kirana-ui/core"
-import { createComputed, createContext, createUniqueId, splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { createContext, createUniqueId, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { positioned } from "./popover.tsx"
 import type { PositionerOptions } from "./popover.tsx"
-import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
+import { Part, Portal as BodyPortal, controller, split, follow } from "./runtime.tsx"
 
 export type RootProps = {
   open?: boolean
@@ -38,7 +38,7 @@ export function hoverPopup<Props extends PartsProps>(
   create: (props: ReadonlySignal<HoverPopupProps>) => HoverPopup,
   triggerTag: string
 ) {
-  const Context = createContext<HoverPopup>()
+  const Context = createContext<HoverPopup | null>(null)
 
   function use(): HoverPopup {
     const made = useContext(Context)
@@ -57,7 +57,7 @@ export function hoverPopup<Props extends PartsProps>(
       disabled: props.disabled,
       onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
     }))
-    return <Context.Provider value={made}>{props.children}</Context.Provider>
+    return <Context value={made}>{props.children}</Context>
   }
 
   const Portal = (props: PortalProps) => (
@@ -75,9 +75,12 @@ export function hoverPopup<Props extends PartsProps>(
 
   /** `delay` and `closeDelay` here come before the root's. */
   function Trigger(props: Props["Trigger"]): JSX.Element {
-    const [local, rest] = splitProps(props as TriggerOptions, ["delay", "closeDelay"])
+    const [local, rest] = split(props as TriggerOptions, ["delay", "closeDelay"])
     const made = use()
-    createComputed(() => made.timing.set(defined({ ...local })))
+    follow(
+      () => defined({ ...local }),
+      (timing) => made.timing.set(timing)
+    )
     return <Part of={made.trigger} tag={triggerTag} {...rest} />
   }
 

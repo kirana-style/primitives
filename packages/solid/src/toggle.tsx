@@ -2,10 +2,10 @@ import { within } from "@kirana-ui/core"
 import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createToggle } from "@kirana-ui/core/toggle"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { splitProps, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 import { ToggleGroupContext, ToolbarContext } from "./toolbar-context.ts"
 
@@ -23,7 +23,7 @@ export type ToggleProps = PartComponentProps<
 >
 
 export function Toggle(props: ToggleProps): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "pressed",
     "defaultPressed",
     "onPressedChange",

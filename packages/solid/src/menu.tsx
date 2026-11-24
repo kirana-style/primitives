@@ -9,25 +9,25 @@ import type {
   MenuRadioGroupProps,
 } from "@kirana-ui/core/menu"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
 import { MenubarContext } from "./menubar-context.ts"
 import { positioned } from "./popover.tsx"
 import type { PortalProps, PositionerOptions } from "./popover.tsx"
-import { Part, Portal as BodyPortal, controller, fromSignal, toSignal } from "./runtime.tsx"
+import { Part, Portal as BodyPortal, controller, fromSignal, toSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["menu"]
 
 export type { PortalProps }
 
-const Context = createContext<Controller>()
+const Context = createContext<Controller | null>(null)
 const GroupContext = createContext<MenuGroup | null>(null)
-const CheckboxContext = createContext<MenuCheckboxItem>()
-const RadioGroupContext = createContext<MenuRadioGroup>()
-const RadioItemContext = createContext<unknown>()
+const CheckboxContext = createContext<MenuCheckboxItem | null>(null)
+const RadioGroupContext = createContext<MenuRadioGroup | null>(null)
+const RadioItemContext = createContext<unknown>(null)
 
 function useMenu(): Controller {
   const made = useContext(Context)
@@ -53,7 +53,7 @@ export type RootProps = {
 
 function make(props: RootProps, kind: "menu" | "submenu" | "context"): JSX.Element {
   const generated = createUniqueId()
-  const direction = useContext(DirectionContext)
+  const direction = useContext(DirectionContext) ?? undefined
   const parent = kind === "submenu" ? useMenu() : undefined
   const menubar = kind === "menu" ? (useContext(MenubarContext) ?? undefined) : undefined
   const around = { parent, direction, menubar, context: kind === "context" }
@@ -67,13 +67,13 @@ function make(props: RootProps, kind: "menu" | "submenu" | "context"): JSX.Eleme
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       {/* A group around a submenu is not a group of the submenu's own items; nor is a menu
           written inside a bar's menu one of the bar's. */}
-      <MenubarContext.Provider value={null}>
-        <GroupContext.Provider value={null}>{props.children}</GroupContext.Provider>
-      </MenubarContext.Provider>
-    </Context.Provider>
+      <MenubarContext value={null}>
+        <GroupContext value={null}>{props.children}</GroupContext>
+      </MenubarContext>
+    </Context>
   )
 }
 
@@ -107,7 +107,7 @@ const ITEM = ["disabled", "label", "closeOnClick"] as const
 export type ItemProps = PartComponentProps<"div", StateOf<Parts["item"]>, ItemOptions>
 
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ITEM)
+  const [local, rest] = split(props, ITEM)
   const options = toSignal(() => ({ ...local }))
   const part = useMenu().item(() => defined(options.get()))
   return <Part of={part} tag="div" {...rest} />
@@ -117,7 +117,7 @@ export type LinkItemProps = PartComponentProps<"a", StateOf<Parts["linkItem"]>, 
 
 /** An item that is a link: `href` and the rest go to its `<a>`. */
 function LinkItem(props: LinkItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ITEM)
+  const [local, rest] = split(props, ITEM)
   const options = toSignal(() => ({ ...local }))
   const part = useMenu().item(() => defined(options.get()))
   return <Part of={part} tag="a" {...rest} />
@@ -126,13 +126,13 @@ function LinkItem(props: LinkItemProps): JSX.Element {
 export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
 
 function Group(props: GroupProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["id"])
+  const [local, rest] = split(props, ["id"])
   const generated = createUniqueId()
   const group = useMenu().group(untrack(() => local.id) ?? generated)
   return (
-    <GroupContext.Provider value={group}>
+    <GroupContext value={group}>
       <Part of={group.root} tag="div" {...rest} />
-    </GroupContext.Provider>
+    </GroupContext>
   )
 }
 
@@ -140,7 +140,11 @@ export type GroupLabelProps = PartComponentProps<"div", StateOf<Parts["groupLabe
 
 /** Names the group it is in. With no group around it, it is plain text. */
 const GroupLabel = (props: GroupLabelProps) => (
-  <Part of={useContext(GroupContext)?.label ?? useMenu().label} tag="div" {...props} />
+  <Part
+    of={(useContext(GroupContext) ?? undefined)?.label ?? useMenu().label}
+    tag="div"
+    {...props}
+  />
 )
 
 export type CheckboxItemProps = PartComponentProps<
@@ -154,7 +158,7 @@ export type CheckboxItemProps = PartComponentProps<
 >
 
 function CheckboxItem(props: CheckboxItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, [...ITEM, "checked", "defaultChecked", "onCheckedChange"])
+  const [local, rest] = split(props, [...ITEM, "checked", "defaultChecked", "onCheckedChange"])
   const item = controller(useMenu().checkboxItem, () => ({
     checked: local.checked,
     defaultChecked: local.defaultChecked,
@@ -165,9 +169,9 @@ function CheckboxItem(props: CheckboxItemProps): JSX.Element {
       local.onCheckedChange?.(checked, details),
   }))
   return (
-    <CheckboxContext.Provider value={item}>
+    <CheckboxContext value={item}>
       <Part of={item.part} tag="div" {...rest} />
-    </CheckboxContext.Provider>
+    </CheckboxContext>
   )
 }
 
@@ -178,8 +182,8 @@ export type CheckboxItemIndicatorProps = PartComponentProps<
 >
 
 function CheckboxItemIndicator(props: CheckboxItemIndicatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
-  const item = inside(useContext(CheckboxContext), "CheckboxItem")
+  const [local, rest] = split(props, ["keepMounted"])
+  const item = inside(useContext(CheckboxContext) ?? undefined, "CheckboxItem")
   const checked = fromSignal(item.checked)
   return (
     <Show when={checked() || local.keepMounted}>
@@ -196,7 +200,7 @@ export type RadioGroupProps<Value = unknown> = PartComponentProps<
 >
 
 function RadioGroup<Value = unknown>(props: RadioGroupProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "defaultValue", "onValueChange", "disabled"])
+  const [local, rest] = split(props, ["value", "defaultValue", "onValueChange", "disabled"])
   const group = controller(useMenu().radioGroup<Value>, () => ({
     value: local.value,
     defaultValue: local.defaultValue,
@@ -204,9 +208,9 @@ function RadioGroup<Value = unknown>(props: RadioGroupProps<Value>): JSX.Element
     onValueChange: (value: Value, details: ChangeDetails) => local.onValueChange?.(value, details),
   }))
   return (
-    <RadioGroupContext.Provider value={group}>
+    <RadioGroupContext value={group}>
       <Part of={group.root} tag="div" {...rest} />
-    </RadioGroupContext.Provider>
+    </RadioGroupContext>
   )
 }
 
@@ -217,7 +221,7 @@ export type RadioItemProps = PartComponentProps<
 >
 
 function RadioItem(props: RadioItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, [...ITEM, "value"])
+  const [local, rest] = split(props, [...ITEM, "value"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
   const options = toSignal(() => ({
@@ -225,13 +229,13 @@ function RadioItem(props: RadioItemProps): JSX.Element {
     label: local.label,
     closeOnClick: local.closeOnClick,
   }))
-  const part = inside(useContext(RadioGroupContext), "RadioGroup").item(value, () =>
+  const part = inside(useContext(RadioGroupContext) ?? undefined, "RadioGroup").item(value, () =>
     defined(options.get())
   )
   return (
-    <RadioItemContext.Provider value={value}>
+    <RadioItemContext value={value}>
       <Part of={part} tag="div" {...rest} />
-    </RadioItemContext.Provider>
+    </RadioItemContext>
   )
 }
 
@@ -242,9 +246,9 @@ export type RadioItemIndicatorProps = PartComponentProps<
 >
 
 function RadioItemIndicator(props: RadioItemIndicatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
-  const group = inside(useContext(RadioGroupContext), "RadioGroup")
-  const value = useContext(RadioItemContext)
+  const [local, rest] = split(props, ["keepMounted"])
+  const group = inside(useContext(RadioGroupContext) ?? undefined, "RadioGroup")
+  const value = useContext(RadioItemContext) ?? undefined
   const checked = fromSignal(group.checked(value))
   return (
     <Show when={checked() || local.keepMounted}>

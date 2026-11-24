@@ -5,7 +5,7 @@ import { createServer } from "vite-plus"
 import type { ViteDevServer } from "vite-plus"
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test"
 
-// Solid's JSX is compiled by Solid's own preset, which this project's tests do not run: a
+// Solid's JSX is compiled by Solid's own compiler, which this project's tests do not run: a
 // server of this test's own compiles the adapter as a project's build would, for a server.
 const need = createRequire(import.meta.url)
 const typescript = need("typescript") as {
@@ -14,8 +14,8 @@ const typescript = need("typescript") as {
     options: { fileName: string; compilerOptions: Record<string, unknown> }
   ): { outputText: string }
 }
-const babel = need("@babel/core") as {
-  transformAsync(code: string, options: object): Promise<{ code: string } | null>
+const compiler = need("@solidjs/compiler") as {
+  transform(code: string, options: object): { code: string }
 }
 
 type Drawn = "plain" | "as" | "render"
@@ -37,6 +37,9 @@ beforeAll(async () => {
     appType: "custom",
     server: { middlewareMode: true, hmr: false, ws: false, watch: null },
     optimizeDeps: { noDiscovery: true, include: [] },
+    // Solid in this test's own module graph, its runtime and its renderer alike: one copy of
+    // Solid, whose server render the adapter's components run inside.
+    ssr: { noExternal: ["solid-js", "@solidjs/web", "@solidjs/signals"] },
     plugins: [
       {
         name: "solid-on-a-server",
@@ -44,34 +47,50 @@ beforeAll(async () => {
         async transform(code: string, id: string) {
           const file = id.split("?")[0]!
           if (!file.endsWith(".tsx")) return null
-          // TypeScript takes the types off and leaves the JSX for Solid's preset (its enums by
+          // TypeScript takes the types off and leaves the JSX for Solid's compiler (its enums by
           // number: JSX preserved, ES2022, ES modules).
           const plain = typescript.transpileModule(code, {
             fileName: file,
             compilerOptions: { jsx: 1, target: 9, module: 99, verbatimModuleSyntax: true },
           }).outputText
-          const built = await babel.transformAsync(plain, {
+          const built = compiler.transform(plain, {
             filename: file.replace(/\.tsx$/, ".jsx"),
-            babelrc: false,
-            configFile: false,
-            presets: [[need.resolve("babel-preset-solid"), { generate: "ssr", hydratable: true }]],
+            generate: "ssr",
+            hydratable: true,
           })
-          return { code: built!.code, map: null }
+          return { code: built.code, map: null }
         },
       },
     ],
   })
   cases = (await server.ssrLoadModule("/test/cases.tsx")) as unknown as Cases
-  ;({ renderToString } = (await server.ssrLoadModule("solid-js/web")) as unknown as {
+  ;({ renderToString } = (await server.ssrLoadModule("@solidjs/web")) as unknown as {
     renderToString: typeof renderToString
   })
 }, 60_000)
 
 afterAll(() => server?.close())
 
+/**
+ * Markup without its comments, which are the marks a framework writes for its own hydration.
+ * Read from end to end, so that no comment can be left by what is taken out around it.
+ */
+function uncommented(html: string): string {
+  let out = ""
+  let at = 0
+  while (at < html.length) {
+    const start = html.indexOf("<!--", at)
+    const end = start < 0 ? -1 : html.indexOf("-->", start + 4)
+    if (end < 0) return out + html.slice(at, start < 0 ? undefined : start)
+    out += html.slice(at, start)
+    at = end + 3
+  }
+  return out
+}
+
 /** What a server sends, without the keys and marks Solid writes for its own hydration. */
 const html = (draw: () => unknown) =>
-  renderToString(draw).replace(/ data-hk="?[\w-]+"?|<!--[^>]*-->/g, "")
+  uncommented(renderToString(draw)).replace(/ _hk="?[\w-]+"?/g, "")
 
 /** The inputs an element holds, by the element's tag. */
 function inputsIn(text: string, tag: string): string[] {
@@ -134,22 +153,23 @@ describe("on the server", () => {
   })
 
   it("draws a plain element of one's own as a part is drawn, its state as attributes", () => {
-    // The component's own class joined with its caller's, its state under both.
+    // The component's own class joined with its caller's, its state under both. (Solid's
+    // server writes an empty attribute with no value: the same attribute to a browser.)
     expect(html(cases.primitive.plain!)).toMatch(
-      /^<span data-active="" class="badge mine ?" title="own" data-kind="new" ?>New<\/span>$/
+      /^<span data-active(="")? class="badge mine ?" title="own" data-kind="new" ?>New<\/span>$/
     )
     // Another tag, a later set winning an attribute, a state that does not hold absent.
     expect(html(cases.primitive.as!)).toMatch(/^<b class="badge ?" title="theirs" ?>New<\/b>$/)
     // The caller's own element, given the props and the state.
     expect(html(cases.primitive.render!)).toMatch(
-      /^<a data-active="" class="badge mine ?" title="own" href="\/new" ?>On<\/a>$/
+      /^<a data-active(="")? class="badge mine ?" title="own" href="\/new" ?>On<\/a>$/
     )
   })
 
   it("leaves what the caller's element writes before the props where the part has nothing to say", () => {
     const ordered = html(cases.content.ordered!)
     const before = ordered.match(/<td[^>]*data-kind="before"[^>]*>/)![0]
-    expect(before).toContain('data-selected=""')
+    expect(before).toMatch(/ data-selected(="")?[ >]/)
     expect(before).toContain('data-disabled="true"')
     const after = ordered.match(/<td[^>]*data-kind="after"[^>]*>/)![0]
     expect(after).toContain('data-selected="true"')

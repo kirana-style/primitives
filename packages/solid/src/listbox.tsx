@@ -3,17 +3,17 @@ import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createListbox } from "@kirana-ui/core/listbox"
 import type { Listbox as Controller, ListboxGroup, ListboxProps } from "@kirana-ui/core/listbox"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, splitProps, untrack, useContext } from "solid-js"
-import type { JSX } from "solid-js"
+import { Show, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import type { JSX } from "@solidjs/web"
 
-import { Part, controller, fromSignal, toSignal } from "./runtime.tsx"
+import { Part, controller, fromSignal, toSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["listbox"]
 
-const Context = createContext<Controller>()
-const ItemContext = createContext<unknown>()
-const GroupContext = createContext<ListboxGroup>()
+const Context = createContext<Controller | null>(null)
+const ItemContext = createContext<unknown>(null)
+const GroupContext = createContext<ListboxGroup | null>(null)
 
 function useListbox(): Controller {
   const made = useContext(Context)
@@ -29,7 +29,7 @@ export type RootProps<Value = unknown> = PartComponentProps<
 >
 
 function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
-  const [local, rest] = splitProps(props, [
+  const [local, rest] = split(props, [
     "value",
     "defaultValue",
     "onValueChange",
@@ -56,9 +56,9 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
       local.onValueChange?.(value, details),
   }))
   return (
-    <Context.Provider value={made}>
+    <Context value={made}>
       <Part of={made.root} tag="div" {...rest} />
-    </Context.Provider>
+    </Context>
   )
 }
 
@@ -74,7 +74,7 @@ export type ItemProps = PartComponentProps<
 >
 
 function Item(props: ItemProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["value", "disabled", "label", "index"])
+  const [local, rest] = split(props, ["value", "disabled", "label", "index"])
   // An item is its value for as long as it is in the page.
   const value = untrack(() => local.value)
   const options = toSignal(() => ({
@@ -84,9 +84,9 @@ function Item(props: ItemProps): JSX.Element {
   }))
   const part = useListbox().item(value, () => defined(options.get()))
   return (
-    <ItemContext.Provider value={value}>
+    <ItemContext value={value}>
       <Part of={part} tag="div" {...rest} />
-    </ItemContext.Provider>
+    </ItemContext>
   )
 }
 
@@ -97,9 +97,9 @@ export type ItemIndicatorProps = PartComponentProps<
 >
 
 function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["keepMounted"])
+  const [local, rest] = split(props, ["keepMounted"])
   const made = useListbox()
-  const value = useContext(ItemContext)
+  const value = useContext(ItemContext) ?? undefined
   const selected = fromSignal(made.selected(value))
   return (
     <Show when={selected() || local.keepMounted}>
@@ -111,13 +111,13 @@ function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
 export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
 
 function Group(props: GroupProps): JSX.Element {
-  const [local, rest] = splitProps(props, ["id"])
+  const [local, rest] = split(props, ["id"])
   const generated = createUniqueId()
   const group = useListbox().group(untrack(() => local.id) ?? generated)
   return (
-    <GroupContext.Provider value={group}>
+    <GroupContext value={group}>
       <Part of={group.root} tag="div" {...rest} />
-    </GroupContext.Provider>
+    </GroupContext>
   )
 }
 

@@ -104,6 +104,19 @@ describe("a calendar", () => {
     expect(mondays.rows()[0]).toBe("2324252627281")
   })
 
+  it("begins its week on the day the locale's -u-fw- extension names", async () => {
+    const monday = calendar({ locale: "en-US-u-fw-mon" })
+    expect(monday.heading.textContent).toBe("March 2026")
+    expect(monday.head.textContent).toBe("MonTueWedThuFriSatSun")
+    expect(monday.rows()[0]).toBe("2324252627281")
+    expect(monday.rows().at(-1)).toBe("303112345")
+    // Home goes to the start of that week: Sunday 15 is its last day.
+    monday.day("2026-03-15").focus()
+    await press("{Home}")
+    expect(monday.at()).toBe("2026-03-09")
+    expect(calendar({ locale: "fr-FR-u-fw-sun" }).head.textContent!.startsWith("dim.")).toBe(true)
+  })
+
   it("is laid out in the calendar it is given, and its values stay ISO", async () => {
     const { heading, rows, day, heard } = calendar({
       locale: "fa-IR-u-nu-latn",
@@ -164,6 +177,31 @@ describe("a calendar", () => {
     props.set({ ...props.peek(), fixedWeeks: true })
     expect(made.weeks.peek()).not.toBe(weeks)
     expect(made.weeks.peek()[0]).toBe(weeks[0])
+  })
+
+  it("takes a chosen day away when it is pressed again, unless it is required", async () => {
+    const { day, made, heard } = calendar({ defaultValue: "2026-03-10" })
+    await userEvent.click(day("2026-03-10"))
+    expect(made.value.peek()).toBe(null)
+    expect(day("2026-03-10").hasAttribute("data-selected")).toBe(false)
+    expect(heard).toEqual([[null, "day-deselect"]])
+    // A caller may keep it.
+    const kept = calendar({
+      defaultValue: "2026-03-10",
+      onValueChange: (_value, details) => details.cancel(),
+    })
+    await userEvent.click(kept.day("2026-03-10"))
+    expect(kept.made.value.peek()).toBe("2026-03-10")
+    // Required, it stays chosen, and nothing is asked.
+    const required = calendar({ defaultValue: "2026-03-10", required: true })
+    await userEvent.click(required.day("2026-03-10"))
+    expect(required.made.value.peek()).toBe("2026-03-10")
+    expect(required.heard).toEqual([])
+    // Enter on the day is the same press.
+    const keys = calendar({ defaultValue: "2026-03-15" })
+    keys.day("2026-03-15").focus()
+    await press("{Enter}")
+    expect(keys.made.value.peek()).toBe(null)
   })
 
   it("has one day as its stop for Tab, and moves by the keys of a grid", async () => {
@@ -291,6 +329,16 @@ describe("a calendar", () => {
       expect(day("2026-03-20").hasAttribute("data-range-end")).toBe(true)
       await press("{Enter}")
       expect(day("2026-03-15").hasAttribute("data-selected")).toBe(true)
+    })
+
+    it("starts a range again on a chosen day pressed, and is never cleared by a press", async () => {
+      const { day, made } = calendar({
+        mode: "range",
+        defaultValue: { start: "2026-03-10", end: "2026-03-10" },
+      })
+      await userEvent.click(day("2026-03-10"))
+      await userEvent.click(day("2026-03-10"))
+      expect(made.value.peek()).toEqual({ start: "2026-03-10", end: "2026-03-10" })
     })
 
     it("is given up with Escape", async () => {
@@ -452,6 +500,19 @@ describe("choosing several days", () => {
     expect(day("2026-03-04").hasAttribute("data-disabled")).toBe(false)
   })
 
+  it("keeps its last day when it is required", async () => {
+    const { day, made } = calendar({
+      mode: "multiple",
+      defaultValue: ["2026-03-02"],
+      required: true,
+    })
+    await userEvent.click(day("2026-03-03"))
+    await userEvent.click(day("2026-03-02"))
+    expect(made.value.peek()).toEqual(["2026-03-03"])
+    await userEvent.click(day("2026-03-03"))
+    expect(made.value.peek()).toEqual(["2026-03-03"])
+  })
+
   it("is submitted as one entry for each day, and a form's reset puts its first list back", async () => {
     const root = mount(`<form id="form"><input id="input" /></form>`)
     const form = find<HTMLFormElement>(root, "form")
@@ -530,7 +591,9 @@ describe("several months", () => {
     // April 2 fills March's last week, and is April's own.
     const copy = day("2026-04-02", 0)
     expect(copy.hasAttribute("data-outside-month")).toBe(true)
-    expect(copy.hasAttribute("data-selected")).toBe(false)
+    // Drawn as chosen, as the day itself is, and never said to be: one date, one chosen cell.
+    expect(copy.hasAttribute("data-selected")).toBe(true)
+    expect(copy.parentElement!.hasAttribute("data-selected")).toBe(true)
     expect(copy.parentElement!.hasAttribute("aria-selected")).toBe(false)
     expect(day("2026-04-02", 1).hasAttribute("data-selected")).toBe(true)
     expect(day("2026-04-02", 1).hasAttribute("data-outside-month")).toBe(false)
@@ -552,7 +615,22 @@ describe("several months", () => {
     expect(day("2026-03-31").hasAttribute("data-selected")).toBe(true)
     expect(day("2026-04-01", 1).hasAttribute("data-selected")).toBe(true)
     expect(day("2026-04-03", 1).hasAttribute("data-range-end")).toBe(true)
-    expect(day("2026-04-03", 0).hasAttribute("data-range-end")).toBe(false)
+    // The copies March's last week draws look as the days themselves do, and are never said
+    // to be chosen nor the stop for Tab.
+    const copies = ["2026-04-01", "2026-04-02", "2026-04-03"].map((date) => day(date, 0))
+    expect(copies.map((each) => each.hasAttribute("data-selected"))).toEqual([true, true, true])
+    expect(day("2026-04-03", 0).hasAttribute("data-range-end")).toBe(true)
+    expect(day("2026-04-03", 0).parentElement!.hasAttribute("data-range-end")).toBe(true)
+    expect(day("2026-04-01", 0).hasAttribute("data-range-start")).toBe(false)
+    expect(copies.some((each) => each.parentElement!.hasAttribute("aria-selected"))).toBe(false)
+    expect(copies.some((each) => each.getAttribute("tabindex") === "0")).toBe(false)
+    expect(day("2026-04-04", 0).hasAttribute("data-selected")).toBe(false)
+    // And April's first week draws March's last days as copies.
+    expect(day("2026-03-29", 1).hasAttribute("data-selected")).toBe(true)
+    expect(day("2026-03-29", 1).hasAttribute("data-range-start")).toBe(false)
+    expect(day("2026-03-29", 1).parentElement!.hasAttribute("aria-selected")).toBe(false)
+    expect(day("2026-03-29", 0).parentElement!.getAttribute("aria-selected")).toBe("true")
+    expect(day("2026-03-28", 0).hasAttribute("data-range-start")).toBe(true)
   })
 
   it("keeps its months when the range its caller holds changes", async () => {

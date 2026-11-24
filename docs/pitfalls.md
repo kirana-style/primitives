@@ -177,6 +177,13 @@ note. Three places hold them:
   shown beside), it is never the stop for Tab and never said to be chosen, and a press on it
   sends focus to the day in its own month (`calendar.test.ts`, "has one stop for Tab, and a
   day of another month shown is a copy"; scenario `calendars`).
+- **Not said to be chosen is not drawn as not chosen.** Taking a copy's `aria-selected` away
+  took its `data-selected` and `data-range-*` with it, so a range across two months lost its
+  look on every copy, and a design had to work the copy's place in the range out of the value
+  itself. What a cell says to assistive technology and what it says to a stylesheet are two
+  things: a copy writes the day's `data-selected`, `data-range-start` and `data-range-end`,
+  and only the day itself writes `aria-selected` (`calendar.test.ts`, "chooses a range across
+  them"; scenario `calendars`).
 - **A month that turns on focus moves the day being pressed.** A day of another month,
   pressed, takes focus on the pointer's press, before its click: turning the month then
   redraws the grid under the pointer, and the click lands on whatever day is there now. The

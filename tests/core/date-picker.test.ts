@@ -86,6 +86,27 @@ describe("a date picker", () => {
     expect(reasons.at(-1)).toBe("close: day-press")
   })
 
+  it("empties its field when the day picked is pressed again, unless it is required", () => {
+    const { made, trigger, shown, day, heard, hidden, reasons } = picker({
+      defaultValue: "2026-03-14",
+    })
+    trigger.click()
+    day("2026-03-14").click()
+    expect(made.value.peek()).toBe(null)
+    expect(heard.at(-1)).toBe(null)
+    expect(shown()).toBe("mm/dd/yyyy")
+    expect(hidden.value).toBe("")
+    expect(made.open.peek()).toBe(false)
+    expect(reasons.at(-1)).toBe("close: day-press")
+    const required = picker({ defaultValue: "2026-03-14", required: true })
+    required.trigger.click()
+    required.day("2026-03-14").click()
+    expect(required.made.value.peek()).toBe("2026-03-14")
+    expect(required.shown()).toBe("03/14/2026")
+    // Nothing changed, so nothing closes it: as before, for a day pressed that is already chosen.
+    expect(required.made.open.peek()).toBe(true)
+  })
+
   it("keeps its calendar open when a caller refuses the day", () => {
     const { made, trigger, day } = picker({
       defaultValue: "2026-03-14",

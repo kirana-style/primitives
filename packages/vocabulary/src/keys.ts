@@ -1741,7 +1741,7 @@ export const DatePicker = {
   },
   /** A day's cell. */
   Cell: {
-    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1751,14 +1751,14 @@ export const DatePicker = {
     disabled: "[data-disabled]",
     /** Present on a day that cannot be chosen. */
     unavailable: "[data-unavailable]",
-    /** Present on the first day of a range. */
+    /** Present on the first day of a range, and on a copy of it. */
     rangeStart: "[data-range-start]",
-    /** Present on the last day of a range. */
+    /** Present on the last day of a range, and on a copy of it. */
     rangeEnd: "[data-range-end]",
   },
   /** The button for a day. */
   Day: {
-    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1768,9 +1768,9 @@ export const DatePicker = {
     disabled: "[data-disabled]",
     /** Present on a day that cannot be chosen. */
     unavailable: "[data-unavailable]",
-    /** Present on the first day of a range. */
+    /** Present on the first day of a range, and on a copy of it. */
     rangeStart: "[data-range-start]",
-    /** Present on the last day of a range. */
+    /** Present on the last day of a range, and on a copy of it. */
     rangeEnd: "[data-range-end]",
   },
 } as const
@@ -1813,7 +1813,7 @@ export const Calendar = {
   },
   /** A day's cell. */
   Cell: {
-    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1823,14 +1823,14 @@ export const Calendar = {
     disabled: "[data-disabled]",
     /** Present on a day that cannot be chosen. */
     unavailable: "[data-unavailable]",
-    /** Present on the first day of a range. */
+    /** Present on the first day of a range, and on a copy of it. */
     rangeStart: "[data-range-start]",
-    /** Present on the last day of a range. */
+    /** Present on the last day of a range, and on a copy of it. */
     rangeEnd: "[data-range-end]",
   },
   /** The button for a day. */
   Day: {
-    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too. */
+    /** Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected. */
     selected: "[data-selected]",
     /** Present on today. */
     today: "[data-today]",
@@ -1840,9 +1840,9 @@ export const Calendar = {
     disabled: "[data-disabled]",
     /** Present on a day that cannot be chosen. */
     unavailable: "[data-unavailable]",
-    /** Present on the first day of a range. */
+    /** Present on the first day of a range, and on a copy of it. */
     rangeStart: "[data-range-start]",
-    /** Present on the last day of a range. */
+    /** Present on the last day of a range, and on a copy of it. */
     rangeEnd: "[data-range-end]",
   },
   /** The hidden input it is submitted by, when it has a name: one more is drawn after it for each other day. */

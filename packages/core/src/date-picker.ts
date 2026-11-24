@@ -59,7 +59,10 @@ export interface DatePickerProps {
   disabled?: boolean | undefined
   /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
-  /** Needed: in a `Field`, leaving it empty is then invalid. */
+  /**
+   * Needed: in a `Field`, leaving it empty is then invalid, and the day picked, pressed again in
+   * the calendar, stays picked. Without it, that press empties the field and closes the calendar.
+   */
   required?: boolean | undefined
   /** The name it is submitted under. */
   name?: string | undefined
@@ -150,6 +153,7 @@ export function createDatePicker(
         onMonthChange: (next, by) => props.peek().onMonthChange?.(next, by),
         disabled: own.disabled,
         readOnly: own.readOnly,
+        required: own.required,
       }
     }),
     around

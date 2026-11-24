@@ -1809,6 +1809,7 @@ export function App() {
             mode="multiple"
             name="days"
             maxDays={3}
+            required
             defaultValue={["2026-03-02"]}
             defaultFocusedValue="2026-03-15"
             className="calendar"

@@ -1497,6 +1497,7 @@ function press(event: PartEvent<MouseEvent>) {
           mode="multiple"
           name="days"
           :max-days="3"
+          required
           :default-value="['2026-03-02']"
           default-focused-value="2026-03-15"
           class="calendar"

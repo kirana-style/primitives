@@ -723,6 +723,7 @@ Props of its root:
 - `defaultValue?: CalendarValueOf<Mode>`: The value it starts with, when the caller does not hold `value`. Read once.
 - `onValueChange?: (value: CalendarValueOf<Mode>, details: ChangeDetails) => void`: Heard as a day is about to be chosen: `details.cancel()` keeps the value as it was.
 - `mode?: Mode`: Whether one day is chosen (the default), a first and a last (`"range"`), or any number (`"multiple"`: a day pressed is added, and pressed again is taken away).
+- `required?: boolean`: Whether a day, once chosen, stays chosen. Off by default, as in react-day-picker: the chosen day pressed again is taken away and the value is `null`, heard with the reason `"day-deselect"` (cancellable). Given, the chosen day pressed again stays, and with `mode: "multiple"` the last day cannot be taken away. With `mode: "range"` a press always begins a range again, so a press never clears a range. It does not make a form ask for a value.
 - `minDays?: number`: With `mode: "multiple"`: the fewest days that can be left chosen. A press that would leave fewer does nothing.
 - `maxDays?: number`: With `mode: "multiple"`: the most days that can be chosen. Once they are, the other days are disabled until one is taken away.
 - `months?: number`: How many months are shown side by side (1 by default): one selection and one grid for the keys, which go from a month into the next. Each is drawn in `Calendar.Months`.
@@ -731,7 +732,7 @@ Props of its root:
 - `defaultMonth?: IsoDate`: The month it starts on, when the caller does not hold `month`. Read once. Without it, the month of `defaultFocusedValue`, of the value, or of today.
 - `onMonthChange?: (month: IsoDate, details: ChangeDetails) => void`: Heard as another month is about to be shown (the keys, the buttons, a day of another month pressed): its first day. `details.cancel()` keeps the month as it was.
 - `defaultFocusedValue?: IsoDate`: The day it opens on, focusable when Tab reaches the grid. It is also the month it opens on, unless `month` or `defaultMonth` says another: then the stop for Tab is a chosen day of the months shown, today, or their first day.
-- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. Another first day of the week is the tag's `fw` extension: `"en-US-u-fw-mon"` begins each week on Monday. Default `"en-US"`.
+- `locale?: string`: The language and region its names, numbers, first day of the week and calendar follow (`"en-US"`, `"fa-IR"`). Give it: a server does not know the reader's. The week begins on the day the region begins it on (Sunday in `"en-US"`, Monday in `"fr-FR"`), or on the day a `-u-fw-` extension names: `"en-US-u-fw-mon"` is American English with weeks from Monday (`sun`, `mon`, `tue`, `wed`, `thu`, `fri`, `sat`). Default `"en-US"`.
 - `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`). Given, not found from the locale: a page then carries only the calendars it uses.
 - `min?: IsoDate`: The first and the last day that can be chosen.
 - `max?: IsoDate`: The last day that can be chosen.
@@ -773,21 +774,21 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
     - `data-unavailable`: Present on a day that cannot be chosen.
-    - `data-range-start`: Present on the first day of a range.
-    - `data-range-end`: Present on the last day of a range.
+    - `data-range-start`: Present on the first day of a range, and on a copy of it.
+    - `data-range-end`: Present on the last day of a range, and on a copy of it.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
     - `data-unavailable`: Present on a day that cannot be chosen.
-    - `data-range-start`: Present on the first day of a range.
-    - `data-range-end`: Present on the last day of a range.
+    - `data-range-start`: Present on the first day of a range, and on a copy of it.
+    - `data-range-end`: Present on the last day of a range, and on a copy of it.
 
 ### Carousel
 
@@ -1420,7 +1421,7 @@ Props of its root:
 - `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part of the field shows.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
-- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
+- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid, and the day picked, pressed again in the calendar, stays picked. Without it, that press empties the field and closes the calendar.
 - `name?: string`: The name it is submitted under.
 - `form?: string`: The id of the form it belongs to, when it is not inside it.
 
@@ -1496,21 +1497,21 @@ Attributes and CSS variables, by part:
 - next: Shows the month after.
     - `data-disabled`: Present when it is disabled.
 - cell: A day's cell.
-    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
     - `data-unavailable`: Present on a day that cannot be chosen.
-    - `data-range-start`: Present on the first day of a range.
-    - `data-range-end`: Present on the last day of a range.
+    - `data-range-start`: Present on the first day of a range, and on a copy of it.
+    - `data-range-end`: Present on the last day of a range, and on a copy of it.
 - day: The button for a day.
-    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Never on a copy: a day of the month before or after shown in its own month too.
+    - `data-selected`: Present on a chosen day, on every day of a chosen range, and on each day of a list. Also on a copy of one (a day of the month before or after, shown in its own month too), which is drawn as the day is but has no aria-selected.
     - `data-today`: Present on today.
     - `data-outside-month`: Present on the days of the month before and after that fill the first and last weeks.
     - `data-disabled`: Present when it is disabled.
     - `data-unavailable`: Present on a day that cannot be chosen.
-    - `data-range-start`: Present on the first day of a range.
-    - `data-range-end`: Present on the last day of a range.
+    - `data-range-start`: Present on the first day of a range, and on a copy of it.
+    - `data-range-end`: Present on the last day of a range, and on a copy of it.
 
 ### Dialog
 

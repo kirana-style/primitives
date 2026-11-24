@@ -43,6 +43,11 @@ export class KpCalendar<Mode extends CalendarMode = CalendarMode> implements OnI
   readonly defaultValue = input<NoInfer<CalendarValueOf<Mode>>>()
   /** One day (the default), a first and a last (`"range"`), or any number (`"multiple"`). */
   readonly mode = input<Mode>()
+  /**
+   * A chosen day stays chosen: pressed again it is kept, and with `mode="multiple"` the last day
+   * cannot be taken away. Without it, a second press on the chosen day empties the value.
+   */
+  readonly required = input(false, { transform: booleanAttribute })
   /** With `mode="multiple"`: the fewest days that can be left chosen. */
   readonly minDays = input<number>()
   /** With `mode="multiple"`: the most days that can be chosen. */
@@ -56,7 +61,11 @@ export class KpCalendar<Mode extends CalendarMode = CalendarMode> implements OnI
   /** The month it starts on, when the caller does not hold `month`. Read once. */
   readonly defaultMonth = input<string>()
   readonly defaultFocusedValue = input<string>()
-  /** The language and region its names, first day of the week and calendar follow. */
+  /**
+   * The language and region its names, first day of the week and calendar follow. The week
+   * begins where the region begins it, or on the day a `-u-fw-` extension names
+   * (`"en-US-u-fw-mon"`).
+   */
   readonly locale = input<string>()
   /** The calendar its months are laid out in, when it is not the Gregorian one. */
   readonly calendarSystem = input<CalendarProps["calendarSystem"]>()
@@ -85,6 +94,7 @@ export class KpCalendar<Mode extends CalendarMode = CalendarMode> implements OnI
     value: this.value() as CalendarValue | undefined,
     defaultValue: this.defaultValue() as CalendarValue | undefined,
     mode: this.mode(),
+    required: this.required(),
     minDays: this.minDays(),
     maxDays: this.maxDays(),
     months: this.months(),

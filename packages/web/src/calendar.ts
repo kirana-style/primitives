@@ -17,7 +17,7 @@ const { parts, lists } = calendarParts<Calendar>((controller) => controller)
  * `<template kui-each="months">` (`{index}`, `{month}`, `{title}`) holds each month's
  * `heading` and `grid`. An `<input kui-part="input">` submits the value under `name`.
  * `value` and `default-value` (a day as `2026-03-14`; a range's first and last, or a list's
- * days, with commas between), `mode`, `min-days`, `max-days`, `months`, `paged-navigation`,
+ * days, with commas between), `mode`, `required`, `min-days`, `max-days`, `months`, `paged-navigation`,
  * `month`, `default-month`, `default-focused-value`, `locale`, `calendar-system`, `min`,
  * `max`, `disabled`, `read-only`, `fixed-weeks`, `name`, `form`; `isDateUnavailable` as a
  * property; it tells `value-change` and `month-change`.
@@ -28,6 +28,7 @@ export const tag = defineElement<CalendarProps, Calendar>({
     value: "string",
     "default-value": "string",
     mode: "string",
+    required: "boolean",
     "min-days": "number",
     "max-days": "number",
     months: "number",

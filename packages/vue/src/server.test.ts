@@ -109,8 +109,10 @@ describe("a part drawn as its caller's own element (as-child)", () => {
     // Classes join once and styles are merged, the element's own winning a property.
     expect(out).toContain('class="button link"')
     expect(out).toContain('style="color:red;margin:4px;"')
-    // The part's own are over both: an element that is not a button is given the role of one.
-    expect(out).toContain('role="button"')
+    // A link that navigates is not given a button's role: the element's own stands.
+    expect(out).toContain('role="link"')
+    expect(out).not.toContain('role="button"')
+    expect(out).not.toContain("tabindex")
   })
 
   it("leaves an input disabled by the element it is drawn as", async () => {

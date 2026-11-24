@@ -317,8 +317,10 @@ describe("a part drawn as the element its caller asked for", () => {
     // Classes join and styles are merged, the element's own winning a property.
     expect(html).toContain('class="button link"')
     expect(html).toContain('style="color:red;margin:4px"')
-    // The part's own are over both: an element that is not a button is given the role of one.
-    expect(html).toContain('role="button"')
+    // A link that navigates is not given a button's role: the element's own stands.
+    expect(html).toContain('role="link"')
+    expect(html).not.toContain('role="button"')
+    expect(html).not.toContain("tabindex")
   })
 
   it("keeps the element's own children, and the part's caller's where it has none", () => {

@@ -6,7 +6,8 @@ import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-button>` around a `kui-part="root"` button, or with `native-button="false"` another
- * element that acts as one. `disabled`, `focusable-when-disabled`, `native-button`.
+ * element that acts as one; on a link that navigates (`<a href>`), it stays a link. `disabled`,
+ * `focusable-when-disabled`, `native-button`.
  */
 export const tag = defineElement({
   tag: "kui-button",

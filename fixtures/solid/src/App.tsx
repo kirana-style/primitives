@@ -655,6 +655,20 @@ export function App() {
         >
           Not a button element
         </Button>
+        {/* `render` draws an element the part cannot know on a server: it leaves the role out. */}
+        <Button
+          nativeButton={false}
+          data-testid="bl1"
+          onClick={() => setCount((value) => value + 1)}
+          render={(props) => (
+            <a
+              {...(({ type: _type, role: _role, tabindex: _tabindex, ...rest }) => rest)(props())}
+              href="#bl1-docs"
+            >
+              Docs
+            </a>
+          )}
+        />
         <form
           data-testid="b4-form"
           onSubmit={(event) => {

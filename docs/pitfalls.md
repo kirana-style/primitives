@@ -71,6 +71,21 @@ note. Three places hold them:
   button, a reset button, triggers rendered as links), `tests/core/bind.test.ts` ("a part's
   button type") and the conformance run (`simple`: `b4` submits its form; `hover`: `h3`'s link
   has no type).
+- **A button drawn as a link that navigates stays a link.** `nativeButton={false}` gave every
+  element a button's role, a `tabindex="0"` and keys: on an `<a href>` that hid the link from
+  assistive technology, and Enter followed it twice, once by the browser and once by the part's
+  `click()`. A link that navigates (an `<a>` or `<area>` with an `href`, `isLink` in `part.ts`)
+  is now given no role and no tab stop, and the button's keys ask the element they are heard on
+  and leave a link's alone (its Enter is its own; Space does not press it); disabled, it keeps
+  `tabindex="-1"`, `aria-disabled` and a blocked click. The role goes through `forElement` as
+  `type` does, where the adapter knows the tag and the caller's `href`, and through `bind` and
+  `write`, which read the element; where it cannot be known before it is drawn, the button
+  learns it in `attach` and draws itself again, which also holds when it is disabled and
+  enabled again. A server draws the role there unless the caller leaves it out, as `type`.
+  This is not a rule that a caller's `role` beats a part's: on any other element the part's
+  role still wins. Held by `tests/core/button.test.ts` and the conformance run (`simple`: `bl1`
+  has no role, no `tabindex` and its `href`, Enter follows it once and Space does not press it;
+  `b3`, a `<span>`, keeps the role).
 - **A control's `id` is its native input's.** A `<label for>` reaches only a labelable element,
   so a radio item's `id` goes on its hidden radio, as a checkbox's and a switch's do. Held by
   the `controls` scenario, which presses a label `for` a radio item.

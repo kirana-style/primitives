@@ -17,7 +17,10 @@ export type ButtonProps = PartComponentProps<
   }
 >
 
-/** A `<button>`, or with `as` and `nativeButton={false}` another element that acts as one. */
+/**
+ * A `<button>`, or with `as` and `nativeButton={false}` another element that acts as one; a link
+ * that navigates (`<a href>`, drawn by `render`) stays a link.
+ */
 export function Button(props: ButtonProps): JSX.Element {
   const [local, rest] = splitProps(props, ["disabled", "focusableWhenDisabled", "nativeButton"])
   const made = controller(createButton, () => ({ ...local }))

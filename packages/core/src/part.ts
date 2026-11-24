@@ -201,23 +201,44 @@ export function takesType(tag: string): boolean {
 }
 
 /**
+ * Whether an element is a link that navigates: an `<a>` or an `<area>` with an `href`. A part
+ * that makes another element act as a button leaves such a link a link: the browser gives it
+ * its role, its place in the tab order and its Enter.
+ */
+export function isLink(tag: string, href: unknown): boolean {
+  return (tag === "a" || tag === "area") && href !== undefined && href !== null && href !== false
+}
+
+/**
  * A part's own props as they go on an element, before `mergeProps` lays them over the
  * caller's. A part's `type` is a default, not its identity: a `<button>` it draws says
  * `type="button"` so that it never submits a form by accident, but a caller's `type`
  * (`"submit"`, `"reset"`) wins, and an element that takes no button type (a link, where `type`
- * is a MIME type) is given none. `tag` is the element's tag name, or `undefined` when the
- * adapter cannot know it before the element is drawn (a `render` function, a component): the
- * part's `type` is then kept, and `untype` takes it off once the element is known.
+ * is a MIME type) is given none. A link that navigates (`isLink`, the caller's `href`) is not
+ * given a button's role, nor the tab stop that comes with it: it is a link already. `tag` is
+ * the element's tag name, or `undefined` when the adapter cannot know it before the element is
+ * drawn (a `render` function, a component): the part's props are then kept, `untype` takes the
+ * `type` off once the element is known, and a part that draws a role answers the element it
+ * is attached to (a button's `attach`).
  */
 export function forElement(
   own: PartProps,
   caller: PartProps | undefined,
   tag: string | undefined
 ): PartProps {
-  if (own.type === undefined) return own
-  if (caller?.type === undefined && (tag === undefined || takesType(tag))) return own
-  const { type: _type, ...rest } = own
-  return rest
+  let placed = own
+  if (
+    own.type !== undefined &&
+    (caller?.type !== undefined || (tag !== undefined && !takesType(tag)))
+  ) {
+    const { type: _type, ...rest } = placed
+    placed = rest
+  }
+  if (own.role === "button" && tag !== undefined && isLink(tag, caller?.href)) {
+    const { role: _role, tabindex, ...rest } = placed
+    placed = tabindex === "0" || tabindex === undefined ? rest : { ...rest, tabindex }
+  }
+  return placed
 }
 
 /**

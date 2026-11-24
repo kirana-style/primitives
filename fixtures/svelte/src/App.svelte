@@ -541,6 +541,12 @@
         <span {...props} data-testid="b3">Not a button element</span>
       {/snippet}
     </Button>
+    <!-- A snippet draws an element the part cannot know on a server: it says it is a link. -->
+    <Button nativeButton={false} onclick={() => (count += 1)}>
+      {#snippet child({ props })}
+        <a {...props} role={undefined} tabindex={undefined} href="#bl1-docs" data-testid="bl1">Docs</a>
+      {/snippet}
+    </Button>
     <form
       data-testid="b4-form"
       onsubmit={(event) => {

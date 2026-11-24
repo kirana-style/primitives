@@ -6,6 +6,7 @@
   import type { ButtonProps } from "./types.ts"
 
   // A `<button>`, or with `child` and `nativeButton={false}` another element that acts as one.
+  // A link that navigates stays a link.
   let { disabled, focusableWhenDisabled, nativeButton, ...rest }: ButtonProps = $props()
   const made = controller(createButton, () => ({ disabled, focusableWhenDisabled, nativeButton }))
 </script>

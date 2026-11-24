@@ -13,7 +13,10 @@ export type ButtonProps = PartComponentProps<
   CoreProps
 >
 
-/** A `<button>`, or with `render` and `nativeButton={false}` another element that acts as one. */
+/**
+ * A `<button>`, or with `render` and `nativeButton={false}` another element that acts as one; a
+ * link that navigates (`render={<a href="/x" />}`) stays a link.
+ */
 export const Button = /* @__PURE__ */ component(
   "Button",
   function Button({

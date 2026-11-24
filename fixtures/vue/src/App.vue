@@ -545,6 +545,9 @@ function press(event: PartEvent<MouseEvent>) {
       <Button as="span" :native-button="false" data-testid="b3" @click="count += 1">
         Not a button element
       </Button>
+      <Button as-child :native-button="false" data-testid="bl1" @click="count += 1">
+        <a href="#bl1-docs">Docs</a>
+      </Button>
       <form data-testid="b4-form" @submit.prevent="submits += 1">
         <Button type="submit" data-testid="b4">Sent {{ submits }}</Button>
       </form>

@@ -883,6 +883,15 @@ import {
         <span kpButton [nativeButton]="false" data-testid="b3" (click)="count.set(count() + 1)">
           Not a button element
         </span>
+        <a
+          kpButton
+          [nativeButton]="false"
+          href="#bl1-docs"
+          data-testid="bl1"
+          (click)="count.set(count() + 1)"
+        >
+          Docs
+        </a>
         <form data-testid="b4-form" (submit)="$event.preventDefault(); submits.set(submits() + 1)">
           <button kpButton type="submit" data-testid="b4">Sent {{ submits() }}</button>
         </form>

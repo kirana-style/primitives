@@ -2,10 +2,12 @@ import {
   composeProps,
   computed,
   defined,
+  forElement,
   mergeProps,
   sameProps,
   signal,
   stateOf,
+  untype,
 } from "@kirana-ui/core"
 import type {
   Anchor,
@@ -316,6 +318,7 @@ export function usePart<Tag extends PartTag, State = PartState>(
           now.leaving = false
           now.detach()
         }
+        untype(element)
         held.current = { element, part, detach: part.attach(element), leaving: false }
       }
       give(ref, element)
@@ -330,7 +333,19 @@ export function usePart<Tag extends PartTag, State = PartState>(
     const { ref: _ref, ...element } = REF_IS_A_PROP ? asked.props : { ...asked.props }
     under = composeProps(caller, element)
   }
-  const drawn: Record<string, unknown> = { ...toReact(mergeProps(under, own)), ref: attach }
+  // The element's tag, where it is known before it is drawn: a function, or a component given
+  // as `render`, draws one of its own choosing.
+  const drawnAs = asked
+    ? typeof asked.type === "string"
+      ? asked.type
+      : undefined
+    : typeof render === "function"
+      ? undefined
+      : tag
+  const drawn: Record<string, unknown> = {
+    ...toReact(mergeProps(under, forElement(own, under, drawnAs))),
+    ref: attach,
+  }
   if (hold) drawn.children = hold(drawn.children as ReactNode)
   if (asked) return cloneElement(asked, drawn)
   if (typeof render === "function") return render(drawn, state ?? (stateOf(own) as State))

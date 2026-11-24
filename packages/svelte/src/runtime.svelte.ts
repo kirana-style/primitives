@@ -1,4 +1,12 @@
-import { mergeProps, sameProps, signal, stateOf, styleText } from "@kirana-ui/core"
+import {
+  forElement,
+  mergeProps,
+  sameProps,
+  signal,
+  stateOf,
+  styleText,
+  untype,
+} from "@kirana-ui/core"
 import type { Part, PartProps, PartState, PartStyle, ReadonlySignal } from "@kirana-ui/core"
 import { untrack } from "svelte"
 import { createAttachmentKey } from "svelte/attachments"
@@ -71,18 +79,24 @@ function toSvelte(props: PartProps): PartProps {
  * What a part's element spreads: the caller's props merged under the part's, and an attachment
  * that runs the part's DOM work. A `child` snippet spreads the same object on its own element,
  * where what the element writes after the spread wins, and is given `state` beside it: the
- * part's state (`open`, `side` …), read from its `data-*` attributes.
+ * part's state (`open`, `side` …), read from its `data-*` attributes. `tag` is the element's
+ * when the part draws its own, and `undefined` for a `child` snippet's.
  */
 export function partProps(
   part: () => Part,
-  caller: () => PartProps
+  caller: () => PartProps,
+  tag?: () => string | undefined
 ): { readonly current: PartProps; readonly state: PartState } {
   const key = createAttachmentKey()
   const own = $derived(fromSignal(part().props))
   // One function for the element's life: Svelte runs an attachment again when it is another.
-  const attachment = (element: HTMLElement) => untrack(() => part().attach(element))
+  const attachment = (element: HTMLElement) =>
+    untrack(() => {
+      untype(element)
+      return part().attach(element)
+    })
   const current = $derived({
-    ...mergeProps(caller(), toSvelte(own.current)),
+    ...mergeProps(caller(), toSvelte(forElement(own.current, caller(), tag?.()))),
     [key]: attachment,
   })
   const state = $derived(stateOf(own.current))

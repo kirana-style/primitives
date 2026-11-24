@@ -19,7 +19,10 @@ export interface Button {
 
 const NOTHING = () => {}
 
-/** A button: a `<button>` that is never a submit by accident, or another element made to act as one. */
+/**
+ * A button: a `<button>` that is never a submit by accident (`type="button"`, unless its caller
+ * gives a `type` of its own: `"submit"` submits its form), or another element made to act as one.
+ */
 export function createButton(props: ReadonlySignal<ButtonProps>): Button {
   return {
     mount: () => NOTHING,

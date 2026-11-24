@@ -390,6 +390,7 @@ Its other types:
 - Each part is a standalone directive on the caller's own element: `<button kpDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).
 - The package has one entry for the components: every directive is imported from `@kirana-ui/angular`.
 - Props are inputs. Bind them (`[defaultValue]="'a'"`): a static attribute stays on the element. An `id` is given as `[kpId]`.
+- A part on a `<button>` writes `type="button"`, so that it never submits a form by accident, unless the element has a `type` of its own (`<button kpButton type="submit">`); a part on an element that is not a button (`<a kpTooltipTrigger href="/x">`) writes none.
 - A value binds two ways with `[(value)]` (`[(open)]`, `[(page)]` …); the output with the details is `(valueChanged)="…($event.value, $event.details)"` (`(openChanged)`, `(pageChanged)` …). Below, `[(name)]` is such a model and `(name)` an output.
 - A part that draws a list is structural and gives each entry: `*kpDateFieldSegments="let segment"`.
 - A structural directive's own value is written after its name, and its other inputs after a semicolon: `*kpTabsPanel="'account'; keepMounted: true"`.

@@ -6,11 +6,14 @@ export {
   defined,
   details,
   flag,
+  forElement,
   mergeProps,
   sameProps,
   stateAttributes,
   stateOf,
   styleText,
+  takesType,
+  untype,
   within,
 } from "./part.ts"
 export type {

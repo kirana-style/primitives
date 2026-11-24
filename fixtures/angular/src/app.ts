@@ -813,6 +813,14 @@ import {
             </div>
           </ng-template>
         </ng-container>
+        <ng-container kpTooltip [kpId]="'h4'" [delay]="100">
+          <a kpTooltipTrigger href="#guide" data-testid="h4-trigger">Guide</a>
+          <ng-template kpTooltipPortal>
+            <div kpTooltipPositioner [sideOffset]="8">
+              <div kpTooltipPopup class="tip">Read the guide</div>
+            </div>
+          </ng-template>
+        </ng-container>
         <ng-container kpHoverCard [kpId]="'v1'" [delay]="100" [closeDelay]="100">
           <a kpHoverCardTrigger href="#profile" data-testid="v1-trigger">&#64;kirana</a>
           <ng-template kpHoverCardPortal>
@@ -852,6 +860,9 @@ import {
         <span kpButton [nativeButton]="false" data-testid="b3" (click)="count.set(count() + 1)">
           Not a button element
         </span>
+        <form data-testid="b4-form" (submit)="$event.preventDefault(); submits.set(submits() + 1)">
+          <button kpButton type="submit" data-testid="b4">Sent {{ submits() }}</button>
+        </form>
         <button kpToggle aria-label="Bold" data-testid="g1">B</button>
         <div kpSeparator data-testid="sp1"></div>
         <div kpSeparator [orientation]="'vertical'" data-testid="sp2"></div>
@@ -2978,6 +2989,7 @@ export class App {
   // The other adapters give the caller the part's state; here the caller holds it.
   protected readonly layered = signal<boolean | undefined>(false)
   protected readonly count = signal(0)
+  protected readonly submits = signal(0)
   protected readonly done = signal<number | null>(40)
   protected readonly tipKept = signal(true)
   protected readonly pictures = signal(false)

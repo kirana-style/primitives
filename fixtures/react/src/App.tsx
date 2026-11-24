@@ -226,6 +226,7 @@ export function App() {
   const [alerts, setAlerts] = useState(false)
   const [toppings, setToppings] = useState<string[]>(["ham"])
   const [count, setCount] = useState(0)
+  const [submits, setSubmits] = useState(0)
   const [done, setDone] = useState(40)
   const [tipKept, setTipKept] = useState(true)
   const [pictures, setPictures] = useState(false)
@@ -577,6 +578,16 @@ export function App() {
             </Tooltip.Positioner>
           </Tooltip.Portal>
         </Tooltip.Root>
+        <Tooltip.Root id="h4" delay={100}>
+          <Tooltip.Trigger render={<a href="#guide" />} data-testid="h4-trigger">
+            Guide
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner sideOffset={8}>
+              <Tooltip.Popup className="tip">Read the guide</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
         <HoverCard.Root id="v1" delay={100} closeDelay={100}>
           <HoverCard.Trigger href="#profile" data-testid="v1-trigger">
             @kirana
@@ -624,6 +635,17 @@ export function App() {
         >
           Not a button element
         </Button>
+        <form
+          data-testid="b4-form"
+          onSubmit={(event) => {
+            event.preventDefault()
+            setSubmits((value) => value + 1)
+          }}
+        >
+          <Button type="submit" data-testid="b4">
+            Sent {submits}
+          </Button>
+        </form>
         <Toggle aria-label="Bold" data-testid="g1">
           B
         </Toggle>

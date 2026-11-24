@@ -1,4 +1,4 @@
-import { composeProps, mergeProps } from "@kirana-ui/core"
+import { composeProps, forElement, mergeProps } from "@kirana-ui/core"
 import type { PartProps } from "@kirana-ui/core"
 import { Comment, Fragment, cloneVNode, h } from "vue"
 import type { Component, VNode, VNodeArrayChildren } from "vue"
@@ -96,16 +96,17 @@ export function draw(
   ref?: (target: unknown) => void,
   hold?: Hold
 ): VNode | null {
-  const whole = (under: PartProps) => {
-    const merged = own ? mergeProps(under, own) : under
+  // `tag` is the element's, where it is known before it is drawn: a component draws its own.
+  const whole = (under: PartProps, tag: string | undefined) => {
+    const merged = own ? mergeProps(under, forElement(own, under, tag)) : under
     return ref ? { ...merged, ref } : merged
   }
   if (!asChild) {
     const inside = hold ? hold(content, false) : content
     // A component takes its content as a slot.
     return typeof as === "string"
-      ? h(as, whole(single(attrs)), inside)
-      : h(as, whole(single(attrs)), () => inside)
+      ? h(as, whole(single(attrs), as), inside)
+      : h(as, whole(single(attrs), undefined), () => inside)
   }
   const child = firstElement(content)
   if (!child) return null
@@ -115,7 +116,10 @@ export function draw(
   // twice and its listener beside the one that already calls it.
   return cloneVNode(
     { ...child, props: null, ...(hold ? holding(child, hold) : null) },
-    whole(composeProps(single(attrs), single(theirs))),
+    whole(
+      composeProps(single(attrs), single(theirs)),
+      typeof child.type === "string" ? child.type : undefined
+    ),
     true
   )
 }

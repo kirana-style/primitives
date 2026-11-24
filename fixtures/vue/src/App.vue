@@ -136,6 +136,7 @@ const controlled = ref(false)
 const alerts = ref(false)
 const toppings = ref<string[]>(["ham"])
 const count = ref(0)
+const submits = ref(0)
 const done = ref(40)
 const tipKept = ref(true)
 const pictures = ref(false)
@@ -479,6 +480,16 @@ function press(event: PartEvent<MouseEvent>) {
           </Tooltip.Positioner>
         </Tooltip.Portal>
       </Tooltip.Root>
+      <Tooltip.Root id="h4" :delay="100">
+        <Tooltip.Trigger as-child data-testid="h4-trigger">
+          <a href="#guide">Guide</a>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner :side-offset="8">
+            <Tooltip.Popup class="tip">Read the guide</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
       <HoverCard.Root id="v1" :delay="100" :close-delay="100">
         <HoverCard.Trigger href="#profile" data-testid="v1-trigger">@kirana</HoverCard.Trigger>
         <HoverCard.Portal>
@@ -507,6 +518,9 @@ function press(event: PartEvent<MouseEvent>) {
       <Button as="span" :native-button="false" data-testid="b3" @click="count += 1">
         Not a button element
       </Button>
+      <form data-testid="b4-form" @submit.prevent="submits += 1">
+        <Button type="submit" data-testid="b4">Sent {{ submits }}</Button>
+      </form>
       <Toggle aria-label="Bold" data-testid="g1">B</Toggle>
       <Separator data-testid="sp1" />
       <Separator orientation="vertical" data-testid="sp2" />

@@ -21,7 +21,13 @@ const { component, usePart } = await import("./runtime.tsx")
 const element = () =>
   new Proxy({} as HTMLElement, {
     get: (_target, key) =>
-      key === "isConnected" ? false : key === "ownerDocument" ? undefined : () => undefined,
+      key === "isConnected"
+        ? false
+        : key === "ownerDocument"
+          ? undefined
+          : key === "localName"
+            ? "button"
+            : () => undefined,
   })
 
 describe("a part's ref where a component is given one only through forwardRef", () => {

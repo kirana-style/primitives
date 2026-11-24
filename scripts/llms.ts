@@ -1402,7 +1402,7 @@ async function fileFor(adapter: Adapter, problems: Problem[]): Promise<string> {
       if (/(Props|Emits)$/.test(name) && entry !== "./runtime" && entry !== ".") continue
       // A component of one part: its props type is the component's name with `Props`.
       if (own.components.has(name.replace(/Props$/, ""))) continue
-      if (!new RegExp(`\\b${name.replace(/\$/g, "\\$")}\\b`).test(text))
+      if (!new RegExp(`\\b${name.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&")}\\b`).test(text))
         problems.push({
           rule: "exports",
           adapter,

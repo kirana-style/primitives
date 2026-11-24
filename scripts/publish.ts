@@ -129,7 +129,7 @@ function level(tarball: Tarball, seen: string[] = []): number {
 const levels: Tarball[][] = []
 for (const tarball of tarballs) (levels[level(tarball)] ??= []).push(tarball)
 
-const escaped = (name: string) => name.replace("/", "%2f")
+const escaped = (name: string) => name.replaceAll("/", "%2f")
 
 /** A registry request, asked again while the registry fails for its own reasons. */
 async function ask(target: string, init?: RequestInit): Promise<Response> {

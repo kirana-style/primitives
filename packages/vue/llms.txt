@@ -2934,7 +2934,7 @@ Each part, and its own props:
     - `placeholder?: string`: What it shows while nothing is chosen.
 - `<Select.Portal>` draws no element. A portal takes nothing: where it is drawn is its `PortalProvider`'s to say.
 - `<Select.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
-    - `alignItemWithTrigger?: boolean`: Opens the list over its trigger, the chosen item's text on the trigger's own.
+    - `alignItemWithTrigger?: boolean`: Opens the list over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it. While it lies there the page's scroll is held (its scrollbar's room kept), and a scroll of a box around the trigger closes the list (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
 - `<Select.Popup>` draws a `<div>`.
 - `<Select.List>` draws a `<div>`. The items' own box inside the popup, when the popup holds more than its items: the listbox, and what scrolls.
 - `<Select.ScrollUpArrow>` draws a `<div>`.

@@ -13,6 +13,7 @@ import { popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPresence } from "./services/presence.ts"
 import { createPlacement } from "./services/position.ts"
+import { lockScroll } from "./services/scroll-lock.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { byPlace } from "./services/list-places.ts"
 import { createList, pointerMoved } from "./services/list.ts"
@@ -125,7 +126,9 @@ export interface Select<Value = unknown> {
    * Whether the list opens over its trigger, the chosen item's text on the trigger's own (as
    * a native select does), where there is room and unless a finger opened it. With `multiple`
    * it is the first chosen item's; with nothing chosen, the first item's, in either mode. Its
-   * positioner's adapter writes it here. Off unless asked for.
+   * positioner's adapter writes it here. Off unless asked for. While the list is open over
+   * its trigger the page's scroll is held, and a scroll of a box around the trigger closes it
+   * (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
    */
   readonly alignItemWithTrigger: Signal<boolean>
   mount(): () => void
@@ -551,6 +554,24 @@ export function createSelect<Value = unknown>(
         const stops = [
           detach,
           () => view?.removeEventListener("resize", resized),
+          // Over its trigger, it is placed once: while it is open there, the page's scroll is
+          // held, and a box around the trigger that scrolls (which that does not hold) closes it.
+          effect(() => {
+            if (!open.get() || !aligned.get()) return
+            const page = element.ownerDocument
+            const scrolled = (event: Event) => {
+              const box = event.target
+              // The page is held; the list's own scroll is inside it, not around the trigger.
+              if (box === page || !trigger || !(box as Node).contains?.(trigger)) return
+              setOpen(false, details("ancestor-scroll", event))
+            }
+            page.addEventListener("scroll", scrolled, true)
+            const unlock = lockScroll(page)
+            return () => {
+              page.removeEventListener("scroll", scrolled, true)
+              unlock()
+            }
+          }),
           // Each time it opens, once it has been placed the usual way: its variables are
           // written by then, and its items are in the page.
           effect(() => {

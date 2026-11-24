@@ -7,6 +7,7 @@ import type { Field } from "../../packages/core/src/field.ts"
 import { details } from "../../packages/core/src/part.ts"
 import { effect, signal } from "../../packages/core/src/reactivity.ts"
 import { createSelect } from "../../packages/core/src/select.ts"
+import { lockScroll } from "../../packages/core/src/services/scroll-lock.ts"
 import type { SelectProps } from "../../packages/core/src/select.ts"
 import { find, focused, mount, style } from "./page.ts"
 
@@ -20,10 +21,20 @@ function select(given: {
   align?: boolean
   /** Whether the design holds the list to the room beside its trigger. */
   capped?: boolean
+  /** How the trigger is placed: fixed to the viewport, or moving with what scrolls. */
+  position?: "fixed" | "absolute"
 }) {
-  const { top, count = 5, value = "v2", values, align = true, capped = true } = given
+  const {
+    top,
+    count = 5,
+    value = "v2",
+    values,
+    align = true,
+    capped = true,
+    position = "fixed",
+  } = given
   style(`
-    .trigger { position: fixed; left: 100px; top: ${top}px; width: 160px; height: 36px; padding: 0 12px; border: 1px solid; text-align: start; font: 14px/20px sans-serif; }
+    .trigger { position: ${position}; left: 100px; top: ${top}px; width: 160px; height: 36px; padding: 0 12px; border: 1px solid; text-align: start; font: 14px/20px sans-serif; }
     .popup { box-sizing: border-box; width: 200px; ${capped ? "max-height: var(--available-height);" : ""} overflow-y: auto; border: 1px solid; font: 14px/20px sans-serif; }
     .option { height: 30px; padding: 5px 20px; box-sizing: border-box; }`)
   const items = Array.from({ length: count }, (_each, at) => `v${at}`)
@@ -56,14 +67,20 @@ function select(given: {
     onTestFinished(bind(each, made.item(item)))
     onTestFinished(bind(each.querySelector("span")!, made.itemText(item)))
   }
-  onTestFinished(bind(positioner, made.positioner))
+  let unplace: (() => void) | undefined = bind(positioner, made.positioner)
+  /** Takes the positioner's part off its element. */
+  const detach = () => {
+    unplace?.()
+    unplace = undefined
+  }
+  onTestFinished(detach)
   onTestFinished(bind(popup, made.popup))
   onTestFinished(() => made.setOpen(false, details("test")))
   const text = (item: string) =>
     root.querySelector<HTMLElement>(`[data-v="${item}"] span`)!.getBoundingClientRect()
   const middle = (box: DOMRect) => box.top + box.height / 2
   const placed = () => expect.poll(() => positioner.getAttribute("data-side")).not.toBe(null)
-  return { made, trigger, shown, positioner, popup, reasons, text, middle, placed }
+  return { made, root, trigger, shown, positioner, popup, reasons, text, middle, placed, detach }
 }
 
 const MID = Math.round(window.innerHeight / 2)
@@ -267,6 +284,106 @@ describe("a select's list over its trigger", () => {
       .poll(() => Math.abs(middle(text("v2")) - middle(shown.getBoundingClientRect())))
       .toBeLessThan(2)
     expect(positioner.getAttribute("data-side")).toBe("none")
+  })
+})
+
+/** A page taller than the viewport, scrolled back to its top when the test ends. */
+function tallPage() {
+  mount(`<div style="height: 4000px"></div>`)
+  window.scrollTo(0, 0)
+  onTestFinished(() => window.scrollTo(0, 0))
+}
+
+/** A spot at the viewport's top right, clear of the list, for the wheel to turn over. */
+function wheelSpot(): HTMLElement {
+  const spot = mount(
+    `<div style="position: fixed; right: 0; top: 0; width: 40px; height: 40px"></div>`
+  )
+  return spot.firstElementChild as HTMLElement
+}
+
+const held = () => getComputedStyle(document.documentElement).overflowY === "hidden"
+const turned = () => new Promise((resolve) => setTimeout(resolve, 150))
+
+describe("a select's list over its trigger, in a page that scrolls", () => {
+  it("holds the page's scroll while it is open, so the list stays on its trigger", async () => {
+    tallPage()
+    const spot = wheelSpot()
+    const { trigger, shown, positioner, text, middle } = select({ top: MID, position: "absolute" })
+    trigger.click()
+    await expect.poll(() => positioner.getAttribute("data-side")).toBe("none")
+    await userEvent.wheel(spot, { delta: { y: 300 } })
+    await turned()
+    expect(Math.abs(middle(text("v2")) - middle(shown.getBoundingClientRect()))).toBeLessThan(2)
+    expect(window.scrollY).toBe(0)
+    expect(held()).toBe(true)
+    // Closed, the page scrolls again.
+    trigger.click()
+    expect(held()).toBe(false)
+    await userEvent.wheel(spot, { delta: { y: 300 } })
+    await expect.poll(() => window.scrollY).toBeGreaterThan(0)
+  })
+
+  it("holds nothing when it lies beside its trigger", async () => {
+    tallPage()
+    const { trigger, placed } = select({ top: MID, position: "absolute", align: false })
+    trigger.click()
+    await placed()
+    expect(held()).toBe(false)
+  })
+
+  it("lets the page go when it stops lying over its trigger, or its positioner is taken off", async () => {
+    tallPage()
+    const { made, trigger, positioner, detach } = select({ top: MID, position: "absolute" })
+    trigger.click()
+    await expect.poll(() => positioner.getAttribute("data-side")).toBe("none")
+    made.alignItemWithTrigger.set(false)
+    expect(held()).toBe(false)
+    made.alignItemWithTrigger.set(true)
+    trigger.click()
+    trigger.click()
+    await expect.poll(() => positioner.getAttribute("data-side")).toBe("none")
+    expect(held()).toBe(true)
+    detach()
+    expect(held()).toBe(false)
+  })
+
+  it("closing, it leaves a modal dialog's hold on the page where it was", async () => {
+    tallPage()
+    // What an open modal dialog holds, counted with the select's.
+    const dialog = lockScroll(document)
+    onTestFinished(dialog)
+    const { trigger, positioner } = select({ top: MID, position: "absolute" })
+    trigger.click()
+    await expect.poll(() => positioner.getAttribute("data-side")).toBe("none")
+    trigger.click()
+    expect(held()).toBe(true)
+    dialog()
+    expect(held()).toBe(false)
+  })
+
+  it("closes when a box around its trigger scrolls, and not when the list itself does", async () => {
+    const { made, root, trigger, positioner, popup, reasons } = select({
+      top: MID,
+      count: 60,
+      position: "absolute",
+    })
+    const panel = document.createElement("div")
+    panel.style.cssText = "position: fixed; inset: 0 auto 0 0; width: 400px; overflow-y: auto"
+    const tall = document.createElement("div")
+    tall.style.cssText = "position: relative; height: 4000px"
+    tall.append(trigger)
+    panel.append(tall)
+    root.prepend(panel)
+    trigger.click()
+    await expect.poll(() => positioner.getAttribute("data-side")).toBe("none")
+    popup.scrollTop = 40
+    await turned()
+    expect(made.open.peek()).toBe(true)
+    panel.scrollTop = 50
+    await expect.poll(() => made.open.peek()).toBe(false)
+    expect(reasons.at(-1)).toBe("close: ancestor-scroll")
+    expect(held()).toBe(false)
   })
 })
 

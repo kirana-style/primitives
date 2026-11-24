@@ -2973,7 +2973,7 @@ Each part, and its own props:
     - `placeholder?: string`: Shown while nothing is chosen.
 - `[kpSelectPortal]` is `KpSelectPortal`. Structural: written `*kpSelectPortal`. Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names.
 - `[kpSelectPositioner]` is `KpSelectPositioner`. Takes the positioner options ("Positioner options", above).
-    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it.
+    - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it. While it lies there the page's scroll is held (its scrollbar's room kept), and a scroll of a box around the trigger closes the list (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
 - `[kpSelectPopup]` is `KpSelectPopup`.
 - `[kpSelectList]` is `KpSelectList`. The items' own box inside the popup, when the popup also holds scroll arrows.
 - `[kpSelectScrollUpArrow]` is `KpSelectScrollUpArrow`. Structural: written `*kpSelectScrollUpArrow`. `<div *kpSelectScrollUpArrow>`: in the page while there is more of the list above. It scrolls the list while the pointer moves over it.

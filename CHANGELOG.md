@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/kirana-style/primitives/compare/v0.4.0...v0.4.1) (2026-11-25)
+
+
+### Bug fixes
+
+* a file upload works from its trigger alone, and what the first consumers found ([#79](https://github.com/kirana-style/primitives/issues/79)) ([7c8c4ab](https://github.com/kirana-style/primitives/commit/7c8c4abe280ce9fcb0f9b2e9c649b6660efe40fa))
+* an input keeps its caller's id, progress writes its value, and a toggle is read once ([#81](https://github.com/kirana-style/primitives/issues/81)) ([1f08821](https://github.com/kirana-style/primitives/commit/1f088213c22644adf59df2943b4d414e2e8eea4e))
+
 ## [0.4.0](https://github.com/kirana-style/primitives/compare/v0.3.0...v0.4.0) (2026-11-25)
 
 

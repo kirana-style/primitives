@@ -103,18 +103,18 @@ export interface SelectProps<Value = unknown, Multiple extends boolean | undefin
   multiple?: boolean | undefined
   /**
    * With `multiple`: the chosen values.
-   * @deprecated Base UI's shape is `value` holding the list, which wins when both are given.
+   * @deprecated Use `value`, which holds the list with `multiple` and wins when both are given.
    */
   values?: readonly Value[] | undefined
   /**
    * With `multiple`: the values it starts with.
-   * @deprecated Base UI's shape is `defaultValue` holding the list, which wins when both are
+   * @deprecated Use `defaultValue`, which holds the list with `multiple` and wins when both are
    * given.
    */
   defaultValues?: readonly Value[] | undefined
   /**
    * With `multiple`: heard as a value is about to be added or taken away.
-   * @deprecated Base UI's shape is `onValueChange` told the list, the one called when both are
+   * @deprecated Use `onValueChange`, told the list with `multiple`, the one called when both are
    * given.
    */
   onValuesChange?: ((values: Value[], details: ChangeDetails) => void) | undefined

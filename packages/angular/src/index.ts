@@ -385,8 +385,9 @@ export {
   mounted,
   onServer,
   presentWhile,
+  statePart,
 } from "./runtime"
-export type { InputsSignal } from "./runtime"
+export type { InputsSignal, StatePart } from "./runtime"
 // The core's types a prop names: imported from this package, the one a project installs.
 // Types only: nothing of the core's is drawn in by them.
 export type {
@@ -476,7 +477,7 @@ export type {
   ComboboxItemEntry,
   ComboboxShown,
 } from "@kirana-ui/core/combobox"
-export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"
+export type { SliderChangeDetails, SliderTold, SliderValue } from "@kirana-ui/core/slider"
 export type { ImageStatus } from "@kirana-ui/core/avatar"
 export type { PositionerAnchor } from "./runtime"
 export type { TourPopupContext, TourShownStep } from "./tour"

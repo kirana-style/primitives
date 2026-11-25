@@ -77,23 +77,20 @@ function Root({
       id,
     }
   )
-  return (
-    <Context.Provider value={controller}>{usePart(controller.root, "div", rest)}</Context.Provider>
-  )
-}
-
-export type DropzoneProps = PartComponentProps<"div", StateOf<Parts["dropzone"]>>
-
-function Dropzone(props: DropzoneProps): ReactElement {
-  const controller = useFileUpload("Dropzone")
-  return usePart(controller.dropzone, "div", props, undefined, (content) => (
-    // The native file input is the element's last child, whatever element was asked for.
+  const root = usePart(controller.root, "div", rest, undefined, (content) => (
+    // The native file input is the element's last child, whatever element was asked for: a
+    // trigger opens it with no dropzone in the page.
     <>
       {content}
       <PartElement of={controller.input} tag="input" />
     </>
   ))
+  return <Context.Provider value={controller}>{root}</Context.Provider>
 }
+
+export type DropzoneProps = PartComponentProps<"div", StateOf<Parts["dropzone"]>>
+
+const Dropzone = (props: DropzoneProps) => usePart(useFileUpload("Dropzone").dropzone, "div", props)
 
 export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 

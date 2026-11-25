@@ -155,5 +155,5 @@ export type {
   ComboboxItemEntry,
   ComboboxShown,
 } from "@kirana-ui/core/combobox"
-export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"
+export type { SliderChangeDetails, SliderTold, SliderValue } from "@kirana-ui/core/slider"
 export type { ImageStatus } from "@kirana-ui/core/avatar"

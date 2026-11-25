@@ -201,17 +201,26 @@ export function serialize(root: Element, options: SerializeOptions = {}): string
 
 /**
  * Resolves once nothing is moving: a framework has had its turn, no part is in the first or
- * last frame of its way in or out, and no animation is running. Rejects after `timeout`
- * milliseconds, saying what was still moving.
+ * last frame of its way in or out, and no animation is running. A document with no Web
+ * Animations (jsdom) runs none, as the components there wait for none. Rejects after
+ * `timeout` milliseconds, saying what was still moving, and at once when the page cannot be
+ * looked at.
  */
 export function settled(page: Document = document, timeout = 5000): Promise<void> {
   return new Promise((resolve, reject) => {
     const from = Date.now()
     const moving = () =>
       page.querySelector("[data-starting-style], [data-ending-style]") !== null ||
-      page.getAnimations().length > 0
+      (typeof page.getAnimations === "function" && page.getAnimations().length > 0)
     const look = () => {
-      if (!moving()) return resolve()
+      let busy: boolean
+      try {
+        busy = moving()
+      } catch (error) {
+        // Thrown in a timer, it would leave the promise waiting for ever.
+        return reject(error)
+      }
+      if (!busy) return resolve()
       if (Date.now() - from > timeout) {
         const still = page.querySelector("[data-starting-style], [data-ending-style]")
         return reject(

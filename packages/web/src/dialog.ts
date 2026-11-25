@@ -9,8 +9,7 @@ import type { As, ElementOf } from "./runtime.ts"
  * `<kui-dialog>` around a `kui-part="trigger"` button and a `portal`, which is drawn at the
  * end of the page while the dialog is open and holds its `backdrop` and its `popup`, with a
  * `title`, a `description` and a `close` button. The trigger and the close take `kui-disabled`. A long dialog's popup is in a `viewport`,
- * which scrolls. `open`, `default-open`, `modal`, `disable-pointer-dismissal`
- * (`close-on-outside-press` and `dismissible`, the other way round, its old names, still read); it tells `open-change`.
+ * which scrolls. `open`, `default-open`, `modal`, `disable-pointer-dismissal`; it tells `open-change`.
  */
 export const tag = defineElement({
   tag: "kui-dialog",

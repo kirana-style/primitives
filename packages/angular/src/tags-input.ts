@@ -12,10 +12,11 @@ import {
   output,
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { effect } from "@kirana-ui/core"
 import { createTagsInput } from "@kirana-ui/core/tags-input"
 import type { TagsInput, TagsInputEntry } from "@kirana-ui/core/tags-input"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_DIRECTION } from "./direction-token"
 import { KP_FIELD } from "./field-token"
@@ -28,7 +29,10 @@ import {
   mounted,
   onServer,
   ownText,
+  statePart,
 } from "./runtime"
+
+type Parts = Vocabulary["tagsInput"]
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 const optionalBoolean = (value: unknown) => (value == null ? undefined : booleanAttribute(value))
@@ -98,7 +102,9 @@ export class KpTagsInput implements OnInit {
     onValueInvalid: (text: string, reason: "duplicate" | "max" | "invalid") =>
       this.valueInvalid.emit({ text, reason }),
   }))
-  private readonly part = hostPart()
+  private readonly part = statePart<StateOf<Parts["root"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.part.state
   private readonly inner = innerPart("input")
   private readonly mount = mounted()
 
@@ -184,13 +190,18 @@ export class KpTagsInputItems implements OnInit {
   }
 }
 
-/** A tag, on the element `*kpTagsInputItems` draws for it. */
-@Directive({ selector: "[kpTagsInputItem]" })
+/**
+ * A tag, on the element `*kpTagsInputItems` draws for it. `state()` is its state, for the
+ * template (`#tag="kpTagsInputItem"`, `tag.state().editing`).
+ */
+@Directive({ selector: "[kpTagsInputItem]", exportAs: "kpTagsInputItem" })
 export class KpTagsInputItem implements OnInit {
   /** The tag it is, as `*kpTagsInputItems` gave it. */
   readonly entry = input.required<TagsInputEntry>()
   readonly root = inject(KpTagsInput)
-  private readonly put = hostPart()
+  private readonly put = statePart<StateOf<Parts["item"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
     this.put(this.root.controller.item(this.entry().key))

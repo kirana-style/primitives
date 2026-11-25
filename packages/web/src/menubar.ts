@@ -6,7 +6,7 @@ import type { As, ElementOf } from "./runtime.ts"
 
 /**
  * `<kui-menubar>` around `kui-part="root"` and its `<kui-menu>`s, which work as one: the
- * arrows move between them, and with one open the pointer opens the next. `loop-focus` (`loop` is its older name), `disabled`,
+ * arrows move between them, and with one open the pointer opens the next. `loop-focus`, `disabled`,
  * `orientation`, `modal`.
  */
 export const tag = defineElement({

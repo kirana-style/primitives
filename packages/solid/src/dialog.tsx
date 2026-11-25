@@ -33,13 +33,13 @@ export type RootProps = {
   disablePointerDismissal?: boolean
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins
+   * @deprecated Use `disablePointerDismissal`, the other way round, which wins
    * when both are given.
    */
   closeOnOutsidePress?: boolean
   /**
    * Whether a press outside closes it.
-   * @deprecated Base UI's name is `disablePointerDismissal`, which wins over this.
+   * @deprecated Use `disablePointerDismissal`, which wins over this.
    */
   dismissible?: boolean
   id?: string

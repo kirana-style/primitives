@@ -515,6 +515,62 @@ describe("the agent bridge, on what a page really writes", () => {
     expect(root.querySelector<HTMLInputElement>('[aria-label="Notes"]')!.value).toBe("new")
   })
 
+  it("lists no choices of a secret control when asked for them, and opens nothing", async () => {
+    const root = mount(`
+      <div data-agent-secret>
+        <button class="customer" aria-label="Secret customer"><span class="shown">Acme Ltd</span></button>
+        <div role="radiogroup" aria-label="Tier">
+          <button role="radio" aria-checked="true">Gold</button><button role="radio" aria-checked="false">Lead</button>
+        </div>
+        <div role="tablist" aria-label="Ledger">
+          <button role="tab" aria-selected="true">Payroll</button><button role="tab" aria-selected="false">Bonuses</button>
+        </div>
+        <div role="listbox" aria-label="Debtors"><div role="option" aria-selected="true">Initech</div></div>
+        <div role="tree" aria-label="Accounts"><div role="treeitem" aria-selected="true">Umbrella</div></div>
+        <button role="combobox" aria-label="Partner" aria-expanded="true" aria-controls="partners">Hooli</button>
+        <div id="partners" role="listbox"><div role="option">Hooli</div></div>
+      </div>
+      <div class="positioner"><div class="popup">
+        <div class="option" data-v="acme">Acme Ltd</div><div class="option" data-v="globex">Globex</div>
+      </div></div>`)
+    const opened: boolean[] = []
+    const select = createSelect(
+      signal<SelectProps<string>>({
+        id: "secret-select",
+        defaultValue: "acme",
+        onOpenChange: (open) => void opened.push(open),
+      })
+    )
+    onTestFinished(select.mount())
+    onTestFinished(bind(root.querySelector<HTMLElement>(".customer")!, select.trigger))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".shown")!, select.valuePart))
+    for (const each of root.querySelectorAll<HTMLElement>(".option"))
+      onTestFinished(bind(each, select.item(each.dataset.v!)))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".positioner")!, select.positioner))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".popup")!, select.popup))
+    const agent = createAgent({ root })
+    for (const name of ["Secret customer", "Tier", "Ledger", "Debtors", "Accounts", "Partner"]) {
+      const [found] = await agent.query({ within: name })
+      expect(found!.label).toBe(name)
+      expect(found!.items).toBeUndefined()
+      expect(found!.actions.length).toBeGreaterThan(0)
+      const text = JSON.stringify(found)
+      for (const word of [
+        "Acme",
+        "Globex",
+        "Gold",
+        "Lead",
+        "Payroll",
+        "Initech",
+        "Umbrella",
+        "Hooli",
+      ])
+        expect(text).not.toContain(word)
+    }
+    expect(opened).toEqual([])
+    expect(select.open.peek()).toBe(false)
+  })
+
   it("refuses a step that names nothing", async () => {
     const root = mount(`<button class="bare"></button><button>Save</button>`)
     let pressed = 0
@@ -670,6 +726,42 @@ describe("the agent bridge, beside a person", () => {
     expect(agent.history().every((each) => !each.undone)).toBe(true)
   })
 
+  it("keeps a step that takes many events once while recording, and takes it back", async () => {
+    const root = mount(`<div class="control"><div class="thumb" aria-label="Volume"></div></div>`)
+    // A caller who holds the value and hands it back a moment later, as a framework does: the
+    // slider has no input in its thumb, so the step moves it by its keys, waiting for each.
+    const props = signal({
+      id: "held",
+      step: 10,
+      value: 20,
+      onValueChange: (value: number | number[]) =>
+        void setTimeout(() => props.set({ ...props.peek(), value: value as number }), 40),
+    })
+    const slider = createSlider(props)
+    onTestFinished(bind(root.querySelector<HTMLElement>(".control")!, slider.control))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".thumb")!, slider.thumb(0)))
+    const agent = createAgent({ root })
+    onTestFinished(agent.record())
+    const volume = () => root.querySelector(".thumb")!.getAttribute("aria-valuenow")
+    await agent.act({ steps: [{ ref: "Volume", action: "setValue", args: [50] }] })
+    await agent.act({ steps: [{ ref: "Volume", action: "setValue", args: [80] }] })
+    await wait()
+    expect(volume()).toBe("80")
+    expect(agent.history().map((each) => [each.source, each.text])).toEqual([
+      ["agent", "The agent set Volume to 50"],
+      ["agent", "The agent set Volume to 80"],
+    ])
+    expect((await agent.undo()).ok).toBe(true)
+    await wait()
+    expect(volume()).toBe("50")
+    expect(agent.history().map((each) => each.undone)).toEqual([false, true])
+    expect((await agent.seek(0)).ok).toBe(true)
+    await wait()
+    expect(volume()).toBe("20")
+    expect(agent.history()).toHaveLength(2)
+    expect(agent.history().every((each) => each.undone)).toBe(true)
+  })
+
   it("shows a suggestion in the controls, and takes it back or keeps it", async () => {
     const { agent, find } = page()
     const steps = [
@@ -820,6 +912,49 @@ describe("the agent bridge, beside a person", () => {
     const text = await agent.act({ steps: [{ ref: "Seats", action: "setValue", args: ["many"] }] })
     expect(text.error).toContain("is not a number")
     expect(root.querySelector<HTMLInputElement>("input")!.value).toBe("3")
+  })
+
+  it("stops at a signal aborted before the wait for an answer begins", async () => {
+    const root = mount(`
+      <div data-agent-confirm="Resets every setting"><button>Reset settings</button></div>`)
+    let pressed = 0
+    root.querySelector("button")!.addEventListener("click", () => pressed++)
+    const step = { ref: "Reset settings", action: "press" }
+    // Stop pressed as the question opened, the page's own dialog still open.
+    const asking = new AbortController()
+    const asked = createAgent({
+      root,
+      confirm: () => {
+        asking.abort()
+        return new Promise<boolean>(() => {})
+      },
+    })
+    const inConfirm = await asked.act({ steps: [step], signal: asking.signal })
+    expect(inConfirm.error).toBe("Step 1 (Reset settings): Stopped")
+    // A policy that stops the turn itself.
+    const policy = new AbortController()
+    const allowing = createAgent({
+      root,
+      allow: () => {
+        policy.abort()
+        return new Promise<boolean>(() => {})
+      },
+      confirm: () => true,
+    })
+    const inAllow = await allowing.act({ steps: [step], signal: policy.signal })
+    expect(inAllow.error).toBe("Step 1 (Reset settings): Stopped")
+    // An answer given at once after Stop is not taken either.
+    const late = new AbortController()
+    const answered = createAgent({
+      root,
+      confirm: () => {
+        late.abort()
+        return true
+      },
+    })
+    const atOnce = await answered.act({ steps: [step], signal: late.signal })
+    expect(atOnce.error).toBe("Step 1 (Reset settings): Stopped")
+    expect(pressed).toBe(0)
   })
 
   it("caps a snapshot and says how many more there are", () => {

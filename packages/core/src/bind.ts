@@ -21,8 +21,8 @@ export function eventType(key: string): string {
  * the part writes anything: a part's `type` does not go on it when one of the element's own is
  * there (`type="submit"` wins over the part's `type="button"`) or the element takes no button
  * type (a link, where `type` is a MIME type), a link that navigates is given no button
- * role, and an `id` of the element's own wins over a part's default one. The element's own
- * attributes are read before the part writes any.
+ * role, and an `id` or an `aria-label` of the element's own wins over a part's default one. The
+ * element's own attributes are read before the part writes any.
  */
 function fitted(element: HTMLElement): (props: PartProps) => PartProps {
   const caller: PartProps = {
@@ -30,8 +30,19 @@ function fitted(element: HTMLElement): (props: PartProps) => PartProps {
     href: element.getAttribute("href") ?? undefined,
     // A part's default id (a control a field names) gives way to the element's own.
     id: element.getAttribute("id") ?? undefined,
+    // And so does a part's default label (a toggle's name) to the element's own.
+    "aria-label": element.getAttribute("aria-label") ?? undefined,
   }
-  return (props) => forElement(props, caller, element.localName)
+  let first = true
+  return (props) => {
+    if (first) {
+      first = false
+      // A label that already says what the part says was written there for the part, by a
+      // server: it is not the element's own, and the part's goes on changing it.
+      if (caller["aria-label"] === props["aria-label"]) caller["aria-label"] = undefined
+    }
+    return forElement(props, caller, element.localName)
+  }
 }
 
 /**

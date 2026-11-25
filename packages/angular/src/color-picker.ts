@@ -10,7 +10,7 @@ import {
 } from "@angular/core"
 import type { OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation, ReadonlySignal } from "@kirana-ui/core"
+import type { ChangeDetails, Orientation, ReadonlySignal, StateOf } from "@kirana-ui/core"
 import { createColorPicker } from "@kirana-ui/core/color-picker"
 import type {
   ColorFormat,
@@ -19,10 +19,20 @@ import type {
   ColorPickerProps,
   ColorPickerSliderChannel,
 } from "@kirana-ui/core/color-picker"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_DIRECTION } from "./direction-token"
 import { KP_FIELD } from "./field-token"
-import { KpIds, hostPart, innerPart, inputsSignal, mounted, onServer, ownText } from "./runtime"
+import {
+  KpIds,
+  hostPart,
+  innerPart,
+  inputsSignal,
+  mounted,
+  onServer,
+  ownText,
+  statePart,
+} from "./runtime"
 
 /**
  * On the element that holds the picker's parts. `[(value)]` is the colour as text in its
@@ -198,13 +208,18 @@ export class KpColorPickerSwatch implements OnInit {
   }
 }
 
-/** A preset: pressed, the colour is this one. */
-@Directive({ selector: "[kpColorPickerSwatchTrigger]" })
+/**
+ * A preset: pressed, the colour is this one. `state()` is its state, for the template
+ * (`#preset="kpColorPickerSwatchTrigger"`, `preset.state().selected`).
+ */
+@Directive({ selector: "[kpColorPickerSwatchTrigger]", exportAs: "kpColorPickerSwatchTrigger" })
 export class KpColorPickerSwatchTrigger implements OnInit {
   /** The preset's colour, in any format. */
   readonly value = input.required<string>()
   private readonly root = inject(KpColorPicker)
-  private readonly put = hostPart()
+  private readonly put = statePart<StateOf<Vocabulary["colorPicker"]["swatchTrigger"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
     this.put(this.root.controller.swatchTrigger(this.value()))

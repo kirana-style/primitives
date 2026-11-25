@@ -28,7 +28,7 @@ export type RootEmits = Changes<"value", string> & {
   valueComplete: (value: string, details: ChangeDetails) => void
   /**
    * The finished code.
-   * @deprecated Base UI's name is `valueComplete`, which is told the details too. Both are
+   * @deprecated Use `valueComplete`, which is told the details too. Both are
    * emitted: a listener cannot be told from none.
    */
   complete: (value: string) => void
@@ -45,7 +45,7 @@ const Root = defineComponent({
     validationType: String as PropType<OtpProps["validationType"]>,
     /**
      * What a character may be.
-     * @deprecated Base UI's name is `validationType`, which wins when both are given.
+     * @deprecated Use `validationType`, which wins when both are given.
      */
     mode: String as PropType<OtpProps["mode"]>,
     pattern: String,

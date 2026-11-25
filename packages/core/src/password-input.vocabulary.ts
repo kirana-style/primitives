@@ -27,13 +27,15 @@ export const passwordInputVocabulary = defineComponent({
   },
   toggle: {
     inside: "root",
-    description: "Shows the password, and hides it again. Focus and the caret stay in the input.",
+    description:
+      'Shows the password, and hides it again. Focus and the caret stay in the input. It is named "Show password" while the password is hidden and "Hide password" while it is shown: the root\'s `toggleLabels` (`{ show, hide }`) words them in the page\'s language, and an `aria-label` given to the toggle wins over both.',
     states: STATES,
   },
   indicator: {
     inside: "toggle",
     optional: true,
-    description: "What draws which of the two it is: an eye, open or struck.",
+    description:
+      "An element hidden from assistive technology (`aria-hidden`) that holds what the design draws to say which of the two it is, an eye open or struck, by its `data-visible`. It has no content of its own.",
     states: STATES,
   },
 })

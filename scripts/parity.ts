@@ -199,6 +199,7 @@ const IDIOM: Record<
       mounted: RUNTIME,
       onServer: RUNTIME,
       presentWhile: RUNTIME,
+      statePart: RUNTIME,
       "Combobox.HiddenInput":
         "the root is an `<ng-container>`, with no element to hold the hidden input: it is written",
       "Select.Input":

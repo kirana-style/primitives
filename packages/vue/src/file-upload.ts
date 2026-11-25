@@ -33,7 +33,16 @@ function useEntry(part: string): () => FileUploadEntry {
   return entry
 }
 
-const RootElement = partComponent("FileUploadRootElement", "div", () => scope.use().root)
+const NativeInput = partComponent("FileUploadInput", "input", () => scope.use().input)
+
+// The native file input is the element's last child, whatever element was asked for: a trigger
+// opens it with no dropzone in the page.
+const RootElement = partComponent(
+  "FileUploadRootElement",
+  "div",
+  () => scope.use().root,
+  (content) => [content, h(NativeInput)]
+)
 
 export type RootProps = Omit<FileUploadProps, "id" | "onFilesChange" | "onFilesReject"> & {
   id?: string | undefined
@@ -92,16 +101,12 @@ const Root = defineComponent({
   },
 }) as unknown as PartComponent<"div", State["root"], RootProps, RootEmits>
 
-const NativeInput = partComponent("FileUploadInput", "input", () => scope.use().input)
-
 export type DropzoneProps = PartComponentProps
 
-// The native file input is the element's last child, whatever element was asked for.
 const Dropzone = partComponent<"div", State["dropzone"]>(
   "FileUploadDropzone",
   "div",
-  () => scope.use().dropzone,
-  (content) => [content, h(NativeInput)]
+  () => scope.use().dropzone
 )
 
 export type ItemsProps = Record<never, never>

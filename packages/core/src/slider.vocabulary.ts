@@ -34,7 +34,7 @@ export const sliderVocabulary = defineComponent({
   indicator: {
     inside: "track",
     description:
-      "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
+      "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it inline, and a design does not set these: `position: relative`, `inset-inline-start` and `width`, with `height: inherit` (on a vertical slider, `position: absolute`, `bottom` and `height`, with `width: inherit`).",
     states: STATES,
     exclusive: EITHER_VALID,
     variables: {
@@ -48,7 +48,7 @@ export const sliderVocabulary = defineComponent({
     inside: "track",
     repeated: true,
     description:
-      "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.",
+      "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` at its value's place and `top: 50%` (on a vertical slider, `bottom` and `left: 50%`), and a `translate` that centres it there (with `thumbAlignment: \"edge\"`, one that keeps it inside). The track needs `position: relative`. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.",
     states: {
       ...STATES,
       index: {

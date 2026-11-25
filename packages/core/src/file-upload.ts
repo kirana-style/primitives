@@ -70,12 +70,19 @@ export interface FileUpload {
   /** Opens the browser's file picker. */
   open(): void
   mount(): () => void
+  /** What holds the parts, and the hidden file input as its last child; a paste in it is taken. */
   readonly root: Part
-  /** Where files are dropped, pasted, or pressed to be picked. */
+  /**
+   * Where files are dropped; a press on it opens the file picker. A group, not a control: the
+   * trigger is the keyboard's way in, and may be drawn in it.
+   */
   readonly dropzone: Part
-  /** A button that opens the file picker. */
+  /** The button that opens the file picker: the control, with or without a dropzone. */
   readonly trigger: Part
-  /** The native file input, hidden: it is what a form submits, and what the picker fills. */
+  /**
+   * The native file input, hidden: it is what a form submits, and what the picker fills. Each
+   * adapter draws it in the root, so a trigger with no dropzone opens the picker.
+   */
   readonly input: Part
   /** What holds the files: a list. */
   readonly list: Part
@@ -160,7 +167,8 @@ export function createFileUpload(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
   )
   let input: HTMLInputElement | undefined
-  let zone: HTMLElement | undefined
+  // The triggers in the page, in the order they came: the first is what a field's label focuses.
+  const triggers: HTMLElement[] = []
   const made = new Map<string, Part>()
   const entryOf = (key: string) => entries.peek().find((each) => each.key === key)
 
@@ -233,11 +241,23 @@ export function createFileUpload(
     open,
     mount: () => NOTHING,
     root: {
-      props: computed(() => ({ ...state(), "data-empty": flag(files.get().length === 0) })),
+      props: computed(() => ({
+        ...state(),
+        "data-empty": flag(files.get().length === 0),
+        // Files pasted while focus is anywhere in it, the trigger as a rule, are taken.
+        onPaste(event: ClipboardEvent) {
+          const pasted = [...(event.clipboardData?.files ?? [])]
+          if (pasted.length === 0) return
+          event.preventDefault()
+          take(pasted, details("paste", event))
+        },
+        onFocus: () => member?.focused(true),
+        onBlur: () => member?.focused(false),
+      })),
       attach(element) {
         member = field?.join({
           element,
-          focus: () => zone?.focus(),
+          focus: () => triggers[0]?.focus(),
           kind: "group",
           required: () => Boolean(props.peek().required),
           value: names(files.peek()),
@@ -250,22 +270,17 @@ export function createFileUpload(
     },
     dropzone: {
       props: computed(() => ({
-        role: "button",
-        tabindex: disabled.get() ? "-1" : "0",
+        // A group that a trigger may be drawn in: a control inside a control is read as one,
+        // and would be reached twice.
+        role: "group",
         "aria-disabled": disabled.get() ? "true" : undefined,
         ...field?.aria(),
         ...state(),
         onClick(event: MouseEvent) {
-          // A press on something of its own inside it (a button, the list) is that thing's.
+          // A pointer's way in: a press on something of its own inside it (a button, the list)
+          // is that thing's.
           const on = (event.target as Element).closest("button, a, input, [role='listitem']")
           if (!on || on === event.currentTarget) open()
-        },
-        onKeyDown(event: KeyboardEvent) {
-          if (event.target !== event.currentTarget) return
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault()
-            open()
-          }
         },
         onDragEnter(event: DragEvent) {
           if (!carries(event) || disabled.peek()) return
@@ -289,21 +304,8 @@ export function createFileUpload(
           dragging.set(false)
           take([...(event.dataTransfer?.files ?? [])], details("drop", event))
         },
-        onPaste(event: ClipboardEvent) {
-          const pasted = [...(event.clipboardData?.files ?? [])]
-          if (pasted.length === 0) return
-          event.preventDefault()
-          take(pasted, details("paste", event))
-        },
-        onFocus: () => member?.focused(true),
-        onBlur: () => member?.focused(false),
       })),
-      attach(element) {
-        zone = element
-        return () => {
-          if (zone === element) zone = undefined
-        }
-      },
+      attach: () => NOTHING,
     },
     trigger: {
       props: computed(() => ({
@@ -312,7 +314,13 @@ export function createFileUpload(
         ...state(),
         onClick: open,
       })),
-      attach: () => NOTHING,
+      attach(element) {
+        triggers.push(element)
+        return () => {
+          const at = triggers.indexOf(element)
+          if (at >= 0) triggers.splice(at, 1)
+        }
+      },
     },
     input: {
       props: computed(() => {
@@ -331,7 +339,7 @@ export function createFileUpload(
             const control = event.currentTarget as HTMLInputElement
             take([...(control.files ?? [])], details("pick", event))
           },
-          // The picker's own press must not come back up as a press on the dropzone.
+          // The picker's own press is not a press on what is around the input.
           onClick: (event: Event) => event.stopPropagation(),
         }
       }),

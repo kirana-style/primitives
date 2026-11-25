@@ -11,7 +11,15 @@
 
   // `bind:visible` is whether the password can be read. Inside a `<Field.Root>` its input is
   // the field's control.
-  let { visible = $bindable(), defaultVisible, onVisibleChange, disabled, onValueChange, ...rest }: RootProps = $props()
+  let {
+    visible = $bindable(),
+    defaultVisible,
+    onVisibleChange,
+    disabled,
+    onValueChange,
+    toggleLabels,
+    ...rest
+  }: RootProps = $props()
 
   function change(next: boolean, by: ChangeDetails) {
     onVisibleChange?.(next, by)
@@ -23,6 +31,7 @@
       visible,
       defaultVisible,
       disabled,
+      toggleLabels,
       onVisibleChange: change,
       onValueChange: (next: string, by: ChangeDetails) => onValueChange?.(next, by),
     }))

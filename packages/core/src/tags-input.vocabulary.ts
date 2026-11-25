@@ -49,7 +49,8 @@ export const tagsInputVocabulary = defineComponent({
   },
   input: {
     inside: "root",
-    description: "Where a new tag is typed. In a `Field` it is what the field's label names.",
+    description:
+      "Where a new tag is typed. In a `Field` it is what the field's label names; an `id` given to it is kept, so a `<label for>` names it outside one.",
     states: SHARED,
   },
   clear: {

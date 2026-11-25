@@ -90,17 +90,17 @@ export class KpCombobox<Value = unknown, Multiple extends boolean = false> imple
   })
   /**
    * With `multiple`: the chosen values.
-   * @deprecated Base UI's shape is `[(value)]` holding the list, which wins when both are given.
+   * @deprecated Use `[(value)]`, which holds the list with `multiple` and wins when both are given.
    */
   readonly values = model<readonly Value[] | undefined>(undefined)
   /**
    * With `multiple`: the values it starts with.
-   * @deprecated Base UI's shape is `[defaultValue]` holding the list, which wins.
+   * @deprecated Use `[defaultValue]`, which holds the list with `multiple` and wins.
    */
   readonly defaultValues = input<readonly Value[]>()
   /**
    * With `multiple`: heard as a value is about to be added or taken away.
-   * @deprecated Base UI's shape is `(valueChanged)` told the list. Both are emitted.
+   * @deprecated Use `(valueChanged)`, told the list with `multiple`. Both are emitted.
    */
   readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** The list is always in the page, with no popup: a command palette. */

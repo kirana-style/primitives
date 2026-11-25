@@ -15,7 +15,8 @@ const FIELD = {
 
 export const timeFieldVocabulary = defineComponent({
   root: {
-    description: "The field: a group of the time's parts.",
+    description:
+      "The field: a group of the time's parts. Inside a `Field` it is the field's control: the field's label names it (a press on the label goes to its first empty part), its description and messages describe it, and the field checks it.",
     states: {
       disabled: DISABLED,
       readonly: state("data-readonly", "Present when its value cannot be changed."),

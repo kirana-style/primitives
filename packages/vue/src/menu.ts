@@ -72,7 +72,7 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
       loopFocus: optional(Boolean),
       /**
        * Whether the arrows wrap from the last item to the first.
-       * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+       * @deprecated Use `loopFocus`, which wins when both are given.
        */
       loop: optional(Boolean),
       modal: Boolean,

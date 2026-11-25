@@ -3,23 +3,19 @@ import type { Snippet } from "svelte"
 
 import type { Controlled, HeldInput, HeldText, PartAttributes, StateFor } from "../types.ts"
 
-/** `bind:files` is the files held. */
+/**
+ * `bind:files` is the files held. With `child`, the snippet is also given `input`: the native
+ * file input, hidden, which a form submits.
+ */
 export type RootProps = PartAttributes<
   "div",
   StateFor<"fileUpload", "root">,
-  Controlled<FileUploadProps>
->
-
-/**
- * Where files are dropped, and pressed to pick them. With `child`, the snippet is also given
- * `input`: the native file input, hidden, which a form submits.
- */
-export type DropzoneProps = PartAttributes<
-  "div",
-  StateFor<"fileUpload", "dropzone">,
-  unknown,
+  Controlled<FileUploadProps>,
   HeldInput
 >
+
+/** Where files are dropped, and pressed to pick them. */
+export type DropzoneProps = PartAttributes<"div", StateFor<"fileUpload", "dropzone">>
 
 export type TriggerProps = PartAttributes<"button", StateFor<"fileUpload", "trigger">>
 

@@ -217,7 +217,12 @@ export function isLink(tag: string, href: unknown): boolean {
   return (tag === "a" || tag === "area") && href !== undefined && href !== null && href !== false
 }
 
-const OWN_ID = Symbol("an id the caller's own wins over")
+// The attributes a part may give as defaults only, each with its own mark, so that two spread
+// into the same props keep both marks.
+const OWN = {
+  id: Symbol("an id the caller's own wins over"),
+  "aria-label": Symbol("a label the caller's own wins over"),
+} as const
 
 /**
  * A part's `id` that is only a default, as props to spread: an `id` the caller gives the element
@@ -225,12 +230,21 @@ const OWN_ID = Symbol("an id the caller's own wins over")
  * caller names it, and the field then learns the name from the element.
  */
 export function defaultId(id: string | undefined): PartProps {
-  return id === undefined ? {} : { id, [OWN_ID]: true }
+  return id === undefined ? {} : { id, [OWN.id]: true }
+}
+
+/**
+ * A part's `aria-label` that is only a default, as props to spread: an `aria-label` the caller
+ * gives the element wins over it (`forElement`), so a page names the part in its own words.
+ */
+export function defaultLabel(label: string | undefined): PartProps {
+  return label === undefined ? {} : { "aria-label": label, [OWN["aria-label"]]: true }
 }
 
 /**
  * A part's own props as they go on an element, before `mergeProps` lays them over the
- * caller's. An `id` given with `defaultId` gives way to the caller's. A part's `type` is a default, not its identity: a `<button>` it draws says
+ * caller's. An `id` given with `defaultId` and an `aria-label` given with `defaultLabel` give
+ * way to the caller's. A part's `type` is a default, not its identity: a `<button>` it draws says
  * `type="button"` so that it never submits a form by accident, but a caller's `type`
  * (`"submit"`, `"reset"`) wins, and an element that takes no button type (a link, where `type`
  * is a MIME type) is given none. A link that navigates (`isLink`, the caller's `href`) is not
@@ -246,10 +260,12 @@ export function forElement(
   tag: string | undefined
 ): PartProps {
   let placed = own
-  if ((own as Record<symbol, unknown>)[OWN_ID]) {
-    const fitted: Record<string | symbol, unknown> = { ...own }
-    delete fitted[OWN_ID]
-    if (typeof caller?.id === "string" && caller.id) delete fitted.id
+  for (const key of Object.keys(OWN) as (keyof typeof OWN)[]) {
+    if (!(placed as Record<symbol, unknown>)[OWN[key]]) continue
+    const fitted: Record<string | symbol, unknown> = { ...placed }
+    delete fitted[OWN[key]]
+    const theirs = caller?.[key]
+    if (typeof theirs === "string" && theirs) delete fitted[key]
     placed = fitted as PartProps
   }
   if (

@@ -44,7 +44,7 @@ export interface ToastOptions<Content = string> {
   timeout?: number | undefined
   /**
    * How long it stays, in milliseconds; `Infinity` until it is closed.
-   * @deprecated Base UI's name is `timeout`, which wins when both are given. Here `0` is no
+   * @deprecated Use `timeout`, which wins when both are given. Here `0` is no
    * time at all; there it is no end.
    */
   duration?: number | undefined
@@ -72,7 +72,7 @@ export interface ToastRecord<Content = string> extends ToastOptions<Content> {
   readonly timeout: number
   /**
    * How long it stays, in milliseconds.
-   * @deprecated The same as `timeout`.
+   * @deprecated Use `timeout`, which holds the same.
    */
   readonly duration: number
   /** How it is announced: its own, or `"polite"` when it gave none. */
@@ -98,7 +98,7 @@ export interface ToasterOptions {
   timeout?: number | undefined
   /**
    * How long a toast stays when it does not say, in milliseconds.
-   * @deprecated Base UI's name is `timeout`, which wins when both are given.
+   * @deprecated Use `timeout`, which wins when both are given.
    */
   duration?: number | undefined
   /** How many toasts are shown at once; the rest wait behind, `data-limited`. Default: `3`. */

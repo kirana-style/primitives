@@ -38,7 +38,11 @@ export interface TourStep {
 
 export interface TourProps<Step extends TourStep = TourStep> {
   id: string
-  /** The steps, in order. */
+  /**
+   * The steps, in order: each a `TourStep` (an `id`, and a `target`, `side` and `align` where it
+   * has them) with whatever else the page draws it from, such as
+   * `[{ id: "search", target: "#search", title: "Find anything" }]`.
+   */
   steps: readonly Step[]
   /** Whether it is open, when the caller holds it. */
   open?: boolean | undefined

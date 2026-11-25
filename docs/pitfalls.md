@@ -56,6 +56,25 @@ note. Three places hold them:
   form before `forElement`, and the default's mark was lost on the way: a mark that is not an
   attribute goes through every adapter's conversion. Held by `tests/core/field.test.ts` ("a
   control's own id inside a field") and the `field` scenario ("a control keeps its own id").
+- **Outside a field too, an id the caller gives is the element's.** A tags input named its input
+  after its root wherever no field was around, over the caller's own `id`, so a `<label for>`
+  that named it pointed at nothing. The root's id is a default there as well. Held by
+  `tests/core/tags-input.test.ts` ("keeps the id its caller gives the input") and the
+  `tagging` scenario ("its input keeps the page's id").
+- **A name the library writes in English is a default.** A password input's toggle wrote
+  "Show password" over the caller's `aria-label`, so a page in another language could not name
+  it. Such a label goes through `defaultLabel`, which the caller's own `aria-label` wins over
+  (`forElement`), and its words are a prop (`toggleLabels`). The plain-DOM binder takes an
+  element's `aria-label` for the caller's, but not one that already says what the part says:
+  that one a server wrote, and the part goes on changing it. Held by
+  `tests/core/password-input.test.ts` ("is named in the page's words", "follows the state with
+  the label a server wrote for it").
+- **A control is never drawn inside a control.** A file upload's dropzone was a button, and the
+  trigger drawn in it a second one: read as one control, reached twice. The dropzone is a
+  group (a pointer's press on it still opens the picker), the trigger is the control, and the
+  hidden file input is the root's, so a trigger works with no dropzone at all. Held by
+  `tests/core/file-upload.test.ts` ("is a group around its trigger", "opens the picker from a
+  trigger with no dropzone") and the `tagging` scenario.
 - **Two messages shown at once are two ids.** Every `Field.Error` was written with the
   field's one error id, which the control's `aria-describedby` could not tell apart. A
   message's id is made from what it shows (`-error`, `-error-valueMissing`,
@@ -511,6 +530,12 @@ note. Three places hold them:
   server draws and hydration takes over; one drawn as an element's last child stays
   `innerPart`'s. Held by the conformance run's `select` scenario on `angular+ssr`, whose
   selects write no hidden input.
+- **Angular's template is told a part's state too.** React's `render` and Vue's slot are given
+  a part's state, while an Angular directive wrote `data-*` attributes and gave its template
+  nothing to draw by: an indicator could not show an open eye or a tick. A part a template
+  draws by (an indicator, a step, an item, a dropzone) keeps its state as an Angular signal
+  (`statePart` in `runtime.ts`, read with `stateOf`) under an `exportAs`. Held by the `editing`
+  scenario, where every page draws the password's indicator from its state.
 
 ## Composition
 
@@ -1101,6 +1126,20 @@ note. Three places hold them:
   source and, from a part of this library, its reason; `record()` keeps a person's changes
   too, typing as one, and `undoSource` leaves a control someone else changed since ("keeps a
   person's changes beside its own", "takes back what one source did").
+- **A step of the bridge's own is not a change the recorder sees.** A slider moved by its keys,
+  each waiting for its caller to hand the value back, took longer than the recorder's wait for
+  the page to be still: it kept the step's change as well as `act`'s own entry, `undo` took
+  back the copy, and `seek(0)` went to the wrong value. While a step, a menu opened to find an
+  item or a list opened to read it is moving a control, the page is compared once, at its end,
+  as the agent's ("keeps a step that takes many events once while recording").
+- **A signal may be aborted before the wait for it begins.** The wait for `allow` and
+  `confirm` heard the signal's `abort` event only: one aborted inside `confirm`, or by the
+  policy itself, was never heard and `act` never ended. The wait now looks at `aborted` first
+  ("stops at a signal aborted before the wait for an answer begins").
+- **Asking for a secret control's choices reads none.** `query({ within })` opened a select
+  inside `data-agent-secret` and read its options from the popup, drawn outside the mark. A
+  marked control is given back as `snapshot` gives it, and nothing is opened ("lists no
+  choices of a secret control when asked for them").
 - **A name that two controls answer to is never guessed.** A step finds its control by its
   label whole, then by the label's words, the text of its row, a choice of one group, its
   kind: the next way is tried only when the one before found nothing, and two matches at any
@@ -1337,4 +1376,7 @@ note. Three places hold them:
 - **A test's document may have no Web Animations.** `whenSettled` called `getAnimations()` on
   the element, which jsdom does not have: a dialog or a select closed in a jsdom test threw, and
   stayed in the page. With no such method nothing animates, and the element is settled at once
-  (`tests/core/presence.test.ts`, "an element in a document with no Web Animations").
+  (`tests/core/presence.test.ts`, "an element in a document with no Web Animations"). The
+  testing kit's `settled()` did the same on the document, in a timer, so its promise never
+  ended: it now takes such a document as still, and rejects when it cannot look
+  (`tests/core/testing.test.ts`, "is settled in a document with no Web Animations").

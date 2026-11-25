@@ -3148,7 +3148,13 @@ export function App() {
               data-testid="pw1-input"
             />
             <PasswordInput.Toggle data-testid="pw1-toggle">
-              <PasswordInput.Indicator className="eye" data-testid="pw1-indicator" />
+              <PasswordInput.Indicator
+                className="eye"
+                data-testid="pw1-indicator"
+                render={(props, state) => (
+                  <span {...props}>{state.visible ? "shown" : "hidden"}</span>
+                )}
+              />
             </PasswordInput.Toggle>
             <output form="" data-testid="pw1-output">
               {revealed}
@@ -3189,7 +3195,7 @@ export function App() {
                 )}
               </TagsInput.Items>
             </TagsInput.List>
-            <TagsInput.Input aria-label="Add a color" data-testid="ti1-input" />
+            <TagsInput.Input id="ti1-entry" aria-label="Add a color" data-testid="ti1-input" />
             <TagsInput.Clear data-testid="ti1-clear">Clear</TagsInput.Clear>
             <output form="" data-testid="ti1-output">
               {tagged}

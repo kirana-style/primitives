@@ -15,7 +15,9 @@ type Props = Omit<
   /** With `multiple`, the chosen values, with commas between. */
   value?: string | readonly string[] | null
   defaultValue?: string | readonly string[] | null
+  /** @deprecated Use `value`, which holds the list with `multiple`. */
   values?: string | readonly string[]
+  /** @deprecated Use `defaultValue`, which holds the list with `multiple`. */
   defaultValues?: string | readonly string[]
 }
 
@@ -40,12 +42,11 @@ const arrow = (drawn: SelectScrollArrow): Drawn => ({
  * page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value
  * (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`,
  * `default-open`, `disabled`, `read-only`, `required`, `multiple` (with it, `value`
- * and `default-value` hold the chosen values with commas between; `values` and
- * `default-values`, the older names, are still read), `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge,
+ * and `default-value` hold the chosen values with commas between), `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge,
  * modal, over a `backdrop` part in the portal; `auto` on a narrow touch screen) and
  * `sheet-below`; `items`, `itemToStringLabel` and `itemToStringValue` as
- * properties; it tells `value-change`,
- * `values-change` and `open-change`.
+ * properties; it tells `value-change`
+ * and `open-change`.
  */
 export const tag = defineElement<Props, Select<string>>({
   tag: "kui-select",

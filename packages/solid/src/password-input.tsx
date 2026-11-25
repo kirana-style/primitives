@@ -32,6 +32,7 @@ function Root(props: RootProps): JSX.Element {
     "onVisibleChange",
     "disabled",
     "onValueChange",
+    "toggleLabels",
   ])
   const made = controller(
     within(createPasswordInput, { field: useContext(FieldContext) ?? undefined }),
@@ -39,6 +40,7 @@ function Root(props: RootProps): JSX.Element {
       visible: local.visible,
       defaultVisible: local.defaultVisible,
       disabled: local.disabled,
+      toggleLabels: local.toggleLabels,
       onVisibleChange: (visible: boolean, details: ChangeDetails) =>
         local.onVisibleChange?.(visible, details),
       onValueChange: (value: string, details: ChangeDetails) =>

@@ -12,9 +12,10 @@ import {
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createTour } from "@kirana-ui/core/tour"
 import type { Tour, TourStep } from "@kirana-ui/core/tour"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_DIRECTION } from "./direction-token"
 import {
@@ -26,6 +27,7 @@ import {
   inputsSignal,
   mounted,
   presentWhile,
+  statePart,
 } from "./runtime"
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
@@ -36,7 +38,11 @@ const optionalNumber = (value: unknown) => (value == null ? undefined : numberAt
  */
 @Directive({ selector: "[kpTour]", exportAs: "kpTour" })
 export class KpTour<Step extends TourStep = TourStep> implements OnInit {
-  /** The steps, in order. */
+  /**
+   * The steps, in order: each a `TourStep` (an `id`, and a `target`, `side` and `align` where it
+   * has them) with whatever else the page draws it from, such as
+   * `[{ id: "search", target: "#search", title: "Find anything" }]`.
+   */
   readonly steps = input.required<readonly Step[]>()
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
@@ -195,9 +201,7 @@ export class KpTourPopup implements OnInit {
   }
 }
 
-function part(
-  name: "spotlight" | "arrow" | "title" | "description" | "previous" | "next" | "close"
-) {
+function part(name: "spotlight" | "arrow" | "title" | "description" | "previous" | "close") {
   const root = inject(KpTour)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -249,13 +253,19 @@ export class KpTourPrevious implements OnInit {
   }
 }
 
-/** Goes on a step; on the last, it finishes the tour. */
-@Directive({ selector: "[kpTourNext]" })
+/**
+ * Goes on a step; on the last, it finishes the tour. `state()` is its state, for the template:
+ * `#next="kpTourNext"`, then `@if (next.state().last) { Finish } @else { Next }`.
+ */
+@Directive({ selector: "[kpTourNext]", exportAs: "kpTourNext" })
 export class KpTourNext implements OnInit {
-  private readonly init = part("next")
+  private readonly root = inject(KpTour)
+  private readonly put = statePart<StateOf<Vocabulary["tour"]["next"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
-    this.init()
+    this.put(this.root.controller.next)
   }
 }
 

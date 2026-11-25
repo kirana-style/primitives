@@ -40,7 +40,7 @@ export class KpDialog implements OnInit {
   })
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Base UI's name is `[disablePointerDismissal]`, the other way round, which wins
+   * @deprecated Use `[disablePointerDismissal]`, the other way round, which wins
    * when both are given.
    */
   readonly closeOnOutsidePress = input<boolean | undefined, unknown>(undefined, {
@@ -48,7 +48,7 @@ export class KpDialog implements OnInit {
   })
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Base UI's name is `[disablePointerDismissal]`, the other way round, which wins
+   * @deprecated Use `[disablePointerDismissal]`, the other way round, which wins
    * over this and over `[closeOnOutsidePress]`.
    */
   readonly dismissible = input(true, { transform: booleanAttribute })

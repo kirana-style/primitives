@@ -18,6 +18,7 @@ import {
   untracked,
 } from "@angular/core"
 import type {
+  Signal as AngularSignal,
   ComponentRef,
   EmbeddedViewRef,
   InputSignalWithTransform,
@@ -26,7 +27,7 @@ import type {
   ProviderToken,
   SimpleChanges,
 } from "@angular/core"
-import { bind, defined, effect, sameProps, signal, write } from "@kirana-ui/core"
+import { bind, defined, effect, sameProps, signal, stateOf, write } from "@kirana-ui/core"
 import type {
   Align,
   Anchor,
@@ -35,6 +36,7 @@ import type {
   CollisionPadding,
   OffsetFunction,
   Part,
+  PartState,
   PositionOptions,
   ReadonlySignal,
   Side,
@@ -216,6 +218,39 @@ export function hostPart(): (part: Part) => void {
   const destroy = inject(DestroyRef)
   const put = binder()
   return (part) => destroy.onDestroy(put(element, part))
+}
+
+/** What `statePart` gives: a `hostPart`, and the part's state as an Angular signal. */
+export type StatePart<State extends object = PartState> = ((part: Part) => void) & {
+  /** The part's state, as its `data-*` attributes say it: `{ visible: true }` for `data-visible`. */
+  readonly state: AngularSignal<State>
+}
+
+/**
+ * A `hostPart` that also gives the part's state to a template, as React's `render` and Vue's
+ * slot are given it (`stateOf`). A directive keeps it as `readonly state = this.put.state` with
+ * an `exportAs`, so a template draws by it: `<span kpStepsIndicator #mark="kpStepsIndicator">`,
+ * then `@if (mark.state().complete) { … }`. On a server it is the state the part is written in.
+ */
+export function statePart<State extends object = PartState>(): StatePart<State> {
+  const put = hostPart()
+  const destroy = inject(DestroyRef)
+  const server = onServer()
+  const held = angularSignal<State>({} as State, {
+    equal: sameProps as unknown as (a: State, b: State) => boolean,
+  })
+  return Object.assign(
+    (part: Part) => {
+      put(part)
+      if (server) return held.set(stateOf(part.props.peek()) as State)
+      const stop = effect(() => {
+        const next = stateOf(part.props.get()) as State
+        untracked(() => held.set(next))
+      })
+      destroy.onDestroy(stop)
+    },
+    { state: held.asReadonly() }
+  )
 }
 
 /**

@@ -88,9 +88,12 @@ export type RootProps<Value = unknown, Multiple extends boolean | undefined = fa
 export type RootEmits<Value = unknown, Multiple extends boolean | undefined = false> = Changes<
   "value",
   Multiple extends true ? Value[] : Value | null
-> &
-  Changes<"values", Value[]> &
-  Changes<"inputValue", string> &
+> & {
+  /** @deprecated Use `update:value`, which holds the list with `multiple`. Both are emitted. */
+  "update:values": (value: Value[]) => void
+  /** @deprecated Use `valueChange`, told the list with `multiple`. Both are emitted. */
+  valuesChange: (value: Value[], details: ChangeDetails) => void
+} & Changes<"inputValue", string> &
   Changes<"open", boolean>
 
 /**

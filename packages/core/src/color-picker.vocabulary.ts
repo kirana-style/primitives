@@ -27,14 +27,14 @@ export const colorPickerVocabulary = defineComponent({
   area: {
     inside: "root",
     description:
-      "The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue.",
+      "The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--hue-color))` (`to left` for the second where the text runs right to left). It writes `touch-action: none` inline, so a finger drags the thumb, not the page.",
     states: { ...STATES, dragging: OWN_DRAG },
     variables: { "--hue-color": "The colour's hue at full saturation and brightness." },
   },
   areaThumb: {
     inside: "area",
     description:
-      "What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it.",
+      'What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` and `bottom` at its saturation and brightness, and a `translate` that centres it on that point (with `thumbAlignment: "edge"`, one that keeps it inside the area). The area is what it is placed in, so the area needs `position: relative`.',
     states: { ...STATES, dragging: OWN_DRAG },
     variables: {
       "--saturation": "Its place across, as a share of the area: the saturation.",
@@ -46,12 +46,13 @@ export const colorPickerVocabulary = defineComponent({
     inside: "root",
     repeated: true,
     description:
-      "What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`.",
+      "What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`. It writes `touch-action: none` inline, so a finger drags the thumb, not the page.",
     states: SLIDER,
   },
   channelSliderTrack: {
     inside: "channelSlider",
-    description: "The channel's whole range: what a design paints the hues or the alpha on.",
+    description:
+      "The channel's whole range: what a design paints the hues or the alpha on. Both run from the inline start (the bottom of a vertical track): the hue from 0 to 360, `linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)`, and the alpha from none to whole, `linear-gradient(to right, transparent, var(--color))` over a checkerboard of the design's own (`to left` where the text runs right to left, `to top` on a vertical track).",
     states: SLIDER,
     variables: {
       "--color": "The colour without its alpha: the end of an alpha track.",
@@ -61,7 +62,7 @@ export const colorPickerVocabulary = defineComponent({
   channelSliderThumb: {
     inside: ["channelSliderTrack", "channelSlider"],
     description:
-      "What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it.",
+      'What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` at its share of the range and `top: 50%` (on a vertical track, `bottom` and `left: 50%`), and a `translate` that centres it there (with `thumbAlignment: "edge"`, one that keeps it inside the track). The element it is in (the track, or the slider) needs `position: relative`.',
     states: SLIDER,
     variables: {
       "--color": "The colour under it: the pure hue, or the colour at its alpha.",

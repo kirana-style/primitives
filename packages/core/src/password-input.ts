@@ -2,7 +2,7 @@ import { bindable } from "./bindable.ts"
 import type { Field } from "./field.ts"
 import { createInput } from "./input.ts"
 import type { InputProps } from "./input.ts"
-import { details, flag } from "./part.ts"
+import { defaultLabel, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -15,6 +15,12 @@ export interface PasswordInputProps extends InputProps {
   defaultVisible?: boolean | undefined
   /** Heard as it is about to be shown or hidden: `details.cancel()` keeps it as it was. */
   onVisibleChange?: ((visible: boolean, details: ChangeDetails) => void) | undefined
+  /**
+   * What the toggle is called, for assistive technology: `show` while the password is hidden,
+   * `hide` while it is shown. Default: `"Show password"` and `"Hide password"`. An `aria-label`
+   * given to the toggle itself wins over both.
+   */
+  toggleLabels?: { show?: string | undefined; hide?: string | undefined } | undefined
 }
 
 export interface PasswordInput {
@@ -24,7 +30,7 @@ export interface PasswordInput {
   readonly root: Part
   /** An `<input>`: a password, or text while it is shown. */
   readonly input: Part
-  /** Shows the password, and hides it again. */
+  /** Shows the password, and hides it again: named by `toggleLabels`, or by its own `aria-label`. */
   readonly toggle: Part
   /** What draws which of the two it is (an eye, open or struck): it says the state only. */
   readonly indicator: Part
@@ -105,7 +111,12 @@ export function createPasswordInput(
       props: computed(() => ({
         type: "button",
         "aria-pressed": String(visible.get()),
-        "aria-label": visible.get() ? "Hide password" : "Show password",
+        // A default only: the caller's own `aria-label` on the toggle wins.
+        ...defaultLabel(
+          visible.get()
+            ? (props.get().toggleLabels?.hide ?? "Hide password")
+            : (props.get().toggleLabels?.show ?? "Show password")
+        ),
         disabled: flag(disabled.get()),
         ...state(),
         onPointerDown(event: PointerEvent) {

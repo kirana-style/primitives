@@ -191,7 +191,7 @@ export function createNumberField(
   let member: FieldMembership | undefined
   const id = props.peek().id
   const inputId = field?.controlId ?? `${id}-input`
-  // In a field, what the input is called once it is in the page: its caller's id, if it has one.
+  // What the input is called once it is in the page: its caller's id, if it has one.
   const inputName = signal<string | undefined>(undefined)
   const value = bindable<number | null>({
     value: () => props.get().value,
@@ -522,7 +522,8 @@ export function createNumberField(
         const { min: least, format, required, readOnly } = props.get()
         const whole = format?.maximumFractionDigits === 0
         return {
-          ...(field ? defaultId(inputId) : { id: inputId }),
+          // A default only, in a field or not: an id the caller gives the input wins.
+          ...defaultId(inputId),
           type: "text",
           // What it says, so a server draws the number. In a page the core writes it too:
           // a framework writes in its own time, after what was typed since.
@@ -600,7 +601,7 @@ export function createNumberField(
       }),
       attach(element) {
         input = element as HTMLInputElement
-        if (field) inputName.set(element.id || undefined)
+        inputName.set(element.id || undefined)
         const now = value.peek()
         member = field?.join({
           element,

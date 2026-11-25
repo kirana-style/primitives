@@ -28,7 +28,7 @@ export type RootProps = PartComponentProps<
   "div",
   StateOf<Parts["root"]>,
   Omit<NumberFieldProps, "id"> & {
-    /** What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead. */
+    /** What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead. An `id` given to the input itself wins over both. */
     id?: string
   }
 >

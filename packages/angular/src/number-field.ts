@@ -43,7 +43,7 @@ export class KpNumberField implements OnInit {
   readonly name = input<string>()
   /** The id of the form the control belongs to, when it is not inside it. */
   readonly form = input<string>()
-  /** What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead. */
+  /** What its input's id is made from: the input is `<id>-input`, which a `<label for>` names. Inside a `Field`, the input takes the field's id instead. An `id` given to the input itself wins over both. */
   readonly kpId = input<string>()
   readonly valueChanged = output<{ value: number | null; details: ChangeDetails }>()
   /** A change that is done: focus left the input, a key or a button stepped it. */

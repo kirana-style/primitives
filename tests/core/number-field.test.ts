@@ -7,6 +7,7 @@ import type {
   NumberFieldProps,
   NumberFieldScrubOptions,
 } from "../../packages/core/src/number-field.ts"
+import { forElement } from "../../packages/core/src/part.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { mount } from "./page.ts"
 
@@ -193,6 +194,27 @@ describe("a number field", () => {
     expect(made.value.peek()).toBe(2)
     expect(input.readOnly).toBe(true)
     expect(input.hasAttribute("data-readonly")).toBe(true)
+  })
+
+  it("keeps the id its caller gives the input, which its label and its buttons name", () => {
+    const root = mount(`
+      <label for="qty">Quantity</label>
+      <div class="root"><input class="input" id="qty" /><button class="up">+</button></div>
+      <div class="other"><input class="input" /></div>`)
+    const named = createNumberField(signal<NumberFieldProps>({ id: "n" }))
+    const input = root.querySelector<HTMLInputElement>(".root .input")!
+    const up = root.querySelector<HTMLButtonElement>(".up")!
+    onTestFinished(bind(input, named.input))
+    onTestFinished(bind(up, named.increment))
+    expect(input.id).toBe("qty")
+    expect(root.querySelector("label")!.control).toBe(input)
+    expect(up.getAttribute("aria-controls")).toBe("qty")
+    expect(forElement(named.input.props.peek(), { id: "qty" }, "input").id).toBeUndefined()
+    // With none of the caller's, the input is named after its root.
+    const unnamed = createNumberField(signal<NumberFieldProps>({ id: "n2" }))
+    const other = root.querySelector<HTMLInputElement>(".other .input")!
+    onTestFinished(bind(other, unnamed.input))
+    expect(other.id).toBe("n2-input")
   })
 })
 

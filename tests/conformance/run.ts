@@ -258,6 +258,9 @@ const withoutStyles = (dom: string) =>
     // A label is for what its control is called once the control is in the page: a server,
     // which writes the label first, writes the field's id where the caller gave its own.
     .replace(/^(\s*<label#(?:fd3|fc6)-label[^\n]*?) for="[^"]*"/gm, "$1")
+    // So are a number field's buttons: a server, which writes them before the input, names the
+    // input by the id it makes where the caller gave its own.
+    .replace(/^(\s*<button#nf1-(?:down|up)[^\n]*?) aria-controls="[^"]*"/gm, "$1")
     // The tags' hidden inputs after the first are the core's to draw, once the first is in the
     // page: a server sends one for a control that holds two.
     .replace(/^\s*<input[^\n]* name="colors"[^\n]*\n/gm, "")
@@ -838,6 +841,9 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
 
     const width = (testid: string) =>
       id(testid).evaluate((element) => (element as HTMLElement).style.width)
+    // A variable on the root, read where it is inherited.
+    const variable = (testid: string, name: string) =>
+      id(testid).evaluate((element, read) => getComputedStyle(element).getPropertyValue(read), name)
     expect((await attribute("pr1", "role")) === "progressbar", "role=progressbar")
     expect((await attribute("pr1", "aria-valuenow")) === "40", "the value")
     expect((await attribute("pr1", "aria-valuetext")) === "40%", "as it is written")
@@ -845,17 +851,24 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await attribute("pr1", "data-progressing")) === "", "under way")
     expect((await width("pr1-fill")) === "40%", "the filled part is the value's share")
     expect((await id("pr1-value").textContent()) === "40%", "the value is written")
+    expect(
+      (await variable("pr1-fill", "--progress-value")) === "0.4",
+      "and its share is a variable every part inherits"
+    )
     expect((await attribute("pr2", "aria-valuenow")) === null, "not known: no value")
     expect((await attribute("pr2", "data-indeterminate")) === "", "and said so")
     expect((await width("pr2-fill")) === "", "with no width of its own")
+    expect((await variable("pr2", "--progress-value")) === "", "and no share")
     await id("pr1-more").click()
     await snapshot("progress complete")
     expect((await attribute("pr1", "data-complete")) === "", "at the end of the range: complete")
     expect((await width("pr1-fill")) === "100%", "the filled part follows")
+    expect((await variable("pr1", "--progress-value")) === "1", "and so does its share")
 
     expect((await attribute("m1", "role")) === "meter", "role=meter")
     expect((await attribute("m1", "aria-valuenow")) === "30", "a meter's value")
     expect((await width("m1-fill")) === "50%", "its share of its own range")
+    expect((await variable("m1-fill", "--meter-value")) === "0.5", "a variable on a meter too")
     expect((await id("m1-value").textContent()) === "50%", "written as a share")
     expect((await attribute("m1", "data-progressing")) === null, "a meter is not a task")
 
@@ -3200,6 +3213,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       (await attribute("otp1-input", "autocomplete")) === "one-time-code",
       "the code is one input a phone can fill"
     )
+    expect((await attribute("otp1-input", "id")) === "otp1-entry", "its input keeps the page's id")
     await id("otp1-input").focus()
     await settled(page)
     expect((await attribute("otp1-0", "data-active")) === "", "focused, the first cell is active")
@@ -3971,6 +3985,11 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect(
       (await attribute("nf1-input", "aria-roledescription")) === "Number field",
       "its input says what it is"
+    )
+    expect((await attribute("nf1-input", "id")) === "nf1-entry", "its input keeps the page's id")
+    expect(
+      (await attribute("nf1-up", "aria-controls")) === "nf1-entry",
+      "and its buttons name the input by it"
     )
     expect((await sent("qty")) === "5", "and a hidden input holds it for a form")
     await id("nf1-input").focus()
@@ -4916,6 +4935,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     // An editable text.
     expect((await text("ed1-preview")) === "Apollo", "an editable reads as its text")
     expect(!(await shown("ed1-input")), "with its input hidden")
+    expect((await attribute("ed1-input", "id")) === "ed1-entry", "its input keeps the page's id")
     await snapshot("an editable at rest")
     await press("ed1-edit")
     expect(
@@ -4945,6 +4965,10 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     // A password that can be shown.
     expect((await attribute("pw1-input", "type")) === "password", "a password is hidden")
     expect((await attribute("pw1-toggle", "aria-label")) === "Show password", "its button says so")
+    expect(
+      (await attribute("pw1-toggle", "aria-pressed")) === null,
+      "its name tells its state, not aria-pressed"
+    )
     expect((await text("pw1-indicator")) === "hidden", "its mark is drawn from its state")
     await snapshot("a password hidden")
     await id("pw1-input").focus()
@@ -4953,6 +4977,11 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await text("pw1-output")) === "true", "and the caller hears")
     expect((await focused()) === "pw1-input", "focus stays in the input")
     expect((await attribute("pw1-indicator", "data-visible")) === "", "its mark says which it is")
+    expect(
+      (await attribute("pw1-toggle", "aria-label")) === "Hide password",
+      "and its button's name says the other"
+    )
+    expect((await attribute("pw1-toggle", "aria-pressed")) === null, "still with no aria-pressed")
     expect((await text("pw1-indicator")) === "shown", "and what is drawn from its state follows")
     await snapshot("a password shown")
     await press("ef1-reset")
@@ -5549,6 +5578,20 @@ for (const engine of engines) {
         if (!subject.second && width !== "40%") {
           failed++
           log(`FAIL  ${label}  the server wrote the progress bar's width, got "${width}"`)
+        }
+        // So is the value's share, written on the root for every part to inherit.
+        const shares = await page.evaluate(() =>
+          ["pr1", "pr2", "m1"]
+            .map((name) =>
+              document
+                .querySelector<HTMLElement>(`[data-testid="${name}"]`)
+                ?.style.getPropertyValue(name === "m1" ? "--meter-value" : "--progress-value")
+            )
+            .join(" ")
+        )
+        if (!subject.second && shares !== "0.4  0.5") {
+          failed++
+          log(`FAIL  ${label}  the server wrote the bars' shares, got "${shares}"`)
         }
         const place = await page.evaluate(() =>
           document

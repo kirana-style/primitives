@@ -1924,7 +1924,13 @@ const TOUR: PageStep[] = [
             data-testid="otp1"
             (valueCompleted)="code.set($event.value)"
           >
-            <input kpOtpInput aria-label="Code" class="otp-input" data-testid="otp1-input" />
+            <input
+              kpOtpInput
+              id="otp1-entry"
+              aria-label="Code"
+              class="otp-input"
+              data-testid="otp1-input"
+            />
             <div kpOtpGroup class="otp-group">
               <div kpOtpSlot [index]="0" class="otp-slot" data-testid="otp1-0">
                 <div *kpOtpCaret class="otp-caret"></div>
@@ -2523,7 +2529,12 @@ const TOUR: PageStep[] = [
           </span>
           <div kpNumberFieldGroup class="number-group" data-testid="nf1-group">
             <button kpNumberFieldDecrement data-testid="nf1-down">-</button>
-            <input kpNumberFieldInput aria-label="Quantity" data-testid="nf1-input" />
+            <input
+              kpNumberFieldInput
+              id="nf1-entry"
+              aria-label="Quantity"
+              data-testid="nf1-input"
+            />
             <button kpNumberFieldIncrement data-testid="nf1-up">+</button>
           </div>
         </div>
@@ -3450,7 +3461,7 @@ const TOUR: PageStep[] = [
             (valueChanged)="titled.set($event.value)"
           >
             <span kpEditablePreview class="editable-preview" data-testid="ed1-preview"></span>
-            <input kpEditableInput aria-label="Title" data-testid="ed1-input" />
+            <input kpEditableInput id="ed1-entry" aria-label="Title" data-testid="ed1-input" />
             <button kpEditableEditTrigger data-testid="ed1-edit">Edit</button>
             <button kpEditableSubmitTrigger data-testid="ed1-submit">Save</button>
             <button kpEditableCancelTrigger data-testid="ed1-cancel">Cancel</button>

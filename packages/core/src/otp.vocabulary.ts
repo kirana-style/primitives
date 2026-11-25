@@ -24,7 +24,8 @@ export const otpVocabulary = defineComponent({
   },
   input: {
     inside: "root",
-    description: "The one input the code is typed in. A design lays it over the cells, unseen.",
+    description:
+      "The one input the code is typed in. A design lays it over the cells, unseen. It is named by the root's `id`; an `id` given to it is kept, so a `<label for>` names it.",
     states: { disabled: CONTROL.disabled },
   },
   group: { inside: "root", repeated: true, description: "Cells that are drawn together." },

@@ -1347,7 +1347,7 @@ function press(event: PartEvent<MouseEvent>) {
           data-testid="otp1"
           @value-complete="(next: string) => (code = next)"
         >
-          <Otp.Input aria-label="Code" class="otp-input" data-testid="otp1-input" />
+          <Otp.Input id="otp1-entry" aria-label="Code" class="otp-input" data-testid="otp1-input" />
           <Otp.Group class="otp-group">
             <Otp.Slot :index="0" class="otp-slot" data-testid="otp1-0">
               <Otp.Caret class="otp-caret" />
@@ -1851,7 +1851,7 @@ function press(event: PartEvent<MouseEvent>) {
         </NumberField.ScrubArea>
         <NumberField.Group class="number-group" data-testid="nf1-group">
           <NumberField.Decrement data-testid="nf1-down">-</NumberField.Decrement>
-          <NumberField.Input aria-label="Quantity" data-testid="nf1-input" />
+          <NumberField.Input id="nf1-entry" aria-label="Quantity" data-testid="nf1-input" />
           <NumberField.Increment data-testid="nf1-up">+</NumberField.Increment>
         </NumberField.Group>
       </NumberField.Root>
@@ -2696,7 +2696,7 @@ function press(event: PartEvent<MouseEvent>) {
           @value-change="(next: string) => (titled = next)"
         >
           <Editable.Preview class="editable-preview" data-testid="ed1-preview" />
-          <Editable.Input aria-label="Title" data-testid="ed1-input" />
+          <Editable.Input id="ed1-entry" aria-label="Title" data-testid="ed1-input" />
           <Editable.EditTrigger data-testid="ed1-edit">Edit</Editable.EditTrigger>
           <Editable.SubmitTrigger data-testid="ed1-submit">Save</Editable.SubmitTrigger>
           <Editable.CancelTrigger data-testid="ed1-cancel">Cancel</Editable.CancelTrigger>

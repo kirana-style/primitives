@@ -1253,6 +1253,10 @@ Root
 
 The meter: it says the value to assistive technology.
 
+| Variable | Holds |
+| --- | --- |
+| `--meter-value` | The value's share of the range, a number from 0 (at `min`) to 1 (at `max`), which every part inherits: what a ring or a gauge is drawn from. |
+
 ### Meter.Track
 
 The whole range.
@@ -1453,7 +1457,7 @@ The code: the input and its cells.
 
 ### Otp.Input
 
-The one input the code is typed in. A design lays it over the cells, unseen.
+The one input the code is typed in. A design lays it over the cells, unseen. It is named by the root's `id`; an `id` given to it is kept, so a `<label for>` names it.
 
 | Attribute | When |
 | --- | --- |
@@ -1670,7 +1674,7 @@ What holds the input and its buttons, as one control.
 
 ### NumberField.Input
 
-The text input: it takes what its locale writes a number with.
+The text input: it takes what its locale writes a number with. It is named `<root id>-input`, or in a `Field` by the field's id; an `id` given to it is kept, so a `<label for>` and the buttons' `aria-controls` name it.
 
 | Attribute | When |
 | --- | --- |
@@ -2175,7 +2179,7 @@ The text as it reads, or the placeholder while there is none: hidden while editi
 
 ### Editable.Input
 
-Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.
+Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. It is named by the root's `id`, or in a `Field` by the field's; an `id` given to it is kept, so a `<label for>` names it.
 
 | Attribute | When |
 | --- | --- |
@@ -2276,7 +2280,7 @@ The `<input>`: a password, or text while it is shown. In a `Field` it is the fie
 
 ### PasswordInput.Toggle
 
-Shows the password, and hides it again. Focus and the caret stay in the input. It is named "Show password" while the password is hidden and "Hide password" while it is shown: the root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both.
+Shows the password, and hides it again. Focus and the caret stay in the input. It is named "Show password" while the password is hidden and "Hide password" while it is shown, and that name is how its state is told: it is a plain button, with no `aria-pressed`. The root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both.
 
 | Attribute | When |
 | --- | --- |
@@ -3687,6 +3691,10 @@ The progress bar: it says the value to assistive technology.
 | `data-progressing` | Present while the task is under way. |
 | `data-complete` | Present once the value has reached the end of the range. |
 | `data-indeterminate` | Present while how far the task has come is not known. |
+
+| Variable | Holds |
+| --- | --- |
+| `--progress-value` | The value's share of the range, a number from 0 (at `min`) to 1 (at `max`), which every part inherits: what a ring or a gauge is drawn from. Absent while the value is not known. |
 
 ### Progress.Track
 

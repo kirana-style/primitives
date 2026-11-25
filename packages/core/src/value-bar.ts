@@ -23,6 +23,11 @@ export interface ValueBar {
   /** The value as it is written: `"40%"`. `undefined` while it is not known. */
   readonly text: ReadonlySignal<string | undefined>
   mount(): () => void
+  /**
+   * The bar, which says the value to assistive technology. It writes the value's share of the
+   * range as a number from 0 to 1, `--progress-value` on a progress bar and `--meter-value` on a
+   * meter, which every part inherits: none while how far a task has come is not known.
+   */
   readonly root: Part
   readonly track: Part
   /** The filled part of the track: its width is the value's share of the range. */
@@ -44,6 +49,7 @@ export function createValueBar(
   role: "progressbar" | "meter"
 ): ValueBar {
   const id = props.peek().id
+  const variable = role === "meter" ? "--meter-value" : "--progress-value"
   const labelled = signal(false)
   const range = computed(() => {
     const { value, min = 0, max = 100 } = props.get()
@@ -74,7 +80,7 @@ export function createValueBar(
     mount: () => NOTHING,
     root: {
       props: computed(() => {
-        const { value, min, max } = range.get()
+        const { value, min, max, share } = range.get()
         const written = text.get()
         return {
           role,
@@ -84,6 +90,9 @@ export function createValueBar(
           "aria-valuetext": props.get().getAriaValueText?.(written, value) ?? written,
           "aria-labelledby": labelled.get() ? `${id}-label` : undefined,
           ...state(),
+          // The value's share of the range, which a server can write and every part inherits:
+          // what a ring, a gauge or a label that follows the bar is drawn from.
+          style: share === null ? undefined : { [variable]: String(share) },
         }
       }),
       attach: () => NOTHING,

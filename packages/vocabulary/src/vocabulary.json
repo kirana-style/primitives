@@ -3366,7 +3366,9 @@
           "description": "The meter: it says the value to assistive technology.",
           "states": {},
           "exclusive": [],
-          "variables": {},
+          "variables": {
+            "--meter-value": "The value's share of the range, a number from 0 (at `min`) to 1 (at `max`), which every part inherits: what a ring or a gauge is drawn from."
+          },
           "inside": [],
           "optional": false,
           "repeated": false
@@ -3919,7 +3921,7 @@
           "repeated": false
         },
         "input": {
-          "description": "The one input the code is typed in. A design lays it over the cells, unseen.",
+          "description": "The one input the code is typed in. A design lays it over the cells, unseen. It is named by the root's `id`; an `id` given to it is kept, so a `<label for>` names it.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -4498,7 +4500,7 @@
           "repeated": false
         },
         "input": {
-          "description": "The text input: it takes what its locale writes a number with.",
+          "description": "The text input: it takes what its locale writes a number with. It is named `<root id>-input`, or in a `Field` by the field's id; an `id` given to it is kept, so a `<label for>` and the buttons' `aria-controls` name it.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -5953,7 +5955,7 @@
           "repeated": false
         },
         "input": {
-          "description": "Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.",
+          "description": "Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. It is named by the root's `id`, or in a `Field` by the field's; an `id` given to it is kept, so a `<label for>` names it.",
           "states": {
             "editing": {
               "attribute": "data-editing",
@@ -6282,7 +6284,7 @@
           "repeated": false
         },
         "toggle": {
-          "description": "Shows the password, and hides it again. Focus and the caret stay in the input. It is named \"Show password\" while the password is hidden and \"Hide password\" while it is shown: the root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both.",
+          "description": "Shows the password, and hides it again. Focus and the caret stay in the input. It is named \"Show password\" while the password is hidden and \"Hide password\" while it is shown, and that name is how its state is told: it is a plain button, with no `aria-pressed`. The root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both.",
           "states": {
             "visible": {
               "attribute": "data-visible",
@@ -9738,7 +9740,9 @@
               "indeterminate"
             ]
           ],
-          "variables": {},
+          "variables": {
+            "--progress-value": "The value's share of the range, a number from 0 (at `min`) to 1 (at `max`), which every part inherits: what a ring or a gauge is drawn from. Absent while the value is not known."
+          },
           "inside": [],
           "optional": false,
           "repeated": false

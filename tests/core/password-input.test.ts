@@ -38,9 +38,17 @@ describe("a password input", () => {
     expect(input.type).toBe("password")
     expect(input.getAttribute("spellcheck")).toBe("false")
     expect(input.getAttribute("autocapitalize")).toBe("off")
-    expect(toggle.getAttribute("aria-pressed")).toBe("false")
     expect(toggle.getAttribute("aria-label")).toBe("Show password")
     expect(toggle.type).toBe("button")
+  })
+
+  it("tells its state by its name alone, so a screen reader says it once", () => {
+    const { toggle } = password()
+    expect(toggle.hasAttribute("aria-pressed")).toBe(false)
+    toggle.click()
+    expect(toggle.getAttribute("aria-label")).toBe("Hide password")
+    expect(toggle.hasAttribute("aria-pressed")).toBe(false)
+    expect(toggle.hasAttribute("data-visible")).toBe(true)
   })
 
   it("is shown and hidden by its button, focus and the caret left where they are", () => {

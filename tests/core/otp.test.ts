@@ -5,6 +5,7 @@ import { bind } from "../../packages/core/src/bind.ts"
 import { createField } from "../../packages/core/src/field.ts"
 import type { Field } from "../../packages/core/src/field.ts"
 import { createOtp } from "../../packages/core/src/otp.ts"
+import { forElement } from "../../packages/core/src/part.ts"
 import type { OtpProps } from "../../packages/core/src/otp.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { find, focused, mount } from "./page.ts"
@@ -269,5 +270,23 @@ describe("a one-time code", () => {
     await settled()
     agree("touched dirty valid")
     expect(find(root, "s0").hasAttribute("data-focused")).toBe(false)
+  })
+
+  it("keeps the id its caller gives the input, so a label for it names it", () => {
+    const root = mount(`
+      <label for="sms">Code</label>
+      <div class="root"><input class="input" id="sms" /></div>
+      <div class="other"><input class="input" /></div>`)
+    const named = createOtp(signal<OtpProps>({ id: "code", length: 4 }))
+    const input = root.querySelector<HTMLInputElement>(".root .input")!
+    onTestFinished(bind(input, named.input))
+    expect(input.id).toBe("sms")
+    expect(root.querySelector("label")!.control).toBe(input)
+    expect(forElement(named.input.props.peek(), { id: "sms" }, "input").id).toBeUndefined()
+    // With none of the caller's, the input is named by its root's id.
+    const unnamed = createOtp(signal<OtpProps>({ id: "code2", length: 4 }))
+    const other = root.querySelector<HTMLInputElement>(".other .input")!
+    onTestFinished(bind(other, unnamed.input))
+    expect(other.id).toBe("code2")
   })
 })

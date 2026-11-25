@@ -106,6 +106,7 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
 const ITEM_PROPS = {
   disabled: optional(Boolean),
   label: String,
+  closeOnSelect: optional(Boolean),
   closeOnClick: optional(Boolean),
 }
 
@@ -178,6 +179,7 @@ const CheckboxItem = defineComponent({
       defaultChecked: props.defaultChecked,
       disabled: props.disabled,
       label: props.label,
+      closeOnSelect: props.closeOnSelect,
       closeOnClick: props.closeOnClick,
       onCheckedChange(checked: boolean, details: ChangeDetails) {
         emit("checkedChange", checked, details)
@@ -260,6 +262,7 @@ const RadioItem = defineComponent({
     const options = toSignal(() => ({
       disabled: props.disabled,
       label: props.label,
+      closeOnSelect: props.closeOnSelect,
       closeOnClick: props.closeOnClick,
     }))
     const part = inside(RADIO_GROUP, "RadioGroup").item(value, () => defined(options.get()))

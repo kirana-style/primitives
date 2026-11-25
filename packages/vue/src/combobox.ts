@@ -14,6 +14,7 @@ import type {
 import { defineComponent, Fragment, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType, PublicProps } from "vue"
 
+import { useDirectionAround } from "./direction-context.ts"
 import { useFieldAround } from "./field-context.ts"
 import { positionerComponent } from "./popover.ts"
 import {
@@ -102,6 +103,8 @@ const Root = defineComponent({
     defaultValues: Array as PropType<readonly unknown[]>,
     inline: Boolean,
     virtualized: Object as PropType<ComboboxProps["virtualized"]>,
+    presentation: String as PropType<ComboboxProps["presentation"]>,
+    sheetBelow: Number,
     autoHighlight: Boolean,
     name: String,
     form: String,
@@ -109,6 +112,14 @@ const Root = defineComponent({
     filter: {
       type: null as unknown as PropType<((label: string, query: string) => boolean) | null>,
       default: undefined,
+    },
+    itemToStringLabel: {
+      type: Function as PropType<(value: unknown) => string>,
+      default: undefined as unknown,
+    },
+    itemToStringValue: {
+      type: Function as PropType<(value: unknown) => string>,
+      default: undefined as unknown,
     },
     id: String,
   },
@@ -126,7 +137,7 @@ const Root = defineComponent({
     const generated = useId()
     const field = useFieldAround()
     const made = scope.provide(
-      controller(within(createCombobox, { field }), () => ({
+      controller(within(createCombobox, { field, direction: useDirectionAround() }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,
@@ -146,11 +157,15 @@ const Root = defineComponent({
         },
         inline: props.inline,
         virtualized: props.virtualized,
+        presentation: props.presentation,
+        sheetBelow: props.sheetBelow,
         autoHighlight: props.autoHighlight,
         name: props.name,
         form: props.form,
         items: props.items,
         filter: props.filter,
+        itemToStringLabel: props.itemToStringLabel as ComboboxProps["itemToStringLabel"],
+        itemToStringValue: props.itemToStringValue as ComboboxProps["itemToStringValue"],
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
@@ -401,6 +416,7 @@ export type TriggerProps = PartComponentProps
 export type ChipsProps = PartComponentProps
 export type ChipRemoveProps = PartComponentProps
 export type PopupProps = PartComponentProps
+export type BackdropProps = PartComponentProps
 export type ListProps = PartComponentProps
 export type GroupLabelProps = PartComponentProps
 export type SeparatorProps = PartComponentProps
@@ -434,6 +450,12 @@ export const Combobox = {
     scope.use().chipRemove(inject(CHIP))
   ),
   Portal: portalComponent("ComboboxPortal", () => scope.use().mounted),
+  /** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+  Backdrop: partComponent<"div", State["backdrop"]>(
+    "ComboboxBackdrop",
+    "div",
+    () => scope.use().backdrop
+  ),
   Positioner: positionerComponent<State["positioner"]>(
     "ComboboxPositioner",
     () => scope.use(),

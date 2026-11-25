@@ -6,6 +6,12 @@ const STATES = {
   disabled: DISABLED,
   readonly: state("data-readonly", "Present when it is shown and cannot be edited."),
   placeholder: state("data-placeholder", "Present while it holds no text."),
+  touched: state("data-touched", "In a field: present once focus has left it."),
+  dirty: state("data-dirty", "In a field: present while the text is not the one it began with."),
+  filled: state("data-filled", "In a field: present while it holds text."),
+  focused: state("data-focused", "In a field: present while it has focus."),
+  valid: state("data-valid", "In a field: present once the text was checked and found right."),
+  invalid: state("data-invalid", "In a field: present while the text is wrong."),
 }
 
 // The component's parts as data, apart from its controller: a page that uses the component does

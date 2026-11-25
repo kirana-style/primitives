@@ -13,6 +13,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, Fragment, useContext, useId, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import {
   Portal as BodyPortal,
@@ -48,8 +49,9 @@ export type RootProps<Value = unknown> = Omit<ComboboxProps<Value>, "id"> & {
 
 function Root<Value = unknown>({ children, ...props }: RootProps<Value>): ReactElement {
   const field = useContext(FieldContext) ?? undefined
+  const direction = useContext(DirectionContext) ?? undefined
   const controller: Controller = useController<ComboboxProps<Value>, Controller<Value>>(
-    within(createCombobox<Value>, { field }),
+    within(createCombobox<Value>, { field, direction }),
     props
   )
   const named = useSignal(controller.named)
@@ -70,6 +72,9 @@ const HiddenInput = () => usePart(useCombobox("Root").hidden, "input", {})
 const Input = (props: InputProps) => usePart(useOwnText(useCombobox("Input").input), "input", props)
 const Trigger = (props: TriggerProps) => usePart(useCombobox("Trigger").trigger, "button", props)
 const Popup = (props: PopupProps) => usePart(useCombobox("Popup").popup, "div", props)
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
+/** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+const Backdrop = (props: BackdropProps) => usePart(useCombobox("Backdrop").backdrop, "div", props)
 /**
  * The items' own box inside the popup, when the popup holds more than items (an input): it
  * is then the listbox.
@@ -315,6 +320,7 @@ export const Combobox = /* @__PURE__ */ parts("Combobox", {
   Chip,
   ChipRemove,
   Portal,
+  Backdrop,
   Positioner,
   Popup,
   List,

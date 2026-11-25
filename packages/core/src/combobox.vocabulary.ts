@@ -1,4 +1,5 @@
 import { defineComponent } from "./part.ts"
+import { PRESENTATION, SHEET_STATES, SHEET_VARIABLES } from "./select.vocabulary.ts"
 import {
   ANCHORED,
   CONTROL,
@@ -43,24 +44,38 @@ export const comboboxVocabulary = defineComponent({
       "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
     inside: "root",
   },
+  backdrop: {
+    inside: "portal",
+    optional: true,
+    description: "The layer over the page behind the list: a press on it closes the list.",
+    states: { ...TRANSITION, ...SHEET_STATES },
+    exclusive: EITHER_FRAME,
+    variables: SHEET_VARIABLES,
+  },
   positioner: {
     inside: "portal",
     description:
-      "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT },
+      "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.",
+    states: { ...OPEN, ...PLACEMENT, presentation: PRESENTATION },
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
   },
   popup: {
     inside: ["positioner", "root"],
     description:
-      "The list of items. With a `list` inside, what holds it: a dialog around an input and the list.",
+      "The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
     states: {
       ...TRANSITION,
       ...PLACEMENT,
+      ...SHEET_STATES,
       empty: state("data-empty", "Present when no item is shown for what was typed."),
     },
     exclusive: EITHER_FRAME,
+    variables: {
+      ...SHEET_VARIABLES,
+      "--drawer-swipe-strength":
+        "As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest.",
+    },
   },
   list: {
     inside: "popup",
@@ -120,7 +135,12 @@ export const comboboxVocabulary = defineComponent({
     description:
       "With several values: what holds the chips and the input, and what the list is placed against.",
   },
-  chip: { inside: "chips", repeated: true, description: "One chosen value." },
+  chip: {
+    inside: "chips",
+    repeated: true,
+    description:
+      "One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.",
+  },
   chipRemove: {
     inside: "chip",
     description: "A chip's button that takes its value away.",

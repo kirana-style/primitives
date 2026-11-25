@@ -1,5 +1,6 @@
 import { bindable } from "./bindable.ts"
-import { details, flag } from "./part.ts"
+import type { Field, FieldMembership } from "./field.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -34,7 +35,9 @@ export interface EditableProps {
   disabled?: boolean | undefined
   /** Shown as it is, not editable. */
   readOnly?: boolean | undefined
-  /** With a name, the text is submitted with the form around it. */
+  /** Needed: in a `Field`, leaving it empty is then invalid. */
+  required?: boolean | undefined
+  /** With a name, the text is submitted with the form around it; in a `Field`, the field's by default. */
   name?: string | undefined
   /** The id of the form the input belongs to, when it is not inside it. */
   form?: string | undefined
@@ -66,9 +69,15 @@ const NOTHING = () => {}
 
 /**
  * A text edited in place: it reads as text until it is edited, Enter or leaving keeps the edit,
- * Escape drops it, and focus goes back to where the edit began.
+ * Escape drops it, and focus goes back to where the edit began. Inside a field its input is the
+ * field's control: the field's label names it and a press on the label starts an edit.
  */
-export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
+export function createEditable(
+  props: ReadonlySignal<EditableProps>,
+  around: { field?: Field | undefined } = {}
+): Editable {
+  const { field } = around
+  let member: FieldMembership | undefined
   const id = props.peek().id
   const value = bindable<string>({
     value: () => props.get().value,
@@ -80,7 +89,7 @@ export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
     defaultValue: props.peek().defaultEditing ?? false,
     onChange: (next, by) => props.peek().onEditingChange?.(next, by),
   })
-  const disabled = computed(() => Boolean(props.get().disabled))
+  const disabled = computed(() => Boolean(props.get().disabled) || Boolean(field?.disabled.get()))
   const readOnly = computed(() => Boolean(props.get().readOnly))
   const activation = computed(() => props.get().activation ?? "focus")
   const text = computed(() => value.get() || (props.get().placeholder ?? ""))
@@ -126,6 +135,7 @@ export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
       value.set(typed, by)
       // Refused: the edit stays open on what was typed.
       if (by.canceled) return
+      member?.changed(typed)
     }
     end(by, back)
   }
@@ -135,6 +145,7 @@ export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
   }
 
   const state = () => ({
+    ...field?.state(),
     "data-editing": flag(editing.get()),
     "data-disabled": flag(disabled.get()),
     "data-readonly": flag(readOnly.get()),
@@ -162,7 +173,18 @@ export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
     submit: (by) => submit(by),
     cancel: (by) => cancel(by),
     mount: () => NOTHING,
-    root: { props: computed(state), attach: () => NOTHING },
+    root: {
+      props: computed(() => ({
+        ...state(),
+        onFocus: () => member?.focused(true),
+        onBlur(event: FocusEvent) {
+          // From the preview to the input and back, focus has not left it.
+          const to = event.relatedTarget as Node | null
+          if (!(event.currentTarget as HTMLElement).contains(to)) member?.focused(false)
+        },
+      })),
+      attach: () => NOTHING,
+    },
     preview: {
       props: computed(() => {
         const can = !disabled.get() && !readOnly.get()
@@ -191,14 +213,17 @@ export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
     },
     input: {
       props: computed(() => ({
-        id,
+        // In a field, the id its label is `for` unless the caller gives one.
+        ...(field ? defaultId(field.controlId) : { id }),
         hidden: flag(!editing.get()),
-        name: props.get().name,
+        name: props.get().name ?? field?.name.get(),
         form: props.get().form,
         // What a server draws and a form reads; the text being typed is the element's own.
         value: value.get(),
         disabled: flag(disabled.get()),
         readonly: flag(readOnly.get()),
+        "aria-required": props.get().required ? "true" : undefined,
+        ...field?.aria(),
         ...state(),
         onKeyDown(event: KeyboardEvent) {
           if (event.isComposing) return
@@ -237,12 +262,29 @@ export function createEditable(props: ReadonlySignal<EditableProps>): Editable {
           input.hidden = false
           input.focus()
         }
+        member = field?.join({
+          element,
+          // A press on the label, or a form sending focus to what is wrong, starts an edit.
+          focus() {
+            if (editing.peek()) input?.focus()
+            else if (disabled.peek() || readOnly.peek()) (trigger ?? preview)?.focus()
+            else edit(details("focus"))
+          },
+          kind: "text",
+          required: () => Boolean(props.peek().required),
+          value: value.peek(),
+        })
         const stop = onFormReset(element, (event) => {
           const by = details("form-reset", event)
+          const first = props.peek().defaultValue ?? ""
           cancel(by, false)
-          value.set(props.peek().defaultValue ?? "", by)
+          value.set(first, by)
+          // The value asked for, not the value read back: a caller who holds it answers later.
+          member?.reset(first)
         })
         return () => {
+          member?.leave()
+          member = undefined
           stop()
           follow()
           if (input === element) input = undefined

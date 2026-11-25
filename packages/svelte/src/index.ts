@@ -107,6 +107,7 @@ export type {
   PartStyle,
   PhysicalSide,
   PositionOptions,
+  Presentation,
   ReadonlySignal,
   Side,
   Signal,
@@ -124,6 +125,12 @@ export type {
   IsoDate,
 } from "@kirana-ui/core/calendar"
 export type { DateFieldSegment, DateUnit } from "@kirana-ui/core/date-field"
+export type {
+  DatePickerMode,
+  DatePickerRange,
+  DatePickerValue,
+  DatePickerValueOf,
+} from "@kirana-ui/core/date-picker"
 export type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 export type { FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"

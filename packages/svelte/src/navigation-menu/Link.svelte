@@ -6,8 +6,8 @@
   import { useNavigation } from "./context.ts"
   import type { LinkProps } from "./types.ts"
 
-  let { active, closeOnClick, ...rest }: LinkProps = $props()
-  const options = toSignal(() => ({ active, closeOnClick }))
+  let { active, closeOnSelect, closeOnClick, ...rest }: LinkProps = $props()
+  const options = toSignal(() => ({ active, closeOnSelect, closeOnClick }))
   const part = useNavigation().link(() => defined(options.get()))
 </script>
 

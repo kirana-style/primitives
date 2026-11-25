@@ -130,6 +130,10 @@ export class KpNavigationMenuLink implements OnInit {
   /** The link is the page the reader is on. */
   readonly active = input(false, { transform: booleanAttribute })
   /** Whether following it closes the menu. Default: it does. */
+  readonly closeOnSelect = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /** @deprecated Use `[closeOnSelect]`, which wins when both are given. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
@@ -137,6 +141,7 @@ export class KpNavigationMenuLink implements OnInit {
   private readonly put = hostPart()
   private readonly options = inputsSignal(this, () => ({
     active: this.active(),
+    closeOnSelect: this.closeOnSelect(),
     closeOnClick: this.closeOnClick(),
   }))
 

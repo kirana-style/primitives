@@ -10,7 +10,14 @@ import {
 import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createDatePicker } from "@kirana-ui/core/date-picker"
-import type { DatePicker, DatePickerProps } from "@kirana-ui/core/date-picker"
+import type {
+  DatePicker,
+  DatePickerMode,
+  DatePickerProps,
+  DatePickerRange,
+  DatePickerValue,
+  DatePickerValueOf,
+} from "@kirana-ui/core/date-picker"
 
 import { KpCalendar } from "./calendar"
 import { KpDateField } from "./date-field"
@@ -33,8 +40,9 @@ const stands = (pick: (picker: DatePicker) => unknown) => ({
  * on `<ng-container>` to draw none. Inside it the date field's, the popover's and the
  * calendar's own directives are its parts (`kpDateFieldSegments`, `kpPopoverTrigger`,
  * `kpCalendarGrid` …), with `kpDatePickerField` and `kpDatePickerCalendar` for the two
- * elements that hold them. `[(value)]` is the day, `[(open)]` whether the calendar shows,
- * `[(month)]` the first day of the month it shows.
+ * elements that hold them, and `kpDatePickerClear` and `kpDatePickerPreset` buttons.
+ * `[(value)]` is the day (with `mode="range"` the range), `[(open)]` whether the calendar
+ * shows, `[(month)]` the first day of the month it shows.
  */
 @Directive({
   selector: "[kpDatePicker]",
@@ -45,9 +53,15 @@ const stands = (pick: (picker: DatePicker) => unknown) => ({
     { provide: KpCalendar, ...stands((picker) => picker.calendar) },
   ],
 })
-export class KpDatePicker implements OnInit {
-  readonly value = model<string | null | undefined>(undefined)
-  readonly defaultValue = input<string | null>()
+export class KpDatePicker<Mode extends DatePickerMode = DatePickerMode> implements OnInit {
+  /** The day; with `mode="range"` a first and a last: `[(value)]`. Typed by `mode`. */
+  readonly value = model<DatePickerValueOf<Mode> | undefined>(undefined)
+  readonly defaultValue = input<NoInfer<DatePickerValueOf<Mode>>>()
+  /**
+   * One day (the default), or a first and a last (`"range"`): two `kpDatePickerField`s,
+   * `range="start"` and `range="end"`. Read once.
+   */
+  readonly mode = input<Mode>()
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly locale = input<string>()
@@ -72,7 +86,7 @@ export class KpDatePicker implements OnInit {
   /** The id of the form it belongs to, when it is not inside it. */
   readonly form = input<string>()
   readonly kpId = input<string>()
-  readonly valueChanged = output<{ value: string | null; details: ChangeDetails }>()
+  readonly valueChanged = output<{ value: DatePickerValueOf<Mode>; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
   /** The calendar is about to show another month: its first day, and `details.cancel()`. */
   readonly monthChanged = output<{ month: string; details: ChangeDetails }>()
@@ -83,8 +97,10 @@ export class KpDatePicker implements OnInit {
   private readonly mount = mounted()
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
-    value: this.value(),
-    defaultValue: this.defaultValue(),
+    // The core holds either mode's value; the caller's is its mode's.
+    value: this.value() as DatePickerValue | undefined,
+    defaultValue: this.defaultValue() as DatePickerValue | undefined,
+    mode: this.mode(),
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     locale: this.locale(),
@@ -103,7 +119,8 @@ export class KpDatePicker implements OnInit {
     required: this.required(),
     name: this.name(),
     form: this.form(),
-    onValueChange: (value: string | null, details: ChangeDetails) => {
+    onValueChange: (given: DatePickerValue, details: ChangeDetails) => {
+      const value = given as DatePickerValueOf<Mode>
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
         this.value.set(value)
@@ -136,14 +153,66 @@ export class KpDatePicker implements OnInit {
   }
 }
 
-/** The typed date: what holds its segments and its hidden input. */
-@Directive({ selector: "[kpDatePickerField]" })
+/**
+ * The typed date: what holds its segments and its hidden input. With `mode="range"` there are
+ * two, `range="start"` and `range="end"`, each giving the date field's directives inside it
+ * their field.
+ */
+@Directive({
+  selector: "[kpDatePickerField]",
+  providers: [
+    {
+      provide: KpDateField,
+      useFactory: (field: KpDatePickerField) => ({
+        get controller() {
+          return field.field
+        },
+      }),
+      deps: [forwardRef(() => KpDatePickerField)],
+    },
+  ],
+})
 export class KpDatePickerField implements OnInit {
+  /**
+   * With `mode="range"`: which day of the range it is typed in, the first (`"start"`, the
+   * default) or the last (`"end"`).
+   */
+  readonly range = input<"start" | "end">()
+  private readonly root = inject(KpDatePicker)
+  private readonly put = hostPart()
+
+  /** The field it is: its end's, in a range. */
+  get field() {
+    const picker = this.root.controller
+    return (this.range() === "end" && picker.endField) || picker.field
+  }
+
+  ngOnInit(): void {
+    this.put(this.field.root)
+  }
+}
+
+/** Empties the value, and gives focus to the field. Disabled while there is none. */
+@Directive({ selector: "[kpDatePickerClear]" })
+export class KpDatePickerClear implements OnInit {
   private readonly root = inject(KpDatePicker)
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.put(this.root.controller.field.root)
+    this.put(this.root.controller.clear)
+  }
+}
+
+/** `<button kpDatePickerPreset [value]="…">`: makes the value the one it is given, pressed while it is. */
+@Directive({ selector: "[kpDatePickerPreset]" })
+export class KpDatePickerPreset implements OnInit {
+  /** The value its press gives: a day, or with `mode="range"` a range. */
+  readonly value = input.required<string | DatePickerRange>()
+  private readonly root = inject(KpDatePicker)
+  private readonly put = hostPart()
+
+  ngOnInit(): void {
+    this.put(this.root.controller.preset(this.value()))
   }
 }
 

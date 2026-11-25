@@ -1,4 +1,5 @@
 import "../../shared/styles.css"
+import { JapaneseCalendar } from "@internationalized/date"
 import { effect } from "@kirana-ui/core"
 import type { Field } from "@kirana-ui/core/field"
 import type { Tour } from "@kirana-ui/core/tour"
@@ -207,6 +208,16 @@ pantry.addEventListener("input-value-change", (event) => {
       ? ""
       : `${all.filter((each) => each.label.toLowerCase().includes(text.toLowerCase())).length} left`
 })
+// Values named by what the caller says of them: a custom element's values are text, so the
+// codes are named here as the other pages name their objects.
+const CITY_NAMES: Record<string, string> = { osl: "Oslo", osa: "Osaka", par: "Paris" }
+for (const [tag, id] of [
+  ["kui-select", "sm4"],
+  ["kui-combobox", "cd3"],
+]) {
+  element<{ itemToStringLabel: (code: string) => string }>(tag!, id!).itemToStringLabel = (code) =>
+    CITY_NAMES[code] ?? code
+}
 const berries = element<{ items: typeof BERRIES; readOnly: boolean }>("kui-combobox", "cd2")
 berries.items = BERRIES
 find("cd2-unlock").addEventListener("click", () => {
@@ -312,6 +323,16 @@ find("cal4-jump").addEventListener("click", () => {
 })
 one("kui-date-field", "df1", "df1-output", "null")
 one("kui-date-picker", "dk1", "dk1-output", "null")
+// A date field typed in a calendar of eras, and a range picked whole: written out as it is.
+element<{ calendarSystem: unknown }>("kui-date-field", "df2").calendarSystem =
+  new JapaneseCalendar()
+one("kui-date-field", "df2", "df2-output", "null")
+element("kui-date-picker", "dk2").addEventListener("value-change", (event) => {
+  if (event.target !== event.currentTarget) return
+  find("dk2-output").textContent = JSON.stringify(
+    (event as CustomEvent<{ value: unknown }>).detail.value
+  )
+})
 element("kui-pagination", "pg1").addEventListener("page-change", (event) => {
   find("pg1-output").textContent = String((event as CustomEvent<{ page: number }>).detail.page)
 })

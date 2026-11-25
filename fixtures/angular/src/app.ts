@@ -1,4 +1,5 @@
 import { Component, computed, signal } from "@angular/core"
+import { JapaneseCalendar } from "@internationalized/date"
 import {
   KpAccordion,
   KpAccordionHeader,
@@ -185,7 +186,9 @@ import {
   KpTimeFieldSegments,
   KpDatePicker,
   KpDatePickerCalendar,
+  KpDatePickerClear,
   KpDatePickerField,
+  KpDatePickerPreset,
   KpSelectGroup,
   KpSelectGroupLabel,
   KpSelectSeparator,
@@ -265,6 +268,7 @@ import {
   KpRadioGroupIndicator,
   KpRadioGroupItem,
   KpSelect,
+  KpSelectBackdrop,
   KpSelectInput,
   KpSelectItem,
   KpSelectItemIndicator,
@@ -339,6 +343,11 @@ import {
 interface PageStep extends TourStep {
   title: string
   body: string
+}
+// A value that is an object, named and sent by what its caller says of it.
+interface City {
+  code: string
+  name: string
 }
 // What the tour's popup tells its template of the step it shows.
 interface Shown {
@@ -557,7 +566,9 @@ const TOUR: PageStep[] = [
     KpTimeFieldSegments,
     KpDatePicker,
     KpDatePickerCalendar,
+    KpDatePickerClear,
     KpDatePickerField,
+    KpDatePickerPreset,
     KpSelectGroup,
     KpSelectGroupLabel,
     KpSelectSeparator,
@@ -636,6 +647,7 @@ const TOUR: PageStep[] = [
     KpRadioGroupIndicator,
     KpRadioGroupItem,
     KpSelect,
+    KpSelectBackdrop,
     KpSelectInput,
     KpSelectItem,
     KpSelectItemIndicator,
@@ -1201,10 +1213,35 @@ const TOUR: PageStep[] = [
                 </div>
               </div>
             </ng-template>
+            <!-- Written by hand, as a page from before the trigger drew it: drawn once. -->
             <input kpSelectInput />
           </ng-container>
         </form>
         <output data-testid="s1-output">{{ fruit() ?? "none" }}</output>
+        <div class="bar">
+          <ng-container kpSelect [kpId]="'ss1'" [presentation]="'sheet'" [defaultValue]="'Banana'">
+            <button kpSelectTrigger data-testid="ss1-trigger">
+              <span kpSelectValue [placeholder]="'Pick a fruit'"></span>
+            </button>
+            <ng-template kpSelectPortal>
+              <div kpSelectBackdrop class="backdrop" data-testid="ss1-backdrop"></div>
+              <div kpSelectPositioner class="sheet" data-testid="ss1-positioner">
+                <div kpSelectPopup class="popup" data-testid="ss1-popup">
+                  @for (each of fruits; track each) {
+                    <div
+                      kpSelectItem
+                      [value]="each"
+                      class="item"
+                      [attr.data-testid]="'ss1-' + each"
+                    >
+                      <span kpSelectItemText>{{ each }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
       </section>
       <section data-fixture="select-multiple">
         <form class="bar" data-testid="sm1-form">
@@ -1236,7 +1273,6 @@ const TOUR: PageStep[] = [
                 </div>
               </div>
             </ng-template>
-            <input kpSelectInput />
           </ng-container>
           <button type="reset" data-testid="sm1-reset">Reset</button>
         </form>
@@ -1285,6 +1321,36 @@ const TOUR: PageStep[] = [
             </div>
           </ng-template>
         </ng-container>
+        <form class="bar" data-testid="sm4-form">
+          <ng-container
+            kpSelect
+            [kpId]="'sm4'"
+            [name]="'city'"
+            [defaultValue]="cities[2]"
+            [itemToStringLabel]="cityName"
+            [itemToStringValue]="cityCode"
+          >
+            <button kpSelectTrigger data-testid="sm4-trigger">
+              <span kpSelectValue data-testid="sm4-value"></span>
+            </button>
+            <ng-template kpSelectPortal>
+              <div kpSelectPositioner [sideOffset]="4" data-testid="sm4-positioner">
+                <div kpSelectPopup class="popup" data-testid="sm4-popup">
+                  @for (each of cities; track each.code) {
+                    <div
+                      kpSelectItem
+                      [value]="each"
+                      class="item"
+                      [attr.data-testid]="'sm4-' + each.code"
+                    >
+                      <span kpSelectItemText>{{ each.name }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </ng-template>
+          </ng-container>
+        </form>
       </section>
       <section data-fixture="menu">
         <ng-container kpMenu [kpId]="'mn1'">
@@ -2138,6 +2204,25 @@ const TOUR: PageStep[] = [
           </div>
         </form>
         <output data-testid="df1-output">{{ born() }}</output>
+        <div
+          kpDateField
+          [kpId]="'df2'"
+          [locale]="'en-US'"
+          [calendarSystem]="japanese"
+          [defaultValue]="'2019-05-01'"
+          aria-label="Day of the era"
+          class="date-field"
+          data-testid="df2"
+          (valueChanged)="reign.set('' + $event.value)"
+        >
+          <span
+            *kpDateFieldSegments="let segment"
+            kpDateFieldSegment
+            [segment]="segment"
+            [attr.data-testid]="'df2-' + segment.type + '-' + segment.index"
+          ></span>
+        </div>
+        <output data-testid="df2-output">{{ reign() }}</output>
       </section>
       <section data-fixture="calendars">
         <div
@@ -2483,6 +2568,26 @@ const TOUR: PageStep[] = [
             </div>
           </ng-template>
         </ng-container>
+        <ng-container kpAutocomplete [kpId]="'ac3'" [mode]="'both'">
+          <input kpComboboxInput aria-label="Place, completed" data-testid="ac3-input" />
+          <ng-template kpComboboxPortal>
+            <div kpComboboxPositioner [sideOffset]="4" data-testid="ac3-positioner">
+              <div kpComboboxPopup class="popup" aria-label="Places" data-testid="ac3-popup">
+                @for (each of places; track each) {
+                  <div
+                    kpComboboxItem
+                    [value]="each"
+                    [kpId]="'ac3-' + each"
+                    class="item"
+                    [attr.data-testid]="'ac3-' + each"
+                  >
+                    {{ each }}
+                  </div>
+                }
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
       </section>
       <section data-fixture="picking">
         <ng-container
@@ -2548,6 +2653,95 @@ const TOUR: PageStep[] = [
           </ng-template>
         </ng-container>
         <output data-testid="dk1-output">{{ due() }}</output>
+        <ng-container
+          kpDatePicker
+          [kpId]="'dk2'"
+          [mode]="'range'"
+          [locale]="'en-US'"
+          [name]="'trip'"
+          [defaultMonth]="'2026-03-01'"
+          (valueChanged)="trip.set(json($event.value))"
+        >
+          <div
+            kpDatePickerField
+            [range]="'start'"
+            aria-label="Arrival"
+            class="date-field"
+            data-testid="dk2-start"
+          >
+            <span
+              *kpDateFieldSegments="let segment"
+              kpDateFieldSegment
+              [segment]="segment"
+              [attr.data-testid]="'dk2-start-' + segment.type + '-' + segment.index"
+            ></span>
+            <input kpDateFieldInput />
+          </div>
+          <div
+            kpDatePickerField
+            [range]="'end'"
+            aria-label="Departure"
+            class="date-field"
+            data-testid="dk2-end"
+          >
+            <span
+              *kpDateFieldSegments="let segment"
+              kpDateFieldSegment
+              [segment]="segment"
+              [attr.data-testid]="'dk2-end-' + segment.type + '-' + segment.index"
+            ></span>
+            <input kpDateFieldInput />
+          </div>
+          <button kpPopoverTrigger aria-label="Pick the days" data-testid="dk2-trigger">
+            Pick
+          </button>
+          <button kpDatePickerClear data-testid="dk2-clear">Clear</button>
+          <button kpDatePickerPreset [value]="presetWeek" data-testid="dk2-week">A week</button>
+          <ng-template kpPopoverPortal>
+            <div kpPopoverPositioner [sideOffset]="4" data-testid="dk2-positioner">
+              <div kpPopoverPopup class="popup" aria-label="Calendar" data-testid="dk2-popup">
+                <div kpDatePickerCalendar class="calendar" data-testid="dk2-calendar">
+                  <button kpCalendarPrevious aria-label="Previous month" data-testid="dk2-previous">
+                    Previous
+                  </button>
+                  <div kpCalendarHeading data-testid="dk2-heading"></div>
+                  <button kpCalendarNext aria-label="Next month" data-testid="dk2-next">
+                    Next
+                  </button>
+                  <table kpCalendarGrid data-testid="dk2-grid">
+                    <thead>
+                      <tr>
+                        <th
+                          *kpCalendarWeekdays="let weekday"
+                          kpCalendarHeadCell
+                          [weekday]="weekday"
+                        >
+                          {{ weekday.short }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *kpCalendarWeeks="let week">
+                        @for (day of week; track day.date) {
+                          <td kpCalendarCell [date]="day.date">
+                            <button
+                              kpCalendarDay
+                              [date]="day.date"
+                              [attr.data-testid]="'dk2-' + day.date"
+                            >
+                              {{ day.label }}
+                            </button>
+                          </td>
+                        }
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ng-container>
+        <output data-testid="dk2-output">{{ trip() }}</output>
         <nav
           kpPagination
           [kpId]="'pg1'"
@@ -2685,6 +2879,12 @@ const TOUR: PageStep[] = [
         </form>
         <button data-testid="f1-reject" (click)="rejected.set({ user: 'Reserved' })">Reject</button>
         <span data-testid="f1-sent">{{ sent() }}</span>
+        <div kpField [kpId]="'fd3'" [validationMode]="'onBlur'" data-testid="fd3">
+          <label kpFieldLabel data-testid="fd3-label">Code</label>
+          <input kpFieldControl id="fd3-own" required data-testid="fd3-control" />
+          <div *kpFieldError data-testid="fd3-error"></div>
+          <div *kpFieldError="'valueMissing'" data-testid="fd3-missing"></div>
+        </div>
       </section>
       <section data-fixture="field-controls">
         <form kpForm (formSubmit)="sent2.set(json($event.values))" data-testid="f2">
@@ -2734,13 +2934,45 @@ const TOUR: PageStep[] = [
                   </div>
                 </div>
               </ng-template>
-              <input kpSelectInput />
             </ng-container>
             <div *kpFieldError data-testid="fc5-error"></div>
           </div>
           <button type="submit" data-testid="f2-submit">Send</button>
         </form>
         <span data-testid="f2-sent">{{ sent2() }}</span>
+        <div kpField [kpId]="'fc6'" [name]="'title'" [validationMode]="'onBlur'" data-testid="fc6">
+          <label kpFieldLabel data-testid="fc6-label">Title</label>
+          <div
+            kpEditable
+            [required]="true"
+            [placeholder]="'Untitled'"
+            class="item"
+            data-testid="fc6-editable"
+          >
+            <span kpEditablePreview class="editable-preview" data-testid="fc6-preview"></span>
+            <input kpEditableInput id="fc6-own" data-testid="fc6-input" />
+          </div>
+          <div *kpFieldError data-testid="fc6-error"></div>
+        </div>
+        <div kpField [kpId]="'fc7'" [name]="'at'" [validationMode]="'onBlur'" data-testid="fc7">
+          <label kpFieldLabel data-testid="fc7-label">At</label>
+          <div
+            kpTimeField
+            [required]="true"
+            [locale]="'en-US'"
+            class="date-field"
+            data-testid="fc7-time"
+          >
+            <span
+              *kpTimeFieldSegments="let segment"
+              kpTimeFieldSegment
+              [segment]="segment"
+              [attr.data-testid]="'fc7-' + segment.type + '-' + segment.index"
+            ></span>
+            <input kpTimeFieldInput />
+          </div>
+          <div *kpFieldError data-testid="fc7-error"></div>
+        </div>
       </section>
       <section data-fixture="checkbox-group">
         <form data-testid="cg1-form">
@@ -2860,6 +3092,17 @@ const TOUR: PageStep[] = [
                 <div kpPopoverPopup class="popup" data-testid="dp1-popup">
                   <h2 kpPopoverTitle>Notifications</h2>
                 </div>
+              </div>
+            </ng-template>
+          </ng-container>
+          <button type="button" data-testid="dd1-open" (click)="dirDialog.set(true)">
+            Open dialog
+          </button>
+          <ng-container kpDialog [kpId]="'dd1'" [(open)]="dirDialog">
+            <ng-template kpDialogPortal>
+              <div kpDialogPopup class="dialog" data-testid="dd1-popup">
+                <h2 kpDialogTitle>Settings</h2>
+                <button kpDialogClose data-testid="dd1-close">Close</button>
               </div>
             </ng-template>
           </ng-container>
@@ -3088,6 +3331,37 @@ const TOUR: PageStep[] = [
           </ng-container>
           <button type="button" data-testid="cd2-unlock" (click)="sealed.set(false)">Unlock</button>
         </div>
+        <form class="bar" data-testid="cd3-form">
+          <ng-container
+            kpCombobox
+            [kpId]="'cd3'"
+            [name]="'city'"
+            [defaultValue]="cities[2]"
+            [itemToStringLabel]="cityName"
+            [itemToStringValue]="cityCode"
+            [autoHighlight]="true"
+          >
+            <input kpComboboxInput aria-label="City" data-testid="cd3-input" />
+            <ng-template kpComboboxPortal>
+              <div kpComboboxPositioner [sideOffset]="4" data-testid="cd3-positioner">
+                <div kpComboboxPopup class="popup" aria-label="Cities" data-testid="cd3-popup">
+                  @for (each of cities; track each.code) {
+                    <div
+                      kpComboboxItem
+                      [value]="each"
+                      [kpId]="'cd3-' + each.code"
+                      class="item"
+                      [attr.data-testid]="'cd3-' + each.code"
+                    >
+                      {{ each.name }}
+                    </div>
+                  }
+                </div>
+              </div>
+            </ng-template>
+            <input kpComboboxHiddenInput />
+          </ng-container>
+        </form>
       </section>
       <section data-fixture="editing">
         <form class="editing" data-testid="ef1-form">
@@ -3498,6 +3772,14 @@ export class App {
   // Labels by value: what a select names its values with before its list has been opened.
   protected readonly sizes = { s: "Small", m: "Medium", l: "Large" }
   protected readonly sizeKeys = ["s", "m", "l"] as const
+  // Values that are objects: named and sent by what their caller says of them.
+  protected readonly cities: City[] = [
+    { code: "osl", name: "Oslo" },
+    { code: "osa", name: "Osaka" },
+    { code: "par", name: "Paris" },
+  ]
+  protected readonly cityName = (city: City) => city.name
+  protected readonly cityCode = (city: City) => city.code
   protected readonly basket = signal(["Banana"])
   protected readonly action = signal("none")
   protected readonly picked = signal("none")
@@ -3508,6 +3790,11 @@ export class App {
   protected readonly drawn = signal("closed")
   protected readonly born = signal("none")
   protected readonly due = signal("2026-03-14")
+  protected readonly trip = signal("none")
+  protected readonly reign = signal("none")
+  // A range a preset gives, and a date field typed in a calendar of eras.
+  protected readonly presetWeek = { start: "2026-03-09", end: "2026-03-15" }
+  protected readonly japanese = new JapaneseCalendar()
   protected readonly paged = signal("1")
   protected readonly stars = signal("2")
   protected readonly stepped = signal("0")
@@ -3623,6 +3910,7 @@ export class App {
   protected readonly sent = signal("")
   protected readonly sent2 = signal("")
   protected readonly reading = signal<"ltr" | "rtl">("rtl")
+  protected readonly dirDialog = signal(false)
   protected readonly rejected = signal<Record<string, string> | undefined>(undefined)
   protected readonly json = (values: unknown) => JSON.stringify(values)
   protected readonly word = (valid: boolean | null) =>

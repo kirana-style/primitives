@@ -5,6 +5,7 @@
 
   import Part from "../Part.svelte"
   import { useDirectionAround } from "../direction/context.ts"
+  import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
@@ -36,7 +37,7 @@
   }
 
   const made = provide(
-    controller(within(createTimeField, { direction: useDirectionAround() }), () => ({
+    controller(within(createTimeField, { direction: useDirectionAround(), field: useFieldAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,

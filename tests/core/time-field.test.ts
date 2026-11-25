@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
+import { createField } from "../../packages/core/src/field.ts"
 import { effect, signal } from "../../packages/core/src/reactivity.ts"
 import { createTimeField } from "../../packages/core/src/time-field.ts"
 import type { TimeFieldProps } from "../../packages/core/src/time-field.ts"
@@ -361,5 +362,76 @@ describe("a time that is typed", () => {
     part("dayPeriod").focus()
     await type("7x")
     expect(part("dayPeriod").textContent).toBe("--")
+  })
+})
+
+describe("a time in a field", () => {
+  function inField(given: Partial<TimeFieldProps> = {}) {
+    const root = mount(`
+      <form><div class="field">
+        <label class="label">At</label>
+        <div class="group"></div><input class="hidden" />
+        <p class="description"></p>
+      </div><button type="reset">Reset</button></form>`)
+    const owner = createField(signal({ id: "f", name: "at" }))
+    const made = createTimeField(signal<TimeFieldProps>({ id: "tf", locale: "en-US", ...given }), {
+      field: owner,
+    })
+    const pick = <T extends HTMLElement = HTMLElement>(name: string) => root.querySelector<T>(name)!
+    const group = pick(".group")
+    onTestFinished(bind(pick(".field"), owner.root))
+    onTestFinished(bind(pick(".label"), owner.label))
+    onTestFinished(bind(pick(".description"), owner.description))
+    onTestFinished(bind(group, made.root))
+    onTestFinished(bind(pick(".hidden"), made.input))
+    onTestFinished(made.mount())
+    for (const segment of made.segments.peek()) {
+      const span = document.createElement("span")
+      span.dataset.unit = segment.type
+      group.append(span)
+      onTestFinished(bind(span, made.segment(segment).part))
+    }
+    const unit = (name: string) => group.querySelector<HTMLElement>(`[data-unit="${name}"]`)!
+    return { root, owner, made, pick, group, unit }
+  }
+
+  it("is the field's control: named by its label, described, submitted under its name", () => {
+    const { pick, group } = inField({ defaultValue: "09:30" })
+    expect(group.id).toBe("f-control")
+    expect(pick(".label").getAttribute("for")).toBe("f-control")
+    expect(group.getAttribute("aria-labelledby")).toBe("f-label")
+    expect(group.getAttribute("aria-describedby")).toBe("f-description")
+    expect(pick<HTMLInputElement>(".hidden").name).toBe("at")
+    expect(group.hasAttribute("data-filled")).toBe(true)
+  })
+
+  it("is checked by the field when it is needed, and says what the field found", async () => {
+    const { owner, group, unit } = inField({ required: true })
+    expect(owner.validate()).toBe(false)
+    expect(owner.validity.peek().state.valueMissing).toBe(true)
+    await new Promise((done) => setTimeout(done))
+    expect(group.hasAttribute("data-invalid")).toBe(true)
+    expect(unit("hour").getAttribute("aria-invalid")).toBe("true")
+    unit("hour").focus()
+    await userEvent.keyboard("0930a")
+    expect(owner.validity.peek().valid).toBe(true)
+    expect(owner.dirty.peek()).toBe(true)
+    unit("dayPeriod").blur()
+    expect(owner.touched.peek()).toBe(true)
+  })
+
+  it("takes focus from a press on its label, to the first part that is empty", () => {
+    const { pick, unit } = inField()
+    pick(".label").click()
+    expect(document.activeElement).toBe(unit("hour"))
+  })
+
+  it("is as new after its form's reset", async () => {
+    const { owner, pick, unit } = inField({ defaultValue: "09:30" })
+    unit("minute").focus()
+    await userEvent.keyboard("{ArrowUp}")
+    expect(owner.dirty.peek()).toBe(true)
+    pick<HTMLButtonElement>("[type=reset]").click()
+    expect(owner.dirty.peek()).toBe(false)
   })
 })

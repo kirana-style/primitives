@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createEditable } from "@kirana-ui/core/editable"
 import type { Editable as Controller, EditableProps } from "@kirana-ui/core/editable"
@@ -5,6 +6,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { children, createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
+import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -38,12 +40,14 @@ function Root(props: RootProps): JSX.Element {
     "selectOnFocus",
     "disabled",
     "readOnly",
+    "required",
     "name",
     "form",
     "id",
   ])
   const generated = createUniqueId()
-  const made = controller(createEditable, () => ({
+  const field = useContext(FieldContext) ?? undefined
+  const made = controller(within(createEditable, { field }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,
@@ -55,6 +59,7 @@ function Root(props: RootProps): JSX.Element {
     selectOnFocus: local.selectOnFocus,
     disabled: local.disabled,
     readOnly: local.readOnly,
+    required: local.required,
     name: local.name,
     form: local.form,
     onValueChange: (value: string, details: ChangeDetails) => local.onValueChange?.(value, details),

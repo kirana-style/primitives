@@ -1,7 +1,14 @@
 import { within } from "@kirana-ui/core"
 import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createDatePicker } from "@kirana-ui/core/date-picker"
-import type { DatePicker as Controller, DatePickerProps } from "@kirana-ui/core/date-picker"
+import type {
+  DatePicker as Controller,
+  DatePickerMode,
+  DatePickerProps,
+  DatePickerRange,
+  DatePickerValue,
+  DatePickerValueOf,
+} from "@kirana-ui/core/date-picker"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "@solidjs/web"
@@ -10,7 +17,7 @@ import { Calendar, CalendarContext } from "./calendar.tsx"
 import { DateField, DateFieldContext } from "./date-field.tsx"
 import { DirectionContext } from "./direction-context.ts"
 import { Popover, PopoverContext } from "./popover.tsx"
-import { Part, controller } from "./runtime.tsx"
+import { Part, controller, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["datePicker"]
@@ -39,17 +46,23 @@ function useDatePicker(): Controller {
   return made
 }
 
-export type RootProps = Omit<DatePickerProps, "id"> & { id?: string; children?: JSX.Element }
+/** `value` and `onValueChange` are typed by `mode`: a day, or a range. */
+export type RootProps<Mode extends DatePickerMode = "single"> = Omit<
+  DatePickerProps<Mode>,
+  "id"
+> & { id?: string; children?: JSX.Element }
 
 /** A date field, and a calendar in a popover, with one value between them. It draws nothing. */
-function Root(props: RootProps): JSX.Element {
+function Root<Mode extends DatePickerMode = "single">(props: RootProps<Mode>): JSX.Element {
   const generated = createUniqueId()
   const made = controller(
     within(createDatePicker, { direction: useContext(DirectionContext) ?? undefined }),
     () => ({
       id: props.id ?? generated,
-      value: props.value,
-      defaultValue: props.defaultValue,
+      // The core holds either mode's value; the caller's is its mode's.
+      value: props.value as DatePickerValue | undefined,
+      defaultValue: props.defaultValue as DatePickerValue | undefined,
+      mode: props.mode,
       open: props.open,
       defaultOpen: props.defaultOpen,
       locale: props.locale,
@@ -68,8 +81,8 @@ function Root(props: RootProps): JSX.Element {
       required: props.required,
       name: props.name,
       form: props.form,
-      onValueChange: (value: string | null, details: ChangeDetails) =>
-        props.onValueChange?.(value, details),
+      onValueChange: (value: DatePickerValue, details: ChangeDetails) =>
+        props.onValueChange?.(value as DatePickerValueOf<Mode>, details),
       onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
       onMonthChange: (month: string, details: ChangeDetails) =>
         props.onMonthChange?.(month, details),
@@ -86,13 +99,53 @@ function Root(props: RootProps): JSX.Element {
   )
 }
 
-export type FieldProps = PartComponentProps<"div", StateOf<Parts["field"]>>
+export type FieldProps = PartComponentProps<
+  "div",
+  StateOf<Parts["field"]>,
+  {
+    /**
+     * With `mode="range"`: which day of the range it is typed in, the first (`"start"`, the
+     * default) or the last (`"end"`).
+     */
+    range?: "start" | "end" | undefined
+  }
+>
 export type CalendarProps = PartComponentProps<"div", StateOf<Parts["calendar"]>>
+export type ClearProps = PartComponentProps<"button", StateOf<Parts["clear"]>>
+export type PresetProps = PartComponentProps<
+  "button",
+  StateOf<Parts["preset"]>,
+  {
+    /** The value its press gives: a day, or with `mode="range"` a range. */
+    value: string | DatePickerRange
+  }
+>
+
+/**
+ * The typed date: what holds its segments and its hidden input. With `mode="range"` there are
+ * two, `range="start"` and `range="end"`, each giving its own parts their field.
+ */
+function Field(props: FieldProps): JSX.Element {
+  const [local, rest] = split(props, ["range"])
+  const picker = useDatePicker()
+  // Its end is the one it was drawn for.
+  const field = (local.range === "end" && picker.endField) || picker.field
+  return (
+    <DateFieldContext value={field}>
+      <Part of={field.root} tag="div" {...rest} />
+    </DateFieldContext>
+  )
+}
+
+/** Makes the value the one it is given: pressed while it is. */
+function Preset(props: PresetProps): JSX.Element {
+  const [local, rest] = split(props, ["value"])
+  return <Part of={useDatePicker().preset(local.value)} tag="button" {...rest} />
+}
 
 export const DatePicker = {
   Root,
-  /** The typed date: what holds its segments and its hidden input. */
-  Field: (props: FieldProps) => <Part of={useDatePicker().field.root} tag="div" {...props} />,
+  Field,
   Segments: DateField.Segments,
   Segment: DateField.Segment,
   Input: DateField.Input,
@@ -114,4 +167,7 @@ export const DatePicker = {
   Weeks: Calendar.Weeks,
   Cell: Calendar.Cell,
   Day: Calendar.Day,
+  /** Empties the value, and gives focus to the field. Disabled while there is none. */
+  Clear: (props: ClearProps) => <Part of={useDatePicker().clear} tag="button" {...props} />,
+  Preset,
 }

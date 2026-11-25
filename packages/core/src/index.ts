@@ -48,4 +48,5 @@ export type {
 export type { Orientation } from "./services/roving.ts"
 export type { ListCollection } from "./services/list.ts"
 export type { ItemLabels } from "./services/items.ts"
+export type { Presentation } from "./services/sheet.ts"
 export type { Direction } from "./direction.ts"

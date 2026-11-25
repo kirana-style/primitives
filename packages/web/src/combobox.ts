@@ -123,7 +123,10 @@ export const LISTS = {
  * `default-value`, `input-value`, `default-input-value`, `open`, `default-open`, `disabled`,
  * `read-only`, `required`, `inline`, `auto-highlight`, `multiple`, `values` and `default-values` (with
  * commas between),
- * `name`, `form`; `items` and `filter` as properties; it tells `value-change`,
+ * `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge, modal, over a
+ * `backdrop` part in the portal; `auto` on a narrow touch screen) and `sheet-below`; `items`,
+ * `filter`, `itemToStringLabel` and `itemToStringValue` as
+ * properties; it tells `value-change`,
  * `values-change`, `input-value-change` and `open-change`.
  */
 export const tag = defineElement<Props, Combobox<string>>({
@@ -145,8 +148,10 @@ export const tag = defineElement<Props, Combobox<string>>({
     "default-values": "string",
     name: "string",
     form: "string",
+    presentation: "string",
+    "sheet-below": "number",
   },
-  properties: ["items", "filter"],
+  properties: ["items", "filter", "itemToStringLabel", "itemToStringValue"],
   create: (props, host) =>
     createCombobox<string>(
       computed(() => {
@@ -163,7 +168,8 @@ export const tag = defineElement<Props, Combobox<string>>({
     onInputValueChange: { event: "input-value-change", prop: "inputValue" },
     onOpenChange: { event: "open-change", prop: "open" },
   },
-  parts: PARTS,
+  // A combobox's list may open as a sheet, over a backdrop: an autocomplete's does not.
+  parts: { ...PARTS, backdrop: (controller) => controller.backdrop },
 })
 
 declare global {

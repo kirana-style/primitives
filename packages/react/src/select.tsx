@@ -118,8 +118,11 @@ function Positioner({ alignItemWithTrigger, ...props }: PositionerProps): ReactE
 }
 
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
 
 const Popup = (props: PopupProps) => usePart(useSelect("Popup").popup, "div", props)
+/** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+const Backdrop = (props: BackdropProps) => usePart(useSelect("Backdrop").backdrop, "div", props)
 const GroupContext = createContext<SelectGroup | null>(null)
 
 export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, { id?: string }>
@@ -232,6 +235,7 @@ export const Select = /* @__PURE__ */ parts("Select", {
   Trigger,
   Value,
   Portal,
+  Backdrop,
   Positioner,
   Popup,
   List,

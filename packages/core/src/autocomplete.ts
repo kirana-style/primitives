@@ -23,10 +23,14 @@ export interface AutocompleteProps {
   /** Heard as the list is about to open or close: `details.cancel()` keeps it as it was. */
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /**
-   * `"list"` (the default): the suggestions are filtered by what is typed. `"none"`: they
-   * are as the caller draws them.
+   * `"list"` (the default): the suggestions are filtered by what is typed. `"both"`: they are
+   * filtered, and the rest of the first one that begins with what is typed is written after it
+   * in the input, selected, so typing on replaces it and Enter or Tab keeps it; the arrows write
+   * the suggestion they are on into the input. `"inline"`: written so, and not filtered.
+   * `"none"`: neither; the suggestions are as the caller draws them. A completion is not written
+   * into a word an input method is composing, nor after a deletion.
    */
-  mode?: "list" | "none" | undefined
+  mode?: "list" | "both" | "inline" | "none" | undefined
   /** Whether a suggestion is shown for what was typed; `null` shows every one. */
   filter?: ((label: string, query: string) => boolean) | null | undefined
   /** Whether a press on the input opens the list. Default: it opens when something is typed. */
@@ -89,7 +93,8 @@ export function createAutocomplete(
       open: own.open,
       defaultOpen: own.defaultOpen,
       onOpenChange: (open, by) => props.peek().onOpenChange?.(open, by),
-      filter: own.mode === "none" ? null : own.filter,
+      // Only a mode that filters filters: the others show the suggestions as they are drawn.
+      filter: own.mode === "none" || own.mode === "inline" ? null : own.filter,
       disabled: own.disabled,
       readOnly: own.readOnly,
       items: own.items,
@@ -102,6 +107,10 @@ export function createAutocomplete(
   const combobox = createCombobox(given, {
     field,
     free: () => Boolean(props.peek().openOnInputClick),
+    completion: () => {
+      const mode = props.get().mode
+      return mode === "both" || mode === "inline" ? mode : "list"
+    },
   })
   return {
     ...combobox,

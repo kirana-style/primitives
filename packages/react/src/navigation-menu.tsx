@@ -124,9 +124,9 @@ function Content(props: ContentProps): ReactElement | null {
 
 export type LinkProps = PartComponentProps<"a", StateOf<Parts["link"]>, NavigationMenuLinkOptions>
 
-function Link({ active, closeOnClick, ...props }: LinkProps): ReactElement {
+function Link({ active, closeOnSelect, closeOnClick, ...props }: LinkProps): ReactElement {
   const controller = useNavigation("Link")
-  const options = useOptions({ active, closeOnClick })
+  const options = useOptions({ active, closeOnSelect, closeOnClick })
   const part = useMemo(() => controller.link(() => defined(options.get())), [controller, options])
   return usePart(part, "a", props)
 }

@@ -13,22 +13,30 @@ type Parts<Controller> = Record<
   string,
   (controller: Controller, element: HTMLElement) => Drawn["part"] | Drawn | undefined
 >
-type Lists<Controller> = Record<string, (controller: Controller, around: unknown) => Each>
+type Lists<Controller> = Record<
+  string,
+  (controller: Controller, around: unknown, template: HTMLElement) => Each
+>
 
-/** A date field's parts and its list, for a component that is one or holds one. */
-export function fieldParts<Controller>(of: (controller: Controller) => DateField) {
+/**
+ * A date field's parts and its list, for a component that is one or holds one. `of` is given
+ * the element a part is written on, for a component of several fields.
+ */
+export function fieldParts<Controller>(
+  of: (controller: Controller, element: HTMLElement) => DateField
+) {
   const parts: Parts<Controller> = {
     segment(controller, element) {
       const segment = entryAround<DateFieldSegment>(element)
       if (!segment) return undefined
-      const { part, text } = of(controller).segment(segment)
+      const { part, text } = of(controller, element).segment(segment)
       return { part, text }
     },
-    input: (controller) => of(controller).input,
+    input: (controller, element) => of(controller, element).input,
   }
   const lists: Lists<Controller> = {
-    segments: (controller) => ({
-      entries: of(controller).segments,
+    segments: (controller, _around, template) => ({
+      entries: of(controller, template).segments,
       key: (segment: DateFieldSegment) => `${segment.index}-${segment.type}`,
     }),
   }

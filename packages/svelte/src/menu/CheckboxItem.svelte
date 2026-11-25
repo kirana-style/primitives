@@ -12,6 +12,7 @@
     onCheckedChange,
     disabled,
     label,
+    closeOnSelect,
     closeOnClick,
     ...rest
   }: CheckboxItemProps = $props()
@@ -27,6 +28,7 @@
       defaultChecked,
       disabled,
       label,
+      closeOnSelect,
       closeOnClick,
       onCheckedChange: change,
     }))

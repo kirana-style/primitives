@@ -125,9 +125,9 @@ const Separator = (props: SeparatorProps) => usePart(useMenu("Separator").separa
 
 export type ItemProps = PartComponentProps<"div", StateOf<Parts["item"]>, MenuItemOptions>
 
-function Item({ disabled, label, closeOnClick, ...props }: ItemProps): ReactElement {
+function Item({ disabled, label, closeOnSelect, closeOnClick, ...props }: ItemProps): ReactElement {
   const controller = useMenu("Item")
-  const options = useOptions({ disabled, label, closeOnClick })
+  const options = useOptions({ disabled, label, closeOnSelect, closeOnClick })
   const part = useMemo(() => controller.item(() => defined(options.get())), [controller, options])
   return usePart(part, "div", props)
 }
@@ -135,9 +135,15 @@ function Item({ disabled, label, closeOnClick, ...props }: ItemProps): ReactElem
 export type LinkItemProps = PartComponentProps<"a", StateOf<Parts["linkItem"]>, MenuItemOptions>
 
 /** An item that is a link: `href` and the rest go to its `<a>`. */
-function LinkItem({ disabled, label, closeOnClick, ...props }: LinkItemProps): ReactElement {
+function LinkItem({
+  disabled,
+  label,
+  closeOnSelect,
+  closeOnClick,
+  ...props
+}: LinkItemProps): ReactElement {
   const controller = useMenu("LinkItem")
-  const options = useOptions({ disabled, label, closeOnClick })
+  const options = useOptions({ disabled, label, closeOnSelect, closeOnClick })
   const part = useMemo(() => controller.item(() => defined(options.get())), [controller, options])
   return usePart(part, "a", props)
 }
@@ -174,6 +180,7 @@ function CheckboxItem({
   onCheckedChange,
   disabled,
   label,
+  closeOnSelect,
   closeOnClick,
   ...props
 }: CheckboxItemProps): ReactElement {
@@ -184,6 +191,7 @@ function CheckboxItem({
     onCheckedChange,
     disabled,
     label,
+    closeOnSelect,
     closeOnClick,
   })
   return (
@@ -260,11 +268,12 @@ function RadioItem({
   value,
   disabled,
   label,
+  closeOnSelect,
   closeOnClick,
   ...props
 }: RadioItemProps): ReactElement {
   const group = inside(RadioGroupContext, "RadioItem", "RadioGroup")
-  const options = useOptions({ disabled, label, closeOnClick })
+  const options = useOptions({ disabled, label, closeOnSelect, closeOnClick })
   const part = useMemo(
     () => group.item(value, () => defined(options.get())),
     [group, value, options]

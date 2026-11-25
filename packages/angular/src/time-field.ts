@@ -23,6 +23,7 @@ import type {
 } from "@kirana-ui/core/time-field"
 
 import { KP_DIRECTION } from "./direction-token"
+import { KP_FIELD } from "./field-token"
 import { KpIds, drawing, hostPart, inputsSignal, mounted, onServer } from "./runtime"
 
 @Directive({ selector: "[kpTimeField]", exportAs: "kpTimeField" })
@@ -50,6 +51,7 @@ export class KpTimeField implements OnInit {
 
   controller!: TimeField
   private readonly around = inject(KP_DIRECTION, { optional: true })
+  private readonly field = inject(KP_FIELD, { optional: true })
   private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
@@ -83,7 +85,10 @@ export class KpTimeField implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = createTimeField(this.props(), { direction: this.around?.direction })
+    this.controller = createTimeField(this.props(), {
+      direction: this.around?.direction,
+      field: this.field?.controller,
+    })
     this.put(this.controller.root)
     this.mount(this.controller)
   }

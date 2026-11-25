@@ -1,6 +1,7 @@
 import { createEditable } from "@kirana-ui/core/editable"
 import type { Editable, EditableProps } from "@kirana-ui/core/editable"
 
+import { fieldAround } from "./around.ts"
 import { defineElement } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
 
@@ -9,8 +10,9 @@ import type { ElementOf } from "./runtime.ts"
  * placeholder while there is none) unless the page gave it something to say, an `input` or a
  * textarea, and `edit-trigger`, `submit-trigger` and `cancel-trigger` buttons. The input's id is
  * the element's `kui-id`. `value`, `default-value`, `editing`, `default-editing`, `placeholder`,
- * `activation`, `submit-on-blur`, `select-on-focus`, `disabled`, `read-only`, `name`, `form`;
- * it tells `value-change` and `editing-change`.
+ * `activation`, `submit-on-blur`, `select-on-focus`, `disabled`, `read-only`, `required`,
+ * `name`, `form`; it tells `value-change` and `editing-change`. Inside a `<kui-field>` its
+ * input is the field's control.
  */
 export const tag = defineElement<EditableProps, Editable>({
   tag: "kui-editable",
@@ -25,10 +27,11 @@ export const tag = defineElement<EditableProps, Editable>({
     "select-on-focus": "boolean",
     disabled: "boolean",
     "read-only": "boolean",
+    required: "boolean",
     name: "string",
     form: "string",
   },
-  create: (props) => createEditable(props),
+  create: (props, host) => createEditable(props, { field: fieldAround(host) }),
   changes: {
     onValueChange: { event: "value-change", prop: "value" },
     onEditingChange: { event: "editing-change", prop: "editing" },

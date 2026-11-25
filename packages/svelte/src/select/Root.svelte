@@ -27,6 +27,10 @@
     defaultValues,
     onValuesChange,
     virtualized,
+    presentation,
+    sheetBelow,
+    itemToStringLabel,
+    itemToStringValue,
     id,
     children,
   }: RootProps<Value> = $props()
@@ -65,6 +69,10 @@
       defaultValues,
       onValuesChange: changeValues,
       virtualized,
+      presentation,
+      sheetBelow,
+      itemToStringLabel,
+      itemToStringValue,
       onValueChange: changeValue,
       onOpenChange: changeOpen,
     }))

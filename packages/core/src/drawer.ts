@@ -1,11 +1,13 @@
 import { createDialog } from "./dialog.ts"
 import type { Dialog, DialogProps } from "./dialog.ts"
+import type { DirectionAround } from "./direction.ts"
 import { bindable } from "./bindable.ts"
-import { details, flag } from "./part.ts"
+import { flag } from "./part.ts"
 import type { ChangeDetails } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { clearGeometry, setGeometry } from "./services/geometry.ts"
+import { createSwipe, dragging } from "./services/swipe.ts"
 
 /** The way a drawer is swiped to close it: towards the edge it came from. */
 export type DrawerSide = "up" | "down" | "left" | "right"
@@ -39,33 +41,11 @@ export interface Drawer extends Dialog {
   setSnapPoint(snapPoint: DrawerSnapPoint, details: ChangeDetails): void
 }
 
-/** How far a press moves before it is a drag, in pixels. */
-export const DRAWER_SLOP = 4
-/** The part of the drawer's size a drag passes to close it when let go. */
-export const DRAWER_CLOSE = 0.25
-/** The speed, in pixels a millisecond, at which letting go closes it whatever the distance. */
-export const DRAWER_FLICK = 0.5
-
-/** How long a pointer is still before letting go is no flick, in milliseconds. */
-export const DRAWER_REST = 80
+export { DRAWER_CLOSE, DRAWER_FLICK, DRAWER_REST, DRAWER_SLOP } from "./services/swipe.ts"
 
 // The drawers that are open, in the order they opened: one that opens over another is drawn
 // by what the one under it says of it (how many there are, how tall the frontmost is).
 const stack = signal<readonly HTMLElement[]>([])
-// The drawer that is being dragged, while one is.
-const dragging = signal<HTMLElement | undefined>(undefined)
-
-/**
- * How long a drawer let go takes to come to rest, as a share of the design's own time: a
- * drawer thrown hard arrives sooner. Base UI's measure.
- */
-function strength(speed: number, remaining: number): number {
-  if (speed <= 0.2) return 1
-  const time = Math.min(360, Math.max(80, remaining / Math.min(4, speed)))
-  return Math.round((0.1 + ((time - 80) / 280) * 0.9) * 1000) / 1000
-}
-
-const CONTROLS = "input, textarea, select, [contenteditable], [data-drawer-no-drag]"
 
 /**
  * A dialog that comes from an edge and is dragged back to it. Everything a dialog does, it
@@ -75,8 +55,11 @@ const CONTROLS = "input, textarea, select, [contenteditable], [data-drawer-no-dr
  * (`--drawer-snap-point-offset`); moving the drawer by them is the design's, so nothing is
  * written that a design has to beat.
  */
-export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
-  const dialog = createDialog(props)
+export function createDrawer(
+  props: ReadonlySignal<DrawerProps>,
+  around: DirectionAround = {}
+): Drawer {
+  const dialog = createDialog(props, around)
   const way = computed(() => props.get().swipeDirection ?? "down")
   /** The places it rests at, the smallest first; the whole drawer when none is given. */
   // Its length along the way it is dragged, once it is in the page: a length is a share of it.
@@ -126,9 +109,17 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
   /** A place as the caller wrote it. */
   const givenOf = (share: number) =>
     places.peek().find((each) => each.share === share)?.given ?? share
-  const swiping = signal(false)
-  // Whether a drag closed it: it then leaves from where it was let go.
-  const dismissed = signal(false)
+  const swipe = createSwipe({
+    way: () => way.peek(),
+    points: () => points.peek(),
+    resting: () => resting.peek(),
+    settle: (share, by) => snap.set(givenOf(share), by),
+    close(by) {
+      dialog.setOpen(false, by)
+      return !by.canceled
+    },
+  })
+  const { swiping, dismissed } = swipe
   const own = signal<HTMLElement | undefined>(undefined)
   /** How many drawers are open over this one, and whether one of them is being dragged. */
   const over = computed(() => {
@@ -138,169 +129,13 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
     const held = dragging.get()
     return { count: above.length, swiping: Boolean(held && above.includes(held)) }
   })
-  let popup: HTMLElement | undefined
-  let backdrop: HTMLElement | undefined
-  let drag:
-    | {
-        x: number
-        y: number
-        /** How far it has gone towards the edge it closes at; less than nothing is away from it. */
-        by: number
-        at: number
-        speed: number
-        size: number
-        /** How far it lay from whole when the drag began. */
-        from: number
-        held: boolean
-      }
-    | undefined
-
-  /** Whether a drag from `target` would take a scroll from what it is in. */
-  function scrolls(target: Element | null, direction: DrawerSide): boolean {
-    for (let each = target; each && each !== popup; each = each.parentElement) {
-      if (!(each instanceof HTMLElement)) continue
-      const across = direction === "left" || direction === "right"
-      const room = across
-        ? each.scrollWidth - each.clientWidth
-        : each.scrollHeight - each.clientHeight
-      if (room <= 0) continue
-      const overflow = getComputedStyle(each)[across ? "overflowX" : "overflowY"]
-      if (overflow !== "auto" && overflow !== "scroll") continue
-      const at = Math.abs(across ? each.scrollLeft : each.scrollTop)
-      // Towards the edge it closes at, what is inside scrolls first unless it is at its end.
-      const forward = direction === "down" || direction === "right"
-      if (forward ? at > 0 : at < room - 1) return true
-    }
-    return false
-  }
-
-  const length = () => {
-    if (!popup) return 0
-    const across = way.peek() === "left" || way.peek() === "right"
-    return across ? popup.offsetWidth : popup.offsetHeight
-  }
-
-  function write(by: number, size: number) {
-    const direction = way.peek()
-    const across = direction === "left" || direction === "right"
-    const sign = direction === "up" || direction === "left" ? -1 : 1
-    const progress = String(
-      Math.round(Math.min(1, Math.max(0, size > 0 ? by / size : 0)) * 1000) / 1000
-    )
-    for (const each of [popup, backdrop]) {
-      if (!each) continue
-      setGeometry(each, "--drawer-swipe-movement-x", `${across ? by * sign : 0}px`)
-      setGeometry(each, "--drawer-swipe-movement-y", `${across ? 0 : by * sign}px`)
-      setGeometry(each, "--drawer-swipe-progress", progress)
-    }
-  }
-
   /** Where it rests, as how far it lies from whole towards the edge it closes at. */
   function rest() {
     const sign = way.peek() === "up" || way.peek() === "left" ? -1 : 1
-    const offset = Math.round((1 - resting.peek()) * length() * 100) / 100
-    for (const each of [popup, backdrop]) {
-      if (each) setGeometry(each, "--drawer-snap-point-offset", `${offset * sign}px`)
+    const offset = Math.round((1 - resting.peek()) * swipe.length() * 100) / 100
+    for (const each of swipe.written()) {
+      setGeometry(each, "--drawer-snap-point-offset", `${offset * sign}px`)
     }
-  }
-
-  function clear() {
-    for (const each of [popup, backdrop]) {
-      if (!each) continue
-      clearGeometry(each, "--drawer-swipe-movement-x")
-      clearGeometry(each, "--drawer-swipe-movement-y")
-      clearGeometry(each, "--drawer-swipe-progress")
-    }
-  }
-
-  // A drag has just ended: the click the browser makes of it is not a press.
-  let dragged = false
-  const end = () => {
-    dragged = Boolean(drag?.held)
-    drag = undefined
-    swiping.set(false)
-    if (dragging.peek() === popup) dragging.set(undefined)
-    if (popup) listen(popup.ownerDocument, false)
-  }
-
-  // Heard on the page from the press on: a pointer pressed near the drawer's edge is off the
-  // drawer before the drag has taken hold, and the drawer would hear none of it.
-  function move(event: PointerEvent) {
-    if (!drag) return
-    const direction = way.peek()
-    const across = direction === "left" || direction === "right"
-    const sign = direction === "up" || direction === "left" ? -1 : 1
-    const moved = (across ? event.clientX - drag.x : event.clientY - drag.y) * sign
-    // Away from its edge, only as far as the largest of its places.
-    const most = drag.from - (1 - points.peek().at(-1)!) * drag.size
-    const by = Math.max(-most, moved)
-    if (!drag.held) {
-      if (Math.abs(by) < DRAWER_SLOP) return
-      drag.held = true
-      swiping.set(true)
-      dragging.set(popup)
-      try {
-        popup?.setPointerCapture(event.pointerId)
-      } catch {
-        // A pointer the browser no longer has: the drag goes on while its moves reach.
-      }
-    }
-    const now = performance.now()
-    if (now > drag.at) drag.speed = (by - drag.by) / (now - drag.at)
-    drag.at = now
-    drag.by = by
-    write(by, drag.size)
-  }
-
-  function release(event: PointerEvent) {
-    const ended = drag
-    end()
-    if (!ended?.held) return
-    const all = points.peek()
-    const at = all.indexOf(resting.peek())
-    const offset = (share: number) => (1 - share) * ended.size
-    const lies = ended.from + ended.by
-    // A pointer that rested before it was let go was not flicked, however it got there.
-    const moving = performance.now() - ended.at <= DRAWER_REST
-    const flicked = moving && Math.abs(ended.speed) >= DRAWER_FLICK
-    // Where it goes: one of its places, or out (`undefined`).
-    let to: number | undefined
-    if (flicked) {
-      // A place on, the way it was thrown; from the smallest, out.
-      to = ended.speed > 0 ? all[at - 1] : (all[at + 1] ?? all[at])
-    } else if (lies < offset(all[0]!) + DRAWER_CLOSE * all[0]! * ended.size) {
-      to = all.reduce((best, each) =>
-        Math.abs(offset(each) - lies) < Math.abs(offset(best) - lies) ? each : best
-      )
-    }
-    const by = details("swipe", event)
-    // How far it has left to go, and so how soon it should be there.
-    const left = to === undefined ? ended.size - lies : Math.abs(offset(to) - lies)
-    if (popup) {
-      // Let go at rest, it was not thrown, however fast it got there.
-      const speed = moving ? Math.abs(ended.speed) : 0
-      setGeometry(popup, "--drawer-swipe-strength", String(strength(speed, left)))
-    }
-    if (to === undefined) {
-      dialog.setOpen(false, by)
-      // It leaves from where it was let go: how far stays written through its exit.
-      if (!by.canceled) return dismissed.set(true)
-    } else {
-      snap.set(givenOf(to), by)
-    }
-    clear()
-  }
-
-  function canceled() {
-    if (drag?.held) clear()
-    end()
-  }
-
-  function listen(page: Document, on: boolean) {
-    const change = on ? "addEventListener" : "removeEventListener"
-    page[change]("pointermove", move as EventListener)
-    page[change]("pointerup", release as EventListener)
-    page[change]("pointercancel", canceled)
   }
 
   return {
@@ -313,12 +148,10 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
         "data-swiping": flag(swiping.get()),
       })),
       attach(element) {
-        backdrop = element
-        const stop = dialog.backdrop.attach(element)
+        const stops = [swipe.also(element), dialog.backdrop.attach(element)]
         rest()
         return () => {
-          stop()
-          if (backdrop === element) backdrop = undefined
+          for (const stop of stops.reverse()) stop()
         }
       },
     },
@@ -331,29 +164,11 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
         "data-expanded": flag((props.get().snapPoints?.length ?? 0) > 0 && resting.get() === 1),
         "data-nested-drawer-open": flag(over.get().count > 0),
         "data-nested-drawer-swiping": flag(over.get().swiping),
-        onPointerDown(event: PointerEvent) {
-          if (event.button !== 0 || !popup) return
-          const target = event.target as Element | null
-          // Text is typed and selected in a field, not dragged; and what scrolls, scrolls.
-          dragged = false
-          if (target?.closest(CONTROLS) || scrolls(target, way.peek())) return
-          const size = length()
-          drag = {
-            x: event.clientX,
-            y: event.clientY,
-            by: 0,
-            at: performance.now(),
-            speed: 0,
-            size,
-            from: (1 - resting.peek()) * size,
-            held: false,
-          }
-          listen(popup.ownerDocument, true)
-        },
+        onPointerDown: swipe.press,
       })),
       attach(element) {
-        popup = element
         own.set(element)
+        const held = swipe.attach(element)
         const stop = dialog.popup.attach(element)
         // In the stack while it is open: a drawer on its way out is no longer over another.
         const stacked = effect(() => {
@@ -374,7 +189,7 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
         // Its size, for a design that stacks drawers or moves the page behind one; where it
         // rests is a share of it.
         const size = () => {
-          extent.set(length())
+          extent.set(swipe.length())
           setGeometry(element, "--drawer-height", `${element.offsetHeight}px`)
           setGeometry(element, "--drawer-width", `${element.offsetWidth}px`)
           rest()
@@ -390,7 +205,7 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
         // Opened again, it begins where it lies, not where it was last let go.
         const reopened = effect(() => {
           if (!dialog.open.get()) return
-          clear()
+          swipe.clear()
           dismissed.set(false)
           clearGeometry(element, "--drawer-swipe-strength")
         })
@@ -399,14 +214,6 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
           way.get()
           rest()
         })
-        // Before anything inside hears it, a framework's own listeners included.
-        const pressed = (event: Event) => {
-          if (!dragged) return
-          dragged = false
-          event.stopPropagation()
-          event.preventDefault()
-        }
-        element.addEventListener("click", pressed, true)
         return () => {
           stop()
           stacked()
@@ -417,10 +224,9 @@ export function createDrawer(props: ReadonlySignal<DrawerProps>): Drawer {
           if (own.peek() === element) own.set(undefined)
           reopened()
           rested()
-          element.removeEventListener("click", pressed, true)
+          held()
           observer.disconnect()
           clearTimeout(later)
-          if (popup === element) popup = undefined
         }
       },
     },

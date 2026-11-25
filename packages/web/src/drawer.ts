@@ -17,7 +17,8 @@ type Props = Omit<DrawerProps, "snapPoints" | "snapPoint" | "defaultSnapPoint"> 
 
 /**
  * `<kui-drawer>`: a dialog that comes from an edge and is dragged back to it, with the
- * dialog's parts. `open`, `default-open`, `modal`, `dismissible`, `swipe-direction`,
+ * dialog's parts. `open`, `default-open`, `modal`, `close-on-outside-press` (`dismissible`, its
+ * old name, still read), `swipe-direction`,
  * `snap-points` (with commas between: `0.4,1` or `200px,1`), `snap-point`,
  * `default-snap-point`; it tells `open-change` and `snap-point-change`.
  */
@@ -27,6 +28,7 @@ export const tag = defineElement<Props, Drawer>({
     open: "boolean",
     "default-open": "boolean",
     modal: "boolean",
+    "close-on-outside-press": "boolean",
     dismissible: "boolean",
     "swipe-direction": "string",
     "snap-points": "string",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { JapaneseCalendar } from "@internationalized/date"
 import type { DateRange, FileRejection, OffsetFunction, PartEvent, TourStep } from "@kirana-ui/vue"
 import {
   Calendar,
@@ -115,6 +116,15 @@ function pantryLeft(text: string): string {
 // Labels by value: what a select names its values with before its list has been opened.
 const SIZES = { s: "Small", m: "Medium", l: "Large" }
 const SIZE_KEYS = ["s", "m", "l"] as const
+// Values that are objects: named and sent by what their caller says of them.
+const CITIES = [
+  { code: "osl", name: "Oslo" },
+  { code: "osa", name: "Osaka" },
+  { code: "par", name: "Paris" },
+]
+type City = (typeof CITIES)[number]
+const cityName = (city: unknown) => (city as City).name
+const cityCode = (city: unknown) => (city as City).code
 // A picture of one pixel, and an address that is not a picture.
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 const BROKEN = "data:image/png;base64,AAAA"
@@ -164,6 +174,7 @@ const heard = ref("none")
 const sent = ref("")
 const sent2 = ref("")
 const reading = ref<"ltr" | "rtl">("rtl")
+const dirDialog = ref(false)
 const rejected = ref<Record<string, string> | undefined>(undefined)
 const span = ref<number[]>([20, 80])
 const low = ref(true)
@@ -185,6 +196,10 @@ const drawn = ref("closed")
 const born = ref("none")
 const box = ref<HTMLElement | null>(null)
 const due = ref("2026-03-14")
+const trip = ref("none")
+const reign = ref("none")
+// A date field typed in a calendar of eras: the one calendar this page carries.
+const JAPANESE = new JapaneseCalendar()
 const paged = ref("1")
 const qty = ref("5")
 const place = ref("")
@@ -732,6 +747,29 @@ function press(event: PartEvent<MouseEvent>) {
         </Select.Root>
       </form>
       <output data-testid="s1-output">{{ fruit ?? "none" }}</output>
+      <div class="bar">
+        <Select.Root id="ss1" presentation="sheet" default-value="Banana">
+          <Select.Trigger data-testid="ss1-trigger">
+            <Select.Value placeholder="Pick a fruit" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Backdrop class="backdrop" data-testid="ss1-backdrop" />
+            <Select.Positioner class="sheet" data-testid="ss1-positioner">
+              <Select.Popup class="popup" data-testid="ss1-popup">
+                <Select.Item
+                  v-for="each in FRUITS"
+                  :key="each"
+                  :value="each"
+                  class="item"
+                  :data-testid="`ss1-${each}`"
+                >
+                  <Select.ItemText>{{ each }}</Select.ItemText>
+                </Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </div>
     </section>
     <section data-fixture="select-multiple">
       <form class="bar" data-testid="sm1-form">
@@ -804,6 +842,34 @@ function press(event: PartEvent<MouseEvent>) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
+      <form class="bar" data-testid="sm4-form">
+        <Select.Root
+          id="sm4"
+          name="city"
+          :default-value="CITIES[2]"
+          :item-to-string-label="cityName"
+          :item-to-string-value="cityCode"
+        >
+          <Select.Trigger data-testid="sm4-trigger">
+            <Select.Value data-testid="sm4-value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner :side-offset="4" data-testid="sm4-positioner">
+              <Select.Popup class="popup" data-testid="sm4-popup">
+                <Select.Item
+                  v-for="each in CITIES"
+                  :key="each.code"
+                  :value="each"
+                  class="item"
+                  :data-testid="`sm4-${each.code}`"
+                >
+                  <Select.ItemText>{{ each.name }}</Select.ItemText>
+                </Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </form>
     </section>
     <section data-fixture="menu">
       <Menu.Root id="mn1">
@@ -1512,6 +1578,24 @@ function press(event: PartEvent<MouseEvent>) {
         </DateField.Root>
       </form>
       <output data-testid="df1-output">{{ born }}</output>
+      <DateField.Root
+        id="df2"
+        locale="en-US"
+        :calendar-system="JAPANESE"
+        default-value="2019-05-01"
+        aria-label="Day of the era"
+        class="date-field"
+        data-testid="df2"
+        @value-change="(next: string | null) => (reign = String(next))"
+      >
+        <DateField.Segments v-slot="{ segment }">
+          <DateField.Segment
+            :segment="segment"
+            :data-testid="`df2-${segment.type}-${segment.index}`"
+          />
+        </DateField.Segments>
+      </DateField.Root>
+      <output data-testid="df2-output">{{ reign }}</output>
     </section>
     <section data-fixture="calendars">
       <Calendar.Root
@@ -1815,6 +1899,25 @@ function press(event: PartEvent<MouseEvent>) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
+      <Autocomplete.Root id="ac3" mode="both">
+        <Autocomplete.Input aria-label="Place, completed" data-testid="ac3-input" />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner :side-offset="4" data-testid="ac3-positioner">
+            <Autocomplete.Popup class="popup" aria-label="Places" data-testid="ac3-popup">
+              <Autocomplete.Item
+                v-for="each in PLACES"
+                :id="`ac3-${each}`"
+                :key="each"
+                :value="each"
+                class="item"
+                :data-testid="`ac3-${each}`"
+              >
+                {{ each }}
+              </Autocomplete.Item>
+            </Autocomplete.Popup>
+          </Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
     </section>
     <section data-fixture="picking">
       <DatePicker.Root
@@ -1875,6 +1978,90 @@ function press(event: PartEvent<MouseEvent>) {
         </DatePicker.Portal>
       </DatePicker.Root>
       <output data-testid="dk1-output">{{ due }}</output>
+      <DatePicker.Root
+        id="dk2"
+        mode="range"
+        locale="en-US"
+        name="trip"
+        default-month="2026-03-01"
+        @value-change="(next: unknown) => (trip = JSON.stringify(next))"
+      >
+        <DatePicker.Field
+          range="start"
+          aria-label="Arrival"
+          class="date-field"
+          data-testid="dk2-start"
+        >
+          <DatePicker.Segments v-slot="{ segment }">
+            <DatePicker.Segment
+              :segment="segment"
+              :data-testid="`dk2-start-${segment.type}-${segment.index}`"
+            />
+          </DatePicker.Segments>
+          <DatePicker.Input />
+        </DatePicker.Field>
+        <DatePicker.Field
+          range="end"
+          aria-label="Departure"
+          class="date-field"
+          data-testid="dk2-end"
+        >
+          <DatePicker.Segments v-slot="{ segment }">
+            <DatePicker.Segment
+              :segment="segment"
+              :data-testid="`dk2-end-${segment.type}-${segment.index}`"
+            />
+          </DatePicker.Segments>
+          <DatePicker.Input />
+        </DatePicker.Field>
+        <DatePicker.Trigger aria-label="Pick the days" data-testid="dk2-trigger"
+          >Pick</DatePicker.Trigger
+        >
+        <DatePicker.Clear data-testid="dk2-clear">Clear</DatePicker.Clear>
+        <DatePicker.Preset
+          :value="{ start: '2026-03-09', end: '2026-03-15' }"
+          data-testid="dk2-week"
+          >A week</DatePicker.Preset
+        >
+        <DatePicker.Portal>
+          <DatePicker.Positioner :side-offset="4" data-testid="dk2-positioner">
+            <DatePicker.Popup class="popup" aria-label="Calendar" data-testid="dk2-popup">
+              <DatePicker.Calendar class="calendar" data-testid="dk2-calendar">
+                <DatePicker.Previous aria-label="Previous month" data-testid="dk2-previous">
+                  Previous
+                </DatePicker.Previous>
+                <DatePicker.Heading data-testid="dk2-heading" />
+                <DatePicker.Next aria-label="Next month" data-testid="dk2-next"
+                  >Next</DatePicker.Next
+                >
+                <DatePicker.Grid data-testid="dk2-grid">
+                  <thead>
+                    <tr>
+                      <DatePicker.Weekdays v-slot="{ weekday }">
+                        <DatePicker.HeadCell :weekday="weekday">{{
+                          weekday.short
+                        }}</DatePicker.HeadCell>
+                      </DatePicker.Weekdays>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <DatePicker.Weeks v-slot="{ week }">
+                      <tr>
+                        <DatePicker.Cell v-for="day in week" :key="day.date" :date="day.date">
+                          <DatePicker.Day :date="day.date" :data-testid="`dk2-${day.date}`">
+                            {{ day.label }}
+                          </DatePicker.Day>
+                        </DatePicker.Cell>
+                      </tr>
+                    </DatePicker.Weeks>
+                  </tbody>
+                </DatePicker.Grid>
+              </DatePicker.Calendar>
+            </DatePicker.Popup>
+          </DatePicker.Positioner>
+        </DatePicker.Portal>
+      </DatePicker.Root>
+      <output data-testid="dk2-output">{{ trip }}</output>
       <Pagination.Root
         id="pg1"
         :count="200"
@@ -2005,6 +2192,12 @@ function press(event: PartEvent<MouseEvent>) {
       </Form>
       <button data-testid="f1-reject" @click="rejected = { user: 'Reserved' }">Reject</button>
       <span data-testid="f1-sent">{{ sent }}</span>
+      <Field.Root id="fd3" validation-mode="onBlur" data-testid="fd3">
+        <Field.Label data-testid="fd3-label">Code</Field.Label>
+        <Field.Control id="fd3-own" required data-testid="fd3-control" />
+        <Field.Error data-testid="fd3-error" />
+        <Field.Error match="valueMissing" data-testid="fd3-missing" />
+      </Field.Root>
     </section>
     <section data-fixture="field-controls">
       <Form data-testid="f2" @form-submit="(values: unknown) => (sent2 = JSON.stringify(values))">
@@ -2060,6 +2253,27 @@ function press(event: PartEvent<MouseEvent>) {
         <button type="submit" data-testid="f2-submit">Send</button>
       </Form>
       <span data-testid="f2-sent">{{ sent2 }}</span>
+      <Field.Root id="fc6" name="title" validation-mode="onBlur" data-testid="fc6">
+        <Field.Label data-testid="fc6-label">Title</Field.Label>
+        <Editable.Root required placeholder="Untitled" class="item" data-testid="fc6-editable">
+          <Editable.Preview class="editable-preview" data-testid="fc6-preview" />
+          <Editable.Input id="fc6-own" data-testid="fc6-input" />
+        </Editable.Root>
+        <Field.Error data-testid="fc6-error" />
+      </Field.Root>
+      <Field.Root id="fc7" name="at" validation-mode="onBlur" data-testid="fc7">
+        <Field.Label data-testid="fc7-label">At</Field.Label>
+        <TimeField.Root required locale="en-US" class="date-field" data-testid="fc7-time">
+          <TimeField.Segments v-slot="{ segment }">
+            <TimeField.Segment
+              :segment="segment"
+              :data-testid="`fc7-${segment.type}-${segment.index}`"
+            />
+          </TimeField.Segments>
+          <TimeField.Input />
+        </TimeField.Root>
+        <Field.Error data-testid="fc7-error" />
+      </Field.Root>
     </section>
     <section data-fixture="checkbox-group">
       <form data-testid="cg1-form">
@@ -2178,6 +2392,17 @@ function press(event: PartEvent<MouseEvent>) {
               </Popover.Positioner>
             </Popover.Portal>
           </Popover.Root>
+          <button type="button" data-testid="dd1-open" @click="dirDialog = true">
+            Open dialog
+          </button>
+          <Dialog.Root id="dd1" v-model:open="dirDialog">
+            <Dialog.Portal>
+              <Dialog.Popup class="dialog" data-testid="dd1-popup">
+                <Dialog.Title>Settings</Dialog.Title>
+                <Dialog.Close data-testid="dd1-close">Close</Dialog.Close>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
         </DirectionProvider>
       </div>
     </section>
@@ -2373,6 +2598,34 @@ function press(event: PartEvent<MouseEvent>) {
         </Combobox.Root>
         <button type="button" data-testid="cd2-unlock" @click="sealed = false">Unlock</button>
       </div>
+      <form class="bar" data-testid="cd3-form">
+        <Combobox.Root
+          id="cd3"
+          name="city"
+          :default-value="CITIES[2]"
+          :item-to-string-label="cityName"
+          :item-to-string-value="cityCode"
+          auto-highlight
+        >
+          <Combobox.Input aria-label="City" data-testid="cd3-input" />
+          <Combobox.Portal>
+            <Combobox.Positioner :side-offset="4" data-testid="cd3-positioner">
+              <Combobox.Popup class="popup" aria-label="Cities" data-testid="cd3-popup">
+                <Combobox.Item
+                  v-for="each in CITIES"
+                  :id="`cd3-${each.code}`"
+                  :key="each.code"
+                  :value="each"
+                  class="item"
+                  :data-testid="`cd3-${each.code}`"
+                >
+                  {{ each.name }}
+                </Combobox.Item>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>
     </section>
     <section data-fixture="editing">
       <form class="editing" data-testid="ef1-form">

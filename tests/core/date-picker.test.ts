@@ -1,18 +1,20 @@
+import { PersianCalendar } from "@internationalized/date"
 import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
 import { createDatePicker } from "../../packages/core/src/date-picker.ts"
-import type { DatePickerProps } from "../../packages/core/src/date-picker.ts"
+import type { DatePickerProps, DatePickerValue } from "../../packages/core/src/date-picker.ts"
+import type { DateField } from "../../packages/core/src/date-field.ts"
 import { details } from "../../packages/core/src/part.ts"
 import { effect, signal } from "../../packages/core/src/reactivity.ts"
 import { mount } from "./page.ts"
 
 function picker(given: Partial<DatePickerProps> = {}) {
   const root = mount(
-    `<form class="form"><div class="field"></div><input class="hidden" /><button class="trigger" type="button">Pick</button></form><div class="positioner"><div class="popup"><div class="days"></div></div></div>`
+    `<form class="form"><div class="field"></div><input class="hidden" /><div class="end"></div><input class="end-hidden" /><button class="trigger" type="button">Pick</button><button class="clear" type="button">Clear</button></form><div class="positioner"><div class="popup"><div class="days"></div></div></div>`
   )
-  const heard: (string | null)[] = []
+  const heard: DatePickerValue[] = []
   const reasons: string[] = []
   const props = signal<DatePickerProps>({
     id: "dp",
@@ -27,16 +29,23 @@ function picker(given: Partial<DatePickerProps> = {}) {
   const trigger = root.querySelector<HTMLElement>(".trigger")!
   const hidden = root.querySelector<HTMLInputElement>(".hidden")!
   const days = root.querySelector<HTMLElement>(".days")!
+  const end = root.querySelector<HTMLElement>(".end")!
   onTestFinished(made.mount())
-  for (const segment of made.field.segments.peek()) {
-    const element = document.createElement("span")
-    field.append(element)
-    const { part, text } = made.field.segment(segment)
-    onTestFinished(bind(element, part))
-    onTestFinished(effect(() => void (element.textContent = text.get())))
+  const draw = (into: HTMLElement, of: DateField, input: HTMLElement) => {
+    for (const segment of of.segments.peek()) {
+      const element = document.createElement("span")
+      into.append(element)
+      const { part, text } = of.segment(segment)
+      onTestFinished(bind(element, part))
+      onTestFinished(effect(() => void (element.textContent = text.get())))
+    }
+    onTestFinished(bind(into, of.root))
+    onTestFinished(bind(input, of.input))
   }
-  onTestFinished(bind(field, made.field.root))
-  onTestFinished(bind(hidden, made.field.input))
+  draw(field, made.field, hidden)
+  if (made.endField) draw(end, made.endField, root.querySelector<HTMLElement>(".end-hidden")!)
+  const clear = root.querySelector<HTMLButtonElement>(".clear")!
+  onTestFinished(bind(clear, made.clear))
   onTestFinished(bind(trigger, made.popover.trigger))
   onTestFinished(bind(root.querySelector<HTMLElement>(".positioner")!, made.popover.positioner))
   onTestFinished(bind(root.querySelector<HTMLElement>(".popup")!, made.popover.popup))
@@ -58,7 +67,29 @@ function picker(given: Partial<DatePickerProps> = {}) {
   onTestFinished(() => made.popover.setOpen(false, details("test")))
   const shown = () => field.textContent
   const day = (date: string) => days.querySelector<HTMLElement>(`[data-date="${date}"]`)!
-  return { made, props, field, trigger, hidden, heard, reasons, shown, day }
+  const sent = () => new FormData(root.querySelector("form")!).getAll("due")
+  /** A button for a preset, in the page. */
+  const preset = (value: Parameters<typeof made.preset>[0]) => {
+    const button = document.createElement("button")
+    root.append(button)
+    onTestFinished(bind(button, made.preset(value)))
+    return button
+  }
+  return {
+    made,
+    props,
+    field,
+    end,
+    trigger,
+    hidden,
+    clear,
+    heard,
+    reasons,
+    shown,
+    day,
+    sent,
+    preset,
+  }
 }
 
 describe("a date picker", () => {
@@ -165,5 +196,125 @@ describe("a date picker", () => {
       "June 2026",
       "July 2026",
     ])
+  })
+})
+
+describe("a date picker of a range", () => {
+  it("takes its first day from the first press and closes on the second", () => {
+    const { made, trigger, day, shown, end, heard, reasons, sent } = picker({
+      mode: "range",
+      defaultMonth: "2026-03-01",
+    })
+    expect(made.endField).toBeDefined()
+    trigger.click()
+    day("2026-03-10").click()
+    expect(made.value.peek()).toEqual({ start: "2026-03-10", end: null })
+    expect(heard.at(-1)).toEqual({ start: "2026-03-10", end: null })
+    // Half a range: the calendar stays open, and shows where it begins.
+    expect(made.open.peek()).toBe(true)
+    expect(shown()).toBe("03/10/2026")
+    expect(end.textContent).toBe("mm/dd/yyyy")
+    expect(day("2026-03-10").hasAttribute("data-range-start")).toBe(true)
+    day("2026-03-14").click()
+    expect(made.value.peek()).toEqual({ start: "2026-03-10", end: "2026-03-14" })
+    expect(end.textContent).toBe("03/14/2026")
+    expect(made.open.peek()).toBe(false)
+    expect(reasons.at(-1)).toBe("close: day-press")
+    // Its first and its last day, as two entries under its name.
+    expect(sent()).toEqual(["2026-03-10", "2026-03-14"])
+    // A press begins it again, and a day before the first is the first.
+    trigger.click()
+    day("2026-03-20").click()
+    expect(made.value.peek()).toEqual({ start: "2026-03-20", end: null })
+    expect(end.textContent).toBe("mm/dd/yyyy")
+    day("2026-03-05").click()
+    expect(made.value.peek()).toEqual({ start: "2026-03-05", end: "2026-03-20" })
+  })
+
+  it("is one value with its two fields: an end typed is the calendar's", async () => {
+    const { made, field, end, day } = picker({ mode: "range" })
+    field.querySelector<HTMLElement>('[role="spinbutton"]')!.focus()
+    await userEvent.keyboard("03102026")
+    expect(made.value.peek()).toEqual({ start: "2026-03-10", end: null })
+    // One end typed is a range begun: the next press in the calendar is its other end.
+    expect(made.calendar.value.peek()).toBe(null)
+    expect(day("2026-03-10").hasAttribute("data-range-start")).toBe(true)
+    end.querySelector<HTMLElement>('[role="spinbutton"]')!.focus()
+    await userEvent.keyboard("03142026")
+    expect(made.value.peek()).toEqual({ start: "2026-03-10", end: "2026-03-14" })
+    expect(made.calendar.value.peek()).toEqual({ start: "2026-03-10", end: "2026-03-14" })
+    expect(day("2026-03-12").hasAttribute("data-selected")).toBe(true)
+    // An end before the start is invalid, and no range the calendar shows.
+    end.querySelector<HTMLElement>('[role="spinbutton"]')!.focus()
+    await userEvent.keyboard("02")
+    expect(end.hasAttribute("data-invalid")).toBe(true)
+    expect(made.calendar.value.peek()).toBe(null)
+  })
+
+  it("takes a range begun from its end, and gives its own Escape to the popover", async () => {
+    const { made, trigger, day } = picker({
+      mode: "range",
+      defaultValue: { start: null, end: "2026-03-20" },
+    })
+    trigger.click()
+    day("2026-03-12").click()
+    expect(made.value.peek()).toEqual({ start: "2026-03-12", end: "2026-03-20" })
+    trigger.click()
+    day("2026-03-15").click()
+    day("2026-03-15").focus()
+    await userEvent.keyboard("{Escape}")
+    expect(made.open.peek()).toBe(false)
+    expect(made.value.peek()).toEqual({ start: "2026-03-15", end: null })
+  })
+})
+
+describe("a date picker's clear button and presets", () => {
+  it("empties the value with its clear button, and gives focus to the field", () => {
+    const { made, clear, shown, heard } = picker({ defaultValue: "2026-03-14" })
+    expect(clear.disabled).toBe(false)
+    clear.click()
+    expect(made.value.peek()).toBe(null)
+    expect(heard.at(-1)).toBe(null)
+    expect(shown()).toBe("mm/dd/yyyy")
+    expect(document.activeElement?.getAttribute("role")).toBe("spinbutton")
+    expect(clear.disabled).toBe(true)
+    expect(clear.hasAttribute("data-disabled")).toBe(true)
+    const range = picker({
+      mode: "range",
+      defaultValue: { start: "2026-03-10", end: "2026-03-14" },
+    })
+    range.clear.click()
+    expect(range.made.value.peek()).toBe(null)
+    expect(range.end.textContent).toBe("mm/dd/yyyy")
+  })
+
+  it("makes the value a preset's, and says which preset it is", () => {
+    const { made, preset, shown, heard } = picker({ defaultValue: "2026-03-14" })
+    const first = preset("2026-03-14")
+    const other = preset("2026-04-01")
+    expect(first.getAttribute("aria-pressed")).toBe("true")
+    expect(first.hasAttribute("data-pressed")).toBe(true)
+    expect(other.getAttribute("aria-pressed")).toBe("false")
+    other.click()
+    expect(heard.at(-1)).toBe("2026-04-01")
+    expect(shown()).toBe("04/01/2026")
+    expect(made.calendar.month.peek()).toBe("2026-04-01")
+    expect(other.hasAttribute("data-pressed")).toBe(true)
+    expect(first.hasAttribute("data-pressed")).toBe(false)
+    const range = picker({ mode: "range" })
+    const week = range.preset({ start: "2026-03-09", end: "2026-03-15" })
+    week.click()
+    expect(range.made.value.peek()).toEqual({ start: "2026-03-09", end: "2026-03-15" })
+    expect(range.end.textContent).toBe("03/15/2026")
+    expect(week.getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("types its field in the calendar its calendar is laid out in", () => {
+    const { shown, made } = picker({
+      calendarSystem: new PersianCalendar(),
+      defaultValue: "2026-03-21",
+    })
+    expect(shown()).toBe("01/01/1405")
+    expect(made.value.peek()).toBe("2026-03-21")
   })
 })

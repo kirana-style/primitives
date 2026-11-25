@@ -1,6 +1,6 @@
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
@@ -191,6 +191,8 @@ export function createNumberField(
   let member: FieldMembership | undefined
   const id = props.peek().id
   const inputId = field?.controlId ?? `${id}-input`
+  // In a field, what the input is called once it is in the page: its caller's id, if it has one.
+  const inputName = signal<string | undefined>(undefined)
   const value = bindable<number | null>({
     value: () => props.get().value,
     defaultValue: props.peek().defaultValue ?? null,
@@ -463,7 +465,7 @@ export function createNumberField(
         // The input is the stop, and the arrows do what the buttons do.
         tabindex: "-1",
         "aria-label": label,
-        "aria-controls": inputId,
+        "aria-controls": inputName.get() ?? inputId,
         disabled: flag(off.get()),
         ...state(),
         "data-disabled": flag(off.get()),
@@ -520,7 +522,7 @@ export function createNumberField(
         const { min: least, format, required, readOnly } = props.get()
         const whole = format?.maximumFractionDigits === 0
         return {
-          id: inputId,
+          ...(field ? defaultId(inputId) : { id: inputId }),
           type: "text",
           // What it says, so a server draws the number. In a page the core writes it too:
           // a framework writes in its own time, after what was typed since.
@@ -598,6 +600,7 @@ export function createNumberField(
       }),
       attach(element) {
         input = element as HTMLInputElement
+        if (field) inputName.set(element.id || undefined)
         const now = value.peek()
         member = field?.join({
           element,

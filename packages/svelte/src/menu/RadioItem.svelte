@@ -7,8 +7,8 @@
   import { RADIO_ITEM, useRadioGroup } from "./context.ts"
   import type { RadioItemProps } from "./types.ts"
 
-  let { value, disabled, label, closeOnClick, ...rest }: RadioItemProps = $props()
-  const options = toSignal(() => ({ disabled, label, closeOnClick }))
+  let { value, disabled, label, closeOnSelect, closeOnClick, ...rest }: RadioItemProps = $props()
+  const options = toSignal(() => ({ disabled, label, closeOnSelect, closeOnClick }))
   // An item is its value for as long as it is in the page.
   // svelte-ignore state_referenced_locally
   const item = value

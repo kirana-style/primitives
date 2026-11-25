@@ -2,7 +2,7 @@ import { bindable } from "./bindable.ts"
 import { directionOf } from "./direction.ts"
 import type { DirectionAround } from "./direction.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -396,7 +396,7 @@ export function createTagsInput(
     input: {
       props: computed(() => ({
         // In a field, the id its label is `for`.
-        id: field?.controlId ?? `${id}-input`,
+        ...(field ? defaultId(field.controlId) : { id: `${id}-input` }),
         disabled: flag(disabled.get()),
         readonly: flag(readOnly.get()),
         "aria-required": props.get().required ? "true" : undefined,

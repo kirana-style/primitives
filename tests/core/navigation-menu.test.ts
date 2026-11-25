@@ -213,6 +213,31 @@ describe("a navigation menu", () => {
     expect(find(root, "pricing").hasAttribute("aria-current")).toBe(false)
   })
 
+  it("a link that says so leaves it open: `closeOnSelect`, or `closeOnClick`, the new name winning", async () => {
+    for (const [options, stays] of [
+      [{ closeOnSelect: false }, true],
+      [{ closeOnClick: false }, true],
+      [{ closeOnSelect: true, closeOnClick: false }, false],
+      [{ closeOnSelect: false, closeOnClick: true }, true],
+    ] as const) {
+      const { root, made } = navigation()
+      find(root, "t-products").click()
+      await settled()
+      const link = document.createElement("a")
+      link.href = "#kept"
+      root.append(link)
+      onTestFinished(
+        bind(
+          link,
+          made.link(() => options)
+        )
+      )
+      link.click()
+      expect(made.value.peek() !== null, JSON.stringify(options)).toBe(stays)
+      root.remove()
+    }
+  })
+
   it("opens for a pointer that rests on a trigger, stays under it, and goes when it leaves", async () => {
     const { root, made, reasons } = navigation()
     const trigger = find(root, "t-products")

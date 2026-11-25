@@ -61,8 +61,9 @@ const WEB = [
   "command",
   "toast",
   "dates",
-  // The scenario that plays the "dates" section's calendar.
+  // The scenarios that play the "dates" section's calendar and its date fields.
   "calendar",
+  "date-field",
   "calendars",
   "picking",
   "placing",
@@ -254,6 +255,9 @@ const withoutStyles = (dom: string) =>
     .replace(/ aria-labelledby="[^"]*-(label|legend|heading)"/g, "")
     .replace(/ aria-describedby="[^"]*-description"/g, "")
     .replace(/^(\s*<label[^\n]*?) id="[^"]*-label"/gm, "$1")
+    // A label is for what its control is called once the control is in the page: a server,
+    // which writes the label first, writes the field's id where the caller gave its own.
+    .replace(/^(\s*<label#(?:fd3|fc6)-label[^\n]*?) for="[^"]*"/gm, "$1")
     // The tags' hidden inputs after the first are the core's to draw, once the first is in the
     // page: a server sends one for a control that holds two.
     .replace(/^\s*<input[^\n]* name="colors"[^\n]*\n/gm, "")
@@ -952,6 +956,16 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.waitForFunction(() => !document.querySelector('[data-testid="dp1-popup"]'))
     expect(!(await present("dp1-popup")), "it closes")
 
+    await id("dd1-open").click()
+    await id("dd1-popup").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("a dialog opened by its state, right to left")
+    expect(
+      (await attribute("dd1-popup", "dir")) === "rtl",
+      "a dialog with no trigger takes its provider's direction into the portal"
+    )
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector('[data-testid="dd1-popup"]'))
+
     await id("dir-turn").click()
     await snapshot("turned left to right")
     expect((await attribute("dir-box", "dir")) === "ltr", "the page turned")
@@ -973,6 +987,11 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       "nothing is written where the page's direction already reaches"
     )
     expect((await edges()).left === 0, "and it starts at its trigger's left edge")
+    await page.keyboard.press("Escape")
+    await page.waitForFunction(() => !document.querySelector('[data-testid="dp1-popup"]'))
+    await id("dd1-open").click()
+    await id("dd1-popup").waitFor({ state: "attached", timeout: 3000 })
+    expect((await attribute("dd1-popup", "dir")) === null, "nor on a dialog where it agrees")
   },
 
   async slider({ page, snapshot, id, attribute, focused }) {
@@ -1168,6 +1187,23 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.keyboard.type("1")
     await id("fd2-error").waitFor({ state: "detached", timeout: 3000 })
     expect((await attribute("fd2", "data-invalid")) === null, "until its value changes")
+
+    expect((await attribute("fd3-control", "id")) === "fd3-own", "a control keeps its own id")
+    expect((await attribute("fd3-label", "for")) === "fd3-own", "which its label is for")
+    await id("fd3-label").click()
+    expect((await focused()) === "fd3-control", "and a press on the label reaches it")
+    await page.keyboard.press("Tab")
+    await id("fd3-missing").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("two messages")
+    expect((await attribute("fd3-error", "id")) === "fd3-error", "each message has an id")
+    expect(
+      (await attribute("fd3-missing", "id")) === "fd3-error-valueMissing",
+      "of its own, by what it shows"
+    )
+    expect(
+      (await attribute("fd3-control", "aria-describedby")) === "fd3-error fd3-error-valueMissing",
+      "and the control names both, in the page's order"
+    )
   },
 
   // The controls that are not native ones, each inside a field of a form.
@@ -1247,6 +1283,37 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       (await text("f2-sent")) === '{"terms":"on","plan":"pro","alerts":"on","fruit":"Apple"}',
       "all valid: every control's value is sent, a disabled one's left out"
     )
+
+    // An editable text and a typed time, each its field's control.
+    expect((await attribute("fc6-input", "id")) === "fc6-own", "an input keeps its own id")
+    expect((await attribute("fc6-label", "for")) === "fc6-own", "which its label is for")
+    expect((await attribute("fc6-input", "name")) === "title", "and takes the field's name")
+    expect((await attribute("fc6-input", "aria-labelledby")) === "fc6-label", "named by it")
+    expect((await attribute("fc7-time", "id")) === "fc7-control", "a time takes the field's id")
+    expect((await attribute("fc7-time", "aria-labelledby")) === "fc7-label", "and its name")
+    await id("fc6-label").click()
+    expect((await focused()) === "fc6-input", "a press on the label starts an edit")
+    expect((await attribute("fc6", "data-focused")) === "", "the field is focused")
+    await id("f2-submit").focus()
+    await id("fc6-error").waitFor({ state: "attached", timeout: 3000 })
+    expect((await attribute("fc6", "data-touched")) === "", "the text left: touched")
+    expect((await attribute("fc6-editable", "data-invalid")) === "", "and needed, so invalid")
+    expect(
+      (await attribute("fc6-input", "aria-describedby")) === "fc6-error",
+      "its message is said with it"
+    )
+    await id("fc7-label").click()
+    expect((await focused()) === "fc7-hour-0", "a press on a time's label goes to its first part")
+    await id("f2-submit").focus()
+    await id("fc7-error").waitFor({ state: "attached", timeout: 3000 })
+    await snapshot("needed and left empty")
+    expect((await attribute("fc7-time", "data-invalid")) === "", "a time left empty is invalid")
+    expect((await attribute("fc7-time", "aria-describedby")) === "fc7-error", "and says why")
+    await id("fc7-hour-0").focus()
+    await page.keyboard.type("0930a")
+    await id("fc7-error").waitFor({ state: "detached", timeout: 3000 })
+    expect((await attribute("fc7", "data-valid")) === "", "a whole time puts it right")
+    expect((await attribute("fc7", "data-dirty")) === "", "and it changed")
   },
 
   // Popups the pointer opens: a tooltip and a hover card.
@@ -1817,6 +1884,51 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("closed by Escape")
     expect((await output()) === "Cherry", "Escape keeps the value")
     expect((await focused()) === "s1-trigger", "focus returns to the trigger")
+
+    // Asked to open as a sheet: from the bottom edge, not placed, modal over its backdrop.
+    const sheetUntil = async (wanted: boolean, message: string) => {
+      const from = Date.now()
+      while ((await present("ss1-popup")) !== wanted && Date.now() - from < 3000) {
+        await page.waitForTimeout(25)
+      }
+      expect((await present("ss1-popup")) === wanted, message)
+      await settled(page)
+    }
+    await id("ss1-trigger").scrollIntoViewIfNeeded()
+    await id("ss1-trigger").click()
+    await settled(page)
+    for (const part of ["ss1-positioner", "ss1-popup", "ss1-backdrop"]) {
+      expect((await attribute(part, "data-presentation")) === "sheet", `${part} says it is a sheet`)
+    }
+    expect((await attribute("ss1-positioner", "style")) === null, "the positioner is not placed")
+    expect((await attribute("ss1-positioner", "data-side")) === null, "and is on no side")
+    expect((await focused()) === "ss1-Banana", "focus goes to the value, as in a popup")
+    expect(
+      (await id("s1-trigger").evaluate((element) => Boolean(element.closest("[inert]")))) === true,
+      "the page behind it is inert"
+    )
+    await snapshot("a sheet open")
+    // From the sheet's top edge, so the whole drag stays in the window: an engine tells
+    // nothing of a pointer that has left it.
+    const box = (await id("ss1-popup").boundingBox())!
+    await page.mouse.move(box.x + 10, box.y + 5)
+    await page.mouse.down()
+    await page.mouse.move(box.x + 10, box.y + 60, { steps: 3 })
+    await page.mouse.move(box.x + 10, box.y + 120, { steps: 3 })
+    expect((await attribute("ss1-popup", "data-swiping")) === "", "a drag is said while it lasts")
+    // Held a moment: let go at once, a drag this quick is a flick, which closes anyway.
+    await page.waitForTimeout(150)
+    await page.mouse.up()
+    await sheetUntil(false, "dragged down far enough, it closes")
+    expect(
+      (await id("ss1-trigger").textContent())?.trim() === "Banana",
+      "and the row let go on is not chosen"
+    )
+    expect((await focused()) === "ss1-trigger", "focus returns to the trigger")
+    await id("ss1-trigger").click()
+    await settled(page)
+    await page.mouse.click(20, 20)
+    await sheetUntil(false, "a press on its backdrop closes it")
   },
 
   async "select-multiple"({ page, snapshot, id, present, attribute, focused }) {
@@ -1926,6 +2038,25 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     )
     await key("Escape")
     expect(!(await present("sm3-popup")), "Escape closes it")
+
+    const city = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="sm4-form"]')!).get(
+          "city"
+        )
+      )
+    expect(
+      (await text("sm4-value"))?.trim() === "Paris",
+      "a value that is an object is named by itemToStringLabel"
+    )
+    expect((await city()) === "par", "and sent by itemToStringValue")
+    await press("sm4-trigger")
+    expect((await focused()) === "sm4-par", "it opens on its value")
+    await key("Home")
+    await key("Enter")
+    await snapshot("a value that is an object, chosen")
+    expect((await text("sm4-value"))?.trim() === "Oslo", "the one chosen is named so")
+    expect((await city()) === "osl", "and sent so")
   },
 
   async menu({ page, snapshot, id, present, attribute, focused }) {
@@ -2490,6 +2621,14 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await page.mouse.click(2, 2)
     await snapshot("closed by a press outside")
     expect(!(await present("pl3-popup")), "a press outside closes it")
+    await id("pl3-trigger").click()
+    await settled(page)
+    await key("Tab")
+    expect(!(await present("pl3-popup")), "Tab from its input closes it")
+    expect(
+      (await focused()) === "pm1-trigger",
+      "and goes on from the button, not from the popup at the page's end"
+    )
   },
 
   // A popover's backdrop and arrow, what it holds of the page, the pointer opening it, and
@@ -3005,7 +3144,25 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await attribute("cbm-Print", "aria-selected")) === "true", "the item says it is chosen")
     expect((await sent()) === "New,Print", "both are sent")
     await key("Backspace")
-    expect(!(await present("cbm-chip-Print")), "Backspace in the empty input takes the last away")
+    expect(
+      (await focused()) === "cbm-chip-Print",
+      "Backspace in the empty input goes onto the last chip"
+    )
+    expect(await present("cbm-chip-Print"), "and takes nothing away unseen")
+    expect(!(await present("cbm-popup")), "the list closes as focus leaves the input")
+    await key("ArrowLeft")
+    expect((await focused()) === "cbm-chip-New", "the arrows go between the chips")
+    await key("ArrowRight")
+    await key("ArrowRight")
+    expect((await focused()) === "cbm-input", "and forward from the last back to the input")
+    await key("ArrowLeft")
+    expect((await focused()) === "cbm-chip-Print", "as the arrow back goes from its start")
+    await snapshot("a chip with focus")
+    await key("Backspace")
+    expect(!(await present("cbm-chip-Print")), "Backspace on a chip takes it away")
+    expect((await focused()) === "cbm-chip-New", "and focus goes to the one before")
+    await key("ArrowRight")
+    expect((await focused()) === "cbm-input", "which is the last now")
     await id("cbm-remove-New").click()
     await settled(page)
     await snapshot("no value left")
@@ -3699,6 +3856,20 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await output()) === "null", "and a date with a part missing is no date")
     expect((await sent()) === "", "so nothing is submitted")
     await snapshot("a date with a part emptied")
+
+    // A date typed in a calendar of eras: its value is still an ISO day.
+    const reign = async () => ((await id("df2").textContent()) ?? "").replace(/\s+/g, "")
+    await id("df2").scrollIntoViewIfNeeded()
+    expect((await reign()) === "05/01/1Reiwa", `a field in another calendar (${await reign()})`)
+    expect((await attribute("df2-era-6", "role")) === "spinbutton", "its era is a part")
+    expect((await attribute("df2-year-4", "aria-valuenow")) === "1", "its year the era's")
+    await id("df2-era-6").click()
+    await settled(page)
+    await key("ArrowDown")
+    expect((await reign()) === "05/01/1Heisei", `the arrows turn the era (${await reign()})`)
+    expect((await id("df2-output").textContent()) === "1989-05-01", "and the value is an ISO day")
+    expect((await attribute("df2-year-4", "aria-valuemax")) === "31", "held to that era's years")
+    await snapshot("a date in a calendar of eras")
   },
   async measures({ page, snapshot, id, present, attribute }) {
     const box = (testid: string) =>
@@ -3912,6 +4083,39 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("a select scrolled to its end")
     await key("Escape")
     await until(() => present("s4-popup"), false, "Escape closes it")
+
+    const completed = () =>
+      id("ac3-input").evaluate((element: HTMLInputElement) => {
+        const { value, selectionStart, selectionEnd } = element
+        return `${value} [${value.slice(selectionStart ?? 0, selectionEnd ?? 0)}]`
+      })
+    expect(
+      (await attribute("ac3-input", "aria-autocomplete")) === "both",
+      "an autocomplete that completes in its input says so"
+    )
+    await id("ac3-input").focus()
+    await page.keyboard.type("o")
+    await until(() => present("ac3-popup"), true, "typing opens its suggestions")
+    await until(
+      completed,
+      "oslo [slo]",
+      "the rest of the first is written after what was typed, selected"
+    )
+    expect(
+      (await attribute("ac3-input", "aria-activedescendant")) === "ac3-Oslo",
+      "and that suggestion is the one on"
+    )
+    await snapshot("an autocomplete completing")
+    await page.keyboard.type("sa")
+    await until(completed, "osaka [ka]", "typing on replaces the completion with the next")
+    await key("Backspace")
+    await until(completed, "osa []", "Backspace takes it away and does not write it again")
+    await page.keyboard.type("k")
+    await until(completed, "osaka [a]", "a letter typed completes again")
+    await key("Enter")
+    await until(() => present("ac3-popup"), false, "Enter takes the suggestion")
+    expect((await completed()) === "Osaka []", "and writes it into the input as it is")
+    await snapshot("an autocomplete completed")
   },
   async picking({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {
@@ -3969,6 +4173,75 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("a date picker after a month was typed")
     await key("Escape")
     await until(() => present("dk1-popup"), false, "Escape closes it")
+
+    // A range: a field for each end and one calendar, open until the range is whole.
+    const written = async (testid: string) =>
+      ((await id(testid).textContent()) ?? "").replace(/\s+/g, "")
+    const trip = () => id("dk2-output").textContent()
+    const tripSent = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLInputElement>('input[name="trip"]')]
+          .map((each) => each.value)
+          .join(",")
+      )
+    await id("dk2-start").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect(
+      (await written("dk2-start")) === "mm/dd/yyyy" && (await written("dk2-end")) === "mm/dd/yyyy",
+      "a range picker has a field for each end"
+    )
+    expect((await attribute("dk2-clear", "data-disabled")) === "", "and nothing to clear")
+    expect((await attribute("dk2-week", "aria-pressed")) === "false", "nor a preset that is it")
+    await id("dk2-trigger").click()
+    await until(() => present("dk2-popup"), true, "its calendar opens")
+    expect(
+      (await id("dk2-heading").textContent())?.trim() === "March 2026",
+      "on the month asked for"
+    )
+    await snapshot("a range picker open")
+    await id("dk2-2026-03-10").click()
+    await settled(page)
+    expect(await present("dk2-popup"), "the first day picked keeps it open")
+    expect((await written("dk2-start")) === "03/10/2026", "and is the first field's")
+    expect(
+      (await trip()) === '{"start":"2026-03-10","end":null}',
+      `heard with no last day yet (${await trip()})`
+    )
+    expect((await attribute("dk2-2026-03-10", "data-range-start")) === "", "where the range begins")
+    await snapshot("a range begun")
+    await id("dk2-2026-03-14").click()
+    await until(() => present("dk2-popup"), false, "the second day closes it")
+    expect((await written("dk2-end")) === "03/14/2026", "and is the last field's")
+    expect(
+      (await trip()) === '{"start":"2026-03-10","end":"2026-03-14"}',
+      `the range is heard whole (${await trip()})`
+    )
+    expect((await tripSent()) === "2026-03-10,2026-03-14", "and each end is submitted")
+    expect((await focused()) === "dk2-trigger", "focus goes back to the button")
+    await snapshot("a range picked")
+    await id("dk2-end-month-0").click()
+    await settled(page)
+    await page.keyboard.type("02")
+    await settled(page)
+    expect(
+      (await attribute("dk2-end", "data-invalid")) === "",
+      "a last day before the first is invalid"
+    )
+    await id("dk2-week").click()
+    await settled(page)
+    expect(
+      (await trip()) === '{"start":"2026-03-09","end":"2026-03-15"}',
+      `a preset pressed is the value (${await trip()})`
+    )
+    expect((await written("dk2-end")) === "03/15/2026", "written into the fields")
+    expect((await attribute("dk2-week", "data-pressed")) === "", "and says it is the value")
+    await snapshot("a range from a preset")
+    await id("dk2-clear").click()
+    await settled(page)
+    expect((await trip()) === "null", "the clear button empties it")
+    expect((await written("dk2-start")) === "mm/dd/yyyy", "both fields")
+    expect((await focused()) === "dk2-start-month-0", "and gives focus to the first field")
+    expect((await attribute("dk2-clear", "data-disabled")) === "", "with nothing left to clear")
+    await snapshot("a range cleared")
 
     expect((await attribute("pg1", "aria-label")) === "Pagination", "pages are a navigation")
     const row = () =>
@@ -4349,6 +4622,27 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await key("Enter")
     expect((await sent()) === "blackberry", "and what is chosen is its value")
     expect((await id("cd2-input").inputValue()) === "Blackberry", "which the input names")
+
+    const city = () =>
+      page.evaluate(() =>
+        new FormData(document.querySelector<HTMLFormElement>('[data-testid="cd3-form"]')!).get(
+          "city"
+        )
+      )
+    expect(
+      (await id("cd3-input").inputValue()) === "Paris",
+      "a value that is an object is shown by itemToStringLabel"
+    )
+    expect((await city()) === "par", "and sent by itemToStringValue")
+    await id("cd3-input").focus()
+    await id("cd3-input").fill("")
+    await page.keyboard.type("osa")
+    await settled(page)
+    expect((await drawn("cd3-popup")) === "cd3-osl hidden,cd3-osa,cd3-par hidden", "it filters")
+    await key("Enter")
+    await snapshot("a value that is an object, chosen")
+    expect((await id("cd3-input").inputValue()) === "Osaka", "the one chosen is shown so")
+    expect((await city()) === "osa", "and sent so")
   },
   async menubar({ page, snapshot, id, present, attribute, focused }) {
     const key = async (name: string) => {

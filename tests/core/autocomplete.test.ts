@@ -4,7 +4,7 @@ import { userEvent } from "vite-plus/test/browser"
 import { createAutocomplete } from "../../packages/core/src/autocomplete.ts"
 import type { AutocompleteProps } from "../../packages/core/src/autocomplete.ts"
 import { bind } from "../../packages/core/src/bind.ts"
-import { signal } from "../../packages/core/src/reactivity.ts"
+import { effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
 import { find, mount } from "./page.ts"
 
 const settled = () => new Promise<void>((resolve) => setTimeout(resolve))
@@ -188,5 +188,146 @@ describe("an autocomplete", () => {
     expect(input.value).toBe("Osaka")
     expect(made.open.peek()).toBe(false)
     expect(sent()).toBe(0)
+  })
+})
+
+describe("an autocomplete that completes in its input", () => {
+  const selected = (input: HTMLInputElement) =>
+    input.value.slice(input.selectionStart ?? 0, input.selectionEnd ?? 0)
+
+  it("writes the rest of the first suggestion after what is typed, selected, and Enter takes it", async () => {
+    const { input, made, heard, shown, press, sent } = autocomplete({ mode: "both" })
+    expect(input.getAttribute("aria-autocomplete")).toBe("both")
+    input.focus()
+    await userEvent.keyboard("o")
+    await settled()
+    expect(input.value).toBe("oslo")
+    expect(selected(input)).toBe("slo")
+    expect(input.getAttribute("aria-activedescendant")).toBe("a-Oslo")
+    // The text is what was typed: the list is filtered by it, and the caller hears it.
+    expect(made.inputValue.peek()).toBe("o")
+    expect(heard.at(-1)).toBe("o input-change")
+    expect(shown()).toEqual(["Oslo", "Osaka"])
+    // Typing on replaces the completion with the next.
+    await userEvent.keyboard("sa")
+    await settled()
+    expect(input.value).toBe("osaka")
+    expect(selected(input)).toBe("ka")
+    expect(input.getAttribute("aria-activedescendant")).toBe("a-Osaka")
+    await press("Enter")
+    expect(input.value).toBe("Osaka")
+    expect(made.inputValue.peek()).toBe("Osaka")
+    expect(input.selectionStart).toBe(5)
+    expect(made.open.peek()).toBe(false)
+    expect(sent()).toBe(0)
+  })
+
+  it("does not complete again what Backspace took away", async () => {
+    const { input, made } = autocomplete({ mode: "both" })
+    input.focus()
+    await userEvent.keyboard("osa")
+    await settled()
+    expect(input.value).toBe("osaka")
+    await userEvent.keyboard("{Backspace}")
+    await settled()
+    expect(input.value).toBe("osa")
+    await userEvent.keyboard("{Backspace}")
+    await settled()
+    expect(input.value).toBe("os")
+    expect(made.inputValue.peek()).toBe("os")
+    // A letter typed again completes again.
+    await userEvent.keyboard("l")
+    await settled()
+    expect(input.value).toBe("oslo")
+  })
+
+  it("Tab keeps the completion, Escape takes it away", async () => {
+    const first = autocomplete({ mode: "both" })
+    first.input.focus()
+    await userEvent.keyboard("pa")
+    await settled()
+    await userEvent.keyboard("{Escape}")
+    await settled()
+    expect(first.input.value).toBe("pa")
+    expect(first.made.inputValue.peek()).toBe("pa")
+    await userEvent.keyboard("r")
+    await settled()
+    expect(first.input.value).toBe("paris")
+    await userEvent.tab()
+    await settled()
+    expect(first.input.value).toBe("paris")
+    expect(first.made.inputValue.peek()).toBe("paris")
+    expect(first.heard.at(-1)).toBe("paris input-blur")
+  })
+
+  it("does not complete into a word an input method is composing", async () => {
+    const { input } = autocomplete({ mode: "both" })
+    input.focus()
+    input.value = "o"
+    input.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        inputType: "insertCompositionText",
+        isComposing: true,
+        data: "o",
+      })
+    )
+    await settled()
+    expect(input.value).toBe("o")
+    expect(input.getAttribute("aria-activedescendant")).toBe(null)
+  })
+
+  it("with `inline`, completes and shows every suggestion", async () => {
+    const { input, shown } = autocomplete({ mode: "inline" })
+    expect(input.getAttribute("aria-autocomplete")).toBe("inline")
+    input.focus()
+    await userEvent.keyboard("p")
+    await settled()
+    expect(input.value).toBe("paris")
+    expect(shown()).toEqual(["Oslo", "Osaka", "Paris"])
+  })
+
+  it("writes the suggestion the arrows go to into the input, and filters by what was typed", async () => {
+    const { input, made, shown, press } = autocomplete({ mode: "both" })
+    input.focus()
+    await userEvent.keyboard("o")
+    await settled()
+    await press("ArrowDown")
+    expect(input.getAttribute("aria-activedescendant")).toBe("a-Osaka")
+    expect(input.value).toBe("Osaka")
+    expect(made.inputValue.peek()).toBe("o")
+    expect(shown()).toEqual(["Oslo", "Osaka"])
+    await press("Enter")
+    expect(made.inputValue.peek()).toBe("Osaka")
+  })
+
+  it("completes for a caller who holds the text and answers later", async () => {
+    const held = signal("")
+    const { input, props } = autocomplete({ mode: "both" })
+    props.set({
+      ...props.peek(),
+      value: held.peek(),
+      onValueChange: (next) => void setTimeout(() => held.set(next)),
+    })
+    onTestFinished(
+      effect(() => {
+        const value = held.get()
+        untracked(() => props.set({ ...props.peek(), value }))
+      })
+    )
+    input.focus()
+    // A key at a time: each answer comes before the next key, as a person types.
+    await userEvent.keyboard("o")
+    await settled()
+    await userEvent.keyboard("s")
+    await settled()
+    expect(input.value).toBe("oslo")
+    expect(selected(input)).toBe("lo")
+    expect(input.getAttribute("aria-activedescendant")).toBe("a-Oslo")
+  })
+
+  it("read only, completes nothing", async () => {
+    const { input } = autocomplete({ mode: "both", readOnly: true })
+    expect(input.getAttribute("aria-autocomplete")).toBe("none")
   })
 })

@@ -14,6 +14,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createEditable } from "@kirana-ui/core/editable"
 import type { Editable, EditableProps } from "@kirana-ui/core/editable"
 
+import { KP_FIELD } from "./field-token"
 import { KpIds, hostPart, inputsSignal, mounted, onServer, ownText } from "./runtime"
 
 /**
@@ -40,10 +41,13 @@ export class KpEditable implements OnInit {
   })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly readOnly = input(false, { transform: booleanAttribute })
+  /** Needed: in a field, leaving it empty is then invalid. */
+  readonly required = input(false, { transform: booleanAttribute })
+  /** The name it is submitted under; in a field, the field's by default. */
   readonly name = input<string>()
   /** The id of the form the input belongs to, when it is not inside it. */
   readonly form = input<string>()
-  /** The input's id, which a `<label for>` names. */
+  /** The input's id, which a `<label for>` names. Inside a field, the field's id unless the input has one of its own. */
   readonly kpId = input<string>()
   /** An edit about to be kept; `details.cancel()` keeps the text, and the edit open. */
   readonly valueChanged = output<{ value: string; details: ChangeDetails }>()
@@ -51,6 +55,7 @@ export class KpEditable implements OnInit {
   readonly editingChanged = output<{ editing: boolean; details: ChangeDetails }>()
 
   controller!: Editable
+  private readonly field = inject(KP_FIELD, { optional: true })
   private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
@@ -64,6 +69,7 @@ export class KpEditable implements OnInit {
     selectOnFocus: this.selectOnFocus(),
     disabled: this.disabled(),
     readOnly: this.readOnly(),
+    required: this.required(),
     name: this.name(),
     form: this.form(),
     onValueChange: (value: string, details: ChangeDetails) => {
@@ -89,7 +95,7 @@ export class KpEditable implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = createEditable(this.props())
+    this.controller = createEditable(this.props(), { field: this.field?.controller })
     this.part(this.controller.root)
     this.mount(this.controller)
   }

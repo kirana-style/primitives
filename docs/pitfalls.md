@@ -47,6 +47,21 @@ note. Three places hold them:
   `aria-describedby` and `for` are checked on every snapshot. Met in Field: its label was `for`
   an id that only a native control carried, so a radio group, a slider and a select left it
   pointing at nothing. Those now take the id.
+- **A control's own id wins over the one its field gives it.** The field named its control by
+  writing its own id over the caller's, so a caller who named the element lost the name. The
+  field's id is now a default (`defaultId`): `forElement` drops it where the caller gives an
+  `id`, and the field reads what the element is called once it is in the page, which its
+  label is then `for`. A server writes the label before the control and cannot know it, so
+  the label follows after the page mounts. Vue's adapter turned a part's props into its own
+  form before `forElement`, and the default's mark was lost on the way: a mark that is not an
+  attribute goes through every adapter's conversion. Held by `tests/core/field.test.ts` ("a
+  control's own id inside a field") and the `field` scenario ("a control keeps its own id").
+- **Two messages shown at once are two ids.** Every `Field.Error` was written with the
+  field's one error id, which the control's `aria-describedby` could not tell apart. A
+  message's id is made from what it shows (`-error`, `-error-valueMissing`,
+  `-error-always`), which a server knows too, and the control names every message in the
+  page in the page's order. Held by `tests/core/field.test.ts` ("a field's messages") and the
+  `field` scenario ("two messages").
 - **A label must not press a button it names.** A `<label for>` clicks its control. For a
   select's trigger that would open the list, where a native `<select>` only takes focus. The
   field's label prevents the click and moves focus.
@@ -130,8 +145,17 @@ note. Three places hold them:
 - **A combobox of several values has its own props** (`multiple`, `values`, `onValuesChange`):
   one prop that is a value or a list of them, by a flag, is a type every adapter has to
   narrow. An item chosen is added and the list stays open; chosen again, taken away; what was
-  typed is used up. Backspace in the empty input takes the last value away. A chip's remove
-  button is not a stop: the input is, and keeps focus.
+  typed is used up. A chip's remove button is not a stop: the input is, and keeps focus.
+- **A chip is reached by the arrows, with real focus, as a tag of a tags input is.** Backspace
+  in the empty input took the last value away unseen, and a held key ate them one after
+  another. From the start of the input, Backspace or the arrow that points back in the reading
+  direction goes onto the last chip; the arrows move between chips (read from the page, in its
+  order), forward from the last is the input, and Backspace or Delete on a chip takes it away,
+  focus going to the chip that takes its place. Focus is real, not a highlight the input
+  names: `aria-activedescendant` names a row of the listbox the input controls, and a chip is
+  not one. Moving onto a chip closes the list and keeps what was typed (`combobox.test.ts`,
+  "goes between its chips by the arrows" and "Backspace in the empty input goes onto the last
+  chip"; scenario `combobox`).
 - **A select of several values is the combobox's, without the input.** The same props
   (`multiple`, `values`, `onValuesChange`); a press adds or takes away and the list stays
   open; one hidden input for each value, the first its adapter's and the rest the core's
@@ -164,6 +188,23 @@ note. Three places hold them:
   that is shown. While the list is open, Enter is never the form's.
 - **A combobox's text is the core's to write.** A framework that held the input's `value`
   would write it in its own time, over what was typed since.
+- **Tab from an input inside a popup goes on from the button.** The popup is drawn at the
+  end of `<body>`: from its input the browser's Tab went on from there and left the page, the
+  popup closing for the focus that left. The input's Tab now puts focus on the button and
+  closes the popup, and leaves the key's default to the browser, which goes on from the button
+  either way (`combobox.test.ts`, "Tab from its input goes on from its button"; scenario
+  `placing`, `pl3`).
+- **A completion written into the input must not be taken back while the caller answers.**
+  With `mode: "both"` or `"inline"` the rest of an item's label is written after what was
+  typed, selected. The text the caller holds is still the typed text, and arrives later: what
+  the input part says (`value`) changes only when that text changes or a completion is made
+  for it, never as a key is heard, or each framework writes the text before the key over the
+  completion. And the plain binder wrote `value` again on every pass, for any attribute's
+  change: it now writes a text as it changes, as a framework does (`bind.test.ts`, "writes a
+  text as it changes"; `autocomplete.test.ts`, "completes for a caller who holds the text and
+  answers later"). A completion is written only for a key that wrote a letter
+  (`inputType` `insertText`, not composing), so Backspace does not bring back what it removed
+  and an input method's word is not written into.
 - **A menu opened as the button goes down asks, and does not read back.** One press opens it,
   and the click that ends the press must not close it. Whether it opened is what was asked
   for (unless cancelled), not `open` read back: on a framework that answers later the press
@@ -425,6 +466,15 @@ note. Three places hold them:
   focus fell to the page. `Calendar.Weeks` keeps a week by its first day, as the other adapters
   key it, and hands its child days that read the week now there. Held by the conformance run's
   `calendars` scenario ("and focus follows into it").
+- **Angular's hydration finds each node by walking from the one before it.** An element a
+  directive adds by hand between Angular's own nodes, the select's hidden input after its
+  trigger, is taken for the node Angular looks for next, and hydration fails. A view container
+  on an `<ng-container>` that has children of its own does not help either: its anchor is found
+  by counting only the container's views. An element the adapter draws in place is a view of
+  Angular's, in the view container of a real element (`inputAfter` in `runtime.ts`), which a
+  server draws and hydration takes over; one drawn as an element's last child stays
+  `innerPart`'s. Held by the conformance run's `select` scenario on `angular+ssr`, whose
+  selects write no hidden input.
 
 ## Composition
 
@@ -610,7 +660,10 @@ note. Three places hold them:
 - **A row's name is the text a person reads.** A shortcut drawn beside it with `aria-hidden`,
   or anything `hidden`, is not part of what typing searches or a trigger shows (`textOf`).
 - **A popup moved to the end of `<body>` loses its `dir`.** The position service carries the
-  anchor's direction onto the positioner.
+  anchor's direction onto the positioner. A dialog has no anchor, and one opened by its state
+  alone has no trigger either: inside a direction provider its popup takes the provider's
+  direction (`carryDirection` given a direction), and with none the page decides. Held by
+  `tests/core/dialog.test.ts` ("a dialog's reading direction") and the `direction` scenario.
 - **`overflow: hidden` on the page does not stop `scrollTo`.** A test of the scroll lock reads
   the computed style, not whether a script can scroll.
 
@@ -760,6 +813,23 @@ note. Three places hold them:
 - **A typed date is parts, not text.** Each part is a spin button that takes digits, so
   nothing is parsed and nothing typed can fail to be a date. A value is said once a part is
   whole (a year is not 2, then 20, then 202), and when a part is left half typed.
+- **A calendar system is the same calendar however often it is made.** A caller who writes
+  `calendarSystem={new PersianCalendar()}` in a render hands a new instance each time, and a
+  field that took a new instance for a new calendar laid its parts out again from its value,
+  dropping the digit just typed. The field compares calendars by `identifier`
+  (`date-field.test.ts`, "keeps what is half typed when its caller makes the same calendar
+  again").
+- **A calendar of one era writes it anyway.** `Intl.DateTimeFormat` with a Persian, Buddhist or
+  Hebrew calendar adds the era (`1378 AP`) where none was asked for; a part for an era nobody
+  can change is noise. The era is a part only where the calendar has several (Japanese, Minguo,
+  Ethiopic), and the field leaves the other out with what stood beside it
+  (`date-field.test.ts`, "lays its parts out and holds their ranges in the calendar given").
+- **The date field takes a calendar's arithmetic from the instance it is given.** Its days,
+  months, years and eras come from the calendar's own methods and dates from its
+  `fromJulianDay`, so the field imports nothing of the date library: a page that gives no
+  calendar carries none of it. A date the calendar holds inside an era (a May in Heisei 31,
+  which ended in April) is what the calendar makes of it, and the parts show that
+  (`date-field.test.ts`, "has a part for the era where the calendar has several").
 - **A part that is typed is `contenteditable` with `inputmode="numeric"`, and every write to
   it is refused.** That is what brings a phone's digits up; the text is the field's own.
   React needs `suppressContentEditableWarning` for it.
@@ -888,6 +958,12 @@ note. Three places hold them:
   field, a popover and a calendar with one value between them: its root makes the three
   controllers and provides each to that component's own parts, which are then the picker's
   parts. Nothing is written twice, and a fix to a calendar is a fix to the picker's.
+- **A range a date picker holds begins in its value.** Its calendar's first press is the
+  picker's to hold (`around.range`): one end, typed or picked, is a range begun, so the fields
+  and the calendar never say two things, and the next press is the other end. Escape is then
+  not the grid's to take for giving the range up: it goes on to the popover, which closes
+  (`date-picker.test.ts`, "takes a range begun from its end, and gives its own Escape to the
+  popover"; scenario `picking`).
 - **A calendar shows the month of a value that came from elsewhere.** A day typed in the
   picker's field was the calendar's chosen day, in a month it was not showing
   (`date-picker.test.ts`, "is one value").

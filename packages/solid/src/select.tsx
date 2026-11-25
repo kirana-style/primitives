@@ -62,6 +62,10 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     values: props.values,
     defaultValues: props.defaultValues,
     virtualized: props.virtualized,
+    presentation: props.presentation,
+    sheetBelow: props.sheetBelow,
+    itemToStringLabel: props.itemToStringLabel,
+    itemToStringValue: props.itemToStringValue,
     onValueChange: (value: Value | null, details: ChangeDetails) =>
       props.onValueChange?.(value, details),
     onValuesChange: (values: Value[], details: ChangeDetails) =>
@@ -254,12 +258,13 @@ function scrollArrow<Props extends Record<string, unknown>>(direction: "up" | "d
 
 export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
 export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
 export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
 
 const part =
   <Props extends Record<string, unknown>>(
-    name: "trigger" | "popup" | "list" | "separator",
+    name: "trigger" | "popup" | "backdrop" | "list" | "separator",
     tag: string
   ) =>
   (props: Props): JSX.Element => <Part of={useSelect()[name]} tag={tag} {...props} />
@@ -274,6 +279,8 @@ export const Select = {
   ItemIndicator,
   Trigger: part<TriggerProps>("trigger", "button"),
   Popup: part<PopupProps>("popup", "div"),
+  /** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+  Backdrop: part<BackdropProps>("backdrop", "div"),
   /** The items' own box inside the popup, when the popup also holds scroll arrows. */
   List: part<ListProps>("list", "div"),
   /** In the page while there is more of the list above: it scrolls it under a moving pointer. */

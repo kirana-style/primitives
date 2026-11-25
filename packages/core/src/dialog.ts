@@ -1,4 +1,6 @@
 import { bindable } from "./bindable.ts"
+import { carryDirection } from "./direction.ts"
+import type { DirectionAround } from "./direction.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
@@ -18,7 +20,15 @@ export interface DialogProps {
   onOpenChange?: ((open: boolean, details: ChangeDetails) => void) | undefined
   /** Blocks the page behind it and traps focus. Default `true`. */
   modal?: boolean | undefined
-  /** Whether a press outside closes it. Default `true`. */
+  /**
+   * Whether a press outside closes it. Default `true`. Escape always closes it: a caller who
+   * must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+   */
+  closeOnOutsidePress?: boolean | undefined
+  /**
+   * Whether a press outside closes it. Default `true`.
+   * @deprecated Use `closeOnOutsidePress`, which says the same and wins when both are given.
+   */
   dismissible?: boolean | undefined
 }
 
@@ -58,6 +68,7 @@ function onScrollbar(event: PointerEvent, element: HTMLElement): boolean {
 
 export function createDialog(
   props: ReadonlySignal<DialogProps>,
+  around: DirectionAround = {},
   /** An alert dialog asks for an answer: a press outside does not dismiss it. */
   kind: { alert: boolean } = { alert: false }
 ): Dialog {
@@ -85,7 +96,8 @@ export function createDialog(
     modal: () => props.peek().modal ?? true,
     // An alert dialog asks for an answer.
     outsidePress(event) {
-      if (kind.alert || props.peek().dismissible === false) return false
+      const given = props.peek()
+      if (kind.alert || (given.closeOnOutsidePress ?? given.dismissible) === false) return false
       const within = viewport.peek()
       // Its viewport's own scrollbar scrolls the dialog.
       return !(within && event.target === within && onScrollbar(event, within))
@@ -144,13 +156,18 @@ export function createDialog(
           // in its own time: reopened, the popup takes focus at once, which nothing inside an
           // inert element can.
           effect(() => {
-            const around = viewport.get()
+            const holder = viewport.get()
             const live = open.get()
-            if (!around) return
-            if (live) around.removeAttribute("inert")
-            else around.setAttribute("inert", "")
+            if (!holder) return
+            if (live) holder.removeAttribute("inert")
+            else holder.setAttribute("inert", "")
           }),
           popup.attach(element),
+          // Moved to the end of `<body>`, it reads the way its provider states, which it may have
+          // no trigger to take from. With no provider the page's own `dir` decides.
+          around.direction
+            ? effect(() => carryDirection(element, around.direction!.get()))
+            : NOTHING,
           // How many dialogs are open above this one, for a design that stacks them.
           effect(() => {
             layersChanged.get()

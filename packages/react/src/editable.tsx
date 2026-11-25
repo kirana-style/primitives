@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { StateOf } from "@kirana-ui/core"
 import { createEditable } from "@kirana-ui/core/editable"
 import type { Editable as Controller, EditableProps } from "@kirana-ui/core/editable"
@@ -5,6 +6,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { parts, useController, useOwnText, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -37,12 +39,14 @@ function Root({
   selectOnFocus,
   disabled,
   readOnly,
+  required,
   name,
   form,
   id,
   ...rest
 }: RootProps): ReactElement {
-  const controller = useController<EditableProps, Controller>(createEditable, {
+  const field = useContext(FieldContext) ?? undefined
+  const controller = useController<EditableProps, Controller>(within(createEditable, { field }), {
     value,
     defaultValue,
     onValueChange,
@@ -55,6 +59,7 @@ function Root({
     selectOnFocus,
     disabled,
     readOnly,
+    required,
     name,
     form,
     id,

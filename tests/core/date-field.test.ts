@@ -1,3 +1,9 @@
+import {
+  BuddhistCalendar,
+  HebrewCalendar,
+  JapaneseCalendar,
+  PersianCalendar,
+} from "@internationalized/date"
 import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
@@ -242,5 +248,94 @@ describe("a date that is typed", () => {
     await type("ab1c2")
     expect(shown()).toBe("12/dd/yyyy")
     expect(part("month").childNodes.length).toBe(1)
+  })
+})
+
+describe("a date typed in another calendar", () => {
+  it("lays its parts out and holds their ranges in the calendar given", async () => {
+    const { part, shown, made, heard, hidden } = field({
+      calendarSystem: new PersianCalendar(),
+      defaultValue: "2026-03-21",
+    })
+    // The first day of 1405, and nothing of the era a calendar of one era writes.
+    expect(shown()).toBe("01/01/1405")
+    expect(made.value.peek()).toBe("2026-03-21")
+    expect(hidden.value).toBe("2026-03-21")
+    part("month").focus()
+    await type("{ArrowDown}")
+    // Esfand: twenty-nine days in 1405, thirty in 1403, a leap year in the Persian calendar.
+    expect(shown()).toBe("12/01/1405")
+    expect(part("day").getAttribute("aria-valuemax")).toBe("29")
+    part("year").focus()
+    await type("{ArrowDown}{ArrowDown}")
+    expect(part("day").getAttribute("aria-valuemax")).toBe("30")
+    part("day").focus()
+    await type("30")
+    expect(shown()).toBe("12/30/1403")
+    expect(heard.at(-1)).toEqual(["2025-03-20", "typed"])
+    // A day past the month's last is its last, as in the Gregorian field.
+    part("year").focus()
+    await type("{ArrowUp}")
+    expect(shown()).toBe("12/29/1404")
+    expect(heard.at(-1)).toEqual(["2026-03-20", "step"])
+  })
+
+  it("has a part for the era where the calendar has several", async () => {
+    const { part, shown, made, heard } = field({
+      calendarSystem: new JapaneseCalendar(),
+      defaultValue: "2019-05-01",
+    })
+    expect(shown()).toBe("05/01/1 Reiwa")
+    expect(part("era").getAttribute("role")).toBe("spinbutton")
+    expect(part("era").getAttribute("aria-valuemax")).toBe("5")
+    expect(part("year").textContent).toBe("1")
+    part("era").focus()
+    await type("{ArrowDown}")
+    expect(part("era").textContent).toBe("Heisei")
+    expect(made.value.peek()).toBe("1989-05-01")
+    expect(heard.at(-1)).toEqual(["1989-05-01", "step"])
+    // An era's years end where the next one begins.
+    expect(part("year").getAttribute("aria-valuemax")).toBe("31")
+    // Heisei 31 ended in April: a May of it is held inside the era, as the calendar holds it.
+    part("year").focus()
+    await type("{PageUp}{PageUp}{PageUp}{PageUp}")
+    expect(part("year").textContent).toBe("31")
+    expect(shown()).toBe("04/01/31 Heisei")
+    expect(made.value.peek()).toBe("2019-04-01")
+  })
+
+  it("is not whole while its era is empty, and takes a month a calendar's year has", async () => {
+    const japanese = field({ calendarSystem: new JapaneseCalendar(), defaultValue: "2019-05-01" })
+    japanese.part("era").focus()
+    await type("{Backspace}")
+    expect(japanese.part("era").textContent).toBe("era")
+    expect(japanese.made.value.peek()).toBe(null)
+    // A Hebrew leap year has thirteen months.
+    const hebrew = field({ calendarSystem: new HebrewCalendar(), defaultValue: "2024-03-15" })
+    expect(hebrew.part("month").getAttribute("aria-valuemax")).toBe("13")
+    const buddhist = field({ calendarSystem: new BuddhistCalendar(), defaultValue: "2026-03-14" })
+    expect(buddhist.shown()).toBe("03/14/2569")
+  })
+
+  it("keeps what is half typed when its caller makes the same calendar again", async () => {
+    const { props, part, shown } = field({
+      calendarSystem: new PersianCalendar(),
+      defaultValue: "2026-04-09",
+    })
+    expect(shown()).toBe("01/20/1405")
+    part("day").focus()
+    await type("1")
+    expect(shown()).toBe("01/01/1405")
+    // A render that writes `new PersianCalendar()` again gives another instance of it.
+    props.set({ ...props.peek(), calendarSystem: new PersianCalendar() })
+    await type("5")
+    expect(shown()).toBe("01/15/1405")
+  })
+
+  it("says a day it is given in the calendar given, and follows when that changes", () => {
+    const { props, shown, made } = field({ defaultValue: "2026-03-21" })
+    expect(shown()).toBe("03/21/2026")
+    props.set({ ...props.peek(), calendarSystem: new PersianCalendar() })
+    expect(made.value.peek()).toBe("2026-03-21")
   })
 })

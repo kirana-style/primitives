@@ -3,8 +3,15 @@ import { DISABLED, state, valued } from "./states.ts"
 
 const INVALID = state(
   "data-invalid",
-  "Present when the time is outside what it takes, or is asked for and half typed."
+  "Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field."
 )
+const FIELD = {
+  touched: state("data-touched", "In a field: present once focus has left it."),
+  dirty: state("data-dirty", "In a field: present while the time is not the one it began with."),
+  filled: state("data-filled", "In a field: present while it holds a time."),
+  focused: state("data-focused", "In a field: present while one of its parts has focus."),
+  valid: state("data-valid", "In a field: present once the time was checked and found right."),
+}
 
 export const timeFieldVocabulary = defineComponent({
   root: {
@@ -13,6 +20,7 @@ export const timeFieldVocabulary = defineComponent({
       disabled: DISABLED,
       readonly: state("data-readonly", "Present when its value cannot be changed."),
       invalid: INVALID,
+      ...FIELD,
     },
   },
   segments: {
@@ -33,6 +41,7 @@ export const timeFieldVocabulary = defineComponent({
       placeholder: state("data-placeholder", "Present on a part that is empty."),
       disabled: DISABLED,
       invalid: INVALID,
+      ...FIELD,
     },
   },
   input: { inside: "root", description: "The hidden input it is submitted by." },

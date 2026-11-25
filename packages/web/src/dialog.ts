@@ -8,7 +8,8 @@ import type { As, ElementOf } from "./runtime.ts"
  * `<kui-dialog>` around a `kui-part="trigger"` button and a `portal`, which is drawn at the
  * end of the page while the dialog is open and holds its `backdrop` and its `popup`, with a
  * `title`, a `description` and a `close` button. A long dialog's popup is in a `viewport`,
- * which scrolls. `open`, `default-open`, `modal`, `dismissible`; it tells `open-change`.
+ * which scrolls. `open`, `default-open`, `modal`, `close-on-outside-press` (`dismissible`, its
+ * old name, still read); it tells `open-change`.
  */
 export const tag = defineElement({
   tag: "kui-dialog",
@@ -16,6 +17,7 @@ export const tag = defineElement({
     open: "boolean",
     "default-open": "boolean",
     modal: "boolean",
+    "close-on-outside-press": "boolean",
     dismissible: "boolean",
   },
   create: (props) => createDialog(props),

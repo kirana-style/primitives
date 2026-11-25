@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
+  import { within } from "@kirana-ui/core"
   import { createDrawer } from "@kirana-ui/core/drawer"
 
   import { provide } from "../dialog/context.ts"
+  import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import type { RootProps } from "./types.ts"
 
@@ -11,6 +13,7 @@
     open = $bindable(),
     defaultOpen,
     modal,
+    closeOnOutsidePress,
     dismissible,
     swipeDirection,
     snapPoints,
@@ -35,11 +38,12 @@
   }
 
   provide(
-    controller(createDrawer, () => ({
+    controller(within(createDrawer, { direction: useDirectionAround() }), () => ({
       id: id ?? generated,
       open,
       defaultOpen,
       modal,
+      closeOnOutsidePress,
       dismissible,
       swipeDirection,
       snapPoints,

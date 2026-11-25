@@ -101,8 +101,15 @@ function Positioner(props: PositionerProps): JSX.Element {
   return <Part of={made.positioner} tag="div" {...positioned(props, made.positioning)} />
 }
 
-type ItemOptions = { disabled?: boolean; label?: string; closeOnClick?: boolean }
-const ITEM = ["disabled", "label", "closeOnClick"] as const
+type ItemOptions = {
+  disabled?: boolean
+  label?: string
+  /** Whether choosing the item closes the menu. */
+  closeOnSelect?: boolean
+  /** @deprecated Use `closeOnSelect`, which wins when both are given. */
+  closeOnClick?: boolean
+}
+const ITEM = ["disabled", "label", "closeOnSelect", "closeOnClick"] as const
 
 export type ItemProps = PartComponentProps<"div", StateOf<Parts["item"]>, ItemOptions>
 
@@ -164,6 +171,7 @@ function CheckboxItem(props: CheckboxItemProps): JSX.Element {
     defaultChecked: local.defaultChecked,
     disabled: local.disabled,
     label: local.label,
+    closeOnSelect: local.closeOnSelect,
     closeOnClick: local.closeOnClick,
     onCheckedChange: (checked: boolean, details: ChangeDetails) =>
       local.onCheckedChange?.(checked, details),
@@ -227,6 +235,7 @@ function RadioItem(props: RadioItemProps): JSX.Element {
   const options = toSignal(() => ({
     disabled: local.disabled,
     label: local.label,
+    closeOnSelect: local.closeOnSelect,
     closeOnClick: local.closeOnClick,
   }))
   const part = inside(useContext(RadioGroupContext) ?? undefined, "RadioGroup").item(value, () =>

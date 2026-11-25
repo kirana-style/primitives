@@ -209,6 +209,23 @@ describe("a menu", () => {
     expect(made.open.peek()).toBe(true)
   })
 
+  it("reads `closeOnSelect` as `closeOnClick`, and the new name wins when both are given", async () => {
+    for (const [options, stays] of [
+      [{ closeOnSelect: false }, true],
+      [{ closeOnClick: false }, true],
+      [{ closeOnSelect: true, closeOnClick: false }, false],
+      [{ closeOnSelect: false, closeOnClick: true }, true],
+    ] as const) {
+      const root = mount(PAGE)
+      const { made } = file(root, {}, options)
+      await userEvent.click(find(root, "m-trigger"))
+      await settled()
+      find(root, "new").click()
+      expect(made.open.peek(), JSON.stringify(options)).toBe(stays)
+      root.remove()
+    }
+  })
+
   it("follows the pointer, and leaves the keys working when it is on no item", async () => {
     const root = mount(PAGE)
     file(root)

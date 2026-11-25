@@ -424,3 +424,17 @@ describe("a drawer", () => {
     })
   })
 })
+
+describe("a drawer's reading direction", () => {
+  it("is its provider's, as a dialog's: carried into the portal", () => {
+    const made = createDrawer(signal<DrawerProps>({ id: "dd", defaultOpen: true }), {
+      direction: signal<"ltr" | "rtl">("rtl"),
+    })
+    const sheet = document.createElement("div")
+    document.body.append(sheet)
+    const stops = [made.mount(), bind(sheet, made.popup)]
+    expect(sheet.getAttribute("dir")).toBe("rtl")
+    for (const stop of stops.reverse()) stop()
+    sheet.remove()
+  })
+})

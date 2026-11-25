@@ -156,6 +156,21 @@ export interface CalendarWeekday {
   readonly long: string
 }
 
+/**
+ * What a component made of a calendar gives it (a date picker in `mode: "range"`): the first day
+ * of a range being chosen is then the component's to hold, as its value's one end.
+ */
+export interface CalendarAround extends DirectionAround {
+  range?:
+    | {
+        /** The day a range being chosen began on: the one end there is, when only one is. */
+        readonly anchor: ReadonlySignal<IsoDate | undefined>
+        /** Told as a press begins a range: the component holds it from then. */
+        begin(date: IsoDate, details: ChangeDetails): void
+      }
+    | undefined
+}
+
 /** A day in the grid of a month shown. */
 export interface CalendarDay {
   readonly date: IsoDate
@@ -290,7 +305,7 @@ const sameWeek = (a: readonly CalendarDay[], b: readonly CalendarDay[]): boolean
  */
 export function createCalendar(
   props: ReadonlySignal<CalendarProps>,
-  around: DirectionAround = {}
+  around: CalendarAround = {}
 ): Calendar {
   const id = props.peek().id
   const locale = computed(() => props.get().locale ?? "en-US")
@@ -334,8 +349,11 @@ export function createCalendar(
     () => startOfMonth(local(month.get())),
     (a, b) => a.calendar.identifier === b.calendar.identifier && a.compare(b) === 0
   )
-  // A range being chosen: its first press, and where the pointer is since.
-  const anchor = signal<IsoDate | undefined>(undefined)
+  // A range being chosen: its first press, and where the pointer is since. A component made of
+  // the calendar may hold the first press itself.
+  const held = around.range
+  const ownAnchor = signal<IsoDate | undefined>(undefined)
+  const anchor = held?.anchor ?? ownAnchor
   const hovered = signal<IsoDate | undefined>(undefined)
   // Each day's elements, by the month they are drawn in (-1 when no month is said).
   const elements = new Map<IsoDate, Map<number, HTMLElement>>()
@@ -562,11 +580,12 @@ export function createCalendar(
     const from = anchor.peek()
     if (from === undefined) {
       // The first of the two: nothing is chosen until the second.
-      anchor.set(date)
+      if (held) held.begin(date, details("day-press", event))
+      else ownAnchor.set(date)
       hovered.set(date)
       return show(date, false, "day-press", event)
     }
-    anchor.set(undefined)
+    ownAnchor.set(undefined)
     hovered.set(undefined)
     value.set(
       from <= date ? { start: from, end: date } : { start: date, end: from },
@@ -681,11 +700,12 @@ export function createCalendar(
           "aria-multiselectable": range.get() || multiple.get() ? "true" : undefined,
           "aria-readonly": props.get().readOnly ? "true" : undefined,
           "aria-disabled": props.get().disabled ? "true" : undefined,
-          // A range half chosen is given up when the pointer or Escape leaves it.
+          // A range half chosen is given up when the pointer or Escape leaves it. One a
+          // component holds is its own: Escape goes on to it.
           onKeyDown(event: KeyboardEvent) {
-            if (event.key !== "Escape" || anchor.peek() === undefined) return
+            if (event.key !== "Escape" || held || anchor.peek() === undefined) return
             event.preventDefault()
-            anchor.set(undefined)
+            ownAnchor.set(undefined)
             hovered.set(undefined)
           },
         })),
@@ -834,7 +854,7 @@ export function createCalendar(
       attach(element) {
         // A form's reset puts the first value back.
         const stopReset = onFormReset(element, (event) => {
-          anchor.set(undefined)
+          ownAnchor.set(undefined)
           hovered.set(undefined)
           value.set(initial, details("form-reset", event))
         })

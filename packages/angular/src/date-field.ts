@@ -26,6 +26,11 @@ export class KpDateField implements OnInit {
   readonly defaultValue = input<string | null>()
   /** The language and region that order the day, the month and the year. */
   readonly locale = input<string>()
+  /**
+   * The calendar its parts are typed in, when it is not the Gregorian one: an instance from
+   * `@internationalized/date`. The value is still an ISO day.
+   */
+  readonly calendarSystem = input<DateFieldProps["calendarSystem"]>()
   readonly min = input<string>()
   readonly max = input<string>()
   readonly placeholders = input<DateFieldProps["placeholders"]>()
@@ -48,6 +53,7 @@ export class KpDateField implements OnInit {
     value: this.value(),
     defaultValue: this.defaultValue(),
     locale: this.locale(),
+    calendarSystem: this.calendarSystem(),
     min: this.min(),
     max: this.max(),
     placeholders: this.placeholders(),

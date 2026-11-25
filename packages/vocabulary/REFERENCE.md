@@ -293,6 +293,7 @@ Root
   Trigger
     Value (optional)
   Portal
+    Backdrop (optional)
     Positioner
       Popup
         Input (as above)
@@ -350,9 +351,29 @@ The chosen value's label, or a placeholder while nothing is chosen, for a button
 
 Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
+### Combobox.Backdrop
+
+The layer over the page behind the list: a press on it closes the list.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-swiping` | Present while the sheet is dragged. |
+| `data-swipe-dismiss` | Present once a drag has closed it. |
+
+| Variable | Holds |
+| --- | --- |
+| `--drawer-swipe-movement-x` | As a sheet: how far it has been dragged across, always 0px. |
+| `--drawer-swipe-movement-y` | As a sheet: how far it has been dragged down. |
+| `--drawer-swipe-progress` | As a sheet: how far it has been dragged, of its own height: 0 to 1. |
+
 ### Combobox.Positioner
 
-Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
+Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.
 
 | Attribute | When |
 | --- | --- |
@@ -360,6 +381,7 @@ Places the list against the input: against the chips' box when the input is in o
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
 
 | Variable | Holds |
 | --- | --- |
@@ -371,7 +393,7 @@ Places the list against the input: against the chips' box when the input is in o
 
 ### Combobox.Popup
 
-The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
+The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
 
 | Attribute | When |
 | --- | --- |
@@ -381,7 +403,17 @@ The list of items. With a `list` inside, what holds it: a dialog around an input
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-swiping` | Present while the sheet is dragged. |
+| `data-swipe-dismiss` | Present once a drag has closed it. |
 | `data-empty` | Present when no item is shown for what was typed. |
+
+| Variable | Holds |
+| --- | --- |
+| `--drawer-swipe-movement-x` | As a sheet: how far it has been dragged across, always 0px. |
+| `--drawer-swipe-movement-y` | As a sheet: how far it has been dragged down. |
+| `--drawer-swipe-progress` | As a sheet: how far it has been dragged, of its own height: 0 to 1. |
+| `--drawer-swipe-strength` | As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. |
 
 ### Combobox.List
 
@@ -443,7 +475,7 @@ With several values: what holds the chips and the input, and what the list is pl
 
 ### Combobox.Chip
 
-One chosen value.
+One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.
 
 ### Combobox.ChipRemove
 
@@ -716,7 +748,7 @@ Root
   Label
   Control
   Description
-  Error
+  Error (repeated)
   Validity
 ```
 
@@ -778,7 +810,7 @@ More about the control, said after its name.
 
 ### Field.Error
 
-What is wrong with the value. In the page while it applies.
+What is wrong with the value. In the page while it applies. Several, each with its own `match`, can be shown at once: each has an id of its own, and the control names them all.
 
 | Attribute | When |
 | --- | --- |
@@ -1380,7 +1412,7 @@ One piece of the date: a part that is typed, or what stands between two.
 
 | Attribute | When |
 | --- | --- |
-| `data-segment` (day, month, year, literal) | Which piece it is. |
+| `data-segment` (era, day, month, year, literal) | Which piece it is: the era only in a calendar of several eras. |
 | `data-placeholder` | Present on a part that is empty. |
 | `data-disabled` | Present when it is disabled. |
 | `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
@@ -1670,7 +1702,7 @@ Draws what it holds at the end of `<body>`, or in the container a `PortalProvide
 
 ### Autocomplete.Positioner
 
-Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
+Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.
 
 | Attribute | When |
 | --- | --- |
@@ -1678,6 +1710,7 @@ Places the list against the input: against the chips' box when the input is in o
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
 
 | Variable | Holds |
 | --- | --- |
@@ -1689,7 +1722,7 @@ Places the list against the input: against the chips' box when the input is in o
 
 ### Autocomplete.Popup
 
-The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
+The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
 
 | Attribute | When |
 | --- | --- |
@@ -1699,7 +1732,17 @@ The list of items. With a `list` inside, what holds it: a dialog around an input
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-swiping` | Present while the sheet is dragged. |
+| `data-swipe-dismiss` | Present once a drag has closed it. |
 | `data-empty` | Present when no item is shown for what was typed. |
+
+| Variable | Holds |
+| --- | --- |
+| `--drawer-swipe-movement-x` | As a sheet: how far it has been dragged across, always 0px. |
+| `--drawer-swipe-movement-y` | As a sheet: how far it has been dragged down. |
+| `--drawer-swipe-progress` | As a sheet: how far it has been dragged, of its own height: 0 to 1. |
+| `--drawer-swipe-strength` | As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. |
 
 ### Autocomplete.List
 
@@ -1972,6 +2015,12 @@ A text edited in place.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be edited. |
 | `data-placeholder` | Present while it holds no text. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the text is not the one it began with. |
+| `data-filled` | In a field: present while it holds text. |
+| `data-focused` | In a field: present while it has focus. |
+| `data-valid` | In a field: present once the text was checked and found right. |
+| `data-invalid` | In a field: present while the text is wrong. |
 
 ### Editable.Preview
 
@@ -1983,6 +2032,12 @@ The text as it reads, or the placeholder while there is none: hidden while editi
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be edited. |
 | `data-placeholder` | Present while it holds no text. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the text is not the one it began with. |
+| `data-filled` | In a field: present while it holds text. |
+| `data-focused` | In a field: present while it has focus. |
+| `data-valid` | In a field: present once the text was checked and found right. |
+| `data-invalid` | In a field: present while the text is wrong. |
 
 ### Editable.Input
 
@@ -1994,6 +2049,12 @@ Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be edited. |
 | `data-placeholder` | Present while it holds no text. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the text is not the one it began with. |
+| `data-filled` | In a field: present while it holds text. |
+| `data-focused` | In a field: present while it has focus. |
+| `data-valid` | In a field: present once the text was checked and found right. |
+| `data-invalid` | In a field: present while the text is wrong. |
 
 ### Editable.EditTrigger
 
@@ -2005,6 +2066,12 @@ Starts an edit: hidden while editing.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be edited. |
 | `data-placeholder` | Present while it holds no text. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the text is not the one it began with. |
+| `data-filled` | In a field: present while it holds text. |
+| `data-focused` | In a field: present while it has focus. |
+| `data-valid` | In a field: present once the text was checked and found right. |
+| `data-invalid` | In a field: present while the text is wrong. |
 
 ### Editable.SubmitTrigger
 
@@ -2016,6 +2083,12 @@ Keeps what was typed: hidden unless editing.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be edited. |
 | `data-placeholder` | Present while it holds no text. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the text is not the one it began with. |
+| `data-filled` | In a field: present while it holds text. |
+| `data-focused` | In a field: present while it has focus. |
+| `data-valid` | In a field: present once the text was checked and found right. |
+| `data-invalid` | In a field: present while the text is wrong. |
 
 ### Editable.CancelTrigger
 
@@ -2027,6 +2100,12 @@ Drops what was typed: hidden unless editing.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be edited. |
 | `data-placeholder` | Present while it holds no text. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the text is not the one it began with. |
+| `data-filled` | In a field: present while it holds text. |
+| `data-focused` | In a field: present while it has focus. |
+| `data-valid` | In a field: present once the text was checked and found right. |
+| `data-invalid` | In a field: present while the text is wrong. |
 
 ## PasswordInput
 
@@ -2308,7 +2387,12 @@ The field: a group of the time's parts.
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when its value cannot be changed. |
-| `data-invalid` | Present when the time is outside what it takes, or is asked for and half typed. |
+| `data-invalid` | Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the time is not the one it began with. |
+| `data-filled` | In a field: present while it holds a time. |
+| `data-focused` | In a field: present while one of its parts has focus. |
+| `data-valid` | In a field: present once the time was checked and found right. |
 
 ### TimeField.Segments
 
@@ -2323,7 +2407,12 @@ One piece of the time: a part that is typed, or what stands between two.
 | `data-segment` (hour, minute, second, dayPeriod, literal) | Which piece it is: `dayPeriod` is AM or PM, on a clock of twelve hours. |
 | `data-placeholder` | Present on a part that is empty. |
 | `data-disabled` | Present when it is disabled. |
-| `data-invalid` | Present when the time is outside what it takes, or is asked for and half typed. |
+| `data-invalid` | Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field. |
+| `data-touched` | In a field: present once focus has left it. |
+| `data-dirty` | In a field: present while the time is not the one it began with. |
+| `data-filled` | In a field: present while it holds a time. |
+| `data-focused` | In a field: present while one of its parts has focus. |
+| `data-valid` | In a field: present once the time was checked and found right. |
 
 ### TimeField.Input
 
@@ -2713,7 +2802,7 @@ A button that ends the tour.
 
 ```
 Root
-  Field
+  Field (repeated)
     Segments
       Segment (repeated)
     Input
@@ -2732,6 +2821,8 @@ Root
                   Day
           Previous
           Next
+  Clear (optional)
+  Preset (optional, repeated)
 ```
 
 ### DatePicker.Root
@@ -2740,7 +2831,7 @@ Holds the date picker: its value, the month shown and whether the calendar is op
 
 ### DatePicker.Field
 
-The field: a group of the date's parts.
+The field a day is typed in: with `mode: "range"`, one for the first day (`range="start"`) and one for the last (`range="end"`).
 
 | Attribute | When |
 | --- | --- |
@@ -2758,7 +2849,7 @@ One piece of the date: a part that is typed, or what stands between two.
 
 | Attribute | When |
 | --- | --- |
-| `data-segment` (day, month, year, literal) | Which piece it is. |
+| `data-segment` (era, day, month, year, literal) | Which piece it is: the era only in a calendar of several eras. |
 | `data-placeholder` | Present on a part that is empty. |
 | `data-disabled` | Present when it is disabled. |
 | `data-invalid` | Present when the date is outside what it takes, or is asked for and half typed. |
@@ -2887,6 +2978,23 @@ The button for a day.
 | `data-unavailable` | Present on a day that cannot be chosen. |
 | `data-range-start` | Present on the first day of a range, and on a copy of it. |
 | `data-range-end` | Present on the last day of a range, and on a copy of it. |
+
+### DatePicker.Clear
+
+Empties the value, and gives focus to the field. Disabled while there is none.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### DatePicker.Preset
+
+Makes the value the day, or the range, it is given. Pressed while the value is that.
+
+| Attribute | When |
+| --- | --- |
+| `data-pressed` | Present while the value is the one it gives. |
+| `data-disabled` | Present when it is disabled. |
 
 ## Calendar
 
@@ -3595,6 +3703,7 @@ Root
   Trigger
     Value
   Portal
+    Backdrop (optional)
     Positioner
       Popup
         ScrollUpArrow
@@ -3635,9 +3744,29 @@ The chosen value's label, or the placeholder. With several values, their labels 
 
 Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
 
+### Select.Backdrop
+
+The layer over the page behind the list: a press on it closes the list.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-swiping` | Present while the sheet is dragged. |
+| `data-swipe-dismiss` | Present once a drag has closed it. |
+
+| Variable | Holds |
+| --- | --- |
+| `--drawer-swipe-movement-x` | As a sheet: how far it has been dragged across, always 0px. |
+| `--drawer-swipe-movement-y` | As a sheet: how far it has been dragged down. |
+| `--drawer-swipe-progress` | As a sheet: how far it has been dragged, of its own height: 0 to 1. |
+
 ### Select.Positioner
 
-Places the list against the trigger. It carries the geometry.
+Places the list against the trigger. It carries the geometry. As a sheet it is not placed, and carries none.
 
 | Attribute | When |
 | --- | --- |
@@ -3645,6 +3774,7 @@ Places the list against the trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end, none) | The side of the trigger it is on, after any flip; `none` when it lies over the trigger. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
 
 | Variable | Holds |
 | --- | --- |
@@ -3696,7 +3826,7 @@ In the page while there is more of the list below: it scrolls the list while the
 
 ### Select.Popup
 
-The list of items.
+The list of items. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
 
 | Attribute | When |
 | --- | --- |
@@ -3706,6 +3836,16 @@ The list of items.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-swiping` | Present while the sheet is dragged. |
+| `data-swipe-dismiss` | Present once a drag has closed it. |
+
+| Variable | Holds |
+| --- | --- |
+| `--drawer-swipe-movement-x` | As a sheet: how far it has been dragged across, always 0px. |
+| `--drawer-swipe-movement-y` | As a sheet: how far it has been dragged down. |
+| `--drawer-swipe-progress` | As a sheet: how far it has been dragged, of its own height: 0 to 1. |
+| `--drawer-swipe-strength` | As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. |
 
 ### Select.Item
 

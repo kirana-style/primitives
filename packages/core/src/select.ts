@@ -1,6 +1,6 @@
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { directionOf } from "./direction.ts"
 import { batch, computed, effect, keyed, signal, untracked } from "./reactivity.ts"
@@ -8,9 +8,11 @@ import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createItemAlignment } from "./services/align-item.ts"
 import { createFormControl } from "./services/form-control.ts"
 import { restInputs } from "./services/hidden-inputs.ts"
-import { itemsOf, labelIn } from "./services/items.ts"
-import { popupFocus } from "./services/popup-focus.ts"
+import { formValue, itemsOf, labelIn, ownLabel, plainLabel } from "./services/items.ts"
+import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
+import { createSheet } from "./services/sheet.ts"
+import type { Presentation } from "./services/sheet.ts"
 import { createPresence } from "./services/presence.ts"
 import { createPlacement } from "./services/position.ts"
 import { lockScroll } from "./services/scroll-lock.ts"
@@ -22,6 +24,18 @@ import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
 export interface SelectProps<Value = unknown> {
   id: string
+  /**
+   * How the list opens. `"sheet"`: from the bottom edge, not placed against the trigger, modal
+   * with a backdrop, swiped down or pressed outside to close. `"auto"`: decided each time it
+   * opens, a sheet when the pointer is coarse and the viewport narrower than `sheetBelow`.
+   * Default `"popup"`.
+   */
+  presentation?: Presentation | undefined
+  /**
+   * With `presentation: "auto"`: the viewport's width, in CSS pixels, under which a coarse
+   * pointer opens a sheet. Default 640.
+   */
+  sheetBelow?: number | undefined
   /** The chosen value; `null` is "none". */
   value?: Value | null | undefined
   /** The value it starts with, when the caller does not hold `value`. Read once. */
@@ -53,6 +67,17 @@ export interface SelectProps<Value = unknown> {
    * (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the markup.
    */
   items?: readonly { value: Value; label: string }[] | Readonly<Record<string, string>> | undefined
+  /**
+   * For values that are objects: the text the trigger shows for one, and what typing matches
+   * an item by when it gives no `label`. Without it, an object's own `label` names it, then the
+   * label `items` gives it, then the item's text in the markup.
+   */
+  itemToStringLabel?: ((value: Value) => string) | undefined
+  /**
+   * For values that are objects: the text the form is sent for one. Without it, the `value` of
+   * an object shaped `{ value, label }` is sent, and any other object as JSON.
+   */
+  itemToStringValue?: ((value: Value) => string) | undefined
   /**
    * Several values: an item chosen is added, chosen again taken away, and the list stays open.
    * The values are `values`, not `value`.
@@ -136,6 +161,8 @@ export interface Select<Value = unknown> {
   readonly valuePart: Part
   readonly positioner: Part
   readonly popup: Part
+  /** What lies over the page behind the list; a press on it closes the list. */
+  readonly backdrop: Part
   /**
    * The items' own box inside the popup, when the popup holds more than its items (scroll
    * arrows): it is then the listbox, and what scrolls.
@@ -223,8 +250,10 @@ export function createSelect<Value = unknown>(
     onChange: (next, by) => props.peek().onValuesChange?.([...next], by),
     equals: alike,
   })
+  /** What the form is sent for a value. */
+  const sent = (item: Value) => formValue(item, props.peek().itemToStringValue)
   /** What a field is told the control holds: something, or nothing. */
-  const held = (list: readonly Value[]) => list.map(String).join(",")
+  const held = (list: readonly Value[]) => list.map(sent).join(",")
   // What a form's reset goes back to: the value the select began with.
   const initial = value.peek()
   const initialValues = values.peek()
@@ -239,7 +268,7 @@ export function createSelect<Value = unknown>(
     // What was asked for, not what is read back: a caller who holds the value gives it back
     // in their framework's time.
     const next = by.canceled ? value.peek() : initial
-    member?.reset(next === null ? "" : String(next))
+    member?.reset(next === null ? "" : sent(next))
   })
   const disabled = computed(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
@@ -253,12 +282,21 @@ export function createSelect<Value = unknown>(
   let touched = false
   const fingered = signal(false)
   const alignment = createItemAlignment()
+  // As a sheet the list is modal: the page behind it inert, its scroll held, Tab kept inside.
+  const sheet = createSheet(
+    open,
+    () => props.get(),
+    (by) => setOpen(false, by)
+  )
   const layer = createPopup({
     open,
     setOpen,
     kind: "select",
     // The list moves focus itself, once its rows are in the page; the popup gives it back.
     focus: popupFocus("none"),
+    modal: () => sheet.on.peek(),
+    hold: lockPage,
+    mode: sheet.on,
     placement,
     // Over its trigger, its place is its own: the usual one would take it back.
     following: computed(() => open.get() && !aligned.get()),
@@ -323,9 +361,14 @@ export function createSelect<Value = unknown>(
     if (on) labelsChanged.set(labelsChanged.peek() + 1)
   }
 
-  /** The label given for a value, else the one learned from the markup, else the value. */
+  /**
+   * The label the caller gave a value (`itemToStringLabel`, an object's own, `items`), else
+   * the one learned from the markup, else the value.
+   */
   const nameOf = (item: Value) =>
-    labelIn(props.get().items, item) ?? (labels.get(item) || String(item))
+    ownLabel(item, props.get().itemToStringLabel) ??
+    labelIn(props.get().items, item) ??
+    (labels.get(item) || plainLabel(item))
 
   /**
    * With several values: reads the items' order from the page. A list of which only some rows
@@ -395,7 +438,7 @@ export function createSelect<Value = unknown>(
 
   function setValue(next: Value | null, by: ChangeDetails) {
     value.set(next, by)
-    if (!by.canceled) member?.changed(next === null ? "" : String(next))
+    if (!by.canceled) member?.changed(next === null ? "" : sent(next))
   }
 
   function setValues(next: readonly Value[], by: ChangeDetails) {
@@ -466,7 +509,7 @@ export function createSelect<Value = unknown>(
       props: computed(() => ({
         type: "button",
         // In a field, the id its label is `for`.
-        id: field?.controlId,
+        ...defaultId(field?.controlId),
         role: "combobox",
         "aria-haspopup": "listbox",
         ...layer.expanded(listed.get() ? `${id}-list` : popupId),
@@ -494,7 +537,11 @@ export function createSelect<Value = unknown>(
           } else if (printable(event) && !open.peek() && !multiple && !readOnly.peek()) {
             // Closed, a letter chooses: only the labels the caller gave are known then. With
             // several values a letter would have to add or take away: it does neither.
-            const items = itemsOf(props.peek().items)
+            // By the names the trigger would show for them.
+            const items = itemsOf(props.peek().items).map((each) => ({
+              value: each.value,
+              label: nameOf(each.value),
+            }))
             const one = value.peek()
             const match = typeahead.match(
               event.key,
@@ -515,7 +562,7 @@ export function createSelect<Value = unknown>(
           kind: "select",
           // With several values: at least one.
           required: () => Boolean(props.peek().required),
-          value: multiple ? held(values.peek()) : one === null ? "" : String(one),
+          value: multiple ? held(values.peek()) : one === null ? "" : sent(one),
         })
         const leave = inForm.attach(element)
         return () => {
@@ -538,12 +585,13 @@ export function createSelect<Value = unknown>(
     },
     positioner: {
       props: computed(() => {
-        const own = layer.positioner.props.get()
-        // Over its trigger it is on no side of it.
+        const own = { ...layer.positioner.props.get(), ...sheet.state() }
+        // A sheet is on no side of its trigger; over its trigger, the list is on none either.
+        if (sheet.on.get()) return { ...own, "data-side": undefined, "data-align": undefined }
         return aligned.get() ? { ...own, "data-side": "none" } : own
       }),
       attach(element) {
-        const detach = layer.positioner.attach(element)
+        const detach = sheet.positioner(element, (each) => layer.positioner.attach(each))
         const view = element.ownerDocument.defaultView
         // The window changed: what was measured no longer holds.
         const resized = (event: Event) => {
@@ -576,8 +624,9 @@ export function createSelect<Value = unknown>(
           // written by then, and its items are in the page.
           effect(() => {
             const isOpen = open.get()
-            const wanted = alignItemWithTrigger.get()
-            const ready = placement.position.placed.get()
+            // A sheet is not placed, over its trigger or anywhere else.
+            const wanted = alignItemWithTrigger.get() && !sheet.on.get()
+            const ready = placement.position.placed.get() || sheet.on.get()
             untracked(() => {
               // Closing, it stays where it is through its exit.
               if (!isOpen) return void (reopened = true)
@@ -623,7 +672,10 @@ export function createSelect<Value = unknown>(
           "aria-readonly": readOnly.get() && !listed.get() ? "true" : undefined,
           tabindex: "-1",
           ...layer.state(),
-          ...layer.placed(),
+          ...(sheet.on.get() ? {} : layer.placed()),
+          ...sheet.state(),
+          // As a sheet, it is dragged down to close it.
+          onPointerDown: sheet.on.get() ? sheet.swipe.press : undefined,
           onKeyDown(event: KeyboardEvent) {
             switch (event.key) {
               case " ":
@@ -653,6 +705,7 @@ export function createSelect<Value = unknown>(
         element.addEventListener("scroll", scrolled, true)
         const stops = [
           () => element.removeEventListener("scroll", scrolled, true),
+          sheet.swipe.attach(element),
           list.attach(element),
           layer.attach(element),
           // Each time it opens: the items attach around the list, in an order each framework
@@ -684,6 +737,15 @@ export function createSelect<Value = unknown>(
         return () => {
           for (const stop of stops.reverse()) stop()
           if (popup === element) popup = undefined
+        }
+      },
+    },
+    backdrop: {
+      props: computed(() => ({ role: "presentation", ...layer.state(), ...sheet.state() })),
+      attach(element) {
+        const stops = [sheet.swipe.also(element), layer.attachBackdrop(element)]
+        return () => {
+          for (const stop of stops.reverse()) stop()
         }
       },
     },
@@ -808,7 +870,7 @@ export function createSelect<Value = unknown>(
           // With several and none chosen, nothing is sent.
           name: multiple && current === undefined ? undefined : name.get(),
           form: props.get().form,
-          value: current === undefined ? "" : String(current),
+          value: current === undefined ? "" : sent(current),
           disabled: flag(disabled.get()),
         }
       }),
@@ -817,7 +879,7 @@ export function createSelect<Value = unknown>(
         // One input for each value: the first is this one, the rest the core's own to draw,
         // after it.
         return restInputs(element, () => ({
-          rest: values.get().slice(1),
+          rest: values.get().slice(1).map(sent),
           name: name.get(),
           form: props.get().form,
           disabled: disabled.get(),
@@ -844,8 +906,17 @@ export function createSelect<Value = unknown>(
     },
     item(item, options = () => ({})) {
       const selected = chosen(item)
-      // Its name is its text part's when it has one, read when it is needed.
-      const row = list.row(options, (element) => textOf(texts.get(item) ?? element))
+      // Its name is the one given, or the value's own, else its text part's when it has one,
+      // read when it is needed.
+      const row = list.row(
+        () => {
+          const own = options()
+          if (own.label !== undefined) return own
+          const named = ownLabel(item, props.peek().itemToStringLabel)
+          return named === undefined ? own : { ...own, label: named }
+        },
+        (element) => textOf(texts.get(item) ?? element)
+      )
       return {
         props: computed(() => {
           const off = Boolean(options().disabled)

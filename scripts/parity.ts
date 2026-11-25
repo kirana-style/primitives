@@ -164,7 +164,7 @@ const IDIOM: Record<
     rename: { Direction: "DirectionProvider", injectDirection: "useDirection" },
     without: {
       AlertDialog:
-        "the dialog's directives under a root of its own, `kpAlertDialog`, which takes neither `modal` nor `dismissible`",
+        "the dialog's directives under a root of its own, `kpAlertDialog`, which takes neither `modal` nor `closeOnOutsidePress`",
       Drawer: "the dialog's directives with another selector on the root: `kpDrawer`",
       Autocomplete: "the combobox's directives with another selector on the root: `kpAutocomplete`",
       "DatePicker.Cell": DATE_PICKER,
@@ -202,7 +202,7 @@ const IDIOM: Record<
       "Combobox.HiddenInput":
         "the root is an `<ng-container>`, with no element to hold the hidden input: it is written",
       "Select.Input":
-        "the root is an `<ng-container>`, with no element to hold the hidden input: it is written",
+        "deprecated: the trigger draws the hidden input itself; kept for a page that still writes one, and then nothing is drawn twice",
     },
   },
 }
@@ -400,6 +400,10 @@ const PROPS: Record<string, PropIdiom> = {
       "Autocomplete.Root.defaultValues": ONE_COMBOBOX,
       "Autocomplete.Root.onValuesChange": ONE_COMBOBOX,
       "Autocomplete.Root.inline": ONE_COMBOBOX,
+      "Autocomplete.Root.itemToStringLabel": ONE_COMBOBOX,
+      "Autocomplete.Root.itemToStringValue": ONE_COMBOBOX,
+      "Autocomplete.Root.presentation": ONE_COMBOBOX,
+      "Autocomplete.Root.sheetBelow": ONE_COMBOBOX,
     },
     open: {
       "*.Clear.keepMounted": KEPT,

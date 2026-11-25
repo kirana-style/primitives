@@ -23,7 +23,7 @@ const itemOf = (controller: NavigationMenu<string>, element: HTMLElement) =>
  * `trigger` (with an `icon` if it has one) and a `content`, which is drawn in the menu's one
  * `viewport` while its item is open; its `kui-value` tells it from the others, and an item
  * that is given none makes its own. A `link` is a link (`kui-active`,
- * `kui-close-on-click="false"`). The viewport is in a `portal` with a `positioner` around
+ * `kui-close-on-select="false"`). The viewport is in a `portal` with a `positioner` around
  * the `popup`, with an `arrow` and a `backdrop` if it has them. `value`, `default-value`,
  * `delay`, `close-delay`, `orientation`; it tells `value-change`.
  */
@@ -55,6 +55,9 @@ export const tag = defineElement<NavigationMenuProps<string>, NavigationMenu<str
     link: (controller, element) =>
       controller.link(() => ({
         ...(element.hasAttribute("kui-active") ? { active: true } : {}),
+        ...(element.hasAttribute("kui-close-on-select")
+          ? { closeOnSelect: element.getAttribute("kui-close-on-select") !== "false" }
+          : {}),
         ...(element.hasAttribute("kui-close-on-click")
           ? { closeOnClick: element.getAttribute("kui-close-on-click") !== "false" }
           : {}),

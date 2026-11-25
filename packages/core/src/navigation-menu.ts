@@ -41,6 +41,11 @@ export interface NavigationMenuLinkOptions {
   /** The link is the page the reader is on. */
   active?: boolean | undefined
   /** Whether following it closes the menu. Default: it does. */
+  closeOnSelect?: boolean | undefined
+  /**
+   * Whether following it closes the menu.
+   * @deprecated Use `closeOnSelect`, which says the same and wins when both are given.
+   */
   closeOnClick?: boolean | undefined
 }
 
@@ -425,7 +430,10 @@ export function createNavigationMenu<Value = unknown>(
           "aria-current": options().active ? "page" : undefined,
           "data-active": flag(options().active),
           onClick(event: Event) {
-            if (options().closeOnClick === false || value.peek() === null) return
+            const given = options()
+            if ((given.closeOnSelect ?? given.closeOnClick) === false || value.peek() === null) {
+              return
+            }
             setValue(null, details("link-press", event))
           },
         })),

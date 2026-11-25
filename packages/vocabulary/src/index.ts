@@ -769,8 +769,71 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "backdrop": {
+          "description": "The layer over the page behind the list: a press on it closes the list.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the sheet is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed it.",
+              "selector": "[data-swipe-dismiss]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--drawer-swipe-movement-x": "As a sheet: how far it has been dragged across, always 0px.",
+            "--drawer-swipe-movement-y": "As a sheet: how far it has been dragged down.",
+            "--drawer-swipe-progress": "As a sheet: how far it has been dragged, of its own height: 0 to 1."
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "positioner": {
-          "description": "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.",
+          "description": "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -802,6 +865,14 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
             }
           },
           "exclusive": [
@@ -824,7 +895,7 @@ export const vocabulary = {
           "repeated": false
         },
         "popup": {
-          "description": "The list of items. With a `list` inside, what holds it: a dialog around an input and the list.",
+          "description": "The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -867,6 +938,24 @@ export const vocabulary = {
                 "end": "[data-align=\"end\"]"
               }
             },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the sheet is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed it.",
+              "selector": "[data-swipe-dismiss]"
+            },
             "empty": {
               "attribute": "data-empty",
               "description": "Present when no item is shown for what was typed.",
@@ -883,7 +972,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {},
+          "variables": {
+            "--drawer-swipe-movement-x": "As a sheet: how far it has been dragged across, always 0px.",
+            "--drawer-swipe-movement-y": "As a sheet: how far it has been dragged down.",
+            "--drawer-swipe-progress": "As a sheet: how far it has been dragged, of its own height: 0 to 1.",
+            "--drawer-swipe-strength": "As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest."
+          },
           "inside": [
             "positioner",
             "root"
@@ -1046,7 +1140,7 @@ export const vocabulary = {
           "repeated": false
         },
         "chip": {
-          "description": "One chosen value.",
+          "description": "One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.",
           "states": {},
           "exclusive": [],
           "variables": {},
@@ -1954,7 +2048,7 @@ export const vocabulary = {
           "repeated": false
         },
         "error": {
-          "description": "What is wrong with the value. In the page while it applies.",
+          "description": "What is wrong with the value. In the page while it applies. Several, each with its own `match`, can be shown at once: each has an id of its own, and the control names them all.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -2017,7 +2111,7 @@ export const vocabulary = {
             "root"
           ],
           "optional": false,
-          "repeated": false
+          "repeated": true
         },
         "validity": {
           "description": "Gives the control's validity to what it holds, to draw from. It draws no element.",
@@ -3446,8 +3540,9 @@ export const vocabulary = {
           "states": {
             "segment": {
               "attribute": "data-segment",
-              "description": "Which piece it is.",
+              "description": "Which piece it is: the era only in a calendar of several eras.",
               "values": {
+                "era": "[data-segment=\"era\"]",
                 "day": "[data-segment=\"day\"]",
                 "month": "[data-segment=\"month\"]",
                 "year": "[data-segment=\"year\"]",
@@ -4266,7 +4361,7 @@ export const vocabulary = {
           "repeated": false
         },
         "positioner": {
-          "description": "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.",
+          "description": "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -4298,6 +4393,14 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
             }
           },
           "exclusive": [
@@ -4320,7 +4423,7 @@ export const vocabulary = {
           "repeated": false
         },
         "popup": {
-          "description": "The list of items. With a `list` inside, what holds it: a dialog around an input and the list.",
+          "description": "The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -4363,6 +4466,24 @@ export const vocabulary = {
                 "end": "[data-align=\"end\"]"
               }
             },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the sheet is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed it.",
+              "selector": "[data-swipe-dismiss]"
+            },
             "empty": {
               "attribute": "data-empty",
               "description": "Present when no item is shown for what was typed.",
@@ -4379,7 +4500,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {},
+          "variables": {
+            "--drawer-swipe-movement-x": "As a sheet: how far it has been dragged across, always 0px.",
+            "--drawer-swipe-movement-y": "As a sheet: how far it has been dragged down.",
+            "--drawer-swipe-progress": "As a sheet: how far it has been dragged, of its own height: 0 to 1.",
+            "--drawer-swipe-strength": "As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest."
+          },
           "inside": [
             "positioner",
             "root"
@@ -5010,6 +5136,36 @@ export const vocabulary = {
               "attribute": "data-placeholder",
               "description": "Present while it holds no text.",
               "selector": "[data-placeholder]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the text is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the text was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the text is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [],
@@ -5040,6 +5196,36 @@ export const vocabulary = {
               "attribute": "data-placeholder",
               "description": "Present while it holds no text.",
               "selector": "[data-placeholder]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the text is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the text was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the text is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [],
@@ -5072,6 +5258,36 @@ export const vocabulary = {
               "attribute": "data-placeholder",
               "description": "Present while it holds no text.",
               "selector": "[data-placeholder]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the text is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the text was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the text is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [],
@@ -5104,6 +5320,36 @@ export const vocabulary = {
               "attribute": "data-placeholder",
               "description": "Present while it holds no text.",
               "selector": "[data-placeholder]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the text is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the text was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the text is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [],
@@ -5136,6 +5382,36 @@ export const vocabulary = {
               "attribute": "data-placeholder",
               "description": "Present while it holds no text.",
               "selector": "[data-placeholder]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the text is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the text was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the text is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [],
@@ -5168,6 +5444,36 @@ export const vocabulary = {
               "attribute": "data-placeholder",
               "description": "Present while it holds no text.",
               "selector": "[data-placeholder]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the text is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the text was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the text is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [],
@@ -5828,8 +6134,33 @@ export const vocabulary = {
             },
             "invalid": {
               "attribute": "data-invalid",
-              "description": "Present when the time is outside what it takes, or is asked for and half typed.",
+              "description": "Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field.",
               "selector": "[data-invalid]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the time is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds a time.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while one of its parts has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the time was checked and found right.",
+              "selector": "[data-valid]"
             }
           },
           "exclusive": [],
@@ -5875,8 +6206,33 @@ export const vocabulary = {
             },
             "invalid": {
               "attribute": "data-invalid",
-              "description": "Present when the time is outside what it takes, or is asked for and half typed.",
+              "description": "Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field.",
               "selector": "[data-invalid]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "In a field: present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "In a field: present while the time is not the one it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "In a field: present while it holds a time.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "In a field: present while one of its parts has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the time was checked and found right.",
+              "selector": "[data-valid]"
             }
           },
           "exclusive": [],
@@ -6916,7 +7272,7 @@ export const vocabulary = {
           "repeated": false
         },
         "field": {
-          "description": "The field: a group of the date's parts.",
+          "description": "The field a day is typed in: with `mode: \"range\"`, one for the first day (`range=\"start\"`) and one for the last (`range=\"end\"`).",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -6940,7 +7296,7 @@ export const vocabulary = {
             "root"
           ],
           "optional": false,
-          "repeated": false
+          "repeated": true
         },
         "segments": {
           "description": "The date's segments, in the locale's order: each is given to draw. It draws no element.",
@@ -6958,8 +7314,9 @@ export const vocabulary = {
           "states": {
             "segment": {
               "attribute": "data-segment",
-              "description": "Which piece it is.",
+              "description": "Which piece it is: the era only in a calendar of several eras.",
               "values": {
+                "era": "[data-segment=\"era\"]",
                 "day": "[data-segment=\"day\"]",
                 "month": "[data-segment=\"month\"]",
                 "year": "[data-segment=\"year\"]",
@@ -7360,6 +7717,45 @@ export const vocabulary = {
           ],
           "optional": false,
           "repeated": false
+        },
+        "clear": {
+          "description": "Empties the value, and gives focus to the field. Disabled while there is none.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "preset": {
+          "description": "Makes the value the day, or the range, it is given. Pressed while the value is that.",
+          "states": {
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while the value is the one it gives.",
+              "selector": "[data-pressed]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": true
         }
       }
     },
@@ -9054,8 +9450,71 @@ export const vocabulary = {
           "optional": false,
           "repeated": false
         },
+        "backdrop": {
+          "description": "The layer over the page behind the list: a press on it closes the list.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the sheet is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed it.",
+              "selector": "[data-swipe-dismiss]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--drawer-swipe-movement-x": "As a sheet: how far it has been dragged across, always 0px.",
+            "--drawer-swipe-movement-y": "As a sheet: how far it has been dragged down.",
+            "--drawer-swipe-progress": "As a sheet: how far it has been dragged, of its own height: 0 to 1."
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": true,
+          "repeated": false
+        },
         "positioner": {
-          "description": "Places the list against the trigger. It carries the geometry.",
+          "description": "Places the list against the trigger. It carries the geometry. As a sheet it is not placed, and carries none.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -9087,6 +9546,14 @@ export const vocabulary = {
                 "start": "[data-align=\"start\"]",
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
+              }
+            },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
               }
             }
           },
@@ -9260,7 +9727,7 @@ export const vocabulary = {
           "repeated": false
         },
         "popup": {
-          "description": "The list of items.",
+          "description": "The list of items. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
           "states": {
             "open": {
               "attribute": "data-open",
@@ -9302,6 +9769,24 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "presentation": {
+              "attribute": "data-presentation",
+              "description": "How the list opened: placed against its trigger, or as a sheet from the bottom edge.",
+              "values": {
+                "popup": "[data-presentation=\"popup\"]",
+                "sheet": "[data-presentation=\"sheet\"]"
+              }
+            },
+            "swiping": {
+              "attribute": "data-swiping",
+              "description": "Present while the sheet is dragged.",
+              "selector": "[data-swiping]"
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed it.",
+              "selector": "[data-swipe-dismiss]"
             }
           },
           "exclusive": [
@@ -9314,7 +9799,12 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {},
+          "variables": {
+            "--drawer-swipe-movement-x": "As a sheet: how far it has been dragged across, always 0px.",
+            "--drawer-swipe-movement-y": "As a sheet: how far it has been dragged down.",
+            "--drawer-swipe-progress": "As a sheet: how far it has been dragged, of its own height: 0 to 1.",
+            "--drawer-swipe-strength": "As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest."
+          },
           "inside": [
             "positioner"
           ],

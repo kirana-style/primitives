@@ -18,6 +18,16 @@ export { Command } from "./command.tsx"
 export { NumberField } from "./number-field.tsx"
 export { Autocomplete } from "./autocomplete.tsx"
 export { Pagination } from "./pagination.tsx"
+export { Rating } from "./rating.tsx"
+export { Steps } from "./steps.tsx"
+export { Editable } from "./editable.tsx"
+export { PasswordInput } from "./password-input.tsx"
+export { TagsInput } from "./tags-input.tsx"
+export { FileUpload } from "./file-upload.tsx"
+export { TimeField } from "./time-field.tsx"
+export { Tree } from "./tree.tsx"
+export { ColorPicker } from "./color-picker.tsx"
+export { Tour } from "./tour.tsx"
 export { DatePicker } from "./date-picker.tsx"
 export { Calendar } from "./calendar.tsx"
 export { QrCode } from "./qr-code.tsx"
@@ -105,7 +115,29 @@ export type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 export type { FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
+export type { TagsInputEntry } from "@kirana-ui/core/tags-input"
+export type {
+  HourCycle,
+  IsoTime,
+  TimeFieldSegment,
+  TimeGranularity,
+  TimeUnit,
+} from "@kirana-ui/core/time-field"
+export type {
+  FileRejection,
+  FileRejectionReason,
+  FileUploadEntry,
+} from "@kirana-ui/core/file-upload"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
+export type { TreeSelectionMode } from "@kirana-ui/core/tree"
+export type {
+  ColorFormat,
+  ColorPickerInputChannel,
+  ColorPickerSliderChannel,
+  ColorPickerThumb,
+  Hsva,
+} from "@kirana-ui/core/color-picker"
+export type { TourStep, TourTarget } from "@kirana-ui/core/tour"
 export type { SelectShown } from "@kirana-ui/core/select"
 export type {
   ComboboxEntry,

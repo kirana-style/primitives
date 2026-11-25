@@ -1803,6 +1803,912 @@ Goes to the page after.
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
 
+## Rating
+
+```
+Root
+  Items
+    Item (repeated)
+```
+
+### Rating.Root
+
+The items, as one choice: a radio group. It holds the hidden input a form reads.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be changed. |
+| `data-required` | Present when a value is needed. |
+| `data-hovering` | Present while a pointer is over an item. |
+
+### Rating.Items
+
+The items, from 1 to `count`: each place is given to draw. It draws no element.
+
+### Rating.Item
+
+One item (a star): pressed, the value is its place, or half of it.
+
+| Attribute | When |
+| --- | --- |
+| `data-checked` | Present on the item that holds the value. |
+| `data-filled` | Present on every item up to the value drawn: the one a pointer is over, or the one held. |
+| `data-half` | Present on the item the value drawn fills by half. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be changed. |
+| `data-required` | Present when a value is needed. |
+
+## Steps
+
+```
+Root
+  List
+    Item (repeated)
+      Trigger
+        Indicator (optional)
+      Separator (optional)
+  Content (repeated)
+  Completed (optional)
+  Previous (optional)
+  Next (optional)
+```
+
+### Steps.Root
+
+A task in steps, taken in order.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+| `data-complete` | Present once every step is done. |
+
+### Steps.List
+
+The row of steps: the arrows move between their triggers.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+
+### Steps.Item
+
+One step of the row, around its trigger and its separator.
+
+| Attribute | When |
+| --- | --- |
+| `data-current` | Present on the step that is shown. |
+| `data-complete` | Present on a step that is done: one before the step shown. |
+| `data-incomplete` | Present on a step still to come. |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+
+### Steps.Trigger
+
+Names a step, and goes to it when pressed.
+
+| Attribute | When |
+| --- | --- |
+| `data-current` | Present on the step that is shown. |
+| `data-complete` | Present on a step that is done: one before the step shown. |
+| `data-incomplete` | Present on a step still to come. |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+| `data-disabled` | Present when it is disabled. |
+
+### Steps.Indicator
+
+A step's mark: its number, or a tick once it is done.
+
+| Attribute | When |
+| --- | --- |
+| `data-current` | Present on the step that is shown. |
+| `data-complete` | Present on a step that is done: one before the step shown. |
+| `data-incomplete` | Present on a step still to come. |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+
+### Steps.Separator
+
+The line from a step to the next.
+
+| Attribute | When |
+| --- | --- |
+| `data-current` | Present on the step that is shown. |
+| `data-complete` | Present on a step that is done: one before the step shown. |
+| `data-incomplete` | Present on a step still to come. |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+
+### Steps.Content
+
+What a step shows: hidden unless its step is the one shown.
+
+| Attribute | When |
+| --- | --- |
+| `data-current` | Present on the step that is shown. |
+| `data-complete` | Present on a step that is done: one before the step shown. |
+| `data-incomplete` | Present on a step still to come. |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+
+### Steps.Completed
+
+What is shown once every step is done.
+
+| Attribute | When |
+| --- | --- |
+| `data-orientation` (horizontal, vertical) | Whether the steps are laid out across or down. |
+
+### Steps.Previous
+
+Goes to the step before.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Steps.Next
+
+Goes to the step after; from the last, to all of them done.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+## Editable
+
+```
+Root
+  Preview
+  Input
+  EditTrigger (optional)
+  SubmitTrigger (optional)
+  CancelTrigger (optional)
+```
+
+### Editable.Root
+
+A text edited in place.
+
+| Attribute | When |
+| --- | --- |
+| `data-editing` | Present while it is being edited. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be edited. |
+| `data-placeholder` | Present while it holds no text. |
+
+### Editable.Preview
+
+The text as it reads, or the placeholder while there is none: hidden while editing.
+
+| Attribute | When |
+| --- | --- |
+| `data-editing` | Present while it is being edited. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be edited. |
+| `data-placeholder` | Present while it holds no text. |
+
+### Editable.Input
+
+Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.
+
+| Attribute | When |
+| --- | --- |
+| `data-editing` | Present while it is being edited. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be edited. |
+| `data-placeholder` | Present while it holds no text. |
+
+### Editable.EditTrigger
+
+Starts an edit: hidden while editing.
+
+| Attribute | When |
+| --- | --- |
+| `data-editing` | Present while it is being edited. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be edited. |
+| `data-placeholder` | Present while it holds no text. |
+
+### Editable.SubmitTrigger
+
+Keeps what was typed: hidden unless editing.
+
+| Attribute | When |
+| --- | --- |
+| `data-editing` | Present while it is being edited. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be edited. |
+| `data-placeholder` | Present while it holds no text. |
+
+### Editable.CancelTrigger
+
+Drops what was typed: hidden unless editing.
+
+| Attribute | When |
+| --- | --- |
+| `data-editing` | Present while it is being edited. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it is shown and cannot be edited. |
+| `data-placeholder` | Present while it holds no text. |
+
+## PasswordInput
+
+```
+Root
+  Input
+  Toggle
+    Indicator (optional)
+```
+
+### PasswordInput.Root
+
+A password that can be shown while it is typed.
+
+| Attribute | When |
+| --- | --- |
+| `data-visible` | Present while the password can be read. |
+| `data-disabled` | Present when it is disabled. |
+
+### PasswordInput.Input
+
+The `<input>`: a password, or text while it is shown. In a `Field` it is the field's control.
+
+| Attribute | When |
+| --- | --- |
+| `data-visible` | Present while the password can be read. |
+| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Present once focus has left it. |
+| `data-dirty` | Present once its text differs from what it began with. |
+| `data-filled` | Present while it holds text. |
+| `data-focused` | Present while it has focus. |
+| `data-valid` | In a field: present once the value was checked and found right. |
+| `data-invalid` | In a field: present while the value is wrong. |
+
+### PasswordInput.Toggle
+
+Shows the password, and hides it again. Focus and the caret stay in the input.
+
+| Attribute | When |
+| --- | --- |
+| `data-visible` | Present while the password can be read. |
+| `data-disabled` | Present when it is disabled. |
+
+### PasswordInput.Indicator
+
+What draws which of the two it is: an eye, open or struck.
+
+| Attribute | When |
+| --- | --- |
+| `data-visible` | Present while the password can be read. |
+| `data-disabled` | Present when it is disabled. |
+
+## TagsInput
+
+```
+Root
+  List
+    Items
+      Item (repeated)
+        ItemText
+        ItemInput (optional)
+        ItemRemove (optional)
+  Input
+  Clear (optional)
+```
+
+### TagsInput.Root
+
+Several short texts held as tags, and the input a new one is typed in. It holds the hidden inputs a form reads.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+| `data-focused` | Present while focus is on a tag or in the input. |
+| `data-empty` | Present while it holds no tag. |
+
+### TagsInput.List
+
+What holds the tags: a list.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+
+### TagsInput.Items
+
+The tags, in order: each entry is given to draw. It draws no element.
+
+### TagsInput.Item
+
+A tag: reached with the arrows, taken away with Backspace or Delete.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+| `data-editing` | Present while the tag is edited. |
+
+### TagsInput.ItemText
+
+A tag's text: hidden while the tag is edited.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+
+### TagsInput.ItemInput
+
+Where a tag is edited in place: hidden unless it is being edited.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+
+### TagsInput.ItemRemove
+
+A tag's button that takes it away.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+
+### TagsInput.Input
+
+Where a new tag is typed. In a `Field` it is what the field's label names.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+
+### TagsInput.Clear
+
+Takes every tag away: hidden while there is none.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when the tags are shown and cannot be changed. |
+| `data-required` | Present when a tag is needed. |
+
+## FileUpload
+
+```
+Root
+  Dropzone
+    Trigger (as above)
+  Trigger (optional)
+  List
+    Items
+      Item (repeated)
+        ItemName
+        ItemSize (optional)
+        ItemRemove (optional)
+  Clear (optional)
+```
+
+### FileUpload.Root
+
+Files chosen to be sent.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+| `data-empty` | Present while it holds no file. |
+
+### FileUpload.Dropzone
+
+Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.Trigger
+
+A button that opens the file picker.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.List
+
+What holds the files: a list.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.Items
+
+The files, in order: each entry is given to draw. It draws no element.
+
+### FileUpload.Item
+
+A file.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.ItemName
+
+A file's name.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.ItemSize
+
+A file's size, as people read one.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.ItemRemove
+
+A file's button that takes it away.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+### FileUpload.Clear
+
+Takes every file away: hidden while there is none.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-dragging` | Present while files are dragged over the dropzone. |
+| `data-required` | Present when a file is needed. |
+
+## TimeField
+
+```
+Root
+  Segments
+    Segment (repeated)
+  Input
+```
+
+### TimeField.Root
+
+The field: a group of the time's parts.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when its value cannot be changed. |
+| `data-invalid` | Present when the time is outside what it takes, or is asked for and half typed. |
+
+### TimeField.Segments
+
+The time's segments, in the locale's order: each is given to draw. It draws no element.
+
+### TimeField.Segment
+
+One piece of the time: a part that is typed, or what stands between two.
+
+| Attribute | When |
+| --- | --- |
+| `data-segment` (hour, minute, second, dayPeriod, literal) | Which piece it is: `dayPeriod` is AM or PM, on a clock of twelve hours. |
+| `data-placeholder` | Present on a part that is empty. |
+| `data-disabled` | Present when it is disabled. |
+| `data-invalid` | Present when the time is outside what it takes, or is asked for and half typed. |
+
+### TimeField.Input
+
+The hidden input it is submitted by.
+
+## Tree
+
+```
+Root
+  Item (repeated)
+    ItemRow (optional)
+      ItemIndicator
+      ItemText
+    Group
+      Item (as above)
+```
+
+### Tree.Root
+
+The tree. Its nodes are one stop for Tab.
+
+### Tree.Item
+
+One node, a `treeitem`: a leaf, or a branch that holds its row and its group. Its `value` tells it from the others; its depth, and its place among its siblings, are read from the page.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen node. |
+| `data-highlighted` | Present on the node focus is on, while it is in the tree. |
+| `data-disabled` | Present when it is disabled. |
+| `data-open` | Present on a branch that is open. |
+| `data-closed` | Present on a branch that is closed. |
+| `data-loading` | Present on a branch that says its children are being loaded. |
+
+### Tree.ItemRow
+
+The line a node draws, apart from the children its group holds: what a design gives a background.
+
+| Attribute | When |
+| --- | --- |
+| `data-selected` | Present on a chosen node. |
+| `data-highlighted` | Present on the node focus is on, while it is in the tree. |
+| `data-disabled` | Present when it is disabled. |
+| `data-open` | Present on a branch that is open. |
+| `data-closed` | Present on a branch that is closed. |
+| `data-loading` | Present on a branch that says its children are being loaded. |
+
+### Tree.ItemIndicator
+
+The mark that says whether a branch is open. A press on it opens or closes the branch and chooses nothing.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present on a branch that is open. |
+| `data-closed` | Present on a branch that is closed. |
+| `data-loading` | Present on a branch that says its children are being loaded. |
+
+### Tree.ItemText
+
+The node's name: what names it to assistive technology, and what typing matches.
+
+### Tree.Group
+
+A branch's children. In the page while the branch is open, and through its exit's motion.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+
+| Variable | Holds |
+| --- | --- |
+| `--tree-group-height` | The group's content height while it opens or closes, `auto` once it is open. |
+| `--tree-group-width` | The group's content width while it opens or closes, `auto` once it is open. |
+
+## ColorPicker
+
+```
+Root
+  Area
+    AreaThumb
+  ChannelSlider (repeated)
+    ChannelSliderTrack
+      ChannelSliderThumb
+    ChannelSliderThumb (as above)
+  ChannelInput (repeated)
+  Swatch (repeated)
+  SwatchTrigger (repeated)
+  EyeDropperTrigger
+  ValueText
+  FormatTrigger
+```
+
+### ColorPicker.Root
+
+Groups the picker's parts. It holds the hidden input a form reads, and the colour for anything inside to paint with.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+| `data-format` (hex, rgb, hsl) | How the value is written. |
+
+| Variable | Holds |
+| --- | --- |
+| `--color` | The colour, with its alpha. |
+
+### ColorPicker.Area
+
+The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds this part's thumb. |
+
+| Variable | Holds |
+| --- | --- |
+| `--hue-color` | The colour's hue at full saturation and brightness. |
+
+### ColorPicker.AreaThumb
+
+What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds this part's thumb. |
+
+| Variable | Holds |
+| --- | --- |
+| `--saturation` | Its place across, as a share of the area: the saturation. |
+| `--brightness` | Its place up, as a share of the area: the brightness. |
+| `--color` | The colour under it, without its alpha. |
+
+### ColorPicker.ChannelSlider
+
+What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds this part's thumb. |
+| `data-channel` (hue, alpha) | The channel the slider moves. |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+
+### ColorPicker.ChannelSliderTrack
+
+The channel's whole range: what a design paints the hues or the alpha on.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds this part's thumb. |
+| `data-channel` (hue, alpha) | The channel the slider moves. |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+
+| Variable | Holds |
+| --- | --- |
+| `--color` | The colour without its alpha: the end of an alpha track. |
+| `--hue-color` | The colour's hue at full saturation and brightness. |
+
+### ColorPicker.ChannelSliderThumb
+
+What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds this part's thumb. |
+| `data-channel` (hue, alpha) | The channel the slider moves. |
+| `data-orientation` (horizontal, vertical) | The way the track runs. |
+
+| Variable | Holds |
+| --- | --- |
+| `--color` | The colour under it: the pure hue, or the colour at its alpha. |
+
+### ColorPicker.ChannelInput
+
+A text input for one channel (`hex`, `red`, `green`, `blue`, `hue`, `saturation`, `lightness`, `alpha`). What is typed is taken when it is a colour or a number in range, and put back when focus leaves while it is not.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+| `data-channel` (hex, red, green, blue, hue, saturation, lightness, alpha) | The channel the input is typed in. |
+
+### ColorPicker.Swatch
+
+Shows the current colour.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+
+| Variable | Holds |
+| --- | --- |
+| `--color` | The colour, with its alpha. |
+
+### ColorPicker.SwatchTrigger
+
+A preset colour, given as `value`: pressed, the colour is this one.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+| `data-selected` | Present while the colour is this one. |
+
+| Variable | Holds |
+| --- | --- |
+| `--color` | The preset's colour, with its alpha. |
+
+### ColorPicker.EyeDropperTrigger
+
+Picks a colour from the screen with the browser's eye dropper. Hidden where the browser has none, and on a server.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+
+### ColorPicker.ValueText
+
+The colour, written in its format.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+| `data-format` (hex, rgb, hsl) | How the value is written. |
+
+### ColorPicker.FormatTrigger
+
+Goes to the next format: hex, then rgb, then hsl.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs a colour. |
+| `data-dragging` | Present while a pointer holds a thumb of the picker. |
+| `data-format` (hex, rgb, hsl) | How the value is written. |
+
+## Tour
+
+```
+Root
+  Portal
+    Spotlight
+    Positioner
+      Popup
+        Arrow
+        Title
+        Description
+        Previous
+        Next
+        Close
+```
+
+### Tour.Root
+
+Holds the tour: its steps, whether it is open and which step is shown. It draws no element.
+
+### Tour.Portal
+
+Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.
+
+### Tour.Spotlight
+
+A layer over the page with a hole over the step's target, which the design draws from its variables (a clip path, or a box with a large shadow). A press on it is a press outside the tour. While the target can be used (`interactive`), presses go through it.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-centered` | Present while the step shown has no target in the page: the popup stands in the middle of the viewport. |
+
+| Variable | Holds |
+| --- | --- |
+| `--spotlight-left` | The hole's left edge, from the spotlight's own left edge: the target's, less `spotlightPadding`. |
+| `--spotlight-top` | The hole's top edge, from the spotlight's own top edge: the target's, less `spotlightPadding`. |
+| `--spotlight-width` | The hole's width: the target's, with `spotlightPadding` on each side. |
+| `--spotlight-height` | The hole's height: the target's, with `spotlightPadding` on each side. With no target, the hole is a point in the middle. |
+
+### Tour.Positioner
+
+Places the popup against the step's target, or in the middle of the viewport for a step with none. It carries the geometry.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-centered` | Present while the step shown has no target in the page: the popup stands in the middle of the viewport. |
+
+| Variable | Holds |
+| --- | --- |
+| `--anchor-width` | The anchor's width. |
+| `--anchor-height` | The anchor's height. |
+| `--available-width` | The width between the anchor and the edge of the viewport. |
+| `--available-height` | The height between the anchor and the edge of the viewport. |
+| `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+
+### Tour.Popup
+
+The step itself: a dialog that stays in the page from the first step to the last, and moves.
+
+| Attribute | When |
+| --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-centered` | Present while the step shown has no target in the page: the popup stands in the middle of the viewport. |
+
+### Tour.Arrow
+
+An element that points at the target, placed along the popup's edge.
+
+| Attribute | When |
+| --- | --- |
+| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
+| `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the target's centre. |
+| `data-centered` | Present while the step shown has no target in the page: the popup stands in the middle of the viewport. |
+
+### Tour.Title
+
+The heading that names the step.
+
+### Tour.Description
+
+The text that describes the step.
+
+### Tour.Previous
+
+A button that goes back a step. On the first step it does nothing.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
+
+### Tour.Next
+
+A button that goes on a step. On the last step it finishes the tour.
+
+| Attribute | When |
+| --- | --- |
+| `data-last` | Present on the last step: a press finishes the tour. |
+
+### Tour.Close
+
+A button that ends the tour.
+
 ## DatePicker
 
 ```

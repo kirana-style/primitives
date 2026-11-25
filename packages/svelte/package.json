@@ -141,6 +141,46 @@
       "svelte": "./src/pagination.ts",
       "default": "./src/pagination.ts"
     },
+    "./rating": {
+      "svelte": "./src/rating.ts",
+      "default": "./src/rating.ts"
+    },
+    "./steps": {
+      "svelte": "./src/steps.ts",
+      "default": "./src/steps.ts"
+    },
+    "./editable": {
+      "svelte": "./src/editable.ts",
+      "default": "./src/editable.ts"
+    },
+    "./password-input": {
+      "svelte": "./src/password-input.ts",
+      "default": "./src/password-input.ts"
+    },
+    "./tags-input": {
+      "svelte": "./src/tags-input.ts",
+      "default": "./src/tags-input.ts"
+    },
+    "./file-upload": {
+      "svelte": "./src/file-upload.ts",
+      "default": "./src/file-upload.ts"
+    },
+    "./time-field": {
+      "svelte": "./src/time-field.ts",
+      "default": "./src/time-field.ts"
+    },
+    "./tree": {
+      "svelte": "./src/tree.ts",
+      "default": "./src/tree.ts"
+    },
+    "./color-picker": {
+      "svelte": "./src/color-picker.ts",
+      "default": "./src/color-picker.ts"
+    },
+    "./tour": {
+      "svelte": "./src/tour.ts",
+      "default": "./src/tour.ts"
+    },
     "./date-picker": {
       "svelte": "./src/date-picker.ts",
       "default": "./src/date-picker.ts"

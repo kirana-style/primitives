@@ -101,3 +101,22 @@ export type { ItemLabels } from "./services/items.ts"
 // The reading direction: a provider's where there is one, the element's own otherwise.
 export { carryDirection, directionOf } from "./direction.ts"
 export type { Direction, DirectionAround } from "./direction.ts"
+
+// Colours as text and as numbers: read in any CSS form, written in hex, rgb or hsl, and moved
+// between hue, saturation and brightness and the other models without losing the hue on grey.
+export {
+  COLOR_FORMATS,
+  cssColor,
+  formatColor,
+  hslToHsv,
+  hslToRgb,
+  hsvToHsl,
+  hsvToRgb,
+  hueColor,
+  namesHue,
+  parseColor,
+  rgbToHsl,
+  rgbToHsv,
+  sameColor,
+} from "./services/color.ts"
+export type { ColorFormat, Hsla, Hsva, Rgba } from "./services/color.ts"

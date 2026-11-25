@@ -1,3 +1,4 @@
+import type { FileRejection, DateRange, OffsetFunction } from "@kirana-ui/react"
 import {
   Calendar,
   Autocomplete,
@@ -8,6 +9,16 @@ import {
   Label,
   NumberField,
   Pagination,
+  Rating,
+  Steps,
+  Editable,
+  PasswordInput,
+  TagsInput,
+  FileUpload,
+  TimeField,
+  Tree,
+  ColorPicker,
+  Tour,
   PortalProvider,
   Drawer,
   MessageScroller,
@@ -52,7 +63,6 @@ import {
   Toolbar,
   Tooltip,
 } from "@kirana-ui/react"
-import type { DateRange, OffsetFunction } from "@kirana-ui/react"
 import { mergeProps, useRender } from "@kirana-ui/react/use-render"
 import type { RenderProp } from "@kirana-ui/react/use-render"
 import { Fragment, useRef, useState } from "react"
@@ -186,6 +196,21 @@ const SIZE_KEYS = ["s", "m", "l"] as const
  * The page every adapter draws, element for element: the conformance run walks it and compares
  * the DOM of each state across adapters. Change it in all three fixtures at once.
  */
+const STEPS = ["Account", "Profile", "Review"]
+// A tour's steps: what each says is the page's own, kept beside the step. One is about an element
+// of its own section, one about another section's, and the last about none.
+interface PageStep {
+  id: string
+  target?: string
+  title: string
+  body: string
+}
+const TOUR: PageStep[] = [
+  { id: "files", target: '[data-testid="tr1"]', title: "Files", body: "Documents and music." },
+  { id: "stars", target: '[data-testid="rt1"]', title: "Stars", body: "How much it was liked." },
+  { id: "done", title: "All set", body: "That is the whole page." },
+]
+
 export function App() {
   const [controlled, setControlled] = useState(false)
   const [fruit, setFruit] = useState<string | null>("Banana")
@@ -201,6 +226,22 @@ export function App() {
   const [box, setBox] = useState<HTMLElement | null>(null)
   const [due, setDue] = useState("2026-03-14")
   const [paged, setPaged] = useState("1")
+  const [stars, setStars] = useState("2")
+  const [stepped, setStepped] = useState("0")
+  const [titled, setTitled] = useState("Apollo")
+  const [revealed, setRevealed] = useState("false")
+  const [tagged, setTagged] = useState("red,green")
+  const [timed, setTimed] = useState("09:30")
+  const [refused, setRefused] = useState("")
+  const [opened, setOpened] = useState("docs")
+  const [picks, setPicks] = useState("letter")
+  const [hue, setHue] = useState("#ff0000ff")
+  const [kept, setKept] = useState("")
+  const [written, setWritten] = useState("hex")
+  const [touring, setTouring] = useState(false)
+  const [toured, setToured] = useState("0")
+  const [uploaded, setUploaded] = useState("")
+  const [turnedAway, setTurnedAway] = useState("")
   const [qty, setQty] = useState("5")
   const [place, setPlace] = useState("")
   const [named, setNamed] = useState("")
@@ -2735,6 +2776,401 @@ export function App() {
             Unlock
           </button>
         </div>
+      </section>
+
+      <section data-fixture="editing">
+        <form className="editing" data-testid="ef1-form">
+          <div className="item">
+            <Rating.Root
+              id="rt1"
+              name="stars"
+              defaultValue={2}
+              allowHalf
+              aria-label="Stars"
+              className="rating"
+              data-testid="rt1"
+              onValueChange={(next: number) => setStars(String(next))}
+            >
+              <Rating.Items>
+                {(star) => (
+                  <Rating.Item place={star} className="star" data-testid={`rt1-${star}`}>
+                    ★
+                  </Rating.Item>
+                )}
+              </Rating.Items>
+            </Rating.Root>
+            <output data-testid="rt1-output">{stars}</output>
+          </div>
+          <Steps.Root
+            id="st1"
+            count={3}
+            linear
+            className="steps"
+            data-testid="st1"
+            onStepChange={(next: number) => setStepped(String(next))}
+          >
+            <Steps.List className="item" aria-label="Sign up" data-testid="st1-list">
+              {STEPS.map((each, index) => (
+                <Steps.Item
+                  key={each}
+                  index={index}
+                  className="item"
+                  data-testid={`st1-item-${index}`}
+                >
+                  <Steps.Trigger data-testid={`st1-trigger-${index}`}>
+                    <Steps.Indicator className="step-mark" data-testid={`st1-indicator-${index}`}>
+                      {index + 1}
+                    </Steps.Indicator>
+                    {each}
+                  </Steps.Trigger>
+                  <Steps.Separator className="step-line" data-testid={`st1-separator-${index}`} />
+                </Steps.Item>
+              ))}
+            </Steps.List>
+            {STEPS.map((each, index) => (
+              <Steps.Content key={each} index={index} data-testid={`st1-content-${index}`}>
+                {each} details
+              </Steps.Content>
+            ))}
+            <Steps.Completed data-testid="st1-completed">All done</Steps.Completed>
+            <div className="item">
+              <Steps.Previous data-testid="st1-previous">Back</Steps.Previous>
+              <Steps.Next data-testid="st1-next">Next</Steps.Next>
+              <output data-testid="st1-output">{stepped}</output>
+            </div>
+          </Steps.Root>
+          <Editable.Root
+            id="ed1"
+            name="title"
+            defaultValue="Apollo"
+            placeholder="Untitled"
+            className="item"
+            data-testid="ed1"
+            onValueChange={(next: string) => setTitled(next)}
+          >
+            <Editable.Preview className="editable-preview" data-testid="ed1-preview" />
+            <Editable.Input aria-label="Title" data-testid="ed1-input" />
+            <Editable.EditTrigger data-testid="ed1-edit">Edit</Editable.EditTrigger>
+            <Editable.SubmitTrigger data-testid="ed1-submit">Save</Editable.SubmitTrigger>
+            <Editable.CancelTrigger data-testid="ed1-cancel">Cancel</Editable.CancelTrigger>
+            <output data-testid="ed1-output">{titled}</output>
+          </Editable.Root>
+          <PasswordInput.Root
+            className="item"
+            data-testid="pw1"
+            onVisibleChange={(next: boolean) => setRevealed(String(next))}
+          >
+            <PasswordInput.Input
+              id="pw1-input"
+              name="secret"
+              aria-label="Password"
+              autoComplete="current-password"
+              data-testid="pw1-input"
+            />
+            <PasswordInput.Toggle data-testid="pw1-toggle">
+              <PasswordInput.Indicator className="eye" data-testid="pw1-indicator" />
+            </PasswordInput.Toggle>
+            <output data-testid="pw1-output">{revealed}</output>
+          </PasswordInput.Root>
+          <button type="reset" data-testid="ef1-reset">
+            Reset
+          </button>
+        </form>
+      </section>
+
+      <section data-fixture="tagging">
+        <form className="editing" data-testid="tf1-form">
+          <TagsInput.Root
+            id="ti1"
+            name="colors"
+            defaultValue={["red", "green"]}
+            max={4}
+            className="tags"
+            data-testid="ti1"
+            onValueChange={(next: string[]) => setTagged(next.join(","))}
+            onValueInvalid={(text: string, reason: string) => setRefused(`${text}:${reason}`)}
+          >
+            <TagsInput.List className="item" aria-label="Colors" data-testid="ti1-list">
+              <TagsInput.Items>
+                {(entry) => (
+                  <TagsInput.Item
+                    entry={entry}
+                    className="tag"
+                    data-testid={`ti1-item-${entry.value}`}
+                  >
+                    <TagsInput.ItemText data-testid={`ti1-text-${entry.value}`} />
+                    <TagsInput.ItemInput data-testid={`ti1-edit-${entry.value}`} />
+                    <TagsInput.ItemRemove data-testid={`ti1-remove-${entry.value}`}>
+                      ×
+                    </TagsInput.ItemRemove>
+                  </TagsInput.Item>
+                )}
+              </TagsInput.Items>
+            </TagsInput.List>
+            <TagsInput.Input aria-label="Add a color" data-testid="ti1-input" />
+            <TagsInput.Clear data-testid="ti1-clear">Clear</TagsInput.Clear>
+            <output data-testid="ti1-output">{tagged}</output>
+            <output data-testid="ti1-refused">{refused}</output>
+          </TagsInput.Root>
+          <FileUpload.Root
+            id="fu1"
+            name="docs"
+            multiple
+            accept=".txt"
+            maxFiles={2}
+            className="upload"
+            data-testid="fu1"
+            onFilesChange={(next: File[]) => setUploaded(next.map((each) => each.name).join(","))}
+            onFilesReject={(next: FileRejection[]) =>
+              setTurnedAway(
+                next.map((each) => `${each.file.name}:${each.reasons.join("+")}`).join(",")
+              )
+            }
+          >
+            <FileUpload.Dropzone
+              className="dropzone"
+              aria-label="Documents"
+              data-testid="fu1-dropzone"
+            >
+              <FileUpload.Trigger data-testid="fu1-trigger">Browse</FileUpload.Trigger>
+            </FileUpload.Dropzone>
+            <FileUpload.List className="files" data-testid="fu1-list">
+              <FileUpload.Items>
+                {(entry) => (
+                  <FileUpload.Item
+                    entry={entry}
+                    className="item"
+                    data-testid={`fu1-item-${entry.file.name}`}
+                  >
+                    <FileUpload.ItemName data-testid={`fu1-name-${entry.file.name}`} />
+                    <FileUpload.ItemSize locale="en" data-testid={`fu1-size-${entry.file.name}`} />
+                    <FileUpload.ItemRemove data-testid={`fu1-remove-${entry.file.name}`}>
+                      ×
+                    </FileUpload.ItemRemove>
+                  </FileUpload.Item>
+                )}
+              </FileUpload.Items>
+            </FileUpload.List>
+            <FileUpload.Clear data-testid="fu1-clear">Clear</FileUpload.Clear>
+            <output data-testid="fu1-output">{uploaded}</output>
+            <output data-testid="fu1-rejected">{turnedAway}</output>
+          </FileUpload.Root>
+          <div className="item">
+            <TimeField.Root
+              id="tm1"
+              name="at"
+              locale="en-US"
+              defaultValue="09:30"
+              aria-label="Time"
+              className="date-field"
+              data-testid="tm1"
+              onValueChange={(next: string | null) => setTimed(String(next))}
+            >
+              <TimeField.Segments>
+                {(segment) => (
+                  <TimeField.Segment
+                    segment={segment}
+                    data-testid={`tm1-${segment.type}-${segment.index}`}
+                  />
+                )}
+              </TimeField.Segments>
+              <TimeField.Input />
+            </TimeField.Root>
+            <output data-testid="tm1-output">{timed}</output>
+          </div>
+          <button type="reset" data-testid="tf1-reset">
+            Reset
+          </button>
+        </form>
+      </section>
+
+      <section data-fixture="exploring">
+        <div className="item">
+          <Tree.Root
+            id="tr1"
+            aria-label="Files"
+            defaultExpandedValue={["docs"]}
+            defaultSelectedValue={["letter"]}
+            className="tree"
+            data-testid="tr1"
+            onExpandedChange={(next: unknown[]) => setOpened(next.join(","))}
+            onSelectedChange={(next: unknown[]) => setPicks(next.join(","))}
+          >
+            <Tree.Item value="docs" branch data-testid="tr1-docs">
+              <Tree.ItemRow className="tree-row" data-testid="tr1-docs-row">
+                <Tree.ItemIndicator className="tree-mark" data-testid="tr1-docs-mark">
+                  ›
+                </Tree.ItemIndicator>
+                <Tree.ItemText data-testid="tr1-docs-text">Documents</Tree.ItemText>
+              </Tree.ItemRow>
+              <Tree.Group className="tree-group" data-testid="tr1-docs-group">
+                <Tree.Item value="work" branch data-testid="tr1-work">
+                  <Tree.ItemRow className="tree-row">
+                    <Tree.ItemIndicator className="tree-mark" data-testid="tr1-work-mark">
+                      ›
+                    </Tree.ItemIndicator>
+                    <Tree.ItemText>Work</Tree.ItemText>
+                  </Tree.ItemRow>
+                  <Tree.Group className="tree-group" data-testid="tr1-work-group">
+                    <Tree.Item value="report" data-testid="tr1-report">
+                      <Tree.ItemRow className="tree-row">
+                        <Tree.ItemText>Report</Tree.ItemText>
+                      </Tree.ItemRow>
+                    </Tree.Item>
+                    <Tree.Item value="budget" data-testid="tr1-budget">
+                      <Tree.ItemRow className="tree-row">
+                        <Tree.ItemText>Budget</Tree.ItemText>
+                      </Tree.ItemRow>
+                    </Tree.Item>
+                  </Tree.Group>
+                </Tree.Item>
+                <Tree.Item value="letter" data-testid="tr1-letter">
+                  <Tree.ItemRow className="tree-row">
+                    <Tree.ItemText>Letter</Tree.ItemText>
+                  </Tree.ItemRow>
+                </Tree.Item>
+                <Tree.Item value="old" disabled data-testid="tr1-old">
+                  <Tree.ItemRow className="tree-row">
+                    <Tree.ItemText>Old letter</Tree.ItemText>
+                  </Tree.ItemRow>
+                </Tree.Item>
+              </Tree.Group>
+            </Tree.Item>
+            <Tree.Item value="music" branch data-testid="tr1-music">
+              <Tree.ItemRow className="tree-row">
+                <Tree.ItemIndicator className="tree-mark" data-testid="tr1-music-mark">
+                  ›
+                </Tree.ItemIndicator>
+                <Tree.ItemText>Music</Tree.ItemText>
+              </Tree.ItemRow>
+              <Tree.Group className="tree-group" data-testid="tr1-music-group">
+                <Tree.Item value="song" data-testid="tr1-song">
+                  <Tree.ItemRow className="tree-row">
+                    <Tree.ItemText>Song</Tree.ItemText>
+                  </Tree.ItemRow>
+                </Tree.Item>
+              </Tree.Group>
+            </Tree.Item>
+            <Tree.Item value="notes" data-testid="tr1-notes">
+              <Tree.ItemRow className="tree-row">
+                <Tree.ItemText>Notes</Tree.ItemText>
+              </Tree.ItemRow>
+            </Tree.Item>
+          </Tree.Root>
+          <output data-testid="tr1-expanded">{opened}</output>
+          <output data-testid="tr1-selected">{picks}</output>
+        </div>
+        <form className="editing" data-testid="pk1-form">
+          <ColorPicker.Root
+            id="pk1"
+            name="color"
+            defaultValue="#ff0000"
+            alpha
+            className="color-picker"
+            data-testid="pk1"
+            onValueChange={(next: string) => setHue(next)}
+            onValueCommitted={(next: string) => setKept(next)}
+            onFormatChange={(next: string) => setWritten(next)}
+          >
+            <ColorPicker.Area className="color-area" data-testid="pk1-area">
+              <ColorPicker.AreaThumb
+                className="color-thumb"
+                aria-label="Colour"
+                data-testid="pk1-area-thumb"
+              />
+            </ColorPicker.Area>
+            <ColorPicker.ChannelSlider channel="hue" className="slider" data-testid="pk1-hue">
+              <ColorPicker.ChannelSliderTrack className="slider-track" data-testid="pk1-hue-track">
+                <ColorPicker.ChannelSliderThumb
+                  className="thumb"
+                  aria-label="Hue"
+                  data-testid="pk1-hue-thumb"
+                />
+              </ColorPicker.ChannelSliderTrack>
+            </ColorPicker.ChannelSlider>
+            <ColorPicker.ChannelSlider channel="alpha" className="slider" data-testid="pk1-alpha">
+              <ColorPicker.ChannelSliderTrack
+                className="slider-track"
+                data-testid="pk1-alpha-track"
+              >
+                <ColorPicker.ChannelSliderThumb
+                  className="thumb"
+                  aria-label="Alpha"
+                  data-testid="pk1-alpha-thumb"
+                />
+              </ColorPicker.ChannelSliderTrack>
+            </ColorPicker.ChannelSlider>
+            <div className="item">
+              <ColorPicker.Swatch className="swatch" data-testid="pk1-swatch" />
+              <ColorPicker.ChannelInput channel="hex" aria-label="Hex" data-testid="pk1-hex" />
+              <ColorPicker.SwatchTrigger
+                value="#0000ff"
+                aria-label="Blue"
+                className="swatch"
+                data-testid="pk1-blue"
+              />
+              <ColorPicker.SwatchTrigger
+                value="#00800080"
+                aria-label="Green"
+                className="swatch"
+                data-testid="pk1-green"
+              />
+            </div>
+            <div className="item">
+              <ColorPicker.ValueText data-testid="pk1-text" />
+              <ColorPicker.FormatTrigger data-testid="pk1-format" />
+            </div>
+          </ColorPicker.Root>
+          <div className="item">
+            <output data-testid="pk1-output">{hue}</output>
+            <output data-testid="pk1-committed">{kept}</output>
+            <output data-testid="pk1-written">{written}</output>
+          </div>
+          <button type="reset" data-testid="pk1-reset">
+            Reset
+          </button>
+        </form>
+        <div className="item">
+          <button type="button" data-testid="tu1-open" onClick={() => setTouring(true)}>
+            Tour
+          </button>
+          <output data-testid="tu1-output">{String(touring)}</output>
+          <output data-testid="tu1-step">{toured}</output>
+        </div>
+        <Tour.Root
+          id="tu1"
+          steps={TOUR}
+          open={touring}
+          onOpenChange={(next: boolean) => setTouring(next)}
+          onStepChange={(next: number) => setToured(String(next))}
+        >
+          <Tour.Portal>
+            <Tour.Spotlight className="spotlight" data-testid="tu1-spotlight" />
+            <Tour.Positioner sideOffset={8} data-testid="tu1-positioner">
+              <Tour.Popup<PageStep> className="tour-popup" data-testid="tu1-popup">
+                {({ step, current, total }) => (
+                  <>
+                    <Tour.Arrow className="arrow" data-testid="tu1-arrow" />
+                    <Tour.Title className="tour-title" data-testid="tu1-title">
+                      {step?.title}
+                    </Tour.Title>
+                    <Tour.Description data-testid="tu1-description">{step?.body}</Tour.Description>
+                    <div className="item">
+                      <span data-testid="tu1-count">
+                        {current} of {total}
+                      </span>
+                      <Tour.Previous data-testid="tu1-previous">Back</Tour.Previous>
+                      <Tour.Next data-testid="tu1-next">
+                        {current === total ? "Done" : "Next"}
+                      </Tour.Next>
+                      <Tour.Close data-testid="tu1-close">Skip</Tour.Close>
+                    </div>
+                  </>
+                )}
+              </Tour.Popup>
+            </Tour.Positioner>
+          </Tour.Portal>
+        </Tour.Root>
       </section>
     </main>
   )

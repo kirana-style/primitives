@@ -125,6 +125,97 @@ export {
   KpPaginationNext,
   KpPaginationPrevious,
 } from "./pagination"
+export { KpRating, KpRatingItem, KpRatingItems } from "./rating"
+export {
+  KpTree,
+  KpTreeGroup,
+  KpTreeItem,
+  KpTreeItemIndicator,
+  KpTreeItemRow,
+  KpTreeItemText,
+} from "./tree"
+export {
+  KpColorPicker,
+  KpColorPickerArea,
+  KpColorPickerAreaThumb,
+  KpColorPickerChannelInput,
+  KpColorPickerChannelSlider,
+  KpColorPickerChannelSliderThumb,
+  KpColorPickerChannelSliderTrack,
+  KpColorPickerEyeDropperTrigger,
+  KpColorPickerFormatTrigger,
+  KpColorPickerSwatch,
+  KpColorPickerSwatchTrigger,
+  KpColorPickerValueText,
+} from "./color-picker"
+export {
+  KpTour,
+  KpTourArrow,
+  KpTourClose,
+  KpTourDescription,
+  KpTourNext,
+  KpTourPopup,
+  KpTourPortal,
+  KpTourPositioner,
+  KpTourPrevious,
+  KpTourSpotlight,
+  KpTourTitle,
+} from "./tour"
+export {
+  KpTagsInput,
+  KpTagsInputClear,
+  KpTagsInputInput,
+  KpTagsInputItem,
+  KpTagsInputItemInput,
+  KpTagsInputItemRemove,
+  KpTagsInputItemText,
+  KpTagsInputItems,
+  KpTagsInputList,
+} from "./tags-input"
+export {
+  KpFileUpload,
+  KpFileUploadClear,
+  KpFileUploadDropzone,
+  KpFileUploadItem,
+  KpFileUploadItemName,
+  KpFileUploadItemRemove,
+  KpFileUploadItemSize,
+  KpFileUploadItems,
+  KpFileUploadList,
+  KpFileUploadTrigger,
+} from "./file-upload"
+export {
+  KpTimeField,
+  KpTimeFieldInput,
+  KpTimeFieldSegment,
+  KpTimeFieldSegments,
+} from "./time-field"
+export {
+  KpSteps,
+  KpStepsCompleted,
+  KpStepsContent,
+  KpStepsIndicator,
+  KpStepsItem,
+  KpStepsList,
+  KpStepsNext,
+  KpStepsPrevious,
+  KpStepsSeparator,
+  KpStepsTrigger,
+} from "./steps"
+export {
+  KpEditable,
+  KpEditableCancelTrigger,
+  KpEditableEditTrigger,
+  KpEditableInput,
+  KpEditablePreview,
+  KpEditableSubmitTrigger,
+} from "./editable"
+export {
+  KpPasswordInput,
+  KpPasswordInputIndicator,
+  KpPasswordInputInput,
+  KpPasswordInputToggle,
+} from "./password-input"
 export { KpDatePicker, KpDatePickerCalendar, KpDatePickerField } from "./date-picker"
 export {
   KpNumberField,
@@ -337,7 +428,29 @@ export type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 export type { FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
+export type { TagsInputEntry } from "@kirana-ui/core/tags-input"
+export type {
+  HourCycle,
+  IsoTime,
+  TimeFieldSegment,
+  TimeGranularity,
+  TimeUnit,
+} from "@kirana-ui/core/time-field"
+export type {
+  FileRejection,
+  FileRejectionReason,
+  FileUploadEntry,
+} from "@kirana-ui/core/file-upload"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
+export type { TreeSelectionMode } from "@kirana-ui/core/tree"
+export type {
+  ColorFormat,
+  ColorPickerInputChannel,
+  ColorPickerSliderChannel,
+  ColorPickerThumb,
+  Hsva,
+} from "@kirana-ui/core/color-picker"
+export type { TourStep, TourTarget } from "@kirana-ui/core/tour"
 export type { SelectShown } from "@kirana-ui/core/select"
 export type {
   ComboboxEntry,
@@ -350,3 +463,4 @@ export type {
 export type { SliderChangeDetails, SliderTold } from "@kirana-ui/core/slider"
 export type { ImageStatus } from "@kirana-ui/core/avatar"
 export type { PositionerAnchor } from "./runtime"
+export type { TourPopupContext, TourShownStep } from "./tour"

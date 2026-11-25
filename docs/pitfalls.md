@@ -997,6 +997,48 @@ note. Three places hold them:
   in the page was a second component, named by all its choices at once. A listbox something
   points at with `aria-controls`, or that says it is closed, is not listed, and a list is
   named only by a label.
+- **Each value asked for is looked for by itself.** Setting several choices checked that
+  every value asked for was in the list by asking whether any option matched any of them:
+  `["Olives", "Anchovies"]` passed on Olives, and the step pressed what it could and said
+  `ok`. Each value is now matched alone before anything is pressed
+  (`tests/core/agent.test.ts`, "reads a list of several choices", "reads a select of several
+  values once its list is read").
+- **Focus cannot go to what is still hidden.** An editable's input is in the page always,
+  hidden until it is edited, and a framework takes the `hidden` off in its own time: focus
+  sent to the input as the edit starts went nowhere. The core shows the element itself, at
+  once, as its props are about to say, and then focuses it; the same when focus goes back to
+  the preview, whose own focus must then start no second edit
+  (`tests/core/editable.test.ts`, "is edited as focus reaches it").
+- **A button of an edit must not end the edit by being pressed.** A press on Cancel took
+  focus from the input, and leaving the input keeps the edit: the text was kept before the
+  cancel was heard. The edit's buttons keep the pointer's press from moving focus ("is kept
+  and dropped by its buttons").
+- **What a pointer rests on is not what the keys chose.** A rating draws the value under
+  the pointer; after a press the pointer is still on the item, and an arrow's new value was
+  drawn as the old one. A key ends the preview (conformance, `editing`: "the item it half
+  fills says so").
+- **A browser drops the caret when an input's type changes.** Showing a password turns its
+  input to text: the selection is read first and put back after
+  (`tests/core/password-input.test.ts`, "focus and the caret left where they are").
+- **A part's attribute that depends on a list must follow the list.** A tag's `id` was built
+  from its place and read the tags without following them: when a tag before it was taken
+  away, its id kept the old place. React hid it, because its props are given anew on every
+  render and every part computes again; four other adapters showed it at once. The id is gone
+  (nothing pointed at it), and the rule stands: what a part writes from a signal reads the
+  signal with `get()` (conformance, `tagging`).
+- **A browser resets a form after the reset is heard.** An editable wrote its text back into
+  its input as its form was reset, and the browser then put the input back to its default,
+  which was empty wherever a framework sets `value` as a property. The text kept is also the
+  input's `defaultValue`, which is what the browser reads next (conformance, `editing`,
+  "after the form is reset").
+- **What only a browser can draw is not in a server's page.** A control of several values
+  sends a hidden input for each; the ones after the first are the core's to draw once the
+  first is in the page, so a server sends one. The run that compares a server's page with the
+  mounted one leaves them out, as it does a name known only once a label is in the page.
+- **A scenario waits for the page before it reads what the page holds.** A press that the
+  core answers at once is drawn by a framework in its own time: an output read straight after
+  a pointer's press was the old one on the adapter that renders in a task of its own
+  (conformance, `exploring`).
 - **A length is a share once there is something to measure.** A drawer's snap point given
   as `"148px"` is whole until the drawer is in the page: so "the smallest of its places" is
   not decided when the controller is made, where a length looked like the largest.

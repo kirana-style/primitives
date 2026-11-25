@@ -11,6 +11,7 @@ import "./carousel.ts"
 import "./checkbox.ts"
 import "./checkbox-group.ts"
 import "./collapsible.ts"
+import "./color-picker.ts"
 import "./combobox.ts"
 import "./command.ts"
 import "./context-menu.ts"
@@ -18,8 +19,10 @@ import "./date-field.ts"
 import "./date-picker.ts"
 import "./dialog.ts"
 import "./drawer.ts"
+import "./editable.ts"
 import "./field.ts"
 import "./fieldset.ts"
+import "./file-upload.ts"
 import "./form.ts"
 import "./hover-card.ts"
 import "./input.ts"
@@ -33,22 +36,29 @@ import "./navigation-menu.ts"
 import "./number-field.ts"
 import "./otp.ts"
 import "./pagination.ts"
+import "./password-input.ts"
 import "./popover.ts"
 import "./progress.ts"
 import "./qr-code.ts"
 import "./radio-group.ts"
+import "./rating.ts"
 import "./resizable.ts"
 import "./scroll-area.ts"
 import "./select.ts"
 import "./separator.ts"
 import "./slider.ts"
+import "./steps.ts"
 import "./switch.ts"
 import "./tabs.ts"
+import "./tags-input.ts"
+import "./time-field.ts"
 import "./toast.ts"
 import "./toggle.ts"
 import "./toggle-group.ts"
 import "./toolbar.ts"
 import "./tooltip.ts"
+import "./tour.ts"
+import "./tree.ts"
 
 export {
   controllerAround,
@@ -108,7 +118,29 @@ export type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 export type { FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"
 export type { PaginationEntry } from "@kirana-ui/core/pagination"
+export type { TagsInputEntry } from "@kirana-ui/core/tags-input"
+export type {
+  HourCycle,
+  IsoTime,
+  TimeFieldSegment,
+  TimeGranularity,
+  TimeUnit,
+} from "@kirana-ui/core/time-field"
+export type {
+  FileRejection,
+  FileRejectionReason,
+  FileUploadEntry,
+} from "@kirana-ui/core/file-upload"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
+export type { TreeSelectionMode } from "@kirana-ui/core/tree"
+export type {
+  ColorFormat,
+  ColorPickerInputChannel,
+  ColorPickerSliderChannel,
+  ColorPickerThumb,
+  Hsva,
+} from "@kirana-ui/core/color-picker"
+export type { TourStep, TourTarget } from "@kirana-ui/core/tour"
 export type { SelectShown } from "@kirana-ui/core/select"
 export type {
   ComboboxEntry,

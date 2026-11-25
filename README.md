@@ -4,9 +4,9 @@ Headless components for React, Vue, Svelte, Solid and Angular, and as custom ele
 is no framework: one framework-free core that holds every behaviour, and a thin adapter per
 framework that renders it in that framework's idiom.
 
-> **Status: before 1.0.** On npm as `@kirana-ui/*`, one version for every package. Forty-nine components on every adapter:
-> Accordion, Alert Dialog, Autocomplete, Autosize (a text area), Avatar, Button, Calendar, Carousel, Checkbox, Checkbox Group, Collapsible, Combobox, Command, Context Menu, Date Field, Date Picker, Dialog, Drawer, Field, Fieldset, Form, Hover Card, Input, Label, Listbox, Menu, Menubar, Message Scroller, Meter, Navigation Menu, Number Field, One-Time Code (`Otp`), Pagination,
-> Popover, Progress, QR Code, Radio Group, Resizable, Select, Scroll Area, Separator, Slider, Switch, Tabs, Toast, Toggle, Toggle Group, Toolbar, Tooltip; and the
+> **Status: before 1.0.** On npm as `@kirana-ui/*`, one version for every package. Fifty-nine components on every adapter:
+> Accordion, Alert Dialog, Autocomplete, Autosize (a text area), Avatar, Button, Calendar, Carousel, Checkbox, Checkbox Group, Collapsible, Color Picker, Combobox, Command, Context Menu, Date Field, Date Picker, Dialog, Drawer, Editable, Field, Fieldset, File Upload, Form, Hover Card, Input, Label, Listbox, Menu, Menubar, Message Scroller, Meter, Navigation Menu, Number Field, One-Time Code (`Otp`), Pagination, Password Input,
+> Popover, Progress, QR Code, Radio Group, Rating, Resizable, Select, Scroll Area, Separator, Slider, Steps, Switch, Tabs, Tags Input, Time Field, Toast, Toggle, Toggle Group, Toolbar, Tooltip, Tour, Tree; and the
 > Direction provider. The API will change.
 
 - **The same on every framework.** One set of scenarios runs on every adapter in a real browser,
@@ -61,7 +61,7 @@ framework that renders it in that framework's idiom.
   own elements (`<button kui-part="trigger">`), with no shadow root, so the page is the page
   the other adapters draw. A list the component draws (a calendar's weeks, a toast for each
   message) is written once as a `<template kui-each="weeks">` and stamped for each entry.
-  All 49 are held to the same scenarios and the same DOM as the five frameworks.
+  All 59 are held to the same scenarios and the same DOM as the five frameworks.
 - **Small.** The core has one dependency (`@floating-ui/dom`), and the calendar a second of its own
   (`@internationalized/date`): a page that draws no calendar carries none of it.
 - **Renders on a server.** A controller touches no DOM until its element exists, so the page a

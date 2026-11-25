@@ -4,14 +4,20 @@ import { agentTools, createAgent, registerTools } from "../../packages/core/src/
 import type { AgentEvent, AgentKind } from "../../packages/core/src/agent.ts"
 import { bind } from "../../packages/core/src/bind.ts"
 import { createCollapsible } from "../../packages/core/src/collapsible.ts"
+import { createDateField } from "../../packages/core/src/date-field.ts"
+import type { DateField } from "../../packages/core/src/date-field.ts"
 import { createInput } from "../../packages/core/src/input.ts"
 import { createRadioGroup } from "../../packages/core/src/radio-group.ts"
-import { signal } from "../../packages/core/src/reactivity.ts"
+import { effect, signal } from "../../packages/core/src/reactivity.ts"
 import { createSelect } from "../../packages/core/src/select.ts"
 import type { SelectProps } from "../../packages/core/src/select.ts"
 import { createSlider } from "../../packages/core/src/slider.ts"
 import { createSwitch } from "../../packages/core/src/switch.ts"
 import { faults, recorder } from "../../packages/core/src/testing.ts"
+import { createTimeField } from "../../packages/core/src/time-field.ts"
+import type { TimeField } from "../../packages/core/src/time-field.ts"
+import { createTree } from "../../packages/core/src/tree.ts"
+import type { TreeProps } from "../../packages/core/src/tree.ts"
 import { mount } from "./page.ts"
 
 const PAGE = `
@@ -351,6 +357,12 @@ describe("the agent bridge", () => {
     expect(tools.get("snapshot")!.annotations).toEqual({
       readOnlyHint: true,
       untrustedContentHint: true,
+    })
+    // WebMCP's hint that a tool's actions may be significant or not taken back.
+    expect(tools.get("act")!.annotations).toEqual({
+      readOnlyHint: false,
+      untrustedContentHint: true,
+      consequentialHint: true,
     })
     await tools.get("act")!.execute({ steps: [{ ref: "Notifications", action: "toggle" }] })
     expect(toggled.calls.length).toBe(1)
@@ -841,6 +853,12 @@ describe("the agent bridge, beside a person", () => {
     })
     expect(done.steps[0]!.now?.values).toEqual(["Olives", "Capers"])
     expect((await agent.undo()).steps[0]!.now?.values).toEqual(["Basil"])
+    // A choice it does not have is said, beside one it has, and nothing is pressed.
+    const none = await agent.act({
+      steps: [{ ref: "Toppings", action: "setValue", args: [["Olives", "Anchovies"]] }],
+    })
+    expect(none.error).toBe('Step 1 (Toppings): It has no choice "Anchovies"')
+    expect(agent.snapshot()[0]!.values).toEqual(["Basil"])
   })
 
   it("reads and uses a kind of component of your own", async () => {
@@ -879,6 +897,415 @@ describe("the agent bridge, beside a person", () => {
       (await agent.act({ steps: [{ ref: "Stars", action: "setValue", args: [9] }] })).error
     ).toContain("It has no 9")
     expect((await agent.undo()).steps[0]!.now?.value).toBe(2)
+  })
+})
+
+/** A select of several values drawn in plain DOM, as the select's own tests draw one. */
+function toppings() {
+  const root = mount(`
+    <button class="trigger" aria-label="Toppings"><span class="shown"></span></button>
+    <div class="positioner"><div class="popup">
+      <div class="option" data-v="Basil">Basil</div>
+      <div class="option" data-v="Olives">Olives</div>
+      <div class="option" data-v="Capers">Capers</div>
+    </div></div>
+    <button>Order</button>`)
+  const find = (name: string) => root.querySelector<HTMLElement>(name)!
+  const heard = recorder<string[]>()
+  const made = createSelect(
+    signal<SelectProps<string>>({
+      id: "tp",
+      multiple: true,
+      defaultValues: ["Basil"],
+      onValuesChange: heard.listen,
+    })
+  )
+  const shown = find(".shown")
+  onTestFinished(made.mount())
+  onTestFinished(bind(find(".trigger"), made.trigger))
+  onTestFinished(bind(shown, made.valuePart))
+  onTestFinished(effect(() => void (shown.textContent = made.label.get() ?? "")))
+  for (const each of root.querySelectorAll<HTMLElement>(".option"))
+    onTestFinished(bind(each, made.item(each.dataset.v!)))
+  onTestFinished(bind(find(".positioner"), made.positioner))
+  onTestFinished(bind(find(".popup"), made.popup))
+  return { root, made, heard }
+}
+
+/** A tree of files: Documents holds Work (which holds Report) and Letter; Notes is a leaf. */
+function files(given: Partial<TreeProps<string>> = {}) {
+  const root = mount(`
+    <ul class="tree" aria-label="Files">
+      <li data-v="docs"><span data-text>Documents</span>
+        <ul data-group>
+          <li data-v="work"><span data-text>Work</span>
+            <ul data-group><li data-v="report"><span data-text>Report</span></li></ul>
+          </li>
+          <li data-v="letter"><span data-text>Letter</span></li>
+        </ul>
+      </li>
+      <li data-v="notes"><span data-text>Notes</span></li>
+    </ul>
+    <button>Upload</button>`)
+  const expanded = recorder<string[]>()
+  const selected = recorder<string[]>()
+  const made = createTree(
+    signal<TreeProps<string>>({
+      id: "files",
+      onExpandedChange: expanded.listen,
+      onSelectedChange: selected.listen,
+      ...given,
+    })
+  )
+  const branches = new Set(["docs", "work"])
+  onTestFinished(bind(root.querySelector<HTMLElement>(".tree")!, made.root))
+  for (const node of root.querySelectorAll<HTMLElement>("[data-v]")) {
+    const value = node.dataset.v!
+    const item = made.item(value, () => ({ branch: branches.has(value) }))
+    onTestFinished(bind(node, item.root))
+    onTestFinished(bind(node.querySelector<HTMLElement>(":scope > [data-text]")!, item.text))
+    const group = node.querySelector<HTMLElement>(":scope > [data-group]")
+    if (group) onTestFinished(bind(group, item.group))
+    onTestFinished(item.mount())
+  }
+  onTestFinished(made.mount())
+  return { root, made, expanded, selected }
+}
+
+/** A date or a time field drawn in plain DOM: a span for each piece, its text as it changes. */
+function pieces(made: DateField | TimeField, label: string) {
+  const root = mount(
+    `<div class="group" aria-label="${label}"></div><input class="hidden" /><button>Save</button>`
+  )
+  const group = root.querySelector<HTMLElement>(".group")!
+  onTestFinished(bind(group, made.root))
+  onTestFinished(bind(root.querySelector<HTMLElement>(".hidden")!, made.input))
+  onTestFinished(made.mount())
+  for (const segment of made.segments.peek()) {
+    const span = document.createElement("span")
+    group.append(span)
+    const { part, text } = (
+      made.segment as (each: typeof segment) => ReturnType<DateField["segment"]>
+    )(segment)
+    onTestFinished(bind(span, part))
+    onTestFinished(effect(() => void (span.textContent = text.get())))
+  }
+  return root
+}
+
+describe("the agent bridge, on more kinds", () => {
+  it("reads a select of several values once its list is read, and sets them", async () => {
+    const { root, made, heard } = toppings()
+    const agent = createAgent({ root })
+    // Closed and never opened, its list is not in the page: what it holds is not known yet.
+    const first = agent.snapshot().find((each) => each.label === "Toppings")!
+    expect(first).toMatchObject({ component: "select", value: "Basil", open: false })
+    expect(first.values).toBeUndefined()
+    const done = await agent.act({
+      steps: [{ ref: "Toppings", action: "setValue", args: [["Olives", "Capers"]] }],
+    })
+    expect(done.error).toBe(undefined)
+    expect(made.values.peek()).toEqual(["Olives", "Capers"])
+    // Opened to be set, and closed again.
+    expect(made.open.peek()).toBe(false)
+    expect(done.steps[0]!.now).toMatchObject({ values: ["Olives", "Capers"], open: false })
+    expect(heard.calls.map((each) => each.source)).toEqual(["agent", "agent", "agent"])
+    // What it held as the step opened it is what is put back.
+    expect(agent.history()[0]!.before.values).toEqual(["Basil"])
+    expect((await agent.undo()).ok).toBe(true)
+    expect(made.values.peek()).toEqual(["Basil"])
+    expect(made.open.peek()).toBe(false)
+    // Read by opening it, for an agent that never set it.
+    const other = createAgent({ root })
+    const [read] = await other.query({ within: "Toppings" })
+    expect(read).toMatchObject({ values: ["Basil"], open: false })
+    expect(read!.items!.map((each) => each.value)).toEqual(["Basil", "Olives", "Capers"])
+    expect(other.snapshot().find((each) => each.label === "Toppings")!.values).toEqual(["Basil"])
+    const none = await other.act({
+      steps: [{ ref: "Toppings", action: "setValue", args: [["Basil", "Mars"]] }],
+    })
+    expect(none.error).toBe('Step 1 (Toppings): It has no choice "Mars"')
+    expect(made.open.peek()).toBe(false)
+    expect(made.values.peek()).toEqual(["Basil"])
+  })
+
+  it("reads and sets a select of several values in plain markup, its list kept in the page", async () => {
+    const root = mount(`
+      <button role="combobox" aria-label="Days" aria-expanded="false" aria-controls="days">Mon</button>
+      <div id="days" role="listbox" aria-multiselectable="true" hidden>
+        <div role="option" aria-selected="true">Mon</div>
+        <div role="option" aria-selected="false">Tue</div>
+        <div role="option" aria-selected="false">Wed</div>
+      </div>`)
+    const trigger = root.querySelector<HTMLElement>('[role="combobox"]')!
+    const list = root.querySelector<HTMLElement>("#days")!
+    trigger.addEventListener("click", () => {
+      list.hidden = !list.hidden
+      trigger.setAttribute("aria-expanded", String(!list.hidden))
+    })
+    for (const each of list.querySelectorAll('[role="option"]')) {
+      each.addEventListener("click", () => {
+        each.setAttribute("aria-selected", String(each.getAttribute("aria-selected") !== "true"))
+        trigger.textContent = [...list.querySelectorAll('[aria-selected="true"]')]
+          .map((option) => option.textContent)
+          .join(", ")
+      })
+    }
+    const agent = createAgent({ root })
+    expect(agent.snapshot()).toEqual([
+      expect.objectContaining({ component: "select", label: "Days", values: ["Mon"] }),
+    ])
+    const done = await agent.act({
+      steps: [{ ref: "Days", action: "setValue", args: [["Tue", "Wed"]] }],
+    })
+    expect(done.steps[0]!.now).toMatchObject({ value: "Tue, Wed", values: ["Tue", "Wed"] })
+    expect(trigger.getAttribute("aria-expanded")).toBe("false")
+    expect((await agent.undo()).steps[0]!.now?.values).toEqual(["Mon"])
+  })
+
+  it("keeps a select of one value as it was, and says it holds one", async () => {
+    const { agent, picked } = page()
+    const many = await agent.act({
+      steps: [{ ref: "Region", action: "setValue", args: [["Asia", "Europe"]] }],
+    })
+    expect(many.error).toBe("Step 1 (Region): It holds one choice")
+    const one = await agent.act({
+      steps: [{ ref: "Region", action: "setValue", args: [["Europe"]] }],
+    })
+    expect(one.ok).toBe(true)
+    expect(picked.calls.at(-1)).toMatchObject({ value: "Europe", source: "agent" })
+    expect(agent.snapshot().find((each) => each.label === "Region")!.values).toBeUndefined()
+  })
+
+  it("tells the thumbs of a range apart, and asks which when named by the range", async () => {
+    const root = mount(`
+      <div class="slider" aria-label="Price">
+        <div class="control">
+          <div class="thumb"><input /></div><div class="thumb"><input /></div>
+        </div>
+      </div>
+      <div role="group" aria-label="Hours">
+        <div role="slider" aria-label="From" aria-valuenow="9" aria-valuemin="0" aria-valuemax="24"></div>
+        <div role="slider" aria-label="To" aria-valuenow="17" aria-valuemin="0" aria-valuemax="24"></div>
+      </div>`)
+    const turned = recorder<number | number[]>()
+    const slider = createSlider(
+      signal({ id: "pr", defaultValue: [20, 80], onValueChange: turned.listen })
+    )
+    onTestFinished(bind(root.querySelector<HTMLElement>(".slider")!, slider.root))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".control")!, slider.control))
+    const thumbs = root.querySelectorAll<HTMLElement>(".thumb")
+    for (const [at, thumb] of [...thumbs].entries()) {
+      onTestFinished(bind(thumb, slider.thumb(at)))
+      onTestFinished(bind(thumb.querySelector("input")!, slider.thumbInput(at)))
+    }
+    const agent = createAgent({ root })
+    expect(agent.snapshot().map((each) => `${each.label} ${each.value}`)).toEqual([
+      "Price, 1 of 2 20",
+      "Price, 2 of 2 80",
+      // A thumb the page named itself keeps its name.
+      "From 9",
+      "To 17",
+    ])
+    const both = await agent.act({ steps: [{ ref: "Price", action: "setValue", args: [50] }] })
+    expect(both.error).toMatch(/"Price" names 2 components: .*"Price, 1 of 2".*"Price, 2 of 2"/)
+    const done = await agent.act({
+      steps: [{ ref: "Price, 2 of 2", action: "setValue", args: [60] }],
+    })
+    expect(done.ok).toBe(true)
+    expect(slider.values.peek()).toEqual([20, 60])
+    expect(turned.calls.at(-1)).toMatchObject({ value: [20, 60], source: "agent" })
+    expect((await agent.undo()).ok).toBe(true)
+    expect(slider.values.peek()).toEqual([20, 80])
+  })
+
+  it("types a date part by part, and says a value a part does not take", async () => {
+    const heard = recorder<string | null>()
+    const made = createDateField(signal({ id: "df", locale: "en-US", onValueChange: heard.listen }))
+    const root = pieces(made, "Start")
+    const agent = createAgent({ root })
+    expect(agent.snapshot().filter((each) => each.component === "spinbutton")).toEqual([
+      expect.objectContaining({ label: "month", min: 1, max: 12, actions: ["setValue"] }),
+      expect.objectContaining({ label: "day", min: 1, max: 31 }),
+      expect.objectContaining({ label: "year", min: 1, max: 9999 }),
+    ])
+    // Empty, a part says nothing: its placeholder is not a value.
+    expect(agent.snapshot()[0]!.value).toBeUndefined()
+    const done = await agent.act({
+      steps: [
+        { ref: "month", action: "setValue", args: [3] },
+        { ref: "day", action: "setValue", args: ["14"] },
+        { ref: "year", action: "setValue", args: [2025] },
+      ],
+    })
+    expect(done.error).toBe(undefined)
+    expect(done.steps.map((each) => each.now?.value)).toEqual([3, 14, 2025])
+    expect(made.value.peek()).toBe("2025-03-14")
+    expect(heard.calls).toEqual([{ value: "2025-03-14", reason: "typed", source: "agent" }])
+    // Beyond what the part takes: said with what it holds, and nothing typed.
+    const far = await agent.act({ steps: [{ ref: "day", action: "setValue", args: [40] }] })
+    expect(far.error).toBe("Step 1 (day): It holds 14, not 40")
+    expect(made.value.peek()).toBe("2025-03-14")
+    await agent.act({ steps: [{ ref: "month", action: "setValue", args: [11] }] })
+    expect(made.value.peek()).toBe("2025-11-14")
+    expect((await agent.undo()).ok).toBe(true)
+    expect(made.value.peek()).toBe("2025-03-14")
+  })
+
+  it("types a time, its day period by its word, and a native spin button through its input", async () => {
+    const heard = recorder<string | null>()
+    const made = createTimeField(
+      signal({ id: "tf", locale: "en-US", hourCycle: 12 as const, onValueChange: heard.listen })
+    )
+    const root = pieces(made, "Alarm")
+    root.insertAdjacentHTML(
+      "beforeend",
+      '<input type="number" role="spinbutton" aria-label="Guests" min="1" max="8" value="2" />'
+    )
+    const guests = root.querySelector<HTMLInputElement>('[aria-label="Guests"]')!
+    const typed: string[] = []
+    guests.addEventListener("input", () => typed.push(guests.value))
+    const agent = createAgent({ root })
+    // Named as the locale names each part: asked for here by their refs.
+    const parts = agent.snapshot().filter((each) => each.component === "spinbutton")
+    expect(parts.map((each) => [each.min, each.max])).toEqual([
+      [1, 12],
+      [0, 59],
+      [0, 1],
+      [1, 8],
+    ])
+    const [hour, minute, period] = parts.map((each) => each.ref)
+    const done = await agent.act({
+      steps: [
+        { ref: hour!, action: "setValue", args: [9] },
+        { ref: minute!, action: "setValue", args: [30] },
+        { ref: period!, action: "setValue", args: ["PM"] },
+      ],
+    })
+    expect(done.error).toBe(undefined)
+    expect(made.value.peek()).toBe("21:30")
+    expect(heard.calls.every((each) => each.source === "agent")).toBe(true)
+    // Asked for by its number, which typing does not take: its arrow keys then.
+    await agent.act({ steps: [{ ref: period!, action: "setValue", args: [0] }] })
+    expect(made.value.peek()).toBe("09:30")
+    expect(agent.snapshot().find((each) => each.label === "Guests")).toMatchObject({
+      component: "spinbutton",
+      value: 2,
+      min: 1,
+      max: 8,
+    })
+    expect(
+      (await agent.act({ steps: [{ ref: "Guests", action: "setValue", args: [5] }] })).ok
+    ).toBe(true)
+    expect(guests.value).toBe("5")
+    expect(typed).toEqual(["5"])
+    const many = await agent.act({ steps: [{ ref: "Guests", action: "setValue", args: [9] }] })
+    expect(many.error).toBe("Step 1 (Guests): It holds 5, not 9")
+  })
+
+  it("reads a tree as one component, and chooses, opens and closes its nodes", async () => {
+    const { root, made, expanded, selected } = files({ defaultExpandedValue: ["docs"] })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const agent = createAgent({ root })
+    // Its nodes are its own, not components of their own.
+    expect(agent.snapshot().map(({ ref: _ref, ...rest }) => rest)).toEqual([
+      {
+        component: "tree",
+        label: "Files",
+        items: [
+          { value: "Documents", label: "Documents", open: true },
+          { value: "Work", label: "Work", level: 2, open: false },
+          { value: "Letter", label: "Letter", level: 2 },
+          { value: "Notes", label: "Notes" },
+        ],
+        actions: ["setValue", "open", "close"],
+      },
+      { component: "button", label: "Upload", actions: ["press"] },
+    ])
+    const hidden = await agent.act({
+      steps: [{ ref: "Files", action: "setValue", args: ["Report"] }],
+    })
+    expect(hidden.error).toBe('Step 1 (Files): "Report" is in a closed branch: open it first')
+    const done = await agent.act({
+      steps: [
+        { ref: "Files", action: "open", args: ["Work"] },
+        { ref: "Files", action: "setValue", args: ["Report"] },
+        // Named by a node alone: that node is chosen.
+        { ref: "Letter", action: "press" },
+      ],
+    })
+    expect(done.error).toBe(undefined)
+    expect(made.expandedValue.peek()).toEqual(["docs", "work"])
+    expect(made.selectedValue.peek()).toEqual(["letter"])
+    expect(done.steps[2]!.now?.value).toBe("Letter")
+    expect(done.steps[2]!.now?.items).toContainEqual({ value: "Report", label: "Report", level: 3 })
+    expect([...expanded.calls, ...selected.calls].every((each) => each.source === "agent")).toBe(
+      true
+    )
+    expect(agent.history().map((each) => each.text)).toEqual([
+      "The agent opened Work in Files",
+      'The agent set Files to "Report"',
+      'The agent set Files to "Letter"',
+    ])
+    // Choosing a branch does not open or close it.
+    await agent.act({ steps: [{ ref: "Files", action: "setValue", args: ["Documents"] }] })
+    expect(made.expandedValue.peek()).toEqual(["docs", "work"])
+    await agent.undo()
+    await agent.undo()
+    expect(made.selectedValue.peek()).toEqual(["report"])
+    // Nothing was chosen before: that is not a value to put back.
+    expect((await agent.undo()).ok).toBe(false)
+    // A branch closed is opened again by its undo.
+    await agent.act({ steps: [{ ref: "Files", action: "close", args: ["Documents"] }] })
+    expect(made.expandedValue.peek()).toEqual(["work"])
+    expect((await agent.undo()).ok).toBe(true)
+    expect([...made.expandedValue.peek()].sort()).toEqual(["docs", "work"])
+    expect((await agent.act({ steps: [{ ref: "Files", action: "close" }] })).error).toContain(
+      "close takes the name of a node"
+    )
+    expect(
+      (await agent.act({ steps: [{ ref: "Files", action: "open", args: ["Notes"] }] })).error
+    ).toContain('"Notes" is not a branch')
+  })
+
+  it("chooses several nodes of a tree", async () => {
+    const { root, made } = files({ selectionMode: "multiple", defaultExpandedValue: ["docs"] })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const agent = createAgent({ root })
+    expect(agent.snapshot()[0]).toMatchObject({ component: "tree", values: [] })
+    const done = await agent.act({
+      steps: [{ ref: "Files", action: "setValue", args: [["Notes", "Letter"]] }],
+    })
+    expect(done.steps[0]!.now?.values).toEqual(["Letter", "Notes"])
+    expect(made.selectedValue.peek()).toEqual(["letter", "notes"])
+    await agent.act({ steps: [{ ref: "Files", action: "setValue", args: [["Documents"]] }] })
+    expect(made.selectedValue.peek()).toEqual(["docs"])
+    expect((await agent.undo()).steps[0]!.now?.values).toEqual(["Letter", "Notes"])
+  })
+
+  it("hides what a secret mark holds of the new kinds", () => {
+    const root = mount(`
+      <div data-agent-secret>
+        <button role="combobox" aria-label="Clients" aria-expanded="false" aria-controls="clients">Acme</button>
+        <div id="clients" role="listbox" aria-multiselectable="true" hidden>
+          <div role="option" aria-selected="true">Acme</div>
+        </div>
+        <div role="spinbutton" aria-label="Salary" aria-valuenow="90" aria-valuemin="0" aria-valuemax="999"></div>
+        <div role="tree" aria-label="Accounts" aria-multiselectable="true">
+          <div role="treeitem" aria-selected="true">Acme</div>
+        </div>
+      </div>`)
+    const read = Object.fromEntries(
+      createAgent({ root })
+        .snapshot()
+        .map((each) => [each.label, each])
+    )
+    expect(read["Clients"]!.values).toBeUndefined()
+    expect(read["Salary"]!.value).toBe("[redacted]")
+    expect(read["Accounts"]!.values).toBeUndefined()
+    expect(read["Accounts"]!.items).toBeUndefined()
+    expect(JSON.stringify(read)).not.toContain("Acme")
+    expect(JSON.stringify(read)).not.toContain("90")
   })
 })
 

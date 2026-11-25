@@ -16,6 +16,10 @@ export const exclusive: string[][] = [
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
   ["[data-segment=\"day\"]","[data-segment=\"month\"]","[data-segment=\"year\"]","[data-segment=\"literal\"]"],
+  ["[data-segment=\"hour\"]","[data-segment=\"minute\"]","[data-segment=\"second\"]","[data-segment=\"dayPeriod\"]","[data-segment=\"literal\"]"],
+  ["[data-format=\"hex\"]","[data-format=\"rgb\"]","[data-format=\"hsl\"]"],
+  ["[data-channel=\"hue\"]","[data-channel=\"alpha\"]"],
+  ["[data-channel=\"hex\"]","[data-channel=\"red\"]","[data-channel=\"green\"]","[data-channel=\"blue\"]","[data-channel=\"hue\"]","[data-channel=\"saturation\"]","[data-channel=\"lightness\"]","[data-channel=\"alpha\"]"],
   ["[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]","[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]"],
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
@@ -1610,6 +1614,839 @@ export const Pagination = {
   Next: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+  },
+} as const
+
+export const Rating = {
+  /** The items, as one choice: a radio group. It holds the hidden input a form reads. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a value is needed. */
+    required: "[data-required]",
+    /** Present while a pointer is over an item. */
+    hovering: "[data-hovering]",
+  },
+  /** The items, from 1 to `count`: each place is given to draw. It draws no element. */
+  Items: {
+  },
+  /** One item (a star): pressed, the value is its place, or half of it. */
+  Item: {
+    /** Present on the item that holds the value. */
+    checked: "[data-checked]",
+    /** Present on every item up to the value drawn: the one a pointer is over, or the one held. */
+    filled: "[data-filled]",
+    /** Present on the item the value drawn fills by half. */
+    half: "[data-half]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a value is needed. */
+    required: "[data-required]",
+  },
+} as const
+
+export const Steps = {
+  /** A task in steps, taken in order. */
+  Root: {
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present once every step is done. */
+    complete: "[data-complete]",
+  },
+  /** The row of steps: the arrows move between their triggers. */
+  List: {
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** One step of the row, around its trigger and its separator. */
+  Item: {
+    /** Present on the step that is shown. */
+    current: "[data-current]",
+    /** Present on a step that is done: one before the step shown. */
+    complete: "[data-complete]",
+    /** Present on a step still to come. */
+    incomplete: "[data-incomplete]",
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** Names a step, and goes to it when pressed. */
+  Trigger: {
+    /** Present on the step that is shown. */
+    current: "[data-current]",
+    /** Present on a step that is done: one before the step shown. */
+    complete: "[data-complete]",
+    /** Present on a step still to come. */
+    incomplete: "[data-incomplete]",
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A step's mark: its number, or a tick once it is done. */
+  Indicator: {
+    /** Present on the step that is shown. */
+    current: "[data-current]",
+    /** Present on a step that is done: one before the step shown. */
+    complete: "[data-complete]",
+    /** Present on a step still to come. */
+    incomplete: "[data-incomplete]",
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** The line from a step to the next. */
+  Separator: {
+    /** Present on the step that is shown. */
+    current: "[data-current]",
+    /** Present on a step that is done: one before the step shown. */
+    complete: "[data-complete]",
+    /** Present on a step still to come. */
+    incomplete: "[data-incomplete]",
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** What a step shows: hidden unless its step is the one shown. */
+  Content: {
+    /** Present on the step that is shown. */
+    current: "[data-current]",
+    /** Present on a step that is done: one before the step shown. */
+    complete: "[data-complete]",
+    /** Present on a step still to come. */
+    incomplete: "[data-incomplete]",
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** What is shown once every step is done. */
+  Completed: {
+    /** Whether the steps are laid out across or down. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** Goes to the step before. */
+  Previous: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Goes to the step after; from the last, to all of them done. */
+  Next: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
+export const Editable = {
+  /** A text edited in place. */
+  Root: {
+    /** Present while it is being edited. */
+    editing: "[data-editing]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be edited. */
+    readonly: "[data-readonly]",
+    /** Present while it holds no text. */
+    placeholder: "[data-placeholder]",
+  },
+  /** The text as it reads, or the placeholder while there is none: hidden while editing. */
+  Preview: {
+    /** Present while it is being edited. */
+    editing: "[data-editing]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be edited. */
+    readonly: "[data-readonly]",
+    /** Present while it holds no text. */
+    placeholder: "[data-placeholder]",
+  },
+  /** Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. */
+  Input: {
+    /** Present while it is being edited. */
+    editing: "[data-editing]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be edited. */
+    readonly: "[data-readonly]",
+    /** Present while it holds no text. */
+    placeholder: "[data-placeholder]",
+  },
+  /** Starts an edit: hidden while editing. */
+  EditTrigger: {
+    /** Present while it is being edited. */
+    editing: "[data-editing]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be edited. */
+    readonly: "[data-readonly]",
+    /** Present while it holds no text. */
+    placeholder: "[data-placeholder]",
+  },
+  /** Keeps what was typed: hidden unless editing. */
+  SubmitTrigger: {
+    /** Present while it is being edited. */
+    editing: "[data-editing]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be edited. */
+    readonly: "[data-readonly]",
+    /** Present while it holds no text. */
+    placeholder: "[data-placeholder]",
+  },
+  /** Drops what was typed: hidden unless editing. */
+  CancelTrigger: {
+    /** Present while it is being edited. */
+    editing: "[data-editing]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it is shown and cannot be edited. */
+    readonly: "[data-readonly]",
+    /** Present while it holds no text. */
+    placeholder: "[data-placeholder]",
+  },
+} as const
+
+export const PasswordInput = {
+  /** A password that can be shown while it is typed. */
+  Root: {
+    /** Present while the password can be read. */
+    visible: "[data-visible]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** The `<input>`: a password, or text while it is shown. In a `Field` it is the field's control. */
+  Input: {
+    /** Present while the password can be read. */
+    visible: "[data-visible]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present once focus has left it. */
+    touched: "[data-touched]",
+    /** Present once its text differs from what it began with. */
+    dirty: "[data-dirty]",
+    /** Present while it holds text. */
+    filled: "[data-filled]",
+    /** Present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the value was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the value is wrong. */
+    invalid: "[data-invalid]",
+  },
+  /** Shows the password, and hides it again. Focus and the caret stay in the input. */
+  Toggle: {
+    /** Present while the password can be read. */
+    visible: "[data-visible]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** What draws which of the two it is: an eye, open or struck. */
+  Indicator: {
+    /** Present while the password can be read. */
+    visible: "[data-visible]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+} as const
+
+export const TagsInput = {
+  /** Several short texts held as tags, and the input a new one is typed in. It holds the hidden inputs a form reads. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+    /** Present while focus is on a tag or in the input. */
+    focused: "[data-focused]",
+    /** Present while it holds no tag. */
+    empty: "[data-empty]",
+  },
+  /** What holds the tags: a list. */
+  List: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+  },
+  /** The tags, in order: each entry is given to draw. It draws no element. */
+  Items: {
+  },
+  /** A tag: reached with the arrows, taken away with Backspace or Delete. */
+  Item: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+    /** Present while the tag is edited. */
+    editing: "[data-editing]",
+  },
+  /** A tag's text: hidden while the tag is edited. */
+  ItemText: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+  },
+  /** Where a tag is edited in place: hidden unless it is being edited. */
+  ItemInput: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+  },
+  /** A tag's button that takes it away. */
+  ItemRemove: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+  },
+  /** Where a new tag is typed. In a `Field` it is what the field's label names. */
+  Input: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+  },
+  /** Takes every tag away: hidden while there is none. */
+  Clear: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the tags are shown and cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when a tag is needed. */
+    required: "[data-required]",
+  },
+} as const
+
+export const FileUpload = {
+  /** Files chosen to be sent. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+    /** Present while it holds no file. */
+    empty: "[data-empty]",
+  },
+  /** Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input. */
+  Dropzone: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** A button that opens the file picker. */
+  Trigger: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** What holds the files: a list. */
+  List: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** The files, in order: each entry is given to draw. It draws no element. */
+  Items: {
+  },
+  /** A file. */
+  Item: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** A file's name. */
+  ItemName: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** A file's size, as people read one. */
+  ItemSize: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** A file's button that takes it away. */
+  ItemRemove: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+  /** Takes every file away: hidden while there is none. */
+  Clear: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present while files are dragged over the dropzone. */
+    dragging: "[data-dragging]",
+    /** Present when a file is needed. */
+    required: "[data-required]",
+  },
+} as const
+
+export const TimeField = {
+  /** The field: a group of the time's parts. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when its value cannot be changed. */
+    readonly: "[data-readonly]",
+    /** Present when the time is outside what it takes, or is asked for and half typed. */
+    invalid: "[data-invalid]",
+  },
+  /** The time's segments, in the locale's order: each is given to draw. It draws no element. */
+  Segments: {
+  },
+  /** One piece of the time: a part that is typed, or what stands between two. */
+  Segment: {
+    /** Which piece it is: `dayPeriod` is AM or PM, on a clock of twelve hours. */
+    segment: {
+      hour: "[data-segment=\"hour\"]",
+      minute: "[data-segment=\"minute\"]",
+      second: "[data-segment=\"second\"]",
+      dayPeriod: "[data-segment=\"dayPeriod\"]",
+      literal: "[data-segment=\"literal\"]",
+    },
+    /** Present on a part that is empty. */
+    placeholder: "[data-placeholder]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when the time is outside what it takes, or is asked for and half typed. */
+    invalid: "[data-invalid]",
+  },
+  /** The hidden input it is submitted by. */
+  Input: {
+  },
+} as const
+
+export const Tree = {
+  /** The tree. Its nodes are one stop for Tab. */
+  Root: {
+  },
+  /** One node, a `treeitem`: a leaf, or a branch that holds its row and its group. Its `value` tells it from the others; its depth, and its place among its siblings, are read from the page. */
+  Item: {
+    /** Present on a chosen node. */
+    selected: "[data-selected]",
+    /** Present on the node focus is on, while it is in the tree. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present on a branch that is open. */
+    open: "[data-open]",
+    /** Present on a branch that is closed. */
+    closed: "[data-closed]",
+    /** Present on a branch that says its children are being loaded. */
+    loading: "[data-loading]",
+  },
+  /** The line a node draws, apart from the children its group holds: what a design gives a background. */
+  ItemRow: {
+    /** Present on a chosen node. */
+    selected: "[data-selected]",
+    /** Present on the node focus is on, while it is in the tree. */
+    highlighted: "[data-highlighted]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present on a branch that is open. */
+    open: "[data-open]",
+    /** Present on a branch that is closed. */
+    closed: "[data-closed]",
+    /** Present on a branch that says its children are being loaded. */
+    loading: "[data-loading]",
+  },
+  /** The mark that says whether a branch is open. A press on it opens or closes the branch and chooses nothing. */
+  ItemIndicator: {
+    /** Present on a branch that is open. */
+    open: "[data-open]",
+    /** Present on a branch that is closed. */
+    closed: "[data-closed]",
+    /** Present on a branch that says its children are being loaded. */
+    loading: "[data-loading]",
+  },
+  /** The node's name: what names it to assistive technology, and what typing matches. */
+  ItemText: {
+  },
+  /** A branch's children. In the page while the branch is open, and through its exit's motion. */
+  Group: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+  },
+} as const
+
+export const ColorPicker = {
+  /** Groups the picker's parts. It holds the hidden input a form reads, and the colour for anything inside to paint with. */
+  Root: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+    /** How the value is written. */
+    format: {
+      hex: "[data-format=\"hex\"]",
+      rgb: "[data-format=\"rgb\"]",
+      hsl: "[data-format=\"hsl\"]",
+    },
+  },
+  /** The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue. */
+  Area: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds this part's thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it. */
+  AreaThumb: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds this part's thumb. */
+    dragging: "[data-dragging]",
+  },
+  /** What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`. */
+  ChannelSlider: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds this part's thumb. */
+    dragging: "[data-dragging]",
+    /** The channel the slider moves. */
+    channel: {
+      hue: "[data-channel=\"hue\"]",
+      alpha: "[data-channel=\"alpha\"]",
+    },
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** The channel's whole range: what a design paints the hues or the alpha on. */
+  ChannelSliderTrack: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds this part's thumb. */
+    dragging: "[data-dragging]",
+    /** The channel the slider moves. */
+    channel: {
+      hue: "[data-channel=\"hue\"]",
+      alpha: "[data-channel=\"alpha\"]",
+    },
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it. */
+  ChannelSliderThumb: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds this part's thumb. */
+    dragging: "[data-dragging]",
+    /** The channel the slider moves. */
+    channel: {
+      hue: "[data-channel=\"hue\"]",
+      alpha: "[data-channel=\"alpha\"]",
+    },
+    /** The way the track runs. */
+    orientation: {
+      horizontal: "[data-orientation=\"horizontal\"]",
+      vertical: "[data-orientation=\"vertical\"]",
+    },
+  },
+  /** A text input for one channel (`hex`, `red`, `green`, `blue`, `hue`, `saturation`, `lightness`, `alpha`). What is typed is taken when it is a colour or a number in range, and put back when focus leaves while it is not. */
+  ChannelInput: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+    /** The channel the input is typed in. */
+    channel: {
+      hex: "[data-channel=\"hex\"]",
+      red: "[data-channel=\"red\"]",
+      green: "[data-channel=\"green\"]",
+      blue: "[data-channel=\"blue\"]",
+      hue: "[data-channel=\"hue\"]",
+      saturation: "[data-channel=\"saturation\"]",
+      lightness: "[data-channel=\"lightness\"]",
+      alpha: "[data-channel=\"alpha\"]",
+    },
+  },
+  /** Shows the current colour. */
+  Swatch: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+  },
+  /** A preset colour, given as `value`: pressed, the colour is this one. */
+  SwatchTrigger: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+    /** Present while the colour is this one. */
+    selected: "[data-selected]",
+  },
+  /** Picks a colour from the screen with the browser's eye dropper. Hidden where the browser has none, and on a server. */
+  EyeDropperTrigger: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+  },
+  /** The colour, written in its format. */
+  ValueText: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+    /** How the value is written. */
+    format: {
+      hex: "[data-format=\"hex\"]",
+      rgb: "[data-format=\"rgb\"]",
+      hsl: "[data-format=\"hsl\"]",
+    },
+  },
+  /** Goes to the next format: hex, then rgb, then hsl. */
+  FormatTrigger: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs a colour. */
+    required: "[data-required]",
+    /** Present while a pointer holds a thumb of the picker. */
+    dragging: "[data-dragging]",
+    /** How the value is written. */
+    format: {
+      hex: "[data-format=\"hex\"]",
+      rgb: "[data-format=\"rgb\"]",
+      hsl: "[data-format=\"hsl\"]",
+    },
+  },
+} as const
+
+export const Tour = {
+  /** Holds the tour: its steps, whether it is open and which step is shown. It draws no element. */
+  Root: {
+  },
+  /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
+  Portal: {
+  },
+  /** A layer over the page with a hole over the step's target, which the design draws from its variables (a clip path, or a box with a large shadow). A press on it is a press outside the tour. While the target can be used (`interactive`), presses go through it. */
+  Spotlight: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** Present while the step shown has no target in the page: the popup stands in the middle of the viewport. */
+    centered: "[data-centered]",
+  },
+  /** Places the popup against the step's target, or in the middle of the viewport for a step with none. It carries the geometry. */
+  Positioner: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present while the step shown has no target in the page: the popup stands in the middle of the viewport. */
+    centered: "[data-centered]",
+  },
+  /** The step itself: a dialog that stays in the page from the first step to the last, and moves. */
+  Popup: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present while the step shown has no target in the page: the popup stands in the middle of the viewport. */
+    centered: "[data-centered]",
+  },
+  /** An element that points at the target, placed along the popup's edge. */
+  Arrow: {
+    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
+    side: {
+      top: "[data-side=\"top\"]",
+      right: "[data-side=\"right\"]",
+      bottom: "[data-side=\"bottom\"]",
+      left: "[data-side=\"left\"]",
+      "inline-start": "[data-side=\"inline-start\"]",
+      "inline-end": "[data-side=\"inline-end\"]",
+    },
+    /** How it is aligned with the anchor. */
+    align: {
+      start: "[data-align=\"start\"]",
+      center: "[data-align=\"center\"]",
+      end: "[data-align=\"end\"]",
+    },
+    /** Present when the popup was pushed along its edge, so the arrow is not at the target's centre. */
+    uncentered: "[data-uncentered]",
+    /** Present while the step shown has no target in the page: the popup stands in the middle of the viewport. */
+    centered: "[data-centered]",
+  },
+  /** The heading that names the step. */
+  Title: {
+  },
+  /** The text that describes the step. */
+  Description: {
+  },
+  /** A button that goes back a step. On the first step it does nothing. */
+  Previous: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** A button that goes on a step. On the last step it finishes the tour. */
+  Next: {
+    /** Present on the last step: a press finishes the tour. */
+    last: "[data-last]",
+  },
+  /** A button that ends the tour. */
+  Close: {
   },
 } as const
 

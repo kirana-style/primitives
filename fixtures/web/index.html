@@ -2301,6 +2301,335 @@
             <button type="button" data-testid="cd2-unlock">Unlock</button>
           </div>
         </section>
+        <section data-fixture="editing">
+          <form class="editing" data-testid="ef1-form">
+            <div class="item">
+              <kui-rating kui-id="rt1" name="stars" default-value="2" allow-half>
+                <div kui-part="root" aria-label="Stars" class="rating" data-testid="rt1">
+                  <template kui-each="items">
+                    <span kui-part="item" class="star" data-testid="rt1-{place}">★</span>
+                  </template>
+                </div>
+              </kui-rating>
+              <output data-testid="rt1-output">2</output>
+            </div>
+            <kui-steps kui-id="st1" count="3" linear>
+              <div kui-part="root" class="steps" data-testid="st1">
+                <div kui-part="list" class="item" aria-label="Sign up" data-testid="st1-list">
+                  <div kui-part="item" kui-index="0" class="item" data-testid="st1-item-0">
+                    <button kui-part="trigger" data-testid="st1-trigger-0">
+                      <span kui-part="indicator" class="step-mark" data-testid="st1-indicator-0"
+                        >1</span
+                      >Account
+                    </button>
+                    <div kui-part="separator" class="step-line" data-testid="st1-separator-0"></div>
+                  </div>
+                  <div kui-part="item" kui-index="1" class="item" data-testid="st1-item-1">
+                    <button kui-part="trigger" data-testid="st1-trigger-1">
+                      <span kui-part="indicator" class="step-mark" data-testid="st1-indicator-1"
+                        >2</span
+                      >Profile
+                    </button>
+                    <div kui-part="separator" class="step-line" data-testid="st1-separator-1"></div>
+                  </div>
+                  <div kui-part="item" kui-index="2" class="item" data-testid="st1-item-2">
+                    <button kui-part="trigger" data-testid="st1-trigger-2">
+                      <span kui-part="indicator" class="step-mark" data-testid="st1-indicator-2"
+                        >3</span
+                      >Review
+                    </button>
+                    <div kui-part="separator" class="step-line" data-testid="st1-separator-2"></div>
+                  </div>
+                </div>
+                <div kui-part="content" kui-index="0" data-testid="st1-content-0">
+                  Account details
+                </div>
+                <div kui-part="content" kui-index="1" data-testid="st1-content-1">
+                  Profile details
+                </div>
+                <div kui-part="content" kui-index="2" data-testid="st1-content-2">
+                  Review details
+                </div>
+                <div kui-part="completed" data-testid="st1-completed">All done</div>
+                <div class="item">
+                  <button kui-part="previous" data-testid="st1-previous">Back</button>
+                  <button kui-part="next" data-testid="st1-next">Next</button>
+                  <output data-testid="st1-output">0</output>
+                </div>
+              </div>
+            </kui-steps>
+            <kui-editable kui-id="ed1" name="title" default-value="Apollo" placeholder="Untitled">
+              <div kui-part="root" class="item" data-testid="ed1">
+                <span kui-part="preview" class="editable-preview" data-testid="ed1-preview"></span>
+                <input kui-part="input" aria-label="Title" data-testid="ed1-input" />
+                <button kui-part="edit-trigger" data-testid="ed1-edit">Edit</button>
+                <button kui-part="submit-trigger" data-testid="ed1-submit">Save</button>
+                <button kui-part="cancel-trigger" data-testid="ed1-cancel">Cancel</button>
+                <output data-testid="ed1-output">Apollo</output>
+              </div>
+            </kui-editable>
+            <kui-password-input>
+              <div kui-part="root" class="item" data-testid="pw1">
+                <input
+                  kui-part="input"
+                  id="pw1-input"
+                  name="secret"
+                  aria-label="Password"
+                  autocomplete="current-password"
+                  data-testid="pw1-input"
+                />
+                <button kui-part="toggle" data-testid="pw1-toggle">
+                  <span kui-part="indicator" class="eye" data-testid="pw1-indicator"></span>
+                </button>
+                <output data-testid="pw1-output">false</output>
+              </div>
+            </kui-password-input>
+            <button type="reset" data-testid="ef1-reset">Reset</button>
+          </form>
+        </section>
+        <section data-fixture="tagging">
+          <form class="editing" data-testid="tf1-form">
+            <kui-tags-input kui-id="ti1" name="colors" default-value="red,green" max="4">
+              <div kui-part="root" class="tags" data-testid="ti1">
+                <div kui-part="list" class="item" aria-label="Colors" data-testid="ti1-list">
+                  <template kui-each="items"
+                    ><span kui-part="item" class="tag" data-testid="ti1-item-{value}"
+                      ><span kui-part="item-text" data-testid="ti1-text-{value}"></span
+                      ><input kui-part="item-input" data-testid="ti1-edit-{value}" /><button
+                        kui-part="item-remove"
+                        data-testid="ti1-remove-{value}"
+                      >
+                        ×
+                      </button></span
+                    ></template
+                  >
+                </div>
+                <input kui-part="input" aria-label="Add a color" data-testid="ti1-input" />
+                <button kui-part="clear" data-testid="ti1-clear">Clear</button>
+                <output data-testid="ti1-output">red,green</output>
+                <output data-testid="ti1-refused"></output>
+              </div>
+            </kui-tags-input>
+            <kui-file-upload kui-id="fu1" name="docs" multiple accept=".txt" max-files="2">
+              <div kui-part="root" class="upload" data-testid="fu1">
+                <div
+                  kui-part="dropzone"
+                  class="dropzone"
+                  aria-label="Documents"
+                  data-testid="fu1-dropzone"
+                >
+                  <button kui-part="trigger" data-testid="fu1-trigger">Browse</button>
+                </div>
+                <ul kui-part="list" class="files" data-testid="fu1-list">
+                  <template kui-each="items"
+                    ><li kui-part="item" class="item" data-testid="fu1-item-{name}">
+                      <span kui-part="item-name" data-testid="fu1-name-{name}"></span
+                      ><span
+                        kui-part="item-size"
+                        kui-locale="en"
+                        data-testid="fu1-size-{name}"
+                      ></span
+                      ><button kui-part="item-remove" data-testid="fu1-remove-{name}">×</button>
+                    </li></template
+                  >
+                </ul>
+                <button kui-part="clear" data-testid="fu1-clear">Clear</button>
+                <output data-testid="fu1-output"></output>
+                <output data-testid="fu1-rejected"></output>
+              </div>
+            </kui-file-upload>
+            <div class="item">
+              <kui-time-field kui-id="tm1" name="at" locale="en-US" default-value="09:30">
+                <div kui-part="root" aria-label="Time" class="date-field" data-testid="tm1">
+                  <template kui-each="segments"
+                    ><span kui-part="segment" data-testid="tm1-{type}-{index}"></span
+                  ></template>
+                  <input kui-part="input" />
+                </div>
+              </kui-time-field>
+              <output data-testid="tm1-output">09:30</output>
+            </div>
+            <button type="reset" data-testid="tf1-reset">Reset</button>
+          </form>
+        </section>
+        <section data-fixture="exploring">
+          <div class="item">
+            <kui-tree kui-id="tr1" default-expanded-value="docs" default-selected-value="letter">
+              <div kui-part="root" aria-label="Files" class="tree" data-testid="tr1">
+                <div kui-part="item" kui-value="docs" kui-branch data-testid="tr1-docs">
+                  <div kui-part="item-row" class="tree-row" data-testid="tr1-docs-row">
+                    <span kui-part="item-indicator" class="tree-mark" data-testid="tr1-docs-mark"
+                      >›</span
+                    ><span kui-part="item-text" data-testid="tr1-docs-text">Documents</span>
+                  </div>
+                  <div kui-part="group" class="tree-group" data-testid="tr1-docs-group">
+                    <div kui-part="item" kui-value="work" kui-branch data-testid="tr1-work">
+                      <div kui-part="item-row" class="tree-row">
+                        <span
+                          kui-part="item-indicator"
+                          class="tree-mark"
+                          data-testid="tr1-work-mark"
+                          >›</span
+                        ><span kui-part="item-text">Work</span>
+                      </div>
+                      <div kui-part="group" class="tree-group" data-testid="tr1-work-group">
+                        <div kui-part="item" kui-value="report" data-testid="tr1-report">
+                          <div kui-part="item-row" class="tree-row">
+                            <span kui-part="item-text">Report</span>
+                          </div>
+                        </div>
+                        <div kui-part="item" kui-value="budget" data-testid="tr1-budget">
+                          <div kui-part="item-row" class="tree-row">
+                            <span kui-part="item-text">Budget</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div kui-part="item" kui-value="letter" data-testid="tr1-letter">
+                      <div kui-part="item-row" class="tree-row">
+                        <span kui-part="item-text">Letter</span>
+                      </div>
+                    </div>
+                    <div kui-part="item" kui-value="old" kui-disabled data-testid="tr1-old">
+                      <div kui-part="item-row" class="tree-row">
+                        <span kui-part="item-text">Old letter</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div kui-part="item" kui-value="music" kui-branch data-testid="tr1-music">
+                  <div kui-part="item-row" class="tree-row">
+                    <span kui-part="item-indicator" class="tree-mark" data-testid="tr1-music-mark"
+                      >›</span
+                    ><span kui-part="item-text">Music</span>
+                  </div>
+                  <div kui-part="group" class="tree-group" data-testid="tr1-music-group">
+                    <div kui-part="item" kui-value="song" data-testid="tr1-song">
+                      <div kui-part="item-row" class="tree-row">
+                        <span kui-part="item-text">Song</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div kui-part="item" kui-value="notes" data-testid="tr1-notes">
+                  <div kui-part="item-row" class="tree-row">
+                    <span kui-part="item-text">Notes</span>
+                  </div>
+                </div>
+              </div>
+            </kui-tree>
+            <output data-testid="tr1-expanded">docs</output>
+            <output data-testid="tr1-selected">letter</output>
+          </div>
+          <form class="editing" data-testid="pk1-form">
+            <kui-color-picker kui-id="pk1" name="color" default-value="#ff0000" alpha>
+              <div kui-part="root" class="color-picker" data-testid="pk1">
+                <div kui-part="area" class="color-area" data-testid="pk1-area">
+                  <div
+                    kui-part="area-thumb"
+                    class="color-thumb"
+                    aria-label="Colour"
+                    data-testid="pk1-area-thumb"
+                  ></div>
+                </div>
+                <div
+                  kui-part="channel-slider"
+                  kui-channel="hue"
+                  class="slider"
+                  data-testid="pk1-hue"
+                >
+                  <div
+                    kui-part="channel-slider-track"
+                    class="slider-track"
+                    data-testid="pk1-hue-track"
+                  >
+                    <div
+                      kui-part="channel-slider-thumb"
+                      class="thumb"
+                      aria-label="Hue"
+                      data-testid="pk1-hue-thumb"
+                    ></div>
+                  </div>
+                </div>
+                <div
+                  kui-part="channel-slider"
+                  kui-channel="alpha"
+                  class="slider"
+                  data-testid="pk1-alpha"
+                >
+                  <div
+                    kui-part="channel-slider-track"
+                    class="slider-track"
+                    data-testid="pk1-alpha-track"
+                  >
+                    <div
+                      kui-part="channel-slider-thumb"
+                      class="thumb"
+                      aria-label="Alpha"
+                      data-testid="pk1-alpha-thumb"
+                    ></div>
+                  </div>
+                </div>
+                <div class="item">
+                  <div kui-part="swatch" class="swatch" data-testid="pk1-swatch"></div>
+                  <input
+                    kui-part="channel-input"
+                    kui-channel="hex"
+                    aria-label="Hex"
+                    data-testid="pk1-hex"
+                  />
+                  <button
+                    kui-part="swatch-trigger"
+                    kui-value="#0000ff"
+                    aria-label="Blue"
+                    class="swatch"
+                    data-testid="pk1-blue"
+                  ></button>
+                  <button
+                    kui-part="swatch-trigger"
+                    kui-value="#00800080"
+                    aria-label="Green"
+                    class="swatch"
+                    data-testid="pk1-green"
+                  ></button>
+                </div>
+                <div class="item">
+                  <span kui-part="value-text" data-testid="pk1-text"></span>
+                  <button kui-part="format-trigger" data-testid="pk1-format"></button>
+                </div>
+              </div>
+            </kui-color-picker>
+            <div class="item">
+              <output data-testid="pk1-output">#ff0000ff</output>
+              <output data-testid="pk1-committed"></output>
+              <output data-testid="pk1-written">hex</output>
+            </div>
+            <button type="reset" data-testid="pk1-reset">Reset</button>
+          </form>
+          <div class="item">
+            <button type="button" data-testid="tu1-open">Tour</button>
+            <output data-testid="tu1-output">false</output>
+            <output data-testid="tu1-step">0</output>
+          </div>
+          <kui-tour kui-id="tu1">
+            <div kui-part="portal">
+              <div kui-part="spotlight" class="spotlight" data-testid="tu1-spotlight"></div>
+              <div kui-part="positioner" kui-side-offset="8" data-testid="tu1-positioner">
+                <div kui-part="popup" class="tour-popup" data-testid="tu1-popup">
+                  <div kui-part="arrow" class="arrow" data-testid="tu1-arrow"></div>
+                  <h2 kui-part="title" class="tour-title" data-testid="tu1-title"></h2>
+                  <p kui-part="description" data-testid="tu1-description"></p>
+                  <div class="item">
+                    <span data-testid="tu1-count"></span>
+                    <button kui-part="previous" data-testid="tu1-previous">Back</button>
+                    <button kui-part="next" data-testid="tu1-next">Next</button>
+                    <button kui-part="close" data-testid="tu1-close">Skip</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </kui-tour>
+        </section>
       </main>
     </div>
     <script type="module" src="/src/main.ts"></script>

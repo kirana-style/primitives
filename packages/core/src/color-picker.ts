@@ -571,7 +571,7 @@ export function createColorPicker(
       return /^#[0-9a-f]+$/i.test(digits) ? parseColor(digits, now) : null
     }
     // A number, with the unit its channel is written in, or none.
-    const found = /^([+-]?(?:\d+\.?\d*|\.\d+))\s*(%|°|deg)?$/i.exec(plain)
+    const found = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(%|°|deg)?$/i.exec(plain)
     if (!found) return null
     const number = Number(found[1])
     if (!(number >= 0 && number <= RANGES[channel])) return null

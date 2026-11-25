@@ -99,8 +99,10 @@ export function hslToHsv({ h, s, l, a }: Hsla, keep?: Hsva): Hsva {
 export const rgbToHsl = (rgb: Rgba, keep?: Hsva): Hsla => hsvToHsl(rgbToHsv(rgb, keep))
 export const hslToRgb = (hsl: Hsla): Rgba => hsvToRgb(hslToHsv(hsl))
 
-// A number as CSS writes one, with a unit or none.
-const NUMBER = /^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)(%|deg)?$/i
+// A number as CSS writes one, with a unit or none. Its digits before the point and after it
+// are told apart by the point alone, so a long run of digits is read once, not once for each
+// way it could be split in two.
+const NUMBER = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?)(%|deg)?$/i
 
 /** A number and its unit, or `undefined` when the text is not one. */
 function numberOf(text: string): { value: number; unit: string } | undefined {
@@ -186,6 +188,8 @@ export const namesHue = (text: string): boolean => /^\s*hsla?\(/i.test(text)
  */
 export function parseColor(text: string, keep?: Hsva): Hsva | null {
   const plain = text.trim()
+  // No colour is this long: a text that is, pasted into a field, is not read at all.
+  if (plain.length > 128) return null
   if (plain.startsWith("#")) {
     const rgb = parseHex(plain)
     return rgb ? rgbToHsv(rgb, keep) : null

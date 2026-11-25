@@ -153,4 +153,11 @@ describe("converting between models", () => {
     expect(sameColor({ h: 10, s: 0, v: 50, a: 1 }, { h: 10, s: 0, v: 50, a: 0.5 })).toBe(false)
     expect(sameColor({ h: 10, s: 50, v: 50, a: 1 }, { h: 11, s: 50, v: 50, a: 1 })).toBe(false)
   })
+
+  it("reads a long run of digits once, and refuses a text no colour is as long as", () => {
+    expect(parseColor(`rgb(${"9".repeat(100)}x, 0, 0)`)).toBeNull()
+    expect(parseColor(`rgb(${"9".repeat(50000)}, 0, 0)`)).toBeNull()
+    // A number written with a point still reads as it did.
+    expect(parseColor("rgb(12.5, 0., .5)")).not.toBeNull()
+  })
 })

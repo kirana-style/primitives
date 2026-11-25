@@ -6,10 +6,14 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 
+// Only the type: a calendar system is the caller's own instance, and the field calls its
+// methods. A page that gives none carries nothing of the date library for it.
+import type { Calendar as CalendarSystem } from "@internationalized/date"
+
 /** A day as `YYYY-MM-DD` (ISO 8601). */
 export type IsoDate = string
-/** A part of a date that is typed on its own. */
-export type DateUnit = "day" | "month" | "year"
+/** A part of a date that is typed on its own; the era only in a calendar that has several. */
+export type DateUnit = "era" | "day" | "month" | "year"
 
 export interface DateFieldProps {
   id: string
@@ -31,7 +35,14 @@ export interface DateFieldProps {
   min?: IsoDate | undefined
   /** The last day it takes. */
   max?: IsoDate | undefined
-  /** What an empty part shows. Default: `dd`, `mm`, `yyyy`. */
+  /**
+   * The calendar its parts are typed in, when it is not the Gregorian one: an instance from
+   * `@internationalized/date` (`new PersianCalendar()`), as a calendar takes it. Its days,
+   * months, years and eras are the parts' ranges; the value is still an ISO day. In a calendar
+   * with several eras (Japanese, Minguo, Ethiopic), the era is a part of its own.
+   */
+  calendarSystem?: CalendarSystem | undefined
+  /** What an empty part shows. Default: `dd`, `mm`, `yyyy`, `era`. */
   placeholders?: Partial<Record<DateUnit, string>> | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
@@ -60,6 +71,8 @@ export interface DateField {
   readonly segments: ReadonlySignal<readonly DateFieldSegment[]>
   /** Empties it. */
   clear(details?: ChangeDetails): void
+  /** Moves focus to its first part. */
+  focus(): void
   mount(): () => void
   readonly root: Part
   /** One piece's element, and what it shows now. */
@@ -70,21 +83,38 @@ export interface DateField {
 
 const NOTHING = () => {}
 const NONE = () => NOTHING
-const UNITS: readonly DateUnit[] = ["day", "month", "year"]
-const DIGITS: Record<DateUnit, number> = { day: 2, month: 2, year: 4 }
-const PLACEHOLDER: Record<DateUnit, string> = { day: "dd", month: "mm", year: "yyyy" }
+const UNITS: readonly DateUnit[] = ["era", "day", "month", "year"]
+const DIGITS: Record<DateUnit, number> = { era: 1, day: 2, month: 2, year: 4 }
+const PLACEHOLDER: Record<DateUnit, string> = { era: "era", day: "dd", month: "mm", year: "yyyy" }
+const NO_ERAS: readonly string[] = []
 const pad = (value: number, length: number) => String(value).padStart(length, "0")
 /** The days a month has; a month that is not known yet may have thirty-one. */
 const daysIn = (year: number | undefined, month: number | undefined) =>
   month === undefined ? 31 : new Date(Date.UTC(year ?? 2000, month, 0)).getUTCDate()
 
-function parse(iso: IsoDate | null | undefined): Record<DateUnit, number> | undefined {
+type Fields = Partial<Record<DateUnit, number>>
+
+function parse(iso: IsoDate | null | undefined): Fields | undefined {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "")
   if (!match) return undefined
   const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])]
   if (month < 1 || month > 12 || day < 1 || day > daysIn(year, month)) return undefined
   return { year, month, day }
 }
+
+// A day as the number a calendar system counts it by (its Julian day), and back.
+const DAY = 864e5
+const EPOCH = 2440588
+function julian(iso: IsoDate): number {
+  const [year, month, day] = iso.split("-").map(Number) as [number, number, number]
+  const at = new Date(0)
+  at.setUTCFullYear(year, month - 1, day)
+  return at.getTime() / DAY + EPOCH
+}
+const fromJulian = (count: number): IsoDate =>
+  new Date((count - EPOCH) * DAY).toISOString().slice(0, 10)
+/** Any day: what a calendar system makes a date of, before the parts are set on it. */
+const SOME_DAY = julian("2000-01-01")
 
 /**
  * A date that is typed: a part for the day, one for the month, one for the year, in the order
@@ -105,8 +135,45 @@ export function createDateField(
     defaultValue: props.peek().defaultValue ?? null,
     onChange: (next, by) => props.peek().onValueChange?.(next, by),
   })
-  const began = parse(value.peek())
+  // The same calendar however often a caller makes it again (`new PersianCalendar()` in a render).
+  const system = computed(
+    () => props.get().calendarSystem,
+    (a, b) => a?.identifier === b?.identifier
+  )
+  // The eras a part chooses between: only in a calendar with several, and never the Gregorian.
+  const eras = computed(() => {
+    const given = system.get()
+    const all = given?.identifier === "gregory" ? NO_ERAS : (given?.getEras() ?? NO_ERAS)
+    return all.length > 1 ? all : NO_ERAS
+  })
+
+  /** The parts a day is, in the calendar the field is typed in. */
+  function fieldsOf(iso: IsoDate | null | undefined): Fields | undefined {
+    const gregorian = parse(iso)
+    const given = system.peek()
+    if (!gregorian || !given) return gregorian
+    const at = given.fromJulianDay(julian(iso!))
+    return { era: given.getEras().indexOf(at.era) + 1, year: at.year, month: at.month, day: at.day }
+  }
+  /**
+   * The date some parts make in the calendar given, kept inside what it has (a day past the
+   * month's last is its last). The parts not given are the first of their kind.
+   */
+  function dateOf(given: CalendarSystem, fields: Omit<Fields, "era">) {
+    const all = given.getEras()
+    const era = parts.era.get()
+    return given.fromJulianDay(SOME_DAY).set({
+      era: era === undefined ? all[all.length - 1] : all[era - 1],
+      year: 1,
+      month: 1,
+      day: 1,
+      ...fields,
+    })
+  }
+
+  const began = fieldsOf(value.peek())
   const parts: Record<DateUnit, Signal<number | undefined>> = {
+    era: signal(began?.era),
     day: signal(began?.day),
     month: signal(began?.month),
     year: signal(began?.year),
@@ -121,15 +188,22 @@ export function createDateField(
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
+      calendar: system.get()?.identifier,
       timeZone: "UTC",
-    }).formatToParts(new Date(Date.UTC(2000, 0, 1)))
-    return written
+    })
+      .formatToParts(new Date(Date.UTC(2000, 0, 1)))
       .filter((each) => each.type === "literal" || (UNITS as readonly string[]).includes(each.type))
-      .map((each, index): DateFieldSegment => ({
-        type: each.type as DateUnit | "literal",
-        literal: each.type === "literal" ? each.value : "",
-        index,
-      }))
+    // A calendar of one era writes it too: it is left out, with what stood beside it.
+    const era = written.findIndex((each) => each.type === "era")
+    if (era >= 0 && eras.get().length === 0) {
+      const before = written[era - 1]?.type === "literal"
+      written.splice(before ? era - 1 : era, before || written[era + 1]?.type === "literal" ? 2 : 1)
+    }
+    return written.map((each, index): DateFieldSegment => ({
+      type: each.type as DateUnit | "literal",
+      literal: each.type === "literal" ? each.value : "",
+      index,
+    }))
   })
   const order = computed(() =>
     segments
@@ -142,7 +216,33 @@ export function createDateField(
   const whole = () => {
     const [year, month, day] = [parts.year.peek(), parts.month.peek(), parts.day.peek()]
     if (year === undefined || month === undefined || day === undefined) return null
-    return `${pad(year, 4)}-${pad(month, 2)}-${pad(Math.min(day, daysIn(year, month)), 2)}`
+    const given = system.peek()
+    if (!given)
+      return `${pad(year, 4)}-${pad(month, 2)}-${pad(Math.min(day, daysIn(year, month)), 2)}`
+    if (eras.peek().length > 0 && parts.era.peek() === undefined) return null
+    return fromJulian(given.toJulianDay(dateOf(given, { year, month, day })))
+  }
+
+  /**
+   * The most a part can be: what the calendar has for the parts known so far. While typed, a day
+   * may be any month's most, as it is held to its month once the date is whole.
+   */
+  function most(unit: DateUnit, typing = false): number {
+    const given = system.get()
+    const [year, month] = [parts.year.get(), parts.month.get()]
+    if (!given) {
+      if (unit === "day") return typing ? 31 : daysIn(year, month)
+      return unit === "month" ? 12 : 9999
+    }
+    if (unit === "era") return eras.get().length
+    if (unit === "year") return given.getYearsInEra(dateOf(given, {}))
+    if (unit === "month")
+      return year === undefined
+        ? given.getMaximumMonthsInYear()
+        : given.getMonthsInYear(dateOf(given, { year }))
+    return typing || year === undefined || month === undefined
+      ? given.getMaximumDaysInMonth()
+      : given.getDaysInMonth(dateOf(given, { year, month }))
   }
   const invalid = computed(() => {
     const now = value.get()
@@ -153,7 +253,7 @@ export function createDateField(
   })
 
   function load(from: IsoDate | null) {
-    const read = parse(from)
+    const read = fieldsOf(from)
     batch(() => {
       for (const unit of UNITS) parts[unit].set(read?.[unit])
       typed.set("")
@@ -163,9 +263,13 @@ export function createDateField(
   /** Says what the parts now make, and takes them back if a caller refuses. */
   function settle(by: ChangeDetails) {
     const next = whole()
-    // A day the month does not have is that month's last.
-    const read = parse(next)
-    if (read && read.day !== parts.day.peek()) parts.day.set(read.day)
+    // A day the month does not have is that month's last; in a calendar given, any part the
+    // calendar keeps inside what it has (an era's last year) is what it kept.
+    const read = fieldsOf(next)
+    if (read)
+      batch(() => {
+        for (const unit of UNITS) if (read[unit] !== parts[unit].peek()) parts[unit].set(read[unit])
+      })
     if (next === value.peek()) return
     value.set(next, by)
     if (by.canceled) load(value.peek())
@@ -180,13 +284,16 @@ export function createDateField(
 
   function turn(unit: DateUnit, by: number, event: Event) {
     const now = parts[unit].peek()
-    const most =
-      unit === "day" ? daysIn(parts.year.peek(), parts.month.peek()) : unit === "month" ? 12 : 9999
+    const top = most(unit)
     let next: number
-    // From nothing, the arrows begin at this year, and at the first or the last of the rest.
-    if (now === undefined) next = unit === "year" ? new Date().getFullYear() : by > 0 ? 1 : most
-    else if (unit === "year") next = Math.min(9999, Math.max(1, now + by))
-    else next = ((((now - 1 + by) % most) + most) % most) + 1
+    // From nothing, the arrows begin at this year (and era), and at the first or the last of
+    // the rest.
+    if (now === undefined) {
+      const today = new Date()
+      const at = `${pad(today.getFullYear(), 4)}-${pad(today.getMonth() + 1, 2)}-${pad(today.getDate(), 2)}`
+      next = unit === "year" || unit === "era" ? fieldsOf(at)![unit]! : by > 0 ? 1 : top
+    } else if (unit === "year") next = Math.min(top, Math.max(1, now + by))
+    else next = ((((now - 1 + by) % top) + top) % top) + 1
     batch(() => {
       typed.set("")
       parts[unit].set(next)
@@ -195,17 +302,19 @@ export function createDateField(
   }
 
   function type(unit: DateUnit, digit: string, event: Event) {
-    const most = unit === "day" ? 31 : unit === "month" ? 12 : 9999
+    // An era is turned, not typed.
+    if (unit === "era") return
+    const top = most(unit, true)
     let digits = (typed.peek() + digit).slice(-DIGITS[unit])
     // A digit that would take the part past its most begins it again: 3 then 9 is the 9th.
-    if (Number(digits) > most) digits = digit
+    if (Number(digits) > top) digits = digit
     const number = Number(digits)
     // Nothing more can follow: the part is full, or another digit would be past its most.
-    const full = digits.length >= DIGITS[unit] || (unit !== "year" && number * 10 > most)
+    const full = digits.length >= DIGITS[unit] || number * 10 > top
     batch(() => {
       typed.set(full ? "" : digits)
       // A lone zero waits for the digit after it.
-      if (number > 0) parts[unit].set(Math.min(number, most))
+      if (number > 0) parts[unit].set(Math.min(number, top))
     })
     // Said once the part is whole, not for each digit of it: a year is not 2, then 20.
     if (!full || number === 0) return
@@ -243,8 +352,27 @@ export function createDateField(
     })
     const text = computed(() => {
       const now = parts[unit].get()
-      const shown = props.get().placeholders?.[unit] ?? PLACEHOLDER[unit]
-      return now === undefined ? shown : pad(now, DIGITS[unit])
+      const given = system.get()
+      if (now === undefined) return props.get().placeholders?.[unit] ?? PLACEHOLDER[unit]
+      if (unit === "era" && given) {
+        // Its name as the locale writes it, read from a day of that era.
+        const day = new Date(
+          `${fromJulian(given.toJulianDay(dateOf(given, { year: 2, month: 6 })))}T00:00Z`
+        )
+        return (
+          new Intl.DateTimeFormat(locale.get(), {
+            era: "short",
+            year: "numeric",
+            calendar: given.identifier,
+            timeZone: "UTC",
+          })
+            .formatToParts(day)
+            .find((each) => each.type === "era")?.value ?? String(now)
+        )
+      }
+      // A year of another calendar is written as it is counted (an era's sixth year is 6).
+      if (unit === "year" && given && given.identifier !== "gregory") return String(now)
+      return pad(now, DIGITS[unit])
     })
     return {
       text,
@@ -265,12 +393,7 @@ export function createDateField(
             "aria-valuenow": now === undefined ? undefined : String(now),
             "aria-valuetext": text.get(),
             "aria-valuemin": "1",
-            "aria-valuemax":
-              unit === "day"
-                ? String(daysIn(parts.year.get(), parts.month.get()))
-                : unit === "month"
-                  ? "12"
-                  : "9999",
+            "aria-valuemax": String(most(unit)),
             "aria-disabled": disabled ? "true" : undefined,
             "aria-readonly": props.get().readOnly ? "true" : undefined,
             "aria-invalid": invalid.get() ? "true" : undefined,
@@ -295,10 +418,13 @@ export function createDateField(
               if (off()) return
               if (event.key === "ArrowUp") turn(unit, 1, event)
               else if (event.key === "ArrowDown") turn(unit, -1, event)
-              else if (event.key === "PageUp")
-                turn(unit, unit === "year" ? 10 : unit === "month" ? 3 : 7, event)
-              else if (event.key === "PageDown")
-                turn(unit, unit === "year" ? -10 : unit === "month" ? -3 : -7, event)
+              else if (event.key === "PageUp" || event.key === "PageDown")
+                turn(
+                  unit,
+                  (event.key === "PageUp" ? 1 : -1) *
+                    (unit === "year" ? 10 : unit === "month" ? 3 : unit === "day" ? 7 : 1),
+                  event
+                )
               else if (event.key === "Backspace" || event.key === "Delete") erase(unit, event)
               else return
               event.preventDefault()
@@ -334,10 +460,16 @@ export function createDateField(
       load(null)
       settle(by)
     },
+    focus() {
+      const first = order.peek()[0]
+      if (first) elements.get(first)?.focus()
+    },
     mount() {
       let first = true
-      // A caller who holds the value, or sets it, is shown it: the parts follow.
+      // A caller who holds the value, or sets it, is shown it: the parts follow, as they do a
+      // calendar system that changes.
       return effect(() => {
+        system.get()
         const now = value.get()
         if (first) {
           first = false
@@ -373,7 +505,7 @@ export function createDateField(
     },
     segment(segment) {
       // By its place: the same piece however often it is asked for, until the locale changes.
-      const key = segment.index * 4 + ["literal", "day", "month", "year"].indexOf(segment.type)
+      const key = segment.index * 5 + ["literal", ...UNITS].indexOf(segment.type)
       let kept = made.get(key)
       if (!kept) {
         kept =

@@ -42,6 +42,11 @@ export interface MenuItemOptions {
    * Whether choosing the item closes the menu. Default: it does for an item, and does not for a
    * checkbox or a radio item.
    */
+  closeOnSelect?: boolean | undefined
+  /**
+   * Whether choosing the item closes the menu.
+   * @deprecated Use `closeOnSelect`, which says the same and wins when both are given.
+   */
   closeOnClick?: boolean | undefined
 }
 
@@ -314,7 +319,9 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           onClick(event: Event) {
             if (options().disabled) return
             press(event)
-            if (options().closeOnClick ?? closes) link.closeAll(details("item-press", event))
+            const given = options()
+            if (given.closeOnSelect ?? given.closeOnClick ?? closes)
+              link.closeAll(details("item-press", event))
           },
         }
       }),

@@ -217,9 +217,20 @@ export function isLink(tag: string, href: unknown): boolean {
   return (tag === "a" || tag === "area") && href !== undefined && href !== null && href !== false
 }
 
+const OWN_ID = Symbol("an id the caller's own wins over")
+
+/**
+ * A part's `id` that is only a default, as props to spread: an `id` the caller gives the element
+ * wins over it (`forElement`). A control inside a field is so named by the field until its
+ * caller names it, and the field then learns the name from the element.
+ */
+export function defaultId(id: string | undefined): PartProps {
+  return id === undefined ? {} : { id, [OWN_ID]: true }
+}
+
 /**
  * A part's own props as they go on an element, before `mergeProps` lays them over the
- * caller's. A part's `type` is a default, not its identity: a `<button>` it draws says
+ * caller's. An `id` given with `defaultId` gives way to the caller's. A part's `type` is a default, not its identity: a `<button>` it draws says
  * `type="button"` so that it never submits a form by accident, but a caller's `type`
  * (`"submit"`, `"reset"`) wins, and an element that takes no button type (a link, where `type`
  * is a MIME type) is given none. A link that navigates (`isLink`, the caller's `href`) is not
@@ -235,6 +246,12 @@ export function forElement(
   tag: string | undefined
 ): PartProps {
   let placed = own
+  if ((own as Record<symbol, unknown>)[OWN_ID]) {
+    const fitted: Record<string | symbol, unknown> = { ...own }
+    delete fitted[OWN_ID]
+    if (typeof caller?.id === "string" && caller.id) delete fitted.id
+    placed = fitted as PartProps
+  }
   if (
     own.type !== undefined &&
     (caller?.type !== undefined || (tag !== undefined && !takesType(tag)))

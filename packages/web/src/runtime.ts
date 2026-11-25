@@ -92,9 +92,12 @@ export interface ElementSpec<Props extends { id: string }, Controller> {
    * message. The page writes one of an entry as a `<template kui-each="name">` where the
    * list goes, and the element stamps it for each entry, keyed, so an entry that stays keeps
    * its elements. `around` is the entry of the list this one is written in (a week, for its
-   * days).
+   * days); `template` is where the list is written (inside which of a date picker's fields).
    */
-  lists?: Record<string, (controller: Controller, around: unknown) => Each | undefined>
+  lists?: Record<
+    string,
+    (controller: Controller, around: unknown, template: HTMLElement) => Each | undefined
+  >
   /**
    * The hidden native input a form reads, for a component with no part to hold it: drawn as
    * the element's last child, while `mounted` (a select with a name).
@@ -502,7 +505,8 @@ export function defineElement<Props extends { id: string }, Controller extends o
     #each(template: HTMLTemplateElement) {
       const list = spec.lists?.[template.getAttribute("kui-each")!]?.(
         this.controller!,
-        entryAround(template)
+        entryAround(template),
+        template
       )
       if (!list) return
       // The template leaves the page for a mark: what is drawn is the page a framework draws.

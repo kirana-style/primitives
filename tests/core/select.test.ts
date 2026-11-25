@@ -23,6 +23,9 @@ function select(given: {
   capped?: boolean
   /** How the trigger is placed: fixed to the viewport, or moving with what scrolls. */
   position?: "fixed" | "absolute"
+  /** How the list opens; a backdrop is drawn when it is given. */
+  presentation?: SelectProps["presentation"]
+  sheetBelow?: number
 }) {
   const {
     top,
@@ -32,6 +35,8 @@ function select(given: {
     align = true,
     capped = true,
     position = "fixed",
+    presentation,
+    sheetBelow,
   } = given
   style(`
     .trigger { position: ${position}; left: 100px; top: ${top}px; width: 160px; height: 36px; padding: 0 12px; border: 1px solid; text-align: start; font: 14px/20px sans-serif; }
@@ -39,7 +44,9 @@ function select(given: {
     .option { height: 30px; padding: 5px 20px; box-sizing: border-box; }`)
   const items = Array.from({ length: count }, (_each, at) => `v${at}`)
   const root = mount(
-    `<button class="trigger"><span class="value"></span></button>
+    `<button class="trigger"><span class="value"></span></button>${
+      presentation ? `<div class="backdrop"></div>` : ""
+    }
      <div class="positioner"><div class="popup">${items
        .map((each) => `<div class="option" data-v="${each}"><span>Item ${each}</span></div>`)
        .join("")}</div></div>`
@@ -49,6 +56,8 @@ function select(given: {
     signal<SelectProps<string>>({
       id: "s",
       ...(values ? { multiple: true, defaultValues: values } : { defaultValue: value }),
+      ...(presentation ? { presentation } : {}),
+      ...(sheetBelow ? { sheetBelow } : {}),
       onOpenChange: (open, by) => void reasons.push(`${open ? "open" : "close"}: ${by.reason}`),
     })
   )
@@ -75,12 +84,27 @@ function select(given: {
   }
   onTestFinished(detach)
   onTestFinished(bind(popup, made.popup))
+  const backdrop = root.querySelector<HTMLElement>(".backdrop")
+  if (backdrop) onTestFinished(bind(backdrop, made.backdrop))
   onTestFinished(() => made.setOpen(false, details("test")))
   const text = (item: string) =>
     root.querySelector<HTMLElement>(`[data-v="${item}"] span`)!.getBoundingClientRect()
   const middle = (box: DOMRect) => box.top + box.height / 2
   const placed = () => expect.poll(() => positioner.getAttribute("data-side")).not.toBe(null)
-  return { made, root, trigger, shown, positioner, popup, reasons, text, middle, placed, detach }
+  return {
+    made,
+    root,
+    trigger,
+    shown,
+    positioner,
+    popup,
+    backdrop,
+    reasons,
+    text,
+    middle,
+    placed,
+    detach,
+  }
 }
 
 const MID = Math.round(window.innerHeight / 2)
@@ -580,7 +604,8 @@ describe("a select of several values", () => {
       { field }
     )
     onTestFinished(bind(find(root, "field"), field.root))
-    expect(trigger.id).toBe(field.controlId)
+    // The trigger's own id wins over the field's.
+    expect(trigger.id).toBe("trigger")
     expect(trigger.getAttribute("aria-required")).toBe("true")
     expect(made.named.peek()).toBe(true)
     expect(await field.validate()).toBe(false)
@@ -780,5 +805,212 @@ describe("a select's items given as a record", () => {
     })
     expect(shown.textContent).toBe("Sour cherry, Ripe banana")
     expect(made.shown.peek().values).toEqual(["Cherry", "Banana"])
+  })
+})
+
+describe("a select whose values are objects", () => {
+  interface Size {
+    code: string
+    name: string
+  }
+  const SIZES: Size[] = [
+    { code: "s", name: "Small" },
+    { code: "m", name: "Medium" },
+    { code: "l", name: "Large" },
+  ]
+
+  /** A select of objects whose items draw no text of their own: a swatch each. */
+  function sizes(given: Partial<SelectProps<Size>>) {
+    const root = mount(
+      `<form id="form"><button id="trigger"><span id="value"></span></button><input id="hidden" /></form>
+       <div id="positioner"><div id="popup">${SIZES.map(
+         (each) => `<div id="o-${each.code}"><span class="swatch"></span></div>`
+       ).join("")}</div></div>`
+    )
+    const made = createSelect(signal<SelectProps<Size>>({ id: "o", name: "size", ...given }))
+    const shown = find(root, "value")
+    onTestFinished(made.mount())
+    onTestFinished(bind(find(root, "trigger"), made.trigger))
+    onTestFinished(bind(shown, made.valuePart))
+    onTestFinished(bind(find(root, "hidden"), made.input))
+    onTestFinished(bind(find(root, "positioner"), made.positioner))
+    onTestFinished(bind(find(root, "popup"), made.popup))
+    for (const each of SIZES) onTestFinished(bind(find(root, `o-${each.code}`), made.item(each)))
+    onTestFinished(() => made.setOpen(false, details("test")))
+    // The value part's text as an adapter writes it.
+    onTestFinished(
+      effect(() => {
+        shown.textContent = made.label.get() ?? "Pick"
+      })
+    )
+    const sent = () => new FormData(find<HTMLFormElement>(root, "form")).getAll("size")
+    return { root, made, shown, sent, trigger: find(root, "trigger") }
+  }
+
+  it("names one by itemToStringLabel and sends what itemToStringValue makes of it", () => {
+    const { shown, sent } = sizes({
+      defaultValue: SIZES[1],
+      itemToStringLabel: (size) => size.name,
+      itemToStringValue: (size) => size.code,
+    })
+    expect(shown.textContent).toBe("Medium")
+    expect(sent()).toEqual(["m"])
+  })
+
+  it("lets typing find an item by that name, closed and open", async () => {
+    const { made, trigger, sent } = sizes({
+      items: SIZES.map((each) => ({ value: each, label: each.name })),
+      itemToStringLabel: (size) => size.name,
+      itemToStringValue: (size) => size.code,
+    })
+    trigger.focus()
+    await press("l")
+    expect(made.value.peek()).toBe(SIZES[2])
+    expect(sent()).toEqual(["l"])
+    // Open, the items have no text: their names are what itemToStringLabel says.
+    await press("ArrowDown")
+    await expect.poll(() => focused()).toBe("o-l")
+    await press("s")
+    expect(focused()).toBe("o-s")
+    await press("Enter")
+    expect(made.value.peek()).toBe(SIZES[0])
+    expect(sent()).toEqual(["s"])
+  })
+
+  it("with several values, sends each by itemToStringValue", () => {
+    const { shown, sent } = sizes({
+      multiple: true,
+      defaultValues: [SIZES[0]!, SIZES[2]!],
+      itemToStringLabel: (size) => size.name,
+      itemToStringValue: (size) => size.code,
+    })
+    expect(shown.textContent).toBe("Small, Large")
+    expect(sent()).toEqual(["s", "l"])
+  })
+
+  it("with nothing given, names an object shaped { value, label } by its label and sends its value", () => {
+    const tea = { value: "tea", label: "Green tea" }
+    const { shown, sent } = sizes({ defaultValue: tea as unknown as Size })
+    expect(shown.textContent).toBe("Green tea")
+    expect(sent()).toEqual(["tea"])
+  })
+})
+
+/** Moves a pointer from `from` down by `by` in steps, as a finger drags, and lets it go after `rest` ms. */
+async function drag(target: HTMLElement, by: number, rest = 120) {
+  const box = target.getBoundingClientRect()
+  const x = box.left + 20
+  const y = box.top + 10
+  const at = (type: string, dy: number, on: EventTarget) =>
+    on.dispatchEvent(
+      new PointerEvent(type, {
+        clientX: x,
+        clientY: y + dy,
+        button: 0,
+        pointerId: 7,
+        pointerType: "touch",
+        bubbles: true,
+        cancelable: true,
+      })
+    )
+  at("pointerdown", 0, target)
+  for (let step = 1; step <= 5; step++) {
+    at("pointermove", (by * step) / 5, document)
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  await new Promise((resolve) => setTimeout(resolve, rest))
+  at("pointerup", by, document)
+  target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }))
+}
+
+describe("a select's list as a sheet", () => {
+  it("is a popup unless asked, and says so", async () => {
+    const { trigger, positioner, popup, placed } = select({ top: MID, align: false })
+    trigger.click()
+    await placed()
+    expect(positioner.getAttribute("data-presentation")).toBe("popup")
+    expect(popup.getAttribute("data-presentation")).toBe("popup")
+    expect(trigger.hasAttribute("inert")).toBe(false)
+  })
+
+  it("is not placed, blocks the page with its backdrop, and a press on the backdrop closes it", async () => {
+    const { made, trigger, positioner, popup, backdrop, reasons } = select({
+      top: MID,
+      presentation: "sheet",
+    })
+    trigger.click()
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    for (const each of [positioner, popup, backdrop!]) {
+      expect(each.getAttribute("data-presentation")).toBe("sheet")
+    }
+    expect(positioner.getAttribute("style")).toBe(null)
+    expect(positioner.hasAttribute("data-side")).toBe(false)
+    expect(popup.hasAttribute("data-side")).toBe(false)
+    // Over its trigger is a popup's place: a sheet is at the bottom edge, so it is not asked.
+    expect(made.alignItemWithTrigger.peek()).toBe(true)
+    expect(trigger.hasAttribute("inert")).toBe(true)
+    expect(backdrop!.hasAttribute("inert")).toBe(false)
+    expect(document.documentElement.style.overflow).not.toBe("")
+    backdrop!.dispatchEvent(
+      new PointerEvent("pointerdown", { button: 0, bubbles: true, cancelable: true })
+    )
+    expect(made.open.peek()).toBe(false)
+    expect(reasons).toEqual(["open: trigger-press", "close: outside-press"])
+    await expect.poll(() => trigger.hasAttribute("inert")).toBe(false)
+  })
+
+  it("closes when dragged down far enough, and goes back from a short drag, choosing nothing", async () => {
+    const { made, trigger, popup, backdrop, reasons } = select({
+      top: MID,
+      presentation: "sheet",
+    })
+    trigger.click()
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    const item = popup.querySelector<HTMLElement>('[data-v="v4"]')!
+    await drag(item, 10)
+    expect(made.open.peek()).toBe(true)
+    expect(made.value.peek()).toBe("v2")
+    expect(popup.style.getPropertyValue("--drawer-swipe-movement-y")).toBe("")
+    await drag(item, popup.offsetHeight * 0.6)
+    expect(made.open.peek()).toBe(false)
+    expect(made.value.peek()).toBe("v2")
+    expect(reasons.at(-1)).toBe("close: swipe")
+    expect(popup.hasAttribute("data-swipe-dismiss")).toBe(true)
+    // It leaves from where it was let go: the drag stays written through its exit.
+    expect(popup.style.getPropertyValue("--drawer-swipe-movement-y")).not.toBe("")
+    expect(backdrop!.style.getPropertyValue("--drawer-swipe-progress")).not.toBe("")
+  })
+
+  it("with `auto`, is decided each time it opens: a coarse pointer under `sheetBelow`", async () => {
+    let fits = true
+    const asked: string[] = []
+    const real = window.matchMedia
+    window.matchMedia = ((query: string) => {
+      asked.push(query)
+      return { matches: fits, media: query } as MediaQueryList
+    }) as typeof window.matchMedia
+    onTestFinished(() => {
+      window.matchMedia = real
+    })
+    const { made, trigger, positioner, placed } = select({
+      top: MID,
+      align: false,
+      presentation: "auto",
+      sheetBelow: 500,
+    })
+    expect(positioner.getAttribute("data-presentation")).toBe("popup")
+    trigger.click()
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    expect(positioner.getAttribute("data-presentation")).toBe("sheet")
+    expect(asked.at(-1)).toBe("(pointer: coarse) and (max-width: 499.98px)")
+    // What changes while it is open does not change what it opened as.
+    fits = false
+    made.setValue("v3", details("test"))
+    expect(positioner.getAttribute("data-presentation")).toBe("sheet")
+    made.setOpen(false, details("test"))
+    trigger.click()
+    await placed()
+    expect(positioner.getAttribute("data-presentation")).toBe("popup")
+    expect(positioner.style.position).toBe("absolute")
   })
 })

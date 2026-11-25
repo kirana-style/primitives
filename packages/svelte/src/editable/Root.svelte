@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
+  import { within } from "@kirana-ui/core"
   import { createEditable } from "@kirana-ui/core/editable"
 
   import Part from "../Part.svelte"
+  import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
@@ -21,6 +23,7 @@
     selectOnFocus,
     disabled,
     readOnly,
+    required,
     name,
     form,
     id,
@@ -39,7 +42,7 @@
   }
 
   const made = provide(
-    controller(createEditable, () => ({
+    controller(within(createEditable, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       value,
       defaultValue,
@@ -51,6 +54,7 @@
       selectOnFocus,
       disabled,
       readOnly,
+      required,
       name,
       form,
       onValueChange: change,

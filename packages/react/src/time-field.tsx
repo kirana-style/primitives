@@ -11,6 +11,7 @@ import { Fragment, createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
+import { FieldContext } from "./field-context.ts"
 import { parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -49,8 +50,9 @@ function Root({
   ...rest
 }: RootProps): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
+  const field = useContext(FieldContext) ?? undefined
   const controller = useController<TimeFieldProps, Controller>(
-    within(createTimeField, { direction }),
+    within(createTimeField, { direction, field }),
     {
       value,
       defaultValue,

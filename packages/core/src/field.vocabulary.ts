@@ -40,7 +40,9 @@ export const fieldVocabulary = defineComponent({
   },
   error: {
     inside: "root",
-    description: "What is wrong with the value. In the page while it applies.",
+    repeated: true,
+    description:
+      "What is wrong with the value. In the page while it applies. Several, each with its own `match`, can be shown at once: each has an id of its own, and the control names them all.",
     states: {
       ...STATES,
       startingStyle: TRANSITION.startingStyle,

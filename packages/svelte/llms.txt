@@ -104,10 +104,14 @@ The named types the props below mention, each with the entry of this package it 
     - `type: DateUnit | "literal"`
     - `literal: string`: What stands between two parts (`"/"`); empty for a part that is typed.
     - `index: number`: Its place among the pieces.
+- `DatePickerRange` (`@kirana-ui/svelte`): A range a date picker holds: its first and its last day, either `null` while it is being chosen (the first picked, the second not yet; one end typed).
+    - `start: IsoDate | null`
+    - `end: IsoDate | null`
+- `DatePickerValueOf<Mode extends DatePickerMode | undefined>` (`@kirana-ui/svelte`): `Mode extends "range" ? DatePickerRange | null : IsoDate | null`. The value of one mode: a day or `null`, or a range or `null`.
 - `DateRange` (`@kirana-ui/svelte`): A range of days, its first and its last, both in it.
     - `start: IsoDate`
     - `end: IsoDate`
-- `DateUnit` (`@kirana-ui/svelte`): `"day" | "month" | "year"`. A part of a date that is typed on its own.
+- `DateUnit` (`@kirana-ui/svelte`): `"era" | "day" | "month" | "year"`. A part of a date that is typed on its own; the era only in a calendar that has several.
 - `DrawerSide` (`@kirana-ui/svelte`): `"up" | "down" | "left" | "right"`. The way a drawer is swiped to close it: towards the edge it came from.
 - `DrawerSnapPoint` (`@kirana-ui/svelte`): `number | string`. How much of a drawer shows at a place it rests: a share of it, or a length.
 - `FieldValidity` (`@kirana-ui/svelte`): What a field knows of its control's value once it has been checked.
@@ -149,6 +153,7 @@ The named types the props below mention, each with the entry of this package it 
 - `Orientation` (`@kirana-ui/svelte`): `"horizontal" | "vertical"`. The way a row of things is laid out, and so which arrow keys move along it.
 - `PaginationEntry` (`@kirana-ui/svelte`): `{ readonly type: "page"; readonly page: number; readonly key: string } | { readonly type: "ellipsis"; readonly key: "start" | "end" }`. One piece of the list of pages: a page, or the mark for pages left out.
 - `PhysicalSide` (`@kirana-ui/svelte`): `"top" | "right" | "bottom" | "left"`. A side of the anchor as the page is drawn.
+- `Presentation` (`@kirana-ui/svelte`): `"popup" | "sheet" | "auto"`. How a list opens: `"popup"` placed against its trigger, `"sheet"` from the bottom edge of the viewport, `"auto"` a sheet on a narrow touch screen and a popup elsewhere.
 - `QrCorrection` (`@kirana-ui/svelte`): `"L" | "M" | "Q" | "H"`. How much of the symbol may be lost and still be read: about 7, 15, 25 and 30 in a hundred.
 - `ReadonlySignal<T>` (`@kirana-ui/svelte`): A value that is read, and that tells when it changes.
     - `get(): T`: The value, tracked by the computed or effect that reads it.
@@ -229,6 +234,8 @@ What the entries export beside the components, their parts' props types and the 
 - `CalendarMode`, from `@kirana-ui/svelte`: How many days it chooses: one, a first and a last, or any number.
 - `CalendarValue`, from `@kirana-ui/svelte`: What a calendar holds: a day, a range of days in `mode: "range"`, a list of days in `mode: "multiple"`, or `null` for none.
 - `ComponentDefinition`, from `@kirana-ui/svelte`: A component in the vocabulary: its parts by name.
+- `DatePickerMode`, from `@kirana-ui/svelte`: Whether a date picker chooses one day or a first and a last.
+- `DatePickerValue`, from `@kirana-ui/svelte`: What a date picker holds: a day, or in `mode: "range"` a range; `null` for none.
 - `Direction`, from `@kirana-ui/svelte`: The reading direction: left to right, or right to left.
 - `ItemLabels`, from `@kirana-ui/svelte`: The labels of a control's values, as its caller gives them: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`).
 - `PartDefinition`, from `@kirana-ui/svelte`: A part of a component in the vocabulary: its states, its CSS variables, and where it goes.
@@ -661,7 +668,7 @@ Props of its root:
 - `open?: boolean`: `bind:open`. Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
-- `mode?: "list" | "none"`: `"list"` (the default): the suggestions are filtered by what is typed. `"none"`: they are as the caller draws them.
+- `mode?: "list" | "both" | "inline" | "none"`: `"list"` (the default): the suggestions are filtered by what is typed. `"both"`: they are filtered, and the rest of the first one that begins with what is typed is written after it in the input, selected, so typing on replaces it and Enter or Tab keeps it; the arrows write the suggestion they are on into the input. `"inline"`: written so, and not filtered. `"none"`: neither; the suggestions are as the caller draws them. A completion is not written into a word an input method is composing, nor after a deletion.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether a suggestion is shown for what was typed; `null` shows every one.
 - `openOnInputClick?: boolean`: Whether a press on the input opens the list. Default: it opens when something is typed.
 - `disabled?: boolean`: Disabled: it cannot be changed.
@@ -708,24 +715,32 @@ Attributes and CSS variables, by part:
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
-- positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
+- positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
-- popup: The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
+- popup: The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-swiping`: Present while the sheet is dragged.
+    - `data-swipe-dismiss`: Present once a drag has closed it.
     - `data-empty`: Present when no item is shown for what was typed.
+    - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
+    - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
+    - `--drawer-swipe-progress`: As a sheet: how far it has been dragged, of its own height: 0 to 1.
+    - `--drawer-swipe-strength`: As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest.
 - list: The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
     - `data-empty`: Present when no item is shown for what was typed.
 - item: One suggestion: chosen, its text is written into the input.
@@ -1240,7 +1255,7 @@ Attributes and CSS variables, by part:
 import { Combobox } from "@kirana-ui/svelte/combobox"
 ```
 
-Parts: `<Combobox.Root>`, `<Combobox.Input>`, `<Combobox.Trigger>`, `<Combobox.Value>`, `<Combobox.Clear>`, `<Combobox.Chips>`, `<Combobox.Chip>`, `<Combobox.ChipRemove>`, `<Combobox.Portal>`, `<Combobox.Positioner>`, `<Combobox.Popup>`, `<Combobox.List>`, `<Combobox.Collection>`, `<Combobox.Group>`, `<Combobox.GroupLabel>`, `<Combobox.Separator>`, `<Combobox.Item>`, `<Combobox.ItemIndicator>`, `<Combobox.Empty>`, `<Combobox.Status>`.
+Parts: `<Combobox.Root>`, `<Combobox.Input>`, `<Combobox.Trigger>`, `<Combobox.Value>`, `<Combobox.Clear>`, `<Combobox.Chips>`, `<Combobox.Chip>`, `<Combobox.ChipRemove>`, `<Combobox.Portal>`, `<Combobox.Backdrop>`, `<Combobox.Positioner>`, `<Combobox.Popup>`, `<Combobox.List>`, `<Combobox.Collection>`, `<Combobox.Group>`, `<Combobox.GroupLabel>`, `<Combobox.Separator>`, `<Combobox.Item>`, `<Combobox.ItemIndicator>`, `<Combobox.Empty>`, `<Combobox.Status>`.
 
 Anatomy:
 
@@ -1250,6 +1265,7 @@ Anatomy:
   <Combobox.Trigger>
     <Combobox.Value> (optional)
   <Combobox.Portal>
+    <Combobox.Backdrop> (optional)
     <Combobox.Positioner>
       <Combobox.Popup>
         <Combobox.Input> (as above)
@@ -1277,6 +1293,8 @@ Anatomy:
 
 Props of its root:
 
+- `presentation?: Presentation`: How the list opens. `"sheet"`: from the bottom edge, not placed against the input, modal with a backdrop, swiped down or pressed outside to close; the input then goes in the popup, at its head. `"auto"`: decided each time it opens, a sheet when the pointer is coarse and the viewport narrower than `sheetBelow`. Default `"popup"`. Not with `inline`.
+- `sheetBelow?: number`: With `presentation: "auto"`: the viewport's width, in CSS pixels, under which a coarse pointer opens a sheet. Default 640.
 - `value?: Value | null`: `bind:value`. The chosen value; `null` is "none".
 - `defaultValue?: Value | null`: The value it starts with, when the caller does not hold `value`. Read once.
 - `onValueChange?: (value: Value | null, details: ChangeDetails) => void`: Heard as a value is about to be chosen or cleared: `details.cancel()` keeps it as it was.
@@ -1291,6 +1309,8 @@ Props of its root:
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `items?: readonly ComboboxItemData<Value>[] | readonly ComboboxGroupData<Value>[] | Readonly<Record<string, string>>`: The values with their labels: a list of them, groups of them (`{ value, items }`, `value` the group's name), or, for values that are text, the labels by value (`{ apple: "Apple" }`). The input shows a value by its label from here before the list has ever been opened. With the items written in the markup that is all it is for. With a `Collection` it is the list itself: the combobox filters it by what is typed, and the `Collection` draws what is left.
+- `itemToStringLabel?: (value: Value) => string`: For values that are objects: the text the input shows for one, and what an item drawn with no text of its own is filtered by. Without it, an object's own `label` names it, then the label `items` gives it, then the item's text in the markup.
+- `itemToStringValue?: (value: Value) => string`: For values that are objects: the text the form is sent for one. Without it, the `value` of an object shaped `{ value, label }` is sent, and any other object as JSON.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants (or gives the `items` it wants, when they are loaded for what was typed).
 - `multiple?: boolean`: Several values, each shown as a chip beside the input: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
 - `values?: readonly Value[]`: `bind:values`. With `multiple`: the chosen values, in the order they were chosen.
@@ -1316,6 +1336,7 @@ Each part, and its own props:
     - `value: unknown`: Required. The chosen value it shows: what its remove button takes away.
 - `<Combobox.ChipRemove>` draws a `<button>`.
 - `<Combobox.Portal>` draws no element. Draws nothing itself: its content at the end of `<body>`, or where a `<PortalProvider>` says.
+- `<Combobox.Backdrop>` draws a `<div>`. What lies over the page behind the list: a sheet's (`presentation`) is modal.
 - `<Combobox.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
 - `<Combobox.Popup>` draws a `<div>`.
 - `<Combobox.List>` draws a `<div>`. The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
@@ -1345,24 +1366,43 @@ Attributes and CSS variables, by part:
     - `data-popup-open`: Present when the list is open.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
-- positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry.
+- backdrop: The layer over the page behind the list: a press on it closes the list.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-swiping`: Present while the sheet is dragged.
+    - `data-swipe-dismiss`: Present once a drag has closed it.
+    - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
+    - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
+    - `--drawer-swipe-progress`: As a sheet: how far it has been dragged, of its own height: 0 to 1.
+- positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
-- popup: The list of items. With a `list` inside, what holds it: a dialog around an input and the list.
+- popup: The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-swiping`: Present while the sheet is dragged.
+    - `data-swipe-dismiss`: Present once a drag has closed it.
     - `data-empty`: Present when no item is shown for what was typed.
+    - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
+    - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
+    - `--drawer-swipe-progress`: As a sheet: how far it has been dragged, of its own height: 0 to 1.
+    - `--drawer-swipe-strength`: As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest.
 - list: The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.
     - `data-empty`: Present when no item is shown for what was typed.
 - item: One choice in the list.
@@ -1486,18 +1526,21 @@ Each part, and its own props:
 - `<ContextMenu.Item>` draws a `<div>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
 - `<ContextMenu.LinkItem>` draws a `<a>`. An item that is a link: `href` and the rest go to its `<a>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
 - `<ContextMenu.Group>` draws a `<div>`. Items that belong together, named by their label.
 - `<ContextMenu.GroupLabel>` draws a `<div>`. Names the group it is in. With no group around it, it is plain text.
 - `<ContextMenu.Separator>` draws a `<div>`. A line between items.
 - `<ContextMenu.CheckboxItem>` draws a `<div>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
     - `checked?: boolean`: Whether the item is checked, when the caller holds it.
     - `defaultChecked?: boolean`: Whether the item starts checked, when the caller does not hold `checked`. Read once.
     - `onCheckedChange?: (checked: boolean, details: ChangeDetails) => void`: Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
@@ -1511,7 +1554,8 @@ Each part, and its own props:
 - `<ContextMenu.RadioItem>` draws a `<div>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
     - `value: unknown`: Required. What the radio group's value is while this item is the chosen one.
 - `<ContextMenu.RadioItemIndicator>` draws a `<span>`.
     - `keepMounted?: boolean`: Keeps the mark in the page while its item is not the chosen one.
@@ -1603,7 +1647,8 @@ Props of its root:
 - `locale?: string`: The language and region that order the day, the month and the year and put what stands between them (`"en-US"`: month/day/year). Give it: a server does not know the reader's. Default `"en-US"`.
 - `min?: IsoDate`: The first and the last day it takes: outside them it says it is invalid.
 - `max?: IsoDate`: The last day it takes.
-- `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`.
+- `calendarSystem?: CalendarSystem`: The calendar its parts are typed in, when it is not the Gregorian one: an instance from `@internationalized/date` (`new PersianCalendar()`), as a calendar takes it. Its days, months, years and eras are the parts' ranges; the value is still an ISO day. In a calendar with several eras (Japanese, Minguo, Ethiopic), the era is a part of its own.
+- `placeholders?: Partial<Record<DateUnit, string>>`: What an empty part shows. Default: `dd`, `mm`, `yyyy`, `era`.
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
@@ -1626,7 +1671,7 @@ Attributes and CSS variables, by part:
     - `data-readonly`: Present when its value cannot be changed.
     - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
 - segment: One piece of the date: a part that is typed, or what stands between two.
-    - `data-segment="day | month | year | literal"`: Which piece it is.
+    - `data-segment="era | day | month | year | literal"`: Which piece it is: the era only in a calendar of several eras.
     - `data-placeholder`: Present on a part that is empty.
     - `data-disabled`: Present when it is disabled.
     - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
@@ -1637,13 +1682,13 @@ Attributes and CSS variables, by part:
 import { DatePicker } from "@kirana-ui/svelte/date-picker"
 ```
 
-Parts: `<DatePicker.Root>`, `<DatePicker.Field>`, `<DatePicker.Segments>`, `<DatePicker.Segment>`, `<DatePicker.Input>`, `<DatePicker.Trigger>`, `<DatePicker.Portal>`, `<DatePicker.Positioner>`, `<DatePicker.Popup>`, `<DatePicker.Calendar>`, `<DatePicker.Heading>`, `<DatePicker.Previous>`, `<DatePicker.Next>`, `<DatePicker.Months>`, `<DatePicker.Grid>`, `<DatePicker.Weekdays>`, `<DatePicker.HeadCell>`, `<DatePicker.Weeks>`, `<DatePicker.Cell>`, `<DatePicker.Day>`.
+Parts: `<DatePicker.Root>`, `<DatePicker.Field>`, `<DatePicker.Segments>`, `<DatePicker.Segment>`, `<DatePicker.Input>`, `<DatePicker.Trigger>`, `<DatePicker.Portal>`, `<DatePicker.Positioner>`, `<DatePicker.Popup>`, `<DatePicker.Calendar>`, `<DatePicker.Heading>`, `<DatePicker.Previous>`, `<DatePicker.Next>`, `<DatePicker.Months>`, `<DatePicker.Grid>`, `<DatePicker.Weekdays>`, `<DatePicker.HeadCell>`, `<DatePicker.Weeks>`, `<DatePicker.Cell>`, `<DatePicker.Day>`, `<DatePicker.Clear>`, `<DatePicker.Preset>`.
 
 Anatomy:
 
 ```
 <DatePicker.Root>
-  <DatePicker.Field>
+  <DatePicker.Field> (repeated)
     <DatePicker.Segments>
       <DatePicker.Segment> (repeated)
     <DatePicker.Input>
@@ -1662,13 +1707,16 @@ Anatomy:
                   <DatePicker.Day>
           <DatePicker.Previous>
           <DatePicker.Next>
+  <DatePicker.Clear> (optional)
+  <DatePicker.Preset> (optional, repeated)
 ```
 
 Props of its root:
 
-- `value?: IsoDate | null`: `bind:value`. The day, typed or picked; `null` for none.
-- `defaultValue?: IsoDate | null`: The value it starts with, when the caller does not hold `value`. Read once.
-- `onValueChange?: (value: IsoDate | null, details: ChangeDetails) => void`: Heard as the day is about to change, typed or picked: `details.cancel()` keeps the value as it was.
+- `value?: DatePickerValueOf<Mode>`: `bind:value`. The day, typed or picked; with `mode: "range"` a first and a last day, each typed in its own field or both picked in the one calendar. `null` for none.
+- `defaultValue?: DatePickerValueOf<Mode>`: The value it starts with, when the caller does not hold `value`. Read once.
+- `onValueChange?: (value: DatePickerValueOf<Mode>, details: ChangeDetails) => void`: Heard as the value is about to change, typed, picked, pressed or cleared: `details.cancel()` keeps the value as it was. A range is heard as each end comes, its other end `null` until it is there too.
+- `mode?: Mode`: One day (the default), or a first and a last (`"range"`): two fields, `DatePicker.Field` with `range="start"` and `range="end"`, and the calendar in range mode, which stays open until the range is whole. Read once.
 - `open?: boolean`: `bind:open`. Whether the calendar is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the calendar starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as the calendar is about to open or close: `details.cancel()` keeps it as it was.
@@ -1676,7 +1724,7 @@ Props of its root:
 - `min?: IsoDate`: The first and the last day that can be typed or picked.
 - `max?: IsoDate`: The last day that can be typed or picked.
 - `isDateUnavailable?: (date: IsoDate) => boolean`: Days that cannot be picked in the calendar.
-- `calendarSystem?: CalendarSystem`: The calendar its months are laid out in, when it is not the Gregorian one.
+- `calendarSystem?: CalendarSystem`: The calendar its months are laid out in and its field typed in, when it is not the Gregorian one. The value is an ISO day whatever it is.
 - `fixedWeeks?: boolean`: Always six rows of days.
 - `months?: number`: How many months the calendar shows side by side (1 by default).
 - `pagedNavigation?: boolean`: With several `months`: whether Previous and Next turn them all rather than one month.
@@ -1692,8 +1740,9 @@ Props of its root:
 
 Each part, and its own props:
 
-- `<DatePicker.Root>` draws no element. A date field, and a calendar in a popover, with one value between them. It draws nothing. `bind:value` is the day, `bind:open` whether the calendar shows, `bind:month` the first day of the month it shows. Its props are above.
-- `<DatePicker.Field>` draws a `<div>`. The typed date: what holds its segments and its hidden input.
+- `<DatePicker.Root>` draws no element. Generic: `<Mode extends DatePickerMode = "single">`. A date field, and a calendar in a popover, with one value between them. It draws nothing. `bind:value` is the day (or the range, with `mode="range"`), `bind:open` whether the calendar shows, `bind:month` the first day of the month it shows. `value` and `onValueChange` are typed by `mode`. Its props are above.
+- `<DatePicker.Field>` draws a `<div>`. The typed date: what holds its segments and its hidden input. With `mode="range"` there are two, `range="start"` and `range="end"`.
+    - `range?: "start" | "end"`: With `mode="range"`: which day of the range it is typed in, the first (`"start"`, the default) or the last (`"end"`).
 - `<DatePicker.Segments>` draws no element. Draws nothing itself: its snippet once for each piece of the date, in the locale's order.
     - `children: Snippet<[DateFieldSegment]>`: Required. Draws one piece of the date, once for each: a part that is typed, or what stands between two.
 - `<DatePicker.Segment>` draws a `<span>`. One piece: a part that is typed, or what stands between two. It writes its own text. Its `child` snippet is also given `text`.
@@ -1723,15 +1772,18 @@ Each part, and its own props:
     - `date: string`: Required. The day, as its week gave it (`day.date`).
 - `<DatePicker.Day>` draws a `<button>`.
     - `date: string`: Required. The day, as its week gave it (`day.date`).
+- `<DatePicker.Clear>` draws a `<button>`. Empties the value, and gives focus to the field. Disabled while there is none.
+- `<DatePicker.Preset>` draws a `<button>`. Makes the value the one it is given: pressed while it is.
+    - `value: string | DatePickerRange`: Required. The value its press gives: a day, or with `mode="range"` a range.
 
 Attributes and CSS variables, by part:
 
-- field: The field: a group of the date's parts.
+- field: The field a day is typed in: with `mode: "range"`, one for the first day (`range="start"`) and one for the last (`range="end"`).
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when its value cannot be changed.
     - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
 - segment: One piece of the date: a part that is typed, or what stands between two.
-    - `data-segment="day | month | year | literal"`: Which piece it is.
+    - `data-segment="era | day | month | year | literal"`: Which piece it is: the era only in a calendar of several eras.
     - `data-placeholder`: Present on a part that is empty.
     - `data-disabled`: Present when it is disabled.
     - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
@@ -1777,6 +1829,11 @@ Attributes and CSS variables, by part:
     - `data-unavailable`: Present on a day that cannot be chosen.
     - `data-range-start`: Present on the first day of a range, and on a copy of it.
     - `data-range-end`: Present on the last day of a range, and on a copy of it.
+- clear: Empties the value, and gives focus to the field. Disabled while there is none.
+    - `data-disabled`: Present when it is disabled.
+- preset: Makes the value the day, or the range, it is given. Pressed while the value is that.
+    - `data-pressed`: Present while the value is the one it gives.
+    - `data-disabled`: Present when it is disabled.
 
 ### Dialog
 
@@ -1806,6 +1863,7 @@ Props of its root:
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
+- `closeOnOutsidePress?: boolean`: Whether a press outside closes it. Default `true`. Escape always closes it: a caller who must keep it open cancels the change whose `details.reason` is `"escape-key"`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
 
 Each part, and its own props:
@@ -1871,6 +1929,7 @@ Props of its root:
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
+- `closeOnOutsidePress?: boolean`: Whether a press outside closes it. Default `true`. Escape always closes it: a caller who must keep it open cancels the change whose `details.reason` is `"escape-key"`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
 - `swipeDirection?: DrawerSide`: The way it is dragged to close it: the edge it came from. Default: `"down"`.
 - `snapPoints?: readonly DrawerSnapPoint[]`: Places it rests at, each how much of itself shows: a share (`0.4`, or `"40%"`) or a length (`"148px"`, `"20rem"`). `[0.4, 1]` is a drawer that opens two fifths shown and is dragged up to the whole. Without any, it is whole.
@@ -1959,7 +2018,8 @@ Props of its root:
 - `selectOnFocus?: boolean`: Whether the text is selected as editing starts. Default `true`.
 - `disabled?: boolean`: Disabled: it cannot be edited.
 - `readOnly?: boolean`: Shown as it is, not editable.
-- `name?: string`: With a name, the text is submitted with the form around it.
+- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
+- `name?: string`: With a name, the text is submitted with the form around it; in a `Field`, the field's by default.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
 
 Each part, and its own props:
@@ -1978,31 +2038,67 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it is shown and cannot be edited.
     - `data-placeholder`: Present while it holds no text.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the text is not the one it began with.
+    - `data-filled`: In a field: present while it holds text.
+    - `data-focused`: In a field: present while it has focus.
+    - `data-valid`: In a field: present once the text was checked and found right.
+    - `data-invalid`: In a field: present while the text is wrong.
 - preview: The text as it reads, or the placeholder while there is none: hidden while editing.
     - `data-editing`: Present while it is being edited.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it is shown and cannot be edited.
     - `data-placeholder`: Present while it holds no text.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the text is not the one it began with.
+    - `data-filled`: In a field: present while it holds text.
+    - `data-focused`: In a field: present while it has focus.
+    - `data-valid`: In a field: present once the text was checked and found right.
+    - `data-invalid`: In a field: present while the text is wrong.
 - input: Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.
     - `data-editing`: Present while it is being edited.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it is shown and cannot be edited.
     - `data-placeholder`: Present while it holds no text.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the text is not the one it began with.
+    - `data-filled`: In a field: present while it holds text.
+    - `data-focused`: In a field: present while it has focus.
+    - `data-valid`: In a field: present once the text was checked and found right.
+    - `data-invalid`: In a field: present while the text is wrong.
 - editTrigger: Starts an edit: hidden while editing.
     - `data-editing`: Present while it is being edited.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it is shown and cannot be edited.
     - `data-placeholder`: Present while it holds no text.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the text is not the one it began with.
+    - `data-filled`: In a field: present while it holds text.
+    - `data-focused`: In a field: present while it has focus.
+    - `data-valid`: In a field: present once the text was checked and found right.
+    - `data-invalid`: In a field: present while the text is wrong.
 - submitTrigger: Keeps what was typed: hidden unless editing.
     - `data-editing`: Present while it is being edited.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it is shown and cannot be edited.
     - `data-placeholder`: Present while it holds no text.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the text is not the one it began with.
+    - `data-filled`: In a field: present while it holds text.
+    - `data-focused`: In a field: present while it has focus.
+    - `data-valid`: In a field: present once the text was checked and found right.
+    - `data-invalid`: In a field: present while the text is wrong.
 - cancelTrigger: Drops what was typed: hidden unless editing.
     - `data-editing`: Present while it is being edited.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it is shown and cannot be edited.
     - `data-placeholder`: Present while it holds no text.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the text is not the one it began with.
+    - `data-filled`: In a field: present while it holds text.
+    - `data-focused`: In a field: present while it has focus.
+    - `data-valid`: In a field: present once the text was checked and found right.
+    - `data-invalid`: In a field: present while the text is wrong.
 
 ### Field
 
@@ -2019,7 +2115,7 @@ Anatomy:
   <Field.Label>
   <Field.Control>
   <Field.Description>
-  <Field.Error>
+  <Field.Error> (repeated)
   <Field.Validity>
 ```
 
@@ -2078,7 +2174,7 @@ Attributes and CSS variables, by part:
     - `data-focused`: Present while the control has focus.
     - `data-valid`: Present once the value has been checked and found right.
     - `data-invalid`: Present while the value is wrong.
-- error: What is wrong with the value. In the page while it applies.
+- error: What is wrong with the value. In the page while it applies. Several, each with its own `match`, can be shown at once: each has an id of its own, and the control names them all.
     - `data-disabled`: Present when it is disabled.
     - `data-touched`: Present once focus has left the control.
     - `data-dirty`: Present while the value is not the one it started with.
@@ -2449,18 +2545,21 @@ Each part, and its own props:
 - `<Menu.Item>` draws a `<div>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
 - `<Menu.LinkItem>` draws a `<a>`. An item that is a link: `href` and the rest go to its `<a>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
 - `<Menu.Group>` draws a `<div>`. Items that belong together, named by their label.
 - `<Menu.GroupLabel>` draws a `<div>`. Names the group it is in. With no group around it, it is plain text.
 - `<Menu.Separator>` draws a `<div>`. A line between items.
 - `<Menu.CheckboxItem>` draws a `<div>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
     - `checked?: boolean`: `bind:checked`. Whether the item is checked, when the caller holds it.
     - `defaultChecked?: boolean`: Whether the item starts checked, when the caller does not hold `checked`. Read once.
     - `onCheckedChange?: (checked: boolean, details: ChangeDetails) => void`: Heard as the item is about to be checked or unchecked: `details.cancel()` keeps it as it was.
@@ -2474,7 +2573,8 @@ Each part, and its own props:
 - `<Menu.RadioItem>` draws a `<div>`.
     - `disabled?: boolean`: Disables this item: it cannot be pressed, and the arrows pass over it.
     - `label?: string`: What typing matches; the item's text when left out.
-    - `closeOnClick?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnSelect?: boolean`: Whether choosing the item closes the menu. Default: it does for an item, and does not for a checkbox or a radio item.
+    - `closeOnClick?: boolean`: Whether choosing the item closes the menu.
     - `value: unknown`: Required. What the radio group's value is while this item is the chosen one.
 - `<Menu.RadioItemIndicator>` draws a `<span>`.
     - `keepMounted?: boolean`: Keeps the mark in the page while its item is not the chosen one.
@@ -2685,7 +2785,8 @@ Each part, and its own props:
 - `<NavigationMenu.Content>` draws a `<div>`. An item's content: drawn in `<NavigationMenu.Viewport>`, while it is shown.
 - `<NavigationMenu.Link>` draws a `<a>`.
     - `active?: boolean`: The link is the page the reader is on.
-    - `closeOnClick?: boolean`: Whether following it closes the menu. Default: it does.
+    - `closeOnSelect?: boolean`: Whether following it closes the menu. Default: it does.
+    - `closeOnClick?: boolean`: Whether following it closes the menu.
 - `<NavigationMenu.Portal>` draws no element. Draws nothing itself: its content at the end of `<body>`, or where a `<PortalProvider>` says.
 - `<NavigationMenu.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
 - `<NavigationMenu.Popup>` draws a `<div>`.
@@ -3424,7 +3525,7 @@ Attributes and CSS variables, by part:
 import { Select } from "@kirana-ui/svelte/select"
 ```
 
-Parts: `<Select.Root>`, `<Select.Trigger>`, `<Select.Value>`, `<Select.Portal>`, `<Select.Positioner>`, `<Select.Popup>`, `<Select.List>`, `<Select.ScrollUpArrow>`, `<Select.ScrollDownArrow>`, `<Select.Group>`, `<Select.GroupLabel>`, `<Select.Separator>`, `<Select.Item>`, `<Select.ItemText>`, `<Select.ItemIndicator>`.
+Parts: `<Select.Root>`, `<Select.Trigger>`, `<Select.Value>`, `<Select.Portal>`, `<Select.Backdrop>`, `<Select.Positioner>`, `<Select.Popup>`, `<Select.List>`, `<Select.ScrollUpArrow>`, `<Select.ScrollDownArrow>`, `<Select.Group>`, `<Select.GroupLabel>`, `<Select.Separator>`, `<Select.Item>`, `<Select.ItemText>`, `<Select.ItemIndicator>`.
 
 Anatomy:
 
@@ -3433,6 +3534,7 @@ Anatomy:
   <Select.Trigger>
     <Select.Value>
   <Select.Portal>
+    <Select.Backdrop> (optional)
     <Select.Positioner>
       <Select.Popup>
         <Select.ScrollUpArrow>
@@ -3448,6 +3550,8 @@ Anatomy:
 
 Props of its root:
 
+- `presentation?: Presentation`: How the list opens. `"sheet"`: from the bottom edge, not placed against the trigger, modal with a backdrop, swiped down or pressed outside to close. `"auto"`: decided each time it opens, a sheet when the pointer is coarse and the viewport narrower than `sheetBelow`. Default `"popup"`.
+- `sheetBelow?: number`: With `presentation: "auto"`: the viewport's width, in CSS pixels, under which a coarse pointer opens a sheet. Default 640.
 - `value?: Value | null`: `bind:value`. The chosen value; `null` is "none".
 - `defaultValue?: Value | null`: The value it starts with, when the caller does not hold `value`. Read once.
 - `onValueChange?: (value: Value | null, details: ChangeDetails) => void`: Heard as a value is about to be chosen: `details.cancel()` keeps it as it was.
@@ -3460,6 +3564,8 @@ Props of its root:
 - `name?: string`: With a name, the value is submitted with the form around it.
 - `form?: string`: The id of the form the control belongs to, when it is not inside it.
 - `items?: readonly { value: Value; label: string }[] | Readonly<Record<string, string>>`: The labels of the values, for the trigger to show before the list has ever been opened: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the markup.
+- `itemToStringLabel?: (value: Value) => string`: For values that are objects: the text the trigger shows for one, and what typing matches an item by when it gives no `label`. Without it, an object's own `label` names it, then the label `items` gives it, then the item's text in the markup.
+- `itemToStringValue?: (value: Value) => string`: For values that are objects: the text the form is sent for one. Without it, the `value` of an object shaped `{ value, label }` is sent, and any other object as JSON.
 - `multiple?: boolean`: Several values: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
 - `values?: readonly Value[]`: `bind:values`. With `multiple`: the chosen values, in the order they were chosen.
 - `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
@@ -3474,6 +3580,7 @@ Each part, and its own props:
     - `placeholder?: string`: Shown while nothing is chosen.
     - `children?: Snippet<[shown: SelectShown]>`: Draws something else than the label: it is given what is chosen (`value` and `label`; with `multiple`, `values` and `labels`, in the items' order).
 - `<Select.Portal>` draws no element. Draws nothing itself: its content at the end of `<body>`, or where a `<PortalProvider>` says.
+- `<Select.Backdrop>` draws a `<div>`. What lies over the page behind the list: a sheet's (`presentation`) is modal.
 - `<Select.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
     - `alignItemWithTrigger?: boolean`: The list opens over its trigger, the chosen item's text on the trigger's own, where there is room and unless a finger opened it. While it lies there the page's scroll is held (its scrollbar's room kept), and a scroll of a box around the trigger closes the list (`"ancestor-scroll"`), as a change of the window's size does (`"window-resize"`).
 - `<Select.Popup>` draws a `<div>`.
@@ -3501,11 +3608,23 @@ Attributes and CSS variables, by part:
     - `data-readonly`: Present when it can be read but not changed.
 - value: The chosen value's label, or the placeholder. With several values, their labels with commas between.
     - `data-placeholder`: Present while nothing is chosen.
-- positioner: Places the list against the trigger. It carries the geometry.
+- backdrop: The layer over the page behind the list: a press on it closes the list.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-swiping`: Present while the sheet is dragged.
+    - `data-swipe-dismiss`: Present once a drag has closed it.
+    - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
+    - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
+    - `--drawer-swipe-progress`: As a sheet: how far it has been dragged, of its own height: 0 to 1.
+- positioner: Places the list against the trigger. It carries the geometry. As a sheet it is not placed, and carries none.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger it is on, after any flip; `none` when it lies over the trigger.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
@@ -3523,13 +3642,20 @@ Attributes and CSS variables, by part:
     - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger the list is on; `none` when it lies over the trigger.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-- popup: The list of items.
+- popup: The list of items. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-swiping`: Present while the sheet is dragged.
+    - `data-swipe-dismiss`: Present once a drag has closed it.
+    - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
+    - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
+    - `--drawer-swipe-progress`: As a sheet: how far it has been dragged, of its own height: 0 to 1.
+    - `--drawer-swipe-strength`: As a sheet, once let go: 0.1 to 1, the share of the design's own time it should take to come to rest.
 - item: One choice in the list.
     - `data-selected`: Present on the chosen item, or on each of several.
     - `data-highlighted`: Present on the item the pointer or the keyboard is on.
@@ -3966,7 +4092,7 @@ Props of its root:
 - `disabled?: boolean`: Disabled: it cannot be changed.
 - `readOnly?: boolean`: Shown as it is, focusable, not changeable.
 - `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
-- `name?: string`: The name it is submitted under, by its hidden input.
+- `name?: string`: The name it is submitted under, by its hidden input; in a `Field`, the field's by default.
 - `form?: string`: The id of the form it belongs to, when it is not inside it.
 
 Each part, and its own props:
@@ -3983,12 +4109,22 @@ Attributes and CSS variables, by part:
 - root: The field: a group of the time's parts.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when its value cannot be changed.
-    - `data-invalid`: Present when the time is outside what it takes, or is asked for and half typed.
+    - `data-invalid`: Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the time is not the one it began with.
+    - `data-filled`: In a field: present while it holds a time.
+    - `data-focused`: In a field: present while one of its parts has focus.
+    - `data-valid`: In a field: present once the time was checked and found right.
 - segment: One piece of the time: a part that is typed, or what stands between two.
     - `data-segment="hour | minute | second | dayPeriod | literal"`: Which piece it is: `dayPeriod` is AM or PM, on a clock of twelve hours.
     - `data-placeholder`: Present on a part that is empty.
     - `data-disabled`: Present when it is disabled.
-    - `data-invalid`: Present when the time is outside what it takes, or is asked for and half typed.
+    - `data-invalid`: Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field.
+    - `data-touched`: In a field: present once focus has left it.
+    - `data-dirty`: In a field: present while the time is not the one it began with.
+    - `data-filled`: In a field: present while it holds a time.
+    - `data-focused`: In a field: present while one of its parts has focus.
+    - `data-valid`: In a field: present once the time was checked and found right.
 
 ### Toast
 

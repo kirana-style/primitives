@@ -153,6 +153,26 @@ describe("a dialog's viewport", () => {
     expect(made.open.peek()).toBe(true)
   })
 
+  it("reads `closeOnOutsidePress` as `dismissible`, the new name winning, and Escape still closes", async () => {
+    for (const [given, stays] of [
+      [{ closeOnOutsidePress: false }, true],
+      [{ dismissible: false }, true],
+      [{ closeOnOutsidePress: true, dismissible: false }, false],
+      [{ closeOnOutsidePress: false, dismissible: true }, true],
+    ] as const) {
+      const name = `v9-${String(given.closeOnOutsidePress)}-${String(given.dismissible)}`
+      const { open, parts, made, why } = dialog(name, given)
+      open()
+      await settled()
+      press(parts().viewport, 20, 100)
+      expect(made.open.peek(), JSON.stringify(given)).toBe(stays)
+      if (!stays) continue
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+      expect(made.open.peek()).toBe(false)
+      expect(why).toEqual(["open", "escape-key"])
+    }
+  })
+
   it("takes no press on its way out, and is live again when the dialog comes back", async () => {
     const { open, parts, made } = dialog("v5")
     open()
@@ -184,5 +204,48 @@ describe("a dialog's viewport", () => {
     expect(viewport.isConnected).toBe(true)
     expect(viewport.hasAttribute("data-nested")).toBe(true)
     expect(under.parts().viewport.hasAttribute("data-nested-dialog-open")).toBe(false)
+  })
+})
+
+describe("a dialog's reading direction", () => {
+  /** A dialog opened by its state alone, drawn at the end of `<body>` as a portal draws it. */
+  function opened(direction?: ReturnType<typeof signal<"ltr" | "rtl">>, own?: string) {
+    const made = createDialog(signal<DialogProps>({ id: "dr", defaultOpen: true }), { direction })
+    const popup = document.createElement("div")
+    if (own) popup.setAttribute("dir", own)
+    document.body.append(popup)
+    const stops = [made.mount(), bind(popup, made.popup)]
+    onTestFinished(() => {
+      for (const stop of stops.reverse()) stop()
+      popup.remove()
+    })
+    return popup
+  }
+
+  it("is its provider's, carried into the portal where the page reads the other way", () => {
+    const direction = signal<"ltr" | "rtl">("rtl")
+    const popup = opened(direction)
+    expect(popup.getAttribute("dir")).toBe("rtl")
+    direction.set("ltr")
+    expect(popup.hasAttribute("dir")).toBe(false)
+    direction.set("rtl")
+    expect(popup.getAttribute("dir")).toBe("rtl")
+  })
+
+  it("is left to the page with no provider, and to the caller's own `dir`", () => {
+    expect(opened().hasAttribute("dir")).toBe(false)
+    expect(opened(signal<"ltr" | "rtl">("rtl"), "ltr").getAttribute("dir")).toBe("ltr")
+  })
+
+  it("is carried by an alert dialog too", () => {
+    const made = createAlertDialog(signal<DialogProps>({ id: "ar", defaultOpen: true }), {
+      direction: signal<"ltr" | "rtl">("rtl"),
+    })
+    const popup = document.createElement("div")
+    document.body.append(popup)
+    const stops = [made.mount(), bind(popup, made.popup)]
+    expect(popup.getAttribute("dir")).toBe("rtl")
+    for (const stop of stops.reverse()) stop()
+    popup.remove()
   })
 })

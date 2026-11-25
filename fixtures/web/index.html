@@ -493,6 +493,43 @@
             </kui-select>
           </form>
           <output data-testid="s1-output">Banana</output>
+          <div class="bar">
+            <kui-select kui-id="ss1" presentation="sheet" default-value="Banana">
+              <button kui-part="trigger" data-testid="ss1-trigger">
+                <span kui-part="value" kui-placeholder="Pick a fruit"></span>
+              </button>
+              <div kui-part="portal">
+                <div kui-part="backdrop" class="backdrop" data-testid="ss1-backdrop"></div>
+                <div kui-part="positioner" class="sheet" data-testid="ss1-positioner">
+                  <div kui-part="popup" class="popup" data-testid="ss1-popup">
+                    <div kui-part="item" kui-value="Apple" class="item" data-testid="ss1-Apple">
+                      <span kui-part="item-text">Apple</span>
+                    </div>
+                    <div kui-part="item" kui-value="Apricot" class="item" data-testid="ss1-Apricot">
+                      <span kui-part="item-text">Apricot</span>
+                    </div>
+                    <div kui-part="item" kui-value="Banana" class="item" data-testid="ss1-Banana">
+                      <span kui-part="item-text">Banana</span>
+                    </div>
+                    <div
+                      kui-part="item"
+                      kui-value="Blueberry"
+                      class="item"
+                      data-testid="ss1-Blueberry"
+                    >
+                      <span kui-part="item-text">Blueberry</span>
+                    </div>
+                    <div kui-part="item" kui-value="Cherry" class="item" data-testid="ss1-Cherry">
+                      <span kui-part="item-text">Cherry</span>
+                    </div>
+                    <div kui-part="item" kui-value="Grape" class="item" data-testid="ss1-Grape">
+                      <span kui-part="item-text">Grape</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </kui-select>
+          </div>
         </section>
         <section data-fixture="select-multiple">
           <form class="bar" data-testid="sm1-form">
@@ -584,6 +621,28 @@
               </div>
             </div>
           </kui-select>
+          <form class="bar" data-testid="sm4-form">
+            <kui-select kui-id="sm4" name="city" default-value="par">
+              <button kui-part="trigger" data-testid="sm4-trigger">
+                <span kui-part="value" data-testid="sm4-value"></span>
+              </button>
+              <div kui-part="portal">
+                <div kui-part="positioner" kui-side-offset="4" data-testid="sm4-positioner">
+                  <div kui-part="popup" class="popup" data-testid="sm4-popup">
+                    <div kui-part="item" kui-value="osl" class="item" data-testid="sm4-osl">
+                      <span kui-part="item-text">Oslo</span>
+                    </div>
+                    <div kui-part="item" kui-value="osa" class="item" data-testid="sm4-osa">
+                      <span kui-part="item-text">Osaka</span>
+                    </div>
+                    <div kui-part="item" kui-value="par" class="item" data-testid="sm4-par">
+                      <span kui-part="item-text">Paris</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </kui-select>
+          </form>
         </section>
         <section data-fixture="menu">
           <kui-menu kui-id="mn1">
@@ -1283,6 +1342,14 @@
             </kui-date-field>
           </form>
           <output data-testid="df1-output">none</output>
+          <kui-date-field kui-id="df2" locale="en-US" default-value="2019-05-01">
+            <div kui-part="root" aria-label="Day of the era" class="date-field" data-testid="df2">
+              <template kui-each="segments"
+                ><span kui-part="segment" data-testid="df2-{type}-{index}"></span
+              ></template>
+            </div>
+          </kui-date-field>
+          <output data-testid="df2-output">none</output>
         </section>
         <section data-fixture="calendars">
           <kui-calendar
@@ -1722,6 +1789,42 @@
               </div>
             </div>
           </kui-select>
+          <kui-autocomplete kui-id="ac3" mode="both">
+            <input kui-part="input" aria-label="Place, completed" data-testid="ac3-input" />
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="4" data-testid="ac3-positioner">
+                <div kui-part="popup" class="popup" aria-label="Places" data-testid="ac3-popup">
+                  <div
+                    kui-part="item"
+                    kui-value="Oslo"
+                    kui-id="ac3-Oslo"
+                    class="item"
+                    data-testid="ac3-Oslo"
+                  >
+                    Oslo
+                  </div>
+                  <div
+                    kui-part="item"
+                    kui-value="Osaka"
+                    kui-id="ac3-Osaka"
+                    class="item"
+                    data-testid="ac3-Osaka"
+                  >
+                    Osaka
+                  </div>
+                  <div
+                    kui-part="item"
+                    kui-value="Paris"
+                    kui-id="ac3-Paris"
+                    class="item"
+                    data-testid="ac3-Paris"
+                  >
+                    Paris
+                  </div>
+                </div>
+              </div>
+            </div>
+          </kui-autocomplete>
         </section>
         <section data-fixture="picking">
           <kui-date-picker kui-id="dk1" locale="en-US" name="due" default-value="2026-03-14">
@@ -1775,6 +1878,85 @@
             </div>
           </kui-date-picker>
           <output data-testid="dk1-output">2026-03-14</output>
+          <kui-date-picker
+            kui-id="dk2"
+            mode="range"
+            locale="en-US"
+            name="trip"
+            default-month="2026-03-01"
+          >
+            <div
+              kui-part="field"
+              kui-range="start"
+              aria-label="Arrival"
+              class="date-field"
+              data-testid="dk2-start"
+            >
+              <template kui-each="segments"
+                ><span kui-part="segment" data-testid="dk2-start-{type}-{index}"></span
+              ></template>
+              <input kui-part="input" />
+            </div>
+            <div
+              kui-part="field"
+              kui-range="end"
+              aria-label="Departure"
+              class="date-field"
+              data-testid="dk2-end"
+            >
+              <template kui-each="segments"
+                ><span kui-part="segment" data-testid="dk2-end-{type}-{index}"></span
+              ></template>
+              <input kui-part="input" />
+            </div>
+            <button kui-part="trigger" aria-label="Pick the days" data-testid="dk2-trigger">
+              Pick
+            </button>
+            <button kui-part="clear" data-testid="dk2-clear">Clear</button>
+            <button kui-part="preset" kui-value="2026-03-09,2026-03-15" data-testid="dk2-week">
+              A week
+            </button>
+            <div kui-part="portal">
+              <div kui-part="positioner" kui-side-offset="4" data-testid="dk2-positioner">
+                <div kui-part="popup" class="popup" aria-label="Calendar" data-testid="dk2-popup">
+                  <div kui-part="calendar" class="calendar" data-testid="dk2-calendar">
+                    <button
+                      kui-part="previous"
+                      aria-label="Previous month"
+                      data-testid="dk2-previous"
+                    >
+                      Previous
+                    </button>
+                    <div kui-part="heading" data-testid="dk2-heading"></div>
+                    <button kui-part="next" aria-label="Next month" data-testid="dk2-next">
+                      Next
+                    </button>
+                    <table kui-part="grid" data-testid="dk2-grid">
+                      <thead>
+                        <tr>
+                          <template kui-each="weekdays"
+                            ><th kui-part="head-cell">{short}</th></template
+                          >
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template kui-each="weeks">
+                          <tr>
+                            <template kui-each="days">
+                              <td kui-part="cell">
+                                <button kui-part="day" data-testid="dk2-{date}">{label}</button>
+                              </td>
+                            </template>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </kui-date-picker>
+          <output data-testid="dk2-output">none</output>
           <kui-pagination kui-id="pg1" count="200">
             <nav kui-part="root" class="pagination" data-testid="pg1">
               <button kui-part="previous" data-testid="pg1-previous">Previous</button>
@@ -1881,6 +2063,14 @@
           </kui-form>
           <button data-testid="f1-reject">Reject</button>
           <span data-testid="f1-sent"></span>
+          <kui-field kui-id="fd3" validation-mode="onBlur">
+            <div kui-part="root" data-testid="fd3">
+              <label kui-part="label" data-testid="fd3-label">Code</label>
+              <input kui-part="control" id="fd3-own" required data-testid="fd3-control" />
+              <div kui-part="error" data-testid="fd3-error"></div>
+              <div kui-part="error" kui-match="valueMissing" data-testid="fd3-missing"></div>
+            </div>
+          </kui-field>
         </section>
         <section data-fixture="field-controls">
           <kui-form>
@@ -1971,6 +2161,36 @@
             </form>
           </kui-form>
           <span data-testid="f2-sent"></span>
+          <kui-field kui-id="fc6" name="title" validation-mode="onBlur">
+            <div kui-part="root" data-testid="fc6">
+              <label kui-part="label" data-testid="fc6-label">Title</label>
+              <kui-editable required placeholder="Untitled">
+                <div kui-part="root" class="item" data-testid="fc6-editable">
+                  <span
+                    kui-part="preview"
+                    class="editable-preview"
+                    data-testid="fc6-preview"
+                  ></span>
+                  <input kui-part="input" id="fc6-own" data-testid="fc6-input" />
+                </div>
+              </kui-editable>
+              <div kui-part="error" data-testid="fc6-error"></div>
+            </div>
+          </kui-field>
+          <kui-field kui-id="fc7" name="at" validation-mode="onBlur">
+            <div kui-part="root" data-testid="fc7">
+              <label kui-part="label" data-testid="fc7-label">At</label>
+              <kui-time-field required locale="en-US">
+                <div kui-part="root" class="date-field" data-testid="fc7-time">
+                  <template kui-each="segments"
+                    ><span kui-part="segment" data-testid="fc7-{type}-{index}"></span
+                  ></template>
+                  <input kui-part="input" />
+                </div>
+              </kui-time-field>
+              <div kui-part="error" data-testid="fc7-error"></div>
+            </div>
+          </kui-field>
         </section>
         <section data-fixture="checkbox-group">
           <form data-testid="cg1-form">
@@ -2300,6 +2520,44 @@
             </kui-combobox>
             <button type="button" data-testid="cd2-unlock">Unlock</button>
           </div>
+          <form class="bar" data-testid="cd3-form">
+            <kui-combobox kui-id="cd3" name="city" default-value="par" auto-highlight>
+              <input kui-part="input" aria-label="City" data-testid="cd3-input" />
+              <div kui-part="portal">
+                <div kui-part="positioner" kui-side-offset="4" data-testid="cd3-positioner">
+                  <div kui-part="popup" class="popup" aria-label="Cities" data-testid="cd3-popup">
+                    <div
+                      kui-part="item"
+                      kui-value="osl"
+                      kui-id="cd3-osl"
+                      class="item"
+                      data-testid="cd3-osl"
+                    >
+                      Oslo
+                    </div>
+                    <div
+                      kui-part="item"
+                      kui-value="osa"
+                      kui-id="cd3-osa"
+                      class="item"
+                      data-testid="cd3-osa"
+                    >
+                      Osaka
+                    </div>
+                    <div
+                      kui-part="item"
+                      kui-value="par"
+                      kui-id="cd3-par"
+                      class="item"
+                      data-testid="cd3-par"
+                    >
+                      Paris
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </kui-combobox>
+          </form>
         </section>
         <section data-fixture="editing">
           <form class="editing" data-testid="ef1-form">

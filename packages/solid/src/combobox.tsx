@@ -14,6 +14,7 @@ import { For, Show, createContext, createUniqueId, untrack, useContext } from "s
 import type { Accessor } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
+import { DirectionContext } from "./direction-context.ts"
 import { FieldContext } from "./field-context.ts"
 import { positioned } from "./popover.tsx"
 import type { PortalProps, PositionerOptions } from "./popover.tsx"
@@ -45,7 +46,8 @@ export type RootProps<Value = unknown> = Omit<ComboboxProps<Value>, "id"> & {
 function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext) ?? undefined
-  const made = controller(within(createCombobox<Value>, { field }), () => ({
+  const direction = useContext(DirectionContext) ?? undefined
+  const made = controller(within(createCombobox<Value>, { field, direction }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
@@ -63,11 +65,15 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
       props.onValuesChange?.(values, details),
     inline: props.inline,
     virtualized: props.virtualized,
+    presentation: props.presentation,
+    sheetBelow: props.sheetBelow,
     autoHighlight: props.autoHighlight,
     name: props.name,
     form: props.form,
     items: props.items,
     filter: props.filter,
+    itemToStringLabel: props.itemToStringLabel,
+    itemToStringValue: props.itemToStringValue,
     onValueChange: (value: Value | null, details: ChangeDetails) =>
       props.onValueChange?.(value, details),
     onInputValueChange: (value: string, details: ChangeDetails) =>
@@ -238,6 +244,7 @@ export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>>
 export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
 export type ChipsProps = PartComponentProps<"div", StateOf<Parts["chips"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
+export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
 export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>>
 export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
 
@@ -314,7 +321,7 @@ function Collection<Value = unknown>(props: CollectionProps<Value>): JSX.Element
 
 const part =
   <Props extends Record<string, unknown>>(
-    name: "input" | "trigger" | "popup" | "list" | "chips" | "separator" | "status",
+    name: "input" | "trigger" | "popup" | "backdrop" | "list" | "chips" | "separator" | "status",
     tag: string
   ) =>
   (props: Props): JSX.Element => <Part of={useCombobox()[name]} tag={tag} {...props} />
@@ -362,6 +369,8 @@ export const Combobox = {
   Chip,
   ChipRemove,
   Portal,
+  /** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+  Backdrop: part<BackdropProps>("backdrop", "div"),
   Positioner,
   Popup: part<PopupProps>("popup", "div"),
   /**

@@ -133,6 +133,22 @@ describe("a part on an element, with no framework", () => {
     expect(text.value).toBe("two")
   })
 
+  it("writes a text as it changes, not again for another attribute's change", () => {
+    const root = mount(`<input id="text" />`)
+    const text = find<HTMLInputElement>(root, "text")
+    const value = part({ value: "o", "aria-expanded": "false" })
+    bind(text, value.part)
+    // Typed on, and something completed and selected, before the caller gives the text back.
+    text.focus()
+    text.value = "oslo"
+    text.setSelectionRange(2, 4)
+    value.props.set({ value: "o", "aria-expanded": "true" })
+    expect(text.value).toBe("oslo")
+    expect([text.selectionStart, text.selectionEnd]).toEqual([2, 4])
+    value.props.set({ value: "os", "aria-expanded": "true" })
+    expect(text.value).toBe("os")
+  })
+
   it("writes a style's properties one by one, beside the caller's", () => {
     const root = mount(`<div id="bar" style="color: red"></div>`)
     const bar = find(root, "bar")

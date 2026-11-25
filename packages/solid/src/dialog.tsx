@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
@@ -8,6 +9,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
+import { DirectionContext } from "./direction-context.ts"
 import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -27,6 +29,9 @@ export type RootProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   modal?: boolean
+  /** Whether a press outside closes it. Default `true`. */
+  closeOnOutsidePress?: boolean
+  /** @deprecated Use `closeOnOutsidePress`, which wins when both are given. */
   dismissible?: boolean
   id?: string
   children?: JSX.Element
@@ -34,11 +39,13 @@ export type RootProps = {
 
 function Root(props: RootProps): JSX.Element {
   const generated = createUniqueId()
-  const made = controller(createDialog, () => ({
+  const direction = useContext(DirectionContext) ?? undefined
+  const made = controller(within(createDialog, { direction }), () => ({
     id: props.id ?? generated,
     open: props.open,
     defaultOpen: props.defaultOpen,
     modal: props.modal,
+    closeOnOutsidePress: props.closeOnOutsidePress,
     dismissible: props.dismissible,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
@@ -66,11 +73,12 @@ const part =
   ) =>
   (props: Props): JSX.Element => <Part of={useDialog()[name]} tag={tag} {...props} />
 
-export type AlertRootProps = Omit<RootProps, "modal" | "dismissible">
+export type AlertRootProps = Omit<RootProps, "modal" | "closeOnOutsidePress" | "dismissible">
 
 function AlertRoot(props: AlertRootProps): JSX.Element {
   const generated = createUniqueId()
-  const made = controller(createAlertDialog, () => ({
+  const direction = useContext(DirectionContext) ?? undefined
+  const made = controller(within(createAlertDialog, { direction }), () => ({
     id: props.id ?? generated,
     open: props.open,
     defaultOpen: props.defaultOpen,
@@ -105,11 +113,13 @@ export type DrawerRootProps = RootProps & {
 
 function DrawerRoot(props: DrawerRootProps): JSX.Element {
   const generated = createUniqueId()
-  const made = controller(createDrawer, () => ({
+  const direction = useContext(DirectionContext) ?? undefined
+  const made = controller(within(createDrawer, { direction }), () => ({
     id: props.id ?? generated,
     open: props.open,
     defaultOpen: props.defaultOpen,
     modal: props.modal,
+    closeOnOutsidePress: props.closeOnOutsidePress,
     dismissible: props.dismissible,
     swipeDirection: props.swipeDirection,
     snapPoints: props.snapPoints,

@@ -98,6 +98,9 @@ export function context<C>(name: string): { provide(controller: C): C; use(): C 
 
 function toVue(props: PartProps): PartProps {
   const out: PartProps = {}
+  // What is not an attribute (a default id's mark) goes on to `forElement` as it is.
+  for (const mark of Object.getOwnPropertySymbols(props))
+    (out as Record<symbol, unknown>)[mark] = (props as Record<symbol, unknown>)[mark]
   for (const key in props) {
     const value = props[key]
     if (typeof value === "function") {

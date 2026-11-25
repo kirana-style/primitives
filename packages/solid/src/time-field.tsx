@@ -12,6 +12,7 @@ import { For, createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
+import { FieldContext } from "./field-context.ts"
 import { Part, controller, fromSignal, split } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -51,7 +52,8 @@ function Root(props: RootProps): JSX.Element {
   ])
   const generated = createUniqueId()
   const direction = useContext(DirectionContext) ?? undefined
-  const made = controller(within(createTimeField, { direction }), () => ({
+  const field = useContext(FieldContext) ?? undefined
+  const made = controller(within(createTimeField, { direction, field }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,

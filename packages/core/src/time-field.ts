@@ -1,7 +1,8 @@
 import { bindable } from "./bindable.ts"
 import { directionOf } from "./direction.ts"
 import type { DirectionAround } from "./direction.ts"
-import { details, flag } from "./part.ts"
+import type { Field, FieldMembership } from "./field.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
@@ -49,7 +50,7 @@ export interface TimeFieldProps {
   readOnly?: boolean | undefined
   /** Needed: in a `Field`, leaving it empty is then invalid. */
   required?: boolean | undefined
-  /** The name it is submitted under, by its hidden input. */
+  /** The name it is submitted under, by its hidden input; in a `Field`, the field's by default. */
   name?: string | undefined
   /** The id of the form it belongs to, when it is not inside it. */
   form?: string | undefined
@@ -113,12 +114,15 @@ const secondsOf = (iso: IsoTime | null | undefined) => {
  * it, Backspace empties it; the day period is turned by the arrows or typed by its first letter.
  * Its value is an ISO time in 24 hours once every part is in, and nothing until then.
  *
- * No text is parsed: what is typed can only be a time.
+ * No text is parsed: what is typed can only be a time. Inside a field it is the field's control:
+ * named by its label, described by its description and messages, and checked by it.
  */
 export function createTimeField(
   props: ReadonlySignal<TimeFieldProps>,
-  around: DirectionAround = {}
+  around: DirectionAround & { field?: Field | undefined } = {}
 ): TimeField {
+  const { field } = around
+  let member: FieldMembership | undefined
   const id = props.peek().id
   const locale = computed(() => props.get().locale ?? "en-US")
   const seconds = computed(() => props.get().granularity === "second")
@@ -230,6 +234,7 @@ export function createTimeField(
     if (next === value.peek()) return
     value.set(next, by)
     if (by.canceled) load(value.peek())
+    else member?.changed(next ?? "")
   }
 
   const inForm = createFormControl((event) => {
@@ -237,8 +242,13 @@ export function createTimeField(
     value.set(initial, by)
     // The value asked for, not the value read back: a caller who holds it answers later.
     load(by.canceled ? value.peek() : initial)
+    member?.reset(initial ?? "")
   })
-  const disabled = computed(() => Boolean(props.get().disabled) || inForm.disabled.get())
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || inForm.disabled.get() || Boolean(field?.disabled.get())
+  )
+  // Wrong by its own measure (out of range, half typed), or by its field's.
+  const wrong = computed(() => invalid.get() || Boolean(field?.invalid.get()))
   const off = () => disabled.peek() || Boolean(props.peek().readOnly)
 
   function focusBy(unit: TimeUnit, step: 1 | -1) {
@@ -353,11 +363,12 @@ export function createTimeField(
             "aria-valuemax": unit === "hour" ? (twelve ? "12" : "23") : period ? "1" : "59",
             "aria-disabled": locked ? "true" : undefined,
             "aria-readonly": props.get().readOnly ? "true" : undefined,
-            "aria-invalid": invalid.get() ? "true" : undefined,
+            "aria-invalid": wrong.get() ? "true" : undefined,
+            ...field?.state(),
             "data-segment": unit,
             "data-placeholder": flag(now === undefined),
             "data-disabled": flag(locked),
-            "data-invalid": flag(invalid.get()),
+            "data-invalid": flag(wrong.get()),
             onFocus: () => typed.set(""),
             // Left half typed, a part is what was typed of it.
             onBlur(event: FocusEvent) {
@@ -442,11 +453,20 @@ export function createTimeField(
     },
     root: {
       props: computed(() => ({
-        id,
+        // In a field, the id its label is `for` unless the caller gives one.
+        ...(field ? defaultId(field.controlId) : { id }),
         role: "group",
+        ...field?.aria(),
+        ...field?.state(),
         "data-disabled": flag(disabled.get()),
         "data-readonly": flag(props.get().readOnly),
-        "data-invalid": flag(invalid.get()),
+        "data-invalid": flag(wrong.get()),
+        onFocus: () => member?.focused(true),
+        onBlur(event: FocusEvent) {
+          // From one part to another, focus has not left it.
+          const to = event.relatedTarget as Node | null
+          if (!(event.currentTarget as HTMLElement).contains(to)) member?.focused(false)
+        },
         // A press on what stands between the parts goes to the first that is empty.
         onPointerDown(event: PointerEvent) {
           const target = event.target as Element | null
@@ -459,7 +479,20 @@ export function createTimeField(
       })),
       attach(element) {
         group = element
+        member = field?.join({
+          element,
+          focus() {
+            const all = order.peek()
+            const to = all.find((unit) => parts[unit].peek() === undefined) ?? all[0]
+            if (to) elements.get(to)?.focus()
+          },
+          kind: "group",
+          required: () => Boolean(props.peek().required),
+          value: value.peek() ?? "",
+        })
         return () => {
+          member?.leave()
+          member = undefined
           if (group === element) group = undefined
         }
       },
@@ -486,10 +519,10 @@ export function createTimeField(
     input: {
       props: computed(() => ({
         type: "hidden",
-        name: props.get().name,
+        name: props.get().name ?? field?.name.get(),
         form: props.get().form,
         value: value.get() ?? "",
-        disabled: props.get().disabled ? "" : undefined,
+        disabled: props.get().disabled || field?.disabled.get() ? "" : undefined,
       })),
       // A form's reset puts the first value back, and a `<fieldset disabled>` disables it.
       attach: (element) => inForm.attach(element),

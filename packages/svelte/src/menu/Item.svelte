@@ -6,8 +6,8 @@
   import { useMenu } from "./context.ts"
   import type { ItemProps } from "./types.ts"
 
-  let { disabled, label, closeOnClick, ...rest }: ItemProps = $props()
-  const options = toSignal(() => ({ disabled, label, closeOnClick }))
+  let { disabled, label, closeOnSelect, closeOnClick, ...rest }: ItemProps = $props()
+  const options = toSignal(() => ({ disabled, label, closeOnSelect, closeOnClick }))
   const part = useMenu().item(() => defined(options.get()))
 </script>
 

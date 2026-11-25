@@ -16,6 +16,7 @@ import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog } from "@kirana-ui/core/dialog"
 
+import { KP_DIRECTION } from "./direction-token"
 import { KpIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
 
 /**
@@ -29,7 +30,17 @@ export class KpDialog implements OnInit {
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   /** Blocks the page behind it and traps focus. Default `true`. */
   readonly modal = input(true, { transform: booleanAttribute })
-  /** Whether a press outside closes it. Default `true`. */
+  /**
+   * Whether a press outside closes it. Default `true`. Escape always closes it: a caller who
+   * must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+   */
+  readonly closeOnOutsidePress = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether a press outside closes it. Default `true`.
+   * @deprecated Use `[closeOnOutsidePress]`, which wins when both are given.
+   */
   readonly dismissible = input(true, { transform: booleanAttribute })
   /** With `kpDrawer`: the way it is dragged to close it. Default: `"down"`. */
   readonly swipeDirection = input<DrawerSide>()
@@ -49,12 +60,14 @@ export class KpDialog implements OnInit {
 
   controller!: Dialog
   private readonly drawer = inject(new HostAttributeToken("kpDrawer"), { optional: true }) !== null
+  private readonly around = inject(KP_DIRECTION, { optional: true })
   private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     modal: this.modal(),
+    closeOnOutsidePress: this.closeOnOutsidePress(),
     dismissible: this.dismissible(),
     swipeDirection: this.swipeDirection(),
     snapPoints: this.snapPoints(),
@@ -83,7 +96,10 @@ export class KpDialog implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = this.drawer ? createDrawer(this.props()) : createDialog(this.props())
+    const around = { direction: this.around?.direction }
+    this.controller = this.drawer
+      ? createDrawer(this.props(), around)
+      : createDialog(this.props(), around)
     this.mount(this.controller)
   }
 }
@@ -91,7 +107,7 @@ export class KpDialog implements OnInit {
 /**
  * `kpAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer.
  * It is always modal and a press outside it never closes it, so it takes neither `[modal]`
- * nor `[dismissible]`. Its parts are a dialog's (`kpDialogTrigger`, `kpDialogPopup` …), which
+ * nor `[closeOnOutsidePress]`. Its parts are a dialog's (`kpDialogTrigger`, `kpDialogPopup` …), which
  * find it as their root.
  */
 @Directive({
@@ -106,6 +122,7 @@ export class KpAlertDialog implements OnInit {
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Dialog
+  private readonly around = inject(KP_DIRECTION, { optional: true })
   private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
@@ -126,7 +143,7 @@ export class KpAlertDialog implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = createAlertDialog(this.props())
+    this.controller = createAlertDialog(this.props(), { direction: this.around?.direction })
     this.mount(this.controller)
   }
 }

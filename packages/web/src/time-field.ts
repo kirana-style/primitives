@@ -1,6 +1,7 @@
 import { createTimeField } from "@kirana-ui/core/time-field"
 import type { TimeField, TimeFieldProps, TimeFieldSegment } from "@kirana-ui/core/time-field"
 
+import { fieldAround } from "./around.ts"
 import { defineElement, entryAround } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
 
@@ -9,7 +10,7 @@ import type { ElementOf } from "./runtime.ts"
  * with the `segment` each part of the time is typed in (`{type}` and `{index}` say which),
  * and the hidden `input` a form reads. `value`, `default-value`, `granularity`, `hour-cycle`,
  * `locale`, `min`, `max`, `disabled`, `read-only`, `required`, `name`, `form`; `placeholders`
- * as a property; it tells `value-change`.
+ * as a property; it tells `value-change`. Inside a `<kui-field>` it is the field's control.
  */
 export const tag = defineElement<TimeFieldProps, TimeField>({
   tag: "kui-time-field",
@@ -28,7 +29,7 @@ export const tag = defineElement<TimeFieldProps, TimeField>({
     form: "string",
   },
   properties: ["placeholders"],
-  create: (props) => createTimeField(props),
+  create: (props, host) => createTimeField(props, { field: fieldAround(host) }),
   changes: { onValueChange: { event: "value-change", prop: "value" } },
   lists: {
     segments: (controller) => ({

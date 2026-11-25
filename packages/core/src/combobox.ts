@@ -1,6 +1,8 @@
 import { bindable } from "./bindable.ts"
+import { directionOf } from "./direction.ts"
+import type { DirectionAround } from "./direction.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, keyed, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
@@ -8,12 +10,15 @@ import { byPlace } from "./services/list-places.ts"
 import { createList, pointerMoved } from "./services/list.ts"
 import { createFormControl } from "./services/form-control.ts"
 import { restInputs } from "./services/hidden-inputs.ts"
-import { itemsOf, labelIn } from "./services/items.ts"
+import { formValue, itemsOf, labelIn, ownLabel, plainLabel } from "./services/items.ts"
 import type { ItemLabels } from "./services/items.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
+import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
-import { textOf } from "./services/typeahead.ts"
+import { createSheet } from "./services/sheet.ts"
+import type { Presentation } from "./services/sheet.ts"
+import { printable, textOf } from "./services/typeahead.ts"
 import type { PositionOptions } from "./services/position.ts"
 
 /** One item given as data: its value, and what it is called. */
@@ -77,6 +82,18 @@ export interface ComboboxShown<Value = unknown> {
 
 export interface ComboboxProps<Value = unknown> {
   id: string
+  /**
+   * How the list opens. `"sheet"`: from the bottom edge, not placed against the input, modal
+   * with a backdrop, swiped down or pressed outside to close; the input then goes in the
+   * popup, at its head. `"auto"`: decided each time it opens, a sheet when the pointer is
+   * coarse and the viewport narrower than `sheetBelow`. Default `"popup"`. Not with `inline`.
+   */
+  presentation?: Presentation | undefined
+  /**
+   * With `presentation: "auto"`: the viewport's width, in CSS pixels, under which a coarse
+   * pointer opens a sheet. Default 640.
+   */
+  sheetBelow?: number | undefined
   /** The chosen value; `null` is "none". */
   value?: Value | null | undefined
   /** The value it starts with, when the caller does not hold `value`. Read once. */
@@ -121,6 +138,17 @@ export interface ComboboxProps<Value = unknown> {
     | readonly ComboboxGroupData<Value>[]
     | Readonly<Record<string, string>>
     | undefined
+  /**
+   * For values that are objects: the text the input shows for one, and what an item drawn
+   * with no text of its own is filtered by. Without it, an object's own `label` names it, then
+   * the label `items` gives it, then the item's text in the markup.
+   */
+  itemToStringLabel?: ((value: Value) => string) | undefined
+  /**
+   * For values that are objects: the text the form is sent for one. Without it, the `value` of
+   * an object shaped `{ value, label }` is sent, and any other object as JSON.
+   */
+  itemToStringValue?: ((value: Value) => string) | undefined
   /**
    * Whether an item is shown for what was typed. Default: its label holds the text, without
    * regard to case. `null`: every item is shown, and the caller draws the ones it wants (or
@@ -232,6 +260,8 @@ export interface Combobox<Value = unknown> {
   readonly positioner: Part
   /** The list of items, or with a `list` inside what holds it: a dialog around an input and a list. */
   readonly popup: Part
+  /** What lies over the page behind the list; a press on it closes the list. */
+  readonly backdrop: Part
   /**
    * The items' own box inside the popup, when the popup holds more than items: an input, a
    * heading. It is then the listbox, and the popup is not.
@@ -283,7 +313,10 @@ function leaves<Value>(items: Given<Value>) {
 }
 
 /** `items` as entries: each with a key that is its own, by which a drawn item is kept. */
-function arrange<Value>(items: Given<Value>): readonly ComboboxEntry<Value>[] {
+function arrange<Value>(
+  items: Given<Value>,
+  keyOf: (value: Value) => string
+): readonly ComboboxEntry<Value>[] {
   const taken = new Set<string>()
   const own = (wanted: string) => {
     let key = wanted
@@ -293,7 +326,7 @@ function arrange<Value>(items: Given<Value>): readonly ComboboxEntry<Value>[] {
   }
   const entry = (item: ComboboxItemData<Value>): ComboboxItemEntry<Value> => ({
     type: "item",
-    key: own(String(item.value)),
+    key: own(keyOf(item.value)),
     value: item.value,
     label: item.label,
     disabled: Boolean(item.disabled),
@@ -379,7 +412,13 @@ export function createCombobox<Value = unknown>(
      * the list closes. Its function says whether a press on the input opens the list.
      */
     free?: (() => boolean) | undefined
-  } = {}
+    /**
+     * What the input says it does with what is typed (`aria-autocomplete`): `"list"` by
+     * default. With `"inline"` or `"both"` the rest of the first item that begins with what
+     * was typed is written after it in the input, selected.
+     */
+    completion?: (() => "list" | "inline" | "both") | undefined
+  } & DirectionAround = {}
 ): Combobox<Value> {
   const { field, free } = around
   let member: FieldMembership | undefined
@@ -390,10 +429,21 @@ export function createCombobox<Value = unknown>(
   // The labels learned from the markup, so the input still names a value once the list is gone.
   const labels = new Map<Value, string>()
 
+  /** A value's name from what the caller gave: `itemToStringLabel`, an object's own, `items`. */
+  function givenLabel(
+    item: Value,
+    { items, itemToStringLabel }: Pick<ComboboxProps<Value>, "items" | "itemToStringLabel">
+  ): string | undefined {
+    return ownLabel(item, itemToStringLabel) ?? labelIn(leaves(items), item)
+  }
+
   function labelOf(item: Value | null): string {
     if (item === null) return ""
-    return labelIn(leaves(props.peek().items), item) ?? labels.get(item) ?? String(item)
+    return givenLabel(item, props.peek()) ?? labels.get(item) ?? plainLabel(item)
   }
+
+  /** What the form is sent for a value. */
+  const sent = (item: Value) => formValue(item, props.peek().itemToStringValue)
 
   const open = bindable({
     value: () => props.get().open,
@@ -420,7 +470,7 @@ export function createCombobox<Value = unknown>(
     equals: (a, b) => a.length === b.length && a.every((each, at) => Object.is(each, b[at])),
   })
   /** What a field is told the control holds: something, or nothing. */
-  const held = (list: readonly Value[]) => list.map(String).join(",")
+  const held = (list: readonly Value[]) => list.map(sent).join(",")
   const initialValues = values.peek()
   // What a form's reset goes back to: the value the combobox began with.
   const initial = value.peek()
@@ -443,7 +493,7 @@ export function createCombobox<Value = unknown>(
     // The browser puts the input back to its default next: the default is what it should say.
     if (input) input.defaultValue = labelOf(next)
     inputValue.set(labelOf(next), details("form-reset", event))
-    member?.reset(next === null ? "" : String(next))
+    member?.reset(next === null ? "" : sent(next))
   })
   const disabled = computed(
     () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
@@ -475,7 +525,7 @@ export function createCombobox<Value = unknown>(
   const without = (item: Value) => values.peek().filter((each) => !Object.is(each, item))
   // Whether a `Collection` draws the list from `items`: the combobox is then what filters.
   let fromData = false
-  const whole = computed(() => arrange(props.get().items))
+  const whole = computed(() => arrange(props.get().items, sent))
   const left = computed<readonly ComboboxEntry<Value>[]>(() => {
     const all = whole.get()
     const text = query.get()
@@ -543,15 +593,56 @@ export function createCombobox<Value = unknown>(
   const placement = createPlacement({ align: "start" })
 
   let input: HTMLInputElement | undefined
-  // The items the input's text was last named from.
-  let known = props.peek().items
+  // Inline completion: what was typed, and what the input shows for it, an item's label after
+  // it. Kept while the input shows it, and given to the caller only when it is kept.
+  let completed: { typed: string; text: string } | undefined
+  let completedRow: ListRow | undefined
+  // Counts a completion made for the text the caller holds, or taken out of the input.
+  const recompleted = signal(0)
+  const recomplete = () => recompleted.set(recompleted.peek() + 1)
+  // What was just typed, until an item that begins with it is in the page to complete it.
+  let pending: string | undefined
+  const completing = () => {
+    const mode = around.completion?.()
+    return (mode === "inline" || mode === "both") && !readOnly.peek()
+  }
+  /**
+   * What the input shows: the completion of the text the caller holds, or that text. It
+   * changes only as the text does or a completion is made or taken out, never as a key is
+   * heard: a caller who holds the text gives it back later, and until then what the input
+   * shows must not go back to the text before the key.
+   */
+  const written = computed(() => {
+    const text = inputValue.get()
+    recompleted.get()
+    const done = completed
+    return done && done.typed === text ? done.text : text
+  })
+  const rowOf = new WeakMap<Element, ListRow>()
+  // What the input's text was last named from: the items, and how a value is named.
+  let known = { items: props.peek().items, itemToStringLabel: props.peek().itemToStringLabel }
   // The text a field was last told, when the text is the value.
   let told = inputValue.peek()
   let trigger: HTMLElement | undefined
   let popup: HTMLElement | undefined
   let positioner: HTMLElement | undefined
-  // With several values: the box the chips and the input are in.
+  // With several values: the box the chips and the input are in, and each chip in the page.
   let chips: HTMLElement | undefined
+  const chipElements = new Map<Value, HTMLElement>()
+  const chipParts = new Map<Value, Part>()
+
+  /** The chips in the page, in its order: a caller may draw them in any. */
+  function chipsDrawn(): { item: Value; element: HTMLElement }[] {
+    const all: { item: Value; element: HTMLElement }[] = []
+    for (const [item, element] of chipElements) if (element.isConnected) all.push({ item, element })
+    return all.sort((a, b) =>
+      a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    )
+  }
+
+  /** Whether focus moving to `to` stays among the combobox's chips. */
+  const toChip = (to: Node | null) =>
+    to !== null && chipsDrawn().some(({ element }) => element === to || element.contains(to))
   // The text the list was last filtered by.
   let asked = ""
   // The items' own box, when the popup holds more than items.
@@ -610,17 +701,88 @@ export function createCombobox<Value = unknown>(
     placement.position.refresh()
   }
 
-  /** Closes, and puts the input back to what is chosen: `text` when that was only just asked for. */
-  function shut(by: ChangeDetails, text?: string) {
+  /**
+   * Writes the rest of the first item that begins with what was just typed after it, selected,
+   * so typing on replaces it. Asked again as the list follows the text and as items come into
+   * the page: the item may not be drawn yet when the key is heard.
+   */
+  function complete(again = false) {
+    const done = completed
+    // The text was given back by a caller who holds it, and its highlight moved: the item the
+    // input shows is still the one highlighted.
+    if (again && done && done.typed === inputValue.peek() && input?.value === done.text) {
+      if (completedRow) list.highlight(completedRow, true)
+    }
+    const text = pending
+    if (text === undefined || !input) return
+    // Typed on, or the caret moved, since: that is no longer what to complete.
+    if (input.value !== text || input.selectionEnd !== text.length)
+      return void (pending = undefined)
+    const lower = text.toLowerCase()
+    const filter = props.peek().filter
+    // In the page, in its order, those the text is about to hide included: a caller who holds
+    // the text has not given it back yet, and the rows still follow the text before it.
+    for (const element of popup?.querySelectorAll('[role="option"]') ?? []) {
+      const row = rowOf.get(element)
+      if (!row || row.disabled()) continue
+      const label = row.label()
+      if (!label.toLowerCase().startsWith(lower)) continue
+      if (filter !== null && !(filter ?? holds)(label, text)) continue
+      pending = undefined
+      const full = text + label.slice(text.length)
+      completed = { typed: text, text: full }
+      completedRow = row
+      input.value = full
+      input.setSelectionRange(text.length, full.length, "forward")
+      // Shown now if the caller holds this text already; else as it gives it back.
+      if (inputValue.peek() === text) recomplete()
+      list.highlight(row, true)
+      return
+    }
+  }
+
+  /** Makes the completion the input shows the text: it is the caller's now. */
+  function keepCompletion(by: ChangeDetails) {
+    const done = completed
+    pending = undefined
+    if (!done || input?.value !== done.text) return void (completed = undefined)
+    inputValue.set(done.text, by)
+    // Refused, what was typed is left.
+    if (by.canceled) return dropCompletion()
+    completed = undefined
+    input.setSelectionRange(done.text.length, done.text.length)
+  }
+
+  /** Takes the completion out of the input: what was typed is left. */
+  function dropCompletion() {
+    const done = completed
+    pending = undefined
+    if (!done) return
+    completed = undefined
+    if (input && input.value === done.text) input.value = inputValue.peek()
+    recomplete()
+  }
+
+  /**
+   * Closes, and puts the input back to what is chosen: `text` when that was only just asked
+   * for. With `keep`, what was typed stays: focus went to one of the chips.
+   */
+  function shut(by: ChangeDetails, text?: string, keep = false) {
     if (inline) return
     // Focus that left by itself is where the person put it.
     back = by.reason !== "focus-out"
     open.set(false, by)
     if (by.canceled) return
     typed.set(false)
+    if (keep) return
     if (free) {
       // What was typed stays; an item chosen is written in its place.
-      if (text !== undefined) inputValue.set(text, details("item-press", by.event))
+      if (text === undefined) return dropCompletion()
+      completed = undefined
+      pending = undefined
+      inputValue.set(text, details("item-press", by.event))
+      // The completion that was selected is the text now: the caret goes after it.
+      if (input?.value === text) input.setSelectionRange(text.length, text.length)
       return
     }
     // With several, the text is not a value: it goes. As it does from an input in the popup,
@@ -638,13 +800,25 @@ export function createCombobox<Value = unknown>(
 
   function setValue(next: Value | null, by: ChangeDetails) {
     value.set(next, by)
-    if (!by.canceled) member?.changed(next === null ? "" : String(next))
+    if (!by.canceled) member?.changed(next === null ? "" : sent(next))
   }
 
+  // As a sheet the list is modal: the page behind it inert, its scroll held, Tab kept inside.
+  // As a popup focus stays where the combobox puts it.
+  const sheet = createSheet(
+    open,
+    () => (inline ? {} : props.get()),
+    (by) => setOpen(false, by)
+  )
+  const sheetFocus = popupFocus("none")
   const layer = createPopup({
     open,
     setOpen,
     kind: "combobox",
+    modal: () => sheet.on.peek(),
+    hold: lockPage,
+    mode: sheet.on,
+    focus: (element, context) => (context.modal ? sheetFocus(element, context) : NOTHING),
     placement,
     // Under the chips' box when the input is in one, and as wide; against the button when the
     // input is inside the popup, which cannot be placed against what it holds.
@@ -678,6 +852,24 @@ export function createCombobox<Value = unknown>(
    * (`autoHighlight`), the first shown.
    */
   function land() {
+    highlightOnOpen()
+    complete()
+  }
+
+  /** Moves the highlight as what is typed changes: onto the first item still shown, if asked. */
+  function follow(text: string) {
+    if (text === asked || !(inline || open.peek())) return void (asked = text)
+    asked = text
+    // Typed at, nothing is highlighted unless asked to; a suggestion, only for text.
+    awaited = false
+    if (!auto() || (free && text.trim() === "")) return list.highlight(undefined)
+    // Drawn from data, the items for this text are not in the page yet.
+    if (fromData) return ((awaited = true), arrive())
+    if (list.collection()) list.move("first")
+    else list.highlight(list.rows()[0], true)
+  }
+
+  function highlightOnOpen() {
     const first = typed.peek() && auto()
     if (free || multiple) {
       // No one value to open on. Without `autoHighlight` Enter is the typed text's until an
@@ -740,7 +932,65 @@ export function createCombobox<Value = unknown>(
         }
       },
     },
-    chip: () => ({ props: EMPTY, attach: () => NOTHING }),
+    chip(item) {
+      let part = chipParts.get(item)
+      if (part) return part
+      part = {
+        props: computed(() => ({
+          // Reached by the arrows from the input, as the tags of a tags input are.
+          tabindex: disabled.get() ? undefined : "-1",
+          onKeyDown(event: KeyboardEvent) {
+            // Its own keys only: not those of a button inside it.
+            if (event.target !== event.currentTarget || disabled.peek()) return
+            const all = chipsDrawn()
+            const at = all.findIndex((each) => each.element === event.currentTarget)
+            if (at < 0) return
+            const rtl = directionOf(event.currentTarget as Element, around.direction) === "rtl"
+            const to = (index: number) => {
+              event.preventDefault()
+              const next = all[index]
+              if (next) next.element.focus()
+              else input?.focus()
+            }
+            if (event.key === (rtl ? "ArrowRight" : "ArrowLeft")) to(Math.max(0, at - 1))
+            else if (event.key === (rtl ? "ArrowLeft" : "ArrowRight")) to(at + 1)
+            else if (event.key === "Home") to(0)
+            else if (event.key === "End" || event.key === "Escape") to(all.length)
+            else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              // Back to the input, with the list open.
+              to(all.length)
+              setOpen(true, details("list-navigation", event))
+            } else if (event.key === "Backspace" || event.key === "Delete") {
+              event.preventDefault()
+              if (readOnly.peek()) return
+              // Focus goes to the chip that takes its place: the one before for Backspace, the
+              // one after for Delete, and the input when there is none.
+              const before = all[at - 1]
+              const after = all[at + 1]
+              const next = event.key === "Backspace" ? (before ?? after) : (after ?? before)
+              const by = details("chip-remove-press", event)
+              setValues(without(all[at]!.item), by)
+              if (!by.canceled) (next?.element ?? input)?.focus()
+            } else if (printable(event)) {
+              // A letter is typed into the input: focus goes there before the browser writes it.
+              input?.focus()
+            }
+          },
+          onBlur(event: FocusEvent) {
+            const to = event.relatedTarget as Node | null
+            if (to !== input && !toChip(to)) member?.focused(false)
+          },
+        })),
+        attach(element) {
+          chipElements.set(item, element)
+          return () => {
+            if (chipElements.get(item) === element) chipElements.delete(item)
+          }
+        },
+      }
+      chipParts.set(item, part)
+      return part
+    },
     chipRemove(item) {
       return {
         props: computed(() => ({
@@ -803,12 +1053,12 @@ export function createCombobox<Value = unknown>(
       props: computed(() => ({
         role: "combobox",
         // In a field, the id its label is `for`.
-        id: field?.controlId,
+        ...defaultId(field?.controlId),
         // What it says, so a server draws it. In a page the core writes it too.
-        value: inputValue.get(),
+        value: written.get(),
         autocomplete: "off",
         // Read only, it takes nothing typed: no completion is offered.
-        "aria-autocomplete": readOnly.get() ? "none" : "list",
+        "aria-autocomplete": readOnly.get() ? "none" : (around.completion?.() ?? "list"),
         "aria-haspopup": "listbox",
         ...(inline
           ? { "aria-expanded": "true", "aria-controls": boxed.get() ? listId : popupId }
@@ -830,6 +1080,19 @@ export function createCombobox<Value = unknown>(
           // The browser takes no key for it, but a script may still write it: put back.
           if (readOnly.peek()) return void (input && (input.value = inputValue.peek()))
           const by = details("input-change", event)
+          // A key that wrote a letter is completed; not a deletion, a paste, or a word being
+          // composed (an input method's), which the completion would be written into.
+          const native = ((event as { nativeEvent?: Event }).nativeEvent ?? event) as InputEvent
+          pending =
+            completing() && native.inputType === "insertText" && !native.isComposing
+              ? text
+              : undefined
+          // Anything but a letter typed takes the completion away: what is left is what the
+          // key left. A letter replaces it with the next, or leaves it to the text.
+          if (pending === undefined && completed) {
+            completed = undefined
+            recomplete()
+          }
           typed.set(true)
           inputValue.set(text, by)
           // Emptied, nothing is chosen any more. In the popup it is only what is looked for.
@@ -837,26 +1100,56 @@ export function createCombobox<Value = unknown>(
             setValue(null, details("input-clear", event))
           }
           if (!inline && !open.peek()) setOpen(true, details("input-change", event))
+          complete()
         },
         onClick(event: Event) {
           if (free && !free()) return
           if (!inline && !open.peek()) setOpen(true, details("trigger-press", event))
         },
         onKeyDown(event: KeyboardEvent) {
-          // With nothing typed, Backspace takes the last chip away.
-          if (
-            multiple &&
-            !readOnly.peek() &&
-            event.key === "Backspace" &&
-            (event.currentTarget as HTMLInputElement).value === "" &&
-            values.peek().length > 0
-          ) {
-            return setValues(values.peek().slice(0, -1), details("chip-remove-press", event))
+          const control = event.currentTarget as HTMLInputElement
+          if (multiple && !event.isComposing && values.peek().length > 0) {
+            const last = chipsDrawn().at(-1)
+            const rtl = directionOf(control, around.direction) === "rtl"
+            const atStart = control.selectionStart === 0 && control.selectionEnd === 0
+            // From the start of the input, back onto the last chip: Backspace there takes it
+            // away, so a held key does not eat the chips one after another unseen.
+            if (
+              last &&
+              atStart &&
+              (event.key === "Backspace" || event.key === (rtl ? "ArrowRight" : "ArrowLeft"))
+            ) {
+              event.preventDefault()
+              return last.element.focus()
+            }
+            // With no chip drawn, Backspace in the empty input takes the last value away.
+            if (!last && event.key === "Backspace" && control.value === "" && !readOnly.peek()) {
+              return setValues(values.peek().slice(0, -1), details("chip-remove-press", event))
+            }
+          }
+          // In the popup, which is at the page's end, Tab would go on from there and leave the
+          // page: it goes on from the button, as from a dialog that closes, its default left to
+          // the browser once focus is on the button.
+          if (event.key === "Tab" && inside.peek() && open.peek() && trigger) {
+            trigger.focus({ preventScroll: true })
+            return setOpen(false, details("focus-out", event))
           }
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault()
             if (!inline && !open.peek()) return setOpen(true, details("list-navigation", event))
-            return list.move(event.key === "ArrowDown" ? 1 : -1)
+            list.move(event.key === "ArrowDown" ? 1 : -1)
+            if (!completing()) return
+            // The item the arrows are on is written into the input; what was typed stays the
+            // text the list is filtered by.
+            const row = list.highlighted.peek()
+            if (!row || !input) return dropCompletion()
+            pending = undefined
+            const label = row.label()
+            completed = { typed: inputValue.peek(), text: label }
+            completedRow = row
+            input.value = label
+            recomplete()
+            return input.setSelectionRange(label.length, label.length)
           }
           if (event.key === "Enter" && (inline || open.peek())) {
             // Not the form's while the list is open: the highlighted item's own press, which a
@@ -867,7 +1160,10 @@ export function createCombobox<Value = unknown>(
             // with none it is the form's as it would be with the list closed.
             if (readOnly.peek()) return void (on && event.preventDefault())
             // With no suggestion taken, Enter is the form's, with the text as typed.
-            if (free && !on) return setOpen(false, details("input-submit", event))
+            if (free && !on) {
+              keepCompletion(details("input-submit", event))
+              return setOpen(false, details("input-submit", event))
+            }
             event.preventDefault()
             if (on) row.element()?.click()
           }
@@ -875,7 +1171,14 @@ export function createCombobox<Value = unknown>(
         onBlur(event: FocusEvent) {
           const to = event.relatedTarget as Node | null
           if (popup?.contains(to) || positioner?.contains(to) || trigger?.contains(to)) return
+          // Onto a chip, focus is still the combobox's: the list closes, what was typed stays.
+          if (toChip(to)) {
+            if (open.peek()) shut(details("focus-out", event), undefined, true)
+            return
+          }
           member?.focused(false)
+          // Tab keeps what the completion wrote.
+          keepCompletion(details("input-blur", event))
           if (open.peek()) setOpen(false, details("focus-out", event))
         },
       })),
@@ -893,7 +1196,7 @@ export function createCombobox<Value = unknown>(
               ? held(values.peek())
               : one === null
                 ? ""
-                : String(one),
+                : sent(one),
         })
         sort()
         const stops = [
@@ -902,16 +1205,18 @@ export function createCombobox<Value = unknown>(
             member = undefined
           },
           inForm.attach(element),
-          // The labels may come after the value (items that are loaded): a text that named the
-          // value by what was known then names it by what is known now.
+          // The labels may come after the value (items that are loaded, a custom element's
+          // properties set after it began): a text that named the value by what was known then
+          // names it by what is known now.
           effect(() => {
-            const next = props.get().items
+            const { items, itemToStringLabel } = props.get()
             untracked(() => {
               const before = known
-              known = next
+              known = { items, itemToStringLabel }
               const current = value.peek()
-              if (before === next || free || multiple || current === null || inside.peek()) return
-              const was = labelIn(leaves(before), current) ?? labels.get(current) ?? String(current)
+              const same = before.items === items && before.itemToStringLabel === itemToStringLabel
+              if (same || free || multiple || current === null || inside.peek()) return
+              const was = givenLabel(current, before) ?? labels.get(current) ?? plainLabel(current)
               const now = labelOf(current)
               if (was !== now && inputValue.peek() === was) {
                 inputValue.set(now, details("input-reset"))
@@ -921,9 +1226,10 @@ export function createCombobox<Value = unknown>(
           // The input's text is the core's to write: a framework that held it would write it
           // in its own time, after what was typed since.
           effect(() => {
+            const onScreen = written.get()
+            if (input && input.value !== onScreen) input.value = onScreen
+            // Its text is its value: the field hears every change of it, not a completion.
             const text = inputValue.get()
-            if (input && input.value !== text) input.value = text
-            // Its text is its value: the field hears every change of it.
             if (free && text !== told) member?.changed((told = text))
           }),
         ]
@@ -995,11 +1301,15 @@ export function createCombobox<Value = unknown>(
       attach: () => NOTHING,
     },
     positioner: {
-      props: layer.positioner.props,
+      props: computed(() => {
+        const own = { ...layer.positioner.props.get(), ...sheet.state() }
+        // A sheet is on no side of what opened it.
+        return sheet.on.get() ? { ...own, "data-side": undefined, "data-align": undefined } : own
+      }),
       attach(element) {
         positioner = element
         sort()
-        const detach = layer.positioner.attach(element)
+        const detach = sheet.positioner(element, (each) => layer.positioner.attach(each))
         return () => {
           detach()
           if (positioner === element) positioner = undefined
@@ -1015,8 +1325,12 @@ export function createCombobox<Value = unknown>(
         // Said by the listbox: its options can be gone through, and none chosen.
         "aria-readonly": !boxed.get() && readOnly.get() ? "true" : undefined,
         // Always in the page, it is neither open nor closed, and is placed by the page.
-        ...(inline ? {} : { ...layer.state(), ...layer.placed() }),
+        ...(inline
+          ? {}
+          : { ...layer.state(), ...(sheet.on.get() ? {} : layer.placed()), ...sheet.state() }),
         "data-empty": flag(empty.get()),
+        // As a sheet, it is dragged down to close it.
+        onPointerDown: sheet.on.get() ? sheet.swipe.press : undefined,
         // A press in the list does not take focus from the input. A press on an input in the
         // popup is the input's own.
         onMouseDown(event: Event) {
@@ -1029,6 +1343,7 @@ export function createCombobox<Value = unknown>(
         sort()
         const stops = [
           () => listed.set(false),
+          sheet.swipe.attach(element),
           list.attach(element),
           inline ? NOTHING : layer.attach(element),
           // Each time it opens, once its items are in the page.
@@ -1048,21 +1363,18 @@ export function createCombobox<Value = unknown>(
           effect(() => {
             const text = query.get()
             untracked(() => {
-              if (text === asked || !(inline || open.peek())) return void (asked = text)
-              asked = text
-              // Typed at, nothing is highlighted unless asked to; a suggestion, only for text.
-              awaited = false
-              if (!auto() || (free && text.trim() === "")) return list.highlight(undefined)
-              // Drawn from data, the items for this text are not in the page yet.
-              if (fromData) return ((awaited = true), arrive())
-              if (list.collection()) list.move("first")
-              else list.highlight(list.rows()[0], true)
+              follow(text)
+              // A completion highlights its item, after the text's own highlight.
+              complete(true)
             })
           }),
           // As items come into the page and leave it.
           effect(() => {
             registered.get()
-            untracked(arrive)
+            untracked(() => {
+              arrive()
+              complete()
+            })
           }),
         ]
         return () => {
@@ -1101,10 +1413,10 @@ export function createCombobox<Value = unknown>(
           value: multiple
             ? first === undefined
               ? ""
-              : String(first)
+              : sent(first)
             : current === null
               ? ""
-              : String(current),
+              : sent(current),
           disabled: flag(disabled.get()),
         }
       }),
@@ -1113,7 +1425,7 @@ export function createCombobox<Value = unknown>(
         // One input for each value: the first is this one, the rest the core's own to draw,
         // after it.
         return restInputs(element, () => ({
-          rest: values.get().slice(1),
+          rest: values.get().slice(1).map(sent),
           name: name.get(),
           form: props.get().form,
           disabled: disabled.get(),
@@ -1121,6 +1433,15 @@ export function createCombobox<Value = unknown>(
       },
     },
     itemIndicator: () => ({ props: INDICATOR, attach: () => NOTHING }),
+    backdrop: {
+      props: computed(() => ({ role: "presentation", ...layer.state(), ...sheet.state() })),
+      attach(element) {
+        const stops = [sheet.swipe.also(element), layer.attachBackdrop(element)]
+        return () => {
+          for (const stop of stops.reverse()) stop()
+        }
+      },
+    },
     groupLabel: LABEL,
     separator: SEPARATOR,
     group(groupId) {
@@ -1162,9 +1483,11 @@ export function createCombobox<Value = unknown>(
       const within = group as Members | undefined
       // Its text is known once it is in the page.
       const drawn = signal(0)
+      // A label given, or one the value has of its own, before the text in the markup.
+      const named = () => options().label ?? ownLabel(item, props.peek().itemToStringLabel)
       const row: ListRow = list.row(() => ({
         disabled: options().disabled,
-        label: options().label,
+        label: named(),
         hidden: !visible.peek(),
         index: options().index,
       }))
@@ -1177,7 +1500,7 @@ export function createCombobox<Value = unknown>(
         if (filter === null || text === "" || props.get().virtualized || fromData) return true
         // Not through the row: its options ask whether it is shown, which is this.
         const element = row.element()
-        return (filter ?? holds)(options().label ?? (element ? textOf(element) : ""), text)
+        return (filter ?? holds)(named() ?? (element ? textOf(element) : ""), text)
       })
       const record: Shown = { shown: visible }
       // Counted from when it is made: a server attaches nothing, and must not say "empty".
@@ -1207,6 +1530,7 @@ export function createCombobox<Value = unknown>(
         attach(element) {
           const detach = row.attach(element)
           rows.set(item, row)
+          rowOf.set(element, row)
           shown.add(record)
           within?.members.add(record)
           within?.joined.set(within.joined.peek() + 1)

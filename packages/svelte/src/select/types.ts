@@ -46,6 +46,9 @@ export type PositionerProps = PartAttributes<
 
 export type PopupProps = PartAttributes<"div", StateFor<"select", "popup">>
 
+/** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+export type BackdropProps = PartAttributes<"div", StateFor<"select", "backdrop">>
+
 /** The items' own box inside the popup, when the popup also holds scroll arrows. */
 export type ListProps = PartAttributes<"div", StateFor<"select", "list">>
 

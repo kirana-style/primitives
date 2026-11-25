@@ -20,13 +20,16 @@ export function eventType(key: string): string {
  * A part's props fitted to the element they go on (`forElement`), which is known here before
  * the part writes anything: a part's `type` does not go on it when one of the element's own is
  * there (`type="submit"` wins over the part's `type="button"`) or the element takes no button
- * type (a link, where `type` is a MIME type), and a link that navigates is given no button
- * role. The element's own attributes are read before the part writes any.
+ * type (a link, where `type` is a MIME type), a link that navigates is given no button
+ * role, and an `id` of the element's own wins over a part's default one. The element's own
+ * attributes are read before the part writes any.
  */
 function fitted(element: HTMLElement): (props: PartProps) => PartProps {
   const caller: PartProps = {
     type: element.getAttribute("type") ?? undefined,
     href: element.getAttribute("href") ?? undefined,
+    // A part's default id (a control a field names) gives way to the element's own.
+    id: element.getAttribute("id") ?? undefined,
   }
   return (props) => forElement(props, caller, element.localName)
 }
@@ -83,10 +86,14 @@ export function bind(element: HTMLElement, part: Part): () => void {
         element.addEventListener(eventType(key), listener)
       } else if (PROPERTIES.has(key) && key in element) {
         // What a person changes after the page loads is the property, not the attribute. A
-        // value that is not given is left alone: a checkbox's own default is `on`.
+        // value that is not given is left alone: a checkbox's own default is `on`. A text is
+        // written as it changes, as a framework writes it: written again for any other
+        // attribute's change, it took back what was typed since (a caller who holds the text
+        // had not given it back yet) and a completion selected in the input.
         const control = element as unknown as Record<string, unknown>
         if (key === "checked") control.checked = value !== undefined
-        else if (value !== undefined) control[key] = value
+        else if (value !== undefined && (!(key in current) || value !== current[key]))
+          control[key] = value
       } else if (value !== undefined && value !== current[key]) {
         const text = String(value)
         if (current[key] === undefined) {

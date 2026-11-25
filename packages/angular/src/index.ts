@@ -22,6 +22,7 @@ export {
 } from "./dialog"
 export {
   KpCombobox,
+  KpComboboxBackdrop,
   KpComboboxChip,
   KpComboboxChipRemove,
   KpComboboxChips,
@@ -216,7 +217,13 @@ export {
   KpPasswordInputInput,
   KpPasswordInputToggle,
 } from "./password-input"
-export { KpDatePicker, KpDatePickerCalendar, KpDatePickerField } from "./date-picker"
+export {
+  KpDatePicker,
+  KpDatePickerCalendar,
+  KpDatePickerClear,
+  KpDatePickerField,
+  KpDatePickerPreset,
+} from "./date-picker"
 export {
   KpNumberField,
   KpNumberFieldDecrement,
@@ -280,6 +287,7 @@ export {
 } from "./popover"
 export {
   KpSelect,
+  KpSelectBackdrop,
   KpSelectInput,
   KpSelectItem,
   KpSelectItemIndicator,
@@ -406,6 +414,7 @@ export type {
   PartStyle,
   PhysicalSide,
   PositionOptions,
+  Presentation,
   ReadonlySignal,
   Side,
   Signal,
@@ -424,6 +433,12 @@ export type {
   IsoDate,
 } from "@kirana-ui/core/calendar"
 export type { DateFieldProps, DateFieldSegment, DateUnit } from "@kirana-ui/core/date-field"
+export type {
+  DatePickerMode,
+  DatePickerRange,
+  DatePickerValue,
+  DatePickerValueOf,
+} from "@kirana-ui/core/date-picker"
 export type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 export type { FieldValidity, ValidityKey } from "@kirana-ui/core/field"
 export type { FormErrors, FormValues, ValidationMode } from "@kirana-ui/core/form"

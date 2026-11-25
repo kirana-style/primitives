@@ -630,6 +630,25 @@ section[data-fixture="container"] {
 .drawer[data-ending-style] {
   transform: translateY(100%);
 }
+/* A select's list opened as a sheet: at the bottom edge, moved by the drag that closes it. */
+.sheet[data-presentation="sheet"] {
+  position: fixed;
+  inset: auto 0 0;
+}
+.popup[data-presentation="sheet"] {
+  border-radius: 12px 12px 0 0;
+  touch-action: none;
+  transform: translateY(var(--drawer-swipe-movement-y, 0px));
+  transition: transform 100ms;
+}
+.popup[data-presentation="sheet"][data-swiping] {
+  transition: none;
+}
+.popup[data-presentation="sheet"][data-starting-style],
+.popup[data-presentation="sheet"][data-ending-style] {
+  opacity: 1;
+  transform: translateY(100%);
+}
 .chat {
   position: relative;
   width: 300px;

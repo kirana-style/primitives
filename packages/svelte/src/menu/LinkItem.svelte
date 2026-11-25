@@ -7,8 +7,8 @@
   import type { LinkItemProps } from "./types.ts"
 
   // An item that is a link: `href` and the rest go to its `<a>`.
-  let { disabled, label, closeOnClick, ...rest }: LinkItemProps = $props()
-  const options = toSignal(() => ({ disabled, label, closeOnClick }))
+  let { disabled, label, closeOnSelect, closeOnClick, ...rest }: LinkItemProps = $props()
+  const options = toSignal(() => ({ disabled, label, closeOnSelect, closeOnClick }))
   const part = useMenu().item(() => defined(options.get()))
 </script>
 

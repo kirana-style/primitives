@@ -1,6 +1,6 @@
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -319,7 +319,7 @@ export function createFileUpload(
         const { accept, multiple } = props.get()
         return {
           type: "file",
-          id: field?.controlId ?? `${id}-input`,
+          ...(field ? defaultId(field.controlId) : { id: `${id}-input` }),
           name: props.get().name ?? field?.name.get(),
           form: props.get().form,
           accept: typeof accept === "string" ? accept : accept?.join(","),

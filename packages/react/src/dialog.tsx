@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { StateOf } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
@@ -9,6 +10,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement, ReactNode } from "react"
 
+import { DirectionContext } from "./direction-context.ts"
 import { Portal as BodyPortal, parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps, PortalProps } from "./runtime.tsx"
 
@@ -27,7 +29,8 @@ function useDialog(part: string): Controller {
 export type RootProps = Omit<DialogProps, "id"> & { id?: string; children?: ReactNode }
 
 function Root({ children, ...props }: RootProps): ReactElement {
-  const controller = useController(createDialog, props)
+  const direction = useContext(DirectionContext) ?? undefined
+  const controller = useController(within(createDialog, { direction }), props)
   return <Context.Provider value={controller}>{children}</Context.Provider>
 }
 
@@ -69,7 +72,8 @@ export const Dialog = /* @__PURE__ */ parts("Dialog", {
 export type AlertRootProps = Omit<AlertDialogProps, "id"> & { id?: string; children?: ReactNode }
 
 function AlertRoot({ children, ...props }: AlertRootProps): ReactElement {
-  const controller = useController(createAlertDialog, props)
+  const direction = useContext(DirectionContext) ?? undefined
+  const controller = useController(within(createAlertDialog, { direction }), props)
   return <Context.Provider value={controller}>{children}</Context.Provider>
 }
 
@@ -79,7 +83,8 @@ export const AlertDialog = /* @__PURE__ */ parts("AlertDialog", { ...Dialog, Roo
 export type DrawerRootProps = Omit<DrawerProps, "id"> & { id?: string; children?: ReactNode }
 
 function DrawerRoot({ children, ...props }: DrawerRootProps): ReactElement {
-  const controller = useController(createDrawer, props)
+  const direction = useContext(DirectionContext) ?? undefined
+  const controller = useController(within(createDrawer, { direction }), props)
   return <Context.Provider value={controller}>{children}</Context.Provider>
 }
 

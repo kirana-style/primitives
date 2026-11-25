@@ -33,7 +33,10 @@ const arrow = (drawn: SelectScrollArrow): Drawn => ({
  * page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value
  * (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`,
  * `default-open`, `disabled`, `read-only`, `required`, `multiple`, `values` and `default-values` (with
- * commas between), `name`, `form`; `items` as a property; it tells `value-change`,
+ * commas between), `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge,
+ * modal, over a `backdrop` part in the portal; `auto` on a narrow touch screen) and
+ * `sheet-below`; `items`, `itemToStringLabel` and `itemToStringValue` as
+ * properties; it tells `value-change`,
  * `values-change` and `open-change`.
  */
 export const tag = defineElement<Props, Select<string>>({
@@ -51,8 +54,10 @@ export const tag = defineElement<Props, Select<string>>({
     "default-values": "string",
     name: "string",
     form: "string",
+    presentation: "string",
+    "sheet-below": "number",
   },
-  properties: ["items"],
+  properties: ["items", "itemToStringLabel", "itemToStringValue"],
   create: (props, host) =>
     createSelect<string>(
       computed(() => {
@@ -89,6 +94,7 @@ export const tag = defineElement<Props, Select<string>>({
       return positioner(controller, element)
     },
     popup: (controller) => controller.popup,
+    backdrop: (controller) => controller.backdrop,
     list: (controller) => controller.list,
     "scroll-up-arrow": (controller) => arrow(controller.scrollArrow("up")),
     "scroll-down-arrow": (controller) => arrow(controller.scrollArrow("down")),

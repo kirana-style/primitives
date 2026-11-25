@@ -228,6 +228,10 @@ export class KpMenuItem implements OnInit {
   /** What typing matches; the item's text when left out. */
   readonly label = input<string>()
   /** Whether choosing the item closes the menu. Default: it does. */
+  readonly closeOnSelect = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /** @deprecated Use `[closeOnSelect]`, which wins when both are given. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
@@ -236,6 +240,7 @@ export class KpMenuItem implements OnInit {
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
+    closeOnSelect: this.closeOnSelect(),
     closeOnClick: this.closeOnClick(),
   }))
 
@@ -255,6 +260,10 @@ export class KpMenuLinkItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly label = input<string>()
   /** Whether choosing the item closes the menu. Default: it does. */
+  readonly closeOnSelect = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /** @deprecated Use `[closeOnSelect]`, which wins when both are given. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
@@ -263,6 +272,7 @@ export class KpMenuLinkItem implements OnInit {
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
+    closeOnSelect: this.closeOnSelect(),
     closeOnClick: this.closeOnClick(),
   }))
 
@@ -311,6 +321,10 @@ export class KpMenuCheckboxItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly label = input<string>()
   /** Whether choosing the item closes the menu. Default: it does not. */
+  readonly closeOnSelect = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /** @deprecated Use `[closeOnSelect]`, which wins when both are given. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
@@ -324,6 +338,7 @@ export class KpMenuCheckboxItem implements OnInit {
     defaultChecked: this.defaultChecked(),
     disabled: this.disabled(),
     label: this.label(),
+    closeOnSelect: this.closeOnSelect(),
     closeOnClick: this.closeOnClick(),
     onCheckedChange: (checked: boolean, details: ChangeDetails) => {
       this.checkedChanged.emit({ checked, details })
@@ -396,6 +411,10 @@ export class KpMenuRadioItem implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly label = input<string>()
   /** Whether choosing the item closes the menu. Default: it does not. */
+  readonly closeOnSelect = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /** @deprecated Use `[closeOnSelect]`, which wins when both are given. */
   readonly closeOnClick = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
@@ -404,6 +423,7 @@ export class KpMenuRadioItem implements OnInit {
   private readonly options = inputsSignal(this, () => ({
     disabled: this.disabled(),
     label: this.label(),
+    closeOnSelect: this.closeOnSelect(),
     closeOnClick: this.closeOnClick(),
   }))
 

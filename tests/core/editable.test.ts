@@ -2,6 +2,7 @@ import { describe, expect, it, onTestFinished } from "vite-plus/test"
 
 import { bind } from "../../packages/core/src/bind.ts"
 import { createEditable } from "../../packages/core/src/editable.ts"
+import { createField } from "../../packages/core/src/field.ts"
 import type { EditableProps } from "../../packages/core/src/editable.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { recorder } from "../../packages/core/src/testing.ts"
@@ -187,5 +188,83 @@ describe("an editable text", () => {
     key("Enter")
     root.querySelector<HTMLButtonElement>("[type=reset]")!.click()
     expect(made.value.peek()).toBe("Apollo")
+  })
+})
+
+describe("an editable text in a field", () => {
+  function inField(given: Partial<EditableProps> = {}) {
+    const root = mount(`
+      <form><div class="field">
+        <label class="label">Title</label>
+        <div class="root"><span class="preview"></span><input class="input" /></div>
+        <p class="description"></p>
+      </div><button type="reset">Reset</button></form>`)
+    const field = createField(signal({ id: "f", name: "title" }))
+    const made = createEditable(signal<EditableProps>({ id: "ed", ...given }), { field })
+    const find = <T extends HTMLElement = HTMLElement>(name: string) => root.querySelector<T>(name)!
+    onTestFinished(bind(find(".field"), field.root))
+    onTestFinished(bind(find(".label"), field.label))
+    onTestFinished(bind(find(".description"), field.description))
+    onTestFinished(bind(find(".root"), made.root))
+    onTestFinished(bind(find(".preview"), made.preview))
+    onTestFinished(bind(find(".input"), made.input))
+    return { root, field, made, find, input: find<HTMLInputElement>(".input") }
+  }
+
+  it("is the field's control: named by its label, described, submitted under its name", () => {
+    const { find, input } = inField({ defaultValue: "Apollo" })
+    expect(input.id).toBe("f-control")
+    expect(find(".label").getAttribute("for")).toBe("f-control")
+    expect(input.getAttribute("aria-labelledby")).toBe("f-label")
+    expect(input.getAttribute("aria-describedby")).toBe("f-description")
+    expect(input.name).toBe("title")
+    expect(find(".root").hasAttribute("data-filled")).toBe(true)
+  })
+
+  it("is checked by the field when it is needed, and the field's state is on its parts", async () => {
+    const { field, find, input } = inField({ required: true })
+    expect(input.getAttribute("aria-required")).toBe("true")
+    expect(input.hasAttribute("required")).toBe(false)
+    expect(field.validate()).toBe(false)
+    expect(field.validity.peek().state.valueMissing).toBe(true)
+    await new Promise((done) => setTimeout(done))
+    expect(find(".root").hasAttribute("data-invalid")).toBe(true)
+    expect(input.getAttribute("aria-invalid")).toBe("true")
+    find(".preview").focus()
+    input.value = "Gemini"
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    expect(field.validity.peek().valid).toBe(true)
+    expect(field.dirty.peek()).toBe(true)
+    input.blur()
+    find(".preview").blur()
+    expect(field.touched.peek()).toBe(true)
+  })
+
+  it("starts an edit from a press on its label", () => {
+    const { made, find, input } = inField({ defaultValue: "Apollo" })
+    find(".label").click()
+    expect(made.editing.peek()).toBe(true)
+    expect(document.activeElement).toBe(input)
+  })
+
+  it("is as new after its form's reset", () => {
+    const { field, made, find, input } = inField({ defaultValue: "Apollo" })
+    find(".preview").focus()
+    input.value = "Gemini"
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    expect(field.dirty.peek()).toBe(true)
+    find<HTMLButtonElement>("[type=reset]").click()
+    expect(made.value.peek()).toBe("Apollo")
+    expect(field.dirty.peek()).toBe(false)
+  })
+
+  it("keeps its caller's own id on the input, which the label is for", () => {
+    const root = mount(`<label class="label"></label><input class="input" id="own" />`)
+    const field = createField(signal({ id: "f" }))
+    const made = createEditable(signal<EditableProps>({ id: "ed" }), { field })
+    onTestFinished(bind(root.querySelector<HTMLElement>(".label")!, field.label))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, made.input))
+    expect(root.querySelector(".input")!.id).toBe("own")
+    expect(root.querySelector(".label")!.getAttribute("for")).toBe("own")
   })
 })

@@ -25,7 +25,11 @@ export const dateFieldVocabulary = defineComponent({
     repeated: true,
     description: "One piece of the date: a part that is typed, or what stands between two.",
     states: {
-      segment: valued("data-segment", ["day", "month", "year", "literal"], "Which piece it is."),
+      segment: valued(
+        "data-segment",
+        ["era", "day", "month", "year", "literal"],
+        "Which piece it is: the era only in a calendar of several eras."
+      ),
       placeholder: state("data-placeholder", "Present on a part that is empty."),
       disabled: DISABLED,
       invalid: INVALID,

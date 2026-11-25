@@ -11,8 +11,8 @@ const { parts, lists } = fieldParts<DateField>((controller) => controller)
  * `<kui-date-field>` around `kui-part="root"`, which holds a `<template kui-each="segments">`
  * with the `segment` each part of the date is typed in (`{type}` and `{index}` say which),
  * and the hidden `input` a form reads. `value`, `default-value`, `locale`, `min`, `max`,
- * `disabled`, `read-only`, `required`, `name`, `form`; `placeholders` as a property; it
- * tells `value-change`.
+ * `disabled`, `read-only`, `required`, `name`, `form`; `placeholders` and `calendarSystem`
+ * (an instance from `@internationalized/date`) as properties; it tells `value-change`.
  */
 export const tag = defineElement<DateFieldProps, DateField>({
   tag: "kui-date-field",
@@ -28,7 +28,7 @@ export const tag = defineElement<DateFieldProps, DateField>({
     name: "string",
     form: "string",
   },
-  properties: ["placeholders"],
+  properties: ["placeholders", "calendarSystem"],
   create: (props) => createDateField(props),
   changes: { onValueChange: { event: "value-change", prop: "value" } },
   lists,

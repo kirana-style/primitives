@@ -2,7 +2,7 @@ import { bindable } from "./bindable.ts"
 import { directionOf } from "./direction.ts"
 import type { DirectionAround } from "./direction.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartStyle } from "./part.ts"
 import { batch, computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -783,7 +783,7 @@ export function createColorPicker(
       props: computed(() => ({
         role: "group",
         // In a field, the id its label is `for`.
-        id: field?.controlId,
+        ...defaultId(field?.controlId),
         ...state(),
         "data-format": format.get(),
         // The colour, for anything inside to paint with.

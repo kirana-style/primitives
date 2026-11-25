@@ -18,10 +18,16 @@ import type { Drawn, ElementOf, Told } from "./runtime.ts"
 
 const MENUS = ["kui-menu", "kui-context-menu"]
 
-/** An item's own options: `kui-disabled`, `kui-label`, `kui-close-on-click="false"`. */
+/**
+ * An item's own options: `kui-disabled`, `kui-label`, `kui-close-on-select="false"`
+ * (`kui-close-on-click`, its old name, still read).
+ */
 const options = (element: HTMLElement) => () => ({
   ...(element.hasAttribute("kui-disabled") ? { disabled: true } : {}),
   ...(element.hasAttribute("kui-label") ? { label: element.getAttribute("kui-label")! } : {}),
+  ...(element.hasAttribute("kui-close-on-select")
+    ? { closeOnSelect: element.getAttribute("kui-close-on-select") !== "false" }
+    : {}),
   ...(element.hasAttribute("kui-close-on-click")
     ? { closeOnClick: element.getAttribute("kui-close-on-click") !== "false" }
     : {}),
@@ -36,7 +42,12 @@ const boxes = new WeakMap<HTMLElement, Made<MenuCheckboxItem>>()
 const radios = new WeakMap<HTMLElement, Made<MenuRadioGroup<string>>>()
 let made = 0
 
-const ITEM = { disabled: "boolean", label: "string", "close-on-click": "boolean" } as const
+const ITEM = {
+  disabled: "boolean",
+  label: "string",
+  "close-on-select": "boolean",
+  "close-on-click": "boolean",
+} as const
 
 const boxOf = (menu: Menu, element: HTMLElement | null) =>
   once(boxes, element, (item) => {
@@ -131,7 +142,7 @@ const menu = (
 /**
  * `<kui-menu>` around a `kui-part="trigger"` and a `portal` with a `positioner` (its
  * `kui-side` and the like) around the `popup`, which holds its `item`s (`kui-disabled`,
- * `kui-label`, `kui-close-on-click="false"`), `separator`s, `group`s with a `group-label`,
+ * `kui-label`, `kui-close-on-select="false"`), `separator`s, `group`s with a `group-label`,
  * `checkbox-item`s (`kui-checked`, `kui-default-checked`; it tells `checked-change`) with a
  * `checkbox-item-indicator`, and a `radio-group` (`kui-value`, `kui-default-value`; it tells
  * `value-change`) of `radio-item`s (`kui-value`) with a `radio-item-indicator`. A `<kui-menu>`

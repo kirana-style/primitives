@@ -15,7 +15,7 @@ import {
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { computed, effect as coreEffect } from "@kirana-ui/core"
-import type { ChangeDetails, ListCollection } from "@kirana-ui/core"
+import type { ChangeDetails, ListCollection, Presentation } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
@@ -27,6 +27,7 @@ import type {
   ComboboxShown,
 } from "@kirana-ui/core/combobox"
 
+import { KP_DIRECTION } from "./direction-token"
 import { KP_FIELD } from "./field-token"
 import {
   KpIds,
@@ -92,11 +93,25 @@ export class KpCombobox<Value = unknown> implements OnInit {
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
   /**
+   * How the list opens: `"sheet"` from the bottom edge, modal, with a backdrop, the input then
+   * in the popup; `"auto"` a sheet on a narrow touch screen. Default `"popup"`.
+   */
+  readonly presentation = input<Presentation>()
+  /** With `presentation="auto"`: the viewport's width under which a coarse pointer opens a sheet. Default 640. */
+  readonly sheetBelow = input<number>()
+  /**
    * The first item shown for what was typed is highlighted as one types, so Enter chooses it.
    * Off by default.
    */
   readonly autoHighlight = input(false, { transform: booleanAttribute })
-  /** With `kpAutocomplete`: `"none"` shows the suggestions as the caller draws them. */
+  /** For values that are objects: the text the input shows for one, and what is filtered. */
+  readonly itemToStringLabel = input<(value: Value) => string>()
+  /** For values that are objects: the text the form is sent for one. */
+  readonly itemToStringValue = input<(value: Value) => string>()
+  /**
+   * With `kpAutocomplete`: `"none"` shows the suggestions as the caller draws them; `"both"`
+   * and `"inline"` write the rest of the first that begins with what is typed into the input.
+   */
   readonly mode = input<AutocompleteProps["mode"]>()
   /** With `kpAutocomplete`: a press on the input opens the list. */
   readonly openOnInputClick = input(false, { transform: booleanAttribute })
@@ -110,6 +125,7 @@ export class KpCombobox<Value = unknown> implements OnInit {
   private readonly autocomplete =
     inject(new HostAttributeToken("kpAutocomplete"), { optional: true }) !== null
   private readonly field = inject(KP_FIELD, { optional: true })
+  private readonly direction = inject(KP_DIRECTION, { optional: true })
   private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
@@ -140,7 +156,11 @@ export class KpCombobox<Value = unknown> implements OnInit {
     mode: this.mode(),
     openOnInputClick: this.openOnInputClick(),
     virtualized: this.virtualized(),
+    presentation: this.presentation(),
+    sheetBelow: this.sheetBelow(),
     autoHighlight: this.autoHighlight(),
+    itemToStringLabel: this.itemToStringLabel(),
+    itemToStringValue: this.itemToStringValue(),
     onValueChange: (value: Value | null, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
@@ -170,7 +190,7 @@ export class KpCombobox<Value = unknown> implements OnInit {
   }
 
   ngOnInit(): void {
-    const around = { field: this.field?.controller }
+    const around = { field: this.field?.controller, direction: this.direction?.direction }
     const props = this.props()
     this.controller = this.autocomplete
       ? // An autocomplete's value is its text: `Value` is a string there.
@@ -224,7 +244,9 @@ export class KpComboboxPositioner extends KpPositioner {
   }
 }
 
-function part(name: "input" | "trigger" | "popup" | "list" | "hidden" | "chips" | "status") {
+function part(
+  name: "input" | "trigger" | "popup" | "list" | "hidden" | "chips" | "status" | "backdrop"
+) {
   const root = inject(KpCombobox)
   const put = hostPart()
   return () => put(root.controller[name])
@@ -252,6 +274,16 @@ export class KpComboboxTrigger implements OnInit {
 @Directive({ selector: "[kpComboboxPopup]" })
 export class KpComboboxPopup implements OnInit {
   private readonly init = part("popup")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/** `<div kpComboboxBackdrop>`, in the portal: what lies over the page behind the list. */
+@Directive({ selector: "[kpComboboxBackdrop]" })
+export class KpComboboxBackdrop implements OnInit {
+  private readonly init = part("backdrop")
 
   ngOnInit(): void {
     this.init()

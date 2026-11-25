@@ -10,12 +10,13 @@ export const exclusive: string[][] = [
   ["[data-starting-style]","[data-ending-style]"],
   ["[data-image-loading-status=\"idle\"]","[data-image-loading-status=\"loading\"]","[data-image-loading-status=\"loaded\"]","[data-image-loading-status=\"error\"]"],
   ["[data-checked]","[data-unchecked]"],
+  ["[data-presentation=\"popup\"]","[data-presentation=\"sheet\"]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"inline-start\"]","[data-side=\"inline-end\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
   ["[data-valid]","[data-invalid]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
   ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
-  ["[data-segment=\"day\"]","[data-segment=\"month\"]","[data-segment=\"year\"]","[data-segment=\"literal\"]"],
+  ["[data-segment=\"era\"]","[data-segment=\"day\"]","[data-segment=\"month\"]","[data-segment=\"year\"]","[data-segment=\"literal\"]"],
   ["[data-segment=\"hour\"]","[data-segment=\"minute\"]","[data-segment=\"second\"]","[data-segment=\"dayPeriod\"]","[data-segment=\"literal\"]"],
   ["[data-format=\"hex\"]","[data-format=\"rgb\"]","[data-format=\"hsl\"]"],
   ["[data-channel=\"hue\"]","[data-channel=\"alpha\"]"],
@@ -278,7 +279,27 @@ export const Combobox = {
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
   },
-  /** Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. */
+  /** The layer over the page behind the list: a press on it closes the list. */
+  Backdrop: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
+    /** Present while the sheet is dragged. */
+    swiping: "[data-swiping]",
+    /** Present once a drag has closed it. */
+    swipeDismiss: "[data-swipe-dismiss]",
+  },
+  /** Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -299,8 +320,13 @@ export const Combobox = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
   },
-  /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. */
+  /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
   Popup: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -325,6 +351,15 @@ export const Combobox = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
+    /** Present while the sheet is dragged. */
+    swiping: "[data-swiping]",
+    /** Present once a drag has closed it. */
+    swipeDismiss: "[data-swipe-dismiss]",
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
@@ -371,7 +406,7 @@ export const Combobox = {
   /** With several values: what holds the chips and the input, and what the list is placed against. */
   Chips: {
   },
-  /** One chosen value. */
+  /** One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away. */
   Chip: {
   },
   /** A chip's button that takes its value away. */
@@ -670,7 +705,7 @@ export const Field = {
     /** Present while the value is wrong. */
     invalid: "[data-invalid]",
   },
-  /** What is wrong with the value. In the page while it applies. */
+  /** What is wrong with the value. In the page while it applies. Several, each with its own `match`, can be shown at once: each has an id of its own, and the control names them all. */
   Error: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
@@ -1212,8 +1247,9 @@ export const DateField = {
   },
   /** One piece of the date: a part that is typed, or what stands between two. */
   Segment: {
-    /** Which piece it is. */
+    /** Which piece it is: the era only in a calendar of several eras. */
     segment: {
+      era: "[data-segment=\"era\"]",
       day: "[data-segment=\"day\"]",
       month: "[data-segment=\"month\"]",
       year: "[data-segment=\"year\"]",
@@ -1497,7 +1533,7 @@ export const Autocomplete = {
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
   },
-  /** Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. */
+  /** Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -1518,8 +1554,13 @@ export const Autocomplete = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
   },
-  /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. */
+  /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
   Popup: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -1544,6 +1585,15 @@ export const Autocomplete = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
+    /** Present while the sheet is dragged. */
+    swiping: "[data-swiping]",
+    /** Present once a drag has closed it. */
+    swipeDismiss: "[data-swipe-dismiss]",
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
@@ -1771,6 +1821,18 @@ export const Editable = {
     readonly: "[data-readonly]",
     /** Present while it holds no text. */
     placeholder: "[data-placeholder]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the text is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds text. */
+    filled: "[data-filled]",
+    /** In a field: present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the text was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the text is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The text as it reads, or the placeholder while there is none: hidden while editing. */
   Preview: {
@@ -1782,6 +1844,18 @@ export const Editable = {
     readonly: "[data-readonly]",
     /** Present while it holds no text. */
     placeholder: "[data-placeholder]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the text is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds text. */
+    filled: "[data-filled]",
+    /** In a field: present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the text was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the text is wrong. */
+    invalid: "[data-invalid]",
   },
   /** Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. */
   Input: {
@@ -1793,6 +1867,18 @@ export const Editable = {
     readonly: "[data-readonly]",
     /** Present while it holds no text. */
     placeholder: "[data-placeholder]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the text is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds text. */
+    filled: "[data-filled]",
+    /** In a field: present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the text was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the text is wrong. */
+    invalid: "[data-invalid]",
   },
   /** Starts an edit: hidden while editing. */
   EditTrigger: {
@@ -1804,6 +1890,18 @@ export const Editable = {
     readonly: "[data-readonly]",
     /** Present while it holds no text. */
     placeholder: "[data-placeholder]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the text is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds text. */
+    filled: "[data-filled]",
+    /** In a field: present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the text was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the text is wrong. */
+    invalid: "[data-invalid]",
   },
   /** Keeps what was typed: hidden unless editing. */
   SubmitTrigger: {
@@ -1815,6 +1913,18 @@ export const Editable = {
     readonly: "[data-readonly]",
     /** Present while it holds no text. */
     placeholder: "[data-placeholder]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the text is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds text. */
+    filled: "[data-filled]",
+    /** In a field: present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the text was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the text is wrong. */
+    invalid: "[data-invalid]",
   },
   /** Drops what was typed: hidden unless editing. */
   CancelTrigger: {
@@ -1826,6 +1936,18 @@ export const Editable = {
     readonly: "[data-readonly]",
     /** Present while it holds no text. */
     placeholder: "[data-placeholder]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the text is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds text. */
+    filled: "[data-filled]",
+    /** In a field: present while it has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the text was checked and found right. */
+    valid: "[data-valid]",
+    /** In a field: present while the text is wrong. */
+    invalid: "[data-invalid]",
   },
 } as const
 
@@ -2052,8 +2174,18 @@ export const TimeField = {
     disabled: "[data-disabled]",
     /** Present when its value cannot be changed. */
     readonly: "[data-readonly]",
-    /** Present when the time is outside what it takes, or is asked for and half typed. */
+    /** Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field. */
     invalid: "[data-invalid]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the time is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds a time. */
+    filled: "[data-filled]",
+    /** In a field: present while one of its parts has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the time was checked and found right. */
+    valid: "[data-valid]",
   },
   /** The time's segments, in the locale's order: each is given to draw. It draws no element. */
   Segments: {
@@ -2072,8 +2204,18 @@ export const TimeField = {
     placeholder: "[data-placeholder]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
-    /** Present when the time is outside what it takes, or is asked for and half typed. */
+    /** Present when the time is outside what it takes, is asked for and half typed, or is wrong by its field. */
     invalid: "[data-invalid]",
+    /** In a field: present once focus has left it. */
+    touched: "[data-touched]",
+    /** In a field: present while the time is not the one it began with. */
+    dirty: "[data-dirty]",
+    /** In a field: present while it holds a time. */
+    filled: "[data-filled]",
+    /** In a field: present while one of its parts has focus. */
+    focused: "[data-focused]",
+    /** In a field: present once the time was checked and found right. */
+    valid: "[data-valid]",
   },
   /** The hidden input it is submitted by. */
   Input: {
@@ -2454,7 +2596,7 @@ export const DatePicker = {
   /** Holds the date picker: its value, the month shown and whether the calendar is open. It draws no element. */
   Root: {
   },
-  /** The field: a group of the date's parts. */
+  /** The field a day is typed in: with `mode: "range"`, one for the first day (`range="start"`) and one for the last (`range="end"`). */
   Field: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
@@ -2468,8 +2610,9 @@ export const DatePicker = {
   },
   /** One piece of the date: a part that is typed, or what stands between two. */
   Segment: {
-    /** Which piece it is. */
+    /** Which piece it is: the era only in a calendar of several eras. */
     segment: {
+      era: "[data-segment=\"era\"]",
       day: "[data-segment=\"day\"]",
       month: "[data-segment=\"month\"]",
       year: "[data-segment=\"year\"]",
@@ -2609,6 +2752,18 @@ export const DatePicker = {
     rangeStart: "[data-range-start]",
     /** Present on the last day of a range, and on a copy of it. */
     rangeEnd: "[data-range-end]",
+  },
+  /** Empties the value, and gives focus to the field. Disabled while there is none. */
+  Clear: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+  },
+  /** Makes the value the day, or the range, it is given. Pressed while the value is that. */
+  Preset: {
+    /** Present while the value is the one it gives. */
+    pressed: "[data-pressed]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -3187,7 +3342,27 @@ export const Select = {
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
   },
-  /** Places the list against the trigger. It carries the geometry. */
+  /** The layer over the page behind the list: a press on it closes the list. */
+  Backdrop: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
+    /** Present while the sheet is dragged. */
+    swiping: "[data-swiping]",
+    /** Present once a drag has closed it. */
+    swipeDismiss: "[data-swipe-dismiss]",
+  },
+  /** Places the list against the trigger. It carries the geometry. As a sheet it is not placed, and carries none. */
   Positioner: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -3208,6 +3383,11 @@ export const Select = {
       start: "[data-align=\"start\"]",
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
+    },
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
     },
   },
   /** In the page while there is more of the list above: it scrolls the list while the pointer moves over it. */
@@ -3270,7 +3450,7 @@ export const Select = {
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
   },
-  /** The list of items. */
+  /** The list of items. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
   Popup: {
     /** Present when it is open. */
     open: "[data-open]",
@@ -3295,6 +3475,15 @@ export const Select = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** How the list opened: placed against its trigger, or as a sheet from the bottom edge. */
+    presentation: {
+      popup: "[data-presentation=\"popup\"]",
+      sheet: "[data-presentation=\"sheet\"]",
+    },
+    /** Present while the sheet is dragged. */
+    swiping: "[data-swiping]",
+    /** Present once a drag has closed it. */
+    swipeDismiss: "[data-swipe-dismiss]",
   },
   /** One choice in the list. */
   Item: {

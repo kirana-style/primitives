@@ -117,11 +117,17 @@ function Content(props: ContentProps): JSX.Element {
 export type LinkProps = PartComponentProps<
   "a",
   StateOf<Parts["link"]>,
-  { active?: boolean; closeOnClick?: boolean }
+  {
+    active?: boolean
+    /** Whether following it closes the menu. */
+    closeOnSelect?: boolean
+    /** @deprecated Use `closeOnSelect`, which wins when both are given. */
+    closeOnClick?: boolean
+  }
 >
 
 function Link(props: LinkProps): JSX.Element {
-  const [local, rest] = split(props, ["active", "closeOnClick"])
+  const [local, rest] = split(props, ["active", "closeOnSelect", "closeOnClick"])
   const options = toSignal(() => ({ ...local }))
   const part = useNavigation().link(() => defined(options.get()))
   return <Part of={part} tag="a" {...rest} />

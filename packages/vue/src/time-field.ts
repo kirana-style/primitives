@@ -12,6 +12,7 @@ import { Fragment, defineComponent, h, useId } from "vue"
 import type { PropType } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 import type {
   Changes,
@@ -59,7 +60,7 @@ const Root = defineComponent({
     const generated = useId()
     const direction = useDirectionAround()
     scope.provide(
-      controller(within(createTimeField, { direction }), () => ({
+      controller(within(createTimeField, { direction, field: useFieldAround() }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,

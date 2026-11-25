@@ -153,7 +153,11 @@ export interface LinkProps extends NavigationMenuLinkOptions, PartComponentProps
 const Link = defineComponent({
   name: "NavigationMenuLink",
   inheritAttrs: false,
-  props: { active: optional(Boolean), closeOnClick: optional(Boolean) },
+  props: {
+    active: optional(Boolean),
+    closeOnSelect: optional(Boolean),
+    closeOnClick: optional(Boolean),
+  },
   setup(props, { attrs, slots }) {
     const options = toSignal(() => ({ ...props }))
     const part = scope.use().link(() => defined(options.get()))

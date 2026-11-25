@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { ChangeDetails } from "@kirana-ui/core"
+  import { within } from "@kirana-ui/core"
   import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 
   import { provide } from "../dialog/context.ts"
+  import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import type { RootProps } from "./types.ts"
 
@@ -16,7 +18,7 @@
   }
 
   provide(
-    controller(createAlertDialog, () => ({
+    controller(within(createAlertDialog, { direction: useDirectionAround() }), () => ({
       id: id ?? generated,
       open,
       defaultOpen,

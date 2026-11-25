@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
@@ -8,6 +9,7 @@ import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
 import { defineComponent, useId } from "vue"
 import type { PropType } from "vue"
 
+import { useDirectionAround } from "./direction-context.ts"
 import { context, controller, optional, partComponent, portalComponent } from "./runtime.ts"
 import type {
   Changes,
@@ -33,6 +35,7 @@ const Root = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     modal: { type: Boolean, default: true },
+    closeOnOutsidePress: optional(Boolean),
     dismissible: { type: Boolean, default: true },
     id: String,
   },
@@ -40,11 +43,12 @@ const Root = defineComponent({
   setup(props, { slots, emit }) {
     const generated = useId()
     scope.provide(
-      controller(createDialog, () => ({
+      controller(within(createDialog, { direction: useDirectionAround() }), () => ({
         id: props.id ?? generated,
         open: props.open,
         defaultOpen: props.defaultOpen,
         modal: props.modal,
+        closeOnOutsidePress: props.closeOnOutsidePress,
         dismissible: props.dismissible,
         onOpenChange(open: boolean, details: ChangeDetails) {
           emit("openChange", open, details)
@@ -67,7 +71,7 @@ const AlertRoot = defineComponent({
   setup(props, { slots, emit }) {
     const generated = useId()
     scope.provide(
-      controller(createAlertDialog, () => ({
+      controller(within(createAlertDialog, { direction: useDirectionAround() }), () => ({
         id: props.id ?? generated,
         open: props.open,
         defaultOpen: props.defaultOpen,
@@ -132,6 +136,7 @@ const DrawerRoot = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     modal: { type: Boolean, default: true },
+    closeOnOutsidePress: optional(Boolean),
     dismissible: { type: Boolean, default: true },
     swipeDirection: String as PropType<DrawerSide>,
     snapPoints: Array as PropType<readonly DrawerSnapPoint[]>,
@@ -143,11 +148,12 @@ const DrawerRoot = defineComponent({
   setup(props, { slots, emit }) {
     const generated = useId()
     scope.provide(
-      controller(createDrawer, () => ({
+      controller(within(createDrawer, { direction: useDirectionAround() }), () => ({
         id: props.id ?? generated,
         open: props.open,
         defaultOpen: props.defaultOpen,
         modal: props.modal,
+        closeOnOutsidePress: props.closeOnOutsidePress,
         dismissible: props.dismissible,
         swipeDirection: props.swipeDirection,
         snapPoints: props.snapPoints,

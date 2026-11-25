@@ -1,6 +1,6 @@
 import type { Fieldset } from "./fieldset.ts"
 import type { Form, ValidationMode } from "./form.ts"
-import { flag } from "./part.ts"
+import { defaultId, flag } from "./part.ts"
 import type { Part } from "./part.ts"
 import { batch, computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -66,7 +66,7 @@ export interface FieldSubject {
   readonly element: HTMLElement
   focus(): void
   /** The native control it stands for: the browser words "this is required" for each its own way. */
-  readonly kind: "checkbox" | "radio" | "select" | "range" | "group"
+  readonly kind: "checkbox" | "radio" | "select" | "range" | "group" | "text"
   required(): boolean
   /** Its value as text when it joins; empty is "none". */
   readonly value: string
@@ -102,7 +102,10 @@ export interface Field {
   readonly focused: ReadonlySignal<boolean>
   /** Checks the value now, and says whether it is valid. */
   validate(): boolean | Promise<boolean>
-  /** The id the control's element takes, which the label is `for`. */
+  /**
+   * The id the control's element takes unless its caller gives it one (a part writes it with
+   * `defaultId`). The label is `for` what the element is called once it is in the page.
+   */
   readonly controlId: string
   readonly name: ReadonlySignal<string | undefined>
   /** Disabled by the field or by the fieldset around it. */
@@ -149,7 +152,7 @@ function wording(kind: FieldSubject["kind"], page: Document): string {
     return probe.validationMessage
   }
   const probe = page.createElement("input")
-  probe.type = kind === "range" || kind === "group" ? "text" : kind
+  probe.type = kind === "checkbox" || kind === "radio" ? kind : "text"
   // A radio with no name is in no group, and a browser finds nothing missing in it.
   probe.name = "probe"
   probe.required = true
@@ -203,8 +206,10 @@ export function createField(
   const focused = signal(false)
   const described = signal(false)
   const labelled = signal(false)
-  // How many messages are in the page: the control points at them while there is one.
-  const shown = signal(0)
+  // The messages in the page, each with its id: the control points at them, in the page's order.
+  const shown = signal<readonly { element: HTMLElement; id: () => string }[]>([])
+  // What the control's element is called once it is in the page: its caller's id, if it has one.
+  const named = signal<string | undefined>(undefined)
 
   const disabled = computed(
     () => Boolean(props.get().disabled) || Boolean(fieldset?.disabled.get())
@@ -243,9 +248,12 @@ export function createField(
   })
 
   const says = () => {
+    const messages = [...shown.get()].sort((a, b) =>
+      a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    )
     const ids = [
       described.get() ? `${id}-description` : undefined,
-      shown.get() > 0 ? `${id}-error` : undefined,
+      ...messages.map((each) => each.id()),
     ].filter(Boolean)
     return {
       "aria-describedby": ids.length > 0 ? ids.join(" ") : undefined,
@@ -328,11 +336,17 @@ export function createField(
     if (mode.peek() === "onBlur") void validate()
   }
 
-  /** Takes a control as the field's, and gives it to the form. Returns the release. */
-  function take(checked: Checked): () => void {
+  /**
+   * Takes a control as the field's, and gives it to the form. `target` is the element the label is
+   * `for`, whose id it reads. Returns the release.
+   */
+  function take(checked: Checked, target: HTMLElement | undefined): () => void {
     subject = checked
     initial = checked.value()
-    filled.set(initial !== "")
+    batch(() => {
+      filled.set(initial !== "")
+      named.set(target?.id || undefined)
+    })
     const leave = form?.register({
       element: checked.element,
       focus: () => checked.focus(),
@@ -340,7 +354,10 @@ export function createField(
     })
     return () => {
       leave?.()
-      if (subject === checked) subject = undefined
+      if (subject === checked) {
+        subject = undefined
+        named.set(undefined)
+      }
     }
   }
 
@@ -364,20 +381,24 @@ export function createField(
     join(control) {
       joined = control
       let current = control.value
-      const release = take({
-        element: control.element,
-        focus: () => control.focus(),
-        value: () => current,
-        native() {
-          const missing = control.required() && current === ""
-          return {
-            state: { ...CLEAN, valueMissing: missing },
-            message: missing ? wording(control.kind, control.element.ownerDocument) : undefined,
-          }
+      const release = take(
+        {
+          element: control.element,
+          focus: () => control.focus(),
+          value: () => current,
+          native() {
+            const missing = control.required() && current === ""
+            return {
+              state: { ...CLEAN, valueMissing: missing },
+              message: missing ? wording(control.kind, control.element.ownerDocument) : undefined,
+            }
+          },
+          // Its hidden input holds no message: a plain form could not show one on it.
+          mark: NOTHING,
+          // A box's label is for its hidden input, which keeps the field's id.
         },
-        // Its hidden input holds no message: a plain form could not show one on it.
-        mark: NOTHING,
-      })
+        control.kind === "checkbox" ? undefined : control.element
+      )
       return {
         changed(value) {
           current = value
@@ -402,7 +423,7 @@ export function createField(
     label: {
       props: computed(() => ({
         id: `${id}-label`,
-        for: `${id}-control`,
+        for: named.get() ?? `${id}-control`,
         ...state(),
         onClick(event: Event) {
           // A box has its hidden native input, which the label presses by itself. Any other
@@ -419,7 +440,7 @@ export function createField(
     },
     control: {
       props: computed(() => ({
-        id: `${id}-control`,
+        ...defaultId(`${id}-control`),
         name: props.get().name,
         disabled: flag(disabled.get()),
         ...says(),
@@ -438,22 +459,25 @@ export function createField(
         // The browser puts the value back after the event: what it will be is read from the
         // control's defaults.
         const unhear = onFormReset(element, () => reset(resting(control)))
-        const release = take({
-          element,
-          focus: () => control.focus(),
-          value: () => read(control),
-          native() {
-            // The field's own message from last time is not the browser's finding.
-            control.setCustomValidity("")
-            const found = { ...CLEAN }
-            for (const key of KEYS) found[key] = control.validity[key]
-            return {
-              state: found,
-              message: control.validity.valid ? undefined : control.validationMessage,
-            }
+        const release = take(
+          {
+            element,
+            focus: () => control.focus(),
+            value: () => read(control),
+            native() {
+              // The field's own message from last time is not the browser's finding.
+              control.setCustomValidity("")
+              const found = { ...CLEAN }
+              for (const key of KEYS) found[key] = control.validity[key]
+              return {
+                state: found,
+                message: control.validity.valid ? undefined : control.validationMessage,
+              }
+            },
+            mark: (message) => control.setCustomValidity(message),
           },
-          mark: (message) => control.setCustomValidity(message),
-        })
+          element
+        )
         return () => {
           unhear()
           release()
@@ -475,6 +499,12 @@ export function createField(
         return typeof wanted === "string" ? validity.get().state[wanted] : true
       })
       const presence = createPresence(applies)
+      // Its own id, by what it shows: two messages in the page at once are told apart.
+      const own = computed(() => {
+        const wanted = match()
+        if (wanted === true) return `${id}-error-always`
+        return typeof wanted === "string" ? `${id}-error-${wanted}` : `${id}-error`
+      })
       return {
         mounted: presence.mounted,
         text: computed(() => errors.get().join("\n")),
@@ -483,18 +513,21 @@ export function createField(
           props: computed(() => {
             const status = presence.status.get()
             return {
-              id: `${id}-error`,
+              ...defaultId(own.get()),
               ...state(),
               "data-starting-style": flag(status === "starting"),
               "data-ending-style": flag(status === "ending"),
             }
           }),
           attach(element) {
-            shown.set(shown.peek() + 1)
+            // A caller's own id wins over the message's, and the control points at that.
+            const given = element.id && element.id !== own.peek() ? element.id : undefined
+            const entry = { element, id: () => given ?? own.get() }
+            shown.set([...shown.peek(), entry])
             const detach = presence.attach(element)
             return () => {
               detach()
-              shown.set(shown.peek() - 1)
+              shown.set(shown.peek().filter((each) => each !== entry))
             }
           },
         },

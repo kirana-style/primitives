@@ -404,6 +404,131 @@ describe("a combobox of several values", () => {
     expect(made.values.peek()).toEqual([])
   })
 
+  /** Chips drawn as an adapter draws them: one for each value, kept by value, before the input. */
+  function withChips(given: Partial<ComboboxProps<string>> = {}) {
+    const made = several(given)
+    const chips = new Map<string, { element: HTMLElement; stop: () => void }>()
+    const stop = effect(() => {
+      const values = made.made.values.get()
+      untracked(() => {
+        for (const [value, each] of chips) {
+          if (values.includes(value)) continue
+          each.stop()
+          each.element.remove()
+          chips.delete(value)
+        }
+        for (const value of values) {
+          if (chips.has(value)) continue
+          const element = document.createElement("span")
+          element.id = `chip-${value}`
+          element.textContent = value
+          made.input.before(element)
+          chips.set(value, { element, stop: bind(element, made.made.chip(value)) })
+        }
+      })
+    })
+    onTestFinished(() => {
+      stop()
+      for (const each of chips.values()) each.stop()
+    })
+    return made
+  }
+
+  it("goes between its chips by the arrows, from the start of the input and back", async () => {
+    const { input, made, root } = withChips({ defaultValues: ["Apple", "Banana", "Cherry"] })
+    expect(find(root, "chip-Apple").getAttribute("tabindex")).toBe("-1")
+    input.focus()
+    await press("ArrowLeft")
+    expect(focused()).toBe("chip-Cherry")
+    await press("ArrowLeft")
+    expect(focused()).toBe("chip-Banana")
+    await press("Home")
+    expect(focused()).toBe("chip-Apple")
+    await press("ArrowLeft")
+    expect(focused()).toBe("chip-Apple")
+    await press("ArrowRight")
+    await press("ArrowRight")
+    expect(focused()).toBe("chip-Cherry")
+    // Forward from the last chip is the input.
+    await press("ArrowRight")
+    expect(focused()).toBe("input")
+    // With text before the caret the arrow is the input's own.
+    await userEvent.keyboard("ch")
+    await settled()
+    expect(made.open.peek()).toBe(true)
+    await press("ArrowLeft")
+    expect(focused()).toBe("input")
+    expect(input.selectionStart).toBe(1)
+    await press("ArrowLeft")
+    await press("ArrowLeft")
+    expect(focused()).toBe("chip-Cherry")
+    // The list closed as focus went to the chip; what was typed stays.
+    expect(made.open.peek()).toBe(false)
+    expect(input.value).toBe("ch")
+    expect(made.values.peek()).toEqual(["Apple", "Banana", "Cherry"])
+  })
+
+  it("Backspace in the empty input goes onto the last chip, and on a chip takes it away", async () => {
+    const { input, made, sent } = withChips({ defaultValues: ["Apple", "Banana", "Cherry"] })
+    input.focus()
+    await press("Backspace")
+    // Seen before it goes: nothing is taken away yet.
+    expect(focused()).toBe("chip-Cherry")
+    expect(made.values.peek()).toEqual(["Apple", "Banana", "Cherry"])
+    await press("Backspace")
+    expect(made.values.peek()).toEqual(["Apple", "Banana"])
+    expect(sent()).toEqual(["Apple", "Banana"])
+    // Focus is on the chip that takes its place: the one before.
+    expect(focused()).toBe("chip-Banana")
+    await press("ArrowLeft")
+    await press("Delete")
+    // Delete takes the one after.
+    expect(made.values.peek()).toEqual(["Banana"])
+    expect(focused()).toBe("chip-Banana")
+    await press("Backspace")
+    expect(made.values.peek()).toEqual([])
+    expect(focused()).toBe("input")
+  })
+
+  it("read only, its chips are gone through and none is taken away", async () => {
+    const { input, made } = withChips({ defaultValues: ["Apple", "Banana"], readOnly: true })
+    input.focus()
+    await press("Backspace")
+    expect(focused()).toBe("chip-Banana")
+    await press("Backspace")
+    await press("Delete")
+    expect(made.values.peek()).toEqual(["Apple", "Banana"])
+    // Down from a chip is the input, with the list open to be read.
+    await press("ArrowDown")
+    expect(focused()).toBe("input")
+    expect(made.open.peek()).toBe(true)
+  })
+
+  it("goes back onto its chips by the arrow that points back in the reading direction", async () => {
+    const { input, root } = withChips({ defaultValues: ["Apple", "Banana"] })
+    root.dir = "rtl"
+    input.focus()
+    await press("ArrowLeft")
+    expect(focused()).toBe("input")
+    await press("ArrowRight")
+    expect(focused()).toBe("chip-Banana")
+    await press("ArrowRight")
+    expect(focused()).toBe("chip-Apple")
+    await press("ArrowLeft")
+    await press("ArrowLeft")
+    expect(focused()).toBe("input")
+  })
+
+  it("a letter typed on a chip goes into the input", async () => {
+    const { input } = withChips({ defaultValues: ["Apple"] })
+    input.focus()
+    await press("ArrowLeft")
+    expect(focused()).toBe("chip-Apple")
+    await userEvent.keyboard("b")
+    expect(focused()).toBe("input")
+    expect(input.value).toBe("b")
+  })
+
   it("a chip's button takes its value away and leaves focus in the input", async () => {
     const { root, made, sent } = several({ defaultValues: ["Apple", "Banana", "Cherry"] })
     const remove = document.createElement("button")
@@ -596,6 +721,12 @@ describe("a combobox whose input is inside its popup", () => {
         const mounted = made.made.mounted.get()
         untracked(() => {
           if (mounted && !positioner) {
+            if (given.presentation) {
+              const backdrop = document.createElement("div")
+              backdrop.id = "backdrop"
+              root.append(backdrop)
+              undo.push(bind(backdrop, made.made.backdrop), () => backdrop.remove())
+            }
             positioner = document.createElement("div")
             positioner.id = "positioner"
             // A design's usual lines: as wide as its anchor at least, the input as wide as it.
@@ -643,6 +774,57 @@ describe("a combobox whose input is inside its popup", () => {
         .not.toBe("")
     return { ...made, toggle, placed }
   }
+
+  it("as a sheet, is not placed, keeps focus in its input with the page inert, and closes by a swipe or its backdrop", async () => {
+    const { root, made, toggle, reasons } = inside({ presentation: "sheet" })
+    toggle.click()
+    await settled()
+    await settled()
+    const positioner = find(root, "positioner")
+    const popup = positioner.querySelector<HTMLElement>(".popup")!
+    const backdrop = find(root, "backdrop")
+    for (const each of [positioner, popup, backdrop]) {
+      expect(each.getAttribute("data-presentation")).toBe("sheet")
+    }
+    expect(positioner.getAttribute("style")).toBe(null)
+    expect(positioner.hasAttribute("data-side")).toBe(false)
+    expect(focused()).toBe("search")
+    expect(find(root, "before").hasAttribute("inert")).toBe(true)
+    backdrop.dispatchEvent(
+      new PointerEvent("pointerdown", { button: 0, bubbles: true, cancelable: true })
+    )
+    expect(made.open.peek()).toBe(false)
+    await expect.poll(() => find(root, "before").hasAttribute("inert")).toBe(false)
+    toggle.click()
+    await settled()
+    await settled()
+    // Dragged down from a row, far enough: it closes, and the row is not chosen.
+    const row = find(root, "c-Banana")
+    const box = row.getBoundingClientRect()
+    const at = (type: string, dy: number, on: EventTarget) =>
+      on.dispatchEvent(
+        new PointerEvent(type, {
+          clientX: box.left + 5,
+          clientY: box.top + 5 + dy,
+          button: 0,
+          pointerId: 3,
+          pointerType: "touch",
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+    at("pointerdown", 0, row)
+    for (const dy of [20, 60, 120, 200]) {
+      at("pointermove", dy, document)
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    }
+    await new Promise((resolve) => setTimeout(resolve, 120))
+    at("pointerup", 200, document)
+    row.click()
+    expect(made.open.peek()).toBe(false)
+    expect(made.value.peek()).toBe(null)
+    expect(reasons.slice(-1)).toEqual(["swipe"])
+  })
 
   it("has its button as the combobox: a stop for Tab that says what it opens", async () => {
     const { toggle } = inside()
@@ -712,6 +894,25 @@ describe("a combobox whose input is inside its popup", () => {
     expect(reasons).toEqual(["trigger-press", "escape-key", "list-navigation", "outside-press"])
   })
 
+  it("Tab from its input goes on from its button, as from a dialog that closes", async () => {
+    const { made, toggle } = inside()
+    await settled()
+    await userEvent.click(toggle)
+    await settled()
+    expect(focused()).toBe("search")
+    // The popup is at the page's end: Tab would leave the page from there.
+    await userEvent.tab()
+    await settled()
+    expect(made.open.peek()).toBe(false)
+    expect(focused()).toBe("after")
+    await userEvent.click(toggle)
+    await settled()
+    await userEvent.tab({ shift: true })
+    await settled()
+    expect(made.open.peek()).toBe(false)
+    expect(focused()).toBe("before")
+  })
+
   it("keeps focus where a person took it", async () => {
     const { made, toggle, root } = inside()
     await settled()
@@ -754,5 +955,86 @@ describe("a combobox whose input is inside its popup", () => {
     await userEvent.click(search())
     expect(focused()).toBe("search")
     expect(made.open.peek()).toBe(true)
+  })
+})
+
+describe("a combobox whose values are objects", () => {
+  interface City {
+    code: string
+    name: string
+  }
+  const CITIES: City[] = [
+    { code: "osl", name: "Oslo" },
+    { code: "osa", name: "Osaka" },
+    { code: "par", name: "Paris" },
+  ]
+
+  /** Items that draw no text of their own (a flag each), and a hidden input in a form. */
+  function cities(given: Partial<ComboboxProps<City>>) {
+    const root = mount(
+      `<form id="form"><input id="input" /><input id="hidden" /></form>
+       <div id="positioner"><div id="popup">${CITIES.map(
+         (each) => `<div id="o-${each.code}"><span class="flag"></span></div>`
+       ).join("")}</div></div>`
+    )
+    const made = createCombobox(
+      signal<ComboboxProps<City>>({ id: "o", name: "city", autoHighlight: true, ...given })
+    )
+    onTestFinished(made.mount())
+    onTestFinished(bind(find(root, "input"), made.input))
+    onTestFinished(bind(find(root, "hidden"), made.hidden))
+    onTestFinished(bind(find(root, "positioner"), made.positioner))
+    onTestFinished(bind(find(root, "popup"), made.popup))
+    for (const each of CITIES) {
+      onTestFinished(
+        bind(
+          find(root, `o-${each.code}`),
+          made.item(each, () => ({ id: `o-${each.code}` }))
+        )
+      )
+    }
+    const sent = () => new FormData(find<HTMLFormElement>(root, "form")).getAll("city")
+    const shown = () =>
+      [...root.querySelectorAll<HTMLElement>('[role="option"]')]
+        .filter((each) => !each.hidden)
+        .map((each) => each.id)
+    return { root, made, sent, shown, input: find<HTMLInputElement>(root, "input") }
+  }
+
+  it("shows, filters by and sends what itemToStringLabel and itemToStringValue make of them", async () => {
+    const { input, made, sent, shown } = cities({
+      defaultValue: CITIES[2],
+      itemToStringLabel: (city) => city.name,
+      itemToStringValue: (city) => city.code,
+    })
+    expect(input.value).toBe("Paris")
+    expect(sent()).toEqual(["par"])
+    input.focus()
+    input.select()
+    await userEvent.keyboard("osa")
+    await settled()
+    expect(shown()).toEqual(["o-osa"])
+    await press("Enter")
+    expect(made.value.peek()).toBe(CITIES[1])
+    expect(input.value).toBe("Osaka")
+    expect(sent()).toEqual(["osa"])
+  })
+
+  it("with several values, sends each by itemToStringValue", async () => {
+    const { sent, made } = cities({
+      multiple: true,
+      defaultValues: [CITIES[0]!, CITIES[2]!],
+      itemToStringLabel: (city) => city.name,
+      itemToStringValue: (city) => city.code,
+    })
+    expect(sent()).toEqual(["osl", "par"])
+    expect(made.shown.peek().labels).toEqual(["Oslo", "Paris"])
+  })
+
+  it("with nothing given, names an object shaped { value, label } by its label and sends its value", () => {
+    const tea = { value: "tea", label: "Green tea" }
+    const { input, sent } = cities({ defaultValue: tea as unknown as City })
+    expect(input.value).toBe("Green tea")
+    expect(sent()).toEqual(["tea"])
   })
 })

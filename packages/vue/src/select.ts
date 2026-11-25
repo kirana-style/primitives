@@ -84,6 +84,16 @@ const Root = defineComponent({
     values: optional(Array as PropType<readonly unknown[]>),
     defaultValues: Array as PropType<readonly unknown[]>,
     virtualized: Object as PropType<SelectProps["virtualized"]>,
+    presentation: String as PropType<SelectProps["presentation"]>,
+    sheetBelow: Number,
+    itemToStringLabel: {
+      type: Function as PropType<(value: unknown) => string>,
+      default: undefined as unknown,
+    },
+    itemToStringValue: {
+      type: Function as PropType<(value: unknown) => string>,
+      default: undefined as unknown,
+    },
     id: String,
   },
   emits: [
@@ -114,6 +124,10 @@ const Root = defineComponent({
         values: props.values,
         defaultValues: props.defaultValues,
         virtualized: props.virtualized,
+        presentation: props.presentation,
+        sheetBelow: props.sheetBelow,
+        itemToStringLabel: props.itemToStringLabel as SelectProps["itemToStringLabel"],
+        itemToStringValue: props.itemToStringValue as SelectProps["itemToStringValue"],
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
@@ -309,6 +323,7 @@ function scrollArrow<Arrow extends "scrollUpArrow" | "scrollDownArrow">(
 
 export type TriggerProps = PartComponentProps
 export type PopupProps = PartComponentProps
+export type BackdropProps = PartComponentProps
 export type ListProps = PartComponentProps
 export type ScrollUpArrowProps = PartComponentProps
 export type ScrollDownArrowProps = PartComponentProps
@@ -324,6 +339,12 @@ export const Select = {
   ),
   Value,
   Portal: portalComponent("SelectPortal", () => scope.use().mounted),
+  /** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+  Backdrop: partComponent<"div", State["backdrop"]>(
+    "SelectBackdrop",
+    "div",
+    () => scope.use().backdrop
+  ),
   Positioner,
   Popup: partComponent<"div", State["popup"]>("SelectPopup", "div", () => scope.use().popup),
   /** The items' own box inside the popup, when the popup also holds scroll arrows. */

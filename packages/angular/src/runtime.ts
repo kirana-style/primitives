@@ -1,4 +1,5 @@
 import {
+  Component,
   DestroyRef,
   Directive,
   ElementRef,
@@ -8,6 +9,7 @@ import {
   PLATFORM_ID,
   TemplateRef,
   ViewContainerRef,
+  ViewEncapsulation,
   afterNextRender,
   effect as angularEffect,
   inject,
@@ -16,6 +18,7 @@ import {
   untracked,
 } from "@angular/core"
 import type {
+  ComponentRef,
   EmbeddedViewRef,
   InputSignalWithTransform,
   OnChanges,
@@ -445,6 +448,44 @@ export function innerPart(tag: string): (part: Part) => void {
     destroy.onDestroy(() => {
       unbind()
       element.remove()
+    })
+  }
+}
+
+/** The element a directive draws after its host: Angular's own, so hydration takes it over. */
+@Component({ selector: "input", template: "", encapsulation: ViewEncapsulation.None })
+class KpDrawnInput {}
+
+/**
+ * A hidden input the directive draws right after its host while `present` holds: a form
+ * control's, where its root is an `<ng-container>` with no element to hold one. It is drawn in
+ * the host's view container, as a view of Angular's, so a server draws it and hydration takes
+ * over the one it sent: an element added by hand between Angular's own would be taken for the
+ * node Angular looks for next. Returns a function to call in `ngOnInit`.
+ */
+export function inputAfter(): (part: Part, present: ReadonlySignal<boolean>) => void {
+  const container = inject(ViewContainerRef)
+  const destroy = inject(DestroyRef)
+  const put = binder()
+  return (part, present) => {
+    let drawn: { ref: ComponentRef<KpDrawnInput>; unbind: () => void } | undefined
+    const remove = () => {
+      drawn?.unbind()
+      drawn?.ref.destroy()
+      drawn = undefined
+    }
+    const stop = effect(() => {
+      const wanted = present.get()
+      if (wanted === (drawn !== undefined)) return
+      if (!wanted) return remove()
+      untracked(() => {
+        const ref = container.createComponent(KpDrawnInput)
+        drawn = { ref, unbind: put(ref.location.nativeElement as HTMLElement, part) }
+      })
+    })
+    destroy.onDestroy(() => {
+      stop()
+      remove()
     })
   }
 }

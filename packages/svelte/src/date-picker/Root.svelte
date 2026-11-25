@@ -1,7 +1,12 @@
-<script lang="ts">
+<script lang="ts" generics="Mode extends DatePickerMode = 'single'">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createDatePicker } from "@kirana-ui/core/date-picker"
+  import type {
+    DatePickerMode,
+    DatePickerValue,
+    DatePickerValueOf,
+  } from "@kirana-ui/core/date-picker"
 
   import { provide as provideCalendar } from "../calendar/context.ts"
   import { provide as provideField } from "../date-field/context.ts"
@@ -12,12 +17,13 @@
   import type { RootProps } from "./types.ts"
 
   // A date field, and a calendar in a popover, with one value between them. It draws nothing.
-  // `bind:value` is the day, `bind:open` whether the calendar shows, `bind:month` the first day
-  // of the month it shows.
+  // `bind:value` is the day (or the range, with `mode="range"`), `bind:open` whether the calendar
+  // shows, `bind:month` the first day of the month it shows.
   let {
     value = $bindable(),
     defaultValue,
     onValueChange,
+    mode,
     open = $bindable(),
     defaultOpen,
     onOpenChange,
@@ -40,12 +46,13 @@
     form,
     id,
     children,
-  }: RootProps = $props()
+  }: RootProps<Mode> = $props()
   const generated = $props.id()
 
-  function changeValue(next: string | null, by: ChangeDetails) {
-    onValueChange?.(next, by)
-    if (!by.canceled) value = next
+  // The core holds either mode's value; the caller's is its mode's.
+  function changeValue(next: DatePickerValue, by: ChangeDetails) {
+    onValueChange?.(next as DatePickerValueOf<Mode>, by)
+    if (!by.canceled) value = next as DatePickerValueOf<Mode>
   }
 
   function changeOpen(next: boolean, by: ChangeDetails) {
@@ -61,8 +68,9 @@
   const made = provide(
     controller(within(createDatePicker, { direction: useDirectionAround() }), () => ({
       id: id ?? generated,
-      value,
-      defaultValue,
+      value: value as DatePickerValue | undefined,
+      defaultValue: defaultValue as DatePickerValue | undefined,
+      mode,
       open,
       defaultOpen,
       locale,

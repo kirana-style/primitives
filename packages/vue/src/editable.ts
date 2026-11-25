@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createEditable } from "@kirana-ui/core/editable"
 import type { Editable as Controller, EditableProps } from "@kirana-ui/core/editable"
@@ -5,6 +6,7 @@ import { defineComponent, h, useId } from "vue"
 import type { PropType } from "vue"
 
 import { written } from "./element.ts"
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
 
@@ -35,6 +37,7 @@ const Root = defineComponent({
     selectOnFocus: optional(Boolean),
     disabled: Boolean,
     readOnly: Boolean,
+    required: Boolean,
     name: String,
     form: String,
     id: String,
@@ -43,7 +46,7 @@ const Root = defineComponent({
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
     scope.provide(
-      controller(createEditable, () => ({
+      controller(within(createEditable, { field: useFieldAround() }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,
@@ -55,6 +58,7 @@ const Root = defineComponent({
         selectOnFocus: props.selectOnFocus,
         disabled: props.disabled,
         readOnly: props.readOnly,
+        required: props.required,
         name: props.name,
         form: props.form,
         onValueChange(value: string, details: ChangeDetails) {

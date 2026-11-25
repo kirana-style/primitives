@@ -45,6 +45,9 @@ export type PositionerProps = PartAttributes<"div", StateFor<"combobox", "positi
 
 export type PopupProps = PartAttributes<"div", StateFor<"combobox", "popup">>
 
+/** What lies over the page behind the list: a sheet's (`presentation`) is modal. */
+export type BackdropProps = PartAttributes<"div", StateFor<"combobox", "backdrop">>
+
 /**
  * The items' own box inside the popup, when the popup holds more than items (an input): it is
  * then the listbox.

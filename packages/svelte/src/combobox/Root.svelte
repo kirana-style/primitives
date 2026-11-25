@@ -3,6 +3,7 @@
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCombobox } from "@kirana-ui/core/combobox"
 
+  import { useDirectionAround } from "../direction/context.ts"
   import { useFieldAround } from "../field/context.ts"
 
   import Part from "../Part.svelte"
@@ -33,7 +34,11 @@
     onValuesChange,
     inline,
     virtualized,
+    presentation,
+    sheetBelow,
     autoHighlight,
+    itemToStringLabel,
+    itemToStringValue,
     id,
     children,
   }: RootProps<Value> = $props()
@@ -60,32 +65,39 @@
   }
 
   const made = provide(
-    controller(within(createCombobox, { field: useFieldAround() }), () => ({
-      id: id ?? generated,
-      value,
-      defaultValue,
-      inputValue,
-      defaultInputValue,
-      open,
-      defaultOpen,
-      disabled,
-      readOnly,
-      name,
-      form,
-      items,
-      filter,
-      required,
-      multiple,
-      values,
-      defaultValues,
-      onValuesChange: changeValues,
-      inline,
-      virtualized,
-      autoHighlight,
-      onValueChange: changeValue,
-      onInputValueChange: changeInput,
-      onOpenChange: changeOpen,
-    }))
+    controller(
+      within(createCombobox, { field: useFieldAround(), direction: useDirectionAround() }),
+      () => ({
+        id: id ?? generated,
+        value,
+        defaultValue,
+        inputValue,
+        defaultInputValue,
+        open,
+        defaultOpen,
+        disabled,
+        readOnly,
+        name,
+        form,
+        items,
+        filter,
+        required,
+        multiple,
+        values,
+        defaultValues,
+        onValuesChange: changeValues,
+        inline,
+        virtualized,
+        presentation,
+        sheetBelow,
+        autoHighlight,
+        itemToStringLabel,
+        itemToStringValue,
+        onValueChange: changeValue,
+        onInputValueChange: changeInput,
+        onOpenChange: changeOpen,
+      })
+    )
   )
   const named = fromSignal(made.named)
 </script>

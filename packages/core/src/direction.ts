@@ -46,12 +46,12 @@ export function directionOf(element: Element, given?: ReadonlySignal<Direction>)
 /**
  * Gives a popup that was moved out of its place (to the end of `<body>`) the reading direction
  * of where it came from, as a `dir` attribute: the `dir` on a part of the page does not reach
- * it there. Nothing is written when the two agree, or when the popup has a `dir` of its own.
- * Returns the removal.
+ * it there. `from` is the element it came from, or the direction its provider states. Nothing
+ * is written when the two agree, or when the popup has a `dir` of its own. Returns the removal.
  */
-export function carryDirection(popup: HTMLElement, from: Element): () => void {
+export function carryDirection(popup: HTMLElement, from: Element | Direction): () => void {
   if (popup.hasAttribute("dir")) return NOTHING
-  const wanted = directionOf(from)
+  const wanted = typeof from === "string" ? from : directionOf(from)
   if (directionOf(popup) === wanted) return NOTHING
   popup.setAttribute("dir", wanted)
   return () => popup.removeAttribute("dir")

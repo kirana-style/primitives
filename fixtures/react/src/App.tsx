@@ -1,3 +1,4 @@
+import { JapaneseCalendar } from "@internationalized/date"
 import type { FileRejection, DateRange, OffsetFunction } from "@kirana-ui/react"
 import {
   Calendar,
@@ -70,6 +71,8 @@ import type { ComponentProps } from "react"
 
 // A page's toasts are made once, apart from any component: a long time, so a test reads them.
 const toaster = createToaster({ duration: 600_000 })
+// A date field typed in a calendar of eras: the one calendar this page carries.
+const JAPANESE = new JapaneseCalendar()
 
 interface Preventable {
   preventKiranaHandler(): void
@@ -191,6 +194,15 @@ function pantryLeft(text: string): string {
 // Labels by value: what a select names its values with before its list has been opened.
 const SIZES = { s: "Small", m: "Medium", l: "Large" }
 const SIZE_KEYS = ["s", "m", "l"] as const
+// Values that are objects: named and sent by what their caller says of them.
+const CITIES = [
+  { code: "osl", name: "Oslo" },
+  { code: "osa", name: "Osaka" },
+  { code: "par", name: "Paris" },
+]
+type City = (typeof CITIES)[number]
+const cityName = (city: City) => city.name
+const cityCode = (city: City) => city.code
 
 /**
  * The page every adapter draws, element for element: the conformance run walks it and compares
@@ -225,6 +237,8 @@ export function App() {
   const [born, setBorn] = useState("none")
   const [box, setBox] = useState<HTMLElement | null>(null)
   const [due, setDue] = useState("2026-03-14")
+  const [trip, setTrip] = useState("none")
+  const [reign, setReign] = useState("none")
   const [paged, setPaged] = useState("1")
   const [stars, setStars] = useState("2")
   const [stepped, setStepped] = useState("0")
@@ -282,6 +296,7 @@ export function App() {
   const [sent, setSent] = useState("")
   const [sent2, setSent2] = useState("")
   const [reading, setReading] = useState<"ltr" | "rtl">("rtl")
+  const [dirDialog, setDirDialog] = useState(false)
   const [rejected, setRejected] = useState<Record<string, string> | undefined>(undefined)
   const [span, setSpan] = useState<number[]>([20, 80])
   const [low, setLow] = useState(true)
@@ -869,6 +884,30 @@ export function App() {
           </Select.Root>
         </form>
         <output data-testid="s1-output">{fruit ?? "none"}</output>
+        <div className="bar">
+          <Select.Root id="ss1" presentation="sheet" defaultValue="Banana">
+            <Select.Trigger data-testid="ss1-trigger">
+              <Select.Value placeholder="Pick a fruit" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Backdrop className="backdrop" data-testid="ss1-backdrop" />
+              <Select.Positioner className="sheet" data-testid="ss1-positioner">
+                <Select.Popup className="popup" data-testid="ss1-popup">
+                  {FRUITS.map((each) => (
+                    <Select.Item
+                      key={each}
+                      value={each}
+                      className="item"
+                      data-testid={`ss1-${each}`}
+                    >
+                      <Select.ItemText>{each}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </div>
       </section>
       <section data-fixture="select-multiple">
         <form className="bar" data-testid="sm1-form">
@@ -944,6 +983,35 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
+        <form className="bar" data-testid="sm4-form">
+          <Select.Root
+            id="sm4"
+            name="city"
+            defaultValue={CITIES[2]}
+            itemToStringLabel={cityName}
+            itemToStringValue={cityCode}
+          >
+            <Select.Trigger data-testid="sm4-trigger">
+              <Select.Value data-testid="sm4-value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner sideOffset={4} data-testid="sm4-positioner">
+                <Select.Popup className="popup" data-testid="sm4-popup">
+                  {CITIES.map((each) => (
+                    <Select.Item
+                      key={each.code}
+                      value={each}
+                      className="item"
+                      data-testid={`sm4-${each.code}`}
+                    >
+                      <Select.ItemText>{each.name}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>
       </section>
       <section data-fixture="menu">
         <Menu.Root id="mn1">
@@ -1814,6 +1882,26 @@ export function App() {
           </DateField.Root>
         </form>
         <output data-testid="df1-output">{born}</output>
+        <DateField.Root
+          id="df2"
+          locale="en-US"
+          calendarSystem={JAPANESE}
+          defaultValue="2019-05-01"
+          aria-label="Day of the era"
+          className="date-field"
+          data-testid="df2"
+          onValueChange={(next: string | null) => setReign(String(next))}
+        >
+          <DateField.Segments>
+            {(segment) => (
+              <DateField.Segment
+                segment={segment}
+                data-testid={`df2-${segment.type}-${segment.index}`}
+              />
+            )}
+          </DateField.Segments>
+        </DateField.Root>
+        <output data-testid="df2-output">{reign}</output>
       </section>
       <section data-fixture="calendars">
         <Calendar.Root
@@ -2155,6 +2243,26 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
+        <Autocomplete.Root id="ac3" mode="both">
+          <Autocomplete.Input aria-label="Place, completed" data-testid="ac3-input" />
+          <Autocomplete.Portal>
+            <Autocomplete.Positioner sideOffset={4} data-testid="ac3-positioner">
+              <Autocomplete.Popup className="popup" aria-label="Places" data-testid="ac3-popup">
+                {PLACES.map((each) => (
+                  <Autocomplete.Item
+                    key={each}
+                    value={each}
+                    id={`ac3-${each}`}
+                    className="item"
+                    data-testid={`ac3-${each}`}
+                  >
+                    {each}
+                  </Autocomplete.Item>
+                ))}
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>
       </section>
       <section data-fixture="picking">
         <DatePicker.Root
@@ -2223,6 +2331,101 @@ export function App() {
           </DatePicker.Portal>
         </DatePicker.Root>
         <output data-testid="dk1-output">{due}</output>
+        <DatePicker.Root
+          id="dk2"
+          mode="range"
+          locale="en-US"
+          name="trip"
+          defaultMonth="2026-03-01"
+          onValueChange={(next) => setTrip(JSON.stringify(next))}
+        >
+          <DatePicker.Field
+            range="start"
+            aria-label="Arrival"
+            className="date-field"
+            data-testid="dk2-start"
+          >
+            <DatePicker.Segments>
+              {(segment) => (
+                <DatePicker.Segment
+                  segment={segment}
+                  data-testid={`dk2-start-${segment.type}-${segment.index}`}
+                />
+              )}
+            </DatePicker.Segments>
+            <DatePicker.Input />
+          </DatePicker.Field>
+          <DatePicker.Field
+            range="end"
+            aria-label="Departure"
+            className="date-field"
+            data-testid="dk2-end"
+          >
+            <DatePicker.Segments>
+              {(segment) => (
+                <DatePicker.Segment
+                  segment={segment}
+                  data-testid={`dk2-end-${segment.type}-${segment.index}`}
+                />
+              )}
+            </DatePicker.Segments>
+            <DatePicker.Input />
+          </DatePicker.Field>
+          <DatePicker.Trigger aria-label="Pick the days" data-testid="dk2-trigger">
+            Pick
+          </DatePicker.Trigger>
+          <DatePicker.Clear data-testid="dk2-clear">Clear</DatePicker.Clear>
+          <DatePicker.Preset
+            value={{ start: "2026-03-09", end: "2026-03-15" }}
+            data-testid="dk2-week"
+          >
+            A week
+          </DatePicker.Preset>
+          <DatePicker.Portal>
+            <DatePicker.Positioner sideOffset={4} data-testid="dk2-positioner">
+              <DatePicker.Popup className="popup" aria-label="Calendar" data-testid="dk2-popup">
+                <DatePicker.Calendar className="calendar" data-testid="dk2-calendar">
+                  <DatePicker.Previous aria-label="Previous month" data-testid="dk2-previous">
+                    Previous
+                  </DatePicker.Previous>
+                  <DatePicker.Heading data-testid="dk2-heading" />
+                  <DatePicker.Next aria-label="Next month" data-testid="dk2-next">
+                    Next
+                  </DatePicker.Next>
+                  <DatePicker.Grid data-testid="dk2-grid">
+                    <thead>
+                      <tr>
+                        <DatePicker.Weekdays>
+                          {(weekday) => (
+                            <DatePicker.HeadCell weekday={weekday}>
+                              {weekday.short}
+                            </DatePicker.HeadCell>
+                          )}
+                        </DatePicker.Weekdays>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <DatePicker.Weeks>
+                        {(week) => (
+                          <tr>
+                            {week.map((day) => (
+                              <DatePicker.Cell key={day.date} date={day.date}>
+                                <DatePicker.Day date={day.date} data-testid={`dk2-${day.date}`}>
+                                  {day.label}
+                                </DatePicker.Day>
+                              </DatePicker.Cell>
+                            ))}
+                          </tr>
+                        )}
+                      </DatePicker.Weeks>
+                    </tbody>
+                  </DatePicker.Grid>
+                </DatePicker.Calendar>
+              </DatePicker.Popup>
+            </DatePicker.Positioner>
+          </DatePicker.Portal>
+        </DatePicker.Root>
+        <output data-testid="dk2-output">{trip}</output>
         <Pagination.Root
           id="pg1"
           count={200}
@@ -2365,6 +2568,12 @@ export function App() {
           Reject
         </button>
         <span data-testid="f1-sent">{sent}</span>
+        <Field.Root id="fd3" validationMode="onBlur" data-testid="fd3">
+          <Field.Label data-testid="fd3-label">Code</Field.Label>
+          <Field.Control id="fd3-own" required data-testid="fd3-control" />
+          <Field.Error data-testid="fd3-error" />
+          <Field.Error match="valueMissing" data-testid="fd3-missing" />
+        </Field.Root>
       </section>
       <section data-fixture="field-controls">
         <Form onFormSubmit={(values) => setSent2(JSON.stringify(values))} data-testid="f2">
@@ -2422,6 +2631,34 @@ export function App() {
           </button>
         </Form>
         <span data-testid="f2-sent">{sent2}</span>
+        <Field.Root id="fc6" name="title" validationMode="onBlur" data-testid="fc6">
+          <Field.Label data-testid="fc6-label">Title</Field.Label>
+          <Editable.Root
+            required
+            placeholder="Untitled"
+            className="item"
+            data-testid="fc6-editable"
+          >
+            <Editable.Preview className="editable-preview" data-testid="fc6-preview" />
+            <Editable.Input id="fc6-own" data-testid="fc6-input" />
+          </Editable.Root>
+          <Field.Error data-testid="fc6-error" />
+        </Field.Root>
+        <Field.Root id="fc7" name="at" validationMode="onBlur" data-testid="fc7">
+          <Field.Label data-testid="fc7-label">At</Field.Label>
+          <TimeField.Root required locale="en-US" className="date-field" data-testid="fc7-time">
+            <TimeField.Segments>
+              {(segment) => (
+                <TimeField.Segment
+                  segment={segment}
+                  data-testid={`fc7-${segment.type}-${segment.index}`}
+                />
+              )}
+            </TimeField.Segments>
+            <TimeField.Input />
+          </TimeField.Root>
+          <Field.Error data-testid="fc7-error" />
+        </Field.Root>
       </section>
       <section data-fixture="checkbox-group">
         <form data-testid="cg1-form">
@@ -2545,6 +2782,17 @@ export function App() {
                 </Popover.Positioner>
               </Popover.Portal>
             </Popover.Root>
+            <button type="button" data-testid="dd1-open" onClick={() => setDirDialog(true)}>
+              Open dialog
+            </button>
+            <Dialog.Root id="dd1" open={dirDialog} onOpenChange={setDirDialog}>
+              <Dialog.Portal>
+                <Dialog.Popup className="dialog" data-testid="dd1-popup">
+                  <Dialog.Title>Settings</Dialog.Title>
+                  <Dialog.Close data-testid="dd1-close">Close</Dialog.Close>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
           </DirectionProvider>
         </div>
       </section>
@@ -2776,6 +3024,35 @@ export function App() {
             Unlock
           </button>
         </div>
+        <form className="bar" data-testid="cd3-form">
+          <Combobox.Root
+            id="cd3"
+            name="city"
+            defaultValue={CITIES[2]}
+            itemToStringLabel={cityName}
+            itemToStringValue={cityCode}
+            autoHighlight
+          >
+            <Combobox.Input aria-label="City" data-testid="cd3-input" />
+            <Combobox.Portal>
+              <Combobox.Positioner sideOffset={4} data-testid="cd3-positioner">
+                <Combobox.Popup className="popup" aria-label="Cities" data-testid="cd3-popup">
+                  {CITIES.map((each) => (
+                    <Combobox.Item
+                      key={each.code}
+                      value={each}
+                      id={`cd3-${each.code}`}
+                      className="item"
+                      data-testid={`cd3-${each.code}`}
+                    >
+                      {each.name}
+                    </Combobox.Item>
+                  ))}
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>
       </section>
 
       <section data-fixture="editing">

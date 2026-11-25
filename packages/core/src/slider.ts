@@ -2,7 +2,7 @@ import { directionOf } from "./direction.ts"
 import type { DirectionAround } from "./direction.ts"
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part, PartStyle } from "./part.ts"
 import { computed, effect, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -588,7 +588,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
       props: computed(() => ({
         role: "group",
         // In a field, the id its label is `for`.
-        id: field?.controlId,
+        ...defaultId(field?.controlId),
         ...state(),
         onFocus: () => member?.focused(true),
         onBlur(event: FocusEvent) {

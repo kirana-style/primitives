@@ -14,7 +14,7 @@ import {
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { defined, effect as coreEffect } from "@kirana-ui/core"
-import type { ChangeDetails, ItemLabels, ListCollection } from "@kirana-ui/core"
+import type { ChangeDetails, ItemLabels, ListCollection, Presentation } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select, SelectGroup, SelectShown } from "@kirana-ui/core/select"
 
@@ -25,6 +25,7 @@ import {
   binder,
   drawing,
   hostPart,
+  inputAfter,
   inputsSignal,
   mounted,
   onServer,
@@ -54,11 +55,24 @@ export class KpSelect<Value = unknown> implements OnInit {
   readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
+  /**
+   * How the list opens: `"sheet"` from the bottom edge, modal, with a backdrop; `"auto"` a sheet
+   * on a narrow touch screen. Default `"popup"`.
+   */
+  readonly presentation = input<Presentation>()
+  /** With `presentation="auto"`: the viewport's width under which a coarse pointer opens a sheet. Default 640. */
+  readonly sheetBelow = input<number>()
+  /** For values that are objects: the text the trigger shows for one, and what typing matches. */
+  readonly itemToStringLabel = input<(value: Value) => string>()
+  /** For values that are objects: the text the form is sent for one. */
+  readonly itemToStringValue = input<(value: Value) => string>()
   readonly kpId = input<string>()
   readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Select<Value>
+  /** Whether the page writes its own hidden input (`kpSelectInput`): none is drawn then. */
+  written = false
   private readonly field = inject(KP_FIELD, { optional: true })
   private readonly generated = inject(KpIds).make()
   private readonly props = inputsSignal(this, () => ({
@@ -84,6 +98,10 @@ export class KpSelect<Value = unknown> implements OnInit {
       }
     },
     virtualized: this.virtualized(),
+    presentation: this.presentation(),
+    sheetBelow: this.sheetBelow(),
+    itemToStringLabel: this.itemToStringLabel(),
+    itemToStringValue: this.itemToStringValue(),
     onValueChange: (value: Value | null, details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {
@@ -150,18 +168,27 @@ export class KpSelectPositioner extends KpPositioner {
   }
 }
 
-function part(name: "trigger" | "popup" | "input") {
+function part(name: "trigger" | "popup" | "input" | "backdrop") {
   const root = inject(KpSelect)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
+/**
+ * `<button kpSelectTrigger>`. A select with a name, its own or its field's, submits its value
+ * through a hidden input drawn right after the trigger, where the other adapters draw it after
+ * the root's content.
+ */
 @Directive({ selector: "[kpSelectTrigger]" })
 export class KpSelectTrigger implements OnInit {
+  private readonly root = inject(KpSelect)
   private readonly init = part("trigger")
+  private readonly inner = inputAfter()
 
   ngOnInit(): void {
     this.init()
+    const controller = this.root.controller
+    if (!this.root.written) this.inner(controller.input, controller.named)
   }
 }
 
@@ -174,10 +201,29 @@ export class KpSelectPopup implements OnInit {
   }
 }
 
-/** `<input kpSelectInput>`: submits the value with the form around it. */
+/** `<div kpSelectBackdrop>`, in the portal: what lies over the page behind the list. */
+@Directive({ selector: "[kpSelectBackdrop]" })
+export class KpSelectBackdrop implements OnInit {
+  private readonly init = part("backdrop")
+
+  ngOnInit(): void {
+    this.init()
+  }
+}
+
+/**
+ * `<input kpSelectInput>`: submits the value with the form around it. A page that writes one
+ * keeps it, and the trigger then draws none.
+ * @deprecated The trigger draws the hidden input itself; leave this out.
+ */
 @Directive({ selector: "input[kpSelectInput]" })
 export class KpSelectInput implements OnInit {
   private readonly init = part("input")
+
+  constructor() {
+    // Made with the rest of the template, before the trigger decides in its `ngOnInit`.
+    inject(KpSelect).written = true
+  }
 
   ngOnInit(): void {
     this.init()

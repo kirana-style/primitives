@@ -430,11 +430,14 @@ export function createSlider<Value extends SliderValue = SliderValue>(
   }
 
   interface Thumb {
+    /** Takes the slider's name, read from its root, unless the page named the thumb itself. */
+    name(): void
     readonly index: ReadonlySignal<number>
     readonly part: Part
     readonly input: Part
   }
   const made = new Map<number | string, Thumb>()
+  let rootElement: Element | undefined
   const indexOf = (at: number | string) => one(at).index.peek()
   const elementAt = (index: number) => {
     for (const [at, element] of thumbs) if (indexOf(at) === index) return element
@@ -450,7 +453,24 @@ export function createSlider<Value extends SliderValue = SliderValue>(
     const index = computed(() =>
       typeof at === "number" ? at : values.get().length > 1 ? place(at) : 0
     )
+    // The name the slider was given, which is on its root: focus lands on a thumb.
+    const named = signal<{ label?: string | undefined; by?: string | undefined }>({})
     const thumb: Thumb = {
+      name() {
+        const element = thumbs.get(at)
+        // In a field the name is the field's.
+        if (!element || !rootElement || field) return
+        const was = named.peek()
+        // What the page wrote on the thumb is not what this wrote there.
+        const own = (attribute: string, written: string | undefined) => {
+          const there = element.getAttribute(attribute)
+          return there !== null && there !== written
+        }
+        if (own("aria-label", was.label) || own("aria-labelledby", was.by)) return
+        const label = rootElement.getAttribute("aria-label") ?? undefined
+        const labels = rootElement.getAttribute("aria-labelledby") ?? undefined
+        if (label !== was.label || labels !== was.by) named.set({ label, by: labels })
+      },
       index,
       part: {
         props: computed(() => {
@@ -487,6 +507,8 @@ export function createSlider<Value extends SliderValue = SliderValue>(
             "aria-orientation": orientation.get(),
             "aria-disabled": disabled.get() ? "true" : undefined,
             "aria-readonly": readOnly.get() ? "true" : undefined,
+            "aria-label": named.get().label,
+            "aria-labelledby": named.get().by,
             ...field?.aria(),
             "data-index": String(nth),
             ...state(),
@@ -499,6 +521,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
           if (!asked.includes(at)) asked.push(at)
           made.set(at, thumb)
           thumbs.set(at, element)
+          thumb.name()
           drawn.set(drawn.peek() + 1)
           const unwatch = watch(element)
           measure()
@@ -523,7 +546,32 @@ export function createSlider<Value extends SliderValue = SliderValue>(
           value: String(values.get()[index.get()] ?? range.get().min),
           disabled: flag(disabled.get()),
         })),
-        attach: (element) => inForm.attach(element),
+        attach(element) {
+          const leave = inForm.attach(element)
+          // A value written on the input and told with `change`, as a form control's is by
+          // whatever fills a form: the thumb goes there, held as a key or a drag is.
+          const told = (event: Event) => {
+            const control = element as HTMLInputElement
+            const nth = index.peek()
+            const next = Number(control.value)
+            if (
+              control.value !== "" &&
+              Number.isFinite(next) &&
+              setValue(nth, next, by("input", nth, event))
+            ) {
+              commit(nth, event)
+            } else {
+              latest = undefined
+              // Refused: the input says what the slider holds.
+              control.value = String(values.peek()[nth] ?? range.peek().min)
+            }
+          }
+          element.addEventListener("change", told)
+          return () => {
+            element.removeEventListener("change", told)
+            leave()
+          }
+        },
       },
     }
     made.set(at, thumb)
@@ -550,6 +598,9 @@ export function createSlider<Value extends SliderValue = SliderValue>(
         },
       })),
       attach(element) {
+        rootElement = element
+        // Asked as each comes into the page: which is first is its framework's business.
+        for (const each of made.values()) each.name()
         member = field?.join({
           element,
           focus: () => elementAt(0)?.focus(),
@@ -561,6 +612,7 @@ export function createSlider<Value extends SliderValue = SliderValue>(
         return () => {
           member?.leave()
           member = undefined
+          if (rootElement === element) rootElement = undefined
         }
       },
     },

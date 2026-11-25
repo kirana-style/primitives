@@ -4,8 +4,9 @@ import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, keyed, signal } from "./reactivity.ts"
-import type { ReadonlySignal } from "./reactivity.ts"
+import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createFormControl } from "./services/form-control.ts"
+import { labelledBy } from "./services/labels.ts"
 import { createPresence } from "./services/presence.ts"
 import { createRoving } from "./services/roving.ts"
 
@@ -77,6 +78,21 @@ export function createRadioGroup<Value = unknown>(
   const roving = createRoving()
   const values = new WeakMap<Element, Value>()
   const inputs = new Map<Value, HTMLInputElement>()
+  // The labels of an item's hidden radio, which name the item: a label reaches the input, and
+  // focus lands on the item.
+  const names = new Map<Value, Signal<string | undefined>>()
+  const nameOf = (item: Value) => {
+    let made = names.get(item)
+    if (!made) names.set(item, (made = signal<string | undefined>(undefined)))
+    return made
+  }
+  const radios = new Map<Value, Element>()
+  // Asked as each of the two comes into the page: which is first is its framework's business.
+  const name = (item: Value) => {
+    const input = inputs.get(item)
+    const radio = radios.get(item)
+    if (input && radio) nameOf(item).set(labelledBy(input, radio, nameOf(item).peek()))
+  }
   // What a form's reset goes back to: the value the group began with.
   const initial = value.peek()
   const inForm = createFormControl(
@@ -176,6 +192,7 @@ export function createRadioGroup<Value = unknown>(
             tabindex: !off && stop ? "0" : "-1",
             "aria-checked": String(checked.get()),
             "aria-disabled": off ? "true" : undefined,
+            "aria-labelledby": nameOf(item).get(),
             "data-checked": flag(checked.get()),
             "data-unchecked": flag(!checked.get()),
             ...state(),
@@ -193,12 +210,21 @@ export function createRadioGroup<Value = unknown>(
                 event.preventDefault()
               }
             },
-            onFocus: () => focused.set(item),
+            onFocus() {
+              name(item)
+              focused.set(item)
+            },
           }
         }),
         attach(element) {
           values.set(element, item)
-          return roving.register(element)
+          radios.set(item, element)
+          name(item)
+          const leave = roving.register(element)
+          return () => {
+            leave()
+            if (radios.get(item) === element) radios.delete(item)
+          }
         },
       }
     },
@@ -225,6 +251,7 @@ export function createRadioGroup<Value = unknown>(
         })),
         attach(element) {
           inputs.set(item, element as HTMLInputElement)
+          name(item)
           const leave = inForm.attach(element)
           // The input's live state is the group's to keep, whatever draws the element.
           const follow = effect(() => {

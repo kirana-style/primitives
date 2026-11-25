@@ -156,6 +156,16 @@ const textOf = (element: Element | null | undefined) =>
   (element?.textContent ?? "").replace(/\s+/g, " ").trim()
 const turn = (ms = 0) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
+/** What the `<label>`s of a native control say: the ones `for` it, and the one around it. */
+const labelled = (control: Element | null | undefined) =>
+  [...((control as HTMLInputElement | null | undefined)?.labels ?? [])]
+    .map(textOf)
+    .filter(Boolean)
+    .join(" ") || undefined
+
+// A control drawn on an element of its own, with the native input a form and a label know inside.
+const HOLDS_INPUT = '[role="switch"], [role="checkbox"], [role="radio"], [role="slider"]'
+
 /** An element's accessible name, as far as a page says it plainly. */
 function nameOf(element: Element): string | undefined {
   const page = element.ownerDocument
@@ -176,16 +186,28 @@ function nameOf(element: Element): string | undefined {
   }
   const around = element.closest("label")
   if (around) return textOf(around)
+  // A label `for` the hidden input inside it is how a page names such a control.
+  if (element.matches(HOLDS_INPUT)) {
+    const inner = labelled(element.querySelector("input"))
+    if (inner) return inner
+  }
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)
     return element.placeholder || undefined
   return textOf(element) || undefined
 }
 
+/** Marked by the page as not to be read back: whatever kind of control it is. */
+const marked = (element: Element) => element.closest("[data-agent-secret]") !== null
+
 function secret(element: Element): boolean {
-  if (element.closest("[data-agent-secret]")) return true
+  if (marked(element)) return true
   if (!(element instanceof HTMLInputElement)) return false
   return element.type === "password" || SECRET.test(element.autocomplete)
 }
+
+/** A choice of a radio group or a tab list: its name, or else the value its input submits. */
+const choiceOf = (element: Element) =>
+  nameOf(element) ?? (element.querySelector("input") as HTMLInputElement | null)?.value ?? ""
 
 const off = (element: Element) =>
   (element as HTMLButtonElement).disabled === true ||
@@ -228,9 +250,35 @@ export function createAgent(given: AgentOptions = {}): Agent {
 
   const kindOf = (element: Element) => KINDS.find(([, selector]) => element.matches(selector))?.[0]
 
+  /**
+   * Where the agent may read: the root, and what was opened from inside it wherever the page
+   * drew it. A popup is moved to the end of the page, and a modal one makes the root inert: it
+   * is still the root's, by the `aria-controls` of what opened it.
+   */
+  function reach(): ParentNode[] {
+    const places: ParentNode[] = [root]
+    if (root === page) return places
+    // The list grows as it is walked: a popup opened from a popup is reached too.
+    for (const place of places) {
+      for (const opener of place.querySelectorAll('[aria-expanded="true"][aria-controls]')) {
+        if (opener.closest("[data-agent-hidden]")) continue
+        for (const id of opener.getAttribute("aria-controls")!.split(/\s+/)) {
+          const popup = id ? page.getElementById(id) : null
+          if (popup && !places.some((each) => each.contains(popup))) places.push(popup)
+        }
+      }
+    }
+    return places
+  }
+
   /** The elements an agent is shown: each matched once, by the first kind that fits. */
   function found(): Element[] {
-    return [...root.querySelectorAll(EVERY)].filter((element) => {
+    const all = reach().flatMap((place) => [
+      // A popup reached from the root is itself something to read (a dialog); the root is not.
+      ...(place !== root && (place as Element).matches(EVERY) ? [place as Element] : []),
+      ...place.querySelectorAll(EVERY),
+    ])
+    return all.filter((element) => {
       if (element.closest(HIDDEN)) return false
       // A radio, a tab and an option are their group's; a part's own buttons its component's.
       if (element.matches('[role="radio"], [role="tab"], [role="option"]')) return false
@@ -238,7 +286,16 @@ export function createAgent(given: AgentOptions = {}): Agent {
     })
   }
 
+  /** What is read of an element, less what its page marked as not to be read back. */
   function read(element: Element): AgentComponent {
+    const all = readAll(element)
+    if (!marked(element)) return all
+    // Its name and what it can be asked stay: an agent may set what it was told, unread.
+    const { items: _items, checked: _checked, ...rest } = all
+    return rest.value === undefined || rest.value === "" ? rest : { ...rest, value: REDACTED }
+  }
+
+  function readAll(element: Element): AgentComponent {
     const component = kindOf(element) ?? "button"
     const disabled = off(element)
     const label = nameOf(element)
@@ -271,13 +328,10 @@ export function createAgent(given: AgentOptions = {}): Agent {
       case "radio-group": {
         const radios = [...element.querySelectorAll('[role="radio"]')]
         const chosen = radios.find((each) => each.getAttribute("aria-checked") === "true")
-        const items = radios.map((each) => ({
-          value: nameOf(each) ?? "",
-          label: nameOf(each) ?? "",
-        }))
+        const items = radios.map((each) => ({ value: choiceOf(each), label: choiceOf(each) }))
         return {
           ...base,
-          ...(chosen ? { value: nameOf(chosen) ?? "" } : {}),
+          ...(chosen ? { value: choiceOf(chosen) } : {}),
           items,
           actions: change("setValue"),
         }
@@ -346,6 +400,8 @@ export function createAgent(given: AgentOptions = {}): Agent {
     const known = elements.get(name)?.deref()
     if (known?.isConnected) return known
     const wanted = plain(name)
+    // A control with no name is asked by its ref: an empty name must not find it.
+    if (!wanted) throw new Error("A step names a component by its ref or its label")
     const matches = found().filter((each) => plain(nameOf(each) ?? "") === wanted)
     if (matches.length === 1) return matches[0]!
     if (matches.length === 0) throw new Error(`Nothing is called "${name}"`)
@@ -391,12 +447,13 @@ export function createAgent(given: AgentOptions = {}): Agent {
     asAgent(() => (option as HTMLElement).click())
   }
 
+  /** Does the step. What it returns is said as the step's failure, once what it did is kept. */
   async function perform(
     element: Element,
     component: string,
     action: string,
     args: readonly unknown[]
-  ) {
+  ): Promise<string | void> {
     const [first] = args
     const press = () => asAgent(() => (element as HTMLElement).click())
     const listOf = () => page.getElementById(element.getAttribute("aria-controls") ?? "")
@@ -429,23 +486,41 @@ export function createAgent(given: AgentOptions = {}): Agent {
       case "tabs.setValue": {
         const role = component === "tabs" ? "tab" : "radio"
         const target = [...element.querySelectorAll(`[role="${role}"]`)].find(
-          (each) => plain(nameOf(each) ?? "") === plain(String(first))
+          (each) => plain(role === "tab" ? textOf(each) : choiceOf(each)) === plain(String(first))
         )
         if (!target) throw new Error(`It has no choice "${String(first)}"`)
         return asAgent(() => (target as HTMLElement).click())
       }
       case "slider.setValue": {
         const wanted = Number(first)
+        if (!Number.isFinite(wanted)) throw new Error(`"${String(first)}" is not a number`)
         const now = () => Number(element.getAttribute("aria-valuenow"))
+        // At once, through the native input a thumb holds: what a form control's own change does.
+        const input = element.querySelector("input")
+        if (input && now() !== wanted) {
+          asAgent(() => {
+            Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
+              input,
+              String(wanted)
+            )
+            input.dispatchEvent(new Event("input", { bubbles: true }))
+            input.dispatchEvent(new Event("change", { bubbles: true }))
+          })
+          await until(() => now() === wanted, 100)
+        }
         ;(element as HTMLElement).focus()
-        // By its own keys, a step at a time: held to its range and its step as a person's is.
+        // Else by its own keys, a step at a time: held to its range and its step as a person's is.
         for (let moves = 0; moves < 2000 && now() !== wanted; moves++) {
           const before = now()
           asAgent(() => key(element, wanted > before ? "ArrowRight" : "ArrowLeft"))
+          // A framework draws the new value in its own time: the next key waits for it.
+          if (now() === before) await turn()
+          if (now() === before && !(await until(() => now() !== before, 200))) break
           const after = now()
-          if (after === before || (wanted > before ? after > wanted : after < wanted)) break
+          if (wanted > before ? after > wanted : after < wanted) break
         }
-        return
+        // Its range or its step may not hold the value asked for: said, never passed as done.
+        return now() === wanted ? undefined : `It holds ${now()}, not ${wanted}`
       }
       case "input.setValue":
       case "number-field.setValue":
@@ -482,6 +557,8 @@ export function createAgent(given: AgentOptions = {}): Agent {
   /** The step that puts a component back as it was read. */
   function back(change: (typeof changes)[number]): AgentStep | undefined {
     const { before, ref } = change
+    // What was not read cannot be put back.
+    if (before.value === REDACTED) return undefined
     if (before.checked !== undefined && before.checked !== "mixed")
       return { ref, action: "setChecked", args: [before.checked] }
     if (
@@ -546,10 +623,10 @@ export function createAgent(given: AgentOptions = {}): Agent {
         if (action.confirm !== undefined) {
           // A policy that says yes to everything must not answer for a person.
           if (!given.confirm) throw new Error(`Needs a person: ${action.confirm}`)
-          const marked = action as AgentAction & { readonly confirm: string }
-          if (!(await given.confirm(marked))) throw new Error(`Declined: ${action.confirm}`)
+          const asked = action as AgentAction & { readonly confirm: string }
+          if (!(await given.confirm(asked))) throw new Error(`Declined: ${action.confirm}`)
         }
-        await perform(element, now.component, step.action, action.args)
+        const short = await perform(element, now.component, step.action, action.args)
         // A framework has its turn, and a popup its first frame.
         await turn(20)
         const after = element.isConnected ? read(element) : undefined
@@ -570,6 +647,7 @@ export function createAgent(given: AgentOptions = {}): Agent {
           })
           standing = changes.length
         }
+        if (short) throw new Error(short)
       } catch (error) {
         return {
           ok: false,
@@ -625,12 +703,13 @@ export function createAgent(given: AgentOptions = {}): Agent {
       }, 30)
     }
     const observer = new MutationObserver(look)
-    observer.observe(root, { subtree: true, childList: true, attributes: true })
-    root.addEventListener("input", look, true)
+    // The whole page: what the root opened is drawn outside it.
+    observer.observe(page, { subtree: true, childList: true, attributes: true })
+    page.addEventListener("input", look, true)
     return () => {
       clearTimeout(timer)
       observer.disconnect()
-      root.removeEventListener("input", look, true)
+      page.removeEventListener("input", look, true)
     }
   }
 

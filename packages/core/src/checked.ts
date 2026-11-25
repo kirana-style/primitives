@@ -2,12 +2,16 @@ import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
-import { computed, effect } from "./reactivity.ts"
+import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { createFormControl } from "./services/form-control.ts"
+import { labelledBy } from "./services/labels.ts"
 
 export interface CheckedProps {
-  /** Unique in the page, and the hidden input's id: a `<label for>` names it. */
+  /**
+   * Unique in the page, and the hidden input's id: a `<label for>` names it, and the control
+   * takes that label as its own name (`aria-labelledby`) unless it was given one.
+   */
   id: string
   /** Whether it is checked, when the caller holds it. */
   checked?: boolean | undefined
@@ -88,6 +92,14 @@ export function createChecked(
   const checked: ReadonlySignal<boolean> = held ? computed(() => held.checked()) : own
   const readOnly = computed(() => Boolean(props.get().readOnly))
   let input: HTMLInputElement | undefined
+  // The labels of the hidden input, which name the box: a label reaches the input, and focus
+  // lands on the box. In a field the name is the field's to give.
+  const named = signal<string | undefined>(undefined)
+  let box: Element | undefined
+  // Asked as each of the two comes into the page: which is first is its framework's business.
+  const name = () => {
+    if (input && box && !field) named.set(labelledBy(input, box, named.peek()))
+  }
   let member: FieldMembership | undefined
   const submitted = (on: boolean) => (on ? (props.peek().value ?? "on") : "")
   // What a form's reset goes back to: the value the control began with.
@@ -165,9 +177,14 @@ export function createChecked(
         "aria-disabled": disabled.get() ? "true" : undefined,
         "aria-readonly": readOnly.get() ? "true" : undefined,
         "aria-required": props.get().required ? "true" : undefined,
+        "aria-labelledby": named.get(),
         ...field?.aria(),
         ...state(),
-        onFocus: () => member?.focused(true),
+        onFocus() {
+          // A label drawn since the box was: read as focus lands, which is when it is said.
+          name()
+          member?.focused(true)
+        },
         onBlur: () => member?.focused(false),
         onClick(event: Event) {
           // The input's own click, come up from inside: the press is already on its way.
@@ -187,6 +204,8 @@ export function createChecked(
         },
       })),
       attach(element) {
+        box = element
+        name()
         member = field?.join({
           element,
           focus: () => element.focus(),
@@ -200,6 +219,7 @@ export function createChecked(
           leave?.()
           member?.leave()
           member = undefined
+          if (box === element) box = undefined
         }
       },
     },
@@ -232,6 +252,7 @@ export function createChecked(
       })),
       attach(element) {
         input = element as HTMLInputElement
+        name()
         const leave = inForm.attach(element)
         // The input's live state is the control's to keep, whatever draws the element: a
         // framework writes it in its own time, or not at all once the page is drawn.

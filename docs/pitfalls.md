@@ -948,6 +948,34 @@ note. Three places hold them:
   handlers and callback like any other and only its `source` differs. Whether a change is
   the agent's is known when its details are made, not when they are read: a callback may
   read them after the agent's turn is over.
+- **A label names the input, and focus lands on the box.** A switch, a checkbox and a radio
+  hold a hidden native input, and a `<label for>` (or a label around the control) is that
+  input's: a press on it works, and the element with the role, the one focus lands on, had no
+  name for a screen reader or for an agent. The control reads its input's `labels` when the
+  input is in the page, and again as focus lands, and writes `aria-labelledby` on itself
+  (`services/labels.ts`), giving a label an id where it has none; a control the page named
+  itself, or one in a `Field`, is left as it is. A slider's name is on its root, and each
+  thumb takes it. Held by `tests/core/agent.test.ts` ("names a switch by the label of its
+  hidden input", "leaves a switch the page named itself", "reads a radio group's choices").
+- **A step that reports `ok` must have done what it was asked.** The bridge set a slider by
+  pressing an arrow and reading `aria-valuenow` in the same turn: a framework that draws
+  later had not moved it yet, so the loop stopped after one key and the step said `ok`. A
+  thumb's input now takes a value written on it and told with `change`, the bridge waits for
+  each key to show before the next, and a slider that does not hold the value asked for
+  fails the step with what it holds ("sets a slider at once through its thumb's input").
+- **A mark that hides is asked of every kind.** `data-agent-secret` redacted what an input
+  held and left a select's value, a slider's and a switch's state readable. It is applied
+  after a control is read, whatever its kind, and a change over a value that was not read is
+  not offered to `undo`, which would have typed the word "redacted" ("hides whatever is
+  inside a secret mark").
+- **An empty name is nobody's.** A step whose `ref` was empty matched the one control with
+  no label, since both normalised to nothing, and pressed it ("refuses a step that names
+  nothing").
+- **What a root opened is the root's, wherever it is drawn.** A bridge given a `root` read
+  under it only: a modal dialog opened from inside is drawn at the end of the page and makes
+  the root inert, so the snapshot came back empty. The bridge follows the `aria-controls` of
+  what is expanded under its root, and of what is expanded in those ("sees what a narrowed
+  root opened").
 - **A length is a share once there is something to measure.** A drawer's snap point given
   as `"148px"` is whole until the drawer is in the page: so "the smallest of its places" is
   not decided when the controller is made, where a length looked like the largest.

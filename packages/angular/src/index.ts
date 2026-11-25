@@ -271,7 +271,7 @@ export {
 } from "./field"
 export { KpFieldset, KpFieldsetLegend } from "./fieldset"
 export { KpForm } from "./form"
-export { KpDirection, injectDirection } from "./direction"
+export { KpDirection, injectDirection, injectDirectionAround } from "./direction"
 export { KpPortalProvider } from "./portal"
 // What a design system's directive gives a primitive it hosts.
 export { hostInputs } from "./runtime"

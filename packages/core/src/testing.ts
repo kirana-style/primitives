@@ -73,8 +73,16 @@ export function faults(
   options: FaultOptions = {}
 ): string[] {
   const found: string[] = []
-  // The page's own test ids, and the mark on what the library draws at the page's end.
-  const allow = new Set(["data-testid", "data-kirana-portal", ...(options.allow ?? [])])
+  // The page's own test ids, the mark on what the library draws at the page's end, and the
+  // marks a page writes for the agent bridge, which are the library's too.
+  const allow = new Set([
+    "data-testid",
+    "data-kirana-portal",
+    "data-agent-confirm",
+    "data-agent-hidden",
+    "data-agent-secret",
+    ...(options.allow ?? []),
+  ])
   const free = new Set([...FREE, ...(options.free ?? [])])
   const page = root instanceof Document ? root : (root.ownerDocument ?? document)
   const called = (element: Element) =>

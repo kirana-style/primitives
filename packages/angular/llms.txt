@@ -8,7 +8,7 @@ This file describes the version it ships with. What changed in each release, the
 
 ## Install and entries
 
-Install `@kirana-ui/angular`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/angular/agent`, `@kirana-ui/angular/testing`), so nothing is imported from a package the project did not install. It runs on the project's own `@angular/core` >=20.0.0.
+Install `@kirana-ui/angular`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/angular/agent`, `@kirana-ui/angular/testing`), so nothing is imported from a package the project did not install. The one exception is a component of your own, built on `@kirana-ui/core/authoring`: its controller imports the core by name, so that project installs `@kirana-ui/core` too, at this package's exact version (they must be one copy). It runs on the project's own `@angular/core` >=20.0.0.
 
 Its entries: `@kirana-ui/angular` (every directive, and what a directive of your own is made with), `@kirana-ui/angular/agent` and `@kirana-ui/angular/testing`. There is no entry per component: Angular's packager writes one module, which a project's build takes apart.
 
@@ -240,6 +240,7 @@ What the entries export beside the components, their parts' props types and the 
 - `HostInputs`, from `@kirana-ui/angular`: What a directive hosting a primitive gives the primitive's inputs: each a function read like a signal (a signal, a `computed`, `() => 0`), so a value worked out from the host's own inputs follows them.
 - `hostPart()`, from `@kirana-ui/angular`: Puts a part on the directive's host element: the core writes its attributes and listens for its events itself, so nothing waits for change detection. Returns a function to call in `ngOnInit`, when the part's controller exists.
 - `injectDirection()`, from `@kirana-ui/angular`: The direction the nearest `kpDirection` states; `ltr` outside one.
+- `injectDirectionAround()`, from `@kirana-ui/angular`: The reading direction a `kpDirection` around this directive states, as the signal a controller takes (`{ direction }`); `undefined` outside one, where the controller reads the direction its element is laid out in. For a directive of your own: the library's read the same.
 - `innerPart(tag: string)`, from `@kirana-ui/angular`: A part the directive draws itself, as the last child of its host: the hidden native input of a form control, which the caller does not write. Returns a function to call in `ngOnInit`.
 - `InputsOf`, from `@kirana-ui/angular`: The inputs of a directive, by the name its class gives each, and the value each reads (after its transform): `InputsOf<KpTooltip>["delay"]` is `number | undefined`.
 - `inputsSignal(read: () => T)`, from `@kirana-ui/angular`: A core signal that follows a directive's inputs. Call it where injection works (a field initialiser or the constructor); `read` first runs when the directive's inputs are set. Given its directive (`inputsSignal(this, () => …)`), what a host gives it through `hostInputs` is laid over the inputs the element does not bind: the directive then calls `bound(changes)` from its `ngOnChanges`.
@@ -325,7 +326,7 @@ The kinds of component it reads, what each is found by, and the actions each tak
 - `menu-item` (`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`): `press`
 - `button` (`button, [role="button"]`): `press`
 
-`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
+`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and what it must not read with `data-agent-secret`: a control inside it is listed with its name and its actions, never its value, its choices or whether it is checked. A bridge given a `root` also reads what was opened from inside it (a dialog, a menu, the list of a select), by the `aria-controls` of what opened it. `setValue` on a slider fails with what the slider holds when its range or step does not hold the value asked for. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
 
 What `act`, `undo` and `redo` resolve with, and what `history` lists:
 

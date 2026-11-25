@@ -241,13 +241,16 @@ const subjects = (() => {
 /**
  * A serialized page without what only a browser adds: the geometry it measures, and the name a
  * part takes from an optional part (a progress bar's label, a fieldset's legend, a field's
- * description, a command group's heading), which is known once that part is in the page.
+ * description, a command group's heading), which is known once that part is in the page. So is
+ * the name a switch, a checkbox or a radio takes from its hidden input's `<label>`, and the id
+ * that label is given for it.
  */
 const withoutStyles = (dom: string) =>
   dom
     .replace(/ style="[^"]*"/g, "")
     .replace(/ aria-labelledby="[^"]*-(label|legend|heading)"/g, "")
     .replace(/ aria-describedby="[^"]*-description"/g, "")
+    .replace(/^(\s*<label[^\n]*?) id="[^"]*-label"/gm, "$1")
     // Whether a field has a value is its control's to say, once the control is in the page.
     .replace(/ data-filled/g, "")
     // Whether a combobox's button stands alone (its input is in the popup) is known once the

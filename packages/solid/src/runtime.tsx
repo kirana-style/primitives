@@ -1,5 +1,6 @@
 import { forElement, mergeProps, sameProps, signal, stateOf, untype } from "@kirana-ui/core"
 import type {
+  Direction,
   Part as CorePart,
   PartEvent,
   PartProps,
@@ -23,6 +24,8 @@ import {
 } from "solid-js"
 import { Dynamic, Portal as SolidPortal, isServer } from "@solidjs/web"
 import type { JSX } from "@solidjs/web"
+
+import { DirectionContext } from "./direction-context.ts"
 
 /** A core signal as a Solid accessor: tracked by whatever calls it. */
 export function fromSignal<T>(source: ReadonlySignal<T>): () => T {
@@ -281,4 +284,14 @@ export function Portal(props: { mounted: ReadonlySignal<boolean>; children?: JSX
       </SolidPortal>
     </Show>
   )
+}
+
+/**
+ * The reading direction a `DirectionProvider` around this component states, as the signal a
+ * controller takes (`within(createX, { direction })`); `undefined` outside one, where the
+ * controller reads the direction its element is laid out in. For a component of your own: the
+ * library's parts read the same.
+ */
+export function useDirectionAround(): ReadonlySignal<Direction> | undefined {
+  return useContext(DirectionContext) ?? undefined
 }

@@ -11,6 +11,7 @@ import {
 } from "@kirana-ui/core"
 import type {
   Anchor,
+  Direction,
   Part,
   PartEvent,
   PartProps,
@@ -49,6 +50,8 @@ import type {
 } from "react"
 import { createPortal } from "react-dom"
 
+import { DirectionContext } from "./direction-context.ts"
+
 import { REF_IS_A_PROP, give, refOf } from "./element.ts"
 
 /** A layout effect in the browser, an effect (which never runs) on a server. */
@@ -69,7 +72,9 @@ export function useSignal<T>(source: ReadonlySignal<T>): T {
  */
 export function useController<P extends object, C extends { mount(): () => void }>(
   create: (props: ReadonlySignal<P>) => C,
-  props: Omit<P, "id"> & { id?: string | undefined }
+  // The maker says what the props are: read from the props too, a maker written in place
+  // (`within(createX, around)`) had them come out as `object`.
+  props: NoInfer<Omit<P, "id"> & { id?: string | undefined }>
 ): C {
   const generated = useId()
   const next = { ...props, id: props.id ?? generated } as P
@@ -542,4 +547,14 @@ export function Portal({ children }: PortalProps): ReactElement | null {
   useIsomorphicLayoutEffect(() => setReady(true), [])
   if (!ready) return null
   return createPortal(<div data-kirana-portal="">{children}</div>, container ?? document.body)
+}
+
+/**
+ * The reading direction a `DirectionProvider` around this component states, as the signal a
+ * controller takes (`within(createX, { direction })`); `undefined` outside one, where the
+ * controller reads the direction its element is laid out in. For a component of your own: the
+ * library's parts read the same.
+ */
+export function useDirectionAround(): ReadonlySignal<Direction> | undefined {
+  return useContext(DirectionContext) ?? undefined
 }

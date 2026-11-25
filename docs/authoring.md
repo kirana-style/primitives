@@ -13,6 +13,13 @@ React, Vue, Svelte, Solid and Angular.
 
 These entries change only as the components do: a release that breaks one says so.
 
+**A component of your own installs `@kirana-ui/core` itself, at the exact version of the
+adapter beside it.** An application never needs to: the adapter brings the core with it. But a
+controller is plain TypeScript that imports the core by name, and a strict installer keeps a
+package the project did not list out of its reach. The two must be one copy (a signal made by
+one core is not followed by another), which the same version of both guarantees: every
+`@kirana-ui/*` package is released together under one version.
+
 ## The shape of a controller
 
 ```ts
@@ -201,6 +208,25 @@ const stops = [
   rating.mount(),
 ]
 ```
+
+### The reading direction
+
+`createRoving` and the placement services follow the reading direction. A controller takes it
+as `around.direction`, the signal a `DirectionProvider` states, and reads the direction its
+element is laid out in when there is none (`directionOf(element, around.direction)`), so the
+page's own `dir` is followed with no provider. Each adapter's runtime gives that signal, the
+one the library's own parts read: `useDirectionAround()` from `@kirana-ui/react/runtime`
+(and `vue`, `svelte`, `solid`), `injectDirectionAround()` from `@kirana-ui/angular`. It is
+`undefined` outside a provider; pass it on as it is, never a default in its place, or the
+default would be followed over the page's `dir`.
+
+```tsx
+const direction = useDirectionAround()
+const made = useController(within(createReactions, { direction }), props)
+```
+
+`useDirection()` is for drawing (an icon that points the other way): it answers `"ltr"`
+outside a provider, which is not what a controller should be given.
 
 In React, `useController` makes the controller once and keeps its props current, and
 `usePart` draws a part: the caller's props merged under the part's (its attributes win, its

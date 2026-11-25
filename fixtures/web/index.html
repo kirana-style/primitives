@@ -2642,7 +2642,7 @@
                   data-testid="pw1-input"
                 />
                 <button kui-part="toggle" data-testid="pw1-toggle">
-                  <span kui-part="indicator" class="eye" data-testid="pw1-indicator"></span>
+                  <span kui-part="indicator" class="eye" data-testid="pw1-indicator">hidden</span>
                 </button>
                 <output form="" data-testid="pw1-output">false</output>
               </div>
@@ -2667,7 +2667,12 @@
                     ></template
                   >
                 </div>
-                <input kui-part="input" aria-label="Add a color" data-testid="ti1-input" />
+                <input
+                  kui-part="input"
+                  id="ti1-entry"
+                  aria-label="Add a color"
+                  data-testid="ti1-input"
+                />
                 <button kui-part="clear" data-testid="ti1-clear">Clear</button>
                 <output form="" data-testid="ti1-output">red,green</output>
                 <output form="" data-testid="ti1-refused"></output>

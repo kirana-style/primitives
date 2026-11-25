@@ -348,9 +348,10 @@ element("kui-editable", "ed1").addEventListener("value-change", (event) => {
   find("ed1-output").textContent = (event as CustomEvent<{ value: string }>).detail.value
 })
 document.querySelector("kui-password-input")!.addEventListener("visible-change", (event) => {
-  find("pw1-output").textContent = String(
-    (event as CustomEvent<{ visible: boolean }>).detail.visible
-  )
+  const { visible } = (event as CustomEvent<{ visible: boolean }>).detail
+  find("pw1-output").textContent = String(visible)
+  // What the other pages draw from the indicator's state, which a plain page writes itself.
+  find("pw1-indicator").textContent = visible ? "shown" : "hidden"
 })
 
 // What the callers of the "tagging" section heard: tags, what was refused, files, a time.

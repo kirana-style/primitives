@@ -10,12 +10,12 @@ import type { ElementOf } from "./runtime.ts"
 const keyOf = (element: HTMLElement) => entryAround<FileUploadEntry>(element)?.key
 
 /**
- * `<kui-file-upload>` around `kui-part="root"`, which holds a `dropzone` (with a `trigger`
- * button inside, if the page wants one), a `list` with a `<template kui-each="items">` for a
+ * `<kui-file-upload>` around `kui-part="root"`, which holds a `trigger` button (in a
+ * `dropzone`, or beside one, or with none), a `list` with a `<template kui-each="items">` for a
  * file (`{name}`, `{size}` in bytes, `{type}` and `{index}` are its own), and a `clear` button.
  * An `item` holds its `item-name` and `item-size`, which say the file's name and its size as
  * people read one (in the language of its `kui-locale`) unless the page wrote something, and an
- * `item-remove` button. The dropzone draws the native file input, hidden, as its last child.
+ * `item-remove` button. The root draws the native file input, hidden, as its last child.
  * `accept`, `multiple`, `max-files`, `max-size`, `min-size`, `disabled`, `required`, `name`,
  * `form`; `files`, `default-files` and `validate` as properties. It tells `files-change` and
  * `files-reject` (`detail.rejections`).
@@ -52,8 +52,8 @@ export const tag = defineElement<FileUploadProps, FileUpload>({
     }),
   },
   parts: {
-    root: (controller) => controller.root,
-    dropzone: (controller) => ({ part: controller.dropzone, inner: controller.input }),
+    root: (controller) => ({ part: controller.root, inner: controller.input }),
+    dropzone: (controller) => controller.dropzone,
     trigger: (controller) => controller.trigger,
     list: (controller) => controller.list,
     item(controller, element) {

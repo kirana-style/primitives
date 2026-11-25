@@ -101,7 +101,7 @@ const IDIOM: Record<Adapter, string[]> = {
     "A `Positioner`'s `anchor` is an element, a ref object (`useRef`), an object with `getBoundingClientRect`, or a function that gives one of those.",
     "Works in React 18 and 19, on a server, and in StrictMode.",
     "A part that says a value draws what a function child makes of it instead: `<Select.Value>{(value, label) => …}</Select.Value>` (with `multiple`, `(values, labels)`, in the items' order), `<Slider.Value>{(text, values) => …}</Slider.Value>`.",
-    "Each part's props are a type of the same entry, named for the part: `import type { TabProps } from \"@kirana-ui/react/tabs\"`. They are the part's own props listed below, `render`, `ref`, and the props of the element it draws.",
+    "Each part's props are a type of the same entry, named for the part alone, without the component's name: `Tabs.Root`'s are `RootProps`, `Tabs.Tab`'s `TabProps`, `Tabs.Panel`'s `PanelProps` (`import type { RootProps, TabProps } from \"@kirana-ui/react/tabs\"`); a component of one part names them for itself (`ButtonProps`). They are the part's own props listed below, `render`, `ref`, and the props of the element it draws.",
   ],
   vue: [
     "Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.",
@@ -115,7 +115,7 @@ const IDIOM: Record<Adapter, string[]> = {
     'A part that draws a list gives each entry to its slot: `v-slot="{ segment }"`.',
     'A part that says a value gives it to its slot, to draw something else: `<Select.Value v-slot="{ value, label }">` (with `multiple`, `{ values, labels }`, in the items\' order), `<Slider.Value v-slot="{ text, values }">`.',
     'A `Positioner`\'s `anchor` is a template ref to an element or a component (`:anchor="box"`), an element, an object with `getBoundingClientRect`, or a function that gives one of those.',
-    'Each part\'s props are a type of the same entry, named for the part, and its events another: `import type { RootProps, RootEmits } from "@kirana-ui/vue/tabs"`. A part also takes `as`, `as-child` and the attributes of the element it draws.',
+    "Each part's props are a type of the same entry, named for the part alone, without the component's name, and its events another: `Tabs.Root`'s are `RootProps` and `RootEmits`, `Tabs.Tab`'s `TabProps` (`import type { RootProps, RootEmits, TabProps } from \"@kirana-ui/vue/tabs\"`); a component of one part names them for itself (`ButtonProps`). A part also takes `as`, `as-child` and the attributes of the element it draws.",
   ],
   svelte: [
     "Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.",
@@ -129,7 +129,7 @@ const IDIOM: Record<Adapter, string[]> = {
     "A part that says a value gives it to its `children` snippet, to draw something else: in `<Select.Value>`, `{#snippet children({ value, label })}…{/snippet}` (with `multiple`, `{ values, labels }`, in the items' order); in `<Slider.Value>`, `{#snippet children(text, values)}…{/snippet}`.",
     "A `Positioner`'s `anchor` is an element (what `bind:this` filled), an object with `getBoundingClientRect`, or a function that gives one of those.",
     "Svelte 5.",
-    "Each part's props are a type of the same entry, named for the part: `import type { TabProps } from \"@kirana-ui/svelte/tabs\"`. They are the part's own props listed below, `child`, and the attributes of the element it draws.",
+    "Each part's props are a type of the same entry, named for the part alone, without the component's name: `Tabs.Root`'s are `RootProps`, `Tabs.Tab`'s `TabProps`, `Tabs.Panel`'s `PanelProps` (`import type { RootProps, TabProps } from \"@kirana-ui/svelte/tabs\"`); a component of one part names them for itself (`ButtonProps`). They are the part's own props listed below, `child`, and the attributes of the element it draws.",
   ],
   solid: [
     "Each component is a namespace of parts: `<Dialog.Root>`, `<Dialog.Trigger>`. A component with one part is the component: `<Button>`.",
@@ -142,7 +142,7 @@ const IDIOM: Record<Adapter, string[]> = {
     "A part that draws a list gives each entry to its function child: `{(segment) => …}`.",
     "A part that says a value gives it to a function child, as accessors, to draw something else: `<Select.Value>{(value, label) => <>{label()}</>}</Select.Value>` (with `multiple`, `(values, labels)`, in the items' order), `<Slider.Value>{(text, values) => …}</Slider.Value>`.",
     "A `Positioner`'s `anchor` is an element, an object with `getBoundingClientRect`, or a function that gives one of those: a signal's accessor, or `() => element` for a variable a `ref` fills.",
-    "Each part's props are a type of the same entry, named for the part: `import type { TabProps } from \"@kirana-ui/solid/tabs\"`. They are the part's own props listed below, `as`, `render`, and the attributes of the element it draws.",
+    "Each part's props are a type of the same entry, named for the part alone, without the component's name: `Tabs.Root`'s are `RootProps`, `Tabs.Tab`'s `TabProps`, `Tabs.Panel`'s `PanelProps` (`import type { RootProps, TabProps } from \"@kirana-ui/solid/tabs\"`); a component of one part names them for itself (`ButtonProps`). They are the part's own props listed below, `as`, `render`, and the attributes of the element it draws.",
   ],
   angular: [
     "Each part is a standalone directive on the caller's own element: `<button kpDialogTrigger>`. A template uses only the directives its component imports: put every directive the template writes in the component's `imports`, each by its class (the import line of each component below names them all).",
@@ -164,6 +164,86 @@ const IDIOM: Record<Adapter, string[]> = {
 /** What a tooltip's wait is, and how a design system changes it: no provider, on any framework. */
 const TOOLTIP_WAIT =
   "Tooltips need no provider: one is open at a time across the page, and while one shows the next opens without its wait, by themselves. A tooltip waits 600 ms before it opens (a hover card 600 ms, and 300 ms before it closes)."
+
+/**
+ * A component composed with another, said by hand where its own parts do not show it: the
+ * code each framework writes (React's and Vue's are rendered on a server by hand to check
+ * what the trigger draws), then what holds on every framework.
+ */
+const COMPOSED: Record<string, { code: Record<Adapter, string[]>; said: string }> = {
+  ColorPicker: {
+    code: {
+      react: [
+        '<ColorPicker.Root defaultValue="#3b82f6">',
+        "  <Popover.Root>",
+        '    <ColorPicker.Swatch render={<Popover.Trigger aria-label="Colour" />} />',
+        "    <Popover.Portal><Popover.Positioner><Popover.Popup>",
+        "      <ColorPicker.Area><ColorPicker.AreaThumb /></ColorPicker.Area>",
+        '      <ColorPicker.ChannelSlider channel="hue">',
+        "        <ColorPicker.ChannelSliderTrack><ColorPicker.ChannelSliderThumb /></ColorPicker.ChannelSliderTrack>",
+        "      </ColorPicker.ChannelSlider>",
+        "    </Popover.Popup></Popover.Positioner></Popover.Portal>",
+        "  </Popover.Root>",
+        "</ColorPicker.Root>",
+      ],
+      vue: [
+        '<ColorPicker.Root default-value="#3b82f6">',
+        "  <Popover.Root>",
+        '    <ColorPicker.Swatch as-child><Popover.Trigger aria-label="Colour" /></ColorPicker.Swatch>',
+        "    <Popover.Portal><Popover.Positioner><Popover.Popup>",
+        "      <ColorPicker.Area><ColorPicker.AreaThumb /></ColorPicker.Area>",
+        '      <ColorPicker.ChannelSlider channel="hue">',
+        "        <ColorPicker.ChannelSliderTrack><ColorPicker.ChannelSliderThumb /></ColorPicker.ChannelSliderTrack>",
+        "      </ColorPicker.ChannelSlider>",
+        "    </Popover.Popup></Popover.Positioner></Popover.Portal>",
+        "  </Popover.Root>",
+        "</ColorPicker.Root>",
+      ],
+      svelte: [
+        '<ColorPicker.Root defaultValue="#3b82f6">',
+        "  <Popover.Root>",
+        "    <ColorPicker.Swatch>",
+        '      {#snippet child({ props })}<Popover.Trigger {...props} aria-label="Colour" />{/snippet}',
+        "    </ColorPicker.Swatch>",
+        "    <Popover.Portal><Popover.Positioner><Popover.Popup>",
+        "      <ColorPicker.Area><ColorPicker.AreaThumb /></ColorPicker.Area>",
+        '      <ColorPicker.ChannelSlider channel="hue">',
+        "        <ColorPicker.ChannelSliderTrack><ColorPicker.ChannelSliderThumb /></ColorPicker.ChannelSliderTrack>",
+        "      </ColorPicker.ChannelSlider>",
+        "    </Popover.Popup></Popover.Positioner></Popover.Portal>",
+        "  </Popover.Root>",
+        "</ColorPicker.Root>",
+      ],
+      solid: [
+        '<ColorPicker.Root defaultValue="#3b82f6">',
+        "  <Popover.Root>",
+        '    <ColorPicker.Swatch render={(props) => <Popover.Trigger {...props()} aria-label="Colour" />} />',
+        "    <Popover.Portal><Popover.Positioner><Popover.Popup>",
+        "      <ColorPicker.Area><ColorPicker.AreaThumb /></ColorPicker.Area>",
+        '      <ColorPicker.ChannelSlider channel="hue">',
+        "        <ColorPicker.ChannelSliderTrack><ColorPicker.ChannelSliderThumb /></ColorPicker.ChannelSliderTrack>",
+        "      </ColorPicker.ChannelSlider>",
+        "    </Popover.Popup></Popover.Positioner></Popover.Portal>",
+        "  </Popover.Root>",
+        "</ColorPicker.Root>",
+      ],
+      angular: [
+        "<div kpColorPicker [defaultValue]=\"'#3b82f6'\">",
+        "  <ng-container kpPopover>",
+        '    <button kpPopoverTrigger kpColorPickerSwatch aria-label="Colour"></button>',
+        "    <ng-template kpPopoverPortal><div kpPopoverPositioner><div kpPopoverPopup>",
+        "      <div kpColorPickerArea><div kpColorPickerAreaThumb></div></div>",
+        "      <div kpColorPickerChannelSlider [channel]=\"'hue'\">",
+        "        <div kpColorPickerChannelSliderTrack><div kpColorPickerChannelSliderThumb></div></div>",
+        "      </div>",
+        "    </div></div></ng-template>",
+        "  </ng-container>",
+        "</div>",
+      ],
+    },
+    said: "A picker that opens from a swatch is a `Popover` inside the picker's root, the swatch drawn as its trigger (a `<button>`, given the swatch's `--color`); the parts in the popup find the picker through the portal. The root's `--color` does not reach them, since the portal is drawn at the end of `<body>`: a part in the popup paints from its own variables, listed below.",
+  },
+}
 
 /** "For a design system": what a component library built on the parts writes, per framework. */
 const DESIGN: Record<Adapter, string[]> = {
@@ -201,6 +281,7 @@ const SHARED = [
   "No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.",
   'A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.',
   "An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.",
+  'A part said below to be hidden at times ("hidden while editing", "hidden unless its step is the one shown", a filtered item) stays in the page with the `hidden` attribute then. A `display` the design sets on it wins over the browser\'s `[hidden] { display: none }` and shows it all the time: set it under `:not([hidden])`, or not at all.',
   "A value is controlled when it is given (`value`) and the component's own when it is not (`defaultValue`). `open`/`defaultOpen` and the others pair the same way.",
   "A control with a `name` is submitted with the form around it and follows the form's reset. Inside a `Field` it is the field's control.",
   "`PortalProvider` (`container`) says where the popups inside it are drawn, in place of the end of `<body>`: a shadow root's host, a full-screen element.",
@@ -396,15 +477,22 @@ function propLines(
   indent: string,
   defaults: Map<string, string> = new Map()
 ): string[] {
+  // An older name (`@deprecated`) is left out: the reference shows Base UI's names only, and
+  // the editor strikes the older one through. Vue's `update:x` goes with its `x`.
+  const older = new Set(part.props.filter((each) => each.deprecated).map((each) => each.name))
+  const shown = part.props.filter(
+    (each) =>
+      !each.deprecated && !(each.kind === "emit" && older.has(each.name.replace(/^update:/, "")))
+  )
   const models = new Set(
     adapter === "vue"
-      ? part.props
+      ? shown
           .filter((each) => each.kind === "emit" && each.name.startsWith("update:"))
           .map((each) => each.name.slice(7))
-          .filter((name) => part.props.some((each) => each.name === name && !each.kind))
+          .filter((name) => shown.some((each) => each.name === name && !each.kind))
       : []
   )
-  return part.props.flatMap(
+  return shown.flatMap(
     (prop) =>
       propLine(adapter, component, part, prop, react, models, problems, indent, defaults) ?? []
   )
@@ -420,6 +508,23 @@ function stateLines(part: PartDefinition): string[] {
     lines.push(`    - \`${name}\`: ${description}`)
   }
   return lines
+}
+
+/**
+ * The parts that draw an element and write no state attribute or CSS variable of their own (a
+ * title, a close button), named so that a part missing from the list above is not a gap.
+ */
+function unmarked(definition: Record<string, PartDefinition> | undefined): string[] {
+  const names = Object.entries(definition ?? {})
+    .filter(
+      ([, part]) => stateLines(part).length === 0 && !/It draws no element/.test(part.description)
+    )
+    .map(([name]) => code(name))
+  if (names.length === 0) return []
+  return [
+    `${names.length > 1 ? "These parts write" : "This part writes"} no state attribute or CSS variable of ${names.length > 1 ? "their" : "its"} own: ${list(names)}.`,
+    "",
+  ]
 }
 
 /** Every import the text writes, for the check: the names and the module. */
@@ -676,6 +781,7 @@ function reports(from: AdapterReference): { held: string[]; told: string[] } {
   for (const component of from.components.values()) {
     for (const part of component.parts) {
       for (const prop of part.props) {
+        if (prop.deprecated) continue
         let name: string
         if (from.adapter === "angular") {
           if (prop.kind !== "output") continue
@@ -755,7 +861,7 @@ function rules(adapter: Adapter, own: AdapterReference, react: AdapterReference)
   const callback = (each: string) => each
   out.push(
     adapter === "angular"
-      ? `Every change callback is an output whose event is \`{ value, details }\` under the value's own name (\`$event.open\`, \`$event.values\`): \`details.reason\`, \`details.event\`, \`details.source\` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and \`details.cancel()\` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: ${list(told.map(callback).map(code))}.`
+      ? `Every change callback is an output whose event is \`{ value, details }\` under the value's own name (\`$event.open\`, \`$event.page\`): \`details.reason\`, \`details.event\`, \`details.source\` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and \`details.cancel()\` to keep the value as it was. An output that reports something that happened carries only that, and cannot be refused: ${list(told.map(callback).map(code))}.`
       : `Every change callback of a value the component holds is \`(value, details)\`: \`details.reason\`, \`details.event\`, \`details.source\` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and \`details.cancel()\` to keep the value as it was (${list(held.map(callback).map(code))}). A callback that reports something that happened takes only that, and cannot be refused: ${list(told.map(callback).map(code))}.`
   )
   const kept: string[] = []
@@ -1069,6 +1175,8 @@ function componentSection(
     }
     out.push("")
   }
+  const composed = COMPOSED[name]
+  if (composed) out.push(composed.said, "", "```", ...composed.code[adapter], "```", "")
   if (name === "Toast") {
     const from = importable(adapter, "createToaster")
     out.push(
@@ -1082,6 +1190,7 @@ function componentSection(
       out.push(`- ${part}: ${each.description}`, ...stateLines(each))
     out.push("")
   }
+  out.push(...unmarked(definition))
   while (out.at(-1) === "") out.pop()
   void every
   return out
@@ -1131,6 +1240,7 @@ function alsoExported(
     if (directive) {
       mentioned.push(...directive.types)
       const inputs = directive.props
+        .filter((each) => !each.deprecated)
         .map((each) => `\`${each.kind === "output" ? `(${each.name})` : each.name}: ${each.type}\``)
         .join(", ")
       lines.push([
@@ -1546,6 +1656,12 @@ const LISTS_INSIDE: Record<string, Record<string, { part: string; around?: true 
   "date-picker": { days: { part: "cell", around: true } },
 }
 
+/**
+ * A part's `kui-` attributes that are older spellings of another, still read: left out, as a
+ * prop marked `@deprecated` is (`kui-close-on-select` is the one to write).
+ */
+const OLDER_PART_ATTRIBUTES = new Set(["kui-close-on-click"])
+
 /** The custom elements' file: each element's attributes, properties, events, parts and lists. */
 async function web(problems: Problem[]): Promise<string> {
   const elements: WebElement[] = webElements()
@@ -1587,6 +1703,10 @@ async function web(problems: Problem[]): Promise<string> {
     const theirs = react.components.get(name)
     const root = theirs?.parts.find((each) => each.part === "Root") ?? theirs?.parts[0]
     const doc = (prop: string) => root?.props.find((each) => each.name === prop)?.doc ?? ""
+    // An attribute or an event for an older name of a prop (`@deprecated` on React's) is left out.
+    const older = (prop: string) =>
+      element.older.includes(prop) ||
+      Boolean(root?.props.find((each) => each.name === prop)?.deprecated)
     out.push("", `### ${name}`, "", "```", `import "@kirana-ui/web/${element.name}"`, "```", "")
     if (!known.has(`./${element.name}`))
       problems.push({
@@ -1598,6 +1718,7 @@ async function web(problems: Problem[]): Promise<string> {
     if (element.attributes.length > 0) {
       out.push("Attributes of the element (each also a property, in camel case):", "")
       for (const each of element.attributes) {
+        if (older(camel(pascal(each.name)))) continue
         const said = doc(camel(pascal(each.name)))
         out.push(`- \`${each.name}\` (${each.kind})${said ? `: ${said}` : ""}`)
       }
@@ -1617,6 +1738,7 @@ async function web(problems: Problem[]): Promise<string> {
     if (element.events.length > 0) {
       out.push("Events:", "")
       for (const each of element.events) {
+        if (older(each.callback)) continue
         out.push(
           `- \`${each.event}\`: \`event.detail.${each.prop}\`, with \`event.detail.details\`.${each.hold ? ` \`preventDefault()\` keeps \`${each.prop}\` as it was.` : " It reports something that happened: there is nothing to keep."}`
         )
@@ -1640,10 +1762,10 @@ async function web(problems: Problem[]): Promise<string> {
       })
     if (element.parts.length > 0) {
       out.push("Parts (`kui-part`), each with the `kui-` attributes its element is read for:", "")
-      for (const each of element.parts)
-        out.push(
-          `- \`${each.name}\`${each.attributes.length ? `: ${each.attributes.map(code).join(", ")}` : ""}`
-        )
+      for (const each of element.parts) {
+        const current = each.attributes.filter((one) => !OLDER_PART_ATTRIBUTES.has(one))
+        out.push(`- \`${each.name}\`${current.length ? `: ${current.map(code).join(", ")}` : ""}`)
+      }
       out.push("")
     }
     if (element.lists.length > 0)
@@ -1658,6 +1780,7 @@ async function web(problems: Problem[]): Promise<string> {
         out.push(`- ${part}: ${each.description}`, ...stateLines(each))
       out.push("")
     }
+    out.push(...unmarked(definition))
     while (out.at(-1) === "") out.pop()
   }
   const text = `${out.join("\n")}\n`

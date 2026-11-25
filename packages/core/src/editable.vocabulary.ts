@@ -17,7 +17,11 @@ const STATES = {
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const editableVocabulary = defineComponent({
-  root: { description: "A text edited in place.", states: STATES },
+  root: {
+    description:
+      "A text edited in place. Enter keeps the edit (in a `<textarea>`, where Enter is a new line, Ctrl or ⌘ with Enter) and Escape drops it, focus going back to the edit trigger (or the preview where there is none); focus leaving the input keeps the edit, or drops it with `submitOnBlur` `false`. Inside a `Field` its input is the field's control: the field's label names it, and a press on the label starts an edit.",
+    states: STATES,
+  },
   preview: {
     inside: "root",
     description:

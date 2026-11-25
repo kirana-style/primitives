@@ -1,12 +1,15 @@
 import { Directive, booleanAttribute, inject, input, model, output } from "@angular/core"
 import type { OnInit, SimpleChanges } from "@angular/core"
 import { computed, defined } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createTree } from "@kirana-ui/core/tree"
 import type { Tree, TreeItem, TreeSelectionMode } from "@kirana-ui/core/tree"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_DIRECTION } from "./direction-token"
-import { KpIds, hostPart, inputsSignal, mounted, presentWhile } from "./runtime"
+import { KpIds, hostPart, inputsSignal, mounted, presentWhile, statePart } from "./runtime"
+
+type Parts = Vocabulary["tree"]
 
 /**
  * On the element that holds the nodes. `[(expandedValue)]` are the open branches' values and
@@ -72,9 +75,9 @@ export class KpTree<Value = unknown> implements OnInit {
 /**
  * One node. `value` tells it from the others in the tree; `branch` makes it one that holds
  * children in its `kpTreeGroup`. Its depth is known from how the nodes are nested, so a server
- * writes it too.
+ * writes it too. `state()` is its state, for the template (`#node="kpTreeItem"`).
  */
-@Directive({ selector: "[kpTreeItem]" })
+@Directive({ selector: "[kpTreeItem]", exportAs: "kpTreeItem" })
 export class KpTreeItem implements OnInit {
   readonly value = input.required<unknown>()
   readonly branch = input(false, { transform: booleanAttribute })
@@ -87,7 +90,9 @@ export class KpTreeItem implements OnInit {
   /** How deep it is, from 1: one more than the node around it. */
   readonly level: number = depth()
   private readonly root = inject(KpTree)
-  private readonly part = hostPart()
+  private readonly part = statePart<StateOf<Parts["item"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.part.state
   private readonly mount = mounted()
   private readonly options = inputsSignal(this, () => ({
     branch: this.branch(),
@@ -115,36 +120,42 @@ function depth(): number {
   return (inject(KpTreeItem, { skipSelf: true, optional: true })?.level ?? 0) + 1
 }
 
-function part(name: "row" | "indicator" | "text") {
-  const owner = inject(KpTreeItem)
-  const put = hostPart()
-  return () => put(owner.item[name])
-}
-
-@Directive({ selector: "[kpTreeItemRow]" })
+/** The row of a node, which takes focus. `state()` is its state, for the template. */
+@Directive({ selector: "[kpTreeItemRow]", exportAs: "kpTreeItemRow" })
 export class KpTreeItemRow implements OnInit {
-  private readonly init = part("row")
+  private readonly owner = inject(KpTreeItem)
+  private readonly put = statePart<StateOf<Parts["itemRow"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
-    this.init()
+    this.put(this.owner.item.row)
   }
 }
 
-@Directive({ selector: "[kpTreeItemIndicator]" })
+/**
+ * A branch's mark. `state()` is its state, for the template: `#mark="kpTreeItemIndicator"`, then
+ * `@if (mark.state().open) { … }`.
+ */
+@Directive({ selector: "[kpTreeItemIndicator]", exportAs: "kpTreeItemIndicator" })
 export class KpTreeItemIndicator implements OnInit {
-  private readonly init = part("indicator")
+  private readonly owner = inject(KpTreeItem)
+  private readonly put = statePart<StateOf<Parts["itemIndicator"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
-    this.init()
+    this.put(this.owner.item.indicator)
   }
 }
 
 @Directive({ selector: "[kpTreeItemText]" })
 export class KpTreeItemText implements OnInit {
-  private readonly init = part("text")
+  private readonly owner = inject(KpTreeItem)
+  private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.init()
+    this.put(this.owner.item.text)
   }
 }
 

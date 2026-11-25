@@ -67,7 +67,7 @@ export class KpTabsList implements OnInit {
   })
   /**
    * Whether the arrows wrap from the last item to the first.
-   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   * @deprecated Use `loopFocus`, which wins when both are given.
    */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   private readonly root = inject(KpTabs)

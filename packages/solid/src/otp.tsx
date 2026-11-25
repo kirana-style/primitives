@@ -33,13 +33,13 @@ export type RootProps = PartComponentProps<
     onValueComplete?: (value: string, details: ChangeDetails) => void
     /**
      * Every character is in.
-     * @deprecated Base UI's name is `onValueComplete`, the one called when both are given.
+     * @deprecated Use `onValueComplete`, the one called when both are given.
      */
     onComplete?: (value: string) => void
     validationType?: OtpProps["validationType"]
     /**
      * What a character may be.
-     * @deprecated Base UI's name is `validationType`, which wins when both are given.
+     * @deprecated Use `validationType`, which wins when both are given.
      */
     mode?: OtpProps["mode"]
     pattern?: string

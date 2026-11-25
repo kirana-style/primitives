@@ -5520,7 +5520,7 @@ export const vocabulary = {
             },
             "half": {
               "attribute": "data-half",
-              "description": "Present on the item the value drawn fills by half.",
+              "description": "Present on the item the value drawn fills by half, which has `data-filled` too. No variable says how much is filled: a design draws the half, an element of its own in the item (a filled star over an empty one) clipped to its first half: `[data-half] .star-fill { clip-path: inset(0 50% 0 0) }`, `inset(0 0 0 50%)` where the text runs right to left.",
               "selector": "[data-half]"
             },
             "disabled": {
@@ -5670,7 +5670,7 @@ export const vocabulary = {
           "repeated": false
         },
         "indicator": {
-          "description": "A step's mark: its number, or a tick once it is done.",
+          "description": "An element hidden from assistive technology (`aria-hidden`) that holds the step's mark as the design draws it (its number, a tick once it is done) by its `data-current`, `data-complete` and `data-incomplete`. It has no content of its own.",
           "states": {
             "current": {
               "attribute": "data-current",
@@ -5775,7 +5775,7 @@ export const vocabulary = {
           "repeated": true
         },
         "completed": {
-          "description": "What is shown once every step is done.",
+          "description": "What is shown once every step is done: hidden until then.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -5833,7 +5833,7 @@ export const vocabulary = {
     "editable": {
       "parts": {
         "root": {
-          "description": "A text edited in place.",
+          "description": "A text edited in place. Enter keeps the edit (in a `<textarea>`, where Enter is a new line, Ctrl or ⌘ with Enter) and Escape drops it, focus going back to the edit trigger (or the preview where there is none); focus leaving the input keeps the edit, or drops it with `submitOnBlur` `false`. Inside a `Field` its input is the field's control: the field's label names it, and a press on the label starts an edit.",
           "states": {
             "editing": {
               "attribute": "data-editing",
@@ -6284,7 +6284,7 @@ export const vocabulary = {
           "repeated": false
         },
         "toggle": {
-          "description": "Shows the password, and hides it again. Focus and the caret stay in the input.",
+          "description": "Shows the password, and hides it again. Focus and the caret stay in the input. It is named \"Show password\" while the password is hidden and \"Hide password\" while it is shown: the root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both.",
           "states": {
             "visible": {
               "attribute": "data-visible",
@@ -6306,7 +6306,7 @@ export const vocabulary = {
           "repeated": false
         },
         "indicator": {
-          "description": "What draws which of the two it is: an eye, open or struck.",
+          "description": "An element hidden from assistive technology (`aria-hidden`) that holds what the design draws to say which of the two it is, an eye open or struck, by its `data-visible`. It has no content of its own.",
           "states": {
             "visible": {
               "attribute": "data-visible",
@@ -6518,7 +6518,7 @@ export const vocabulary = {
           "repeated": false
         },
         "input": {
-          "description": "Where a new tag is typed. In a `Field` it is what the field's label names.",
+          "description": "Where a new tag is typed. In a `Field` it is what the field's label names; an `id` given to it is kept, so a `<label for>` names it outside one.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -6576,7 +6576,7 @@ export const vocabulary = {
     "fileUpload": {
       "parts": {
         "root": {
-          "description": "Files chosen to be sent.",
+          "description": "Files chosen to be sent. It holds the hidden file input, as its last child, and takes files pasted while focus is in it.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -6606,7 +6606,7 @@ export const vocabulary = {
           "repeated": false
         },
         "dropzone": {
-          "description": "Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input.",
+          "description": "Where files are dropped; a pointer's press on it opens the file picker. A group (`role=\"group\"`), not a control: the trigger is the keyboard's way in, in it or beside it.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -6629,11 +6629,11 @@ export const vocabulary = {
           "inside": [
             "root"
           ],
-          "optional": false,
+          "optional": true,
           "repeated": false
         },
         "trigger": {
-          "description": "A button that opens the file picker.",
+          "description": "The button that opens the file picker: the control, which works with no dropzone in the page.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -6657,7 +6657,7 @@ export const vocabulary = {
             "root",
             "dropzone"
           ],
-          "optional": true,
+          "optional": false,
           "repeated": false
         },
         "list": {
@@ -6838,7 +6838,7 @@ export const vocabulary = {
     "timeField": {
       "parts": {
         "root": {
-          "description": "The field: a group of the time's parts.",
+          "description": "The field: a group of the time's parts. Inside a `Field` it is the field's control: the field's label names it (a press on the label goes to its first empty part), its description and messages describe it, and the field checks it.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -7213,7 +7213,7 @@ export const vocabulary = {
           "repeated": false
         },
         "area": {
-          "description": "The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue.",
+          "description": "The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--hue-color))` (`to left` for the second where the text runs right to left). It writes `touch-action: none` inline, so a finger drags the thumb, not the page.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -7247,7 +7247,7 @@ export const vocabulary = {
           "repeated": false
         },
         "areaThumb": {
-          "description": "What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it.",
+          "description": "What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` and `bottom` at its saturation and brightness, and a `translate` that centres it on that point (with `thumbAlignment: \"edge\"`, one that keeps it inside the area). The area is what it is placed in, so the area needs `position: relative`.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -7283,7 +7283,7 @@ export const vocabulary = {
           "repeated": false
         },
         "channelSlider": {
-          "description": "What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`.",
+          "description": "What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`. It writes `touch-action: none` inline, so a finger drags the thumb, not the page.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -7331,7 +7331,7 @@ export const vocabulary = {
           "repeated": true
         },
         "channelSliderTrack": {
-          "description": "The channel's whole range: what a design paints the hues or the alpha on.",
+          "description": "The channel's whole range: what a design paints the hues or the alpha on. Both run from the inline start (the bottom of a vertical track): the hue from 0 to 360, `linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)`, and the alpha from none to whole, `linear-gradient(to right, transparent, var(--color))` over a checkerboard of the design's own (`to left` where the text runs right to left, `to top` on a vertical track).",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -7382,7 +7382,7 @@ export const vocabulary = {
           "repeated": false
         },
         "channelSliderThumb": {
-          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it.",
+          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` at its share of the range and `top: 50%` (on a vertical track, `bottom` and `left: 50%`), and a `translate` that centres it there (with `thumbAlignment: \"edge\"`, one that keeps it inside the track). The element it is in (the track, or the slider) needs `position: relative`.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
@@ -11294,7 +11294,7 @@ export const vocabulary = {
           "repeated": false
         },
         "indicator": {
-          "description": "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
+          "description": "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it inline, and a design does not set these: `position: relative`, `inset-inline-start` and `width`, with `height: inherit` (on a vertical slider, `position: absolute`, `bottom` and `height`, with `width: inherit`).",
           "states": {
             "orientation": {
               "attribute": "data-orientation",
@@ -11367,7 +11367,7 @@ export const vocabulary = {
           "repeated": false
         },
         "thumb": {
-          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.",
+          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` at its value's place and `top: 50%` (on a vertical slider, `bottom` and `left: 50%`), and a `translate` that centres it there (with `thumbAlignment: \"edge\"`, one that keeps it inside). The track needs `position: relative`. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.",
           "states": {
             "orientation": {
               "attribute": "data-orientation",

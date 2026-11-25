@@ -347,6 +347,10 @@ entry. A part's file in this repository is the example for each
   `inputsSignal(this, () => ({ … }))`, with `ngOnChanges(changes) { this.props.bound(changes) }`,
   lets a design system's directive that hosts yours give it inputs (`hostInputs`), an input
   the element binds winning over what is given; `inputsSignal(() => …)` alone takes none.
+  `statePart()` is a `hostPart()` that also keeps the part's state as an Angular signal, what
+  React's `render` and Vue's slot are told: give it as `readonly state = this.put.state` with
+  an `exportAs`, and a template draws by it (`#mark="kpStepsIndicator"`, then
+  `@if (mark.state().complete) { … }`).
 
 In Solid and Svelte the component that draws a part reads the part under the name `of`, as
 React's `PartElement` does: `part` is an attribute of the element (`::part()` reads it), and

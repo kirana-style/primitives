@@ -56,6 +56,7 @@ function Root(props: RootProps): JSX.Element {
     "name",
     "form",
     "id",
+    "children",
   ])
   const generated = createUniqueId()
   const made = controller(
@@ -81,24 +82,17 @@ function Root(props: RootProps): JSX.Element {
   )
   return (
     <Context value={made}>
-      <Part of={made.root} tag="div" {...rest} />
+      <Part of={made.root} tag="div" {...rest}>
+        {local.children}
+        {/* The native file input is the element's last child, whatever element was asked for:
+            a trigger opens it with no dropzone in the page. */}
+        <Part of={made.input} tag="input" />
+      </Part>
     </Context>
   )
 }
 
 export type DropzoneProps = PartComponentProps<"div", StateOf<Parts["dropzone"]>>
-
-function Dropzone(props: DropzoneProps): JSX.Element {
-  const [local, rest] = split(props, ["children"])
-  const made = useFileUpload()
-  return (
-    <Part of={made.dropzone} tag="div" {...rest}>
-      {local.children}
-      {/* The native file input is the element's last child, whatever element was asked for. */}
-      <Part of={made.input} tag="input" />
-    </Part>
-  )
-}
 
 export type ListProps = PartComponentProps<"ul", StateOf<Parts["list"]>>
 
@@ -185,12 +179,12 @@ export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]
 export type ClearProps = PartComponentProps<"button", StateOf<Parts["clear"]>>
 
 const part =
-  <Props extends Record<string, unknown>>(name: "trigger" | "clear", tag: string) =>
+  <Props extends Record<string, unknown>>(name: "dropzone" | "trigger" | "clear", tag: string) =>
   (props: Props): JSX.Element => <Part of={useFileUpload()[name]} tag={tag} {...props} />
 
 export const FileUpload = {
   Root,
-  Dropzone,
+  Dropzone: part<DropzoneProps>("dropzone", "div"),
   Trigger: part<TriggerProps>("trigger", "button"),
   List,
   Items,

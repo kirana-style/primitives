@@ -47,6 +47,8 @@ export interface Prop {
   initial?: string
   /** Angular: the class member behind an input written under another name (`alias`). */
   member?: string
+  /** Its comment marks it `@deprecated`: an older name of another prop, left out of `llms.txt`. */
+  deprecated?: true
 }
 
 /** A named type a prop's type mentions, and where it is declared. */
@@ -173,6 +175,15 @@ export function docOf(symbol: TS.Symbol | undefined, checker: TS.TypeChecker): s
   if (!symbol) return ""
   return oneLine(ts.displayPartsToString(symbol.getDocumentationComment(checker)))
 }
+
+/** Whether a symbol's comment marks it `@deprecated`: an older name, which the reference leaves out. */
+export function deprecated(symbol: TS.Symbol | undefined, checker: TS.TypeChecker): boolean {
+  return Boolean(symbol?.getJsDocTags(checker).some((tag) => tag.name === "deprecated"))
+}
+
+/** `{ deprecated: true }` for a symbol so marked, to spread into its `Prop`. */
+const marked = (symbol: TS.Symbol, checker: TS.TypeChecker) =>
+  deprecated(symbol, checker) ? { deprecated: true as const } : {}
 
 /** The declaration around a member: the interface or the type alias it is written in. */
 function around(node: TS.Node): string | undefined {
@@ -324,6 +335,7 @@ export function ownProps(type: TS.Type, checker: TS.TypeChecker): Read {
       type: text,
       doc: docOf(symbol, checker),
       at: place(declaration),
+      ...marked(symbol, checker),
       // The core's before an adapter's own, each in the order it is written.
       // The core's before an adapter's own, what is extended before what extends it, and each
       // in the order it is written.
@@ -419,6 +431,14 @@ function chosenTag(text: string, declaration: TS.Declaration | undefined): strin
   return found && /=\s*"([a-z0-9]+)"$/.exec(found)?.[1]
 }
 
+const typeParametersOf = (declaration: TS.Node | undefined) =>
+  declaration &&
+  (ts.isTypeAliasDeclaration(declaration) ||
+    ts.isInterfaceDeclaration(declaration) ||
+    ts.isClassDeclaration(declaration))
+    ? (declaration.typeParameters ?? [])
+    : []
+
 const genericsOf = (declaration: TS.Declaration | undefined) =>
   declaration && (ts.isTypeAliasDeclaration(declaration) || ts.isInterfaceDeclaration(declaration))
     ? (declaration.typeParameters ?? []).map((each) => oneLine(each.getText()))
@@ -452,6 +472,9 @@ function typedPart(
       : undefined
   const text = declaration?.getText() ?? ""
   const { props, positioner, types } = ownProps(type, checker)
+  // A type its own type parameters are held to (`Step extends TourStep`) is one a reader writes.
+  for (const each of typeParametersOf(symbol.declarations?.[0]))
+    mentioned(each.constraint, checker, types)
   return {
     component,
     part,
@@ -701,6 +724,7 @@ async function vue(): Promise<AdapterReference> {
             doc: docOf(each, checker),
             at: declaration ? place(declaration) : "",
             kind: "emit",
+            ...marked(each, checker),
           })
         }
         if (declaration && ts.isTypeAliasDeclaration(declaration))
@@ -805,6 +829,7 @@ function signals(node: TS.ClassDeclaration, checker: TS.TypeChecker): Read {
       ...(kind === "input" ? {} : { kind }),
       ...(initial && initial !== "undefined" ? { initial } : {}),
       ...(alias ? { member: member.name } : {}),
+      ...marked(member, checker),
     })
   }
   return { props, types, positioner }
@@ -835,6 +860,7 @@ export function directives(): Map<string, Directive> {
       if (!selector && node.name.text !== "KpPositioner") return
       const body = node.getText()
       const { props, types, positioner } = signals(node, checker)
+      for (const each of typeParametersOf(node)) mentioned(each.constraint, checker, types)
       // What a structural directive hands its template: its context guard's type.
       const context: Prop[] = []
       const guard = node.members.find(
@@ -1079,7 +1105,8 @@ export function describe(named: Named): Described | undefined {
     const type = checker.getDeclaredTypeOfSymbol(symbol!)
     for (const each of checker.getPropertiesOfType(type)) {
       const written = each.declarations?.[0]
-      if (!written) continue
+      // An older name of another field is left out, as a deprecated prop is.
+      if (!written || deprecated(each, checker)) continue
       mentioned(written, checker, mentions)
       members.push({ text: member(written), doc: docOf(each, checker) })
     }
@@ -1157,6 +1184,8 @@ export interface WebElement {
   parts: { name: string; attributes: string[] }[]
   /** Each list it draws from a `<template kui-each="name">`. */
   lists: string[]
+  /** Its props marked `@deprecated` (older names), camel-cased: left out of `llms.txt`. */
+  older: string[]
 }
 
 /** The `kui-` attributes a piece of the adapter reads, itself or through what it calls. */
@@ -1365,7 +1394,21 @@ export function webElements(): WebElement[] {
         ? named.initializer.text
         : `kui-${entry.slice(2)}`)
     const properties = property("properties")
+    // The props it was defined from (`Tag<Props, Controller>`): those marked `@deprecated`.
+    const defined = checker
+      .getTypeAtLocation(made.name)
+      .getProperties()
+      .find((each) => each.escapedName.toString().includes("DEFINED"))
+    const pair = defined && checker.getNonNullableType(checker.getTypeOfSymbol(defined))
+    const own =
+      pair && checker.isTupleType(pair)
+        ? checker.getTypeArguments(pair as TS.TypeReference)[0]
+        : undefined
+    const older = (own?.getProperties() ?? [])
+      .filter((each) => deprecated(each, checker))
+      .map((each) => each.name)
     found.push({
+      older,
       name: entry.slice(2),
       tag,
       doc: docOf(checker.getSymbolAtLocation(made.name), checker),

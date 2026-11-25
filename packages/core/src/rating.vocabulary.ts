@@ -31,7 +31,10 @@ export const ratingVocabulary = defineComponent({
         "data-filled",
         "Present on every item up to the value drawn: the one a pointer is over, or the one held."
       ),
-      half: state("data-half", "Present on the item the value drawn fills by half."),
+      half: state(
+        "data-half",
+        "Present on the item the value drawn fills by half, which has `data-filled` too. No variable says how much is filled: a design draws the half, an element of its own in the item (a filled star over an empty one) clipped to its first half: `[data-half] .star-fill { clip-path: inset(0 50% 0 0) }`, `inset(0 0 0 50%)` where the text runs right to left."
+      ),
       ...SHARED,
     },
   },

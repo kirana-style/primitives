@@ -8,12 +8,14 @@ import type { ElementOf } from "./runtime.ts"
 /**
  * `<kui-password-input>` around `kui-part="root"`, an `input`, and a `toggle` button that shows
  * the password and hides it again, with an `indicator` inside that says which it is. Inside a
- * `<kui-field>` the input is the field's control. `visible`, `default-visible`, `disabled`; it
- * tells `visible-change` and `value-change`.
+ * `<kui-field>` the input is the field's control. `visible`, `default-visible`, `disabled`;
+ * `toggleLabels` (`{ show, hide }`, the toggle's names) as a property, which an `aria-label` on
+ * the toggle wins over. It tells `visible-change` and `value-change`.
  */
 export const tag = defineElement<PasswordInputProps & { id: string }, PasswordInput>({
   tag: "kui-password-input",
   props: { visible: "boolean", "default-visible": "boolean", disabled: "boolean" },
+  properties: ["toggleLabels"],
   create: (props, host) => createPasswordInput(props, { field: fieldAround(host) }),
   changes: {
     onVisibleChange: { event: "visible-change", prop: "visible" },

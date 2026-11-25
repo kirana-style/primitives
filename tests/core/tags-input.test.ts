@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished } from "vite-plus/test"
 
 import { bind } from "../../packages/core/src/bind.ts"
+import { forElement } from "../../packages/core/src/part.ts"
 import { effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
 import { createTagsInput } from "../../packages/core/src/tags-input.ts"
 import type { TagsInputProps } from "../../packages/core/src/tags-input.ts"
@@ -243,5 +244,24 @@ describe("a tags input", () => {
     type("blue")
     find<HTMLButtonElement>("[type=reset]").focus()
     expect(made.value.peek()).toEqual(["red", "green", "blue"])
+  })
+
+  it("keeps the id its caller gives the input, so a label for it names it", () => {
+    const root = mount(`
+      <label for="colors">Colors</label>
+      <div class="root"><input class="input" id="colors" /></div>
+      <div class="other"><input class="input" /></div>`)
+    const named = createTagsInput(signal<TagsInputProps>({ id: "tg" }))
+    const input = root.querySelector<HTMLInputElement>(".root .input")!
+    onTestFinished(bind(input, named.input))
+    expect(input.id).toBe("colors")
+    expect(root.querySelector("label")!.control).toBe(input)
+    // A framework lays the part's props over its caller's the same way.
+    expect(forElement(named.input.props.peek(), { id: "colors" }, "input").id).toBeUndefined()
+    // With none of the caller's, the input is still named after its root.
+    const unnamed = createTagsInput(signal<TagsInputProps>({ id: "tg2" }))
+    const other = root.querySelector<HTMLInputElement>(".other .input")!
+    onTestFinished(bind(other, unnamed.input))
+    expect(other.id).toBe("tg2-input")
   })
 })

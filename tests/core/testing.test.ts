@@ -95,6 +95,23 @@ describe("the testing kit", () => {
     await expect(settled(document, 60)).rejects.toThrow("<div> in its first or last frame")
   })
 
+  it("is settled in a document with no Web Animations, as the components there are", async () => {
+    // jsdom has no `getAnimations`: nothing animates there, so nothing is moving.
+    const page = document.implementation.createHTMLDocument()
+    Object.defineProperty(page, "getAnimations", { value: undefined })
+    await expect(settled(page, 200)).resolves.toBeUndefined()
+  })
+
+  it("rejects when it cannot look at the page, rather than throwing in a timer", async () => {
+    const page = document.implementation.createHTMLDocument()
+    Object.defineProperty(page, "querySelector", {
+      value: () => {
+        throw new Error("no selectors here")
+      },
+    })
+    await expect(settled(page, 200)).rejects.toThrow("no selectors here")
+  })
+
   it("records what a callback heard, and refuses when told to", () => {
     const heard = recorder<number>()
     const made = createRating(signal<RatingProps>({ defaultValue: 1, onValueChange: heard.listen }))

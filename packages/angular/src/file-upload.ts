@@ -12,10 +12,11 @@ import {
   output,
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { effect } from "@kirana-ui/core"
 import { createFileUpload, formatBytes } from "@kirana-ui/core/file-upload"
 import type { FileRejection, FileUpload, FileUploadEntry } from "@kirana-ui/core/file-upload"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_FIELD } from "./field-token"
 import {
@@ -27,11 +28,19 @@ import {
   mounted,
   onServer,
   ownText,
+  statePart,
 } from "./runtime"
+
+type Parts = Vocabulary["fileUpload"]
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
-/** On the element that holds the file upload's parts. `[(files)]` is the files held, in order. */
+/**
+ * On the element that holds the file upload's parts. `[(files)]` is the files held, in order. It
+ * draws the native file input, hidden, as its last child: what a form submits, and what the
+ * picker fills, so a trigger opens it with no dropzone in the page. `state()` is its state, for
+ * the template (`#upload="kpFileUpload"`, `upload.state().empty`).
+ */
 @Directive({ selector: "[kpFileUpload]", exportAs: "kpFileUpload" })
 export class KpFileUpload implements OnInit {
   readonly files = model<readonly File[] | undefined>(undefined)
@@ -89,7 +98,10 @@ export class KpFileUpload implements OnInit {
     },
     onFilesReject: (rejections: FileRejection[]) => this.filesRejected.emit(rejections),
   }))
-  private readonly part = hostPart()
+  private readonly part = statePart<StateOf<Parts["root"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.part.state
+  private readonly inner = innerPart("input")
   private readonly mount = mounted()
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -99,6 +111,7 @@ export class KpFileUpload implements OnInit {
   ngOnInit(): void {
     this.controller = createFileUpload(this.props(), { field: this.field?.controller })
     this.part(this.controller.root)
+    this.inner(this.controller.input)
     this.mount(this.controller)
   }
 }
@@ -110,22 +123,23 @@ function part(name: "trigger" | "list" | "clear") {
 }
 
 /**
- * Where files are dropped, pasted, or pressed to be picked. It draws the native file input, hidden,
- * as its last child: what a form submits, and what the picker fills.
+ * Where files are dropped; a pointer's press on it opens the file picker. A group, not a control:
+ * the trigger is the keyboard's way in. `state()` is its state, for the template
+ * (`#zone="kpFileUploadDropzone"`, `zone.state().dragging`).
  */
-@Directive({ selector: "[kpFileUploadDropzone]" })
+@Directive({ selector: "[kpFileUploadDropzone]", exportAs: "kpFileUploadDropzone" })
 export class KpFileUploadDropzone implements OnInit {
   private readonly root = inject(KpFileUpload)
-  private readonly put = hostPart()
-  private readonly inner = innerPart("input")
+  private readonly put = statePart<StateOf<Parts["dropzone"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
     this.put(this.root.controller.dropzone)
-    this.inner(this.root.controller.input)
   }
 }
 
-/** A button that opens the file picker. */
+/** The button that opens the file picker: the control, with or without a dropzone. */
 @Directive({ selector: "[kpFileUploadTrigger]" })
 export class KpFileUploadTrigger implements OnInit {
   private readonly init = part("trigger")

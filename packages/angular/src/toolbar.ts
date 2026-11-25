@@ -42,7 +42,7 @@ export class KpToolbar implements OnInit {
   })
   /**
    * Whether the arrows wrap from the last item to the first.
-   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   * @deprecated Use `loopFocus`, which wins when both are given.
    */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
@@ -172,7 +172,7 @@ export class KpToggleGroup<Value = unknown> implements OnInit {
   })
   /**
    * Whether the arrows wrap from the last item to the first.
-   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   * @deprecated Use `loopFocus`, which wins when both are given.
    */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly valueChanged = output<{ value: Value[]; details: ChangeDetails }>()

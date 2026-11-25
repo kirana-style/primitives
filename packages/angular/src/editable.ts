@@ -10,12 +10,13 @@ import {
 } from "@angular/core"
 import type { OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createEditable } from "@kirana-ui/core/editable"
 import type { Editable, EditableProps } from "@kirana-ui/core/editable"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_FIELD } from "./field-token"
-import { KpIds, hostPart, inputsSignal, mounted, onServer, ownText } from "./runtime"
+import { KpIds, hostPart, inputsSignal, mounted, onServer, ownText, statePart } from "./runtime"
 
 /**
  * On the element that holds the editable's parts. `[(value)]` is the text, `[(editing)]` whether
@@ -87,7 +88,9 @@ export class KpEditable implements OnInit {
       }
     },
   }))
-  private readonly part = hostPart()
+  private readonly part = statePart<StateOf<Vocabulary["editable"]["root"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.part.state
   private readonly mount = mounted()
 
   ngOnChanges(changes: SimpleChanges): void {

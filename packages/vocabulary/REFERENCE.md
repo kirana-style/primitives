@@ -2011,7 +2011,7 @@ One item (a star): pressed, the value is its place, or half of it.
 | --- | --- |
 | `data-checked` | Present on the item that holds the value. |
 | `data-filled` | Present on every item up to the value drawn: the one a pointer is over, or the one held. |
-| `data-half` | Present on the item the value drawn fills by half. |
+| `data-half` | Present on the item the value drawn fills by half, which has `data-filled` too. No variable says how much is filled: a design draws the half, an element of its own in the item (a filled star over an empty one) clipped to its first half: `[data-half] .star-fill { clip-path: inset(0 50% 0 0) }`, `inset(0 0 0 50%)` where the text runs right to left. |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it is shown and cannot be changed. |
 | `data-required` | Present when a value is needed. |
@@ -2073,7 +2073,7 @@ Names a step, and goes to it when pressed.
 
 ### Steps.Indicator
 
-A step's mark: its number, or a tick once it is done.
+An element hidden from assistive technology (`aria-hidden`) that holds the step's mark as the design draws it (its number, a tick once it is done) by its `data-current`, `data-complete` and `data-incomplete`. It has no content of its own.
 
 | Attribute | When |
 | --- | --- |
@@ -2106,7 +2106,7 @@ What a step shows: hidden unless its step is the one shown.
 
 ### Steps.Completed
 
-What is shown once every step is done.
+What is shown once every step is done: hidden until then.
 
 | Attribute | When |
 | --- | --- |
@@ -2141,7 +2141,7 @@ Root
 
 ### Editable.Root
 
-A text edited in place.
+A text edited in place. Enter keeps the edit (in a `<textarea>`, where Enter is a new line, Ctrl or ⌘ with Enter) and Escape drops it, focus going back to the edit trigger (or the preview where there is none); focus leaving the input keeps the edit, or drops it with `submitOnBlur` `false`. Inside a `Field` its input is the field's control: the field's label names it, and a press on the label starts an edit.
 
 | Attribute | When |
 | --- | --- |
@@ -2276,7 +2276,7 @@ The `<input>`: a password, or text while it is shown. In a `Field` it is the fie
 
 ### PasswordInput.Toggle
 
-Shows the password, and hides it again. Focus and the caret stay in the input.
+Shows the password, and hides it again. Focus and the caret stay in the input. It is named "Show password" while the password is hidden and "Hide password" while it is shown: the root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both.
 
 | Attribute | When |
 | --- | --- |
@@ -2285,7 +2285,7 @@ Shows the password, and hides it again. Focus and the caret stay in the input.
 
 ### PasswordInput.Indicator
 
-What draws which of the two it is: an eye, open or struck.
+An element hidden from assistive technology (`aria-hidden`) that holds what the design draws to say which of the two it is, an eye open or struck, by its `data-visible`. It has no content of its own.
 
 | Attribute | When |
 | --- | --- |
@@ -2375,7 +2375,7 @@ A tag's button that takes it away.
 
 ### TagsInput.Input
 
-Where a new tag is typed. In a `Field` it is what the field's label names.
+Where a new tag is typed. In a `Field` it is what the field's label names; an `id` given to it is kept, so a `<label for>` names it outside one.
 
 | Attribute | When |
 | --- | --- |
@@ -2397,9 +2397,9 @@ Takes every tag away: hidden while there is none.
 
 ```
 Root
-  Dropzone
+  Dropzone (optional)
     Trigger (as above)
-  Trigger (optional)
+  Trigger
   List
     Items
       Item (repeated)
@@ -2411,7 +2411,7 @@ Root
 
 ### FileUpload.Root
 
-Files chosen to be sent.
+Files chosen to be sent. It holds the hidden file input, as its last child, and takes files pasted while focus is in it.
 
 | Attribute | When |
 | --- | --- |
@@ -2422,7 +2422,7 @@ Files chosen to be sent.
 
 ### FileUpload.Dropzone
 
-Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input.
+Where files are dropped; a pointer's press on it opens the file picker. A group (`role="group"`), not a control: the trigger is the keyboard's way in, in it or beside it.
 
 | Attribute | When |
 | --- | --- |
@@ -2432,7 +2432,7 @@ Where files are dropped or pasted; pressed, it opens the file picker. It holds t
 
 ### FileUpload.Trigger
 
-A button that opens the file picker.
+The button that opens the file picker: the control, which works with no dropzone in the page.
 
 | Attribute | When |
 | --- | --- |
@@ -2515,7 +2515,7 @@ Root
 
 ### TimeField.Root
 
-The field: a group of the time's parts.
+The field: a group of the time's parts. Inside a `Field` it is the field's control: the field's label names it (a press on the label goes to its first empty part), its description and messages describe it, and the field checks it.
 
 | Attribute | When |
 | --- | --- |
@@ -2660,7 +2660,7 @@ Groups the picker's parts. It holds the hidden input a form reads, and the colou
 
 ### ColorPicker.Area
 
-The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue.
+The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--hue-color))` (`to left` for the second where the text runs right to left). It writes `touch-action: none` inline, so a finger drags the thumb, not the page.
 
 | Attribute | When |
 | --- | --- |
@@ -2675,7 +2675,7 @@ The two-dimensional field a pointer presses and drags on: saturation across, the
 
 ### ColorPicker.AreaThumb
 
-What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it.
+What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` and `bottom` at its saturation and brightness, and a `translate` that centres it on that point (with `thumbAlignment: "edge"`, one that keeps it inside the area). The area is what it is placed in, so the area needs `position: relative`.
 
 | Attribute | When |
 | --- | --- |
@@ -2692,7 +2692,7 @@ What is dragged in the area, and what the arrows move: a slider in two dimension
 
 ### ColorPicker.ChannelSlider
 
-What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`.
+What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`. It writes `touch-action: none` inline, so a finger drags the thumb, not the page.
 
 | Attribute | When |
 | --- | --- |
@@ -2705,7 +2705,7 @@ What a pointer presses and drags on to move the hue or the alpha. It holds the t
 
 ### ColorPicker.ChannelSliderTrack
 
-The channel's whole range: what a design paints the hues or the alpha on.
+The channel's whole range: what a design paints the hues or the alpha on. Both run from the inline start (the bottom of a vertical track): the hue from 0 to 360, `linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)`, and the alpha from none to whole, `linear-gradient(to right, transparent, var(--color))` over a checkerboard of the design's own (`to left` where the text runs right to left, `to top` on a vertical track).
 
 | Attribute | When |
 | --- | --- |
@@ -2723,7 +2723,7 @@ The channel's whole range: what a design paints the hues or the alpha on.
 
 ### ColorPicker.ChannelSliderThumb
 
-What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it.
+What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` at its share of the range and `top: 50%` (on a vertical track, `bottom` and `left: 50%`), and a `translate` that centres it there (with `thumbAlignment: "edge"`, one that keeps it inside the track). The element it is in (the track, or the slider) needs `position: relative`.
 
 | Attribute | When |
 | --- | --- |
@@ -4200,7 +4200,7 @@ The whole range.
 
 ### Slider.Indicator
 
-The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
+The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it inline, and a design does not set these: `position: relative`, `inset-inline-start` and `width`, with `height: inherit` (on a vertical slider, `position: absolute`, `bottom` and `height`, with `width: inherit`).
 
 | Attribute | When |
 | --- | --- |
@@ -4222,7 +4222,7 @@ The filled part: up to the thumb, or from the first thumb to the last. Its place
 
 ### Slider.Thumb
 
-What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
+What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it inline, and a design does not set these: `position: absolute`, `inset-inline-start` at its value's place and `top: 50%` (on a vertical slider, `bottom` and `left: 50%`), and a `translate` that centres it there (with `thumbAlignment: "edge"`, one that keeps it inside). The track needs `position: relative`. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
 
 | Attribute | When |
 | --- | --- |

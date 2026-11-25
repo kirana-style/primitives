@@ -9,8 +9,8 @@ import type { Drawn, ElementOf } from "./runtime.ts"
 const toasters = new WeakMap<Element, Toaster>()
 
 /**
- * The toaster a `<kui-toast>` draws: its own (made with the element's `timeout`,
- * `duration`, its old name, and `limit`), unless it was given one as its `toaster` property before it began.
+ * The toaster a `<kui-toast>` draws: its own (made with the element's `timeout`
+ * and `limit`), unless it was given one as its `toaster` property before it began.
  * `toasterOf(element).add({ title: "Saved" })`.
  */
 export function toasterOf(element: Element): Toaster {
@@ -54,15 +54,18 @@ const said =
  * `description`, and a `close` and an `action` button. A `title`, a `description` and an
  * `action` written empty say what the toast was added with, and are in the page only for a
  * toast that has one; one written with something in it (`{title}`) is always there. `label`,
- * `hotkey`, `swipe-direction`; `timeout` (`duration`, its old name) and `limit` for the toaster it makes, or `toaster`
+ * `hotkey`, `swipe-direction`; `timeout` and `limit` for the toaster it makes, or `toaster`
  * as a property for one of the page's own. A title, a description and an action's label are
  * strings.
  */
 export const tag = defineElement<
   Omit<ToastProps, "toaster"> & {
     toaster?: Toaster
+    /** How long a toast stays when it does not say, in milliseconds; `0` until it is closed. */
     timeout?: number
+    /** @deprecated Use `timeout`, which wins when both are given. */
     duration?: number
+    /** How many toasts are shown at once; the rest wait behind, `data-limited`. Default: `3`. */
     limit?: number
   },
   Toast

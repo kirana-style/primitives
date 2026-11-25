@@ -3471,7 +3471,13 @@ const TOUR: PageStep[] = [
               data-testid="pw1-input"
             />
             <button kpPasswordInputToggle data-testid="pw1-toggle">
-              <span kpPasswordInputIndicator class="eye" data-testid="pw1-indicator"></span>
+              <span
+                kpPasswordInputIndicator
+                #eye="kpPasswordInputIndicator"
+                class="eye"
+                data-testid="pw1-indicator"
+                >{{ eye.state().visible ? "shown" : "hidden" }}</span
+              >
             </button>
             <output form="" data-testid="pw1-output">{{ revealed() }}</output>
           </div>
@@ -3506,7 +3512,12 @@ const TOUR: PageStep[] = [
                 </button>
               </span>
             </div>
-            <input kpTagsInputInput aria-label="Add a color" data-testid="ti1-input" />
+            <input
+              kpTagsInputInput
+              id="ti1-entry"
+              aria-label="Add a color"
+              data-testid="ti1-input"
+            />
             <button kpTagsInputClear data-testid="ti1-clear">Clear</button>
             <output form="" data-testid="ti1-output">{{ tagged() }}</output>
             <output form="" data-testid="ti1-refused">{{ refused() }}</output>

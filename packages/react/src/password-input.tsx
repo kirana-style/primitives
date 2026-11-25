@@ -31,12 +31,13 @@ function Root({
   onVisibleChange,
   disabled,
   onValueChange,
+  toggleLabels,
   ...rest
 }: RootProps): ReactElement {
   const field = useContext(FieldContext) ?? undefined
   const controller = useController<PasswordInputProps, Controller>(
     within(createPasswordInput, { field }),
-    { visible, defaultVisible, onVisibleChange, disabled, onValueChange }
+    { visible, defaultVisible, onVisibleChange, disabled, onValueChange, toggleLabels }
   )
   return (
     <Context.Provider value={controller}>{usePart(controller.root, "div", rest)}</Context.Provider>

@@ -25,8 +25,8 @@ function carrying(...files: File[]) {
 
 function upload(given: Partial<FileUploadProps> = {}) {
   const root = mount(`
-    <form><div class="root"><div class="zone"><button class="pick">Browse</button><input class="input" /></div>
-      <ul class="list"></ul><button class="clear">Clear</button>
+    <form><div class="root"><div class="zone"><button class="pick">Browse</button></div>
+      <ul class="list"></ul><button class="clear">Clear</button><input class="input" />
     </div><button type="reset">Reset</button></form>`)
   const changed = recorder<File[]>()
   const rejected: FileRejection[] = []
@@ -65,15 +65,13 @@ function upload(given: Partial<FileUploadProps> = {}) {
 }
 
 describe("a file upload", () => {
-  it("holds a native file input, hidden, which its dropzone and its button open", () => {
+  it("holds a native file input, hidden, which its button and a press on its dropzone open", () => {
     const { find } = upload({ accept: ["image/*", ".pdf"], multiple: true })
     const input = find<HTMLInputElement>(".input")
     expect(input.type).toBe("file")
     expect(input.hidden).toBe(true)
     expect(input.accept).toBe("image/*,.pdf")
     expect(input.multiple).toBe(true)
-    expect(find(".zone").getAttribute("role")).toBe("button")
-    expect(find(".zone").getAttribute("tabindex")).toBe("0")
     let opened = 0
     input.addEventListener("click", (event) => {
       opened++
@@ -81,9 +79,46 @@ describe("a file upload", () => {
     })
     find(".zone").click()
     find<HTMLButtonElement>(".pick").click()
-    find(".zone").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
     // The button is inside the dropzone: its press opens the picker once, not twice.
-    expect(opened).toBe(3)
+    expect(opened).toBe(2)
+  })
+
+  it("is a group around its trigger, never a control holding one", () => {
+    const { find } = upload()
+    const zone = find(".zone")
+    // A control inside a control is read as one, and reached twice.
+    expect(zone.getAttribute("role")).toBe("group")
+    expect(zone.hasAttribute("tabindex")).toBe(false)
+    expect(find(".pick").localName).toBe("button")
+    let opened = 0
+    find(".input").addEventListener("click", (event) => {
+      opened++
+      event.preventDefault()
+    })
+    // The keyboard's way in is the trigger, which a button presses on Enter by itself.
+    zone.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    expect(opened).toBe(0)
+  })
+
+  it("opens the picker from a trigger with no dropzone in the page", () => {
+    const root = mount(
+      `<div class="root"><button class="pick">Upload</button><input class="input" /></div>`
+    )
+    const made = createFileUpload(signal<FileUploadProps>({ id: "alone" }))
+    const pick = root.querySelector<HTMLButtonElement>(".pick")!
+    const input = root.querySelector<HTMLInputElement>(".input")!
+    onTestFinished(bind(root.querySelector<HTMLElement>(".root")!, made.root))
+    onTestFinished(bind(pick, made.trigger))
+    onTestFinished(bind(input, made.input))
+    let opened = 0
+    input.addEventListener("click", (event) => {
+      opened++
+      event.preventDefault()
+    })
+    pick.click()
+    expect(opened).toBe(1)
+    made.open()
+    expect(opened).toBe(2)
   })
 
   it("takes dropped files, says while they are dragged over, and a form submits them", () => {
@@ -140,8 +175,9 @@ describe("a file upload", () => {
     input.files = carrying(file("picked.txt")).files
     input.dispatchEvent(new Event("change", { bubbles: true }))
     expect(changed.calls.at(-1)!.reason).toBe("pick")
+    // Pasted where focus is, the trigger: the root takes it, with no dropzone needed.
     const paste = pasting(carrying(file("pasted.txt")))
-    find(".zone").dispatchEvent(paste)
+    find(".pick").dispatchEvent(paste)
     expect(paste.defaultPrevented).toBe(true)
     expect(held()).toEqual(["picked.txt", "pasted.txt"])
   })
@@ -180,7 +216,8 @@ describe("a file upload", () => {
     const off = upload({ disabled: true })
     off.drop(file("a.txt"))
     expect(off.held()).toEqual([])
-    expect(off.find(".zone").getAttribute("tabindex")).toBe("-1")
+    expect(off.find<HTMLButtonElement>(".pick").disabled).toBe(true)
+    expect(off.find(".zone").getAttribute("aria-disabled")).toBe("true")
   })
 
   it("reads what a file input's accept says, and a size as people do", () => {

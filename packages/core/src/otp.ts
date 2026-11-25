@@ -23,7 +23,7 @@ export interface OtpProps {
   onValueComplete?: ((value: string, details: ChangeDetails) => void) | undefined
   /**
    * Every character is in.
-   * @deprecated Base UI's name is `onValueComplete`, which is told the change's details too
+   * @deprecated Use `onValueComplete`, which is told the change's details too
    * and is the one called when both are given.
    */
   onComplete?: ((value: string) => void) | undefined
@@ -37,7 +37,7 @@ export interface OtpProps {
   validationType?: OtpValidation | undefined
   /**
    * What a character may be.
-   * @deprecated Base UI's name is `validationType`, which wins when both are given. Both take
+   * @deprecated Use `validationType`, which wins when both are given. Both take
    * either spelling of the values.
    */
   mode?: OtpValidation | undefined

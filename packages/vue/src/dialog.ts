@@ -45,7 +45,7 @@ const Root = defineComponent({
     disablePointerDismissal: optional(Boolean),
     /**
      * Whether a press outside closes it.
-     * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins.
+     * @deprecated Use `disablePointerDismissal`, the other way round, which wins.
      */
     closeOnOutsidePress: optional(Boolean),
     dismissible: { type: Boolean, default: true },
@@ -168,7 +168,7 @@ const DrawerRoot = defineComponent({
     disablePointerDismissal: optional(Boolean),
     /**
      * Whether a press outside closes it.
-     * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins.
+     * @deprecated Use `disablePointerDismissal`, the other way round, which wins.
      */
     closeOnOutsidePress: optional(Boolean),
     dismissible: { type: Boolean, default: true },

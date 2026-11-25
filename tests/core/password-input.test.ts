@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished } from "vite-plus/test"
 
 import { bind } from "../../packages/core/src/bind.ts"
+import { forElement } from "../../packages/core/src/part.ts"
 import { createPasswordInput } from "../../packages/core/src/password-input.ts"
 import type { PasswordInputProps } from "../../packages/core/src/password-input.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
@@ -94,5 +95,43 @@ describe("a password input", () => {
     input.dispatchEvent(new InputEvent("input", { bubbles: true }))
     expect(typed.calls.at(-1)!.value).toBe("x")
     expect(input.hasAttribute("data-dirty")).toBe(true)
+  })
+
+  it("is named in the page's words: by toggleLabels, or by the toggle's own aria-label", () => {
+    const worded = password({ toggleLabels: { show: "Afficher", hide: "Masquer" } })
+    expect(worded.toggle.getAttribute("aria-label")).toBe("Afficher")
+    worded.toggle.click()
+    expect(worded.toggle.getAttribute("aria-label")).toBe("Masquer")
+    // The caller's own label wins over the part's default, shown or hidden.
+    const root = mount(
+      `<div><input class="input" /><button class="toggle" aria-label="Mot de passe"></button></div>`
+    )
+    const made = createPasswordInput(signal<PasswordInputProps>({}))
+    const toggle = root.querySelector<HTMLButtonElement>(".toggle")!
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, made.input))
+    onTestFinished(bind(toggle, made.toggle))
+    expect(toggle.getAttribute("aria-label")).toBe("Mot de passe")
+    toggle.click()
+    expect(made.visible.peek()).toBe(true)
+    expect(toggle.getAttribute("aria-label")).toBe("Mot de passe")
+    // A framework lays the part's props over its caller's the same way.
+    const own = made.toggle.props.peek()
+    expect(
+      forElement(own, { "aria-label": "Mot de passe" }, "button")["aria-label"]
+    ).toBeUndefined()
+    expect(forElement(own, {}, "button")["aria-label"]).toBe("Hide password")
+  })
+
+  it("follows the state with the label a server wrote for it", () => {
+    // What a server sent: the part's own label, which is not the caller's.
+    const root = mount(
+      `<div><input class="input" /><button class="toggle" aria-label="Show password"></button></div>`
+    )
+    const made = createPasswordInput(signal<PasswordInputProps>({}))
+    const toggle = root.querySelector<HTMLButtonElement>(".toggle")!
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, made.input))
+    onTestFinished(bind(toggle, made.toggle))
+    toggle.click()
+    expect(toggle.getAttribute("aria-label")).toBe("Hide password")
   })
 })

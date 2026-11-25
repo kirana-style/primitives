@@ -9,7 +9,7 @@ import type { As, ElementOf } from "./runtime.ts"
  * `<kui-toolbar>` around `kui-part="root"` and its items: a `button`, a `link`, an `input`, a
  * `group`, a `separator` (`kui-disabled` on one that is off), and `<kui-toggle>`s and
  * `<kui-toggle-group>`s, which are the toolbar's items too. One stop for Tab; the arrows move
- * between them. `orientation`, `loop-focus` (`loop` is its older name), `disabled`. A disabled
+ * between them. `orientation`, `loop-focus`, `disabled`. A disabled
  * button or input stays focusable, as Base UI's; `kui-focusable-when-disabled="false"` on one
  * disables it the element's own way, and the arrows pass it.
  */

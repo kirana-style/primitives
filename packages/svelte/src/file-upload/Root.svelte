@@ -26,6 +26,7 @@
     name,
     form,
     id,
+    children,
     ...rest
   }: RootProps = $props()
   const generated = $props.id()
@@ -56,4 +57,12 @@
   )
 </script>
 
-<Part of={made.root} tag="div" {...rest} />
+<!-- The native file input is the part's own, not its content: with `child` the caller's
+     element is the caller's to draw, so the snippet is given `input` to render inside it,
+     last, where every other adapter keeps it. It is the root's, so a trigger opens it with no
+     dropzone in the page. -->
+{#snippet input()}<Part of={made.input} tag="input" />{/snippet}
+
+<Part of={made.root} tag="div" {...rest} held={{ input }}>
+  {@render children?.()}<Part of={made.input} tag="input" />
+</Part>

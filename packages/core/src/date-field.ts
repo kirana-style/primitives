@@ -48,7 +48,7 @@ export interface DateFieldProps {
   disabled?: boolean | undefined
   /** Shown as it is, focusable, not changeable. */
   readOnly?: boolean | undefined
-  /** Needed: in a `Field`, leaving it empty is then invalid. */
+  /** Needed: a date left half typed is then invalid (`data-invalid`). */
   required?: boolean | undefined
   /** The name it is submitted under, by its hidden input. */
   name?: string | undefined

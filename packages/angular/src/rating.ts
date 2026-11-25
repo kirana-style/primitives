@@ -12,13 +12,16 @@ import {
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { effect } from "@kirana-ui/core"
-import type { ChangeDetails } from "@kirana-ui/core"
+import type { ChangeDetails, StateOf } from "@kirana-ui/core"
 import { createRating } from "@kirana-ui/core/rating"
 import type { Rating } from "@kirana-ui/core/rating"
+import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 
 import { KP_DIRECTION } from "./direction-token"
 import { KP_FIELD } from "./field-token"
-import { KpIds, drawing, hostPart, innerPart, inputsSignal, mounted, onServer } from "./runtime"
+import { KpIds, drawing, innerPart, inputsSignal, mounted, onServer, statePart } from "./runtime"
+
+type Parts = Vocabulary["rating"]
 
 const optionalNumber = (value: unknown) => (value == null ? undefined : numberAttribute(value))
 
@@ -69,7 +72,9 @@ export class KpRating implements OnInit {
     },
     onHoverChange: (value: number | null) => this.hoverChanged.emit(value),
   }))
-  private readonly part = hostPart()
+  private readonly part = statePart<StateOf<Parts["root"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.part.state
   private readonly inner = innerPart("input")
   private readonly mount = mounted()
 
@@ -136,12 +141,18 @@ export class KpRatingItems implements OnInit {
   }
 }
 
-@Directive({ selector: "[kpRatingItem]" })
+/**
+ * One item, at its `place`. `state()` is its state, for the template: `#star="kpRatingItem"`,
+ * then `@if (star.state().half) { … }`.
+ */
+@Directive({ selector: "[kpRatingItem]", exportAs: "kpRatingItem" })
 export class KpRatingItem implements OnInit {
   /** Its place among the items, from 1. */
   readonly place = input.required({ transform: numberAttribute })
   private readonly root = inject(KpRating)
-  private readonly put = hostPart()
+  private readonly put = statePart<StateOf<Parts["item"]>>()
+  /** The part's state, as its `data-*` attributes say it, for the template. */
+  readonly state = this.put.state
 
   ngOnInit(): void {
     this.put(this.root.controller.item(this.place()))

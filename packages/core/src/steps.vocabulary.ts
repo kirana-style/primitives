@@ -42,7 +42,8 @@ export const stepsVocabulary = defineComponent({
   indicator: {
     inside: "trigger",
     optional: true,
-    description: "A step's mark: its number, or a tick once it is done.",
+    description:
+      "An element hidden from assistive technology (`aria-hidden`) that holds the step's mark as the design draws it (its number, a tick once it is done) by its `data-current`, `data-complete` and `data-incomplete`. It has no content of its own.",
     states: WHERE,
   },
   separator: {
@@ -60,7 +61,7 @@ export const stepsVocabulary = defineComponent({
   completed: {
     inside: "root",
     optional: true,
-    description: "What is shown once every step is done.",
+    description: "What is shown once every step is done: hidden until then.",
     states: { orientation: ORIENTATION },
   },
   previous: {

@@ -1277,6 +1277,9 @@ export function createAgent(given: AgentOptions = {}): Agent {
   const HEARD = ["input", "pointerdown", "keydown", "click"] as const
   let watching = 0
   let recording = 0
+  // While the bridge itself is moving a control (a step, a menu opened to find an item, a list
+  // opened to read it), what changes is that step's: compared once, at its end, as the agent's.
+  let busy = 0
   let watched: Map<string, AgentComponent> | undefined
   let observer: MutationObserver | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -1347,6 +1350,9 @@ export function createAgent(given: AgentOptions = {}): Agent {
   function settle(source?: ChangeSource): void {
     clearTimeout(timer)
     if (!watched) return
+    // A step that takes many events (a slider's keys, a framework's answer to each) is not
+    // a person's change, nor a second one of the agent's: its own end compares it.
+    if (busy > 0 && !source) return
     const now = everything()
     const by = maker(source)
     settledAt = performance.now()
@@ -1422,6 +1428,8 @@ export function createAgent(given: AgentOptions = {}): Agent {
 
   /** An answer that may take a person's time: ended by the caller's signal, or by `timeout`. */
   function answer(asked: boolean | Promise<boolean>, signal?: AbortSignal): Promise<boolean> {
+    // Stopped before the wait began (in `allow` or `confirm` itself): no `abort` event is coming.
+    if (signal?.aborted) return Promise.reject(new Error("Stopped"))
     if (typeof asked === "boolean") return Promise.resolve(asked)
     return new Promise<boolean>((settled, reject) => {
       const late =
@@ -1465,23 +1473,32 @@ export function createAgent(given: AgentOptions = {}): Agent {
         confirm: undefined,
       }
       if (given.allow && !(await answer(given.allow(opening), signal))) continue
-      asAgent(() => (opener as HTMLElement).click())
-      const menu = await until(() => {
-        const popup = page.getElementById(opener.getAttribute("aria-controls") ?? "")
-        return popup?.querySelector('[role^="menuitem"]') ? popup : null
-      }, 600)
-      await turn(20)
-      const item = [...(menu?.querySelectorAll('[role^="menuitem"]') ?? [])].find(
-        (each) => !each.closest(HIDDEN) && plain(nameOf(each) ?? "") === wanted
-      )
-      if (item) return item
-      // Closed as a person closes it: Escape where focus went, and failing that its trigger.
-      const focused = page.activeElement
-      asAgent(() => key(focused && menu?.contains(focused) ? focused : (menu ?? opener), "Escape"))
-      const closed = () => opener.getAttribute("aria-expanded") !== "true"
-      if (!(await until(closed, 300))) {
+      busy++
+      try {
         asAgent(() => (opener as HTMLElement).click())
-        await until(closed, 300)
+        const menu = await until(() => {
+          const popup = page.getElementById(opener.getAttribute("aria-controls") ?? "")
+          return popup?.querySelector('[role^="menuitem"]') ? popup : null
+        }, 600)
+        await turn(20)
+        const item = [...(menu?.querySelectorAll('[role^="menuitem"]') ?? [])].find(
+          (each) => !each.closest(HIDDEN) && plain(nameOf(each) ?? "") === wanted
+        )
+        if (item) return item
+        // Closed as a person closes it: Escape where focus went, and failing that its trigger.
+        const focused = page.activeElement
+        asAgent(() =>
+          key(focused && menu?.contains(focused) ? focused : (menu ?? opener), "Escape")
+        )
+        const closed = () => opener.getAttribute("aria-expanded") !== "true"
+        if (!(await until(closed, 300))) {
+          asAgent(() => (opener as HTMLElement).click())
+          await until(closed, 300)
+        }
+      } finally {
+        // Heard as the agent's, and not kept: a menu opened to look is not a change.
+        busy--
+        settle("agent")
       }
     }
     return undefined
@@ -1554,49 +1571,60 @@ export function createAgent(given: AgentOptions = {}): Agent {
         }
         const before = new Map(everything().map((each) => [each.ref, each]))
         prior.delete(element)
-        const short = await perform(element, now.component, name, args)
-        // A framework has its turn, and a popup its first frame.
-        await turn(20)
-        // What a closed select of several values held, read as the step opened it.
-        const had = prior.get(element)
-        if (had && now.values === undefined && !marked(element)) now = withValues(now, had)
-        const after = element.isConnected ? read(element) : undefined
-        const then = everything()
-        const still = new Set(then.map((each) => each.ref))
-        const opened = then.filter(
-          (each) =>
-            each.ref !== now.ref && each.open === true && before.get(each.ref)?.open !== true
-        )
-        const appeared = then.filter((each) => !before.has(each.ref) && !opened.includes(each))
-        const gone = [...before.values()].filter(
-          (each) => each.ref !== now.ref && !still.has(each.ref)
-        )
-        done.push({
-          ref: now.ref,
-          action: name,
-          ...(after ? { now: after } : {}),
-          ...(opened.length > 0 ? { opened: opened.map(brief) } : {}),
-          ...(appeared.length > 0 ? { appeared: appeared.slice(0, 20).map(brief) } : {}),
-          ...(gone.length > 0 ? { gone: gone.slice(0, 20).map(brief) } : {}),
-        })
-        // Only what took effect is a change: a callback may have refused it.
-        const { ref: _ref, ...was } = now
-        const { ref: _same, ...is } = after ?? now
-        if (keep && (!after || JSON.stringify(was) !== JSON.stringify(is))) {
-          keep({
+        // From here to its own end the step's changes are its own (see `busy`).
+        busy++
+        let short: string | void
+        try {
+          short = await perform(element, now.component, name, args)
+          // A framework has its turn, and a popup its first frame.
+          await turn(20)
+          // What a closed select of several values held, read as the step opened it.
+          const had = prior.get(element)
+          if (had && now.values === undefined && !marked(element)) now = withValues(now, had)
+          const after = element.isConnected ? read(element) : undefined
+          const then = everything()
+          const still = new Set(then.map((each) => each.ref))
+          const opened = then.filter(
+            (each) =>
+              each.ref !== now.ref && each.open === true && before.get(each.ref)?.open !== true
+          )
+          const appeared = then.filter((each) => !before.has(each.ref) && !opened.includes(each))
+          const gone = [...before.values()].filter(
+            (each) => each.ref !== now.ref && !still.has(each.ref)
+          )
+          done.push({
             ref: now.ref,
             action: name,
-            args,
-            source: "agent",
-            before: now,
-            after,
-            undone: false,
-            step: { ref: now.ref, action: name, args },
-            at: performance.now(),
+            ...(after ? { now: after } : {}),
+            ...(opened.length > 0 ? { opened: opened.map(brief) } : {}),
+            ...(appeared.length > 0 ? { appeared: appeared.slice(0, 20).map(brief) } : {}),
+            ...(gone.length > 0 ? { gone: gone.slice(0, 20).map(brief) } : {}),
           })
+          // Only what took effect is a change: a callback may have refused it.
+          const { ref: _ref, ...was } = now
+          const { ref: _same, ...is } = after ?? now
+          if (keep && (!after || JSON.stringify(was) !== JSON.stringify(is))) {
+            keep({
+              ref: now.ref,
+              action: name,
+              args,
+              source: "agent",
+              before: now,
+              after,
+              undone: false,
+              step: { ref: now.ref, action: name, args },
+              at: performance.now(),
+            })
+          }
+          // Whoever listens hears it as the agent's; it is not kept a second time.
+          settle("agent")
+        } catch (error) {
+          // What a step that failed half way changed is compared as before, once it is still.
+          if (watched) look()
+          throw error
+        } finally {
+          busy--
         }
-        // Whoever listens hears it as the agent's; it is not kept a second time.
-        settle("agent")
         if (short) throw new Error(short)
       } catch (error) {
         return {
@@ -1726,21 +1754,31 @@ export function createAgent(given: AgentOptions = {}): Agent {
     if (request.within !== undefined) {
       const { element } = resolve(request.within)
       const now = read(element)
+      // Marked as not to be read back: listed as `snapshot` lists it, no choices, nothing opened.
+      if (marked(element)) return [now]
       let items = now.items
       // A closed select's choices are not in the page: opened to be read, and closed again.
       if (!items && now.component === "select" && !now.disabled) {
-        asAgent(() => (element as HTMLElement).click())
-        const id = element.getAttribute("aria-controls") ?? ""
-        const list = await until(
-          () => page.getElementById(id) ?? page.querySelector('[role="listbox"]')
-        )
-        await turn(20)
-        items = choicesOf(list ?? null)
-        // Several values: what it holds is read with its choices, and known once it is closed.
-        const several = severalIn(list)
-        if (several) remembered.set(element, { shown: textOf(element), values: chosenIn(several) })
-        asAgent(() => key(page.activeElement ?? element, "Escape"))
-        await turn(20)
+        busy++
+        try {
+          asAgent(() => (element as HTMLElement).click())
+          const id = element.getAttribute("aria-controls") ?? ""
+          const list = await until(
+            () => page.getElementById(id) ?? page.querySelector('[role="listbox"]')
+          )
+          await turn(20)
+          items = choicesOf(list ?? null)
+          // Several values: what it holds is read with its choices, and known once it is closed.
+          const several = severalIn(list)
+          if (several)
+            remembered.set(element, { shown: textOf(element), values: chosenIn(several) })
+          asAgent(() => key(page.activeElement ?? element, "Escape"))
+          await turn(20)
+        } finally {
+          // Heard as the agent's, and not kept: a list opened to read it is not a change.
+          busy--
+          settle("agent")
+        }
       }
       const wanted = request.text === undefined ? undefined : plain(request.text)
       const matching = (items ?? []).filter(

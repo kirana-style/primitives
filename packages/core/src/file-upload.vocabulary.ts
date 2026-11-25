@@ -11,20 +11,22 @@ const SHARED = {
 // not carry these descriptions.
 export const fileUploadVocabulary = defineComponent({
   root: {
-    description: "Files chosen to be sent.",
+    description:
+      "Files chosen to be sent. It holds the hidden file input, as its last child, and takes files pasted while focus is in it.",
     states: { ...SHARED, empty: state("data-empty", "Present while it holds no file.") },
   },
   dropzone: {
     inside: "root",
+    optional: true,
     description:
-      "Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input.",
+      "Where files are dropped; a pointer's press on it opens the file picker. A group (`role=\"group\"`), not a control: the trigger is the keyboard's way in, in it or beside it.",
     states: SHARED,
   },
   trigger: {
     // Beside the dropzone, or in it: a press on it is then its own, not the dropzone's.
     inside: ["root", "dropzone"],
-    optional: true,
-    description: "A button that opens the file picker.",
+    description:
+      "The button that opens the file picker: the control, which works with no dropzone in the page.",
     states: SHARED,
   },
   list: { inside: "root", description: "What holds the files: a list.", states: SHARED },

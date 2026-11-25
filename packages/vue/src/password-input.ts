@@ -6,6 +6,7 @@ import type {
   PasswordInputProps,
 } from "@kirana-ui/core/password-input"
 import { defineComponent, h } from "vue"
+import type { PropType } from "vue"
 
 import { useFieldAround } from "./field-context.ts"
 import { context, controller, optional, partComponent } from "./runtime.ts"
@@ -33,6 +34,10 @@ const Root = defineComponent({
     visible: optional(Boolean),
     defaultVisible: Boolean,
     disabled: Boolean,
+    toggleLabels: {
+      type: Object as PropType<PasswordInputProps["toggleLabels"]>,
+      default: undefined as unknown,
+    },
   },
   emits: ["update:visible", "visibleChange", "valueChange"],
   setup(props, { attrs, slots, emit }) {
@@ -41,6 +46,7 @@ const Root = defineComponent({
         visible: props.visible,
         defaultVisible: props.defaultVisible,
         disabled: props.disabled,
+        toggleLabels: props.toggleLabels as PasswordInputProps["toggleLabels"],
         onVisibleChange(visible: boolean, details: ChangeDetails) {
           emit("visibleChange", visible, details)
           if (!details.canceled) emit("update:visible", visible)

@@ -4945,6 +4945,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     // A password that can be shown.
     expect((await attribute("pw1-input", "type")) === "password", "a password is hidden")
     expect((await attribute("pw1-toggle", "aria-label")) === "Show password", "its button says so")
+    expect((await text("pw1-indicator")) === "hidden", "its mark is drawn from its state")
     await snapshot("a password hidden")
     await id("pw1-input").focus()
     await press("pw1-toggle")
@@ -4952,6 +4953,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await text("pw1-output")) === "true", "and the caller hears")
     expect((await focused()) === "pw1-input", "focus stays in the input")
     expect((await attribute("pw1-indicator", "data-visible")) === "", "its mark says which it is")
+    expect((await text("pw1-indicator")) === "shown", "and what is drawn from its state follows")
     await snapshot("a password shown")
     await press("ef1-reset")
     expect((await attribute("pw1-input", "type")) === "password", "a reset hides it again")
@@ -4986,6 +4988,7 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await attribute("ti1-list", "role")) === "list", "the tags are a list")
     expect((await attribute("ti1-item-red", "role")) === "listitem", "each an item of it")
     expect((await sent("colors")) === "red,green", "a form reads each tag under the one name")
+    expect((await attribute("ti1-input", "id")) === "ti1-entry", "its input keeps the page's id")
     await snapshot("tags at rest")
     await id("ti1-input").focus()
     await page.keyboard.type("blue")
@@ -5031,12 +5034,23 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("tags after an edit")
 
     // Files.
-    expect((await attribute("fu1-dropzone", "role")) === "button", "a dropzone is a button")
-    // The native input is the dropzone's own: it has no name of the page's to be found by.
-    const picker = page.locator('[data-testid="fu1-dropzone"] input[type="file"]')
+    expect((await attribute("fu1-dropzone", "role")) === "group", "a dropzone is a group")
+    expect(
+      (await attribute("fu1-dropzone", "tabindex")) === null,
+      "not a control: the trigger in it is the one stop"
+    )
+    // The native input is the root's own, its last child: it has no name of the page's to be
+    // found by, and a trigger reaches it with no dropzone around.
+    const picker = page.locator('[data-testid="fu1"] > input[type="file"]:last-child')
     expect((await picker.count()) === 1, "holding a native file input")
     expect(await picker.evaluate((element) => (element as HTMLElement).hidden), "which is hidden")
     expect(!(await shown("fu1-clear")), "with nothing to clear yet")
+    const [chooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      id("fu1-trigger").click(),
+    ])
+    expect(chooser.isMultiple(), "its trigger opens the picker, for several files")
+    await settled(page)
     await snapshot("a file upload at rest")
     const file = (name: string, mimeType = "text/plain") => ({
       name,

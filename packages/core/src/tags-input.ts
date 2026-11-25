@@ -395,8 +395,9 @@ export function createTagsInput(
       })),
     input: {
       props: computed(() => ({
-        // In a field, the id its label is `for`.
-        ...(field ? defaultId(field.controlId) : { id: `${id}-input` }),
+        // In a field, the id its label is `for`; a default only, outside a field too: an id the
+        // caller gives the input wins, and a `<label for>` names it so.
+        ...defaultId(field ? field.controlId : `${id}-input`),
         disabled: flag(disabled.get()),
         readonly: flag(readOnly.get()),
         "aria-required": props.get().required ? "true" : undefined,

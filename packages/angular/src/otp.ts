@@ -26,7 +26,7 @@ export class KpOtp implements OnInit {
   readonly validationType = input<OtpProps["validationType"]>()
   /**
    * What a character may be.
-   * @deprecated Base UI's name is `validationType`, which wins when both are given.
+   * @deprecated Use `validationType`, which wins when both are given.
    */
   readonly mode = input<OtpProps["mode"]>()
   readonly pattern = input<string>()
@@ -45,7 +45,7 @@ export class KpOtp implements OnInit {
   readonly valueCompleted = output<{ value: string; details: ChangeDetails }>()
   /**
    * Every character is in.
-   * @deprecated Base UI's name is `valueCompleted`, which carries the details too. Both are
+   * @deprecated Use `valueCompleted`, which carries the details too. Both are
    * emitted: an output cannot tell whether it is bound.
    */
   readonly completed = output<string>()

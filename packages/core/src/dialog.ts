@@ -28,13 +28,13 @@ export interface DialogProps {
   disablePointerDismissal?: boolean | undefined
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins
+   * @deprecated Use `disablePointerDismissal`, the other way round, which wins
    * when both are given.
    */
   closeOnOutsidePress?: boolean | undefined
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins
+   * @deprecated Use `disablePointerDismissal`, the other way round, which wins
    * over this and over `closeOnOutsidePress`.
    */
   dismissible?: boolean | undefined

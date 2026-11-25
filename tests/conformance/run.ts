@@ -70,6 +70,9 @@ const WEB = [
   "checkbox-group",
   "read-only",
   "combobox-data",
+  "editing",
+  "tagging",
+  "exploring",
 ]
 
 /**
@@ -251,11 +254,19 @@ const withoutStyles = (dom: string) =>
     .replace(/ aria-labelledby="[^"]*-(label|legend|heading)"/g, "")
     .replace(/ aria-describedby="[^"]*-description"/g, "")
     .replace(/^(\s*<label[^\n]*?) id="[^"]*-label"/gm, "$1")
+    // The tags' hidden inputs after the first are the core's to draw, once the first is in the
+    // page: a server sends one for a control that holds two.
+    .replace(/^\s*<input[^\n]* name="colors"[^\n]*\n/gm, "")
     // Whether a field has a value is its control's to say, once the control is in the page.
     .replace(/ data-filled/g, "")
     // Whether a combobox's button stands alone (its input is in the popup) is known once the
     // page shows no input beside it: a server draws the button as the one beside an input.
     .replace(/^(\s*<button#(?:pl3|cd1)-trigger)[^\n]*$/gm, "$1>")
+    // A tree node's place among its siblings is read from the page, and its name is its text
+    // part's once that part is in it: a server, which has no page, writes its level alone.
+    .replace(/^\s*<[^\n]*role="treeitem"[^\n]*$/gm, (line) =>
+      line.replace(/ aria-(?:posinset|setsize)="\d+"| aria-labelledby="[^"]*-text-[^"]*"/g, "")
+    )
     .replace(/\nfocus: .*$/s, "")
 
 function serve(adapter: string) {
@@ -4533,6 +4544,471 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     await snapshot("a read-only select, closed")
     expect(!(await present("ro2-popup")), "Escape closes it")
     expect((await focused()) === "ro2-trigger", "and focus is back on the trigger")
+  },
+  async editing({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const press = async (testid: string) => {
+      await id(testid).click()
+      await settled(page)
+    }
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    const shown = (testid: string) =>
+      id(testid).evaluate((element) => !(element as HTMLElement).hidden)
+    await id("rt1").evaluate((element) => element.scrollIntoView({ block: "center" }))
+
+    // A rating: radios, one stop for Tab, halves.
+    expect((await attribute("rt1", "role")) === "radiogroup", "a rating is a radio group")
+    expect((await attribute("rt1-2", "aria-checked")) === "true", "the item at its value is chosen")
+    expect((await attribute("rt1-2", "tabindex")) === "0", "and is where Tab stops")
+    expect((await attribute("rt1-3", "data-filled")) === null, "the items after it are not filled")
+    await snapshot("a rating at rest")
+    await press("rt1-4")
+    expect((await text("rt1-output")) === "4", "a press gives the item's place")
+    expect((await attribute("rt1-4", "aria-checked")) === "true", "and the item is the chosen one")
+    await id("rt1-4").focus()
+    await key("ArrowLeft")
+    expect((await text("rt1-output")) === "3.5", "an arrow moves by half where halves are given")
+    expect((await attribute("rt1-4", "data-half")) === "", "the item it half fills says so")
+    expect((await focused()) === "rt1-4", "focus is on the item that holds the value")
+    expect(
+      (await page.evaluate(
+        () => (document.querySelector('input[name="stars"]') as HTMLInputElement).value
+      )) === "3.5",
+      "and a form reads it"
+    )
+    await snapshot("a rating at a half")
+    await key("Home")
+    expect((await text("rt1-output")) === "0.5", "Home is the least that can be given")
+
+    // Steps: tabs in order.
+    expect((await attribute("st1-list", "role")) === "tablist", "steps are tabs")
+    expect((await attribute("st1-trigger-0", "aria-selected")) === "true", "the first is shown")
+    expect(
+      (await attribute("st1-trigger-2", "aria-disabled")) === "true",
+      "in order, a step not reached cannot be gone to"
+    )
+    expect(await shown("st1-content-0"), "its content is in the page")
+    expect(!(await shown("st1-content-1")), "and the others are hidden")
+    await snapshot("steps at the first")
+    // Pressed all the same: the runner would wait for a step that says it is disabled.
+    await id("st1-trigger-2").click({ force: true })
+    await settled(page)
+    expect((await text("st1-output")) === "0", "a press on a step not reached does nothing")
+    await press("st1-next")
+    expect((await text("st1-output")) === "1", "Next goes a step on")
+    expect((await attribute("st1-item-0", "data-complete")) === "", "the step before is done")
+    expect((await attribute("st1-item-1", "data-current")) === "", "and this one is the current")
+    await snapshot("steps at the second")
+    await id("st1-trigger-1").focus()
+    await key("ArrowLeft")
+    expect((await focused()) === "st1-trigger-0", "the arrows move between the steps")
+    expect((await text("st1-output")) === "1", "without going to one")
+    await key("Enter")
+    expect((await text("st1-output")) === "0", "a press on a step that is done goes back to it")
+    await press("st1-next")
+    await press("st1-next")
+    await press("st1-next")
+    expect((await text("st1-output")) === "3", "past the last, every step is done")
+    expect(await shown("st1-completed"), "and what is shown then is in the page")
+    expect((await attribute("st1-next", "data-disabled")) === "", "with nothing after it")
+    await snapshot("steps all done")
+
+    // An editable text.
+    expect((await text("ed1-preview")) === "Apollo", "an editable reads as its text")
+    expect(!(await shown("ed1-input")), "with its input hidden")
+    await snapshot("an editable at rest")
+    await press("ed1-edit")
+    expect(
+      (await focused()) === "ed1-input",
+      "its trigger starts the edit, with focus in the input"
+    )
+    expect((await attribute("ed1", "data-editing")) === "", "and the root says so")
+    expect(!(await shown("ed1-preview")), "the preview is hidden meanwhile")
+    await snapshot("an editable being edited")
+    await page.keyboard.type("Atlas")
+    await key("Enter")
+    expect((await text("ed1-output")) === "Atlas", "Enter keeps what was typed over the selection")
+    expect((await text("ed1-preview")) === "Atlas", "and the preview says it")
+    expect((await focused()) === "ed1-edit", "focus is back where the edit began")
+    await press("ed1-edit")
+    await page.keyboard.type("Zeus")
+    await key("Escape")
+    expect((await text("ed1-preview")) === "Atlas", "Escape drops what was typed")
+    await id("ed1-preview").focus()
+    await settled(page)
+    expect((await focused()) === "ed1-input", "focus reaching the preview starts an edit too")
+    await page.keyboard.type("Borealis")
+    await press("ed1-submit")
+    expect((await text("ed1-output")) === "Borealis", "its button keeps the edit")
+    await snapshot("an editable after an edit")
+
+    // A password that can be shown.
+    expect((await attribute("pw1-input", "type")) === "password", "a password is hidden")
+    expect((await attribute("pw1-toggle", "aria-label")) === "Show password", "its button says so")
+    await snapshot("a password hidden")
+    await id("pw1-input").focus()
+    await press("pw1-toggle")
+    expect((await attribute("pw1-input", "type")) === "text", "the button shows it")
+    expect((await text("pw1-output")) === "true", "and the caller hears")
+    expect((await focused()) === "pw1-input", "focus stays in the input")
+    expect((await attribute("pw1-indicator", "data-visible")) === "", "its mark says which it is")
+    await snapshot("a password shown")
+    await press("ef1-reset")
+    expect((await attribute("pw1-input", "type")) === "password", "a reset hides it again")
+    expect((await text("rt1-output")) === "2", "and the rating is what it began as")
+    expect((await text("ed1-output")) === "Apollo", "and the text too")
+    await snapshot("after the form is reset")
+  },
+  async tagging({ page, snapshot, id, attribute, focused }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const press = async (testid: string) => {
+      await id(testid).click()
+      await settled(page)
+    }
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    const shown = (testid: string) =>
+      id(testid).evaluate((element) => !(element as HTMLElement).hidden)
+    const sent = (name: string) =>
+      page.evaluate(
+        (field) =>
+          new FormData(document.querySelector('[data-testid="tf1-form"]') as HTMLFormElement)
+            .getAll(field)
+            .map((each) => (typeof each === "string" ? each : each.name))
+            .join(","),
+        name
+      )
+    await id("ti1").evaluate((element) => element.scrollIntoView({ block: "center" }))
+
+    // Tags.
+    expect((await attribute("ti1-list", "role")) === "list", "the tags are a list")
+    expect((await attribute("ti1-item-red", "role")) === "listitem", "each an item of it")
+    expect((await sent("colors")) === "red,green", "a form reads each tag under the one name")
+    await snapshot("tags at rest")
+    await id("ti1-input").focus()
+    await page.keyboard.type("blue")
+    await key("Enter")
+    expect((await text("ti1-output")) === "red,green,blue", "Enter makes what was typed a tag")
+    expect((await id("ti1-input").inputValue()) === "", "and empties the input")
+    await page.keyboard.type("red")
+    await key("Enter")
+    expect((await text("ti1-refused")) === "red:duplicate", "a twin is refused, and said")
+    await id("ti1-input").fill("")
+    await page.keyboard.type("pink,gr")
+    await settled(page)
+    expect((await text("ti1-output")) === "red,green,blue,pink", "a delimiter ends a tag as typed")
+    expect((await id("ti1-input").inputValue()) === "gr", "what comes after it is still typed")
+    await id("ti1-input").fill("")
+    await page.keyboard.type("more")
+    await key("Enter")
+    expect((await text("ti1-refused")) === "more:max", "one too many is refused")
+    await id("ti1-input").fill("")
+    await snapshot("tags after some were added")
+    await key("Backspace")
+    expect(
+      (await focused()) === "ti1-item-pink",
+      "Backspace in the empty input goes onto the last tag"
+    )
+    expect((await text("ti1-output")) === "red,green,blue,pink", "and takes nothing away yet")
+    await key("ArrowLeft")
+    expect((await focused()) === "ti1-item-blue", "the arrows move between the tags")
+    await key("Backspace")
+    expect((await text("ti1-output")) === "red,green,pink", "Backspace on a tag takes it away")
+    expect((await focused()) === "ti1-item-green", "and focus goes to the tag before it")
+    await key("Enter")
+    expect((await focused()) === "ti1-edit-green", "Enter on a tag edits it in place")
+    expect(!(await shown("ti1-text-green")), "its text hidden meanwhile")
+    await snapshot("a tag being edited")
+    await page.keyboard.type("lime")
+    await key("Enter")
+    expect((await text("ti1-output")) === "red,lime,pink", "and Enter keeps the edit")
+    await press("ti1-remove-red")
+    expect((await text("ti1-output")) === "lime,pink", "a tag's button takes it away")
+    expect((await focused()) === "ti1-input", "with focus in the input")
+    expect((await sent("colors")) === "lime,pink", "and the form follows")
+    await snapshot("tags after an edit")
+
+    // Files.
+    expect((await attribute("fu1-dropzone", "role")) === "button", "a dropzone is a button")
+    // The native input is the dropzone's own: it has no name of the page's to be found by.
+    const picker = page.locator('[data-testid="fu1-dropzone"] input[type="file"]')
+    expect((await picker.count()) === 1, "holding a native file input")
+    expect(await picker.evaluate((element) => (element as HTMLElement).hidden), "which is hidden")
+    expect(!(await shown("fu1-clear")), "with nothing to clear yet")
+    await snapshot("a file upload at rest")
+    const file = (name: string, mimeType = "text/plain") => ({
+      name,
+      mimeType,
+      buffer: Buffer.from("abcd"),
+    })
+    await picker.setInputFiles([file("a.txt"), file("b.png", "image/png")])
+    await settled(page)
+    expect((await text("fu1-output")) === "a.txt", "a file that may be taken is")
+    expect((await text("fu1-rejected")) === "b.png:type", "one that may not is told, with why")
+    expect((await text("fu1-name-a.txt")) === "a.txt", "it is listed by its name")
+    expect((await text("fu1-size-a.txt")) === "4 B", "and its size")
+    expect((await attribute("fu1-remove-a.txt", "aria-label")) === "Remove a.txt", "with a way out")
+    expect((await sent("docs")) === "a.txt", "a form submits what is held")
+    await snapshot("a file upload holding a file")
+    await picker.setInputFiles([file("b.txt"), file("c.txt")])
+    await settled(page)
+    expect((await text("fu1-output")) === "a.txt,b.txt", "several are held, up to its most")
+    expect((await text("fu1-rejected")) === "c.txt:too-many", "and one too many is told")
+    await press("fu1-remove-a.txt")
+    expect((await text("fu1-output")) === "b.txt", "a file's button takes it away")
+    await press("fu1-clear")
+    expect((await text("fu1-output")) === "", "Clear takes them all")
+    expect((await sent("docs")) === "", "and nothing is submitted")
+
+    // A time that is typed.
+    expect(
+      (await attribute("tm1-hour-0", "role")) === "spinbutton",
+      "each part of a time a spin button"
+    )
+    expect((await text("tm1-hour-0")) === "09", "the hour as the clock of the locale shows it")
+    expect((await text("tm1-dayPeriod-4")) === "AM", "with its half of the day")
+    expect((await sent("at")) === "09:30", "a form reads it in 24 hours")
+    await snapshot("a time field at rest")
+    await id("tm1-hour-0").click()
+    await page.keyboard.type("4")
+    await settled(page)
+    expect((await focused()) === "tm1-minute-2", "an hour that is whole passes focus on")
+    await page.keyboard.type("15")
+    await settled(page)
+    expect((await text("tm1-output")) === "04:15", "the time follows what is typed")
+    expect((await focused()) === "tm1-dayPeriod-4", "and focus goes on to the half of the day")
+    await page.keyboard.type("p")
+    await settled(page)
+    expect((await text("tm1-output")) === "16:15", "typed by its letter, it is the afternoon")
+    await key("ArrowLeft")
+    await key("ArrowUp")
+    expect((await text("tm1-output")) === "16:16", "the arrows turn a part")
+    expect((await attribute("tm1-minute-2", "aria-valuenow")) === "16", "which says its number")
+    await snapshot("a time field after it was typed")
+    await press("tf1-reset")
+    expect((await text("ti1-output")) === "red,green", "a reset gives the tags it began with")
+    expect((await text("tm1-output")) === "09:30", "and the time")
+    await snapshot("after the form is reset")
+  },
+  async exploring({ page, snapshot, id, attribute, focused, present }) {
+    const key = async (name: string) => {
+      await page.keyboard.press(name)
+      await settled(page)
+    }
+    const press = async (testid: string) => {
+      await id(testid).click()
+      await settled(page)
+    }
+    const text = async (testid: string) => (await id(testid).textContent())?.trim()
+    const sent = () =>
+      page.evaluate(() =>
+        String(
+          new FormData(document.querySelector('[data-testid="pk1-form"]') as HTMLFormElement).get(
+            "color"
+          )
+        )
+      )
+    await id("tr1").evaluate((element) => element.scrollIntoView({ block: "center" }))
+
+    // A tree: one stop for Tab, the arrows over the nodes that are shown.
+    expect((await attribute("tr1", "role")) === "tree", "a tree is a tree")
+    expect((await attribute("tr1-docs", "role")) === "treeitem", "each node a tree item")
+    expect((await attribute("tr1-docs", "aria-expanded")) === "true", "an open branch says so")
+    expect((await attribute("tr1-music", "aria-expanded")) === "false", "and a closed one")
+    expect((await attribute("tr1-notes", "aria-expanded")) === null, "a leaf says neither")
+    expect((await attribute("tr1-letter", "aria-level")) === "2", "a node says how deep it is")
+    expect((await attribute("tr1-letter", "aria-selected")) === "true", "the chosen node says so")
+    expect((await attribute("tr1-letter", "tabindex")) === "0", "and is where Tab stops")
+    expect((await attribute("tr1-docs", "tabindex")) === "-1", "the others are not")
+    expect(!(await present("tr1-work-group")), "a closed branch's group is not in the page")
+    await snapshot("a tree at rest")
+    await id("tr1-letter").focus()
+    await key("ArrowUp")
+    expect((await focused()) === "tr1-work", "ArrowUp goes to the node shown before")
+    expect((await attribute("tr1-work", "data-highlighted")) === "", "which says it has focus")
+    await key("ArrowRight")
+    expect((await text("tr1-expanded")) === "docs,work", "ArrowRight opens a closed branch")
+    expect((await focused()) === "tr1-work", "and focus stays on it")
+    expect((await attribute("tr1-report", "aria-level")) === "3", "its children are a level down")
+    await key("ArrowRight")
+    expect((await focused()) === "tr1-report", "ArrowRight on an open branch goes into it")
+    await snapshot("a tree opened two deep")
+    await key("ArrowDown")
+    await key("ArrowDown")
+    expect((await focused()) === "tr1-letter", "ArrowDown goes on through the branch and out")
+    await key("ArrowDown")
+    expect((await focused()) === "tr1-music", "past a disabled node")
+    await key("Enter")
+    expect((await text("tr1-selected")) === "music", "Enter chooses a node")
+    expect((await text("tr1-expanded")) === "docs,work,music", "and opens a branch")
+    await key("ArrowLeft")
+    expect((await text("tr1-expanded")) === "docs,work", "ArrowLeft closes an open branch")
+    expect((await focused()) === "tr1-music", "and focus stays on it")
+    await key("n")
+    expect((await focused()) === "tr1-notes", "typing goes to the node whose name it begins")
+    expect((await text("tr1-selected")) === "music", "without choosing it")
+    await key("Home")
+    expect((await focused()) === "tr1-docs", "Home goes to the first node")
+    await key("ArrowLeft")
+    expect((await text("tr1-expanded")) === "work", "ArrowLeft closes it")
+    expect(!(await present("tr1-letter")), "and what it holds is gone from the page")
+    await snapshot("a tree with its first branch closed")
+    await press("tr1-docs-mark")
+    expect((await text("tr1-expanded")) === "work,docs", "a press on the mark opens a branch")
+    expect((await text("tr1-selected")) === "music", "and chooses nothing")
+    expect((await attribute("tr1-work", "aria-expanded")) === "true", "what was open inside is")
+    // Pressed all the same: the runner would wait for a node that says it is disabled.
+    await id("tr1-old").click({ force: true })
+    await settled(page)
+    expect((await text("tr1-selected")) === "music", "a press on a disabled node does nothing")
+    await press("tr1-letter")
+    expect((await text("tr1-selected")) === "letter", "a press on a node chooses it")
+    expect((await focused()) === "tr1-letter", "and gives it focus")
+    expect((await attribute("tr1-letter", "tabindex")) === "0", "where Tab stops")
+    await snapshot("a tree after a node was pressed")
+
+    // A colour picker: an area, a hue and an alpha, and what a form reads.
+    await id("pk1").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect((await attribute("pk1", "role")) === "group", "a colour picker is a group")
+    expect((await text("pk1-text")) === "#ff0000ff", "its text says the colour in its format")
+    expect((await sent()) === "#ff0000ff", "which is what a form reads")
+    expect((await attribute("pk1-area-thumb", "role")) === "slider", "its area's thumb a slider")
+    expect(
+      (await attribute("pk1-area-thumb", "aria-valuetext")) === "Saturation 100%, Brightness 100%",
+      "which says both of what it moves"
+    )
+    expect((await attribute("pk1-hue-thumb", "aria-valuemax")) === "360", "the hue in degrees")
+    await snapshot("a colour picker at rest")
+    // Each point is a whole pixel: an engine that lays a box out on part of one takes a
+    // pointer at part of one down or up as it likes, and a colour a step away would be chosen.
+    const area = (await id("pk1-area").boundingBox())!
+    await page.mouse.move(Math.round(area.x + 50), Math.round(area.y + 25))
+    await page.mouse.down()
+    await settled(page)
+    expect((await text("pk1-output")) === "#bf8f8fff", "a press in the area sets the colour there")
+    expect((await attribute("pk1-area", "data-dragging")) === "", "and holds its thumb")
+    await page.mouse.move(Math.round(area.x + 150), Math.round(area.y + 50), { steps: 4 })
+    await settled(page)
+    expect((await text("pk1-output")) === "#802020ff", "a drag follows the pointer")
+    expect((await text("pk1-committed")) === "", "and nothing is committed while it is held")
+    await page.mouse.up()
+    await settled(page)
+    expect((await text("pk1-committed")) === "#802020ff", "letting go commits the colour")
+    expect((await attribute("pk1", "data-dragging")) === null, "and the picker lets go")
+    expect((await focused()) === "pk1-area-thumb", "focus is on the thumb that was moved")
+    await key("ArrowRight")
+    await key("ArrowUp")
+    expect(
+      (await attribute("pk1-area-thumb", "aria-valuetext")) === "Saturation 76%, Brightness 51%",
+      "the arrows move the area's thumb a step each way"
+    )
+    expect((await text("pk1-committed")) === "#821f1fff", "and each is committed")
+    await snapshot("a colour picker after its area was dragged")
+    const hue = (await id("pk1-hue-track").boundingBox())!
+    await page.mouse.click(hue.x + hue.width / 2, hue.y + hue.height / 2)
+    await settled(page)
+    expect((await attribute("pk1-hue-thumb", "aria-valuenow")) === "180", "a press on the hue")
+    expect((await text("pk1-output")) === "#1f8282ff", "turns the colour")
+    expect((await focused()) === "pk1-hue-thumb", "and gives its thumb focus")
+    const alpha = (await id("pk1-alpha-track").boundingBox())!
+    const grip = (await id("pk1-alpha-thumb").boundingBox())!
+    await page.mouse.move(Math.round(grip.x + grip.width / 2), Math.round(grip.y + grip.height / 2))
+    await page.mouse.down()
+    await page.mouse.move(
+      Math.round(alpha.x + alpha.width / 2),
+      Math.round(grip.y + grip.height / 2),
+      { steps: 4 }
+    )
+    await page.mouse.up()
+    await settled(page)
+    expect((await attribute("pk1-alpha-thumb", "aria-valuenow")) === "50", "its thumb dragged")
+    expect((await text("pk1-committed")) === "#1f828280", "the alpha is in the colour")
+    await key("ArrowLeft")
+    expect((await attribute("pk1-alpha-thumb", "aria-valuenow")) === "49", "and keys move it")
+    await snapshot("a colour picker after its sliders were moved")
+    await id("pk1-hex").fill("")
+    await page.keyboard.type("336699")
+    await settled(page)
+    expect((await text("pk1-output")) === "#336699ff", "a hex typed is the colour")
+    expect((await text("pk1-committed")) === "#1f82827d", "and is not committed while typed")
+    // Enter in a form's one text input submits the form, as the browser does: Tab leaves it.
+    await key("Tab")
+    expect((await text("pk1-committed")) === "#336699ff", "leaving the input commits it")
+    expect((await id("pk1-hex").inputValue()) === "#336699ff", "the input says it as written")
+    await press("pk1-blue")
+    expect((await text("pk1-committed")) === "#0000ffff", "a preset pressed is the colour")
+    expect((await attribute("pk1-blue", "aria-pressed")) === "true", "and says so")
+    expect((await attribute("pk1-green", "aria-pressed")) === "false", "the other does not")
+    await snapshot("a colour picker after a preset")
+    await press("pk1-format")
+    expect((await text("pk1-written")) === "rgb", "its trigger goes to the next format")
+    expect((await text("pk1-format")) === "rgb", "which it says")
+    expect((await text("pk1-text")) === "rgba(0, 0, 255, 1)", "and the colour is written in it")
+    expect((await text("pk1-output")) === "rgba(0, 0, 255, 1)", "and told so")
+    expect((await sent()) === "rgba(0, 0, 255, 1)", "and a form reads it so")
+    await snapshot("a colour picker in another format")
+    await press("pk1-reset")
+    expect((await sent()) === "rgba(255, 0, 0, 1)", "a reset gives the colour it began with")
+    expect((await id("pk1-hex").inputValue()) === "#ff0000ff", "and its input says it")
+    await snapshot("a colour picker after its form was reset")
+
+    // A tour: a step at a time, against an element of the page, the rest of it inert.
+    await id("tu1-open").evaluate((element) => element.scrollIntoView({ block: "center" }))
+    expect(!(await present("tu1-popup")), "a closed tour draws nothing")
+    await press("tu1-open")
+    expect((await text("tu1-output")) === "true", "it opens")
+    expect((await attribute("tu1-popup", "role")) === "dialog", "its popup a dialog")
+    const named = await id("tu1-popup").evaluate(
+      (element) =>
+        document.getElementById(element.getAttribute("aria-labelledby") ?? "")?.textContent
+    )
+    expect(named === "Files", "named by its step's title")
+    expect((await text("tu1-count")) === "1 of 3", "the page says where it is")
+    expect((await focused()) === "tu1-next", "focus goes to its button that goes on")
+    expect((await attribute("tu1-previous", "aria-disabled")) === "true", "nothing is before")
+    expect(
+      await id("tu1-spotlight").evaluate((element) =>
+        ["left", "top", "width", "height"].every((side) =>
+          (element as HTMLElement).style.getPropertyValue(`--spotlight-${side}`).endsWith("px")
+        )
+      ),
+      "the spotlight is told where its hole is"
+    )
+    expect(
+      await page.evaluate(() => document.querySelector("main")!.closest("[inert]") !== null),
+      "and the page under it is inert"
+    )
+    await snapshot("a tour at its first step")
+    await key("ArrowRight")
+    expect((await text("tu1-step")) === "1", "ArrowRight goes a step on")
+    expect((await text("tu1-title")) === "Stars", "to the step about another section")
+    expect((await text("tu1-count")) === "2 of 3", "and says so")
+    expect((await focused()) === "tu1-next", "focus stays where it was")
+    await snapshot("a tour at its second step")
+    await press("tu1-previous")
+    expect((await text("tu1-step")) === "0", "its button goes back a step")
+    expect((await text("tu1-title")) === "Files", "to the first")
+    await press("tu1-next")
+    await press("tu1-next")
+    expect((await text("tu1-step")) === "2", "and its other on")
+    expect((await attribute("tu1-popup", "data-centered")) === "", "a step with no target")
+    expect((await text("tu1-next")) === "Done", "the last")
+    expect((await attribute("tu1-next", "data-last")) === "", "says it is")
+    await snapshot("a tour at its last step")
+    await key("Escape")
+    expect((await text("tu1-output")) === "false", "Escape ends it")
+    expect(!(await present("tu1-popup")), "and it is gone")
+    expect((await focused()) === "tu1-open", "focus is back on what opened it")
+    expect(
+      await page.evaluate(() => document.querySelector("main")!.closest("[inert]") === null),
+      "and the page is not inert"
+    )
+    await snapshot("a tour closed")
   },
 }
 

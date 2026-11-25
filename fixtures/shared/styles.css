@@ -750,3 +750,192 @@ section[data-fixture="container"] {
 .pagination [data-selected] {
   font-weight: 600;
 }
+
+.editing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.rating {
+  display: flex;
+  gap: 2px;
+}
+.star {
+  display: block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  color: #bbb;
+  cursor: default;
+}
+.star[data-filled] {
+  color: #c80;
+}
+.star[data-half] {
+  color: #db5;
+}
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.step-mark {
+  display: inline-block;
+  width: 16px;
+}
+.step-line {
+  width: 16px;
+  height: 1px;
+  background: #999;
+}
+.step-line[data-complete] {
+  background: #000;
+}
+.editable-preview {
+  display: inline-block;
+  min-width: 80px;
+}
+.eye {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid;
+  border-radius: 50%;
+}
+.eye[data-visible] {
+  background: currentColor;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  border: 1px solid #999;
+}
+.tag:focus {
+  outline: 2px solid #06c;
+}
+.upload {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.dropzone {
+  display: flex;
+  align-items: center;
+  width: 240px;
+  height: 48px;
+  border: 1px dashed #999;
+}
+.dropzone[data-dragging] {
+  border-color: #06c;
+}
+.files {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The tree: a node's children are indented by their group, and its row is what is highlighted. */
+.tree {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+}
+.tree [role="treeitem"] {
+  outline: none;
+}
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 4px;
+}
+.tree-row[data-highlighted] {
+  background: #e5e5e5;
+}
+.tree-row[data-selected] {
+  font-weight: 600;
+}
+.tree-row[data-disabled] {
+  opacity: 0.5;
+}
+.tree-mark {
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+}
+.tree-mark[data-open] {
+  rotate: 90deg;
+}
+.tree-group {
+  padding-inline-start: 16px;
+}
+
+/* The colour picker: an area painted from its hue, and thumbs of a fixed size. */
+.color-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.color-area {
+  position: relative;
+  width: 200px;
+  height: 100px;
+  background:
+    linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--hue-color));
+}
+.color-thumb {
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--color);
+}
+.swatch {
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid #999;
+  background: var(--color);
+}
+.swatch[data-selected] {
+  outline: 2px solid #06c;
+}
+
+/* The tour: a layer over the page, and a popup of its own width that does not move in or out. */
+.spotlight {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.3);
+}
+.tour-popup {
+  position: relative;
+  width: 220px;
+  padding: 8px;
+  background: white;
+  border: 1px solid #ccc;
+}
+.tour-popup:focus {
+  outline: none;
+}
+.tour-title {
+  margin: 0;
+  font-size: 16px;
+}

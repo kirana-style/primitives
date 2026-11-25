@@ -812,6 +812,12 @@ const WHEN: Record<string, string> = {
   "bar?.vertical.get()": "a menu in a vertical menubar",
 }
 
+/** A component whose placement the core works out step by step, in words. */
+const PLACED: Record<string, string> = {
+  "tour.ts":
+    "the shared defaults, under the `side` and `align` of the step shown; a step with no target is placed in the middle of the viewport whatever they say",
+}
+
 /**
  * A positioner's own defaults in a component, from the core's `createPlacement(…)` for it:
  * one object, or, where a function chooses between two, each with when it is the one.
@@ -821,6 +827,8 @@ function placementOf(component: string, adapter: string, problems: Problem[]): s
   const look = (file: string): string | undefined => {
     if (seen.has(file) || !existsSync(join(ROOT, "packages/core/src", file))) return undefined
     seen.add(file)
+    // Chosen by more than a condition: said by hand, beside the function it describes.
+    if (PLACED[file]) return PLACED[file]
     const text = read(`packages/core/src/${file}`)
     const at = text.indexOf("createPlacement(")
     if (at >= 0) {

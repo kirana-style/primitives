@@ -30,6 +30,16 @@ import { commandVocabulary } from "./command.vocabulary.ts"
 import { numberFieldVocabulary } from "./number-field.vocabulary.ts"
 import { autocompleteVocabulary } from "./autocomplete.vocabulary.ts"
 import { paginationVocabulary } from "./pagination.vocabulary.ts"
+import { ratingVocabulary } from "./rating.vocabulary.ts"
+import { stepsVocabulary } from "./steps.vocabulary.ts"
+import { editableVocabulary } from "./editable.vocabulary.ts"
+import { passwordInputVocabulary } from "./password-input.vocabulary.ts"
+import { tagsInputVocabulary } from "./tags-input.vocabulary.ts"
+import { fileUploadVocabulary } from "./file-upload.vocabulary.ts"
+import { timeFieldVocabulary } from "./time-field.vocabulary.ts"
+import { treeVocabulary } from "./tree.vocabulary.ts"
+import { colorPickerVocabulary } from "./color-picker.vocabulary.ts"
+import { tourVocabulary } from "./tour.vocabulary.ts"
 import { datePickerVocabulary } from "./date-picker.vocabulary.ts"
 import { calendarVocabulary } from "./calendar.vocabulary.ts"
 import { drawerVocabulary } from "./drawer.vocabulary.ts"
@@ -90,6 +100,16 @@ export const vocabulary = {
   numberField: numberFieldVocabulary,
   autocomplete: autocompleteVocabulary,
   pagination: paginationVocabulary,
+  rating: ratingVocabulary,
+  steps: stepsVocabulary,
+  editable: editableVocabulary,
+  passwordInput: passwordInputVocabulary,
+  tagsInput: tagsInputVocabulary,
+  fileUpload: fileUploadVocabulary,
+  timeField: timeFieldVocabulary,
+  tree: treeVocabulary,
+  colorPicker: colorPickerVocabulary,
+  tour: tourVocabulary,
   datePicker: datePickerVocabulary,
   calendar: calendarVocabulary,
   drawer: drawerVocabulary,

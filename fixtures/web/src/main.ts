@@ -1,6 +1,7 @@
 import "../../shared/styles.css"
 import { effect } from "@kirana-ui/core"
 import type { Field } from "@kirana-ui/core/field"
+import type { Tour } from "@kirana-ui/core/tour"
 import "@kirana-ui/web"
 import type { Placed } from "@kirana-ui/web"
 import { toasterOf } from "@kirana-ui/web/toast"
@@ -313,4 +314,124 @@ one("kui-date-field", "df1", "df1-output", "null")
 one("kui-date-picker", "dk1", "dk1-output", "null")
 element("kui-pagination", "pg1").addEventListener("page-change", (event) => {
   find("pg1-output").textContent = String((event as CustomEvent<{ page: number }>).detail.page)
+})
+
+// What the callers of the "editing" section heard: a rating, steps, a text, a password shown.
+element("kui-rating", "rt1").addEventListener("value-change", (event) => {
+  find("rt1-output").textContent = String((event as CustomEvent<{ value: number }>).detail.value)
+})
+element("kui-steps", "st1").addEventListener("step-change", (event) => {
+  find("st1-output").textContent = String((event as CustomEvent<{ step: number }>).detail.step)
+})
+element("kui-editable", "ed1").addEventListener("value-change", (event) => {
+  find("ed1-output").textContent = (event as CustomEvent<{ value: string }>).detail.value
+})
+document.querySelector("kui-password-input")!.addEventListener("visible-change", (event) => {
+  find("pw1-output").textContent = String(
+    (event as CustomEvent<{ visible: boolean }>).detail.visible
+  )
+})
+
+// What the callers of the "tagging" section heard: tags, what was refused, files, a time.
+element("kui-tags-input", "ti1").addEventListener("value-change", (event) => {
+  find("ti1-output").textContent = (event as CustomEvent<{ value: string[] }>).detail.value.join(
+    ","
+  )
+})
+element("kui-tags-input", "ti1").addEventListener("value-invalid", (event) => {
+  const { text, reason } = (event as CustomEvent<{ text: string; reason: string }>).detail
+  find("ti1-refused").textContent = `${text}:${reason}`
+})
+const upload = element("kui-file-upload", "fu1")
+upload.addEventListener("files-change", (event) => {
+  find("fu1-output").textContent = (event as CustomEvent<{ files: File[] }>).detail.files
+    .map((each) => each.name)
+    .join(",")
+})
+upload.addEventListener("files-reject", (event) => {
+  find("fu1-rejected").textContent = (
+    event as CustomEvent<{ rejections: { file: File; reasons: string[] }[] }>
+  ).detail.rejections
+    .map((each) => `${each.file.name}:${each.reasons.join("+")}`)
+    .join(",")
+})
+element("kui-time-field", "tm1").addEventListener("value-change", (event) => {
+  find("tm1-output").textContent = String(
+    (event as CustomEvent<{ value: string | null }>).detail.value
+  )
+})
+
+// What the callers of the "exploring" section heard: a tree, a colour, a tour.
+const tree = element("kui-tree", "tr1")
+tree.addEventListener("expanded-change", (event) => {
+  find("tr1-expanded").textContent = (
+    event as CustomEvent<{ expandedValue: string[] }>
+  ).detail.expandedValue.join(",")
+})
+tree.addEventListener("selected-change", (event) => {
+  find("tr1-selected").textContent = (
+    event as CustomEvent<{ selectedValue: string[] }>
+  ).detail.selectedValue.join(",")
+})
+const picker = element("kui-color-picker", "pk1")
+picker.addEventListener("value-change", (event) => {
+  find("pk1-output").textContent = (event as CustomEvent<{ value: string }>).detail.value
+})
+picker.addEventListener("value-committed", (event) => {
+  find("pk1-committed").textContent = (event as CustomEvent<{ value: string }>).detail.value
+})
+picker.addEventListener("format-change", (event) => {
+  find("pk1-written").textContent = (event as CustomEvent<{ format: string }>).detail.format
+})
+// A tour's steps: what each says is the page's own, kept beside the step. One is about an element
+// of its own section, one about another section's, and the last about none.
+interface PageStep {
+  id: string
+  target?: string
+  title: string
+  body: string
+}
+const TOUR: PageStep[] = [
+  { id: "files", target: '[data-testid="tr1"]', title: "Files", body: "Documents and music." },
+  { id: "stars", target: '[data-testid="rt1"]', title: "Stars", body: "How much it was liked." },
+  { id: "done", title: "All set", body: "That is the whole page." },
+]
+// The page holds whether the tour is open, as the other fixtures' state does.
+const tour = element<{ steps: PageStep[]; open: boolean; controller: Tour<PageStep> }>(
+  "kui-tour",
+  "tu1"
+)
+tour.steps = TOUR
+tour.open = false
+const touring = (open: boolean) => {
+  tour.open = open
+  find("tu1-output").textContent = String(open)
+}
+find("tu1-open").addEventListener("click", () => touring(true))
+tour.addEventListener("open-change", (event) => {
+  touring((event as CustomEvent<{ open: boolean }>).detail.open)
+})
+tour.addEventListener("step-change", (event) => {
+  find("tu1-step").textContent = String((event as CustomEvent<{ step: number }>).detail.step)
+})
+// What a step says is written by the page from the step shown. Its popup is out of the page
+// while it is closed, so it is looked for each time, once it has been put back.
+void customElements.whenDefined("kui-tour").then(() => {
+  const { controller } = tour
+  effect(() => {
+    const step = controller.shown.get()
+    const current = controller.current.get()
+    const total = controller.total.get()
+    if (!controller.mounted.get()) return
+    queueMicrotask(() => {
+      const written = (testid: string, text: string) => {
+        const at = document.querySelector(`[data-testid="${testid}"]`)
+        if (at && at.textContent !== text) at.textContent = text
+      }
+      written("tu1-title", step?.title ?? "")
+      written("tu1-description", step?.body ?? "")
+      written("tu1-count", `${current} of ${total}`)
+      written("tu1-next", current === total ? "Done" : "Next")
+    })
+  })
 })

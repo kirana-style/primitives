@@ -109,6 +109,80 @@ import {
   KpPaginationItems,
   KpPaginationNext,
   KpPaginationPrevious,
+  KpEditable,
+  KpEditableCancelTrigger,
+  KpEditableEditTrigger,
+  KpEditableInput,
+  KpEditablePreview,
+  KpEditableSubmitTrigger,
+  KpPasswordInput,
+  KpPasswordInputIndicator,
+  KpPasswordInputInput,
+  KpPasswordInputToggle,
+  KpRating,
+  KpRatingItem,
+  KpRatingItems,
+  KpTree,
+  KpTreeGroup,
+  KpTreeItem,
+  KpTreeItemIndicator,
+  KpTreeItemRow,
+  KpTreeItemText,
+  KpColorPicker,
+  KpColorPickerArea,
+  KpColorPickerAreaThumb,
+  KpColorPickerChannelInput,
+  KpColorPickerChannelSlider,
+  KpColorPickerChannelSliderThumb,
+  KpColorPickerChannelSliderTrack,
+  KpColorPickerFormatTrigger,
+  KpColorPickerSwatch,
+  KpColorPickerSwatchTrigger,
+  KpColorPickerValueText,
+  KpTour,
+  KpTourArrow,
+  KpTourClose,
+  KpTourDescription,
+  KpTourNext,
+  KpTourPopup,
+  KpTourPortal,
+  KpTourPositioner,
+  KpTourPrevious,
+  KpTourSpotlight,
+  KpTourTitle,
+  KpSteps,
+  KpStepsCompleted,
+  KpStepsContent,
+  KpStepsIndicator,
+  KpStepsItem,
+  KpStepsList,
+  KpStepsNext,
+  KpStepsPrevious,
+  KpStepsSeparator,
+  KpStepsTrigger,
+  KpTagsInput,
+  KpTagsInputClear,
+  KpTagsInputInput,
+  KpTagsInputItem,
+  KpTagsInputItemInput,
+  KpTagsInputItemRemove,
+  KpTagsInputItemText,
+  KpTagsInputItems,
+  KpTagsInputList,
+  KpFileUpload,
+  KpFileUploadClear,
+  KpFileUploadDropzone,
+  KpFileUploadItem,
+  KpFileUploadItemName,
+  KpFileUploadItemRemove,
+  KpFileUploadItemSize,
+  KpFileUploadItems,
+  KpFileUploadList,
+  KpFileUploadTrigger,
+  KpTimeField,
+  KpTimeFieldInput,
+  KpTimeFieldSegment,
+  KpTimeFieldSegments,
   KpDatePicker,
   KpDatePickerCalendar,
   KpDatePickerField,
@@ -245,7 +319,7 @@ import {
   KpTooltipPositioner,
   KpTooltipTrigger,
 } from "@kirana-ui/angular"
-import type { DateRange, OffsetFunction } from "@kirana-ui/angular"
+import type { DateRange, FileRejection, OffsetFunction, TourStep } from "@kirana-ui/angular"
 
 import {
   KuiCode,
@@ -259,6 +333,24 @@ import {
   KuiTooltip,
   KuiTooltipPositioner,
 } from "./design-system"
+
+// A tour's steps: what each says is the page's own, kept beside the step. One is about an element
+// of its own section, one about another section's, and the last about none.
+interface PageStep extends TourStep {
+  title: string
+  body: string
+}
+// What the tour's popup tells its template of the step it shows.
+interface Shown {
+  step: TourStep | undefined
+  current: number
+  total: number
+}
+const TOUR: PageStep[] = [
+  { id: "files", target: '[data-testid="tr1"]', title: "Files", body: "Documents and music." },
+  { id: "stars", target: '[data-testid="rt1"]', title: "Stars", body: "How much it was liked." },
+  { id: "done", title: "All set", body: "That is the whole page." },
+]
 
 /**
  * The page every adapter draws, element for element: the conformance run walks it and compares
@@ -389,6 +481,80 @@ import {
     KpPaginationItems,
     KpPaginationNext,
     KpPaginationPrevious,
+    KpEditable,
+    KpEditableCancelTrigger,
+    KpEditableEditTrigger,
+    KpEditableInput,
+    KpEditablePreview,
+    KpEditableSubmitTrigger,
+    KpPasswordInput,
+    KpPasswordInputIndicator,
+    KpPasswordInputInput,
+    KpPasswordInputToggle,
+    KpRating,
+    KpRatingItem,
+    KpRatingItems,
+    KpTree,
+    KpTreeGroup,
+    KpTreeItem,
+    KpTreeItemIndicator,
+    KpTreeItemRow,
+    KpTreeItemText,
+    KpColorPicker,
+    KpColorPickerArea,
+    KpColorPickerAreaThumb,
+    KpColorPickerChannelInput,
+    KpColorPickerChannelSlider,
+    KpColorPickerChannelSliderThumb,
+    KpColorPickerChannelSliderTrack,
+    KpColorPickerFormatTrigger,
+    KpColorPickerSwatch,
+    KpColorPickerSwatchTrigger,
+    KpColorPickerValueText,
+    KpTour,
+    KpTourArrow,
+    KpTourClose,
+    KpTourDescription,
+    KpTourNext,
+    KpTourPopup,
+    KpTourPortal,
+    KpTourPositioner,
+    KpTourPrevious,
+    KpTourSpotlight,
+    KpTourTitle,
+    KpSteps,
+    KpStepsCompleted,
+    KpStepsContent,
+    KpStepsIndicator,
+    KpStepsItem,
+    KpStepsList,
+    KpStepsNext,
+    KpStepsPrevious,
+    KpStepsSeparator,
+    KpStepsTrigger,
+    KpTagsInput,
+    KpTagsInputClear,
+    KpTagsInputInput,
+    KpTagsInputItem,
+    KpTagsInputItemInput,
+    KpTagsInputItemRemove,
+    KpTagsInputItemText,
+    KpTagsInputItems,
+    KpTagsInputList,
+    KpFileUpload,
+    KpFileUploadClear,
+    KpFileUploadDropzone,
+    KpFileUploadItem,
+    KpFileUploadItemName,
+    KpFileUploadItemRemove,
+    KpFileUploadItemSize,
+    KpFileUploadItems,
+    KpFileUploadList,
+    KpFileUploadTrigger,
+    KpTimeField,
+    KpTimeFieldInput,
+    KpTimeFieldSegment,
+    KpTimeFieldSegments,
     KpDatePicker,
     KpDatePickerCalendar,
     KpDatePickerField,
@@ -2923,6 +3089,405 @@ import {
           <button type="button" data-testid="cd2-unlock" (click)="sealed.set(false)">Unlock</button>
         </div>
       </section>
+      <section data-fixture="editing">
+        <form class="editing" data-testid="ef1-form">
+          <div class="item">
+            <div
+              kpRating
+              [kpId]="'rt1'"
+              [name]="'stars'"
+              [defaultValue]="2"
+              [allowHalf]="true"
+              aria-label="Stars"
+              class="rating"
+              data-testid="rt1"
+              (valueChanged)="stars.set('' + $event.value)"
+            >
+              <span
+                *kpRatingItems="let star"
+                kpRatingItem
+                [place]="star"
+                class="star"
+                [attr.data-testid]="'rt1-' + star"
+                >★</span
+              >
+            </div>
+            <output form="" data-testid="rt1-output">{{ stars() }}</output>
+          </div>
+          <div
+            kpSteps
+            [kpId]="'st1'"
+            [count]="3"
+            [linear]="true"
+            class="steps"
+            data-testid="st1"
+            (stepChanged)="stepped.set('' + $event.step)"
+          >
+            <div kpStepsList class="item" aria-label="Sign up" data-testid="st1-list">
+              @for (each of steps; track each; let index = $index) {
+                <div
+                  kpStepsItem
+                  [index]="index"
+                  class="item"
+                  [attr.data-testid]="'st1-item-' + index"
+                >
+                  <button kpStepsTrigger [attr.data-testid]="'st1-trigger-' + index">
+                    <span
+                      kpStepsIndicator
+                      class="step-mark"
+                      [attr.data-testid]="'st1-indicator-' + index"
+                      >{{ index + 1 }}</span
+                    >{{ each }}
+                  </button>
+                  <div
+                    kpStepsSeparator
+                    class="step-line"
+                    [attr.data-testid]="'st1-separator-' + index"
+                  ></div>
+                </div>
+              }
+            </div>
+            @for (each of steps; track each; let index = $index) {
+              <div kpStepsContent [index]="index" [attr.data-testid]="'st1-content-' + index">
+                {{ each }} details
+              </div>
+            }
+            <div kpStepsCompleted data-testid="st1-completed">All done</div>
+            <div class="item">
+              <button kpStepsPrevious data-testid="st1-previous">Back</button>
+              <button kpStepsNext data-testid="st1-next">Next</button>
+              <output form="" data-testid="st1-output">{{ stepped() }}</output>
+            </div>
+          </div>
+          <div
+            kpEditable
+            [kpId]="'ed1'"
+            [name]="'title'"
+            [defaultValue]="'Apollo'"
+            [placeholder]="'Untitled'"
+            class="item"
+            data-testid="ed1"
+            (valueChanged)="titled.set($event.value)"
+          >
+            <span kpEditablePreview class="editable-preview" data-testid="ed1-preview"></span>
+            <input kpEditableInput aria-label="Title" data-testid="ed1-input" />
+            <button kpEditableEditTrigger data-testid="ed1-edit">Edit</button>
+            <button kpEditableSubmitTrigger data-testid="ed1-submit">Save</button>
+            <button kpEditableCancelTrigger data-testid="ed1-cancel">Cancel</button>
+            <output form="" data-testid="ed1-output">{{ titled() }}</output>
+          </div>
+          <div
+            kpPasswordInput
+            class="item"
+            data-testid="pw1"
+            (visibleChanged)="revealed.set('' + $event.visible)"
+          >
+            <input
+              kpPasswordInputInput
+              id="pw1-input"
+              name="secret"
+              aria-label="Password"
+              autocomplete="current-password"
+              data-testid="pw1-input"
+            />
+            <button kpPasswordInputToggle data-testid="pw1-toggle">
+              <span kpPasswordInputIndicator class="eye" data-testid="pw1-indicator"></span>
+            </button>
+            <output form="" data-testid="pw1-output">{{ revealed() }}</output>
+          </div>
+          <button type="reset" data-testid="ef1-reset">Reset</button>
+        </form>
+      </section>
+      <section data-fixture="tagging">
+        <form class="editing" data-testid="tf1-form">
+          <div
+            kpTagsInput
+            [kpId]="'ti1'"
+            [name]="'colors'"
+            [defaultValue]="colors"
+            [max]="4"
+            class="tags"
+            data-testid="ti1"
+            (valueChanged)="tagged.set($event.value.join(','))"
+            (valueInvalid)="refused.set($event.text + ':' + $event.reason)"
+          >
+            <div kpTagsInputList class="item" aria-label="Colors" data-testid="ti1-list">
+              <span
+                *kpTagsInputItems="let entry"
+                kpTagsInputItem
+                [entry]="entry"
+                class="tag"
+                [attr.data-testid]="'ti1-item-' + entry.value"
+              >
+                <span kpTagsInputItemText [attr.data-testid]="'ti1-text-' + entry.value"></span>
+                <input kpTagsInputItemInput [attr.data-testid]="'ti1-edit-' + entry.value" />
+                <button kpTagsInputItemRemove [attr.data-testid]="'ti1-remove-' + entry.value">
+                  ×
+                </button>
+              </span>
+            </div>
+            <input kpTagsInputInput aria-label="Add a color" data-testid="ti1-input" />
+            <button kpTagsInputClear data-testid="ti1-clear">Clear</button>
+            <output form="" data-testid="ti1-output">{{ tagged() }}</output>
+            <output form="" data-testid="ti1-refused">{{ refused() }}</output>
+          </div>
+          <div
+            kpFileUpload
+            [kpId]="'fu1'"
+            [name]="'docs'"
+            [multiple]="true"
+            [accept]="'.txt'"
+            [maxFiles]="2"
+            class="upload"
+            data-testid="fu1"
+            (filesChanged)="uploaded.set(fileNames($event.files))"
+            (filesRejected)="turnedAway.set(rejections($event))"
+          >
+            <div
+              kpFileUploadDropzone
+              class="dropzone"
+              aria-label="Documents"
+              data-testid="fu1-dropzone"
+            >
+              <button kpFileUploadTrigger data-testid="fu1-trigger">Browse</button>
+            </div>
+            <ul kpFileUploadList class="files" data-testid="fu1-list">
+              <li
+                *kpFileUploadItems="let entry"
+                kpFileUploadItem
+                [entry]="entry"
+                class="item"
+                [attr.data-testid]="'fu1-item-' + entry.file.name"
+              >
+                <span
+                  kpFileUploadItemName
+                  [attr.data-testid]="'fu1-name-' + entry.file.name"
+                ></span>
+                <span
+                  kpFileUploadItemSize
+                  [locale]="'en'"
+                  [attr.data-testid]="'fu1-size-' + entry.file.name"
+                ></span>
+                <button kpFileUploadItemRemove [attr.data-testid]="'fu1-remove-' + entry.file.name">
+                  ×
+                </button>
+              </li>
+            </ul>
+            <button kpFileUploadClear data-testid="fu1-clear">Clear</button>
+            <output form="" data-testid="fu1-output">{{ uploaded() }}</output>
+            <output form="" data-testid="fu1-rejected">{{ turnedAway() }}</output>
+          </div>
+          <div class="item">
+            <div
+              kpTimeField
+              [kpId]="'tm1'"
+              [name]="'at'"
+              [locale]="'en-US'"
+              [defaultValue]="'09:30'"
+              aria-label="Time"
+              class="date-field"
+              data-testid="tm1"
+              (valueChanged)="timed.set('' + $event.value)"
+            >
+              <span
+                *kpTimeFieldSegments="let segment"
+                kpTimeFieldSegment
+                [segment]="segment"
+                [attr.data-testid]="'tm1-' + segment.type + '-' + segment.index"
+              ></span>
+              <input kpTimeFieldInput />
+            </div>
+            <output form="" data-testid="tm1-output">{{ timed() }}</output>
+          </div>
+          <button type="reset" data-testid="tf1-reset">Reset</button>
+        </form>
+      </section>
+      <section data-fixture="exploring">
+        <div class="item">
+          <div
+            kpTree
+            [kpId]="'tr1'"
+            aria-label="Files"
+            [defaultExpandedValue]="treeOpen"
+            [defaultSelectedValue]="treeChosen"
+            class="tree"
+            data-testid="tr1"
+            (expandedChanged)="opened.set($event.value.join(','))"
+            (selectedChanged)="picks.set($event.value.join(','))"
+          >
+            <div kpTreeItem [value]="'docs'" [branch]="true" data-testid="tr1-docs">
+              <div kpTreeItemRow class="tree-row" data-testid="tr1-docs-row">
+                <span kpTreeItemIndicator class="tree-mark" data-testid="tr1-docs-mark">›</span>
+                <span kpTreeItemText data-testid="tr1-docs-text">Documents</span>
+              </div>
+              <div *kpTreeGroup class="tree-group" data-testid="tr1-docs-group">
+                <div kpTreeItem [value]="'work'" [branch]="true" data-testid="tr1-work">
+                  <div kpTreeItemRow class="tree-row">
+                    <span kpTreeItemIndicator class="tree-mark" data-testid="tr1-work-mark">›</span>
+                    <span kpTreeItemText>Work</span>
+                  </div>
+                  <div *kpTreeGroup class="tree-group" data-testid="tr1-work-group">
+                    <div kpTreeItem [value]="'report'" data-testid="tr1-report">
+                      <div kpTreeItemRow class="tree-row">
+                        <span kpTreeItemText>Report</span>
+                      </div>
+                    </div>
+                    <div kpTreeItem [value]="'budget'" data-testid="tr1-budget">
+                      <div kpTreeItemRow class="tree-row">
+                        <span kpTreeItemText>Budget</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div kpTreeItem [value]="'letter'" data-testid="tr1-letter">
+                  <div kpTreeItemRow class="tree-row">
+                    <span kpTreeItemText>Letter</span>
+                  </div>
+                </div>
+                <div kpTreeItem [value]="'old'" [disabled]="true" data-testid="tr1-old">
+                  <div kpTreeItemRow class="tree-row">
+                    <span kpTreeItemText>Old letter</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div kpTreeItem [value]="'music'" [branch]="true" data-testid="tr1-music">
+              <div kpTreeItemRow class="tree-row">
+                <span kpTreeItemIndicator class="tree-mark" data-testid="tr1-music-mark">›</span>
+                <span kpTreeItemText>Music</span>
+              </div>
+              <div *kpTreeGroup class="tree-group" data-testid="tr1-music-group">
+                <div kpTreeItem [value]="'song'" data-testid="tr1-song">
+                  <div kpTreeItemRow class="tree-row">
+                    <span kpTreeItemText>Song</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div kpTreeItem [value]="'notes'" data-testid="tr1-notes">
+              <div kpTreeItemRow class="tree-row">
+                <span kpTreeItemText>Notes</span>
+              </div>
+            </div>
+          </div>
+          <output form="" data-testid="tr1-expanded">{{ opened() }}</output>
+          <output form="" data-testid="tr1-selected">{{ picks() }}</output>
+        </div>
+        <form class="editing" data-testid="pk1-form">
+          <div
+            kpColorPicker
+            [kpId]="'pk1'"
+            [name]="'color'"
+            [defaultValue]="'#ff0000'"
+            [alpha]="true"
+            class="color-picker"
+            data-testid="pk1"
+            (valueChanged)="hue.set($event.value)"
+            (valueCommitted)="kept.set($event.value)"
+            (formatChanged)="written.set($event.format)"
+          >
+            <div kpColorPickerArea class="color-area" data-testid="pk1-area">
+              <div
+                kpColorPickerAreaThumb
+                class="color-thumb"
+                aria-label="Colour"
+                data-testid="pk1-area-thumb"
+              ></div>
+            </div>
+            <div kpColorPickerChannelSlider [channel]="'hue'" class="slider" data-testid="pk1-hue">
+              <div kpColorPickerChannelSliderTrack class="slider-track" data-testid="pk1-hue-track">
+                <div
+                  kpColorPickerChannelSliderThumb
+                  class="thumb"
+                  aria-label="Hue"
+                  data-testid="pk1-hue-thumb"
+                ></div>
+              </div>
+            </div>
+            <div
+              kpColorPickerChannelSlider
+              [channel]="'alpha'"
+              class="slider"
+              data-testid="pk1-alpha"
+            >
+              <div
+                kpColorPickerChannelSliderTrack
+                class="slider-track"
+                data-testid="pk1-alpha-track"
+              >
+                <div
+                  kpColorPickerChannelSliderThumb
+                  class="thumb"
+                  aria-label="Alpha"
+                  data-testid="pk1-alpha-thumb"
+                ></div>
+              </div>
+            </div>
+            <div class="item">
+              <div kpColorPickerSwatch class="swatch" data-testid="pk1-swatch"></div>
+              <input
+                kpColorPickerChannelInput
+                [channel]="'hex'"
+                aria-label="Hex"
+                data-testid="pk1-hex"
+              />
+              <button
+                kpColorPickerSwatchTrigger
+                [value]="'#0000ff'"
+                aria-label="Blue"
+                class="swatch"
+                data-testid="pk1-blue"
+              ></button>
+              <button
+                kpColorPickerSwatchTrigger
+                [value]="'#00800080'"
+                aria-label="Green"
+                class="swatch"
+                data-testid="pk1-green"
+              ></button>
+            </div>
+            <div class="item">
+              <span kpColorPickerValueText data-testid="pk1-text"></span>
+              <button kpColorPickerFormatTrigger data-testid="pk1-format"></button>
+            </div>
+          </div>
+          <div class="item">
+            <output form="" data-testid="pk1-output">{{ hue() }}</output>
+            <output form="" data-testid="pk1-committed">{{ kept() }}</output>
+            <output form="" data-testid="pk1-written">{{ written() }}</output>
+          </div>
+          <button type="reset" data-testid="pk1-reset">Reset</button>
+        </form>
+        <div class="item">
+          <button type="button" data-testid="tu1-open" (click)="touring.set(true)">Tour</button>
+          <output form="" data-testid="tu1-output">{{ touring() }}</output>
+          <output form="" data-testid="tu1-step">{{ toured() }}</output>
+        </div>
+        <ng-container
+          kpTour
+          [kpId]="'tu1'"
+          [steps]="tour"
+          [(open)]="touring"
+          (stepChanged)="toured.set('' + $event.step)"
+        >
+          <ng-container *kpTourPortal>
+            <div kpTourSpotlight class="spotlight" data-testid="tu1-spotlight"></div>
+            <div kpTourPositioner [sideOffset]="8" data-testid="tu1-positioner">
+              <div *kpTourPopup="let shown" class="tour-popup" data-testid="tu1-popup">
+                <div kpTourArrow class="arrow" data-testid="tu1-arrow"></div>
+                <h2 kpTourTitle class="tour-title" data-testid="tu1-title">{{ titleOf(shown) }}</h2>
+                <p kpTourDescription data-testid="tu1-description">{{ bodyOf(shown) }}</p>
+                <div class="item">
+                  <span data-testid="tu1-count">{{ shown.current }} of {{ shown.total }}</span>
+                  <button kpTourPrevious data-testid="tu1-previous">Back</button>
+                  <button kpTourNext data-testid="tu1-next">{{ nextOf(shown) }}</button>
+                  <button kpTourClose data-testid="tu1-close">Skip</button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+      </section>
     </main>
   `,
 })
@@ -2944,6 +3509,34 @@ export class App {
   protected readonly born = signal("none")
   protected readonly due = signal("2026-03-14")
   protected readonly paged = signal("1")
+  protected readonly stars = signal("2")
+  protected readonly stepped = signal("0")
+  protected readonly titled = signal("Apollo")
+  protected readonly revealed = signal("false")
+  protected readonly steps = ["Account", "Profile", "Review"]
+  protected readonly colors = ["red", "green"]
+  protected readonly tagged = signal("red,green")
+  protected readonly refused = signal("")
+  protected readonly uploaded = signal("")
+  protected readonly turnedAway = signal("")
+  protected readonly timed = signal("09:30")
+  protected readonly treeOpen = ["docs"]
+  protected readonly treeChosen = ["letter"]
+  protected readonly opened = signal("docs")
+  protected readonly picks = signal("letter")
+  protected readonly hue = signal("#ff0000ff")
+  protected readonly kept = signal("")
+  protected readonly written = signal("hex")
+  protected readonly touring = signal<boolean | undefined>(false)
+  protected readonly toured = signal("0")
+  protected readonly tour = TOUR
+  // The tour tells the step it shows as a step; what this page draws of it is its own.
+  protected readonly titleOf = ({ step }: Shown) => (step as PageStep | undefined)?.title
+  protected readonly bodyOf = ({ step }: Shown) => (step as PageStep | undefined)?.body
+  protected readonly nextOf = ({ current, total }: Shown) => (current === total ? "Done" : "Next")
+  protected readonly fileNames = (files: File[]) => files.map((each) => each.name).join(",")
+  protected readonly rejections = (rejected: FileRejection[]) =>
+    rejected.map((each) => `${each.file.name}:${each.reasons.join("+")}`).join(",")
   protected readonly qty = signal("5")
   protected readonly place = signal("")
   protected readonly named = signal("")

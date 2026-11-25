@@ -364,6 +364,14 @@ const PROPS: Record<string, PropIdiom> = {
         "a text input's own `select` event bubbles to the root: the output is `itemSelected`",
       ],
       "Otp.Root.onCompleted": ["onComplete", "an output is named for what happened: `completed`"],
+      "Tree.Group.kpTreeGroup": [
+        "keepMounted",
+        'the directive\'s own value is its options: `*kpTreeGroup="{ keepMounted: true }"`',
+      ],
+      "FileUpload.Root.onFilesRejected": [
+        "onFilesReject",
+        "an output is named for what happened: `filesRejected`",
+      ],
       "Avatar.Fallback.kpAvatarFallback": [
         "delay",
         'the directive\'s own value is its options: `*kpAvatarFallback="{ delay: 600 }"`',

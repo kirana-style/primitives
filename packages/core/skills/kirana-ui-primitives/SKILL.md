@@ -148,7 +148,13 @@ back only the agent's. `stage({ steps })` shows a suggestion in the controls and
 `revert()` and `keep()`. `act` takes a `signal`; `timeout` bounds a wait for `allow` or
 `confirm`. A component of your own is read through `kinds` (`AgentKind`: a selector, `read`,
 `perform`). A slider's `setValue` fails with what the slider holds when
-its range or step does not hold the value asked for. `allow(action)` is the policy,
+its range or step does not hold the value asked for, and so does a spin button's (a Date or
+Time Field's part, typed as a person types it). The thumbs of a range named by their group
+are told apart by their place (`"Price, 1 of 2"`). A list of several values (a listbox, a
+select with `multiple`, a tree) says `values` and takes a list in `setValue`; a closed
+select's are known once its list has been read. A tree is one component: its shown nodes
+are its `items` (with `level` below the top and `open` for a branch), and `setValue`,
+`open` and `close` take a node's name. `allow(action)` is the policy,
 asked for every step; `confirm(action)` is a person's answer, asked for a step on something
 marked `data-agent-confirm`, and without it such a step fails with "Needs a person" whatever
 `allow` says. Never write `confirm: () => true`: open a dialog and resolve with what the

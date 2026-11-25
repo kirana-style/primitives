@@ -4618,6 +4618,2292 @@ export const vocabulary = {
         }
       }
     },
+    "rating": {
+      "parts": {
+        "root": {
+          "description": "The items, as one choice: a radio group. It holds the hidden input a form reads.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a value is needed.",
+              "selector": "[data-required]"
+            },
+            "hovering": {
+              "attribute": "data-hovering",
+              "description": "Present while a pointer is over an item.",
+              "selector": "[data-hovering]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "items": {
+          "description": "The items, from 1 to `count`: each place is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "item": {
+          "description": "One item (a star): pressed, the value is its place, or half of it.",
+          "states": {
+            "checked": {
+              "attribute": "data-checked",
+              "description": "Present on the item that holds the value.",
+              "selector": "[data-checked]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present on every item up to the value drawn: the one a pointer is over, or the one held.",
+              "selector": "[data-filled]"
+            },
+            "half": {
+              "attribute": "data-half",
+              "description": "Present on the item the value drawn fills by half.",
+              "selector": "[data-half]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a value is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "items"
+          ],
+          "optional": false,
+          "repeated": true
+        }
+      }
+    },
+    "steps": {
+      "parts": {
+        "root": {
+          "description": "A task in steps, taken in order.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present once every step is done.",
+              "selector": "[data-complete]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "list": {
+          "description": "The row of steps: the arrows move between their triggers.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "item": {
+          "description": "One step of the row, around its trigger and its separator.",
+          "states": {
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the step that is shown.",
+              "selector": "[data-current]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present on a step that is done: one before the step shown.",
+              "selector": "[data-complete]"
+            },
+            "incomplete": {
+              "attribute": "data-incomplete",
+              "description": "Present on a step still to come.",
+              "selector": "[data-incomplete]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "trigger": {
+          "description": "Names a step, and goes to it when pressed.",
+          "states": {
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the step that is shown.",
+              "selector": "[data-current]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present on a step that is done: one before the step shown.",
+              "selector": "[data-complete]"
+            },
+            "incomplete": {
+              "attribute": "data-incomplete",
+              "description": "Present on a step still to come.",
+              "selector": "[data-incomplete]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "indicator": {
+          "description": "A step's mark: its number, or a tick once it is done.",
+          "states": {
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the step that is shown.",
+              "selector": "[data-current]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present on a step that is done: one before the step shown.",
+              "selector": "[data-complete]"
+            },
+            "incomplete": {
+              "attribute": "data-incomplete",
+              "description": "Present on a step still to come.",
+              "selector": "[data-incomplete]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "trigger"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "separator": {
+          "description": "The line from a step to the next.",
+          "states": {
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the step that is shown.",
+              "selector": "[data-current]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present on a step that is done: one before the step shown.",
+              "selector": "[data-complete]"
+            },
+            "incomplete": {
+              "attribute": "data-incomplete",
+              "description": "Present on a step still to come.",
+              "selector": "[data-incomplete]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "content": {
+          "description": "What a step shows: hidden unless its step is the one shown.",
+          "states": {
+            "current": {
+              "attribute": "data-current",
+              "description": "Present on the step that is shown.",
+              "selector": "[data-current]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present on a step that is done: one before the step shown.",
+              "selector": "[data-complete]"
+            },
+            "incomplete": {
+              "attribute": "data-incomplete",
+              "description": "Present on a step still to come.",
+              "selector": "[data-incomplete]"
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "completed": {
+          "description": "What is shown once every step is done.",
+          "states": {
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "Whether the steps are laid out across or down.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "previous": {
+          "description": "Goes to the step before.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "next": {
+          "description": "Goes to the step after; from the last, to all of them done.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        }
+      }
+    },
+    "editable": {
+      "parts": {
+        "root": {
+          "description": "A text edited in place.",
+          "states": {
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while it is being edited.",
+              "selector": "[data-editing]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be edited.",
+              "selector": "[data-readonly]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while it holds no text.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "preview": {
+          "description": "The text as it reads, or the placeholder while there is none: hidden while editing.",
+          "states": {
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while it is being edited.",
+              "selector": "[data-editing]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be edited.",
+              "selector": "[data-readonly]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while it holds no text.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "input": {
+          "description": "Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.",
+          "states": {
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while it is being edited.",
+              "selector": "[data-editing]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be edited.",
+              "selector": "[data-readonly]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while it holds no text.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "editTrigger": {
+          "description": "Starts an edit: hidden while editing.",
+          "states": {
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while it is being edited.",
+              "selector": "[data-editing]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be edited.",
+              "selector": "[data-readonly]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while it holds no text.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "submitTrigger": {
+          "description": "Keeps what was typed: hidden unless editing.",
+          "states": {
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while it is being edited.",
+              "selector": "[data-editing]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be edited.",
+              "selector": "[data-readonly]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while it holds no text.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "cancelTrigger": {
+          "description": "Drops what was typed: hidden unless editing.",
+          "states": {
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while it is being edited.",
+              "selector": "[data-editing]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it is shown and cannot be edited.",
+              "selector": "[data-readonly]"
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present while it holds no text.",
+              "selector": "[data-placeholder]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        }
+      }
+    },
+    "passwordInput": {
+      "parts": {
+        "root": {
+          "description": "A password that can be shown while it is typed.",
+          "states": {
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while the password can be read.",
+              "selector": "[data-visible]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "input": {
+          "description": "The `<input>`: a password, or text while it is shown. In a `Field` it is the field's control.",
+          "states": {
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while the password can be read.",
+              "selector": "[data-visible]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Present once focus has left it.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Present once its text differs from what it began with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present while it holds text.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while it has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "In a field: present once the value was checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "In a field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "toggle": {
+          "description": "Shows the password, and hides it again. Focus and the caret stay in the input.",
+          "states": {
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while the password can be read.",
+              "selector": "[data-visible]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "indicator": {
+          "description": "What draws which of the two it is: an eye, open or struck.",
+          "states": {
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while the password can be read.",
+              "selector": "[data-visible]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "toggle"
+          ],
+          "optional": true,
+          "repeated": false
+        }
+      }
+    },
+    "tagsInput": {
+      "parts": {
+        "root": {
+          "description": "Several short texts held as tags, and the input a new one is typed in. It holds the hidden inputs a form reads.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while focus is on a tag or in the input.",
+              "selector": "[data-focused]"
+            },
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present while it holds no tag.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "list": {
+          "description": "What holds the tags: a list.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "items": {
+          "description": "The tags, in order: each entry is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "item": {
+          "description": "A tag: reached with the arrows, taken away with Backspace or Delete.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            },
+            "editing": {
+              "attribute": "data-editing",
+              "description": "Present while the tag is edited.",
+              "selector": "[data-editing]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "items"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "itemText": {
+          "description": "A tag's text: hidden while the tag is edited.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "itemInput": {
+          "description": "Where a tag is edited in place: hidden unless it is being edited.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "itemRemove": {
+          "description": "A tag's button that takes it away.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "input": {
+          "description": "Where a new tag is typed. In a `Field` it is what the field's label names.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "clear": {
+          "description": "Takes every tag away: hidden while there is none.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when the tags are shown and cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a tag is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        }
+      }
+    },
+    "fileUpload": {
+      "parts": {
+        "root": {
+          "description": "Files chosen to be sent.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            },
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present while it holds no file.",
+              "selector": "[data-empty]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "dropzone": {
+          "description": "Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "trigger": {
+          "description": "A button that opens the file picker.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root",
+            "dropzone"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "list": {
+          "description": "What holds the files: a list.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "items": {
+          "description": "The files, in order: each entry is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "list"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "item": {
+          "description": "A file.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "items"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "itemName": {
+          "description": "A file's name.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "itemSize": {
+          "description": "A file's size, as people read one.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "itemRemove": {
+          "description": "A file's button that takes it away.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "clear": {
+          "description": "Takes every file away: hidden while there is none.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while files are dragged over the dropzone.",
+              "selector": "[data-dragging]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when a file is needed.",
+              "selector": "[data-required]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": true,
+          "repeated": false
+        }
+      }
+    },
+    "timeField": {
+      "parts": {
+        "root": {
+          "description": "The field: a group of the time's parts.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when its value cannot be changed.",
+              "selector": "[data-readonly]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the time is outside what it takes, or is asked for and half typed.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "segments": {
+          "description": "The time's segments, in the locale's order: each is given to draw. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "segment": {
+          "description": "One piece of the time: a part that is typed, or what stands between two.",
+          "states": {
+            "segment": {
+              "attribute": "data-segment",
+              "description": "Which piece it is: `dayPeriod` is AM or PM, on a clock of twelve hours.",
+              "values": {
+                "hour": "[data-segment=\"hour\"]",
+                "minute": "[data-segment=\"minute\"]",
+                "second": "[data-segment=\"second\"]",
+                "dayPeriod": "[data-segment=\"dayPeriod\"]",
+                "literal": "[data-segment=\"literal\"]"
+              }
+            },
+            "placeholder": {
+              "attribute": "data-placeholder",
+              "description": "Present on a part that is empty.",
+              "selector": "[data-placeholder]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Present when the time is outside what it takes, or is asked for and half typed.",
+              "selector": "[data-invalid]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "segments"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "input": {
+          "description": "The hidden input it is submitted by.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        }
+      }
+    },
+    "tree": {
+      "parts": {
+        "root": {
+          "description": "The tree. Its nodes are one stop for Tab.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "item": {
+          "description": "One node, a `treeitem`: a leaf, or a branch that holds its row and its group. Its `value` tells it from the others; its depth, and its place among its siblings, are read from the page.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen node.",
+              "selector": "[data-selected]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the node focus is on, while it is in the tree.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "open": {
+              "attribute": "data-open",
+              "description": "Present on a branch that is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present on a branch that is closed.",
+              "selector": "[data-closed]"
+            },
+            "loading": {
+              "attribute": "data-loading",
+              "description": "Present on a branch that says its children are being loaded.",
+              "selector": "[data-loading]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "root",
+            "group"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "itemRow": {
+          "description": "The line a node draws, apart from the children its group holds: what a design gives a background.",
+          "states": {
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present on a chosen node.",
+              "selector": "[data-selected]"
+            },
+            "highlighted": {
+              "attribute": "data-highlighted",
+              "description": "Present on the node focus is on, while it is in the tree.",
+              "selector": "[data-highlighted]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "open": {
+              "attribute": "data-open",
+              "description": "Present on a branch that is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present on a branch that is closed.",
+              "selector": "[data-closed]"
+            },
+            "loading": {
+              "attribute": "data-loading",
+              "description": "Present on a branch that says its children are being loaded.",
+              "selector": "[data-loading]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "item"
+          ],
+          "optional": true,
+          "repeated": false
+        },
+        "itemIndicator": {
+          "description": "The mark that says whether a branch is open. A press on it opens or closes the branch and chooses nothing.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present on a branch that is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present on a branch that is closed.",
+              "selector": "[data-closed]"
+            },
+            "loading": {
+              "attribute": "data-loading",
+              "description": "Present on a branch that says its children are being loaded.",
+              "selector": "[data-loading]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "itemRow"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "itemText": {
+          "description": "The node's name: what names it to assistive technology, and what typing matches.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "itemRow"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "group": {
+          "description": "A branch's children. In the page while the branch is open, and through its exit's motion.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--tree-group-height": "The group's content height while it opens or closes, `auto` once it is open.",
+            "--tree-group-width": "The group's content width while it opens or closes, `auto` once it is open."
+          },
+          "inside": [
+            "item"
+          ],
+          "optional": false,
+          "repeated": false
+        }
+      }
+    },
+    "colorPicker": {
+      "parts": {
+        "root": {
+          "description": "Groups the picker's parts. It holds the hidden input a form reads, and the colour for anything inside to paint with.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            },
+            "format": {
+              "attribute": "data-format",
+              "description": "How the value is written.",
+              "values": {
+                "hex": "[data-format=\"hex\"]",
+                "rgb": "[data-format=\"rgb\"]",
+                "hsl": "[data-format=\"hsl\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--color": "The colour, with its alpha."
+          },
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "area": {
+          "description": "The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds this part's thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--hue-color": "The colour's hue at full saturation and brightness."
+          },
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "areaThumb": {
+          "description": "What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds this part's thumb.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--saturation": "Its place across, as a share of the area: the saturation.",
+            "--brightness": "Its place up, as a share of the area: the brightness.",
+            "--color": "The colour under it, without its alpha."
+          },
+          "inside": [
+            "area"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "channelSlider": {
+          "description": "What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds this part's thumb.",
+              "selector": "[data-dragging]"
+            },
+            "channel": {
+              "attribute": "data-channel",
+              "description": "The channel the slider moves.",
+              "values": {
+                "hue": "[data-channel=\"hue\"]",
+                "alpha": "[data-channel=\"alpha\"]"
+              }
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "channelSliderTrack": {
+          "description": "The channel's whole range: what a design paints the hues or the alpha on.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds this part's thumb.",
+              "selector": "[data-dragging]"
+            },
+            "channel": {
+              "attribute": "data-channel",
+              "description": "The channel the slider moves.",
+              "values": {
+                "hue": "[data-channel=\"hue\"]",
+                "alpha": "[data-channel=\"alpha\"]"
+              }
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--color": "The colour without its alpha: the end of an alpha track.",
+            "--hue-color": "The colour's hue at full saturation and brightness."
+          },
+          "inside": [
+            "channelSlider"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "channelSliderThumb": {
+          "description": "What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds this part's thumb.",
+              "selector": "[data-dragging]"
+            },
+            "channel": {
+              "attribute": "data-channel",
+              "description": "The channel the slider moves.",
+              "values": {
+                "hue": "[data-channel=\"hue\"]",
+                "alpha": "[data-channel=\"alpha\"]"
+              }
+            },
+            "orientation": {
+              "attribute": "data-orientation",
+              "description": "The way the track runs.",
+              "values": {
+                "horizontal": "[data-orientation=\"horizontal\"]",
+                "vertical": "[data-orientation=\"vertical\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--color": "The colour under it: the pure hue, or the colour at its alpha."
+          },
+          "inside": [
+            "channelSliderTrack",
+            "channelSlider"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "channelInput": {
+          "description": "A text input for one channel (`hex`, `red`, `green`, `blue`, `hue`, `saturation`, `lightness`, `alpha`). What is typed is taken when it is a colour or a number in range, and put back when focus leaves while it is not.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            },
+            "channel": {
+              "attribute": "data-channel",
+              "description": "The channel the input is typed in.",
+              "values": {
+                "hex": "[data-channel=\"hex\"]",
+                "red": "[data-channel=\"red\"]",
+                "green": "[data-channel=\"green\"]",
+                "blue": "[data-channel=\"blue\"]",
+                "hue": "[data-channel=\"hue\"]",
+                "saturation": "[data-channel=\"saturation\"]",
+                "lightness": "[data-channel=\"lightness\"]",
+                "alpha": "[data-channel=\"alpha\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "swatch": {
+          "description": "Shows the current colour.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--color": "The colour, with its alpha."
+          },
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "swatchTrigger": {
+          "description": "A preset colour, given as `value`: pressed, the colour is this one.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            },
+            "selected": {
+              "attribute": "data-selected",
+              "description": "Present while the colour is this one.",
+              "selector": "[data-selected]"
+            }
+          },
+          "exclusive": [],
+          "variables": {
+            "--color": "The preset's colour, with its alpha."
+          },
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": true
+        },
+        "eyeDropperTrigger": {
+          "description": "Picks a colour from the screen with the browser's eye dropper. Hidden where the browser has none, and on a server.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "valueText": {
+          "description": "The colour, written in its format.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            },
+            "format": {
+              "attribute": "data-format",
+              "description": "How the value is written.",
+              "values": {
+                "hex": "[data-format=\"hex\"]",
+                "rgb": "[data-format=\"rgb\"]",
+                "hsl": "[data-format=\"hsl\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "formatTrigger": {
+          "description": "Goes to the next format: hex, then rgb, then hsl.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs a colour.",
+              "selector": "[data-required]"
+            },
+            "dragging": {
+              "attribute": "data-dragging",
+              "description": "Present while a pointer holds a thumb of the picker.",
+              "selector": "[data-dragging]"
+            },
+            "format": {
+              "attribute": "data-format",
+              "description": "How the value is written.",
+              "values": {
+                "hex": "[data-format=\"hex\"]",
+                "rgb": "[data-format=\"rgb\"]",
+                "hsl": "[data-format=\"hsl\"]"
+              }
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        }
+      }
+    },
+    "tour": {
+      "parts": {
+        "root": {
+          "description": "Holds the tour: its steps, whether it is open and which step is shown. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [],
+          "optional": false,
+          "repeated": false
+        },
+        "portal": {
+          "description": "Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "root"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "spotlight": {
+          "description": "A layer over the page with a hole over the step's target, which the design draws from its variables (a clip path, or a box with a large shadow). A press on it is a press outside the tour. While the target can be used (`interactive`), presses go through it.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "centered": {
+              "attribute": "data-centered",
+              "description": "Present while the step shown has no target in the page: the popup stands in the middle of the viewport.",
+              "selector": "[data-centered]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {
+            "--spotlight-left": "The hole's left edge, from the spotlight's own left edge: the target's, less `spotlightPadding`.",
+            "--spotlight-top": "The hole's top edge, from the spotlight's own top edge: the target's, less `spotlightPadding`.",
+            "--spotlight-width": "The hole's width: the target's, with `spotlightPadding` on each side.",
+            "--spotlight-height": "The hole's height: the target's, with `spotlightPadding` on each side. With no target, the hole is a point in the middle."
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "positioner": {
+          "description": "Places the popup against the step's target, or in the middle of the viewport for a step with none. It carries the geometry.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "centered": {
+              "attribute": "data-centered",
+              "description": "Present while the step shown has no target in the page: the popup stands in the middle of the viewport.",
+              "selector": "[data-centered]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
+          "variables": {
+            "--anchor-width": "The anchor's width.",
+            "--anchor-height": "The anchor's height.",
+            "--available-width": "The width between the anchor and the edge of the viewport.",
+            "--available-height": "The height between the anchor and the edge of the viewport.",
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+          },
+          "inside": [
+            "portal"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "popup": {
+          "description": "The step itself: a dialog that stays in the page from the first step to the last, and moves.",
+          "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
+            },
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "centered": {
+              "attribute": "data-centered",
+              "description": "Present while the step shown has no target in the page: the popup stands in the middle of the viewport.",
+              "selector": "[data-centered]"
+            }
+          },
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
+          "variables": {},
+          "inside": [
+            "positioner"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "arrow": {
+          "description": "An element that points at the target, placed along the popup's edge.",
+          "states": {
+            "side": {
+              "attribute": "data-side",
+              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
+              "values": {
+                "top": "[data-side=\"top\"]",
+                "right": "[data-side=\"right\"]",
+                "bottom": "[data-side=\"bottom\"]",
+                "left": "[data-side=\"left\"]",
+                "inline-start": "[data-side=\"inline-start\"]",
+                "inline-end": "[data-side=\"inline-end\"]"
+              }
+            },
+            "align": {
+              "attribute": "data-align",
+              "description": "How it is aligned with the anchor.",
+              "values": {
+                "start": "[data-align=\"start\"]",
+                "center": "[data-align=\"center\"]",
+                "end": "[data-align=\"end\"]"
+              }
+            },
+            "uncentered": {
+              "attribute": "data-uncentered",
+              "description": "Present when the popup was pushed along its edge, so the arrow is not at the target's centre.",
+              "selector": "[data-uncentered]"
+            },
+            "centered": {
+              "attribute": "data-centered",
+              "description": "Present while the step shown has no target in the page: the popup stands in the middle of the viewport.",
+              "selector": "[data-centered]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "title": {
+          "description": "The heading that names the step.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "description": {
+          "description": "The text that describes the step.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "previous": {
+          "description": "A button that goes back a step. On the first step it does nothing.",
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "next": {
+          "description": "A button that goes on a step. On the last step it finishes the tour.",
+          "states": {
+            "last": {
+              "attribute": "data-last",
+              "description": "Present on the last step: a press finishes the tour.",
+              "selector": "[data-last]"
+            }
+          },
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        },
+        "close": {
+          "description": "A button that ends the tour.",
+          "states": {},
+          "exclusive": [],
+          "variables": {},
+          "inside": [
+            "popup"
+          ],
+          "optional": false,
+          "repeated": false
+        }
+      }
+    },
     "datePicker": {
       "parts": {
         "root": {

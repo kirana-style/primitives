@@ -10,7 +10,7 @@ This file describes the version it ships with. What changed in each release, the
 
 Install `@kirana-ui/svelte`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/svelte/agent`, `@kirana-ui/svelte/testing`), so nothing is imported from a package the project did not install. The one exception is a component of your own, built on `@kirana-ui/core/authoring`: its controller imports the core by name, so that project installs `@kirana-ui/core` too, at this package's exact version (they must be one copy). It runs on the project's own `svelte` ^5.29.0.
 
-Its entries: an entry per component (`@kirana-ui/svelte/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/svelte` (every component at once, for a bundler that shakes trees), and `@kirana-ui/svelte/runtime`, `@kirana-ui/svelte/primitive`, `@kirana-ui/svelte/agent`, `@kirana-ui/svelte/testing` and `@kirana-ui/svelte/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/svelte/direction`, `PortalProvider` in the package root.
+Its entries: an entry per component (`@kirana-ui/svelte/tabs`, 59 of them, each named under its component below), the package root `@kirana-ui/svelte` (every component at once, for a bundler that shakes trees), and `@kirana-ui/svelte/runtime`, `@kirana-ui/svelte/primitive`, `@kirana-ui/svelte/agent`, `@kirana-ui/svelte/testing` and `@kirana-ui/svelte/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/svelte/direction`, `PortalProvider` in the package root.
 
 The attributes and CSS variables below are also data and typed selectors, for a design system: install `@kirana-ui/vocabulary` for them (`import { vocabulary } from "@kirana-ui/vocabulary"`, `import { Dialog } from "@kirana-ui/vocabulary/keys"`: `Dialog.Popup.open` is `"[data-open]"`). It is its own package, and not installed with this one.
 
@@ -32,7 +32,7 @@ What every `Positioner` takes, beside its own props where a component's section 
 - `positionMethod?: "absolute" | "fixed"`: The CSS `position` the positioner is given: `"absolute"` or `"fixed"`. Default `"absolute"`.
 - `anchor?: Anchor | (() => Anchor | null | undefined) | null`: What the popup is placed against, when that is not its trigger: an element (what `bind:this` filled), a place in the viewport (an object with `getBoundingClientRect`), or a function that gives one. It may change while the popup is open: the popup follows.
 
-A component's own defaults lie over those: `Autocomplete` `{ align: "start" }`; `Combobox` `{ align: "start" }`; `ContextMenu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `HoverCard` `{ side: "top" }`; `Menu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `NavigationMenu` `{ align: "start" }`; `Select` `{ align: "start" }`; `Tooltip` `{ side: "top" }`.
+A component's own defaults lie over those: `Autocomplete` `{ align: "start" }`; `Combobox` `{ align: "start" }`; `ContextMenu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `HoverCard` `{ side: "top" }`; `Menu` `{ align: "start" }`, and `{ side: "inline-end", align: "start" }` for a submenu or for a menu in a vertical menubar; `NavigationMenu` `{ align: "start" }`; `Select` `{ align: "start" }`; `Tooltip` `{ side: "top" }`; `Tour` the shared defaults, under the `side` and `align` of the step shown; a step with no target is placed in the middle of the viewport whatever they say.
 
 ## Types
 
@@ -69,6 +69,10 @@ The named types the props below mention, each with the entry of this package it 
     - `fallbackAxisSide?: "start" | "end" | "none"`: Where it goes when neither the side asked for nor its opposite fits: to the other axis, its `"start"` or its `"end"` first, or nowhere (`"none"`). Default `"end"`.
 - `CollisionBoundary` (`@kirana-ui/svelte`): `"clipping-ancestors" | Element | Element[] | { x: number; y: number; width: number; height: number }`. What a popup is held inside: the ancestors that clip it (`"clipping-ancestors"`), an element, several, or a rectangle of the viewport.
 - `CollisionPadding` (`@kirana-ui/svelte`): `number | Partial<Record<PhysicalSide, number>>`. The room kept between a popup and the edges it is held inside: one number, or one a side.
+- `ColorFormat` (`@kirana-ui/svelte`): `"hex" | "rgb" | "hsl"`. How a colour is written: `#rrggbb`, `rgb(…)` or `hsl(…)`.
+- `ColorPickerInputChannel` (`@kirana-ui/svelte`): `"hex" | "red" | "green" | "blue" | "hue" | "saturation" | "lightness" | "alpha"`. A channel an input of the picker is typed in.
+- `ColorPickerSliderChannel` (`@kirana-ui/svelte`): `"hue" | "alpha"`. A channel a slider of the picker moves: the hue, or the alpha.
+- `ColorPickerThumb` (`@kirana-ui/svelte`): `"area" | ColorPickerSliderChannel`. What a thumb of the picker moves: the area's, or a slider's channel.
 - `ComboboxEntry<Value = unknown>` (`@kirana-ui/svelte`): `ComboboxItemEntry<Value> | ComboboxGroupEntry<Value>`. What a `Collection` hands to be drawn: an item that is left, or a group that has items left.
 - `ComboboxGroupData<Value = unknown>` (`@kirana-ui/svelte`): Items given as data that belong together: `value` is the group's name.
     - `value: string`
@@ -111,10 +115,25 @@ The named types the props below mention, each with the entry of this package it 
     - `errors: readonly string[]`: What is wrong, one message each.
     - `state: Readonly<Record<ValidityKey, boolean>>`: What the browser found, by name; `customError` is the field's own `validate`.
     - `value: string`: The value that was checked.
+- `FileRejection` (`@kirana-ui/svelte`): A file that was not taken, and every reason it was not.
+    - `file: File`
+    - `reasons: readonly FileRejectionReason[]`
+- `FileRejectionReason` (`@kirana-ui/svelte`): `"type" | "too-large" | "too-small" | "too-many" | "invalid"`. Why a file was not taken.
+- `FileUploadEntry` (`@kirana-ui/svelte`): One file as it is drawn: the file, its place, and what tells it from the others.
+    - `key: string`: The same for as long as the file is held: what a list keeps its element by.
+    - `file: File`
+    - `index: number`
 - `FormErrors` (`@kirana-ui/svelte`): `Record<string, string | readonly string[]>`. A form's errors as a server sends them: each field's name with its message, or messages.
 - `FormValues` (`@kirana-ui/svelte`): `Record<string, FormDataEntryValue | FormDataEntryValue[]>`. A form's values by field name, as `FormData` holds them: a list where a name is there more than once.
+- `HourCycle` (`@kirana-ui/svelte`): `12 | 24`. A clock of twelve hours and a day period, or of twenty-four.
+- `Hsva` (`@kirana-ui/svelte`): Hue from 0 to 360, saturation and brightness (value) from 0 to 100, alpha from 0 to 1: what a colour area draws, saturation across and brightness up.
+    - `h: number`
+    - `s: number`
+    - `v: number`
+    - `a: number`
 - `ImageStatus` (`@kirana-ui/svelte`): `"idle" | "loading" | "loaded" | "error"`. Where an avatar's picture is in its loading: `idle` while it has no address, `loading`, then `loaded` or `error`. Base UI's `ImageLoadingStatus`.
 - `IsoDate` (`@kirana-ui/svelte`): `string`. A day as `YYYY-MM-DD`, in the calendar the world's data is kept in (ISO 8601).
+- `IsoTime` (`@kirana-ui/svelte`): `string`. A time of day as `HH:MM` or `HH:MM:SS`, in 24 hours (ISO 8601).
 - `ListCollection` (`@kirana-ui/svelte`): Every row of a list of which only some are in the page: a virtualizer draws the ones in view. The keys then move by place, and ask for a row that is not drawn to be brought into the page.
     - `count: number`: How many rows there are, drawn or not.
     - `label?(index: number): string`: A row's name by its place: what typing matches. Without it, typing finds nothing.
@@ -149,6 +168,16 @@ The named types the props below mention, each with the entry of this package it 
     - `cancel(): void`: Keeps the value as it was.
     - `canceled: boolean`
 - `SliderTold<Value extends SliderValue = SliderValue>` (`@kirana-ui/svelte`): `Value extends number ? number : number[]`. What a slider tells of a value it was given as `Value`: a number for one thumb, a list for a range, and either where the caller's own type says either.
+- `TagsInputEntry` (`@kirana-ui/svelte`): One tag as it is drawn: its text, its place, and what tells it from the others.
+    - `key: string`: The same for as long as the tag is there: what a list keeps its element by.
+    - `value: string`
+    - `index: number`
+- `TimeFieldSegment` (`@kirana-ui/svelte`): One piece of the field, in the locale's order: a part that is typed, or what stands between.
+    - `type: TimeUnit | "literal"`
+    - `literal: string`: What stands between two parts (`":"`); empty for a part that is typed.
+    - `index: number`: Its place among the pieces.
+- `TimeGranularity` (`@kirana-ui/svelte`): `"minute" | "second"`. The smallest part it is typed to.
+- `TimeUnit` (`@kirana-ui/svelte`): `"hour" | "minute" | "second" | "dayPeriod"`. A part of a time that is typed on its own.
 - `ToastActionOptions<Content = string>` (`@kirana-ui/svelte`): A button a toast offers: what it says, and what pressing it does.
     - `label: Content`: What the button says: `Toast.Action` draws it when it is given nothing else. Needed.
     - `onAction(details: ChangeDetails): void`: Heard when the button is pressed, before the toast closes with the reason `"action-press"`: `details.cancel()` keeps the toast open. Needed.
@@ -182,6 +211,12 @@ The named types the props below mention, each with the entry of this package it 
     - `data?: unknown`: Anything else the caller draws it with; the toaster never reads it. Default: none.
     - `onClose?: ((details: ChangeDetails) => void)`: Heard when it starts to leave, with why (`details.reason`). Default: none.
 - `ToastState<Content = string>` (`@kirana-ui/svelte`): `ToastOptions<Content> | (string extends Content ? string : never)`. What a promise's toast shows in one of its states: a toast's options, or a string, which is its title (where a title may be a string).
+- `TourShownStep<Step extends TourStep = TourStep>` (`@kirana-ui/svelte/tour`): What the popup's `children` is given of the step it shows, to draw it.
+    - `step: Step | undefined`: The step shown, as the page gave it; `undefined` while none is.
+    - `index: number`: Its index, from 0.
+    - `current: number`: Its place, from 1: the "2" of "2 of 5".
+    - `total: number`: How many steps there are: the "5" of "2 of 5".
+- `TreeSelectionMode` (`@kirana-ui/svelte`): `"none" | "single" | "multiple"`. Whether a tree's nodes can be chosen, and how many at once.
 - `ValidationMode` (`@kirana-ui/svelte`): `"onSubmit" | "onBlur" | "onChange"`. When a field checks its value. Once it is found invalid, it checks on every change.
 - `ValidityKey` (`@kirana-ui/svelte`): `Exclude<keyof ValidityState, "valid">`. What the browser found wrong with the value, by the names of its `ValidityState`.
 
@@ -204,6 +239,8 @@ What the entries export beside the components, their parts' props types and the 
 - `Signal`, from `@kirana-ui/svelte`: A value that is read and written, and that tells when it changes.
 - `StateDefinition`, from `@kirana-ui/svelte`: A state of a part in the vocabulary: the attribute that marks it, and what it means.
 - `StateOf`, from `@kirana-ui/svelte`: The state of a part, from its definition in the vocabulary: a state its attribute marks by being present is `true` or absent, one with values is one of them or absent. It is what `stateOf` reads from the part's props.
+- `TourStep`, from `@kirana-ui/svelte`: One step of a tour. What it says is the page's to draw: the controller only shows it.
+- `TourTarget`, from `@kirana-ui/svelte`: What a step is about: an element, a CSS selector, or a function that gives an element, asked when the step is shown, so it may be something the page draws late.
 - `DirectionProvider`, from `@kirana-ui/svelte` or `@kirana-ui/svelte/direction`: States the reading direction for the components inside. It draws nothing: set the page's own `dir` attribute with it. Its props are the type `DirectionProviderProps`, from the same entries.
 - `useDirection()`, from `@kirana-ui/svelte` or `@kirana-ui/svelte/direction`: The direction the nearest provider states, as `current`; `ltr` outside one.
 - `Merged`, from `@kirana-ui/svelte/primitive`: The props of several sets as one: each set's, the later's over the earlier's.
@@ -335,6 +372,8 @@ The kinds of component it reads, what each is found by, and the actions each tak
 - `checkbox` (`[role="checkbox"]`): `toggle`, `setChecked`
 - `radio-group` (`[role="radiogroup"]`): `setValue`
 - `slider` (`[role="slider"]`): `setValue`
+- `spinbutton` (`[role="spinbutton"]`): `setValue`
+- `tree` (`[role="tree"]`): `setValue`, `open`, `close`
 - `tabs` (`[role="tablist"]`): `setValue`
 - `listbox` (`[role="listbox"]`): `setValue`
 - `select` (`button[role="combobox"]`): `open`, `close`, `setValue`
@@ -374,6 +413,8 @@ What `act`, `undo` and `redo` resolve with, and what `history` lists:
 - `AgentItem`: One choice of a list: the value it is chosen by, and what it says.
     - `value: string`
     - `label: string`
+    - `level?: number`: A node of a tree below the top: its depth, from 1.
+    - `open?: boolean`: A branch of a tree: whether it is open.
 
 For a model, and for a browser's own agent:
 
@@ -430,12 +471,12 @@ Its other types:
 - Svelte 5.
 - Each part's props are a type of the same entry, named for the part: `import type { TabProps } from "@kirana-ui/svelte/tabs"`. They are the part's own props listed below, `child`, and the attributes of the element it draws.
 - Each component's "Anatomy" is where its parts go: a part is written inside the part it is indented under, with elements of your own between them where the design needs any. `(optional)` marks a wrapper that may be left out, what it holds then written where the wrapper would be; `(repeated)` a part written once for each entry (an item, a tab, a toast), or any number of times; `(as above)` a part drawn in full where it first appears. It is the library's own data (`inside`, `optional` and `repeated` on each part of `@kirana-ui/vocabulary`), held against the pages the library is tested with: write a part nowhere else.
-- These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Autocomplete.Collection`, `Calendar.Months`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `Combobox.Value`, `Combobox.Collection`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Months`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Select.Root`, `Toast.List` and `Tooltip.Root`. Every other part draws the element named for it below.
-- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select` and `Tooltip` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
+- These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Autocomplete.Collection`, `Calendar.Months`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `Combobox.Value`, `Combobox.Collection`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Months`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `FileUpload.Items`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Rating.Items`, `Select.Root`, `TagsInput.Items`, `TimeField.Segments`, `Toast.List`, `Tooltip.Root` and `Tour.Root`. Every other part draws the element named for it below.
+- A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select`, `Tooltip` and `Tour` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
 - Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
-- Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`onAtBottomChange`, `onCheckedChange`, `onFormSubmit`, `onIndexChange`, `onInputValueChange`, `onMonthChange`, `onOpenChange`, `onPageChange`, `onPressedChange`, `onSelect`, `onSizesChange`, `onSnapPointChange`, `onValueChange`, `onValueCommitted` and `onValuesChange`). A callback that reports something that happened takes only that, and cannot be refused: `onClearErrors`, `onComplete` and `onLoadingStatusChange`.
-- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `Accordion.Panel`, `Autocomplete.Clear`, `Avatar.Image`, `Checkbox.Indicator`, `Collapsible.Panel`, `Combobox.Clear`, `Combobox.ItemIndicator`, `ContextMenu.CheckboxItemIndicator`, `ContextMenu.RadioItemIndicator`, `Listbox.ItemIndicator`, `Menu.CheckboxItemIndicator`, `Menu.RadioItemIndicator`, `RadioGroup.Indicator`, `ScrollArea.Scrollbar`, `Select.ItemIndicator` and `Tabs.Panel`.
-- `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `Combobox`, `DateField`, `DatePicker`, `NumberField`, `RadioGroup`, `Select`, `Slider` and `Switch` and of no other component.
+- Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`onAtBottomChange`, `onCheckedChange`, `onEditingChange`, `onExpandedChange`, `onFilesChange`, `onFormSubmit`, `onFormatChange`, `onIndexChange`, `onInputValueChange`, `onMonthChange`, `onOpenChange`, `onPageChange`, `onPressedChange`, `onSelect`, `onSelectedChange`, `onSizesChange`, `onSnapPointChange`, `onStepChange`, `onValueChange`, `onValueCommitted`, `onValuesChange` and `onVisibleChange`). A callback that reports something that happened takes only that, and cannot be refused: `onClearErrors`, `onComplete`, `onFilesReject`, `onHoverChange`, `onLoadingStatusChange` and `onValueInvalid`.
+- A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `Accordion.Panel`, `Autocomplete.Clear`, `Avatar.Image`, `Checkbox.Indicator`, `Collapsible.Panel`, `Combobox.Clear`, `Combobox.ItemIndicator`, `ContextMenu.CheckboxItemIndicator`, `ContextMenu.RadioItemIndicator`, `Listbox.ItemIndicator`, `Menu.CheckboxItemIndicator`, `Menu.RadioItemIndicator`, `RadioGroup.Indicator`, `ScrollArea.Scrollbar`, `Select.ItemIndicator`, `Tabs.Panel` and `Tree.Group`.
+- `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `ColorPicker`, `Combobox`, `DateField`, `DatePicker`, `Editable`, `NumberField`, `RadioGroup`, `Rating`, `Select`, `Slider`, `Switch`, `TagsInput` and `TimeField` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
 - An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
@@ -1045,6 +1086,153 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `--collapsible-panel-height`: The panel's content height while it opens or closes, `auto` once it is open.
     - `--collapsible-panel-width`: The panel's content width while it opens or closes, `auto` once it is open.
+
+### ColorPicker
+
+```
+import { ColorPicker } from "@kirana-ui/svelte/color-picker"
+```
+
+Parts: `<ColorPicker.Root>`, `<ColorPicker.Area>`, `<ColorPicker.AreaThumb>`, `<ColorPicker.ChannelSlider>`, `<ColorPicker.ChannelSliderTrack>`, `<ColorPicker.ChannelSliderThumb>`, `<ColorPicker.ChannelInput>`, `<ColorPicker.Swatch>`, `<ColorPicker.SwatchTrigger>`, `<ColorPicker.EyeDropperTrigger>`, `<ColorPicker.ValueText>`, `<ColorPicker.FormatTrigger>`.
+
+Anatomy:
+
+```
+<ColorPicker.Root>
+  <ColorPicker.Area>
+    <ColorPicker.AreaThumb>
+  <ColorPicker.ChannelSlider> (repeated)
+    <ColorPicker.ChannelSliderTrack>
+      <ColorPicker.ChannelSliderThumb>
+    <ColorPicker.ChannelSliderThumb> (as above)
+  <ColorPicker.ChannelInput> (repeated)
+  <ColorPicker.Swatch> (repeated)
+  <ColorPicker.SwatchTrigger> (repeated)
+  <ColorPicker.EyeDropperTrigger>
+  <ColorPicker.ValueText>
+  <ColorPicker.FormatTrigger>
+```
+
+Props of its root:
+
+- `value?: string`: `bind:value`. The colour as text in `format`, when the caller holds it. Any format is read.
+- `defaultValue?: string`: Read once. Default `#000000`.
+- `onValueChange?: (value: string, details: ChangeDetails) => void`: Each step of a drag, each key, each colour typed or chosen: refusable.
+- `onValueCommitted?: (value: string, details: ChangeDetails) => void`: When the pointer lets go, after each key, when a typed channel is left: the value to save.
+- `format?: ColorFormat`: `bind:format`. How the value is written, when the caller holds it.
+- `defaultFormat?: ColorFormat`: Read once. Default `"hex"`.
+- `onFormatChange?: (format: ColorFormat, details: ChangeDetails) => void`: When the format trigger goes to the next format: refusable.
+- `alpha?: boolean`: Whether the opacity can be chosen. With it, the value always carries its alpha (`#rrggbbaa`, `rgba()`, `hsla()`); without it, never. Default false.
+- `thumbAlignment?: "center" | "edge"`: Where a thumb is at the ends of its range. `"center"` (the default): its centre on the edge, so half of it lies outside. `"edge"`: its edge on the edge, so it stays inside.
+- `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable; still submitted with the form.
+- `required?: boolean`: Needed by the form. A colour always has a value, so this only says so.
+- `name?: string`: With a name, the value is submitted with the form around the picker.
+- `form?: string`: The id of the form the picker belongs to, when it is not inside it.
+- `getAriaValueText?: (text: string, thumb: ColorPickerThumb, color: Hsva) => string`: What assistive technology reads for a thumb, when the written one is not enough.
+
+Each part, and its own props:
+
+- `<ColorPicker.Root>` draws a `<div>`. `bind:value` is the colour as it is written, `bind:format` the format it is written in. With `child`, the snippet is also given `input`: the hidden input a form reads the value from. Its `child` snippet is also given `input`. Its props are above.
+- `<ColorPicker.Area>` draws a `<div>`.
+- `<ColorPicker.AreaThumb>` draws a `<div>`.
+- `<ColorPicker.ChannelSlider>` draws a `<div>`.
+    - `channel: ColorPickerSliderChannel`: Required. The channel it moves: the hue, or the alpha.
+    - `orientation?: Orientation`: The way its track runs. Default `horizontal`.
+- `<ColorPicker.ChannelSliderTrack>` draws a `<div>`.
+- `<ColorPicker.ChannelSliderThumb>` draws a `<div>`.
+- `<ColorPicker.ChannelInput>` draws a `<input>`.
+    - `channel: ColorPickerInputChannel`: Required. The channel it is typed in, or `hex` for the whole colour.
+- `<ColorPicker.Swatch>` draws a `<div>`.
+- `<ColorPicker.SwatchTrigger>` draws a `<button>`.
+    - `value: string`: Required. The preset's colour, in any format: pressed, the colour is this one.
+- `<ColorPicker.EyeDropperTrigger>` draws a `<button>`.
+- `<ColorPicker.ValueText>` draws a `<span>`. Says the colour in its format unless it is given children. Its `child` snippet is also given `text`.
+- `<ColorPicker.FormatTrigger>` draws a `<button>`. Says the format the colour is written in unless it is given children. Its `child` snippet is also given `text`.
+
+Attributes and CSS variables, by part:
+
+- root: Groups the picker's parts. It holds the hidden input a form reads, and the colour for anything inside to paint with.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+    - `data-format="hex | rgb | hsl"`: How the value is written.
+    - `--color`: The colour, with its alpha.
+- area: The two-dimensional field a pointer presses and drags on: saturation across, the way the text runs, and brightness up. A design paints it from its hue.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds this part's thumb.
+    - `--hue-color`: The colour's hue at full saturation and brightness.
+- areaThumb: What is dragged in the area, and what the arrows move: a slider in two dimensions to assistive technology, its text saying both. Its place is written on it.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds this part's thumb.
+    - `--saturation`: Its place across, as a share of the area: the saturation.
+    - `--brightness`: Its place up, as a share of the area: the brightness.
+    - `--color`: The colour under it, without its alpha.
+- channelSlider: What a pointer presses and drags on to move the hue or the alpha. It holds the track and the thumb. It takes `channel` and `orientation`.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds this part's thumb.
+    - `data-channel="hue | alpha"`: The channel the slider moves.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+- channelSliderTrack: The channel's whole range: what a design paints the hues or the alpha on.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds this part's thumb.
+    - `data-channel="hue | alpha"`: The channel the slider moves.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `--color`: The colour without its alpha: the end of an alpha track.
+    - `--hue-color`: The colour's hue at full saturation and brightness.
+- channelSliderThumb: What is dragged, and what the keyboard moves: a slider to assistive technology, its range 0 to 360 for the hue and 0 to 100 for the alpha. Its place on the track is written on it.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds this part's thumb.
+    - `data-channel="hue | alpha"`: The channel the slider moves.
+    - `data-orientation="horizontal | vertical"`: The way the track runs.
+    - `--color`: The colour under it: the pure hue, or the colour at its alpha.
+- channelInput: A text input for one channel (`hex`, `red`, `green`, `blue`, `hue`, `saturation`, `lightness`, `alpha`). What is typed is taken when it is a colour or a number in range, and put back when focus leaves while it is not.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+    - `data-channel="hex | red | green | blue | hue | saturation | lightness | alpha"`: The channel the input is typed in.
+- swatch: Shows the current colour.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+    - `--color`: The colour, with its alpha.
+- swatchTrigger: A preset colour, given as `value`: pressed, the colour is this one.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+    - `data-selected`: Present while the colour is this one.
+    - `--color`: The preset's colour, with its alpha.
+- eyeDropperTrigger: Picks a colour from the screen with the browser's eye dropper. Hidden where the browser has none, and on a server.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+- valueText: The colour, written in its format.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+    - `data-format="hex | rgb | hsl"`: How the value is written.
+- formatTrigger: Goes to the next format: hex, then rgb, then hsl.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs a colour.
+    - `data-dragging`: Present while a pointer holds a thumb of the picker.
+    - `data-format="hex | rgb | hsl"`: How the value is written.
 
 ### Combobox
 
@@ -1738,6 +1926,84 @@ Attributes and CSS variables, by part:
     - `--drawer-swipe-strength`: Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner.
     - `--drawer-width`: Its width.
 
+### Editable
+
+```
+import { Editable } from "@kirana-ui/svelte/editable"
+```
+
+Parts: `<Editable.Root>`, `<Editable.Preview>`, `<Editable.Input>`, `<Editable.EditTrigger>`, `<Editable.SubmitTrigger>`, `<Editable.CancelTrigger>`.
+
+Anatomy:
+
+```
+<Editable.Root>
+  <Editable.Preview>
+  <Editable.Input>
+  <Editable.EditTrigger> (optional)
+  <Editable.SubmitTrigger> (optional)
+  <Editable.CancelTrigger> (optional)
+```
+
+Props of its root:
+
+- `value?: string`: `bind:value`. The text it holds: what the preview shows, and what editing starts from.
+- `defaultValue?: string`: The text it starts with, when the caller does not hold `value`. Read once. Default `""`.
+- `onValueChange?: (value: string, details: ChangeDetails) => void`: Heard as an edit is about to be kept: `details.cancel()` keeps the text, and the edit open.
+- `editing?: boolean`: `bind:editing`. Whether it is being edited, when the caller holds it.
+- `defaultEditing?: boolean`: Read once.
+- `onEditingChange?: (editing: boolean, details: ChangeDetails) => void`: Heard as editing is about to start or end: `details.cancel()` keeps it as it was.
+- `placeholder?: string`: What the preview shows while the text is empty. Default `""`.
+- `activation?: "focus" | "click" | "dblclick" | "none"`: What on the preview starts an edit: focus reaching it (the default), a press, two presses, or nothing, where only the edit trigger does.
+- `submitOnBlur?: boolean`: Whether focus leaving the input keeps the edit (the default) or drops it.
+- `selectOnFocus?: boolean`: Whether the text is selected as editing starts. Default `true`.
+- `disabled?: boolean`: Disabled: it cannot be edited.
+- `readOnly?: boolean`: Shown as it is, not editable.
+- `name?: string`: With a name, the text is submitted with the form around it.
+- `form?: string`: The id of the form the input belongs to, when it is not inside it.
+
+Each part, and its own props:
+
+- `<Editable.Root>` draws a `<div>`. `bind:value` is the text kept, `bind:editing` whether it is being edited. Its props are above.
+- `<Editable.Preview>` draws a `<span>`. Says the text, or the placeholder while there is none, unless it is given children. With `child`, the snippet is also given that text as `text`. Its `child` snippet is also given `text`.
+- `<Editable.Input>` draws a `<input>`.
+- `<Editable.EditTrigger>` draws a `<button>`.
+- `<Editable.SubmitTrigger>` draws a `<button>`.
+- `<Editable.CancelTrigger>` draws a `<button>`.
+
+Attributes and CSS variables, by part:
+
+- root: A text edited in place.
+    - `data-editing`: Present while it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be edited.
+    - `data-placeholder`: Present while it holds no text.
+- preview: The text as it reads, or the placeholder while there is none: hidden while editing.
+    - `data-editing`: Present while it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be edited.
+    - `data-placeholder`: Present while it holds no text.
+- input: Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.
+    - `data-editing`: Present while it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be edited.
+    - `data-placeholder`: Present while it holds no text.
+- editTrigger: Starts an edit: hidden while editing.
+    - `data-editing`: Present while it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be edited.
+    - `data-placeholder`: Present while it holds no text.
+- submitTrigger: Keeps what was typed: hidden unless editing.
+    - `data-editing`: Present while it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be edited.
+    - `data-placeholder`: Present while it holds no text.
+- cancelTrigger: Drops what was typed: hidden unless editing.
+    - `data-editing`: Present while it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be edited.
+    - `data-placeholder`: Present while it holds no text.
+
 ### Field
 
 ```
@@ -1853,6 +2119,103 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
 - legend: The group's name.
     - `data-disabled`: Present when it is disabled.
+
+### FileUpload
+
+```
+import { FileUpload } from "@kirana-ui/svelte/file-upload"
+```
+
+Parts: `<FileUpload.Root>`, `<FileUpload.Dropzone>`, `<FileUpload.Trigger>`, `<FileUpload.List>`, `<FileUpload.Items>`, `<FileUpload.Item>`, `<FileUpload.ItemName>`, `<FileUpload.ItemSize>`, `<FileUpload.ItemRemove>`, `<FileUpload.Clear>`.
+
+Anatomy:
+
+```
+<FileUpload.Root>
+  <FileUpload.Dropzone>
+    <FileUpload.Trigger> (optional, as above)
+  <FileUpload.Trigger> (optional)
+  <FileUpload.List>
+    <FileUpload.Items>
+      <FileUpload.Item> (repeated)
+        <FileUpload.ItemName>
+        <FileUpload.ItemSize> (optional)
+        <FileUpload.ItemRemove> (optional)
+  <FileUpload.Clear> (optional)
+```
+
+Props of its root:
+
+- `files?: readonly File[]`: `bind:files`. The files it holds, in order.
+- `defaultFiles?: readonly File[]`: The files it starts with, when the caller does not hold `files`. Read once.
+- `onFilesChange?: (files: File[], details: ChangeDetails) => void`: Heard as the files are about to change: `details.cancel()` keeps them as they were.
+- `onFilesReject?: (rejections: FileRejection[]) => void`: Told the files that were not taken, each with its reasons.
+- `accept?: string | readonly string[]`: What may be taken, as a file input's `accept`: extensions (`".png"`), types (`"image/png"`) and kinds (`"image/*"`), in a list or one text with commas. Without it, anything.
+- `multiple?: boolean`: Whether several files are held. Default `false`: a file taken is the one held.
+- `maxFiles?: number`: With `multiple`, how many files it holds at most.
+- `maxSize?: number`: The largest a file may be, in bytes.
+- `minSize?: number`: The smallest a file may be, in bytes.
+- `validate?: (file: File) => boolean`: Whether a file may be taken, asked after the checks above.
+- `disabled?: boolean`: Disabled: no file can be taken or removed.
+- `required?: boolean`: Needed: in a `Field`, holding none is then invalid.
+- `name?: string`: With a name, the files are submitted with the form around them.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+
+Each part, and its own props:
+
+- `<FileUpload.Root>` draws a `<div>`. `bind:files` is the files held. Its props are above.
+- `<FileUpload.Dropzone>` draws a `<div>`. Where files are dropped, and pressed to pick them. With `child`, the snippet is also given `input`: the native file input, hidden, which a form submits. Its `child` snippet is also given `input`.
+- `<FileUpload.Trigger>` draws a `<button>`.
+- `<FileUpload.List>` draws a `<ul>`.
+- `<FileUpload.Items>` draws no element. Draws nothing itself: its snippet once for each file, kept by the file's key.
+    - `children: Snippet<[FileUploadEntry]>`: Required. Draws one file, once for each.
+- `<FileUpload.Item>` draws a `<li>`.
+    - `entry: FileUploadEntry`: Required. The file it is, as `<FileUpload.Items>` gave it.
+- `<FileUpload.ItemName>` draws a `<span>`. Says the file's name unless it is given children. With `child`, the snippet is also given that name as `text`. Its `child` snippet is also given `text`.
+- `<FileUpload.ItemSize>` draws a `<span>`. Says the file's size as people read one unless it is given children. With `child`, the snippet is also given that size as `text`. Its `child` snippet is also given `text`.
+    - `locale?: string`: The language the number is written in. Default: the reader's.
+- `<FileUpload.ItemRemove>` draws a `<button>`.
+- `<FileUpload.Clear>` draws a `<button>`.
+
+Attributes and CSS variables, by part:
+
+- root: Files chosen to be sent.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+    - `data-empty`: Present while it holds no file.
+- dropzone: Where files are dropped or pasted; pressed, it opens the file picker. It holds the hidden file input.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- trigger: A button that opens the file picker.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- list: What holds the files: a list.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- item: A file.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- itemName: A file's name.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- itemSize: A file's size, as people read one.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- itemRemove: A file's button that takes it away.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
+- clear: Takes every file away: hidden while there is none.
+    - `data-disabled`: Present when it is disabled.
+    - `data-dragging`: Present while files are dragged over the dropzone.
+    - `data-required`: Present when a file is needed.
 
 ### Form
 
@@ -2624,6 +2987,59 @@ Attributes and CSS variables, by part:
 - next: Goes to the page after.
     - `data-disabled`: Present when it is disabled.
 
+### PasswordInput
+
+```
+import { PasswordInput } from "@kirana-ui/svelte/password-input"
+```
+
+Parts: `<PasswordInput.Root>`, `<PasswordInput.Input>`, `<PasswordInput.Toggle>`, `<PasswordInput.Indicator>`.
+
+Anatomy:
+
+```
+<PasswordInput.Root>
+  <PasswordInput.Input>
+  <PasswordInput.Toggle>
+    <PasswordInput.Indicator> (optional)
+```
+
+Props of its root:
+
+- `disabled?: boolean`: Disabled: nothing can be typed in it.
+- `onValueChange?: (value: string, details: ChangeDetails) => void`: What was typed, as text, each time it changes.
+- `visible?: boolean`: `bind:visible`. Whether the password can be read, when the caller holds it.
+- `defaultVisible?: boolean`: Read once. Default `false`.
+- `onVisibleChange?: (visible: boolean, details: ChangeDetails) => void`: Heard as it is about to be shown or hidden: `details.cancel()` keeps it as it was.
+
+Each part, and its own props:
+
+- `<PasswordInput.Root>` draws a `<div>`. `bind:visible` is whether the password can be read. Inside a `<Field.Root>` its input is the field's control. Its props are above.
+- `<PasswordInput.Input>` draws a `<input>`. It takes what an `<input>` takes (`value`, `autocomplete`).
+- `<PasswordInput.Toggle>` draws a `<button>`.
+- `<PasswordInput.Indicator>` draws a `<span>`.
+
+Attributes and CSS variables, by part:
+
+- root: A password that can be shown while it is typed.
+    - `data-visible`: Present while the password can be read.
+    - `data-disabled`: Present when it is disabled.
+- input: The `<input>`: a password, or text while it is shown. In a `Field` it is the field's control.
+    - `data-visible`: Present while the password can be read.
+    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Present once focus has left it.
+    - `data-dirty`: Present once its text differs from what it began with.
+    - `data-filled`: Present while it holds text.
+    - `data-focused`: Present while it has focus.
+    - `data-valid`: In a field: present once the value was checked and found right.
+    - `data-invalid`: In a field: present while the value is wrong.
+- toggle: Shows the password, and hides it again. Focus and the caret stay in the input.
+    - `data-visible`: Present while the password can be read.
+    - `data-disabled`: Present when it is disabled.
+- indicator: What draws which of the two it is: an eye, open or struck.
+    - `data-visible`: Present while the password can be read.
+    - `data-disabled`: Present when it is disabled.
+
 ### Popover
 
 ```
@@ -2849,6 +3265,59 @@ Attributes and CSS variables, by part:
     - `data-required`: Present when the form needs it.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### Rating
+
+```
+import { Rating } from "@kirana-ui/svelte/rating"
+```
+
+Parts: `<Rating.Root>`, `<Rating.Items>`, `<Rating.Item>`.
+
+Anatomy:
+
+```
+<Rating.Root>
+  <Rating.Items>
+    <Rating.Item> (repeated)
+```
+
+Props of its root:
+
+- `value?: number`: `bind:value`. How much is given, from 0 (none) to `count`; a half where `allowHalf` is set.
+- `defaultValue?: number`: The value it starts with, when the caller does not hold `value`. Read once. Default `0`.
+- `onValueChange?: (value: number, details: ChangeDetails) => void`: Heard as another value is about to be given: `details.cancel()` keeps it as it was.
+- `onHoverChange?: (value: number | null) => void`: Told the value the pointer is over, and `null` as it leaves: nothing is chosen by it.
+- `count?: number`: How many items there are. Default 5.
+- `allowHalf?: boolean`: Whether half an item can be given: by the half of it a pointer is over, and by the arrows.
+- `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, giving none is then invalid.
+- `name?: string`: With a name, the value is submitted with the form around it; none is submitted as empty.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+
+Each part, and its own props:
+
+- `<Rating.Root>` draws a `<div>`. `bind:value` is how much is given. With `child`, the snippet is also given `input`: the hidden input a form reads the value from. Its `child` snippet is also given `input`. Its props are above.
+- `<Rating.Items>` draws no element. Draws nothing itself: its snippet once for each item, given the item's place, from 1.
+    - `children: Snippet<[place: number]>`: Required. Draws one item, once for each place, from 1.
+- `<Rating.Item>` draws a `<span>`.
+    - `place: number`: Required. Its place among the items, from 1.
+
+Attributes and CSS variables, by part:
+
+- root: The items, as one choice: a radio group. It holds the hidden input a form reads.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be changed.
+    - `data-required`: Present when a value is needed.
+    - `data-hovering`: Present while a pointer is over an item.
+- item: One item (a star): pressed, the value is its place, or half of it.
+    - `data-checked`: Present on the item that holds the value.
+    - `data-filled`: Present on every item up to the value drawn: the one a pointer is over, or the one held.
+    - `data-half`: Present on the item the value drawn fills by half.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it is shown and cannot be changed.
+    - `data-required`: Present when a value is needed.
 
 ### Resizable
 
@@ -3171,6 +3640,93 @@ Attributes and CSS variables, by part:
     - `data-index`: Which thumb it is, from 0.
     - `--position`: With thumbs that stay inside the control: where the thumb's centre is.
 
+### Steps
+
+```
+import { Steps } from "@kirana-ui/svelte/steps"
+```
+
+Parts: `<Steps.Root>`, `<Steps.List>`, `<Steps.Item>`, `<Steps.Trigger>`, `<Steps.Indicator>`, `<Steps.Separator>`, `<Steps.Content>`, `<Steps.Completed>`, `<Steps.Previous>`, `<Steps.Next>`.
+
+Anatomy:
+
+```
+<Steps.Root>
+  <Steps.List>
+    <Steps.Item> (repeated)
+      <Steps.Trigger>
+        <Steps.Indicator> (optional)
+      <Steps.Separator> (optional)
+  <Steps.Content> (repeated)
+  <Steps.Completed> (optional)
+  <Steps.Previous> (optional)
+  <Steps.Next> (optional)
+```
+
+Props of its root:
+
+- `step?: number`: `bind:step`. The step shown, from 0. Equal to `count`, every step is done.
+- `defaultStep?: number`: The step it starts at, when the caller does not hold `step`. Read once. Default `0`.
+- `onStepChange?: (step: number, details: ChangeDetails) => void`: Heard as another step is about to be shown: `details.cancel()` keeps it as it was.
+- `count: number`: Required. How many steps there are.
+- `linear?: boolean`: In order only: a step that is not done yet cannot be gone to by its trigger.
+- `orientation?: Orientation`: Whether the steps are laid out across (the default) or down: the arrows follow.
+
+Each part, and its own props:
+
+- `<Steps.Root>` draws a `<div>`. `bind:step` is the step shown, from 0; `count` past the last is every step done. Its props are above.
+- `<Steps.List>` draws a `<div>`.
+- `<Steps.Item>` draws a `<div>`.
+    - `index: number`: Required. Which step it is, from 0.
+- `<Steps.Trigger>` draws a `<button>`.
+- `<Steps.Indicator>` draws a `<span>`.
+- `<Steps.Separator>` draws a `<div>`.
+- `<Steps.Content>` draws a `<div>`.
+    - `index: number`: Required. The step it is shown for, from 0.
+- `<Steps.Completed>` draws a `<div>`.
+- `<Steps.Previous>` draws a `<button>`.
+- `<Steps.Next>` draws a `<button>`.
+
+Attributes and CSS variables, by part:
+
+- root: A task in steps, taken in order.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+    - `data-complete`: Present once every step is done.
+- list: The row of steps: the arrows move between their triggers.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+- item: One step of the row, around its trigger and its separator.
+    - `data-current`: Present on the step that is shown.
+    - `data-complete`: Present on a step that is done: one before the step shown.
+    - `data-incomplete`: Present on a step still to come.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+- trigger: Names a step, and goes to it when pressed.
+    - `data-current`: Present on the step that is shown.
+    - `data-complete`: Present on a step that is done: one before the step shown.
+    - `data-incomplete`: Present on a step still to come.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+    - `data-disabled`: Present when it is disabled.
+- indicator: A step's mark: its number, or a tick once it is done.
+    - `data-current`: Present on the step that is shown.
+    - `data-complete`: Present on a step that is done: one before the step shown.
+    - `data-incomplete`: Present on a step still to come.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+- separator: The line from a step to the next.
+    - `data-current`: Present on the step that is shown.
+    - `data-complete`: Present on a step that is done: one before the step shown.
+    - `data-incomplete`: Present on a step still to come.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+- content: What a step shows: hidden unless its step is the one shown.
+    - `data-current`: Present on the step that is shown.
+    - `data-complete`: Present on a step that is done: one before the step shown.
+    - `data-incomplete`: Present on a step still to come.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+- completed: What is shown once every step is done.
+    - `data-orientation="horizontal | vertical"`: Whether the steps are laid out across or down.
+- previous: Goes to the step before.
+    - `data-disabled`: Present when it is disabled.
+- next: Goes to the step after; from the last, to all of them done.
+    - `data-disabled`: Present when it is disabled.
+
 ### Switch
 
 ```
@@ -3285,6 +3841,154 @@ Attributes and CSS variables, by part:
     - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+
+### TagsInput
+
+```
+import { TagsInput } from "@kirana-ui/svelte/tags-input"
+```
+
+Parts: `<TagsInput.Root>`, `<TagsInput.List>`, `<TagsInput.Items>`, `<TagsInput.Item>`, `<TagsInput.ItemText>`, `<TagsInput.ItemInput>`, `<TagsInput.ItemRemove>`, `<TagsInput.Input>`, `<TagsInput.Clear>`.
+
+Anatomy:
+
+```
+<TagsInput.Root>
+  <TagsInput.List>
+    <TagsInput.Items>
+      <TagsInput.Item> (repeated)
+        <TagsInput.ItemText>
+        <TagsInput.ItemInput> (optional)
+        <TagsInput.ItemRemove> (optional)
+  <TagsInput.Input>
+  <TagsInput.Clear> (optional)
+```
+
+Props of its root:
+
+- `value?: readonly string[]`: `bind:value`. The tags, in order.
+- `defaultValue?: readonly string[]`: The tags it starts with, when the caller does not hold `value`. Read once.
+- `onValueChange?: (value: string[], details: ChangeDetails) => void`: Heard as the tags are about to change: `details.cancel()` keeps them as they were.
+- `onValueInvalid?: (text: string, reason: "duplicate" | "max" | "invalid") => void`: Told a text that was not made a tag, and why.
+- `validate?: (text: string, value: readonly string[]) => boolean`: Whether a text may be a tag. Asked after the text is trimmed, and not for an empty one.
+- `max?: number`: How many tags it holds at most.
+- `allowDuplicates?: boolean`: Whether the same text may be a tag twice. Default `false`.
+- `delimiter?: string | RegExp | null`: What ends a tag as it is typed or pasted, beside Enter. Default `","`. `null` for nothing.
+- `addOnBlur?: boolean`: Whether what is typed becomes a tag as focus leaves the input. Default `false`.
+- `addOnPaste?: boolean`: Whether a pasted text is cut into tags at its delimiters and line ends. Default `true`.
+- `editable?: boolean`: Whether a tag can be edited in place, by two presses or Enter on it. Default `true`.
+- `disabled?: boolean`: Disabled: nothing can be added or taken away.
+- `readOnly?: boolean`: Shown as they are, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, holding none is then invalid.
+- `name?: string`: With a name, each tag is submitted under it with the form around them.
+- `form?: string`: The id of the form the control belongs to, when it is not inside it.
+
+Each part, and its own props:
+
+- `<TagsInput.Root>` draws a `<div>`. `bind:value` is the tags. With `child`, the snippet is also given `input`: the hidden input a form reads the first tag from; the rest follow it, drawn by the component. Its `child` snippet is also given `input`. Its props are above.
+- `<TagsInput.List>` draws a `<div>`.
+- `<TagsInput.Items>` draws no element. Draws nothing itself: its snippet once for each tag, kept by the tag's key.
+    - `children: Snippet<[TagsInputEntry]>`: Required. Draws one tag, once for each.
+- `<TagsInput.Item>` draws a `<span>`.
+    - `entry: TagsInputEntry`: Required. The tag it is, as `<TagsInput.Items>` gave it.
+- `<TagsInput.ItemText>` draws a `<span>`. Says the tag's text unless it is given children. With `child`, the snippet is also given that text as `text`. Its `child` snippet is also given `text`.
+- `<TagsInput.ItemInput>` draws a `<input>`.
+- `<TagsInput.ItemRemove>` draws a `<button>`.
+- `<TagsInput.Input>` draws a `<input>`.
+- `<TagsInput.Clear>` draws a `<button>`.
+
+Attributes and CSS variables, by part:
+
+- root: Several short texts held as tags, and the input a new one is typed in. It holds the hidden inputs a form reads.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+    - `data-focused`: Present while focus is on a tag or in the input.
+    - `data-empty`: Present while it holds no tag.
+- list: What holds the tags: a list.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+- item: A tag: reached with the arrows, taken away with Backspace or Delete.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+    - `data-editing`: Present while the tag is edited.
+- itemText: A tag's text: hidden while the tag is edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+- itemInput: Where a tag is edited in place: hidden unless it is being edited.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+- itemRemove: A tag's button that takes it away.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+- input: Where a new tag is typed. In a `Field` it is what the field's label names.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+- clear: Takes every tag away: hidden while there is none.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when the tags are shown and cannot be changed.
+    - `data-required`: Present when a tag is needed.
+
+### TimeField
+
+```
+import { TimeField } from "@kirana-ui/svelte/time-field"
+```
+
+Parts: `<TimeField.Root>`, `<TimeField.Segments>`, `<TimeField.Segment>`, `<TimeField.Input>`.
+
+Anatomy:
+
+```
+<TimeField.Root>
+  <TimeField.Segments>
+    <TimeField.Segment> (repeated)
+  <TimeField.Input>
+```
+
+Props of its root:
+
+- `value?: IsoTime | null`: `bind:value`. The time typed, once all of it is; `null` until then.
+- `defaultValue?: IsoTime | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `onValueChange?: (value: IsoTime | null, details: ChangeDetails) => void`: Heard as the time is about to change, once all of it is typed or as it is cleared: `details.cancel()` keeps the value as it was.
+- `granularity?: TimeGranularity`: To the minute (`HH:MM`, the default) or to the second (`HH:MM:SS`).
+- `locale?: string`: The language and region that order the parts, put what stands between them and say whether the clock has twelve hours or twenty-four (`"en-US"`: 12, with AM and PM). Give it: a server does not know the reader's. Default `"en-US"`.
+- `hourCycle?: HourCycle`: A clock of 12 or 24 hours, whatever the locale's is.
+- `min?: IsoTime`: The first time it takes: before it, it says it is invalid.
+- `max?: IsoTime`: The last time it takes.
+- `placeholders?: Partial<Record<TimeUnit, string>>`: What an empty part shows. Default: `hh`, `mm`, `ss`, and `--` for the day period.
+- `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, leaving it empty is then invalid.
+- `name?: string`: The name it is submitted under, by its hidden input.
+- `form?: string`: The id of the form it belongs to, when it is not inside it.
+
+Each part, and its own props:
+
+- `<TimeField.Root>` draws a `<div>`. Its props are above.
+- `<TimeField.Segments>` draws no element. Draws nothing itself: its snippet once for each piece of the time, in the locale's order.
+    - `children: Snippet<[TimeFieldSegment]>`: Required. Draws one piece of the time, once for each: a part that is typed, or what stands between two.
+- `<TimeField.Segment>` draws a `<span>`. One piece: a part that is typed, or what stands between two. It writes its own text. Its `child` snippet is also given `text`.
+    - `segment: TimeFieldSegment`: Required. The piece, as `<TimeField.Segments>` gave it.
+- `<TimeField.Input>` draws a `<input>`. The field's hidden input: what a form submits, in 24 hours.
+
+Attributes and CSS variables, by part:
+
+- root: The field: a group of the time's parts.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when its value cannot be changed.
+    - `data-invalid`: Present when the time is outside what it takes, or is asked for and half typed.
+- segment: One piece of the time: a part that is typed, or what stands between two.
+    - `data-segment="hour | minute | second | dayPeriod | literal"`: Which piece it is: `dayPeriod` is AM or PM, on a clock of twelve hours.
+    - `data-placeholder`: Present on a part that is empty.
+    - `data-disabled`: Present when it is disabled.
+    - `data-invalid`: Present when the time is outside what it takes, or is asked for and half typed.
 
 ### Toast
 
@@ -3520,3 +4224,172 @@ Attributes and CSS variables, by part:
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
+
+### Tour
+
+```
+import { Tour } from "@kirana-ui/svelte/tour"
+```
+
+Parts: `<Tour.Root>`, `<Tour.Portal>`, `<Tour.Spotlight>`, `<Tour.Positioner>`, `<Tour.Popup>`, `<Tour.Arrow>`, `<Tour.Title>`, `<Tour.Description>`, `<Tour.Previous>`, `<Tour.Next>`, `<Tour.Close>`.
+
+Anatomy:
+
+```
+<Tour.Root>
+  <Tour.Portal>
+    <Tour.Spotlight>
+    <Tour.Positioner>
+      <Tour.Popup>
+        <Tour.Arrow>
+        <Tour.Title>
+        <Tour.Description>
+        <Tour.Previous>
+        <Tour.Next>
+        <Tour.Close>
+```
+
+Props of its root:
+
+- `steps: readonly Step[]`: Required. The steps, in order.
+- `open?: boolean`: `bind:open`. Whether it is open, when the caller holds it.
+- `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
+- `onOpenChange?: (open: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was. The reason is `"finish"` for the last step's `next`, `"close-press"`, `"escape-key"` or `"outside-press"`.
+- `step?: number`: `bind:step`. The index of the step shown, from 0, when the caller holds it.
+- `defaultStep?: number`: The step it starts at, when the caller does not hold `step`. Read once. Default 0.
+- `onStepChange?: (step: number, details: ChangeDetails) => void`: Heard as another step is about to be shown: `details.cancel()` keeps it as it was. The reason is `"next-press"`, `"previous-press"`, `"next-key"` or `"previous-key"`.
+- `waitForTarget?: number`: How long a step whose target is not in the page waits for it, in milliseconds, before it is shown in the middle of the viewport. Default 1000.
+- `spotlightPadding?: number`: The room between the target and the edge of the spotlight's hole, in pixels. Default 4.
+- `closeOnOutsidePress?: boolean`: Whether a press on the dimmed page ends the tour. Default `false`.
+- `interactive?: boolean`: Whether the target can be used while its step is shown: pressed, focused, typed in. Default `false`: the target is seen, not used, and the rest of the page is inert either way.
+- `keyboardNavigation?: boolean`: Whether ArrowRight and ArrowLeft go on and back a step. Default `true`.
+
+Each part, and its own props:
+
+- `<Tour.Root>` draws no element. Generic: `<Step extends TourStep = TourStep>`. It draws nothing: `bind:open` is whether the tour shows, `bind:step` the index of the step asked for. `Step` is what each step is: a `TourStep` with whatever the page draws it from. Its props are above.
+- `<Tour.Portal>` draws no element. Draws nothing itself: its content at the end of `<body>`, or where a `<PortalProvider>` says.
+- `<Tour.Spotlight>` draws a `<div>`.
+- `<Tour.Positioner>` draws a `<div>`. Takes the positioner options ("Positioner options", above).
+- `<Tour.Popup>` draws a `<div>`. Generic: `<Step extends TourStep = TourStep>`. What the popup holds: its `children`, a snippet given the step shown.
+    - `children?: Snippet<[shown: TourShownStep<Step>]>`: What the popup holds, or a function given the step shown that draws it.
+- `<Tour.Arrow>` draws a `<div>`.
+- `<Tour.Title>` draws a `<h2>`. The heading that names the step.
+- `<Tour.Description>` draws a `<p>`. The text that describes the step.
+- `<Tour.Previous>` draws a `<button>`.
+- `<Tour.Next>` draws a `<button>`.
+- `<Tour.Close>` draws a `<button>`. A button that ends the tour.
+
+Attributes and CSS variables, by part:
+
+- spotlight: A layer over the page with a hole over the step's target, which the design draws from its variables (a clip path, or a box with a large shadow). A press on it is a press outside the tour. While the target can be used (`interactive`), presses go through it.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-centered`: Present while the step shown has no target in the page: the popup stands in the middle of the viewport.
+    - `--spotlight-left`: The hole's left edge, from the spotlight's own left edge: the target's, less `spotlightPadding`.
+    - `--spotlight-top`: The hole's top edge, from the spotlight's own top edge: the target's, less `spotlightPadding`.
+    - `--spotlight-width`: The hole's width: the target's, with `spotlightPadding` on each side.
+    - `--spotlight-height`: The hole's height: the target's, with `spotlightPadding` on each side. With no target, the hole is a point in the middle.
+- positioner: Places the popup against the step's target, or in the middle of the viewport for a step with none. It carries the geometry.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-centered`: Present while the step shown has no target in the page: the popup stands in the middle of the viewport.
+    - `--anchor-width`: The anchor's width.
+    - `--anchor-height`: The anchor's height.
+    - `--available-width`: The width between the anchor and the edge of the viewport.
+    - `--available-height`: The height between the anchor and the edge of the viewport.
+    - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+- popup: The step itself: a dialog that stays in the page from the first step to the last, and moves.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-centered`: Present while the step shown has no target in the page: the popup stands in the middle of the viewport.
+- arrow: An element that points at the target, placed along the popup's edge.
+    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the target's centre.
+    - `data-centered`: Present while the step shown has no target in the page: the popup stands in the middle of the viewport.
+- previous: A button that goes back a step. On the first step it does nothing.
+    - `data-disabled`: Present when it is disabled.
+- next: A button that goes on a step. On the last step it finishes the tour.
+    - `data-last`: Present on the last step: a press finishes the tour.
+
+### Tree
+
+```
+import { Tree } from "@kirana-ui/svelte/tree"
+```
+
+Parts: `<Tree.Root>`, `<Tree.Item>`, `<Tree.ItemRow>`, `<Tree.ItemIndicator>`, `<Tree.ItemText>`, `<Tree.Group>`.
+
+Anatomy:
+
+```
+<Tree.Root>
+  <Tree.Item> (repeated)
+    <Tree.ItemRow> (optional)
+      <Tree.ItemIndicator>
+      <Tree.ItemText>
+    <Tree.Group>
+      <Tree.Item> (repeated, as above)
+```
+
+Props of its root:
+
+- `expandedValue?: readonly Value[]`: `bind:expandedValue`. The values of the open branches.
+- `defaultExpandedValue?: readonly Value[]`: The branches open at first, when the caller does not hold `expandedValue`. Read once.
+- `onExpandedChange?: (value: Value[], details: ChangeDetails) => void`: Heard as a branch is about to open or close, with the values that would then be open: `details.cancel()` keeps them as they were. A page that loads a branch's children loads them when this says the branch opened.
+- `selectionMode?: TreeSelectionMode`: Whether nodes can be chosen: none, one, or several. Default `single`.
+- `selectedValue?: readonly Value[]`: `bind:selectedValue`. The values of the chosen nodes.
+- `defaultSelectedValue?: readonly Value[]`: The nodes chosen at first, when the caller does not hold `selectedValue`. Read once.
+- `onSelectedChange?: (value: Value[], details: ChangeDetails) => void`: Heard as nodes are about to be chosen or taken away, with the values there would then be: `details.cancel()` keeps them as they were.
+- `expandOnClick?: boolean`: Whether a press on a branch (or Enter on it) also opens or closes it. Default `true`.
+
+Each part, and its own props:
+
+- `<Tree.Root>` draws a `<div>`. Generic: `<Value = unknown>`. `bind:expandedValue` is the values of the open branches, `bind:selectedValue` those of the chosen nodes. `Value` is what tells a node from the others: the type of the values' entries. Its props are above.
+- `<Tree.Item>` draws a `<div>`.
+    - `value: unknown`: Required. What tells this node from the others in the tree: what the values hold.
+    - `branch?: boolean`: A branch: it has children, drawn in its `Tree.Group`, and opens and closes.
+    - `disabled?: boolean`: Disables this node: it cannot be chosen, opened or closed, and the keys pass over it.
+    - `loading?: boolean`: A branch whose children are being loaded.
+    - `label?: string`: What typing matches, when it is not the node's text.
+- `<Tree.ItemRow>` draws a `<div>`.
+- `<Tree.ItemIndicator>` draws a `<span>`.
+- `<Tree.ItemText>` draws a `<span>`. The node's name: what names it to assistive technology, and what typing matches.
+- `<Tree.Group>` draws a `<div>`.
+    - `keepMounted?: boolean`: Keeps the closed group in the page, `hidden`.
+
+Attributes and CSS variables, by part:
+
+- item: One node, a `treeitem`: a leaf, or a branch that holds its row and its group. Its `value` tells it from the others; its depth, and its place among its siblings, are read from the page.
+    - `data-selected`: Present on a chosen node.
+    - `data-highlighted`: Present on the node focus is on, while it is in the tree.
+    - `data-disabled`: Present when it is disabled.
+    - `data-open`: Present on a branch that is open.
+    - `data-closed`: Present on a branch that is closed.
+    - `data-loading`: Present on a branch that says its children are being loaded.
+- itemRow: The line a node draws, apart from the children its group holds: what a design gives a background.
+    - `data-selected`: Present on a chosen node.
+    - `data-highlighted`: Present on the node focus is on, while it is in the tree.
+    - `data-disabled`: Present when it is disabled.
+    - `data-open`: Present on a branch that is open.
+    - `data-closed`: Present on a branch that is closed.
+    - `data-loading`: Present on a branch that says its children are being loaded.
+- itemIndicator: The mark that says whether a branch is open. A press on it opens or closes the branch and chooses nothing.
+    - `data-open`: Present on a branch that is open.
+    - `data-closed`: Present on a branch that is closed.
+    - `data-loading`: Present on a branch that says its children are being loaded.
+- group: A branch's children. In the page while the branch is open, and through its exit's motion.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `--tree-group-height`: The group's content height while it opens or closes, `auto` once it is open.
+    - `--tree-group-width`: The group's content width while it opens or closes, `auto` once it is open.

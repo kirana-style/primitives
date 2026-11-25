@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished } from "vite-plus/test"
 
 import { agentTools, createAgent, registerTools } from "../../packages/core/src/agent.ts"
+import type { AgentEvent, AgentKind } from "../../packages/core/src/agent.ts"
 import { bind } from "../../packages/core/src/bind.ts"
 import { createCollapsible } from "../../packages/core/src/collapsible.ts"
 import { createInput } from "../../packages/core/src/input.ts"
@@ -553,3 +554,334 @@ describe("the agent bridge, on what a page really writes", () => {
     expect(faults(root)).toEqual([expect.stringContaining("data-mine")])
   })
 })
+
+const wait = (ms = 80) => new Promise((resolve) => setTimeout(resolve, ms))
+
+describe("the agent bridge, beside a person", () => {
+  it("says of each change which state, from what, to what, and who made it", async () => {
+    const { agent, find, toggled } = page()
+    const heard: AgentEvent[] = []
+    onTestFinished(agent.subscribe((_changed, changes) => void heard.push(...changes)))
+    await agent.act({ steps: [{ ref: "Notifications", action: "toggle" }] })
+    expect(heard.at(-1)).toMatchObject({
+      label: "Notifications",
+      key: "checked",
+      value: true,
+      previous: false,
+      source: "agent",
+      reason: "press",
+    })
+    // A person's press on the same switch: the part says what made it.
+    find(".switch").dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, pointerType: "mouse" })
+    )
+    find(".switch").dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    await wait()
+    expect(heard.at(-1)).toMatchObject({ key: "checked", value: false, source: "mouse" })
+    // And the switch's own callback: the press, not the hidden input's change, made it.
+    expect(toggled.calls.at(-1)).toMatchObject({ value: false, source: "mouse" })
+    // A control of no library, changed by the page's own code.
+    const plainBox = document.createElement("button")
+    plainBox.setAttribute("aria-pressed", "false")
+    plainBox.setAttribute("aria-label", "Bold")
+    find(".more").after(plainBox)
+    await wait()
+    plainBox.setAttribute("aria-pressed", "true")
+    await wait()
+    expect(heard.at(-1)).toMatchObject({ label: "Bold", key: "checked", source: "programmatic" })
+    // What is not read back is never told.
+    expect(JSON.stringify(heard)).not.toContain("hunter2")
+  })
+
+  it("keeps a person's changes beside its own, each as a sentence, typing as one", async () => {
+    const { agent, find } = page()
+    onTestFinished(agent.record())
+    await agent.act({ steps: [{ ref: "Project name", action: "setValue", args: ["Atlas"] }] })
+    const name = find<HTMLInputElement>("#name")
+    for (const text of ["Atlas ", "Atlas V"]) {
+      name.dispatchEvent(new KeyboardEvent("keydown", { key: "V", bubbles: true }))
+      name.value = text
+      name.dispatchEvent(new InputEvent("input", { bubbles: true }))
+      await wait(50)
+    }
+    find(".switch").dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }))
+    await wait()
+    expect(agent.history().map((each) => [each.source, each.text])).toEqual([
+      ["agent", 'The agent set Project name to "Atlas"'],
+      ["keyboard", 'A person set Project name to "Atlas V"'],
+      ["mouse", "A person turned Notifications on"],
+    ])
+  })
+
+  it("takes back what one source did and leaves what someone else changed since", async () => {
+    const { agent, find } = page()
+    onTestFinished(agent.record())
+    await agent.act({
+      steps: [
+        { ref: "Project name", action: "setValue", args: ["Atlas"] },
+        { ref: "Notifications", action: "setChecked", args: [true] },
+      ],
+    })
+    // A person goes on from the agent's name.
+    const name = find<HTMLInputElement>("#name")
+    name.dispatchEvent(new KeyboardEvent("keydown", { key: "s", bubbles: true }))
+    name.value = "Atlas 2"
+    name.dispatchEvent(new InputEvent("input", { bubbles: true }))
+    await wait()
+    const back = await agent.undoSource("agent")
+    expect(find(".switch").getAttribute("aria-checked")).toBe("false")
+    // The person's text is not undone with the agent's.
+    expect(name.value).toBe("Atlas 2")
+    expect(back.ok).toBe(false)
+    expect(back.error).toContain("Project name")
+    expect(agent.history().map((each) => each.undone)).toEqual([false, true, false])
+  })
+
+  it("goes to any point of what was done, back and forward", async () => {
+    const { agent, find } = page()
+    await agent.act({
+      steps: [
+        { ref: "Project name", action: "setValue", args: ["Atlas"] },
+        { ref: "Notifications", action: "setChecked", args: [true] },
+        { ref: "Project name", action: "setValue", args: ["Borealis"] },
+      ],
+    })
+    const name = find<HTMLInputElement>("#name")
+    expect((await agent.seek(1)).ok).toBe(true)
+    expect(name.value).toBe("Atlas")
+    expect(find(".switch").getAttribute("aria-checked")).toBe("false")
+    expect((await agent.seek(0)).ok).toBe(true)
+    expect(name.value).toBe("Apollo")
+    expect((await agent.seek(3)).ok).toBe(true)
+    expect(name.value).toBe("Borealis")
+    expect(find(".switch").getAttribute("aria-checked")).toBe("true")
+    expect(agent.history().every((each) => !each.undone)).toBe(true)
+  })
+
+  it("shows a suggestion in the controls, and takes it back or keeps it", async () => {
+    const { agent, find } = page()
+    const steps = [
+      { ref: "Project name", action: "setValue", args: ["Atlas"] },
+      { ref: "Notifications", action: "toggle" },
+    ]
+    const shown = await agent.stage({ steps })
+    expect(shown.ok).toBe(true)
+    expect(shown.applied.map((each) => each.text)).toEqual([
+      'The agent set Project name to "Atlas"',
+      "The agent turned Notifications on",
+    ])
+    expect(find<HTMLInputElement>("#name").value).toBe("Atlas")
+    expect(agent.history()).toHaveLength(0)
+    expect((await shown.revert()).ok).toBe(true)
+    expect(find<HTMLInputElement>("#name").value).toBe("Apollo")
+    expect(find(".switch").getAttribute("aria-checked")).toBe("false")
+    expect((await shown.revert()).ok).toBe(false)
+    const kept = await agent.stage({ steps })
+    kept.keep()
+    expect(agent.history()).toHaveLength(2)
+  })
+
+  it("finds a control by a word of its label, by the text of its row, by a choice, by its kind", async () => {
+    const root = mount(`
+      <label for="pn">Project name</label><input id="pn" value="Apollo" />
+      <div class="row"><span>Weekly digest</span><button role="switch" aria-checked="false"></button></div>
+      <div role="radiogroup" aria-label="Plan">
+        <button role="radio" aria-checked="true" aria-label="Free"></button>
+        <button role="radio" aria-checked="false" aria-label="Pro"></button>
+      </div>
+      <button>Save changes</button><button>Save draft</button>`)
+    const radios = root.querySelectorAll('[role="radio"]')
+    for (const each of radios) {
+      each.addEventListener("click", () => {
+        for (const other of radios) other.setAttribute("aria-checked", String(other === each))
+      })
+    }
+    const toggle = root.querySelector('[role="switch"]')!
+    toggle.addEventListener("click", () => toggle.setAttribute("aria-checked", "true"))
+    const agent = createAgent({ root })
+    const run = (ref: string, action: string, args?: unknown[]) =>
+      agent.act({ steps: [{ ref, action, ...(args ? { args } : {}) }] })
+    expect((await run("name", "setValue", ["Atlas"])).ok).toBe(true)
+    expect(root.querySelector<HTMLInputElement>("#pn")!.value).toBe("Atlas")
+    expect((await run("Weekly digest", "toggle")).steps[0]!.now?.checked).toBe(true)
+    expect((await run("Pro", "press")).steps[0]!.now?.value).toBe("Pro")
+    expect((await run("the input", "clear")).ok).toBe(true)
+    // A word two controls share is said with both, never guessed.
+    const both = await run("Save", "press")
+    expect(both.ok).toBe(false)
+    expect(both.error).toMatch(
+      /names 2 components: c\d+ \(button "Save changes"\), c\d+ \(button "Save draft"\)/
+    )
+  })
+
+  it("opens a closed menu to press an item of it, and closes the ones it is not in", async () => {
+    const root = mount(`
+      <button id="file" aria-haspopup="menu" aria-expanded="false" aria-controls="file-menu">File</button>
+      <div id="file-menu" role="menu" hidden><div role="menuitem">Open</div></div>
+      <button id="edit" aria-haspopup="menu" aria-expanded="false" aria-controls="edit-menu">Edit</button>
+      <div id="edit-menu" role="menu" hidden><div role="menuitem">Rename</div></div>`)
+    const pressed: string[] = []
+    for (const name of ["file", "edit"]) {
+      const trigger = root.querySelector(`#${name}`)!
+      const menu = root.querySelector<HTMLElement>(`#${name}-menu`)!
+      const set = (open: boolean) => {
+        trigger.setAttribute("aria-expanded", String(open))
+        menu.hidden = !open
+      }
+      trigger.addEventListener("click", () => set(menu.hidden === true))
+      root.addEventListener("keydown", (event) => {
+        if ((event as KeyboardEvent).key === "Escape") set(false)
+      })
+      menu.addEventListener("click", (event) => {
+        pressed.push(textOfItem(event.target))
+        set(false)
+      })
+    }
+    const opened: string[] = []
+    const agent = createAgent({
+      root,
+      allow: (action) => {
+        if (action.action === "open") opened.push(String(action.label))
+        return true
+      },
+    })
+    const done = await agent.act({ steps: [{ ref: "Rename", action: "press" }] })
+    expect(done.ok).toBe(true)
+    expect(pressed).toEqual(["Rename"])
+    expect(opened).toEqual(["File", "Edit"])
+    expect(root.querySelector("#file")!.getAttribute("aria-expanded")).toBe("false")
+    expect((await agent.act({ steps: [{ ref: "Delete", action: "press" }] })).error).toContain(
+      'Nothing is called "Delete"'
+    )
+  })
+
+  it("says what a step opened, what came and what went, and keeps a ref through a redraw", async () => {
+    const root = mount(`
+      <button class="opener" aria-expanded="false" aria-controls="dlg">Settings</button>
+      <span class="place"></span>`)
+    const opener = root.querySelector(".opener")!
+    const place = root.querySelector(".place")!
+    opener.addEventListener("click", () => {
+      const open = opener.getAttribute("aria-expanded") !== "true"
+      opener.setAttribute("aria-expanded", String(open))
+      place.innerHTML = open
+        ? '<div id="dlg" role="dialog" aria-label="Settings panel"><input aria-label="Name" /></div>'
+        : ""
+    })
+    const agent = createAgent({ root })
+    const first = await agent.act({ steps: [{ ref: "Settings", action: "open" }] })
+    expect(first.steps[0]!.opened).toEqual([
+      { ref: expect.any(String), component: "dialog", label: "Settings panel" },
+    ])
+    expect(first.steps[0]!.appeared).toEqual([
+      { ref: expect.any(String), component: "input", label: "Name" },
+    ])
+    const ref = first.steps[0]!.appeared![0]!.ref
+    const closed = await agent.act({ steps: [{ ref: "Settings", action: "close" }] })
+    expect(closed.steps[0]!.gone?.map((each) => each.label)).toEqual(["Settings panel", "Name"])
+    // Drawn again on new elements: the input is asked for by the ref it had.
+    await agent.act({ steps: [{ ref: "Settings", action: "open" }] })
+    expect((await agent.act({ steps: [{ ref, action: "setValue", args: ["x"] }] })).ok).toBe(true)
+    expect(root.querySelector<HTMLInputElement>("#dlg input")!.value).toBe("x")
+  })
+
+  it("stops at a signal, gives up on an answer that does not come, and checks what it is given", async () => {
+    const root = mount(`
+      <button role="switch" aria-checked="false" aria-label="Alerts"></button>
+      <input type="number" aria-label="Seats" value="3" />`)
+    const stopper = new AbortController()
+    const slow = createAgent({ root, allow: () => new Promise<boolean>(() => {}), timeout: 60 })
+    const late = await slow.act({ steps: [{ ref: "Alerts", action: "toggle" }] })
+    expect(late.error).toContain("No answer")
+    const waiting = createAgent({ root, allow: () => new Promise<boolean>(() => {}) })
+    setTimeout(() => stopper.abort(), 30)
+    const stopped = await waiting.act({
+      steps: [{ ref: "Alerts", action: "toggle" }],
+      signal: stopper.signal,
+    })
+    expect(stopped.error).toContain("Stopped")
+    const agent = createAgent({ root })
+    const wrong = await agent.act({
+      steps: [{ ref: "Alerts", action: "setChecked", args: ["yes"] }],
+    })
+    expect(wrong.error).toContain("true or false")
+    const text = await agent.act({ steps: [{ ref: "Seats", action: "setValue", args: ["many"] }] })
+    expect(text.error).toContain("is not a number")
+    expect(root.querySelector<HTMLInputElement>("input")!.value).toBe("3")
+  })
+
+  it("caps a snapshot and says how many more there are", () => {
+    const root = mount(
+      Array.from({ length: 12 }, (_each, at) => `<button>B${at}</button>`).join("")
+    )
+    const list = createAgent({ root, limit: 5 }).snapshot()
+    expect(list).toHaveLength(6)
+    expect(list.at(-1)).toMatchObject({ ref: "more", component: "more", actions: [] })
+    expect(list.at(-1)!.label).toContain("7 more")
+  })
+
+  it("reads a list of several choices, and sets them", async () => {
+    const root = mount(`
+      <div role="listbox" aria-label="Toppings" aria-multiselectable="true">
+        <div role="option" aria-selected="true">Basil</div>
+        <div role="option" aria-selected="false">Olives</div>
+        <div role="option" aria-selected="false">Capers</div>
+      </div>`)
+    for (const each of root.querySelectorAll('[role="option"]')) {
+      each.addEventListener("click", () =>
+        each.setAttribute("aria-selected", String(each.getAttribute("aria-selected") !== "true"))
+      )
+    }
+    const agent = createAgent({ root })
+    expect(agent.snapshot()).toEqual([
+      expect.objectContaining({ component: "listbox", label: "Toppings", values: ["Basil"] }),
+    ])
+    const done = await agent.act({
+      steps: [{ ref: "Toppings", action: "setValue", args: [["Olives", "Capers"]] }],
+    })
+    expect(done.steps[0]!.now?.values).toEqual(["Olives", "Capers"])
+    expect((await agent.undo()).steps[0]!.now?.values).toEqual(["Basil"])
+  })
+
+  it("reads and uses a kind of component of your own", async () => {
+    const root = mount(`
+      <div class="rating" aria-label="Stars" data-value="2">
+        <button>1</button><button>2</button><button>3</button>
+      </div>`)
+    const rating = root.querySelector<HTMLElement>(".rating")!
+    for (const each of rating.querySelectorAll("button"))
+      each.addEventListener("click", () => (rating.dataset.value = each.textContent))
+    const kind: AgentKind = {
+      component: "rating",
+      selector: ".rating",
+      read: (element) => ({
+        value: Number((element as HTMLElement).dataset.value),
+        min: 1,
+        max: 3,
+        actions: ["setValue"],
+      }),
+      perform(element, _action, [value]) {
+        const star = [...element.querySelectorAll("button")].find(
+          (each) => each.textContent === String(value)
+        )
+        if (!star) return `It has no ${String(value)}`
+        star.click()
+      },
+    }
+    const agent = createAgent({ root, kinds: [kind] })
+    // Its own buttons are its own: one component, not four.
+    expect(agent.snapshot()).toEqual([
+      expect.objectContaining({ component: "rating", label: "Stars", value: 2 }),
+    ])
+    const done = await agent.act({ steps: [{ ref: "Stars", action: "setValue", args: [3] }] })
+    expect(done.steps[0]!.now?.value).toBe(3)
+    expect(
+      (await agent.act({ steps: [{ ref: "Stars", action: "setValue", args: [9] }] })).error
+    ).toContain("It has no 9")
+    expect((await agent.undo()).steps[0]!.now?.value).toBe(2)
+  })
+})
+
+function textOfItem(target: EventTarget | null): string {
+  return (target as Element | null)?.textContent ?? ""
+}

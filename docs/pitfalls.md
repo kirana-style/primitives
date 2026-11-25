@@ -976,6 +976,27 @@ note. Three places hold them:
   the root inert, so the snapshot came back empty. The bridge follows the `aria-controls` of
   what is expanded under its root, and of what is expanded in those ("sees what a narrowed
   root opened").
+- **The press made the change, not the input it went through.** A checkbox, a switch and a
+  radio change through their hidden input's `change`, and their callback was given that
+  event: a mouse's press said `source: "virtual"`. The press on the box is what the details
+  are made from. A press through a `<label>` still reaches the input with no pointer of its
+  own; the agent bridge, which says who changed a control, then goes by what the person last
+  used (`tests/core/agent.test.ts`, "says of each change which state").
+- **A change is told with who made it, and kept apart by who did.** The bridge's `subscribe`
+  gave the changed components and nothing of the change; its history held the agent's steps
+  only, so "undo what the agent did" after a person had gone on working either could not be
+  asked or undid theirs. Each change now says its state, its value before and after, its
+  source and, from a part of this library, its reason; `record()` keeps a person's changes
+  too, typing as one, and `undoSource` leaves a control someone else changed since ("keeps a
+  person's changes beside its own", "takes back what one source did").
+- **A name that two controls answer to is never guessed.** A step finds its control by its
+  label whole, then by the label's words, the text of its row, a choice of one group, its
+  kind: the next way is tried only when the one before found nothing, and two matches at any
+  of them fail the step with both ("finds a control by a word of its label").
+- **A list a select opens is the select's.** Read by its role, a closed select's list kept
+  in the page was a second component, named by all its choices at once. A listbox something
+  points at with `aria-controls`, or that says it is closed, is not listed, and a list is
+  named only by a label.
 - **A length is a share once there is something to measure.** A drawer's snap point given
   as `"148px"` is whole until the drawer is in the page: so "the smallest of its places" is
   not decided when the controller is made, where a length looked like the largest.

@@ -242,16 +242,23 @@ What the entries export beside the components, their parts' props types and the 
 - `root?: ParentNode`: The part of the page the agent may read and use. Default: the document.
 - `allow?: ((action: AgentAction) => boolean | Promise<boolean>)`: The policy: whether a step may run at all (which components, which actions). Asked for every step, before `confirm`. Without it every step may. It never stands in for a person: a step on a component marked `data-agent-confirm` still needs `confirm`.
 - `confirm?: ((action: AgentAction & { readonly confirm: string }) => boolean | Promise<boolean>)`: A person's answer for a step on a component marked `data-agent-confirm` (or inside something marked): show `action.confirm`, the mark's text, and resolve with what they chose. Without it such a step fails with "Needs a person", whatever `allow` says.
+- `timeout?: number`: How long `allow` and `confirm` may take to answer, in milliseconds: after it the step fails with "No answer". Without it a step waits for as long as a person takes.
+- `limit?: number`: How many components a snapshot lists before it says how many more there are. Default 200.
+- `kinds?: readonly AgentKind[]`: Kinds of component of your own, matched before the ones the bridge knows.
 
 and gives (`Agent`):
 
 - `snapshot(): AgentComponent[]`: The components in the page now.
-- `act(request: { steps: readonly AgentStep[] }): Promise<AgentResult>`: Runs steps in order, each through its component's own handlers.
+- `act(request: { steps: readonly AgentStep[]; signal?: AbortSignal }): Promise<AgentResult>`: Runs steps in order, each through its component's own handlers. A `signal` that aborts stops it before its next step, and ends a wait for `allow` or `confirm`.
+- `stage(request: { steps: readonly AgentStep[]; signal?: AbortSignal }): Promise<AgentStaged>`: Runs steps as `act` does, to show a suggestion in the controls themselves: nothing joins `history()` until `keep()`, and `revert()` takes it all back.
 - `query(request: { text?: string; within?: string; kind?: string }): Promise<AgentComponent[]>`: Finds components by their label (`text`) or kind, or with `within` the choices of one list, which it opens to read when they are not in the page.
-- `subscribe(listener: (changed: AgentComponent[]) => void): () => void`: Hears the components that changed, a moment after they do. Returns the stop.
-- `history(): AgentChange[]`: What the agent changed through `act`, the oldest first. A person's changes are not here.
+- `subscribe(listener: (changed: AgentComponent[], changes: AgentEvent[]) => void): () => void`: Hears the components that changed, a moment after they do, and each change apart: which state, from what, to what, and what made it. Returns the stop.
+- `record(): () => void`: Starts keeping what a person and the page change too, each with its source, beside what the agent does. Changes to one control close together are one. Returns the stop.
+- `history(): AgentChange[]`: What was changed, the oldest first: the agent's through `act`, and from `record()` on, everyone's.
 - `undo(): Promise<AgentResult>`: Takes the agent's last change back: the component is asked for what it held before, the way any step asks (its callback hears an agent, `allow` and `confirm` are asked). A press cannot be taken back.
 - `redo(): Promise<AgentResult>`: Makes the last change taken back again.
+- `undoSource(source: ChangeSource): Promise<AgentResult>`: Takes back every standing change one source made, the newest first, and leaves the rest: `undoSource("agent")` after a person has gone on working. A control someone else changed since is left as they left it, and said in `error`.
+- `seek(count: number): Promise<AgentResult>`: Goes to where the first `count` changes stand and the rest are taken back.
 
 A component in a snapshot (`AgentComponent`):
 
@@ -259,6 +266,7 @@ A component in a snapshot (`AgentComponent`):
 - `component: string`: What it is: `"switch"`, `"select"`, `"input"`, `"dialog"` …
 - `label?: string`: Its accessible name, when it has one.
 - `value?: string | number`
+- `values?: readonly string[]`: What a list of several choices holds, in the page's order.
 - `checked?: boolean | "mixed"`
 - `open?: boolean`
 - `min?: number`
@@ -278,6 +286,50 @@ A step (`AgentStep`) and what `allow` and `confirm` are asked about (`AgentActio
 - `label: string | undefined`
 - `confirm: string | undefined`
 
+What a step did (`AgentStepResult`), and a change in `history()` (`AgentChange`):
+
+- `ref: string`
+- `action: string`
+- `now?: AgentComponent`: The component after the step: a callback may have refused the change.
+- `opened?: readonly AgentBrief[]`: What the step opened: a dialog, a menu, a list.
+- `appeared?: readonly AgentBrief[]`: What else came into the page with it, up to twenty.
+- `gone?: readonly AgentBrief[]`: What left the page with it, up to twenty.
+- `args: readonly unknown[]`
+- `source: ChangeSource`: What made it: `"agent"`, or a person's mouse, finger, pen or keyboard, or the page's code.
+- `text: string`: The change as a sentence: `The agent set Project name to "Atlas"`.
+- `before: AgentComponent`
+- `after: AgentComponent | undefined`: Absent when the component left the page with the change.
+- `undone: boolean`: Whether it was taken back since.
+
+A change as `subscribe` tells it (`AgentEvent`, with the component's `ref`, `component` and `label`):
+
+- `key: "value" | "values" | "checked" | "open" | "disabled"`: The state that changed.
+- `value: string | number | boolean | readonly string[] | undefined`: What it is now. A value the page keeps from being read is said as redacted, or not at all.
+- `previous: string | number | boolean | readonly string[] | undefined`: What it was.
+- `source: ChangeSource`: What made it: the agent, a person's mouse, finger, pen or keyboard, or the page's code.
+- `reason?: string`: Why, where a part of this library made the change: `"trigger-press"`, `"item-press"` …
+- `ref: string`: Names it in `act` and `query`; the same for as long as its element is in the page.
+- `component: string`: What it is: `"switch"`, `"select"`, `"input"`, `"dialog"` …
+- `label?: string`: Its accessible name, when it has one.
+
+What `stage` gives beside a result (`AgentStaged`):
+
+- `applied: readonly AgentChange[]`: The changes that took effect, the oldest first. None of them is in `history()` yet.
+- `revert(): Promise<AgentResult>`: Takes them back, the newest first, through the same handlers.
+- `keep(): void`: Keeps them: they join `history()` as the agent's changes.
+- `ok: boolean`
+- `steps: readonly AgentStepResult[]`
+- `error?: string`: Which step failed and why. Earlier steps stay done.
+
+A kind of component of your own, given as `kinds` (`AgentKind`):
+
+- `component: string`: Its name in a snapshot: `"rating"`.
+- `selector: string`: The elements that are one. What is inside such an element is its own, and not listed.
+- `read(element: Element): Pick< AgentComponent, "value" | "values" | "checked" | "open" | "min" | "max" | "items" > & { readonly actions: readonly string[] }`: What it holds now, and what it can be asked. Disabled, it is offered nothing.
+- `perform( element: Element, action: string, args: readonly unknown[] ): void | string | Promise<void | string>`: Does one of its actions. A text it returns is said as the step's failure.
+
+A step finds its component by its `ref`; else by its label, whole; else by a label that has every word of the name; else by the text beside it in its row; else by a choice of one radio group or tab list (the step is then that choice); else by its kind, where the page has one of that kind. A name two components answer to fails the step with both. `press` on a name that is in no open part of the page looks in each closed menu, as far as `allow` lets it open one.
+
 The kinds of component it reads, what each is found by, and the actions each takes (a step's `action`; `setValue`, `setChecked` and `choose` take the value as `args[0]`):
 
 - `switch` (`[role="switch"]`): `toggle`, `setChecked`
@@ -285,6 +337,7 @@ The kinds of component it reads, what each is found by, and the actions each tak
 - `radio-group` (`[role="radiogroup"]`): `setValue`
 - `slider` (`[role="slider"]`): `setValue`
 - `tabs` (`[role="tablist"]`): `setValue`
+- `listbox` (`[role="listbox"]`): `setValue`
 - `select` (`button[role="combobox"]`): `open`, `close`, `setValue`
 - `combobox` (`input[role="combobox"]`): `setValue`, `clear`, `choose`
 - `number-field` (`input[aria-roledescription="Number field"]`): `setValue`, `clear`
@@ -307,13 +360,18 @@ What `act`, `undo` and `redo` resolve with, and what `history` lists:
     - `ref: string`
     - `action: string`
     - `now?: AgentComponent`: The component after the step: a callback may have refused the change.
-- `AgentChange`: One change an agent made: what it asked, and the component before and after.
+    - `opened?: readonly AgentBrief[]`: What the step opened: a dialog, a menu, a list.
+    - `appeared?: readonly AgentBrief[]`: What else came into the page with it, up to twenty.
+    - `gone?: readonly AgentBrief[]`: What left the page with it, up to twenty.
+- `AgentChange`: One change that was made: what was asked, by what, and the component before and after.
     - `ref: string`
-    - `action: string`
+    - `action: string`: The action that makes it: what the agent asked, or what would do what a person did.
     - `args: readonly unknown[]`
+    - `source: ChangeSource`: What made it: `"agent"`, or a person's mouse, finger, pen or keyboard, or the page's code.
+    - `text: string`: The change as a sentence: `The agent set Project name to "Atlas"`.
     - `before: AgentComponent`
     - `after: AgentComponent | undefined`: Absent when the component left the page with the change.
-    - `undone: boolean`: Whether `undo` took it back since.
+    - `undone: boolean`: Whether it was taken back since.
 - `AgentItem`: One choice of a list: the value it is chosen by, and what it says.
     - `value: string`
     - `label: string`

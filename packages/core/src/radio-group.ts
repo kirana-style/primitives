@@ -78,6 +78,8 @@ export function createRadioGroup<Value = unknown>(
   const roving = createRoving()
   const values = new WeakMap<Element, Value>()
   const inputs = new Map<Value, HTMLInputElement>()
+  // The press on an item that is pressing its input now.
+  let pressing: Event | undefined
   // The labels of an item's hidden radio, which name the item: a label reaches the input, and
   // focus lands on the item.
   const names = new Map<Value, Signal<string | undefined>>()
@@ -124,9 +126,16 @@ export function createRadioGroup<Value = unknown>(
   function press(item: Value, off: boolean, event: Event) {
     if (off || disabled.peek() || readOnly.peek()) return
     const input = inputs.get(item)
-    // Through the native input when it is in the page, so its `change` is the one path.
-    if (input) input.click()
-    else setValue(item, details("press", event))
+    // Through the native input when it is in the page, so its `change` is the one path. The
+    // change is told as made by this press: the input's own event says nothing of a pointer.
+    if (input) {
+      pressing = event
+      try {
+        input.click()
+      } finally {
+        pressing = undefined
+      }
+    } else setValue(item, details("press", event))
   }
 
   const state = () => ({
@@ -244,7 +253,7 @@ export function createRadioGroup<Value = unknown>(
           "aria-hidden": "true",
           onChange(event: Event) {
             const element = event.currentTarget as HTMLInputElement
-            if (element.checked) setValue(item, details("press", event))
+            if (element.checked) setValue(item, details("press", pressing ?? event))
             // A caller who kept the value keeps the inputs with it.
             for (const [each, input] of inputs) input.checked = Object.is(value.peek(), each)
           },

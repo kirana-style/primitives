@@ -76,7 +76,7 @@ export function asAgent<Result>(run: () => Result): Result {
 }
 
 /** What made an event, read from the event: nothing is remembered between events. */
-function sourceOf(event: Event | undefined): ChangeSource {
+export function sourceOf(event: Event | undefined): ChangeSource {
   if (!event) return "programmatic"
   const type = (event as PointerEvent).pointerType
   if (type === "mouse" || type === "touch" || type === "pen") return type
@@ -89,10 +89,18 @@ function sourceOf(event: Event | undefined): ChangeSource {
   return "virtual"
 }
 
+// The last change a part was making: why, what made it, and when. The agent bridge reads it
+// to say who changed a control it sees change; nothing else does.
+let last: { reason: string; source: ChangeSource; at: number } | undefined
+
+/** The last change a part of this library began: why, what made it, and when it did. */
+export const lastChange = (): typeof last => last
+
 export function details(reason: string, event?: Event): ChangeDetails {
   let canceled = false
   // Known when the change is made: it may be read long after the agent's turn is over.
   const agent = acting > 0
+  last = { reason, source: agent ? "agent" : sourceOf(event), at: performance.now() }
   return {
     reason,
     event,

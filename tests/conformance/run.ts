@@ -1908,7 +1908,9 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
       "the page behind it is inert"
     )
     await snapshot("a sheet open")
-    const box = (await id("ss1-Grape").boundingBox())!
+    // From the sheet's top edge, so the whole drag stays in the window: an engine tells
+    // nothing of a pointer that has left it.
+    const box = (await id("ss1-popup").boundingBox())!
     await page.mouse.move(box.x + 10, box.y + 5)
     await page.mouse.down()
     await page.mouse.move(box.x + 10, box.y + 60, { steps: 3 })

@@ -193,6 +193,7 @@ const IDIOM: Record<
       hostInputs:
         "a design system's directive hosts a primitive's (`hostDirectives`), whose inputs Angular binds only from the element: this gives them. Elsewhere a design system passes props to the part it draws",
       hostPart: RUNTIME,
+      injectDirectionAround: RUNTIME,
       innerPart: RUNTIME,
       inputsSignal: RUNTIME,
       mounted: RUNTIME,

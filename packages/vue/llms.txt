@@ -8,7 +8,7 @@ This file describes the version it ships with. What changed in each release, the
 
 ## Install and entries
 
-Install `@kirana-ui/vue`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/vue/agent`, `@kirana-ui/vue/testing`), so nothing is imported from a package the project did not install. It runs on the project's own `vue` ^3.5.0.
+Install `@kirana-ui/vue`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/vue/agent`, `@kirana-ui/vue/testing`), so nothing is imported from a package the project did not install. The one exception is a component of your own, built on `@kirana-ui/core/authoring`: its controller imports the core by name, so that project installs `@kirana-ui/core` too, at this package's exact version (they must be one copy). It runs on the project's own `vue` ^3.5.0.
 
 Its entries: an entry per component (`@kirana-ui/vue/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/vue` (every component at once, for a bundler that shakes trees), and `@kirana-ui/vue/runtime`, `@kirana-ui/vue/agent`, `@kirana-ui/vue/testing`, `@kirana-ui/vue/primitive` and `@kirana-ui/vue/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/vue/direction`, `PortalProvider` in the package root.
 
@@ -236,6 +236,7 @@ What the entries export beside the components, their parts' props types and the 
 - `PortalProvider`, from `@kirana-ui/vue` or `@kirana-ui/vue/runtime`: Says where every popup inside it is drawn, the popups those open included: an element of the page (a shadow root's host, a full-screen element) in place of `<body>`. Its props are the type `PortalProviderProps`, from the same entries.
 - `StatesOf`, from `@kirana-ui/vue/runtime`: The state of each part of a component, by their names in the vocabulary: what a part's `data-*` attributes say, and what its default slot is given as `state`.
 - `toSignal(read: () => T)`, from `@kirana-ui/vue/runtime`: A core signal that follows Vue state: the core hears a changed prop as it changes.
+- `useDirectionAround()`, from `@kirana-ui/vue/runtime`: The reading direction a provider states, if a component is inside one.
 - `written(text: () => unknown)`, from `@kirana-ui/vue/runtime`: What the element of a part that writes its own text holds: with `as-child`, the text while the caller's element has no content of its own, as the part's own element would.
 
 ## Agent
@@ -300,7 +301,7 @@ The kinds of component it reads, what each is found by, and the actions each tak
 - `menu-item` (`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`): `press`
 - `button` (`button, [role="button"]`): `press`
 
-`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
+`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and what it must not read with `data-agent-secret`: a control inside it is listed with its name and its actions, never its value, its choices or whether it is checked. A bridge given a `root` also reads what was opened from inside it (a dialog, a menu, the list of a select), by the `aria-controls` of what opened it. `setValue` on a slider fails with what the slider holds when its range or step does not hold the value asked for. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
 
 What `act`, `undo` and `redo` resolve with, and what `history` lists:
 

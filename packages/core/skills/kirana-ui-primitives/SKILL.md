@@ -136,7 +136,11 @@ component's ref, kind, label, state and actions), `act({ steps: [{ ref, action, 
 through the component's own handlers: its callback runs with `details.source === "agent"`
 and may cancel. Give every control an accessible name (a `<label>`, `aria-label`): it is how
 an agent finds it. Mark a destructive control `data-agent-confirm="what it does"`, private
-regions `data-agent-hidden`, secrets `data-agent-secret`. `allow(action)` is the policy,
+regions `data-agent-hidden`, secrets `data-agent-secret` (whatever is inside is listed with its
+name and its actions, never its value, its choices or whether it is checked). A bridge given a
+`root` also reads what was opened from inside it (a dialog, a menu, a select's list), by the
+`aria-controls` of what opened it. A slider's `setValue` fails with what the slider holds when
+its range or step does not hold the value asked for. `allow(action)` is the policy,
 asked for every step; `confirm(action)` is a person's answer, asked for a step on something
 marked `data-agent-confirm`, and without it such a step fails with "Needs a person" whatever
 `allow` says. Never write `confirm: () => true`: open a dialog and resolve with what the

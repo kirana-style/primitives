@@ -40,6 +40,9 @@ import { draw } from "./element.ts"
 import type { Hold } from "./element.ts"
 
 export { written } from "./element.ts"
+// The reading direction a `DirectionProvider` around a component states, as the signal a
+// controller takes (`{ direction }`); `undefined` outside one. The library's parts read the same.
+export { useDirectionAround } from "./direction-context.ts"
 export type { Hold } from "./element.ts"
 
 /** A core signal as a Vue ref, read-only: tracked by whatever reads `.value`. */

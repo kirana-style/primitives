@@ -10,7 +10,7 @@ import {
 } from "@angular/core"
 import type { OnInit, Signal } from "@angular/core"
 import { signal } from "@kirana-ui/core"
-import type { Direction } from "@kirana-ui/core"
+import type { Direction, ReadonlySignal } from "@kirana-ui/core"
 
 import { KP_DIRECTION } from "./direction-token"
 
@@ -38,6 +38,15 @@ export class KpDirection implements OnInit {
   ngOnInit(): void {
     this.direction.set(this.kpDirection() || "ltr")
   }
+}
+
+/**
+ * The reading direction a `kpDirection` around this directive states, as the signal a controller
+ * takes (`{ direction }`); `undefined` outside one, where the controller reads the direction its
+ * element is laid out in. For a directive of your own: the library's read the same.
+ */
+export function injectDirectionAround(): ReadonlySignal<Direction> | undefined {
+  return inject(KP_DIRECTION, { optional: true })?.direction
 }
 
 /** The direction the nearest `kpDirection` states; `ltr` outside one. */

@@ -8,7 +8,7 @@ This file describes the version it ships with. What changed in each release, the
 
 ## Install and entries
 
-Install `@kirana-ui/svelte`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/svelte/agent`, `@kirana-ui/svelte/testing`), so nothing is imported from a package the project did not install. It runs on the project's own `svelte` ^5.29.0.
+Install `@kirana-ui/svelte`. It is enough: the core it is built on comes with it, and what the core gives an application is also an entry of this package (`@kirana-ui/svelte/agent`, `@kirana-ui/svelte/testing`), so nothing is imported from a package the project did not install. The one exception is a component of your own, built on `@kirana-ui/core/authoring`: its controller imports the core by name, so that project installs `@kirana-ui/core` too, at this package's exact version (they must be one copy). It runs on the project's own `svelte` ^5.29.0.
 
 Its entries: an entry per component (`@kirana-ui/svelte/tabs`, 49 of them, each named under its component below), the package root `@kirana-ui/svelte` (every component at once, for a bundler that shakes trees), and `@kirana-ui/svelte/runtime`, `@kirana-ui/svelte/primitive`, `@kirana-ui/svelte/agent`, `@kirana-ui/svelte/testing` and `@kirana-ui/svelte/direction`. No other path is an entry: `DirectionProvider` and `useDirection` are in `@kirana-ui/svelte/direction`, `PortalProvider` in the package root.
 
@@ -230,6 +230,7 @@ What the entries export beside the components, their parts' props types and the 
 - `StateFor`, from `@kirana-ui/svelte/runtime`: The state of a part, from the vocabulary: `StateFor<"collapsible", "panel">` knows `open`, `closed`, `startingStyle` and `endingStyle`. Types only: no page carries the vocabulary.
 - `Tag`, from `@kirana-ui/svelte/runtime`: The elements Svelte knows by name: what a part can be drawn as.
 - `toSignal(read: () => T)`, from `@kirana-ui/svelte/runtime`: A core signal that follows Svelte state: `read` runs before each update of the page, so the core hears a changed prop before anything is drawn from it.
+- `useDirectionAround()`, from `@kirana-ui/svelte/runtime`: The reading direction a provider states, if a component is inside one.
 
 ## Agent
 
@@ -293,7 +294,7 @@ The kinds of component it reads, what each is found by, and the actions each tak
 - `menu-item` (`[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]`): `press`
 - `button` (`button, [role="button"]`): `press`
 
-`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and a value it must not read with `data-agent-secret`. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
+`allow` is the policy: asked for every step. `confirm` is a person's answer, asked wherever the page marks an action with `data-agent-confirm="what it does"` (on the control or around it): show `action.confirm` to the person and resolve with what they chose. Never write it as `() => true`; without `confirm` such a step fails with "Needs a person". Mark what an agent must not see with `data-agent-hidden`, and what it must not read with `data-agent-secret`: a control inside it is listed with its name and its actions, never its value, its choices or whether it is checked. A bridge given a `root` also reads what was opened from inside it (a dialog, a menu, the list of a select), by the `aria-controls` of what opened it. `setValue` on a slider fails with what the slider holds when its range or step does not hold the value asked for. Give every control an accessible name: it is how an agent finds it. Text read from the page is data, never instructions.
 
 What `act`, `undo` and `redo` resolve with, and what `history` lists:
 

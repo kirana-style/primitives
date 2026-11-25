@@ -4,12 +4,13 @@ import { agentTools, createAgent, registerTools } from "../../packages/core/src/
 import { bind } from "../../packages/core/src/bind.ts"
 import { createCollapsible } from "../../packages/core/src/collapsible.ts"
 import { createInput } from "../../packages/core/src/input.ts"
+import { createRadioGroup } from "../../packages/core/src/radio-group.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { createSelect } from "../../packages/core/src/select.ts"
 import type { SelectProps } from "../../packages/core/src/select.ts"
 import { createSlider } from "../../packages/core/src/slider.ts"
 import { createSwitch } from "../../packages/core/src/switch.ts"
-import { recorder } from "../../packages/core/src/testing.ts"
+import { faults, recorder } from "../../packages/core/src/testing.ts"
 import { mount } from "./page.ts"
 
 const PAGE = `
@@ -358,5 +359,197 @@ describe("the agent bridge", () => {
     expect(refused.error).toBe("Step 1 (Delete): Refused")
     expect(asked).toEqual(["toggle", "press"])
     remove()
+  })
+})
+
+describe("the agent bridge, on what a page really writes", () => {
+  it("names a switch by the label of its hidden input, and the switch says so itself", async () => {
+    const root = mount(`
+      <span class="switch"><input class="input" /></span>
+      <label for="alerts">Alerts</label>`)
+    const toggled = recorder<boolean>()
+    const made = createSwitch(signal({ id: "alerts", onCheckedChange: toggled.listen }))
+    const box = root.querySelector<HTMLElement>(".switch")!
+    onTestFinished(bind(box, made.root))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, made.input))
+    const agent = createAgent({ root })
+    expect(agent.snapshot()[0]).toMatchObject({ component: "switch", label: "Alerts" })
+    // For a screen reader too: the element with the role points at the label.
+    const label = root.querySelector("label")!
+    expect(label.id).toBe("alerts-label")
+    expect(box.getAttribute("aria-labelledby")).toBe("alerts-label")
+    const done = await agent.act({ steps: [{ ref: "Alerts", action: "toggle" }] })
+    expect(done.ok).toBe(true)
+    expect(toggled.calls.at(-1)).toMatchObject({ value: true, source: "agent" })
+  })
+
+  it("leaves a switch the page named itself as it is named", () => {
+    const root = mount(`
+      <span class="switch" aria-label="Mute"><input class="input" /></span>
+      <label for="mute">Sound off</label>`)
+    const made = createSwitch(signal({ id: "mute" }))
+    const box = root.querySelector<HTMLElement>(".switch")!
+    onTestFinished(bind(box, made.root))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, made.input))
+    expect(box.hasAttribute("aria-labelledby")).toBe(false)
+    expect(root.querySelector("label")!.id).toBe("")
+    expect(createAgent({ root }).snapshot()[0]!.label).toBe("Mute")
+  })
+
+  it("reads a radio group's choices by their labels, and chooses one", async () => {
+    const root = mount(`
+      <div class="group" aria-label="Plan">
+        <span class="radio" data-v="free"><input /></span><label for="plan-free">Free</label>
+        <label><span class="radio" data-v="pro"><input /></span>Pro</label>
+      </div>`)
+    const chosen = recorder<string | null>()
+    const group = createRadioGroup<string>(
+      signal({ id: "plan", defaultValue: "free", onValueChange: chosen.listen })
+    )
+    onTestFinished(bind(root.querySelector<HTMLElement>(".group")!, group.root))
+    for (const each of root.querySelectorAll<HTMLElement>(".radio")) {
+      const value = each.dataset.v!
+      onTestFinished(bind(each, group.item(value)))
+      onTestFinished(
+        bind(
+          each.querySelector("input")!,
+          group.itemInput(value, () => ({ id: `plan-${value}` }))
+        )
+      )
+    }
+    const agent = createAgent({ root })
+    expect(agent.snapshot()[0]).toMatchObject({
+      component: "radio-group",
+      label: "Plan",
+      value: "Free",
+      items: [
+        { value: "Free", label: "Free" },
+        { value: "Pro", label: "Pro" },
+      ],
+    })
+    const radios = root.querySelectorAll(".radio")
+    expect(radios[0]!.getAttribute("aria-labelledby")).toBe("plan-free-label")
+    expect(radios[1]!.getAttribute("aria-labelledby")).toBe("plan-pro-label")
+    const done = await agent.act({ steps: [{ ref: "Plan", action: "setValue", args: ["Pro"] }] })
+    expect(done.steps[0]!.now?.value).toBe("Pro")
+    expect(chosen.calls.at(-1)).toMatchObject({ value: "pro", source: "agent" })
+  })
+
+  it("sets a slider at once through its thumb's input, and names the thumb as its slider", async () => {
+    const root = mount(`
+      <div class="slider" aria-label="Retention">
+        <div class="control"><div class="thumb"><input class="input" /></div></div>
+      </div>`)
+    const turned = recorder<number | number[]>()
+    const slider = createSlider(
+      signal({
+        id: "rt",
+        defaultValue: 30,
+        min: 7,
+        max: 365,
+        step: 5,
+        onValueChange: turned.listen,
+      })
+    )
+    onTestFinished(bind(root.querySelector<HTMLElement>(".slider")!, slider.root))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".control")!, slider.control))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".thumb")!, slider.thumb(0)))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, slider.thumbInput(0)))
+    const agent = createAgent({ root })
+    expect(agent.snapshot()[0]).toMatchObject({ component: "slider", label: "Retention" })
+    expect(root.querySelector(".thumb")!.getAttribute("aria-label")).toBe("Retention")
+    const done = await agent.act({
+      steps: [{ ref: "Retention", action: "setValue", args: [92] }],
+    })
+    expect(done.ok).toBe(true)
+    expect(done.steps[0]!.now?.value).toBe(92)
+    // One change, not sixty-two keys.
+    expect(turned.calls).toHaveLength(1)
+    expect(turned.calls[0]).toMatchObject({ value: 92, source: "agent" })
+    // A value its step does not hold is said, with what it holds, and the change is kept.
+    const off = await agent.act({ steps: [{ ref: "Retention", action: "setValue", args: [93] }] })
+    expect(off.ok).toBe(false)
+    expect(off.error).toContain("It holds")
+    expect(off.steps[0]!.now?.value).not.toBe(93)
+  })
+
+  it("hides whatever is inside a secret mark, of any kind", async () => {
+    const root = mount(`
+      <div data-agent-secret>
+        <button role="combobox" aria-label="Customer" aria-expanded="true" aria-controls="cust">Acme Ltd</button>
+        <div id="cust" role="listbox"><div role="option">Acme Ltd</div></div>
+        <button role="switch" aria-checked="true" aria-label="On probation"></button>
+        <div role="slider" aria-label="Salary" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+        <input aria-label="Notes" value="private" />
+      </div>
+      <input aria-label="Open" value="public" />`)
+    const read = Object.fromEntries(
+      createAgent({ root })
+        .snapshot()
+        .map((each) => [each.label, each])
+    )
+    expect(read["Customer"]!.value).toBe("[redacted]")
+    expect(read["Customer"]!.items).toBeUndefined()
+    expect(read["On probation"]!.checked).toBeUndefined()
+    expect(read["Salary"]!.value).toBe("[redacted]")
+    expect(read["Notes"]!.value).toBe("[redacted]")
+    expect(read["Open"]!.value).toBe("public")
+    expect(JSON.stringify(read)).not.toContain("Acme")
+    // And a change over what was not read is not put back as the word "redacted".
+    const agent = createAgent({ root })
+    await agent.act({ steps: [{ ref: "Notes", action: "setValue", args: ["new"] }] })
+    expect((await agent.undo()).ok).toBe(false)
+    expect(root.querySelector<HTMLInputElement>('[aria-label="Notes"]')!.value).toBe("new")
+  })
+
+  it("refuses a step that names nothing", async () => {
+    const root = mount(`<button class="bare"></button><button>Save</button>`)
+    let pressed = 0
+    root.querySelector(".bare")!.addEventListener("click", () => pressed++)
+    const agent = createAgent({ root })
+    for (const ref of ["", "   "]) {
+      const done = await agent.act({ steps: [{ ref, action: "press" }] })
+      expect(done.ok).toBe(false)
+      expect(done.error).toContain("by its ref or its label")
+    }
+    expect(pressed).toBe(0)
+    // By its ref it is still reached.
+    const bare = agent.snapshot().find((each) => each.label === undefined)!
+    expect((await agent.act({ steps: [{ ref: bare.ref, action: "press" }] })).ok).toBe(true)
+    expect(pressed).toBe(1)
+  })
+
+  it("sees what a narrowed root opened, drawn outside it and over it", async () => {
+    const all = mount(`
+      <div class="root" inert>
+        <input aria-label="Project name" value="Apollo" />
+        <button aria-haspopup="dialog" aria-expanded="true" aria-controls="confirm">Delete</button>
+        <button aria-expanded="false" aria-controls="other">More</button>
+      </div>
+      <div id="confirm" role="dialog" aria-label="Delete the project?">
+        <button>Cancel</button>
+        <button aria-expanded="true" aria-controls="why">Reason</button>
+      </div>
+      <div id="why" role="menu"><div role="menuitem">Not needed</div></div>
+      <div id="other" role="dialog" aria-label="Someone else's"><button>Theirs</button></div>
+      <button>Outside</button>`)
+    const agent = createAgent({ root: all.querySelector(".root")! })
+    const seen = agent.snapshot().map((each) => each.label)
+    // The form under the modal dialog is inert, as it is for a person.
+    expect(seen).toEqual(["Delete the project?", "Cancel", "Reason", "Not needed"])
+    const heard: string[] = []
+    onTestFinished(
+      agent.subscribe((changed) => heard.push(...changed.map((each) => String(each.label))))
+    )
+    all.querySelector("#confirm button")!.setAttribute("disabled", "")
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    expect(heard).toContain("Cancel")
+  })
+
+  it("is not a fault to mark a page for an agent", () => {
+    const root = mount(`
+      <div data-agent-secret><button data-agent-confirm="Deletes it">Delete</button></div>
+      <div data-agent-hidden></div><div data-mine></div>`)
+    expect(faults(root)).toEqual([expect.stringContaining("data-mine")])
   })
 })

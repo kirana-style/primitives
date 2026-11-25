@@ -139,7 +139,15 @@ an agent finds it. Mark a destructive control `data-agent-confirm="what it does"
 regions `data-agent-hidden`, secrets `data-agent-secret` (whatever is inside is listed with its
 name and its actions, never its value, its choices or whether it is checked). A bridge given a
 `root` also reads what was opened from inside it (a dialog, a menu, a select's list), by the
-`aria-controls` of what opened it. A slider's `setValue` fails with what the slider holds when
+`aria-controls` of what opened it. A step names its control by ref, by its label, by words of
+the label, by the text of its row or by one of its choices; a name two controls answer to
+fails with both. `subscribe((changed, changes) => …)` says of each change its `key`, `value`,
+`previous`, `source` and `reason`; `record()` keeps a person's changes in `history()` beside
+the agent's, each with its `source` and a sentence (`text`), and `undoSource("agent")` takes
+back only the agent's. `stage({ steps })` shows a suggestion in the controls and gives
+`revert()` and `keep()`. `act` takes a `signal`; `timeout` bounds a wait for `allow` or
+`confirm`. A component of your own is read through `kinds` (`AgentKind`: a selector, `read`,
+`perform`). A slider's `setValue` fails with what the slider holds when
 its range or step does not hold the value asked for. `allow(action)` is the policy,
 asked for every step; `confirm(action)` is a person's answer, asked for a step on something
 marked `data-agent-confirm`, and without it such a step fails with "Needs a person" whatever

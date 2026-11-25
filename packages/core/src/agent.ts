@@ -8,7 +8,8 @@
  * element (roles, states, names), which is the same on every framework: one bridge serves
  * React, Vue, Svelte, Solid, Angular and plain custom elements alike.
  */
-import { asAgent } from "./part.ts"
+import { asAgent, lastChange, sourceOf } from "./part.ts"
+import type { ChangeSource } from "./part.ts"
 
 /** One choice of a list: the value it is chosen by, and what it says. */
 export interface AgentItem {
@@ -25,6 +26,8 @@ export interface AgentComponent {
   /** Its accessible name, when it has one. */
   readonly label?: string
   readonly value?: string | number
+  /** What a list of several choices holds, in the page's order. */
+  readonly values?: readonly string[]
   readonly checked?: boolean | "mixed"
   readonly open?: boolean
   readonly min?: number
@@ -55,12 +58,21 @@ export interface AgentAction extends Required<AgentStep> {
   readonly confirm: string | undefined
 }
 
+/** A component named in passing: enough to ask for it. */
+export type AgentBrief = Pick<AgentComponent, "ref" | "component" | "label">
+
 /** What one step did. */
 export interface AgentStepResult {
   readonly ref: string
   readonly action: string
   /** The component after the step: a callback may have refused the change. */
   readonly now?: AgentComponent
+  /** What the step opened: a dialog, a menu, a list. */
+  readonly opened?: readonly AgentBrief[]
+  /** What else came into the page with it, up to twenty. */
+  readonly appeared?: readonly AgentBrief[]
+  /** What left the page with it, up to twenty. */
+  readonly gone?: readonly AgentBrief[]
 }
 
 /** What `act`, `undo` and `redo` resolve with: whether every step ran, and what each did. */
@@ -71,16 +83,69 @@ export interface AgentResult {
   readonly error?: string
 }
 
-/** One change an agent made: what it asked, and the component before and after. */
+/** One change that was made: what was asked, by what, and the component before and after. */
 export interface AgentChange {
   readonly ref: string
+  /** The action that makes it: what the agent asked, or what would do what a person did. */
   readonly action: string
   readonly args: readonly unknown[]
+  /** What made it: `"agent"`, or a person's mouse, finger, pen or keyboard, or the page's code. */
+  readonly source: ChangeSource
+  /** The change as a sentence: `The agent set Project name to "Atlas"`. */
+  readonly text: string
   readonly before: AgentComponent
   /** Absent when the component left the page with the change. */
   readonly after: AgentComponent | undefined
-  /** Whether `undo` took it back since. */
+  /** Whether it was taken back since. */
   readonly undone: boolean
+}
+
+/** One thing a component was seen to change: which of its states, from what, to what, by what. */
+export interface AgentEvent extends AgentBrief {
+  /** The state that changed. */
+  readonly key: "value" | "values" | "checked" | "open" | "disabled"
+  /** What it is now. A value the page keeps from being read is said as redacted, or not at all. */
+  readonly value: string | number | boolean | readonly string[] | undefined
+  /** What it was. */
+  readonly previous: string | number | boolean | readonly string[] | undefined
+  /** What made it: the agent, a person's mouse, finger, pen or keyboard, or the page's code. */
+  readonly source: ChangeSource
+  /** Why, where a part of this library made the change: `"trigger-press"`, `"item-press"` … */
+  readonly reason?: string
+}
+
+/**
+ * A kind of component of your own, for the bridge to read and use beside the kinds it knows
+ * by their roles. What `perform` does goes through the element, as a person's press would.
+ */
+export interface AgentKind {
+  /** Its name in a snapshot: `"rating"`. */
+  readonly component: string
+  /** The elements that are one. What is inside such an element is its own, and not listed. */
+  readonly selector: string
+  /** What it holds now, and what it can be asked. Disabled, it is offered nothing. */
+  read(element: Element): Pick<
+    AgentComponent,
+    "value" | "values" | "checked" | "open" | "min" | "max" | "items"
+  > & {
+    readonly actions: readonly string[]
+  }
+  /** Does one of its actions. A text it returns is said as the step's failure. */
+  perform(
+    element: Element,
+    action: string,
+    args: readonly unknown[]
+  ): void | string | Promise<void | string>
+}
+
+/** What `stage` resolves with: what the steps did, and the way back. */
+export interface AgentStaged extends AgentResult {
+  /** The changes that took effect, the oldest first. None of them is in `history()` yet. */
+  readonly applied: readonly AgentChange[]
+  /** Takes them back, the newest first, through the same handlers. */
+  revert(): Promise<AgentResult>
+  /** Keeps them: they join `history()` as the agent's changes. */
+  keep(): void
 }
 
 /** What a bridge is made with. */
@@ -101,22 +166,50 @@ export interface AgentOptions {
   confirm?:
     | ((action: AgentAction & { readonly confirm: string }) => boolean | Promise<boolean>)
     | undefined
+  /**
+   * How long `allow` and `confirm` may take to answer, in milliseconds: after it the step
+   * fails with "No answer". Without it a step waits for as long as a person takes.
+   */
+  timeout?: number | undefined
+  /** How many components a snapshot lists before it says how many more there are. Default 200. */
+  limit?: number | undefined
+  /** Kinds of component of your own, matched before the ones the bridge knows. */
+  kinds?: readonly AgentKind[] | undefined
 }
 
 /** The bridge: what an agent reads the page with, and asks it through. */
 export interface Agent {
   /** The components in the page now. */
   snapshot(): AgentComponent[]
-  /** Runs steps in order, each through its component's own handlers. */
-  act(request: { steps: readonly AgentStep[] }): Promise<AgentResult>
+  /**
+   * Runs steps in order, each through its component's own handlers. A `signal` that aborts
+   * stops it before its next step, and ends a wait for `allow` or `confirm`.
+   */
+  act(request: { steps: readonly AgentStep[]; signal?: AbortSignal }): Promise<AgentResult>
+  /**
+   * Runs steps as `act` does, to show a suggestion in the controls themselves: nothing joins
+   * `history()` until `keep()`, and `revert()` takes it all back.
+   */
+  stage(request: { steps: readonly AgentStep[]; signal?: AbortSignal }): Promise<AgentStaged>
   /**
    * Finds components by their label (`text`) or kind, or with `within` the choices of one
    * list, which it opens to read when they are not in the page.
    */
   query(request: { text?: string; within?: string; kind?: string }): Promise<AgentComponent[]>
-  /** Hears the components that changed, a moment after they do. Returns the stop. */
-  subscribe(listener: (changed: AgentComponent[]) => void): () => void
-  /** What the agent changed through `act`, the oldest first. A person's changes are not here. */
+  /**
+   * Hears the components that changed, a moment after they do, and each change apart: which
+   * state, from what, to what, and what made it. Returns the stop.
+   */
+  subscribe(listener: (changed: AgentComponent[], changes: AgentEvent[]) => void): () => void
+  /**
+   * Starts keeping what a person and the page change too, each with its source, beside what
+   * the agent does. Changes to one control close together are one. Returns the stop.
+   */
+  record(): () => void
+  /**
+   * What was changed, the oldest first: the agent's through `act`, and from `record()` on,
+   * everyone's.
+   */
   history(): AgentChange[]
   /**
    * Takes the agent's last change back: the component is asked for what it held before, the
@@ -126,6 +219,14 @@ export interface Agent {
   undo(): Promise<AgentResult>
   /** Makes the last change taken back again. */
   redo(): Promise<AgentResult>
+  /**
+   * Takes back every standing change one source made, the newest first, and leaves the rest:
+   * `undoSource("agent")` after a person has gone on working. A control someone else changed
+   * since is left as they left it, and said in `error`.
+   */
+  undoSource(source: ChangeSource): Promise<AgentResult>
+  /** Goes to where the first `count` changes stand and the rest are taken back. */
+  seek(count: number): Promise<AgentResult>
 }
 
 const REDACTED = "[redacted]"
@@ -138,6 +239,7 @@ const KINDS: readonly (readonly [string, string])[] = [
   ["radio-group", '[role="radiogroup"]'],
   ["slider", '[role="slider"]'],
   ["tabs", '[role="tablist"]'],
+  ["listbox", '[role="listbox"]'],
   ["select", 'button[role="combobox"]'],
   ["combobox", 'input[role="combobox"]'],
   ["number-field", 'input[aria-roledescription="Number field"]'],
@@ -154,6 +256,11 @@ const plain = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim().toLowerCase()
 const textOf = (element: Element | null | undefined) =>
   (element?.textContent ?? "").replace(/\s+/g, " ").trim()
+/** A text as its words: what a name is matched by. */
+const wordsOf = (text: string) =>
+  plain(text)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
 const turn = (ms = 0) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 /** What the `<label>`s of a native control say: the ones `for` it, and the one around it. */
@@ -168,6 +275,18 @@ const HOLDS_INPUT = '[role="switch"], [role="checkbox"], [role="radio"], [role="
 
 /** An element's accessible name, as far as a page says it plainly. */
 function nameOf(element: Element): string | undefined {
+  // A list is not named by what its choices say.
+  if (element.matches('[role="listbox"]')) {
+    const given = element.getAttribute("aria-label")
+    if (given) return given
+    const ids = element.getAttribute("aria-labelledby")?.split(/\s+/) ?? []
+    return (
+      ids
+        .map((id) => textOf(element.ownerDocument.getElementById(id)))
+        .filter(Boolean)
+        .join(" ") || undefined
+    )
+  }
   const page = element.ownerDocument
   const given = element.getAttribute("aria-label")
   if (given) return given
@@ -237,18 +356,30 @@ export function createAgent(given: AgentOptions = {}): Agent {
   const page = root instanceof Document ? root : (root.ownerDocument ?? document)
   const refs = new WeakMap<Element, string>()
   const elements = new Map<string, WeakRef<Element>>()
+  // A ref by what its component was (its kind, and its id or its name): a component that left
+  // the page and is drawn again, on a new element, is asked for by the ref it had.
+  const known = new Map<string, string>()
   let made = 0
+  const own = given.kinds ?? []
+  const every = [EVERY, ...own.map((each) => each.selector)].join(", ")
+
+  const kindOf = (element: Element) =>
+    own.find((each) => element.matches(each.selector))?.component ??
+    KINDS.find(([, selector]) => element.matches(selector))?.[0]
 
   function refOf(element: Element): string {
     let ref = refs.get(element)
-    if (!ref) {
-      refs.set(element, (ref = `c${++made}`))
-      elements.set(ref, new WeakRef(element))
-    }
+    if (ref) return ref
+    const called = element.id || nameOf(element)
+    const as = called ? `${kindOf(element)}|${called}` : undefined
+    const had = as === undefined ? undefined : known.get(as)
+    // Taken up again only while nothing in the page holds it.
+    ref = had !== undefined && !elements.get(had)?.deref()?.isConnected ? had : `c${++made}`
+    refs.set(element, ref)
+    elements.set(ref, new WeakRef(element))
+    if (as !== undefined) known.set(as, ref)
     return ref
   }
-
-  const kindOf = (element: Element) => KINDS.find(([, selector]) => element.matches(selector))?.[0]
 
   /**
    * Where the agent may read: the root, and what was opened from inside it wherever the page
@@ -275,13 +406,25 @@ export function createAgent(given: AgentOptions = {}): Agent {
   function found(): Element[] {
     const all = reach().flatMap((place) => [
       // A popup reached from the root is itself something to read (a dialog); the root is not.
-      ...(place !== root && (place as Element).matches(EVERY) ? [place as Element] : []),
-      ...place.querySelectorAll(EVERY),
+      ...(place !== root && (place as Element).matches(every) ? [place as Element] : []),
+      ...place.querySelectorAll(every),
     ])
+    const mine = own.map((each) => each.selector).join(", ")
     return all.filter((element) => {
       if (element.closest(HIDDEN)) return false
       // A radio, a tab and an option are their group's; a part's own buttons its component's.
       if (element.matches('[role="radio"], [role="tab"], [role="option"]')) return false
+      // A list a select or a combobox opens is that component's: open, by what points at it,
+      // and kept in the page while closed, by saying so.
+      if (
+        element.matches('[role="listbox"]') &&
+        (element.hasAttribute("data-closed") ||
+          (element.id !== "" &&
+            page.querySelector(`[aria-controls~="${CSS.escape(element.id)}"]`) !== null))
+      )
+        return false
+      // What is inside a component of your own kind is that component's.
+      if (mine && element.parentElement?.closest(mine)) return false
       return true
     })
   }
@@ -291,7 +434,7 @@ export function createAgent(given: AgentOptions = {}): Agent {
     const all = readAll(element)
     if (!marked(element)) return all
     // Its name and what it can be asked stay: an agent may set what it was told, unread.
-    const { items: _items, checked: _checked, ...rest } = all
+    const { items: _items, checked: _checked, values: _values, ...rest } = all
     return rest.value === undefined || rest.value === "" ? rest : { ...rest, value: REDACTED }
   }
 
@@ -315,7 +458,25 @@ export function createAgent(given: AgentOptions = {}): Agent {
       const state = element.getAttribute("aria-checked")
       return state === "mixed" ? ("mixed" as const) : state === "true"
     }
+    const kind = own.find((each) => element.matches(each.selector))
+    if (kind) {
+      const { actions, ...held } = kind.read(element)
+      return { ...base, ...held, actions: can(...actions) }
+    }
     switch (component) {
+      case "listbox": {
+        const options = [...element.querySelectorAll('[role="option"]:not([hidden])')]
+        const chosen = options
+          .filter((each) => each.getAttribute("aria-selected") === "true")
+          .map((each) => each.getAttribute("data-value") ?? textOf(each))
+        const several = element.getAttribute("aria-multiselectable") === "true"
+        return {
+          ...base,
+          ...(several ? { values: chosen } : chosen.length > 0 ? { value: chosen[0]! } : {}),
+          items: choicesOf(element),
+          actions: change("setValue"),
+        }
+      }
       case "switch":
       case "checkbox":
         return { ...base, checked: checked(), actions: change("setChecked", "toggle") }
@@ -393,21 +554,92 @@ export function createAgent(given: AgentOptions = {}): Agent {
     }
   }
 
-  const snapshot = () => found().map(read)
+  const everything = () => found().map(read)
 
-  /** The element a step names: by its ref, or by a label that is one component's only. */
-  function resolve(name: string): Element {
-    const known = elements.get(name)?.deref()
-    if (known?.isConnected) return known
+  function snapshot(): AgentComponent[] {
+    const all = everything()
+    const limit = given.limit ?? 200
+    if (all.length <= limit) return all
+    // A page of thousands of controls is not read whole: the rest is asked for.
+    return [
+      ...all.slice(0, limit),
+      {
+        ref: "more",
+        component: "more",
+        label: `${all.length - limit} more components: find them with query({ text, kind })`,
+        actions: [],
+      },
+    ]
+  }
+
+  /** The text beside a control that is its alone: what its row says, with no other control in it. */
+  function beside(element: Element, all: readonly Element[]): string {
+    let text = ""
+    let around = element.parentElement
+    for (let up = 0; around && up < 3; up++, around = around.parentElement) {
+      const row = around
+      if (all.some((each) => each !== element && row.contains(each))) break
+      text = textOf(row)
+    }
+    return text
+  }
+
+  /**
+   * The element a step names. By its ref; else by its label, whole; else by a label that has
+   * every word of the name; else by the text beside it in its row; else by a choice of one
+   * group (the group is found, and the choice kept); else by its kind, where the page has one
+   * of that kind. Each way is tried only when the one before found nothing, and a name that
+   * two components answer to is said with both.
+   */
+  function resolve(name: string): { element: Element; item?: string } {
+    const held = elements.get(name)?.deref()
+    if (held?.isConnected) return { element: held }
     const wanted = plain(name)
     // A control with no name is asked by its ref: an empty name must not find it.
     if (!wanted) throw new Error("A step names a component by its ref or its label")
-    const matches = found().filter((each) => plain(nameOf(each) ?? "") === wanted)
-    if (matches.length === 1) return matches[0]!
-    if (matches.length === 0) throw new Error(`Nothing is called "${name}"`)
-    throw new Error(
-      `"${name}" names ${matches.length} components: ${matches.map(refOf).join(", ")}. Use a ref.`
-    )
+    const all = found()
+    const one = (matches: Element[]) => {
+      if (matches.length > 1) {
+        const which = matches.slice(0, 8).map((each) => {
+          const label = nameOf(each)
+          return `${refOf(each)} (${kindOf(each)}${label ? ` "${label}"` : ""})`
+        })
+        throw new Error(
+          `"${name}" names ${matches.length} components: ${which.join(", ")}. Use a ref.`
+        )
+      }
+      return matches[0]
+    }
+    const whole = one(all.filter((each) => plain(nameOf(each) ?? "") === wanted))
+    if (whole) return { element: whole }
+    const words = wordsOf(name)
+    const says = (text: string) => {
+      const has = new Set(wordsOf(text))
+      return words.length > 0 && words.every((word) => has.has(word))
+    }
+    const worded = one(all.filter((each) => says(nameOf(each) ?? "")))
+    if (worded) return { element: worded }
+    const rowed = one(all.filter((each) => says(beside(each, all))))
+    if (rowed) return { element: rowed }
+    const groups = all.filter((each) => {
+      const role = each.matches('[role="tablist"]')
+        ? "tab"
+        : each.matches('[role="radiogroup"]')
+          ? "radio"
+          : undefined
+      return (
+        role !== undefined &&
+        [...each.querySelectorAll(`[role="${role}"]`)].some(
+          (choice) => plain(role === "tab" ? textOf(choice) : choiceOf(choice)) === wanted
+        )
+      )
+    })
+    const grouped = one(groups)
+    if (grouped) return { element: grouped, item: name }
+    const kind = wanted.replace(/^the /, "").replace(/ /g, "-")
+    const kinded = one(all.filter((each) => kindOf(each) === kind))
+    if (kinded) return { element: kinded }
+    throw new Error(`Nothing is called "${name}"`)
   }
 
   /** Waits for something a step made happen: a list drawn, a popup gone. */
@@ -522,6 +754,32 @@ export function createAgent(given: AgentOptions = {}): Agent {
         // Its range or its step may not hold the value asked for: said, never passed as done.
         return now() === wanted ? undefined : `It holds ${now()}, not ${wanted}`
       }
+      case "listbox.setValue": {
+        const wanted = (Array.isArray(first) ? first : [first]).map(String)
+        if (element.getAttribute("aria-multiselectable") !== "true") {
+          if (wanted.length !== 1) throw new Error("It holds one choice")
+          return choose(element, wanted[0]!)
+        }
+        // Several: each choice that is not as asked is pressed, as a person goes down the list.
+        const options = [...element.querySelectorAll('[role="option"]:not([hidden])')]
+        const named = (each: Element) =>
+          wanted.some(
+            (value) =>
+              plain(textOf(each)) === plain(value) || each.getAttribute("data-value") === value
+          )
+        for (const value of wanted) {
+          if (!options.some((each) => named(each) && !off(each)))
+            throw new Error(`It has no choice "${value}"`)
+        }
+        for (const each of options) {
+          if (off(each)) continue
+          if ((each.getAttribute("aria-selected") === "true") !== named(each)) {
+            asAgent(() => (each as HTMLElement).click())
+            await turn()
+          }
+        }
+        return
+      }
       case "input.setValue":
       case "number-field.setValue":
       case "combobox.setValue":
@@ -545,108 +803,434 @@ export function createAgent(given: AgentOptions = {}): Agent {
         )
         return choose(list, String(first))
       }
-      default:
+      default: {
+        const kind = own.find((each) => element.matches(each.selector))
+        // What it does at once is the agent's: its own handlers hear an agent.
+        if (kind) return await asAgent(() => kind.perform(element, action, args))
         throw new Error(`A ${component} has no action "${action}"`)
+      }
     }
   }
 
-  // What `act` changed, in order; `standing` is how many of them stand (the rest were taken back).
-  const changes: (Omit<AgentChange, "undone"> & { step: AgentStep })[] = []
-  let standing = 0
-
-  /** The step that puts a component back as it was read. */
-  function back(change: (typeof changes)[number]): AgentStep | undefined {
-    const { before, ref } = change
-    // What was not read cannot be put back.
-    if (before.value === REDACTED) return undefined
-    if (before.checked !== undefined && before.checked !== "mixed")
-      return { ref, action: "setChecked", args: [before.checked] }
+  /** What an action is given, against what its control takes: said before anything is done. */
+  function check(element: Element, component: string, action: string, args: readonly unknown[]) {
+    const [first] = args
+    if (action === "setChecked" && typeof first !== "boolean")
+      throw new Error("setChecked takes true or false")
+    if (action === "choose" && typeof first !== "string") throw new Error("choose takes a text")
+    if (action !== "setValue" || own.some((each) => element.matches(each.selector))) return
+    if (first === undefined || first === null) throw new Error("setValue takes a value")
+    const numeric =
+      component === "number-field" ||
+      component === "slider" ||
+      (element instanceof HTMLInputElement &&
+        (element.type === "number" || element.type === "range"))
+    if (numeric && (first === "" || !Number.isFinite(Number(first))))
+      throw new Error(`"${String(first)}" is not a number`)
     if (
-      before.open !== undefined &&
-      before.actions.some((each) => each === "open" || each === "close")
-    ) {
-      if (before.value === change.after?.value)
-        return { ref, action: before.open ? "open" : "close" }
+      component === "listbox"
+        ? !Array.isArray(first) && typeof first === "object"
+        : typeof first === "object"
+    )
+      throw new Error("setValue takes a text or a number")
+  }
+
+  // What was changed, in order: the agent's steps, and while recording, everyone's.
+  interface Entry extends Omit<AgentChange, "text" | "after" | "args" | "undone"> {
+    args: readonly unknown[]
+    after: AgentComponent | undefined
+    undone: boolean
+    /** What the agent asked, to ask again. A person's change is done again from `after`. */
+    step?: AgentStep
+    at: number
+  }
+  let entries: Entry[] = []
+  // The entries taken back, in the order they were: the last is the first done again.
+  const takenBack: Entry[] = []
+
+  function sentence(entry: Entry): string {
+    const who =
+      entry.source === "agent"
+        ? "The agent"
+        : entry.source === "programmatic"
+          ? "The page"
+          : "A person"
+    const name = entry.before.label ?? `the ${entry.before.component}`
+    const [first] = entry.args
+    const unread = entry.before.value === REDACTED || entry.after?.value === REDACTED
+    switch (entry.action) {
+      case "setValue":
+      case "choose":
+        return unread ? `${who} changed ${name}` : `${who} set ${name} to ${JSON.stringify(first)}`
+      case "clear":
+        return `${who} cleared ${name}`
+      case "setChecked":
+        return `${who} turned ${name} ${first ? "on" : "off"}`
+      case "toggle": {
+        const on = entry.after?.checked ?? entry.after?.open
+        return on === undefined || on === "mixed"
+          ? `${who} toggled ${name}`
+          : `${who} turned ${name} ${on ? "on" : "off"}`
+      }
+      case "open":
+        return `${who} opened ${name}`
+      case "close":
+        return `${who} closed ${name}`
+      case "press":
+        return `${who} pressed ${name}`
+      default:
+        return `${who} changed ${name}`
     }
-    if (before.value !== undefined && before.actions.includes("setValue"))
-      return { ref, action: "setValue", args: [before.value] }
+  }
+
+  const shown = ({ step: _step, at: _at, ...entry }: Entry): AgentChange => ({
+    ...entry,
+    text: sentence({ ...entry, at: _at }),
+  })
+
+  /** A new change: the ones taken back before it are gone. */
+  function add(entry: Entry) {
+    entries = entries.filter((each) => !each.undone)
+    takenBack.length = 0
+    entries.push(entry)
+  }
+
+  /** The step that makes a component what it was read as: `other` is what it is instead. */
+  function toward(
+    ref: string,
+    target: AgentComponent,
+    other: AgentComponent | undefined
+  ): AgentStep | undefined {
+    // What was not read cannot be put back.
+    if (target.value === REDACTED) return undefined
+    if (target.checked !== undefined && target.checked !== "mixed")
+      return { ref, action: "setChecked", args: [target.checked] }
+    const opens = [...target.actions, ...(other?.actions ?? [])].some(
+      (each) => each === "open" || each === "close"
+    )
+    if (target.open !== undefined && opens && target.value === other?.value)
+      return { ref, action: target.open ? "open" : "close" }
+    const sets = [...target.actions, ...(other?.actions ?? [])].includes("setValue")
+    if (target.values !== undefined && sets)
+      return { ref, action: "setValue", args: [target.values] }
+    if (target.value !== undefined && sets) return { ref, action: "setValue", args: [target.value] }
     return undefined
   }
 
-  const act = (request: { steps: readonly AgentStep[] }) => run(request, true)
+  // Watching the page: for `subscribe`, and for `record`.
+  const listeners = new Set<(changed: AgentComponent[], changes: AgentEvent[]) => void>()
+  const KEYS = ["value", "values", "checked", "open", "disabled"] as const
+  const HEARD = ["input", "pointerdown", "keydown", "click"] as const
+  let watching = 0
+  let recording = 0
+  let watched: Map<string, AgentComponent> | undefined
+  let observer: MutationObserver | undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
+  // When the page was last compared, and the last thing a person did to it.
+  let settledAt = 0
+  let touched: { source: ChangeSource; at: number } | undefined
 
-  async function undo(): Promise<AgentResult> {
-    const change = changes[standing - 1]
-    if (!change) return { ok: false, steps: [], error: "Nothing to take back" }
-    const step = back(change)
-    if (!step) return { ok: false, steps: [], error: `A ${change.action} cannot be taken back` }
-    const result = await run({ steps: [step] }, false)
-    if (result.ok) standing--
-    return result
+  const look = () => {
+    clearTimeout(timer)
+    timer = setTimeout(settle, 30)
+  }
+  const heard = (event: Event) => {
+    // Typing follows a key, and a press its pointer: the event before says what made it.
+    if (event.type !== "input") touched = { source: sourceOf(event), at: performance.now() }
+    look()
   }
 
-  async function redo(): Promise<AgentResult> {
-    const change = changes[standing]
-    if (!change) return { ok: false, steps: [], error: "Nothing to do again" }
-    const result = await run({ steps: [change.step] }, false)
-    if (result.ok) standing++
-    return result
+  /** What made the changes seen since the page was last compared. */
+  function maker(by: ChangeSource | undefined): { source: ChangeSource; reason?: string } {
+    // A part of this library says so itself, and why.
+    const part = lastChange()
+    const fresh = part && part.at >= settledAt ? part : undefined
+    if (by) return { source: by, ...(fresh?.source === by ? { reason: fresh.reason } : {}) }
+    const person = touched && touched.at >= settledAt ? touched.source : undefined
+    // A press that reached the part with no pointer of its own (through a `<label>`, a native
+    // input's change) was still made by what the person last used.
+    if (fresh) {
+      const source = fresh.source === "virtual" && person ? person : fresh.source
+      return { source, reason: fresh.reason }
+    }
+    // Any other control: by what a person last did to the page, if they did anything.
+    if (person) return { source: person }
+    return { source: "programmatic" }
   }
+
+  /** A change someone else made, kept: joined to the one before it when it goes on from it. */
+  function note(was: AgentComponent, is: AgentComponent, source: ChangeSource) {
+    const moved = (["value", "values", "checked", "open"] as const).some(
+      (state) => JSON.stringify(was[state]) !== JSON.stringify(is[state])
+    )
+    if (!moved) return
+    const step = toward(is.ref, is, was)
+    const action = step?.action ?? "change"
+    const args = step?.args ?? []
+    const at = performance.now()
+    const last = entries.at(-1)
+    // A word typed is one change, not one a letter.
+    if (
+      last &&
+      !last.undone &&
+      last.ref === is.ref &&
+      last.source === source &&
+      last.action === action &&
+      at - last.at < 1000
+    ) {
+      last.after = is
+      last.args = args
+      last.at = at
+      return
+    }
+    add({ ref: is.ref, action, args, source, before: was, after: is, undone: false, at })
+  }
+
+  /** Compares the page with what it was: tells the listeners, and keeps what others changed. */
+  function settle(source?: ChangeSource): void {
+    clearTimeout(timer)
+    if (!watched) return
+    const now = everything()
+    const by = maker(source)
+    settledAt = performance.now()
+    const changed: AgentComponent[] = []
+    const events: AgentEvent[] = []
+    for (const each of now) {
+      const was = watched.get(each.ref)
+      if (was && JSON.stringify(was) === JSON.stringify(each)) continue
+      changed.push(each)
+      if (!was) continue
+      for (const state of KEYS) {
+        if (JSON.stringify(was[state]) === JSON.stringify(each[state])) continue
+        events.push({
+          ref: each.ref,
+          component: each.component,
+          ...(each.label === undefined ? {} : { label: each.label }),
+          key: state,
+          value: each[state],
+          previous: was[state],
+          ...by,
+        })
+      }
+      // The agent's own steps are kept where they are run.
+      if (recording > 0 && !source) note(was, each, by.source)
+    }
+    watched = new Map(now.map((each) => [each.ref, each]))
+    if (changed.length > 0) for (const listener of listeners) listener(changed, events)
+  }
+
+  function watch(): () => void {
+    if (watching++ === 0) {
+      watched = new Map(everything().map((each) => [each.ref, each]))
+      settledAt = performance.now()
+      observer = new MutationObserver(look)
+      // The whole page: what the root opened is drawn outside it.
+      observer.observe(page, { subtree: true, childList: true, attributes: true })
+      for (const event of HEARD) page.addEventListener(event, heard, true)
+    }
+    let stopped = false
+    return () => {
+      if (stopped) return
+      stopped = true
+      if (--watching > 0) return
+      clearTimeout(timer)
+      observer?.disconnect()
+      for (const event of HEARD) page.removeEventListener(event, heard, true)
+      watched = undefined
+    }
+  }
+
+  function subscribe(listener: (changed: AgentComponent[], changes: AgentEvent[]) => void) {
+    const stop = watch()
+    listeners.add(listener)
+    return () => {
+      listeners.delete(listener)
+      stop()
+    }
+  }
+
+  function record() {
+    const stop = watch()
+    recording++
+    let stopped = false
+    return () => {
+      if (stopped) return
+      stopped = true
+      // What changed a moment ago is still kept.
+      settle()
+      recording--
+      stop()
+    }
+  }
+
+  /** An answer that may take a person's time: ended by the caller's signal, or by `timeout`. */
+  function answer(asked: boolean | Promise<boolean>, signal?: AbortSignal): Promise<boolean> {
+    if (typeof asked === "boolean") return Promise.resolve(asked)
+    return new Promise<boolean>((settled, reject) => {
+      const late =
+        given.timeout === undefined
+          ? undefined
+          : setTimeout(() => reject(new Error("No answer")), given.timeout)
+      const stop = () => reject(new Error("Stopped"))
+      signal?.addEventListener("abort", stop, { once: true })
+      void asked.then(settled, reject).finally(() => {
+        clearTimeout(late)
+        signal?.removeEventListener("abort", stop)
+      })
+    })
+  }
+
+  /**
+   * A menu item that is not in the page because its menu is closed: each closed menu is
+   * opened in turn, as far as the policy lets it be, and closed again when it is not there.
+   */
+  async function reveal(name: string, signal?: AbortSignal): Promise<Element | undefined> {
+    const wanted = plain(name)
+    const openers = found()
+      .filter(
+        (each) =>
+          kindOf(each) === "disclosure" &&
+          /^(menu|true)$/.test(each.getAttribute("aria-haspopup") ?? "") &&
+          each.getAttribute("aria-expanded") !== "true" &&
+          !off(each)
+      )
+      .slice(0, 8)
+    for (const opener of openers) {
+      const now = read(opener)
+      // Opening it to look is a step like any other, and one a person must agree to is not taken.
+      if (now.confirm !== undefined) continue
+      const opening: AgentAction = {
+        ref: now.ref,
+        action: "open",
+        args: [],
+        component: now.component,
+        label: now.label,
+        confirm: undefined,
+      }
+      if (given.allow && !(await answer(given.allow(opening), signal))) continue
+      asAgent(() => (opener as HTMLElement).click())
+      const menu = await until(() => {
+        const popup = page.getElementById(opener.getAttribute("aria-controls") ?? "")
+        return popup?.querySelector('[role^="menuitem"]') ? popup : null
+      }, 600)
+      await turn(20)
+      const item = [...(menu?.querySelectorAll('[role^="menuitem"]') ?? [])].find(
+        (each) => !each.closest(HIDDEN) && plain(nameOf(each) ?? "") === wanted
+      )
+      if (item) return item
+      // Closed as a person closes it: Escape where focus went, and failing that its trigger.
+      const focused = page.activeElement
+      asAgent(() => key(focused && menu?.contains(focused) ? focused : (menu ?? opener), "Escape"))
+      const closed = () => opener.getAttribute("aria-expanded") !== "true"
+      if (!(await until(closed, 300))) {
+        asAgent(() => (opener as HTMLElement).click())
+        await until(closed, 300)
+      }
+    }
+    return undefined
+  }
+
+  const brief = ({ ref, component, label }: AgentComponent): AgentBrief => ({
+    ref,
+    component,
+    ...(label === undefined ? {} : { label }),
+  })
 
   async function run(
-    { steps }: { steps: readonly AgentStep[] },
-    record: boolean
+    { steps, signal }: { steps: readonly AgentStep[]; signal?: AbortSignal | undefined },
+    keep: ((entry: Entry) => void) | undefined
   ): Promise<AgentResult> {
     const done: AgentStepResult[] = []
     for (const [at, step] of steps.entries()) {
       try {
-        const element = resolve(step.ref)
+        if (signal?.aborted) throw new Error("Stopped")
+        // What a person did up to here is theirs, not this step's.
+        settle()
+        let target: { element: Element; item?: string }
+        try {
+          target = resolve(step.ref)
+        } catch (error) {
+          const nothing = (error as Error).message.startsWith("Nothing is called")
+          const item = nothing && step.action === "press" ? await reveal(step.ref, signal) : null
+          if (!item) throw error
+          target = { element: item }
+        }
+        const { element } = target
+        // Named by one of its choices: the step is that choice.
+        const chosen =
+          target.item !== undefined &&
+          (step.args ?? []).length === 0 &&
+          ["press", "choose", "setValue"].includes(step.action)
+        const name = chosen ? "setValue" : step.action
+        const args = chosen ? [target.item] : (step.args ?? [])
         const now = read(element)
-        if (!now.actions.includes(step.action)) {
+        if (!now.actions.includes(name)) {
           throw new Error(
             now.disabled
               ? `${now.label ?? now.ref} is disabled`
               : now.readOnly
                 ? `${now.label ?? now.ref} is read only`
-                : `A ${now.component} has no action "${step.action}" now: ${now.actions.join(", ")}`
+                : `A ${now.component} has no action "${name}" now: ${now.actions.join(", ")}`
           )
         }
+        check(element, now.component, name, args)
         const action: AgentAction = {
           ref: now.ref,
-          action: step.action,
-          args: step.args ?? [],
+          action: name,
+          args,
           component: now.component,
           label: now.label,
           confirm: now.confirm,
         }
-        if (given.allow && !(await given.allow(action))) throw new Error("Refused")
+        if (given.allow && !(await answer(given.allow(action), signal))) throw new Error("Refused")
         if (action.confirm !== undefined) {
           // A policy that says yes to everything must not answer for a person.
           if (!given.confirm) throw new Error(`Needs a person: ${action.confirm}`)
           const asked = action as AgentAction & { readonly confirm: string }
-          if (!(await given.confirm(asked))) throw new Error(`Declined: ${action.confirm}`)
+          if (!(await answer(given.confirm(asked), signal)))
+            throw new Error(`Declined: ${action.confirm}`)
         }
-        const short = await perform(element, now.component, step.action, action.args)
+        const before = new Map(everything().map((each) => [each.ref, each]))
+        const short = await perform(element, now.component, name, args)
         // A framework has its turn, and a popup its first frame.
         await turn(20)
         const after = element.isConnected ? read(element) : undefined
-        done.push({ ref: now.ref, action: step.action, ...(after ? { now: after } : {}) })
+        const then = everything()
+        const still = new Set(then.map((each) => each.ref))
+        const opened = then.filter(
+          (each) =>
+            each.ref !== now.ref && each.open === true && before.get(each.ref)?.open !== true
+        )
+        const appeared = then.filter((each) => !before.has(each.ref) && !opened.includes(each))
+        const gone = [...before.values()].filter(
+          (each) => each.ref !== now.ref && !still.has(each.ref)
+        )
+        done.push({
+          ref: now.ref,
+          action: name,
+          ...(after ? { now: after } : {}),
+          ...(opened.length > 0 ? { opened: opened.map(brief) } : {}),
+          ...(appeared.length > 0 ? { appeared: appeared.slice(0, 20).map(brief) } : {}),
+          ...(gone.length > 0 ? { gone: gone.slice(0, 20).map(brief) } : {}),
+        })
         // Only what took effect is a change: a callback may have refused it.
         const { ref: _ref, ...was } = now
         const { ref: _same, ...is } = after ?? now
-        if (record && (!after || JSON.stringify(was) !== JSON.stringify(is))) {
-          // A new change after some were taken back: those are gone.
-          changes.splice(standing)
-          changes.push({
+        if (keep && (!after || JSON.stringify(was) !== JSON.stringify(is))) {
+          keep({
             ref: now.ref,
-            action: step.action,
-            args: action.args,
+            action: name,
+            args,
+            source: "agent",
             before: now,
             after,
-            step: { ref: now.ref, action: step.action, args: action.args },
+            undone: false,
+            step: { ref: now.ref, action: name, args },
+            at: performance.now(),
           })
-          standing = changes.length
         }
+        // Whoever listens hears it as the agent's; it is not kept a second time.
+        settle("agent")
         if (short) throw new Error(short)
       } catch (error) {
         return {
@@ -659,9 +1243,122 @@ export function createAgent(given: AgentOptions = {}): Agent {
     return { ok: true, steps: done }
   }
 
+  const act = (request: { steps: readonly AgentStep[]; signal?: AbortSignal }) => run(request, add)
+
+  async function takeBack(entry: Entry): Promise<AgentResult> {
+    const step = toward(entry.ref, entry.before, entry.after)
+    if (!step) return { ok: false, steps: [], error: `A ${entry.action} cannot be taken back` }
+    const result = await run({ steps: [step] }, undefined)
+    if (result.ok) {
+      entry.undone = true
+      takenBack.push(entry)
+    }
+    return result
+  }
+
+  async function again(entry: Entry): Promise<AgentResult> {
+    const step = entry.step ?? (entry.after && toward(entry.ref, entry.after, entry.before))
+    if (!step) return { ok: false, steps: [], error: `A ${entry.action} cannot be done again` }
+    const result = await run({ steps: [step] }, undefined)
+    if (result.ok) {
+      entry.undone = false
+      takenBack.splice(takenBack.indexOf(entry), 1)
+    }
+    return result
+  }
+
+  async function undo(): Promise<AgentResult> {
+    settle()
+    const entry = entries.findLast((each) => !each.undone)
+    if (!entry) return { ok: false, steps: [], error: "Nothing to take back" }
+    return takeBack(entry)
+  }
+
+  async function redo(): Promise<AgentResult> {
+    settle()
+    const entry = takenBack.at(-1)
+    if (!entry) return { ok: false, steps: [], error: "Nothing to do again" }
+    return again(entry)
+  }
+
+  async function undoSource(source: ChangeSource): Promise<AgentResult> {
+    settle()
+    const steps: AgentStepResult[] = []
+    const left: string[] = []
+    const all = [...entries]
+    for (const [index, entry] of [...all.entries()].reverse()) {
+      if (entry.undone || entry.source !== source) continue
+      // Someone else changed it since: putting it back would undo theirs.
+      const since = all
+        .slice(index + 1)
+        .some((each) => !each.undone && each.ref === entry.ref && each.source !== source)
+      if (since) {
+        left.push(entry.before.label ?? entry.ref)
+        continue
+      }
+      const result = await takeBack(entry)
+      steps.push(...result.steps)
+      if (!result.ok) return { ...result, steps }
+    }
+    return left.length > 0
+      ? { ok: false, steps, error: `Changed by someone else since, and left: ${left.join(", ")}` }
+      : { ok: true, steps }
+  }
+
+  async function seek(count: number): Promise<AgentResult> {
+    settle()
+    const steps: AgentStepResult[] = []
+    const all = [...entries]
+    for (const entry of all.slice(Math.max(0, count)).reverse()) {
+      if (entry.undone) continue
+      const result = await takeBack(entry)
+      steps.push(...result.steps)
+      if (!result.ok) return { ...result, steps }
+    }
+    for (const entry of all.slice(0, Math.max(0, count))) {
+      if (!entry.undone) continue
+      const result = await again(entry)
+      steps.push(...result.steps)
+      if (!result.ok) return { ...result, steps }
+    }
+    return { ok: true, steps }
+  }
+
+  async function stage(request: {
+    steps: readonly AgentStep[]
+    signal?: AbortSignal
+  }): Promise<AgentStaged> {
+    const staged: Entry[] = []
+    const result = await run(request, (entry) => void staged.push(entry))
+    let held = true
+    return {
+      ...result,
+      applied: staged.map(shown),
+      async revert() {
+        if (!held) return { ok: false, steps: [], error: "Nothing is staged" }
+        held = false
+        const steps: AgentStepResult[] = []
+        for (const entry of [...staged].reverse()) {
+          const step = toward(entry.ref, entry.before, entry.after)
+          // A press cannot be taken back: the rest still is.
+          if (!step) continue
+          const back = await run({ steps: [step] }, undefined)
+          steps.push(...back.steps)
+          if (!back.ok) return { ...back, steps }
+        }
+        return { ok: true, steps }
+      },
+      keep() {
+        if (!held) return
+        held = false
+        for (const entry of staged) add(entry)
+      },
+    }
+  }
+
   async function query(request: { text?: string; within?: string; kind?: string }) {
     if (request.within !== undefined) {
-      const element = resolve(request.within)
+      const { element } = resolve(request.within)
       const now = read(element)
       let items = now.items
       // A closed select's choices are not in the page: opened to be read, and closed again.
@@ -683,48 +1380,25 @@ export function createAgent(given: AgentOptions = {}): Agent {
       return [{ ...read(element), items: matching.slice(0, 50) }]
     }
     const wanted = request.text === undefined ? undefined : plain(request.text)
-    return snapshot().filter(
+    return everything().filter(
       (each) =>
         (request.kind === undefined || each.component === request.kind) &&
         (wanted === undefined || plain(each.label ?? "").includes(wanted))
     )
   }
 
-  function subscribe(listener: (changed: AgentComponent[]) => void) {
-    let before = new Map(snapshot().map((each) => [each.ref, JSON.stringify(each)]))
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const look = () => {
-      clearTimeout(timer)
-      timer = setTimeout(() => {
-        const now = snapshot()
-        const changed = now.filter((each) => before.get(each.ref) !== JSON.stringify(each))
-        before = new Map(now.map((each) => [each.ref, JSON.stringify(each)]))
-        if (changed.length > 0) listener(changed)
-      }, 30)
-    }
-    const observer = new MutationObserver(look)
-    // The whole page: what the root opened is drawn outside it.
-    observer.observe(page, { subtree: true, childList: true, attributes: true })
-    page.addEventListener("input", look, true)
-    return () => {
-      clearTimeout(timer)
-      observer.disconnect()
-      page.removeEventListener("input", look, true)
-    }
-  }
-
   return {
     snapshot,
     act,
+    stage,
     query,
     subscribe,
-    history: () =>
-      changes.map(({ step: _step, ...change }, index) => ({
-        ...change,
-        undone: index >= standing,
-      })),
+    record,
+    history: () => entries.map(shown),
     undo,
     redo,
+    undoSource,
+    seek,
   }
 }
 

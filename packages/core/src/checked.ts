@@ -92,6 +92,8 @@ export function createChecked(
   const checked: ReadonlySignal<boolean> = held ? computed(() => held.checked()) : own
   const readOnly = computed(() => Boolean(props.get().readOnly))
   let input: HTMLInputElement | undefined
+  // The press on the box that is pressing the input now.
+  let pressing: Event | undefined
   // The labels of the hidden input, which name the box: a label reaches the input, and focus
   // lands on the box. In a field the name is the field's to give.
   const named = signal<string | undefined>(undefined)
@@ -159,9 +161,16 @@ export function createChecked(
 
   function press(event: Event) {
     if (disabled.peek() || readOnly.peek()) return
-    // Through the native input when it is in the page, so its `change` is the one path.
-    if (input) input.click()
-    else setChecked(!checked.peek(), details("press", event))
+    // Through the native input when it is in the page, so its `change` is the one path. The
+    // change is told as made by this press: the input's own event says nothing of a pointer.
+    if (input) {
+      pressing = event
+      try {
+        input.click()
+      } finally {
+        pressing = undefined
+      }
+    } else setChecked(!checked.peek(), details("press", event))
   }
 
   return {
@@ -245,7 +254,7 @@ export function createChecked(
             element.checked = checked.peek()
             return
           }
-          setChecked(element.checked, details("press", event))
+          setChecked(element.checked, details("press", pressing ?? event))
           // A caller who kept the value keeps the input with it.
           element.checked = checked.peek()
         },

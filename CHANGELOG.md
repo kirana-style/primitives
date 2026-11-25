@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.4.0](https://github.com/kirana-style/primitives/compare/v0.3.0...v0.4.0) (2026-11-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **solid:** the solid adapter on solid 2 ([#70](https://github.com/kirana-style/primitives/pull/70))
+* a button drawn as a link stays a link: no button role, no keys ([#68](https://github.com/kirana-style/primitives/pull/68))
+* an element keeps its own attributes and text where a part has none ([#63](https://github.com/kirana-style/primitives/pull/63))
+* calendar copies drawn as chosen, and required to keep a day ([#62](https://github.com/kirana-style/primitives/pull/62))
+
+### Features
+
+* a primitive's element on svelte, optional item values, and hostInputs' rules ([#60](https://github.com/kirana-style/primitives/pull/60)) ([df5286e](https://github.com/kirana-style/primitives/commit/df5286e37b9ae40d9cbee3c0163539e9a23a3e72))
+* base ui's prop names and the states it writes, on one ci build ([#78](https://github.com/kirana-style/primitives/pull/78)) ([a6c6020](https://github.com/kirana-style/primitives/commit/a6c6020ffa4a2dc2be505e6d69227354d25f534e))
+* calendar copies drawn as chosen, and required to keep a day ([#62](https://github.com/kirana-style/primitives/pull/62)) ([da040c8](https://github.com/kirana-style/primitives/commit/da040c8562d4cd3ee9e05625941a2413e7d26b0f))
+* **solid:** the solid adapter on solid 2 ([#70](https://github.com/kirana-style/primitives/pull/70)) ([fa80536](https://github.com/kirana-style/primitives/commit/fa80536e2fac79b7f3c49e7a3da1909fc9a8521c))
+* ten components, and the agent bridge reads the kinds it lacked ([#74](https://github.com/kirana-style/primitives/pull/74)) ([7c9553c](https://github.com/kirana-style/primitives/commit/7c9553ccb8e2c4d1e765c9cdefb24ef152dd4722))
+* the agent bridge says who changed what, and takes back by source ([#73](https://github.com/kirana-style/primitives/pull/73)) ([29533a8](https://github.com/kirana-style/primitives/commit/29533a887691449bdb059d8a99ee2c0a6c29a636))
+* the gaps in the date, combobox, field and popup components ([#77](https://github.com/kirana-style/primitives/pull/77)) ([417014e](https://github.com/kirana-style/primitives/commit/417014efd0c30ba8cbaa91a5b2aa8d7f4eace16b))
+
+
+### Bug fixes
+
+* a button drawn as a link stays a link: no button role, no keys ([#68](https://github.com/kirana-style/primitives/pull/68)) ([3341659](https://github.com/kirana-style/primitives/commit/3341659199f30d09f80db749999f01bedcb12d3b))
+* a calendar keeps its days, and focus, when its caller holds the value ([#58](https://github.com/kirana-style/primitives/pull/58)) ([50354ce](https://github.com/kirana-style/primitives/commit/50354cef64ea1b3e743cd2dd4d867f9a15e8a116))
+* a hover popup unmounted while open no longer skips the next one's wait ([#59](https://github.com/kirana-style/primitives/pull/59)) ([b3eb8e5](https://github.com/kirana-style/primitives/commit/b3eb8e5fe407f683813afac6fabd44b2b3641b97))
+* a part writes type="button" only on a button, and a caller's type wins ([#61](https://github.com/kirana-style/primitives/pull/61)) ([8598a75](https://github.com/kirana-style/primitives/commit/8598a75bab4bf3d97079ac3f0dd49d7e77014d96))
+* a popup closes in a document with no web animations, as in jsdom ([#66](https://github.com/kirana-style/primitives/pull/66)) ([ca4e888](https://github.com/kirana-style/primitives/commit/ca4e8889dc579d75632f5a55c94b13fff2c21562))
+* a select's list opened over its trigger holds the page's scroll ([#67](https://github.com/kirana-style/primitives/pull/67)) ([4277f61](https://github.com/kirana-style/primitives/commit/4277f61c0d50fe4f3f8d8f7a447e5410c3d53af4))
+* an element keeps its own attributes and text where a part has none ([#63](https://github.com/kirana-style/primitives/pull/63)) ([73367e0](https://github.com/kirana-style/primitives/commit/73367e0bfe564ea02561281e88974cd07d5dbc51))
+* the agent bridge and the names it reads, as a consumer found them ([#72](https://github.com/kirana-style/primitives/pull/72)) ([8dc7537](https://github.com/kirana-style/primitives/commit/8dc7537cefdf77628fea4ce50e63994d7756b8e2))
+* the check after a release waits for each package's file ([#69](https://github.com/kirana-style/primitives/pull/69)) ([d274248](https://github.com/kirana-style/primitives/commit/d274248c7f09471ebd83a878434777953a90ccd3))
+
+
+### Documentation
+
+* the changelog in every package, and what the reference left out ([#57](https://github.com/kirana-style/primitives/pull/57)) ([c00cf0b](https://github.com/kirana-style/primitives/commit/c00cf0b22bb818dc11503e1d801d6cdd620c85e9))
+
+
+### Dependencies
+
+* bump the minor-and-patch group with 15 updates ([#76](https://github.com/kirana-style/primitives/pull/76)) ([77913b0](https://github.com/kirana-style/primitives/commit/77913b0aee5f2f477fd49917f061e0babd2f2b3b))
+
 ## [0.3.0](https://github.com/kirana-style/primitives/compare/v0.2.0...v0.3.0) (2026-11-20)
 
 

@@ -18,6 +18,7 @@
     disabled,
     orientation,
     loop,
+    loopFocus,
     ...rest
   }: ToggleGroupProps<Value> = $props()
 
@@ -35,6 +36,7 @@
       disabled,
       orientation,
       loop,
+      loopFocus,
       onValueChange: change,
     }))
   )

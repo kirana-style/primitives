@@ -62,8 +62,8 @@ export type DayProps = PartAttributes<
   "button",
   StateFor<"calendar", "day">,
   {
-    /** The day, as its week gave it (`day.date`). */
-    date: string
+    /** The day, as its week gave it (`day.date`). Left out, its `<Calendar.Cell>`'s. */
+    date?: string | undefined
   }
 >
 

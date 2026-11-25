@@ -1,6 +1,8 @@
 import { defineComponent } from "./part.ts"
 import { TRANSITION, state, valued } from "./states.ts"
 
+const TYPE = state("data-type", "The kind the toast was added as.")
+
 const EXPANDED = state(
   "data-expanded",
   "Present while the pointer or focus is on the stack: the toasts are spread out, and wait."
@@ -24,7 +26,7 @@ export const toastVocabulary = defineComponent({
       startingStyle: TRANSITION.startingStyle,
       endingStyle: TRANSITION.endingStyle,
       expanded: EXPANDED,
-      type: state("data-type", "The kind the toast was added as."),
+      type: TYPE,
       limited: state("data-limited", "Present on a toast behind as many as are shown at once."),
       swiping: state("data-swiping", "Present while the toast is dragged."),
       swipeDirection: valued(
@@ -54,16 +56,19 @@ export const toastVocabulary = defineComponent({
     inside: "content",
     description:
       "What the toast is called: the title it was added with, when nothing else is written in it.",
+    states: { type: TYPE },
   },
   description: {
     inside: "content",
     description:
       "What the toast says: the description it was added with, when nothing else is written in it.",
+    states: { type: TYPE },
   },
-  close: { inside: "root", description: "Closes the toast." },
+  close: { inside: "root", description: "Closes the toast.", states: { type: TYPE } },
   action: {
     inside: "root",
     description:
       "A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.",
+    states: { type: TYPE },
   },
 })

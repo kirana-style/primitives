@@ -38,8 +38,14 @@ export interface ToastOptions<Content = string> {
    */
   type?: string | undefined
   /**
-   * How long it stays, in milliseconds; `Infinity` until it is closed. Default: the toaster's
-   * `duration`.
+   * How long it stays, in milliseconds; `0` (or `Infinity`) until it is closed. Default: the
+   * toaster's `timeout`.
+   */
+  timeout?: number | undefined
+  /**
+   * How long it stays, in milliseconds; `Infinity` until it is closed.
+   * @deprecated Base UI's name is `timeout`, which wins when both are given. Here `0` is no
+   * time at all; there it is no end.
    */
   duration?: number | undefined
   /**
@@ -59,7 +65,15 @@ export interface ToastOptions<Content = string> {
 export interface ToastRecord<Content = string> extends ToastOptions<Content> {
   /** What it is known by: the one it was added with, or one the toaster made. */
   readonly id: string
-  /** How long it stays, in milliseconds: its own, or the toaster's when it gave none. */
+  /**
+   * How long it stays, in milliseconds: its own, or the toaster's when it gave none;
+   * `Infinity` until it is closed.
+   */
+  readonly timeout: number
+  /**
+   * How long it stays, in milliseconds.
+   * @deprecated The same as `timeout`.
+   */
   readonly duration: number
   /** How it is announced: its own, or `"polite"` when it gave none. */
   readonly priority: "polite" | "assertive"
@@ -77,7 +91,15 @@ export type ToastState<Content = string> =
 
 /** What a toaster is made with. */
 export interface ToasterOptions {
-  /** How long a toast stays when it does not say, in milliseconds. Default: `5000`. */
+  /**
+   * How long a toast stays when it does not say, in milliseconds; `0` until it is closed.
+   * Default: `5000`.
+   */
+  timeout?: number | undefined
+  /**
+   * How long a toast stays when it does not say, in milliseconds.
+   * @deprecated Base UI's name is `timeout`, which wins when both are given.
+   */
   duration?: number | undefined
   /** How many toasts are shown at once; the rest wait behind, `data-limited`. Default: `3`. */
   limit?: number | undefined
@@ -138,6 +160,13 @@ export const TOAST_SWIPE = 40
  * module, and called from anywhere (`toaster.add({ title })`), a component or not. `Content`
  * is what a title, a description and an action's label may be; it is handed on untouched.
  */
+/**
+ * How long a toast stays by what it was given: Base UI's `timeout` first, whose `0` is no end,
+ * then the older `duration`.
+ */
+const timeOf = (given: { timeout?: number | undefined; duration?: number | undefined }) =>
+  given.timeout === 0 ? Infinity : (given.timeout ?? given.duration)
+
 export function createToaster<Content = string>(options: ToasterOptions = {}): Toaster<Content> {
   const toasts = signal<readonly ToastRecord<Content>[]>([])
   let made = 0
@@ -148,10 +177,12 @@ export function createToaster<Content = string>(options: ToasterOptions = {}): T
     toasts,
     limit: options.limit ?? 3,
     add({ id = `toast-${++made}`, ...given }) {
+      const time = timeOf(given) ?? timeOf(options) ?? TOAST_DURATION
       const toast: ToastRecord<Content> = {
         ...given,
         id,
-        duration: given.duration ?? options.duration ?? TOAST_DURATION,
+        timeout: time,
+        duration: time,
         priority: given.priority ?? "polite",
         closing: false,
       }
@@ -161,13 +192,17 @@ export function createToaster<Content = string>(options: ToasterOptions = {}): T
       return id
     },
     update(id, given) {
-      change(id, (toast) => ({
-        ...toast,
-        ...given,
-        duration: given.duration ?? toast.duration,
-        priority: given.priority ?? toast.priority,
-        closing: false,
-      }))
+      change(id, (toast) => {
+        const time = timeOf(given) ?? toast.timeout
+        return {
+          ...toast,
+          ...given,
+          timeout: time,
+          duration: time,
+          priority: given.priority ?? toast.priority,
+          closing: false,
+        }
+      })
     },
     dismiss(id, by = details("dismiss")) {
       for (const toast of toasts.peek()) {
@@ -181,7 +216,7 @@ export function createToaster<Content = string>(options: ToasterOptions = {}): T
     },
     promise(promise, states) {
       // It stays for as long as the work does.
-      const id = toaster.add({ type: "loading", ...said(states.loading), duration: Infinity })
+      const id = toaster.add({ type: "loading", ...said(states.loading), timeout: Infinity })
       const settle = <Given>(
         type: string,
         state: ToastState<Content> | ((given: Given) => ToastState<Content>),
@@ -197,7 +232,9 @@ export function createToaster<Content = string>(options: ToasterOptions = {}): T
           action: undefined,
           type,
           ...next,
-          duration: next.duration ?? options.duration ?? TOAST_DURATION,
+          // What the state says, read as `add` reads it; `timeout` is then that time.
+          timeout: undefined,
+          duration: timeOf(next) ?? timeOf(options) ?? TOAST_DURATION,
         })
       }
       promise.then(
@@ -446,16 +483,20 @@ export function createToast<Content = string>(
         },
       },
       title: {
-        props: computed(() => ({ id: `${id}-${toastId}-title` })),
+        props: computed(() => ({ id: `${id}-${toastId}-title`, "data-type": record.get()?.type })),
         attach: named(titled),
       },
       description: {
-        props: computed(() => ({ id: `${id}-${toastId}-description` })),
+        props: computed(() => ({
+          id: `${id}-${toastId}-description`,
+          "data-type": record.get()?.type,
+        })),
         attach: named(described),
       },
       close: {
         props: computed(() => ({
           type: "button",
+          "data-type": record.get()?.type,
           onClick: (event: Event) => close("close-press", event),
         })),
         attach: NONE,
@@ -463,6 +504,7 @@ export function createToast<Content = string>(
       action: {
         props: computed(() => ({
           type: "button",
+          "data-type": record.get()?.type,
           onClick(event: Event) {
             const by = details("action-press", event)
             record.peek()?.action?.onAction(by)
@@ -490,14 +532,14 @@ export function createToast<Content = string>(
         const now = performance.now()
         for (const [key, timer] of timers) {
           const toast = all.find((each) => each.id === key)
-          if (toast && !toast.closing && toast.duration === timer.of) continue
+          if (toast && !toast.closing && toast.timeout === timer.of) continue
           clearTimeout(timer.handle)
           timers.delete(key)
         }
         for (const toast of all) {
-          if (toast.closing || !Number.isFinite(toast.duration)) continue
+          if (toast.closing || !Number.isFinite(toast.timeout)) continue
           let timer = timers.get(toast.id)
-          if (!timer) timers.set(toast.id, (timer = { left: toast.duration, of: toast.duration }))
+          if (!timer) timers.set(toast.id, (timer = { left: toast.timeout, of: toast.timeout }))
           if (held && timer.handle !== undefined) {
             clearTimeout(timer.handle)
             timer.left -= now - (timer.since ?? now)

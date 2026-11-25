@@ -1,5 +1,5 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails, StateOf } from "@kirana-ui/core"
+import type { ChangeDetails, ReadonlySignal, StateOf } from "@kirana-ui/core"
 import { createSteps } from "@kirana-ui/core/steps"
 import type { Steps as Controller, StepsProps } from "@kirana-ui/core/steps"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
@@ -13,8 +13,8 @@ import type { PartComponentProps } from "./runtime.tsx"
 type Parts = Vocabulary["steps"]
 
 const Context = createContext<Controller | null>(null)
-// The step an item is, for the parts inside it.
-const ItemContext = createContext<number | null>(null)
+// The step an item is, for the parts inside it: given, or counted from the page.
+const ItemContext = createContext<ReadonlySignal<number> | null>(null)
 
 function useSteps(): Controller {
   const made = useContext(Context)
@@ -22,7 +22,7 @@ function useSteps(): Controller {
   return made
 }
 
-function useIndex(part: string): number {
+function useIndex(part: string): ReadonlySignal<number> {
   const index = useContext(ItemContext)
   if (index === null) throw new Error(`<Steps.${part}> must be inside <Steps.Item>`)
   return index
@@ -72,18 +72,21 @@ export type ItemProps = PartComponentProps<
   "div",
   StateOf<Parts["item"]>,
   {
-    /** Which step it is, from 0. */
-    index: number
+    /**
+     * Which step it is, from 0. Left out, its place among the items in the page, once it is
+     * there: give it on a page a server draws, which cannot count them.
+     */
+    index?: number
   }
 >
 
 function Item(props: ItemProps): JSX.Element {
   const [local, rest] = split(props, ["index"])
   // An item is its step for as long as it is in the page.
-  const index = untrack(() => local.index)
+  const item = useSteps().item(untrack(() => local.index))
   return (
-    <ItemContext value={index}>
-      <Part of={useSteps().item(index)} tag="div" {...rest} />
+    <ItemContext value={item.index}>
+      <Part of={item} tag="div" {...rest} />
     </ItemContext>
   )
 }

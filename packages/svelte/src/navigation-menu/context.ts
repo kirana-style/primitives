@@ -6,6 +6,9 @@ const ITEM = Symbol("NavigationMenuItem")
 
 export const provide = (controller: NavigationMenu): NavigationMenu => setContext(KEY, controller)
 
+/** The menu a root is inside, if any: a menu in another's content is nested. */
+export const outer = (): NavigationMenu | undefined => getContext<NavigationMenu | undefined>(KEY)
+
 export function useNavigation(): NavigationMenu {
   const controller = getContext<NavigationMenu | undefined>(KEY)
   if (!controller) throw new Error("A NavigationMenu part must be inside <NavigationMenu.Root>")

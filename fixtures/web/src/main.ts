@@ -245,7 +245,7 @@ let outside = 0
 find("mm1-outside").addEventListener("click", () => {
   find("mm1-output").textContent = String(++outside)
 })
-element("kui-otp", "otp1").addEventListener("complete", (event) => {
+element("kui-otp", "otp1").addEventListener("value-complete", (event) => {
   find("otp1-output").textContent = (event as CustomEvent<{ value: string }>).detail.value
 })
 element("kui-resizable", "rs1").addEventListener("sizes-change", (event) => {

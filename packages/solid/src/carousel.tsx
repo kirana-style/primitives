@@ -60,7 +60,17 @@ function Root(props: RootProps): JSX.Element {
 }
 
 export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
-export type ItemProps = PartComponentProps<"div", StateOf<Parts["item"]>, { index: number }>
+export type ItemProps = PartComponentProps<
+  "div",
+  StateOf<Parts["item"]>,
+  {
+    /**
+     * Its place among the slides, from 0. Left out, its place in the page, once it is there:
+     * give it on a page a server draws, which cannot count them.
+     */
+    index?: number
+  }
+>
 export type PreviousProps = PartComponentProps<"button", StateOf<Parts["previous"]>>
 export type NextProps = PartComponentProps<"button", StateOf<Parts["next"]>>
 export type IndicatorProps = PartComponentProps<

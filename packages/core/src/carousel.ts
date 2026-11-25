@@ -33,8 +33,12 @@ export interface Carousel {
   readonly root: Part
   /** What scrolls: the slides are its children, snapped by the design's CSS. */
   readonly viewport: Part
-  /** One slide, by its place from 0. */
-  item(index: number): Part
+  /**
+   * One slide, by its place from 0. Left out, its place among the slides in the page, read
+   * from the page once it is there: until then (and on a server) it is no place, and the
+   * slide is not marked current. A page a server draws gives it.
+   */
+  item(index?: number): Part
   readonly previous: Part
   readonly next: Part
   /** A button for one slide. */
@@ -253,13 +257,20 @@ export function createCarousel(
     },
     item(slide) {
       const own: { element: HTMLElement | undefined } = { element: undefined }
+      // The place given, or its place in the page: never the order the slides were made in,
+      // which a framework that draws twice, or a list that changes, would get wrong.
+      const place = computed(() => {
+        if (slide !== undefined) return slide
+        changed.get()
+        return own.element ? ordered().indexOf(own.element) : -1
+      })
       return {
         props: computed(() => ({
           role: "group",
           "aria-roledescription": "slide",
           "data-orientation": orientation.get(),
           // By the place it is given, so a server says it as a browser does.
-          "data-current": flag(index.get() === slide),
+          "data-current": flag(index.get() === place.get()),
         })),
         attach(element) {
           own.element = element

@@ -54,6 +54,7 @@ function Root<Value = unknown>({
   disabled,
   orientation,
   loop,
+  loopFocus,
   id,
   ...rest
 }: RootProps<Value>): ReactElement {
@@ -67,6 +68,7 @@ function Root<Value = unknown>({
     disabled,
     orientation,
     loop,
+    loopFocus,
     id,
   })
   return (

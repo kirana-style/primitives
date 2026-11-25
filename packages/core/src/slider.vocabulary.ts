@@ -1,29 +1,42 @@
 import { defineComponent } from "./part.ts"
-import { CONTROL, DISABLED, state, valued } from "./states.ts"
+import { CONTROL, DISABLED, EITHER_VALID, FIELD, state, valued } from "./states.ts"
 
 const STATES = {
   orientation: valued("data-orientation", ["horizontal", "vertical"], "The way the track runs."),
   disabled: DISABLED,
   readonly: CONTROL.readonly,
   dragging: state("data-dragging", "Present while a pointer holds a thumb."),
+  ...FIELD,
 }
 
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const sliderVocabulary = defineComponent({
-  root: { description: "Groups the slider's parts.", states: STATES },
-  value: { inside: "root", description: "The value, written.", states: STATES },
+  root: { description: "Groups the slider's parts.", states: STATES, exclusive: EITHER_VALID },
+  value: {
+    inside: "root",
+    description: "The value, written.",
+    states: STATES,
+    exclusive: EITHER_VALID,
+  },
   control: {
     inside: "root",
     description: "What a pointer presses and drags on. It holds the track and the thumbs.",
     states: STATES,
+    exclusive: EITHER_VALID,
   },
-  track: { inside: "control", description: "The whole range.", states: STATES },
+  track: {
+    inside: "control",
+    description: "The whole range.",
+    states: STATES,
+    exclusive: EITHER_VALID,
+  },
   indicator: {
     inside: "track",
     description:
       "The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.",
     states: STATES,
+    exclusive: EITHER_VALID,
     variables: {
       "--start-position":
         "With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.",
@@ -43,6 +56,7 @@ export const sliderVocabulary = defineComponent({
         description: "Which thumb it is, from 0.",
       },
     },
+    exclusive: EITHER_VALID,
     variables: {
       "--position": "With thumbs that stay inside the control: where the thumb's centre is.",
     },

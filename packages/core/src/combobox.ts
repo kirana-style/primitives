@@ -16,6 +16,8 @@ import type { ListCollection, ListRow } from "./services/list.ts"
 import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
+import { createPresence, presentPart } from "./services/presence.ts"
+import type { PresentPart } from "./services/presence.ts"
 import { createSheet } from "./services/sheet.ts"
 import type { Presentation } from "./services/sheet.ts"
 import { printable, textOf } from "./services/typeahead.ts"
@@ -80,7 +82,13 @@ export interface ComboboxShown<Value = unknown> {
   readonly labels: readonly string[]
 }
 
-export interface ComboboxProps<Value = unknown> {
+/**
+ * `Multiple` is what `multiple` is given, as Base UI types it: with `true`, `value`,
+ * `defaultValue` and `onValueChange` hold the list of chosen values. Each adapter's root
+ * infers it from `multiple`; written out, it is `false` when left out, as Base UI's is, and
+ * `multiple` alone does not change it.
+ */
+export interface ComboboxProps<Value = unknown, Multiple extends boolean | undefined = false> {
   id: string
   /**
    * How the list opens. `"sheet"`: from the bottom edge, not placed against the input, modal
@@ -94,12 +102,23 @@ export interface ComboboxProps<Value = unknown> {
    * pointer opens a sheet. Default 640.
    */
   sheetBelow?: number | undefined
-  /** The chosen value; `null` is "none". */
-  value?: Value | null | undefined
-  /** The value it starts with, when the caller does not hold `value`. Read once. */
-  defaultValue?: Value | null | undefined
-  /** Heard as a value is about to be chosen or cleared: `details.cancel()` keeps it as it was. */
-  onValueChange?: ((value: Value | null, details: ChangeDetails) => void) | undefined
+  /**
+   * The chosen value; `null` is "none". With `multiple`, the chosen values, in the order they
+   * were chosen.
+   */
+  value?: (Multiple extends true ? readonly Value[] : Value | null) | undefined
+  /**
+   * The value it starts with (with `multiple`, the values), when the caller does not hold
+   * `value`. Read once.
+   */
+  defaultValue?: (Multiple extends true ? readonly Value[] : Value | null) | undefined
+  /**
+   * Heard as a value is about to be chosen or cleared (with `multiple`, added or taken away,
+   * with the values there would then be): `details.cancel()` keeps it as it was.
+   */
+  onValueChange?:
+    | ((value: Multiple extends true ? Value[] : Value | null, details: ChangeDetails) => void)
+    | undefined
   /** What the input says. */
   inputValue?: string | undefined
   /** The text the input starts with, when the caller does not hold `inputValue`. Read once. */
@@ -157,18 +176,25 @@ export interface ComboboxProps<Value = unknown> {
   filter?: ((label: string, query: string) => boolean) | null | undefined
   /**
    * Several values, each shown as a chip beside the input: an item chosen is added, chosen
-   * again taken away, and the list stays open. The values are `values`, not `value`.
+   * again taken away, and the list stays open. `value`, `defaultValue` and `onValueChange`
+   * then hold a list. Read once.
    */
   multiple?: boolean | undefined
-  /** With `multiple`: the chosen values, in the order they were chosen. */
+  /**
+   * With `multiple`: the chosen values.
+   * @deprecated Base UI's shape is `value` holding the list, which wins when both are given.
+   */
   values?: readonly Value[] | undefined
   /**
-   * With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+   * With `multiple`: the values it starts with.
+   * @deprecated Base UI's shape is `defaultValue` holding the list, which wins when both are
+   * given.
    */
   defaultValues?: readonly Value[] | undefined
   /**
-   * With `multiple`: heard as a value is about to be added or taken away, with the values there
-   * would then be: `details.cancel()` keeps them as they were.
+   * With `multiple`: heard as a value is about to be added or taken away.
+   * @deprecated Base UI's shape is `onValueChange` told the list, the one called when both are
+   * given.
    */
   onValuesChange?: ((values: Value[], details: ChangeDetails) => void) | undefined
   /** In a field, "none" is then wrong. */
@@ -218,7 +244,10 @@ export interface Combobox<Value = unknown> {
   readonly empty: ReadonlySignal<boolean>
   /** Whether the combobox has a name: whether its hidden input is drawn. */
   readonly named: ReadonlySignal<boolean>
-  /** Whether there is anything to clear: its clear button is in the page only then. */
+  /**
+   * Whether its clear button is in the page: while there is something to clear (the text, for
+   * an autocomplete; else what is chosen), and through the button's exit.
+   */
   readonly clearable: ReadonlySignal<boolean>
   /** Whether it holds several values. Read once, when the combobox is made. */
   readonly multiple: boolean
@@ -288,13 +317,15 @@ export interface Combobox<Value = unknown> {
   readonly separator: Part
   /** Whether `value` is the chosen one, for an item's indicator. */
   selected(value: Value): ReadonlySignal<boolean>
-  /** The mark an item shows while it is the chosen one. */
-  itemIndicator(value: Value): Part
+  /**
+   * The mark an item shows while it is the chosen one: in the page then, and through its exit.
+   * Asked for again, a new one: an adapter keeps the one it made.
+   */
+  itemIndicator(value: Value): PresentPart
 }
 
 const NOTHING = () => {}
 const NONE: readonly never[] = []
-const INDICATOR = computed(() => ({ "aria-hidden": "true" }))
 const EMPTY = computed(() => ({}))
 const STATUS = computed(() => ({ role: "status", "aria-live": "polite", "aria-atomic": "true" }))
 const holds = (label: string, query: string) => label.toLowerCase().includes(query.toLowerCase())
@@ -402,8 +433,8 @@ const SEPARATOR: Part = {
  * A text input with a list under it: what is typed filters the list, and an item chosen from it
  * is the value. Focus stays in the input; the arrows move a highlight the input names.
  */
-export function createCombobox<Value = unknown>(
-  props: ReadonlySignal<ComboboxProps<Value>>,
+export function createCombobox<Value = unknown, Multiple extends boolean | undefined = false>(
+  shaped: ReadonlySignal<ComboboxProps<Value, Multiple>>,
   around: {
     field?: Field | undefined
     /**
@@ -420,6 +451,8 @@ export function createCombobox<Value = unknown>(
     completion?: (() => "list" | "inline" | "both") | undefined
   } & DirectionAround = {}
 ): Combobox<Value> {
+  // Read in either shape: whether it holds a list is known once it is made.
+  const props = shaped as unknown as ReadonlySignal<ComboboxProps<Value, boolean | undefined>>
   const { field, free } = around
   let member: FieldMembership | undefined
   const inline = Boolean(props.peek().inline)
@@ -450,10 +483,11 @@ export function createCombobox<Value = unknown>(
     defaultValue: props.peek().defaultOpen ?? false,
     onChange: (next, by) => props.peek().onOpenChange?.(next, by),
   })
+  const multiple = Boolean(props.peek().multiple)
   // `undefined` means "not controlled", so "none" is `null` on the way in and out.
   const value = bindable<Value | null>({
-    value: () => props.get().value,
-    defaultValue: props.peek().defaultValue ?? null,
+    value: () => (multiple ? undefined : (props.get().value as Value | null | undefined)),
+    defaultValue: multiple ? null : ((props.peek().defaultValue as Value | null) ?? null),
     onChange: (next, by) => props.peek().onValueChange?.(next, by),
   })
   const inputValue = bindable<string>({
@@ -462,11 +496,17 @@ export function createCombobox<Value = unknown>(
     onChange: (next, by) => props.peek().onInputValueChange?.(next, by),
   })
   const initialText = inputValue.peek()
-  const multiple = Boolean(props.peek().multiple)
+  // With `multiple`, Base UI's `value` holding the list first, then the older `values`.
+  const asList = (held: unknown) =>
+    multiple && Array.isArray(held) ? (held as readonly Value[]) : undefined
   const values = bindable<readonly Value[]>({
-    value: () => props.get().values,
-    defaultValue: props.peek().defaultValues ?? NONE,
-    onChange: (next, by) => props.peek().onValuesChange?.([...next], by),
+    value: () => asList(props.get().value) ?? props.get().values,
+    defaultValue: asList(props.peek().defaultValue) ?? props.peek().defaultValues ?? NONE,
+    onChange(next, by) {
+      const { onValueChange, onValuesChange } = props.peek()
+      if (onValueChange) onValueChange([...next], by)
+      else onValuesChange?.([...next], by)
+    },
     equals: (a, b) => a.length === b.length && a.every((each, at) => Object.is(each, b[at])),
   })
   /** What a field is told the control holds: something, or nothing. */
@@ -591,6 +631,26 @@ export function createCombobox<Value = unknown>(
     return true
   })
   const placement = createPlacement({ align: "start" })
+  // Whether the positioner is in the page: the input and the trigger say the list's side only then.
+  const positioned = signal(false)
+  /** The side of what opened it the list is on: none, as a sheet. */
+  const side = () =>
+    layer.mounted.get() && positioned.get() && !sheet.on.get()
+      ? placement.position.side.get()
+      : undefined
+  // Whether there is anything to clear, as Base UI's clear button says it: what was typed, for
+  // one that holds text alone; else what is chosen.
+  const clearVisible = computed(() =>
+    free ? inputValue.get() !== "" : multiple ? values.get().length > 0 : value.get() !== null
+  )
+  const clearPresence = createPresence(clearVisible)
+  /** What the input and the trigger say beside what each says of its own. */
+  const opener = () => ({
+    "data-pressed": flag(open.get()),
+    "data-popup-side": side(),
+    "data-required": flag(props.get().required),
+    "data-list-empty": flag(empty.get()),
+  })
 
   let input: HTMLInputElement | undefined
   // Inline completion: what was typed, and what the input shows for it, an item's label after
@@ -903,9 +963,7 @@ export function createCombobox<Value = unknown>(
     inputValue,
     empty,
     named: computed(() => name.get() !== undefined),
-    clearable: computed(
-      () => value.get() !== null || values.get().length > 0 || inputValue.get() !== ""
-    ),
+    clearable: clearPresence.mounted,
     values,
     multiple,
     shown: showing,
@@ -939,6 +997,7 @@ export function createCombobox<Value = unknown>(
         props: computed(() => ({
           // Reached by the arrows from the input, as the tags of a tags input are.
           tabindex: disabled.get() ? undefined : "-1",
+          "data-disabled": flag(disabled.get()),
           onKeyDown(event: KeyboardEvent) {
             // Its own keys only: not those of a button inside it.
             if (event.target !== event.currentTarget || disabled.peek()) return
@@ -1014,10 +1073,12 @@ export function createCombobox<Value = unknown>(
     setValue,
     positioning: placement.positioning,
     mount() {
-      if (inline) return NOTHING
+      const cleared = clearPresence.start()
+      if (inline) return cleared
       // An input in the popup has focus while the popup is open, and the button after.
       let within = false
       const stops = [
+        cleared,
         layer.start(),
         effect(() => {
           const on = open.get() && inside.get()
@@ -1072,6 +1133,7 @@ export function createCombobox<Value = unknown>(
         "aria-required": props.get().required ? "true" : undefined,
         ...field?.aria(),
         ...field?.state(),
+        ...opener(),
         "data-disabled": flag(disabled.get()),
         "data-readonly": flag(readOnly.get()),
         onFocus: () => member?.focused(true),
@@ -1254,6 +1316,8 @@ export function createCombobox<Value = unknown>(
           "aria-controls": layer.mounted.get() ? popupId : undefined,
           // Said by the combobox: beside an input, that is the input.
           "aria-readonly": own && readOnly.get() ? "true" : undefined,
+          ...field?.state(),
+          ...opener(),
           "data-popup-open": flag(open.get()),
           disabled: flag(disabled.get()),
           "data-disabled": flag(disabled.get()),
@@ -1288,6 +1352,10 @@ export function createCombobox<Value = unknown>(
         tabindex: "-1",
         disabled: flag(disabled.get()),
         "data-disabled": flag(disabled.get()),
+        "data-popup-open": flag(open.get()),
+        "data-visible": flag(clearVisible.get()),
+        "data-starting-style": flag(clearPresence.status.get() === "starting"),
+        "data-ending-style": flag(clearPresence.status.get() === "ending"),
         // Focus stays in the input.
         onMouseDown: (event: Event) => event.preventDefault(),
         onClick(event: Event) {
@@ -1298,21 +1366,29 @@ export function createCombobox<Value = unknown>(
           input?.focus({ preventScroll: true })
         },
       })),
-      attach: () => NOTHING,
+      attach: (element) => clearPresence.attach(element),
     },
     positioner: {
       props: computed(() => {
-        const own = { ...layer.positioner.props.get(), ...sheet.state() }
+        const own = {
+          ...layer.positioner.props.get(),
+          ...sheet.state(),
+          "data-empty": flag(empty.get()),
+        }
         // A sheet is on no side of what opened it.
         return sheet.on.get() ? { ...own, "data-side": undefined, "data-align": undefined } : own
       }),
       attach(element) {
         positioner = element
+        positioned.set(true)
         sort()
         const detach = sheet.positioner(element, (each) => layer.positioner.attach(each))
         return () => {
           detach()
-          if (positioner === element) positioner = undefined
+          if (positioner === element) {
+            positioner = undefined
+            positioned.set(false)
+          }
           sort()
         }
       },
@@ -1327,7 +1403,11 @@ export function createCombobox<Value = unknown>(
         // Always in the page, it is neither open nor closed, and is placed by the page.
         ...(inline
           ? {}
-          : { ...layer.state(), ...(sheet.on.get() ? {} : layer.placed()), ...sheet.state() }),
+          : {
+              ...layer.state(),
+              ...(sheet.on.get() ? {} : { ...layer.placed(), ...layer.hidden() }),
+              ...sheet.state(),
+            }),
         "data-empty": flag(empty.get()),
         // As a sheet, it is dragged down to close it.
         onPointerDown: sheet.on.get() ? sheet.swipe.press : undefined,
@@ -1432,7 +1512,7 @@ export function createCombobox<Value = unknown>(
         }))
       },
     },
-    itemIndicator: () => ({ props: INDICATOR, attach: () => NOTHING }),
+    itemIndicator: (item) => presentPart(chosen(item), () => ({ "aria-hidden": "true" })),
     backdrop: {
       props: computed(() => ({ role: "presentation", ...layer.state(), ...sheet.state() })),
       attach(element) {

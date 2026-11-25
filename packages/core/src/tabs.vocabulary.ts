@@ -33,6 +33,7 @@ export const tabsVocabulary = defineComponent({
       active: state("data-active", "Present on the tab whose panel is shown."),
       disabled: DISABLED,
       orientation: ORIENTATION,
+      activationDirection: DIRECTION,
     },
   },
   indicator: {
@@ -54,6 +55,11 @@ export const tabsVocabulary = defineComponent({
     description: "A tab's content. In the page while its tab is active, and through its exit.",
     states: {
       hidden: state("data-hidden", "Present while its tab is not the active one."),
+      // Its place, as a number: any value.
+      index: state(
+        "data-index",
+        "The panel's place among the panels in the page, from 0, once it is in the page."
+      ),
       orientation: ORIENTATION,
       activationDirection: DIRECTION,
       startingStyle: TRANSITION.startingStyle,

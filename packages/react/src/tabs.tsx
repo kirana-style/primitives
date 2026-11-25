@@ -61,10 +61,10 @@ function Root<Value = unknown>({
 
 export type ListProps = PartComponentProps<"div", StateOf<Parts["list"]>, TabsListOptions>
 
-function List({ activateOnFocus, loop, ...props }: ListProps): ReactElement {
+function List({ activateOnFocus, loop, loopFocus, ...props }: ListProps): ReactElement {
   const controller = useTabs("List")
   // Read when a key is pressed, so written while rendering: nothing re-renders for it.
-  controller.listOptions.set(defined({ activateOnFocus, loop }))
+  controller.listOptions.set(defined({ activateOnFocus, loop, loopFocus }))
   return usePart(controller.list, "div", props)
 }
 

@@ -75,9 +75,10 @@ function Image({
   told.current = onLoadingStatusChange
   const [report] = useState(() => controller.statusReport(() => told.current))
   useMount(report)
-  const status = useSignal(controller.status)
+  const mounted = useSignal(controller.imageMounted)
   if (keepMounted) return <PartElement of={controller.keptImage} tag="img" src={src} {...props} />
-  if (status !== "loaded") return null
+  // From when it has loaded, and through its exit.
+  if (!mounted) return null
   return <PartElement of={controller.image} tag="img" {...props} />
 }
 

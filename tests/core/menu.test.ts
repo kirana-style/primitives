@@ -185,6 +185,16 @@ describe("a menu", () => {
     expect(focused()).toBe("save")
   })
 
+  it("is told so by Base UI's `loopFocus` too, which wins over `loop`", async () => {
+    const root = mount(PAGE)
+    file(root, { loopFocus: false, loop: true })
+    find(root, "m-trigger").focus()
+    await press("ArrowUp")
+    await settled()
+    await press("ArrowDown")
+    expect(focused()).toBe("save")
+  })
+
   it("an item's press is a click its caller hears, closes the menu and gives focus back", async () => {
     const root = mount(PAGE)
     const { pressed, reasons, popup } = file(root)
@@ -1003,6 +1013,156 @@ describe("a menubar", () => {
     await press("ArrowLeft")
     await settled()
     expect(focused()).toBe("three-a")
+  })
+})
+
+describe("a menu, in Base UI's words", () => {
+  it("says its trigger is pressed while it is open, and why its motion should be skipped", async () => {
+    const root = mount(PAGE)
+    const { made, popup } = file(root)
+    const trigger = find(root, "m-trigger")
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+    // A pointer's press: the usual motion.
+    await userEvent.click(trigger)
+    await settled()
+    expect(trigger.hasAttribute("data-pressed")).toBe(true)
+    expect(popup()!.hasAttribute("data-instant")).toBe(false)
+    await press("Escape")
+    expect(made.open.peek()).toBe(false)
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+    // Closed by Escape: the popup on its way out says so, if it is still in the page.
+    const leaving = popup()
+    if (leaving) expect(leaving.getAttribute("data-instant")).toBe("dismiss")
+    // Opened from the keyboard: a click with no pointer behind it.
+    trigger.focus()
+    await press("Enter")
+    await settled()
+    expect(popup()!.getAttribute("data-instant")).toBe("click")
+  })
+
+  it("says a context menu's area is pressed while the menu is open", async () => {
+    const root = mount(`<div id="area" style="width: 300px; height: 200px">Area</div>`)
+    const area = find(root, "area")
+    const { made } = menu(
+      root,
+      area,
+      "c",
+      (own) => (add) => void add("copy", own.item(), "Copy"),
+      {},
+      { context: true }
+    )
+    expect(area.hasAttribute("data-pressed")).toBe(false)
+    area.dispatchEvent(
+      new MouseEvent("contextmenu", { clientX: 40, clientY: 30, bubbles: true, cancelable: true })
+    )
+    await settled()
+    expect(made.open.peek()).toBe(true)
+    expect(area.hasAttribute("data-pressed")).toBe(true)
+  })
+
+  it("writes its size on its positioner, and says there whether its trigger is in view", async () => {
+    const root = mount(PAGE)
+    const { popup } = file(root)
+    await userEvent.click(find(root, "m-trigger"))
+    await settled()
+    const positioner = popup()!.parentElement!
+    const drawn = getComputedStyle(popup()!)
+    expect(positioner.style.getPropertyValue("--positioner-width")).toBe(drawn.width)
+    expect(positioner.style.getPropertyValue("--positioner-height")).toBe(drawn.height)
+    expect(positioner.hasAttribute("data-anchor-hidden")).toBe(false)
+  })
+
+  it("draws a check mark while its item is checked and through its exit, and says when it is disabled", async () => {
+    const root = mount(
+      `<div id="item">Wrap</div><span id="mark"></span><div id="r-off">Off</div><span id="r-mark"></span>`
+    )
+    // An exit that takes a moment, to be seen.
+    style(`#mark { transition: opacity 100ms } #mark[data-ending-style] { opacity: 0 }`)
+    const made = createMenu(signal<MenuProps>({ id: "m" }))
+    const checkbox = made.checkboxItem(signal({ defaultChecked: true }))
+    const group = made.radioGroup(signal({ defaultValue: "off" }))
+    const item = find(root, "item")
+    const mark = find(root, "mark")
+    const off = find(root, "r-off")
+    const offMark = find(root, "r-mark")
+    const stops = [
+      bind(item, checkbox.part),
+      bind(mark, checkbox.indicator),
+      checkbox.indicator.mount(),
+      bind(
+        off,
+        group.item("off", () => ({ disabled: true }))
+      ),
+    ]
+    const radioMark = group.indicator("off")
+    stops.push(bind(offMark, radioMark), radioMark.mount())
+    onTestFinished(() => {
+      for (const stop of stops.reverse()) stop()
+    })
+    expect(checkbox.indicator.mounted.peek()).toBe(true)
+    expect(mark.hasAttribute("data-checked")).toBe(true)
+    expect(mark.hasAttribute("data-disabled")).toBe(false)
+    expect(offMark.hasAttribute("data-disabled")).toBe(true)
+    // Unchecked, it says it is leaving, and has left once it has no motion to wait for.
+    item.click()
+    expect(mark.hasAttribute("data-ending-style")).toBe(true)
+    await expect.poll(() => checkbox.indicator.mounted.peek()).toBe(false)
+    // Taken out, as an adapter does, and checked again: drawn anew, from its starting style.
+    stops[1]!()
+    item.click()
+    expect(checkbox.indicator.mounted.peek()).toBe(true)
+    expect(checkbox.indicator.props.peek()["data-starting-style"]).toBe("")
+  })
+})
+
+describe("a menubar, in Base UI's words", () => {
+  const BAR = `<div id="bar"><button id="one">File</button><button id="two">Edit</button></div><button id="away" style="margin-top: 300px">Away</button>`
+
+  function bar(root: HTMLElement, modal?: boolean) {
+    const made = createMenubar(signal({ id: "bar", modal }))
+    onTestFinished(bind(find(root, "bar"), made.root))
+    const menus: Record<string, Drawn> = {}
+    for (const id of ["one", "two"]) {
+      menus[id] = menu(
+        root,
+        find(root, id),
+        id,
+        (own) => (add) => void add(`${id}-a`, own.item(), "Alpha"),
+        {},
+        { menubar: made }
+      )
+    }
+    return menus
+  }
+
+  it("says while one of its menus is open, and that going across is one motion", async () => {
+    const root = mount(BAR)
+    const menus = bar(root)
+    const strip = find(root, "bar")
+    expect(strip.hasAttribute("data-has-submenu-open")).toBe(false)
+    expect(strip.hasAttribute("data-modal")).toBe(false)
+    find(root, "one-trigger").focus()
+    await press("ArrowDown")
+    await settled()
+    expect(strip.hasAttribute("data-has-submenu-open")).toBe(true)
+    await press("ArrowRight")
+    await settled()
+    expect(menus.two!.made.open.peek()).toBe(true)
+    expect(strip.hasAttribute("data-has-submenu-open")).toBe(true)
+    expect(menus.two!.popup()!.getAttribute("data-instant")).toBe("group")
+    await press("Escape")
+    expect(strip.hasAttribute("data-has-submenu-open")).toBe(false)
+  })
+
+  it("holds the page while one of its menus is open when it is modal", async () => {
+    const root = mount(BAR)
+    bar(root, true)
+    expect(find(root, "bar").hasAttribute("data-modal")).toBe(true)
+    await userEvent.click(find(root, "one-trigger"))
+    await settled()
+    expect(getComputedStyle(document.documentElement).overflow).toBe("hidden")
+    await userEvent.click(find(root, "away"))
+    await expect.poll(() => getComputedStyle(document.documentElement).overflow).not.toBe("hidden")
   })
 })
 

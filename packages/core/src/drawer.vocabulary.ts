@@ -3,6 +3,7 @@ import { defineComponent } from "./part.ts"
 import { state, valued } from "./states.ts"
 
 const SWIPING = state("data-swiping", "Present while the drawer is dragged.")
+const SWIPE_DISMISS = state("data-swipe-dismiss", "Present once a drag has closed it.")
 const MOVED = {
   "--drawer-swipe-movement-x": "How far it has been dragged across.",
   "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
@@ -19,8 +20,17 @@ export const drawerVocabulary = defineComponent({
   ...shared,
   backdrop: {
     ...dialogVocabulary.backdrop,
-    states: { ...dialogVocabulary.backdrop.states, swiping: SWIPING },
-    variables: MOVED,
+    states: {
+      ...dialogVocabulary.backdrop.states,
+      swiping: SWIPING,
+      swipeDismiss: state("data-swipe-dismiss", "Present once a drag has closed the drawer."),
+    },
+    variables: {
+      ...MOVED,
+      "--drawer-swipe-strength":
+        "Always 1: the backdrop takes the design's own time to leave, however the drawer was thrown.",
+      "--drawer-height": "While the drawer is dragged: the height of the drawer in front.",
+    },
   },
   popup: {
     ...dialogVocabulary.popup,
@@ -35,7 +45,7 @@ export const drawerVocabulary = defineComponent({
         ["up", "down", "left", "right"],
         "The way it is dragged to close it."
       ),
-      swipeDismiss: state("data-swipe-dismiss", "Present once a drag has closed it."),
+      swipeDismiss: SWIPE_DISMISS,
       expanded: state("data-expanded", "Present while it rests whole, of several snap points."),
       nestedDrawerOpen: state(
         "data-nested-drawer-open",

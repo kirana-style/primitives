@@ -72,3 +72,45 @@ export const CONTROL = {
 }
 
 export const EITHER_CHECKED = [["checked", "unchecked"]] as const
+
+/**
+ * The state of the Field a control is in, which every part of the control carries: what the
+ * field itself says, at the same moment. Absent on a control that is in no Field.
+ */
+export const FIELD = {
+  touched: state("data-touched", "Inside a Field: present once focus has left the control."),
+  dirty: state(
+    "data-dirty",
+    "Inside a Field: present while the value is not the one it started with."
+  ),
+  filled: state("data-filled", "Inside a Field: present while the control has a value."),
+  focused: state("data-focused", "Inside a Field: present while the control has focus."),
+  valid: state(
+    "data-valid",
+    "Inside a Field: present once the value has been checked and found right."
+  ),
+  invalid: state("data-invalid", "Inside a Field: present while the value is wrong."),
+}
+
+/** A value is never found right and wrong at once. */
+export const EITHER_VALID = [["valid", "invalid"]] as const
+
+/** What a placed popup's positioner says of its anchor. */
+export const ANCHOR_HIDDEN = state(
+  "data-anchor-hidden",
+  "Present while the anchor is out of view: scrolled away, or clipped by a box around it."
+)
+
+/** The size of a popup whose content changes while it is open, written on its positioner. */
+export const POSITIONER_SIZE = {
+  "--positioner-width":
+    "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+  "--positioner-height":
+    "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.",
+}
+
+/** A trigger that stays pressed while what it opened is open, as Base UI's do. */
+export const PRESSED = state(
+  "data-pressed",
+  "Present while its popup is open: it stays pressed, as a button held down."
+)

@@ -1,12 +1,16 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
   CONTROL,
   DISABLED,
   EITHER_FRAME,
   EITHER_OPEN,
+  EITHER_VALID,
+  FIELD,
   OPEN,
   PLACEMENT,
+  PRESSED,
   TRANSITION,
   state,
   valued,
@@ -27,6 +31,16 @@ const SCROLL_ARROW = (direction: string) => ({
   },
   exclusive: [["startingStyle", "endingStyle"]],
 })
+
+/** The sides a list is on, `none` among them: over its trigger. */
+const SIDES = ["top", "right", "bottom", "left", "inline-start", "inline-end", "none"] as const
+
+/** What a select's or a combobox's trigger says of the list it opened: the side it is on. */
+export const POPUP_SIDE = valued(
+  "data-popup-side",
+  SIDES,
+  "While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet."
+)
 
 /** What a list that may open as a sheet says on its positioner, its popup and its backdrop. */
 export const PRESENTATION = valued(
@@ -59,10 +73,15 @@ export const selectVocabulary = defineComponent({
     description: "The button that shows the value and opens the list.",
     states: {
       popupOpen: state("data-popup-open", "Present when the list is open."),
+      pressed: PRESSED,
+      popupSide: POPUP_SIDE,
       placeholder: state("data-placeholder", "Present while nothing is chosen."),
       disabled: DISABLED,
       readonly: CONTROL.readonly,
+      required: CONTROL.required,
+      ...FIELD,
     },
+    exclusive: EITHER_VALID,
   },
   value: {
     inside: "trigger",
@@ -93,9 +112,10 @@ export const selectVocabulary = defineComponent({
       presentation: PRESENTATION,
       side: valued(
         "data-side",
-        ["top", "right", "bottom", "left", "inline-start", "inline-end", "none"],
+        SIDES,
         "The side of the trigger it is on, after any flip; `none` when it lies over the trigger."
       ),
+      anchorHidden: ANCHOR_HIDDEN,
     },
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
@@ -123,7 +143,16 @@ export const selectVocabulary = defineComponent({
     inside: "positioner",
     description:
       "The list of items. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.",
-    states: { ...TRANSITION, ...PLACEMENT, ...SHEET_STATES },
+    states: {
+      ...TRANSITION,
+      ...PLACEMENT,
+      side: valued(
+        "data-side",
+        SIDES,
+        "The side of the trigger it is on, after any flip; `none` when it lies over the trigger."
+      ),
+      ...SHEET_STATES,
+    },
     exclusive: EITHER_FRAME,
     variables: {
       ...SHEET_VARIABLES,

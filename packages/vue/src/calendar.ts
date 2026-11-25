@@ -227,13 +227,19 @@ export interface CellProps extends PartComponentProps {
   /** The day it is for, as a week of `Calendar.Weeks` gives it. */
   date: string
 }
-export type DayProps = CellProps
+export interface DayProps extends PartComponentProps {
+  /** The day it is the button of. Left out, the `Calendar.Cell`'s it is inside. */
+  date?: string | undefined
+}
 export type PreviousProps = PartComponentProps
 export type NextProps = PartComponentProps
 export type GridProps = PartComponentProps
 export type InputProps = PartComponentProps
 
-const dated = <Tag extends string, Member extends "cell" | "day">(
+// The day a cell holds, for the day button inside it.
+const CELL: InjectionKey<string> = Symbol("CalendarCell")
+
+const dated = <Tag extends string, Member extends "cell" | "day", Props>(
   name: string,
   tag: Tag,
   member: Member
@@ -241,13 +247,16 @@ const dated = <Tag extends string, Member extends "cell" | "day">(
   defineComponent({
     name,
     inheritAttrs: false,
-    props: { date: { type: String, required: true } },
+    props: { date: { type: String, required: member === "cell" } },
     setup(props, { attrs, slots }) {
-      const part = scope.use()[member](props.date, inject(MONTH, undefined))
+      const date = props.date ?? inject(CELL, undefined)
+      if (date === undefined) throw new Error(`<${name}> needs a date or a Calendar.Cell around it`)
+      if (member === "cell") provide(CELL, date)
+      const part = scope.use()[member](date, inject(MONTH, undefined))
       const Element = partComponent<string>(`${name}Element`, tag, () => part)
       return () => h(Element, attrs, slots)
     },
-  }) as unknown as PartComponent<Tag, State[Member], CellProps>
+  }) as unknown as PartComponent<Tag, State[Member], Props>
 
 export const Calendar = {
   Root,
@@ -263,8 +272,8 @@ export const Calendar = {
   Weekdays,
   HeadCell,
   Weeks,
-  Cell: dated("CalendarCell", "td", "cell"),
-  Day: dated("CalendarDay", "button", "day"),
+  Cell: dated<"td", "cell", CellProps>("CalendarCell", "td", "cell"),
+  Day: dated<"button", "day", DayProps>("CalendarDay", "button", "day"),
   /** The hidden input the value is submitted by, when the root has a `name`. */
   Input: partComponent<"input", State["input"]>("CalendarInput", "input", () => scope.use().input),
 }

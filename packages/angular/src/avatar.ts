@@ -1,6 +1,6 @@
 import { Directive, TemplateRef, effect, inject, input, output, untracked } from "@angular/core"
 import type { OnInit } from "@angular/core"
-import { computed, signal } from "@kirana-ui/core"
+import { signal } from "@kirana-ui/core"
 import { createAvatar } from "@kirana-ui/core/avatar"
 import type { Avatar, ImageStatus } from "@kirana-ui/core/avatar"
 
@@ -65,10 +65,7 @@ export class KpAvatarImage implements OnInit {
     const { controller } = this.root
     if (this.host) return this.host(controller.keptImage)
     controller.source.set(this.kpAvatarImage())
-    this.present?.(
-      computed(() => controller.status.get() === "loaded"),
-      controller.image
-    )
+    this.present?.(controller.imageMounted, controller.image)
   }
 }
 

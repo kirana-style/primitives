@@ -238,7 +238,7 @@
   let rests = $state("0.5")
   let said = $state(8)
   // A page's toasts are made once: a long time, so a test reads them.
-  const toaster = createToaster({ duration: 600_000 })
+  const toaster = createToaster({ timeout: 600_000 })
   let first = $state(0)
   let ran = $state<unknown>("none")
   let tags = $state<readonly unknown[] | undefined>(["New"])
@@ -818,7 +818,7 @@
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>
-    <Select.Root id="sm3" items={SIZES} multiple defaultValues={["l", "s"]}>
+    <Select.Root id="sm3" items={SIZES} multiple defaultValue={["l", "s"]}>
       <Select.Trigger data-testid="sm3-trigger">
         <Select.Value class="bar" data-testid="sm3-value">
           {#snippet children({ values, labels })}
@@ -1163,9 +1163,9 @@
       </Toggle>
     </ToggleGroup>
     <output data-testid="tg1-output">{(align as string[]).join(",")}</output>
-    <Toolbar.Root aria-label="Editing" class="bar" data-testid="tb1">
+    <Toolbar.Root aria-label="Editing" loopFocus class="bar" data-testid="tb1">
       <Toolbar.Button data-testid="tb1-save">Save</Toolbar.Button>
-      <Toolbar.Button disabled data-testid="tb1-gone">
+      <Toolbar.Button disabled focusableWhenDisabled={false} data-testid="tb1-gone">
         Gone
       </Toolbar.Button>
       <Toolbar.Link href="#tb1-help" data-testid="tb1-link">
@@ -1355,7 +1355,7 @@
         name="tags"
         multiple
         autoHighlight
-        bind:values={tags}
+        bind:value={tags}
       >
         <Combobox.Chips class="bar" data-testid="cbm-chips">
           {#each tags as string[] as each (each)}
@@ -1402,7 +1402,7 @@
         name="code"
         class="otp"
         data-testid="otp1"
-        onComplete={(next: string) => (code = next)}
+        onValueComplete={(next: string) => (code = next)}
       >
         <Otp.Input aria-label="Code" class="otp-input" data-testid="otp1-input" />
         <Otp.Group class="otp-group">
@@ -1426,7 +1426,7 @@
     </form>
     <output data-testid="otp1-output">{code}</output>
     <div class="otp-row">
-      <Otp.Root id="otp2" length={2} mode="alphabetic" class="otp" data-testid="otp2">
+      <Otp.Root id="otp2" length={2} validationType="alpha" class="otp" data-testid="otp2">
         <Otp.Input aria-label="Letters" class="otp-input" data-testid="otp2-input" />
         <Otp.Group class="otp-group">
           <Otp.Slot index={0} class="otp-slot" data-testid="otp2-0" />
@@ -1474,7 +1474,7 @@
     >
       <Carousel.Viewport class="carousel-view" data-testid="cr1-view">
         <Carousel.Item index={0} class="carousel-item" data-testid="cr1-0">One</Carousel.Item>
-        <Carousel.Item index={1} class="carousel-item" data-testid="cr1-1">Two</Carousel.Item>
+        <Carousel.Item class="carousel-item" data-testid="cr1-1">Two</Carousel.Item>
         <Carousel.Item index={2} class="carousel-item" data-testid="cr1-2">Three</Carousel.Item>
       </Carousel.Viewport>
       <Carousel.Previous data-testid="cr1-previous">Previous</Carousel.Previous>
@@ -1611,7 +1611,7 @@
               <tr>
                 {#each week as day (day.date)}
                   <Calendar.Cell date={day.date}>
-                    <Calendar.Day date={day.date} data-testid={`cal1-${day.date}`}>
+                    <Calendar.Day data-testid={`cal1-${day.date}`}>
                       {day.label}
                     </Calendar.Day>
                   </Calendar.Cell>
@@ -2640,7 +2640,7 @@
         </Rating.Root>
         <output form="" data-testid="rt1-output">{stars}</output>
       </div>
-      <Steps.Root id="st1" count={3} linear class="steps" data-testid="st1" onStepChange={(next: number) => (stepped = String(next))}>
+      <Steps.Root id="st1" linear class="steps" data-testid="st1" onStepChange={(next: number) => (stepped = String(next))}>
         <Steps.List class="item" aria-label="Sign up" data-testid="st1-list">
           {#each STEPS as each, index (each)}
             <Steps.Item {index} class="item" data-testid={`st1-item-${index}`}>

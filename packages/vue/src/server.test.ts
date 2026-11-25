@@ -395,13 +395,15 @@ describe("a part that keeps a native input in its element", () => {
         h(Otp.Slot, { index: 0, ...given }, content)
       )
     expect(await html(() => cell({}, () => h("i")))).toBe(
-      '<div><div data-index="0" data-filled>7<!--[--><i></i><!--]--></div></div>'
+      '<div data-filled><div data-index="0" data-filled>7<!--[--><i></i><!--]--></div></div>'
     )
     const out = await html(() => cell({ asChild: true }, () => h("b", { class: "mine" }, "x")))
-    expect(uncommented(out)).toBe('<div><b class="mine" data-index="0" data-filled>7x</b></div>')
+    expect(uncommented(out)).toBe(
+      '<div data-filled><b class="mine" data-index="0" data-filled>7x</b></div>'
+    )
     const boxed = await html(() => cell({ asChild: true }, () => h(Box, null, () => "x")))
     expect(uncommented(boxed)).toBe(
-      '<div><label class="box" data-index="0" data-filled>7x</label></div>'
+      '<div data-filled><label class="box" data-index="0" data-filled>7x</label></div>'
     )
   })
 })

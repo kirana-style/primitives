@@ -9,8 +9,8 @@ import type { Drawn, ElementOf } from "./runtime.ts"
 const toasters = new WeakMap<Element, Toaster>()
 
 /**
- * The toaster a `<kui-toast>` draws: its own (made with the element's `duration` and
- * `limit`), unless it was given one as its `toaster` property before it began.
+ * The toaster a `<kui-toast>` draws: its own (made with the element's `timeout`,
+ * `duration`, its old name, and `limit`), unless it was given one as its `toaster` property before it began.
  * `toasterOf(element).add({ title: "Saved" })`.
  */
 export function toasterOf(element: Element): Toaster {
@@ -18,7 +18,10 @@ export function toasterOf(element: Element): Toaster {
   if (!toaster) {
     const number = (name: string) =>
       element.hasAttribute(name) ? { [name]: Number(element.getAttribute(name)) } : {}
-    toasters.set(element, (toaster = createToaster({ ...number("duration"), ...number("limit") })))
+    toasters.set(
+      element,
+      (toaster = createToaster({ ...number("timeout"), ...number("duration"), ...number("limit") }))
+    )
   }
   return toaster
 }
@@ -51,12 +54,17 @@ const said =
  * `description`, and a `close` and an `action` button. A `title`, a `description` and an
  * `action` written empty say what the toast was added with, and are in the page only for a
  * toast that has one; one written with something in it (`{title}`) is always there. `label`,
- * `hotkey`, `swipe-direction`; `duration` and `limit` for the toaster it makes, or `toaster`
+ * `hotkey`, `swipe-direction`; `timeout` (`duration`, its old name) and `limit` for the toaster it makes, or `toaster`
  * as a property for one of the page's own. A title, a description and an action's label are
  * strings.
  */
 export const tag = defineElement<
-  Omit<ToastProps, "toaster"> & { toaster?: Toaster; duration?: number; limit?: number },
+  Omit<ToastProps, "toaster"> & {
+    toaster?: Toaster
+    timeout?: number
+    duration?: number
+    limit?: number
+  },
   Toast
 >({
   tag: "kui-toast",
@@ -64,6 +72,7 @@ export const tag = defineElement<
     label: "string",
     hotkey: "string",
     "swipe-direction": "string",
+    timeout: "number",
     duration: "number",
     limit: "number",
   },
@@ -74,7 +83,7 @@ export const tag = defineElement<
     const toaster = toasterOf(host)
     return createToast(
       computed(() => {
-        const { duration: _duration, limit: _limit, ...own } = props.get()
+        const { timeout: _timeout, duration: _duration, limit: _limit, ...own } = props.get()
         return { ...own, toaster }
       })
     )

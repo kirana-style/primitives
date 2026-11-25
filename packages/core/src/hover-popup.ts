@@ -4,6 +4,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createHover } from "./services/hover.ts"
+import { popupSize } from "./services/popup-size.ts"
 import { createPopup } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
@@ -78,6 +79,7 @@ export function createHoverPopup(
     // Escape only: a press outside is not this popup's business, and focus stays where it is.
     outsidePress: () => false,
     placement,
+    size: popupSize(),
   })
   const hover = createHover({
     open,
@@ -110,6 +112,8 @@ export function createHoverPopup(
         // A tooltip is the trigger's description while it shows, and only then.
         "aria-describedby": kind.describes && popup.mounted.get() ? popupId : undefined,
         "data-popup-open": flag(open.get()),
+        // A tooltip says its trigger opens nothing: Base UI's name, which the hover card has not.
+        "data-trigger-disabled": kind.describes ? flag(props.get().disabled) : undefined,
         ...hover.handlers(),
       })),
       attach: (given) => popup.attachTrigger(given),
@@ -132,6 +136,15 @@ export function createHoverPopup(
         }
       },
     },
-    arrow: popup.arrow,
+    // A tooltip's arrow skips the motion when its popup does.
+    arrow: kind.describes
+      ? {
+          props: computed(() => ({
+            ...popup.arrow.props.get(),
+            "data-instant": hover.instant.get(),
+          })),
+          attach: popup.arrow.attach,
+        }
+      : popup.arrow,
   }
 }

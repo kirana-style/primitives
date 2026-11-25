@@ -28,6 +28,11 @@ export interface ToggleGroupProps<Value = unknown> {
    */
   orientation?: Orientation | undefined
   /** Whether the arrows go round from the last toggle to the first. Default: they do. */
+  loopFocus?: boolean | undefined
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   loop?: boolean | undefined
 }
 
@@ -88,7 +93,7 @@ export function createToggleGroup<Value = unknown>(
           if (around.toolbar) return
           stop.roving.move(event, {
             orientation: orientation.peek(),
-            loop: props.peek().loop ?? true,
+            loop: props.peek().loopFocus ?? props.peek().loop ?? true,
             direction: around.direction,
           })
         },

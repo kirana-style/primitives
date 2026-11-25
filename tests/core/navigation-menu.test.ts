@@ -300,3 +300,85 @@ describe("a navigation menu", () => {
     expect(item.mounted.peek()).toBe(false)
   })
 })
+
+describe("a navigation menu, in Base UI's words", () => {
+  it("says it is open on its root and its list, and its trigger pressed while its content shows", async () => {
+    const { root } = navigation()
+    const nav = find(root, "nav")
+    const list = find(root, "list")
+    const trigger = find(root, "t-products")
+    expect(nav.hasAttribute("data-open")).toBe(false)
+    expect(nav.hasAttribute("data-nested")).toBe(false)
+    trigger.click()
+    await settled()
+    expect(nav.hasAttribute("data-open")).toBe(true)
+    expect(list.hasAttribute("data-open")).toBe(true)
+    expect(trigger.hasAttribute("data-pressed")).toBe(true)
+    trigger.click()
+    expect(nav.hasAttribute("data-open")).toBe(false)
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+  })
+
+  it("moves its positioner at once as it is first drawn, and lets it move a moment later", async () => {
+    const { root } = navigation()
+    const instants: boolean[] = []
+    find(root, "t-products").click()
+    const positioner = find(root, "popup").parentElement!
+    instants.push(positioner.hasAttribute("data-instant"))
+    await settled()
+    instants.push(positioner.hasAttribute("data-instant"))
+    expect(instants).toEqual([true, false])
+    expect(positioner.hasAttribute("data-anchor-hidden")).toBe(false)
+    expect(find(root, "popup").hasAttribute("data-anchor-hidden")).toBe(false)
+    // The window resized: at once again, for a moment.
+    window.dispatchEvent(new Event("resize"))
+    expect(positioner.hasAttribute("data-instant")).toBe(true)
+    await expect.poll(() => positioner.hasAttribute("data-instant")).toBe(false)
+  })
+
+  it("says the content came from above or below in a column", async () => {
+    const { root } = navigation({ orientation: "vertical" })
+    find(root, "t-products").click()
+    await settled()
+    find(root, "t-docs").click()
+    await settled()
+    const shown = () => root.querySelector<HTMLElement>("#viewport > [data-open]")!
+    expect(shown().getAttribute("data-activation-direction")).toBe("down")
+    find(root, "t-products").click()
+    await settled()
+    expect(shown().getAttribute("data-activation-direction")).toBe("up")
+  })
+
+  it("a disabled trigger says so and shows nothing, by a press or the pointer", async () => {
+    const root = mount(`<nav id="nav"><button id="t">Off</button></nav>`)
+    const made = createNavigationMenu(signal<NavigationMenuProps<string>>({ id: "n", delay: 0 }))
+    const item = made.item("off")
+    const trigger = find(root, "t")
+    onTestFinished(
+      bind(
+        trigger,
+        item.triggerPart(() => ({ disabled: true }))
+      )
+    )
+    onTestFinished(item.mount())
+    onTestFinished(made.mount())
+    expect(trigger.hasAttribute("data-disabled")).toBe(true)
+    expect((trigger as HTMLButtonElement).disabled).toBe(true)
+    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    trigger.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }))
+    await wait(20)
+    expect(made.value.peek()).toBe(null)
+  })
+
+  it("says a menu inside another's content is nested", () => {
+    const root = mount(`<nav id="outer"></nav><div id="inner"></div>`)
+    const outer = createNavigationMenu(signal<NavigationMenuProps<string>>({ id: "o" }))
+    const inner = createNavigationMenu(signal<NavigationMenuProps<string>>({ id: "i" }), {
+      parent: outer,
+    })
+    onTestFinished(bind(find(root, "outer"), outer.root))
+    onTestFinished(bind(find(root, "inner"), inner.root))
+    expect(find(root, "outer").hasAttribute("data-nested")).toBe(false)
+    expect(find(root, "inner").hasAttribute("data-nested")).toBe(true)
+  })
+})

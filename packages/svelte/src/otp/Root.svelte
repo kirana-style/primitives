@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createOtp } from "@kirana-ui/core/otp"
 
   import Part from "../Part.svelte"
+  import { useFieldAround } from "../field/context.ts"
   import { controller } from "../runtime.svelte.ts"
   import { provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
@@ -12,10 +14,14 @@
     value = $bindable(),
     defaultValue,
     onValueChange,
+    onValueComplete,
     onComplete,
+    validationType,
     mode,
     pattern,
     disabled,
+    readOnly,
+    required,
     name,
     form,
     id,
@@ -29,18 +35,22 @@
   }
 
   const made = provide(
-    controller(createOtp, () => ({
+    controller(within(createOtp, { field: useFieldAround() }), () => ({
       id: id ?? generated,
       length,
       value,
       defaultValue,
+      validationType,
       mode,
       pattern,
       disabled,
+      readOnly,
+      required,
       name,
       form,
       onValueChange: change,
-      onComplete: (code: string) => onComplete?.(code),
+      onValueComplete,
+      onComplete,
     }))
   )
 </script>

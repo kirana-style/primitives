@@ -2,8 +2,20 @@ import { computed, effect } from "@kirana-ui/core"
 import type { Part, PositionOptions, ReadonlySignal, Signal } from "@kirana-ui/core"
 import type { Field } from "@kirana-ui/core/field"
 
-import { controllerAround, ownerOf } from "./runtime.ts"
+import { controllerAround, ownerOf, partProps } from "./runtime.ts"
 import type { Drawn } from "./runtime.ts"
+
+/**
+ * A button that takes a `kui-disabled` of its own (a dialog's trigger or close, a navigation
+ * menu's trigger): its part made with options read from the element, and followed.
+ */
+export function ownDisabled(
+  element: HTMLElement,
+  make: (options: () => { disabled?: boolean | undefined }) => Part
+): Drawn {
+  const own = partProps<{ disabled?: boolean }>(element, { disabled: "boolean" }, {})
+  return { part: make(() => own.props.get()), mount: own.mount }
+}
 
 /** The field a control is in, if it is in one. */
 export const fieldAround = (host: HTMLElement): Field | undefined =>

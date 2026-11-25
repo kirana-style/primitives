@@ -69,6 +69,11 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
       open: optional(Boolean),
       defaultOpen: Boolean,
       disabled: Boolean,
+      loopFocus: optional(Boolean),
+      /**
+       * Whether the arrows wrap from the last item to the first.
+       * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+       */
       loop: optional(Boolean),
       modal: Boolean,
       id: String,
@@ -87,6 +92,7 @@ function root(name: string, kind: "menu" | "submenu" | "context") {
           defaultOpen: props.defaultOpen,
           disabled: props.disabled,
           loop: props.loop,
+          loopFocus: props.loopFocus,
           modal: props.modal,
           onOpenChange(open: boolean, details: ChangeDetails) {
             emit("openChange", open, details)
@@ -203,9 +209,14 @@ const CheckboxItemIndicator = defineComponent({
   props: { keepMounted: Boolean },
   setup(props, { attrs, slots }) {
     const item = inside(CHECKBOX, "CheckboxItem")
-    const checked = fromSignal(item.checked)
-    const Element = partComponent("MenuCheckboxItemIndicatorElement", "span", () => item.indicator)
-    return () => (checked.value || props.keepMounted ? h(Element, attrs, slots) : null)
+    // In the page while checked, and through its exit.
+    const indicator = controller(
+      () => item.indicator,
+      () => ({})
+    )
+    const mounted = fromSignal(indicator.mounted)
+    const Element = partComponent("MenuCheckboxItemIndicatorElement", "span", () => indicator)
+    return () => (mounted.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
 }) as unknown as PartComponent<"span", State["checkboxItemIndicator"], CheckboxItemIndicatorProps>
 
@@ -284,11 +295,14 @@ const RadioItemIndicator = defineComponent({
   setup(props, { attrs, slots }) {
     const group = inside(RADIO_GROUP, "RadioGroup")
     const value = inject(RADIO_ITEM)
-    const checked = fromSignal(group.checked(value))
-    const Element = partComponent("MenuRadioItemIndicatorElement", "span", () =>
-      group.indicator(value)
+    // In the page while chosen, and through its exit.
+    const indicator = controller(
+      () => group.indicator(value),
+      () => ({})
     )
-    return () => (checked.value || props.keepMounted ? h(Element, attrs, slots) : null)
+    const mounted = fromSignal(indicator.mounted)
+    const Element = partComponent("MenuRadioItemIndicatorElement", "span", () => indicator)
+    return () => (mounted.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
 }) as unknown as PartComponent<"span", State["radioItemIndicator"], RadioItemIndicatorProps>
 

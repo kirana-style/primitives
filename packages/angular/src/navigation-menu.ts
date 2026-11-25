@@ -20,6 +20,8 @@ export class KpNavigationMenu<Value = unknown> implements OnInit {
 
   controller!: NavigationMenu<Value>
   private readonly around = inject(KP_DIRECTION, { optional: true })
+  // Inside another's content, it is nested.
+  private readonly outer = inject(KpNavigationMenu, { optional: true, skipSelf: true })
   private readonly generated = inject(KpIds).make()
   private readonly put = hostPart()
   private readonly mount = mounted()
@@ -44,7 +46,10 @@ export class KpNavigationMenu<Value = unknown> implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = createNavigationMenu(this.props(), { direction: this.around?.direction })
+    this.controller = createNavigationMenu(this.props(), {
+      direction: this.around?.direction,
+      parent: this.outer?.controller,
+    })
     this.put(this.controller.root)
     this.mount(this.controller)
   }
@@ -88,11 +93,19 @@ function useItem(): () => NavigationMenuItem {
 
 @Directive({ selector: "[kpNavigationMenuTrigger]" })
 export class KpNavigationMenuTrigger implements OnInit {
+  /** The trigger cannot be pressed, and the pointer resting on it shows nothing. */
+  readonly disabled = input(false, { transform: booleanAttribute })
   private readonly item = useItem()
   private readonly put = hostPart()
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
-    this.put(this.item().trigger)
+    const options = this.options()
+    this.put(this.item().triggerPart(() => options.get()))
   }
 }
 

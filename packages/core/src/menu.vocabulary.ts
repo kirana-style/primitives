@@ -1,6 +1,7 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
   CHECKED,
   DISABLED,
   EITHER_CHECKED,
@@ -8,8 +9,11 @@ import {
   EITHER_OPEN,
   OPEN,
   PLACEMENT,
+  POSITIONER_SIZE,
+  PRESSED,
   TRANSITION,
   state,
+  valued,
 } from "./states.ts"
 
 const HIGHLIGHTED = state(
@@ -26,6 +30,7 @@ export const menuVocabulary = defineComponent({
     description: "The button that opens the menu, and what it is placed against.",
     states: {
       popupOpen: state("data-popup-open", "Present when the menu is open."),
+      pressed: PRESSED,
       disabled: DISABLED,
     },
   },
@@ -37,20 +42,30 @@ export const menuVocabulary = defineComponent({
   positioner: {
     inside: "portal",
     description: "Places the menu against its trigger. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT },
+    states: { ...OPEN, ...PLACEMENT, anchorHidden: ANCHOR_HIDDEN },
     exclusive: EITHER_OPEN,
-    variables: ANCHORED,
+    variables: { ...ANCHORED, ...POSITIONER_SIZE },
   },
   popup: {
     inside: "positioner",
     description: "The menu itself: the list of items.",
-    states: { ...TRANSITION, ...PLACEMENT },
+    states: {
+      ...TRANSITION,
+      ...PLACEMENT,
+      instant: valued(
+        "data-instant",
+        ["click", "dismiss", "group"],
+        "Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another."
+      ),
+    },
     exclusive: EITHER_FRAME,
   },
   arrow: {
     inside: "popup",
     description: "An element that points at the trigger.",
+    exclusive: EITHER_OPEN,
     states: {
+      ...OPEN,
       ...PLACEMENT,
       uncentered: state(
         "data-uncentered",

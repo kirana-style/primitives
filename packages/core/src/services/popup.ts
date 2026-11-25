@@ -4,6 +4,7 @@ import type { ChangeDetails, Part } from "../part.ts"
 import { computed, effect, untracked } from "../reactivity.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
 import { pushLayer } from "./layers.ts"
+import type { PopupSize } from "./popup-size.ts"
 import type { Anchor, PopupPlacement } from "./position.ts"
 import { createPresence } from "./presence.ts"
 import type { TransitionStatus } from "./presence.ts"
@@ -56,6 +57,12 @@ export interface PopupOptions {
    * hold again: `modal` and `focus` are asked once more, and so is `hold`.
    */
   mode?: ReadonlySignal<unknown>
+  /**
+   * Follows the open popup's size (`popupSize` from `popup-size.ts`): `--positioner-width` and
+   * `--positioner-height` on its positioner, and the popup's own when asked. Given, not made
+   * here: a popup whose size is not followed does not carry the code.
+   */
+  size?: PopupSize
 }
 
 /** What a popup's focus is told: whether the popup is modal, and its other elements. */
@@ -89,6 +96,8 @@ export interface Popup {
   state(): Record<string, "" | undefined>
   /** The side and alignment it was placed on, once it is. */
   placed(): Record<string, string | undefined>
+  /** Whether its anchor is out of view, for a part that says so beside its positioner. */
+  hidden(): Record<string, "" | undefined>
   /** The element that is placed against the trigger. */
   readonly positioner: Part
   /** An element that points at the trigger, placed along the popup's edge. */
@@ -96,6 +105,23 @@ export interface Popup {
 }
 
 const NOTHING = () => {}
+
+/** The reasons Base UI names for skipping a popup's motion that every popup can give. */
+export type Instant = "click" | "dismiss"
+
+/**
+ * Why a popup's motion should be skipped after a change, as Base UI's `data-instant` says it:
+ * `"click"` when the keyboard pressed its trigger or one of its items (a click with no pointer
+ * behind it), `"dismiss"` when Escape closed it. Asked for each change that went through, open
+ * or closed; nothing otherwise.
+ */
+export function instantOf(next: boolean, by: ChangeDetails): Instant | undefined {
+  const event = by.event as MouseEvent | undefined
+  const pressed = by.reason === "trigger-press" || by.reason === "item-press"
+  if (pressed && event?.type === "click" && event.detail === 0) return "click"
+  if (!next && by.reason === "escape-key") return "dismiss"
+  return undefined
+}
 
 /**
  * What every popup does, once: it is in the page while open and through its exit; it takes its
@@ -114,6 +140,9 @@ export function createPopup(options: PopupOptions): Popup {
   const position = options.placement?.position
   let trigger: HTMLElement | undefined
   let backdrop: HTMLElement | undefined
+  let positioner: HTMLElement | undefined
+  // The open popup's size, while its element is in the page and its size is followed.
+  let sizer: ReturnType<PopupSize> | undefined
 
   const dismiss = (reason: string, event: Event) => options.setOpen(false, details(reason, event))
 
@@ -146,6 +175,7 @@ export function createPopup(options: PopupOptions): Popup {
     "data-side": position?.side.get(),
     "data-align": position?.align.get(),
   })
+  const hidden = () => ({ "data-anchor-hidden": flag(position?.anchorHidden.get()) })
 
   return {
     open,
@@ -185,6 +215,8 @@ export function createPopup(options: PopupOptions): Popup {
               if (closing) element.removeAttribute("inert")
               closing = false
               release = engage(element)
+              // Opened again: its first size is not a change from the last one it had.
+              sizer?.reset()
             } else if (!now && release) {
               release()
               release = undefined
@@ -195,6 +227,25 @@ export function createPopup(options: PopupOptions): Popup {
           })
         }),
       ]
+      if (options.size) {
+        const followed = options.size(
+          element,
+          () => positioner,
+          () => open.peek()
+        )
+        sizer = followed
+        stops.push(
+          // Measured once it is open and placed: the place writes what its style may read (the
+          // anchor's width, the room there is), in a microtask whichever part attached first.
+          effect(() => {
+            if (open.get() && (position?.placed.get() ?? true)) untracked(() => followed.measure())
+          }),
+          () => {
+            followed.stop()
+            if (sizer === followed) sizer = undefined
+          }
+        )
+      }
       // The page's scroll is held until the popup has left, so nothing shifts under its exit.
       const hold = options.hold
       const mode = options.mode
@@ -237,23 +288,36 @@ export function createPopup(options: PopupOptions): Popup {
       }
     },
     placed,
+    hidden,
     positioner: {
       props: computed(() => ({
         role: "presentation",
         "data-open": flag(open.get()),
         "data-closed": flag(!open.get()),
         ...placed(),
+        ...hidden(),
       })),
       attach(element) {
-        if (!position) return NOTHING
+        positioner = element
+        const forget = () => {
+          if (positioner === element) positioner = undefined
+        }
+        if (!position) return forget
         // Asked each time it is placed: its own anchor, or its trigger.
         const anchor = () => options.anchor?.() ?? trigger
-        return position.attach(element, anchor, options.following ?? open)
+        const detach = position.attach(element, anchor, options.following ?? open)
+        return () => {
+          detach()
+          forget()
+        }
       },
     },
     arrow: {
       props: computed(() => ({
         "aria-hidden": "true",
+        // It fades with its popup.
+        "data-open": flag(open.get()),
+        "data-closed": flag(!open.get()),
         ...placed(),
         "data-uncentered": flag(position?.uncentered.get()),
       })),

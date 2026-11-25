@@ -143,6 +143,7 @@ export type {
 } from "@kirana-ui/core/color-picker"
 export type { TourStep, TourTarget } from "@kirana-ui/core/tour"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
+export type { OtpValidation } from "@kirana-ui/core/otp"
 export type { SelectShown } from "@kirana-ui/core/select"
 export type {
   ComboboxEntry,

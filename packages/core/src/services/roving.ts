@@ -54,7 +54,8 @@ export function createRoving(): Roving {
         (each) =>
           each.isConnected &&
           !each.hasAttribute("disabled") &&
-          each.getAttribute("aria-disabled") !== "true"
+          // A disabled toolbar control that keeps focus (`data-focusable`) is still reached.
+          (each.getAttribute("aria-disabled") !== "true" || each.hasAttribute("data-focusable"))
       )
       .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
   }

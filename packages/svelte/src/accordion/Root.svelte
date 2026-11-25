@@ -17,6 +17,7 @@
     disabled,
     orientation,
     loop,
+    loopFocus,
     id,
     ...rest
   }: RootProps<Value> = $props()
@@ -36,6 +37,7 @@
       disabled,
       orientation,
       loop,
+      loopFocus,
       onValueChange: change,
     }))
   )

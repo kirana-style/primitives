@@ -21,11 +21,12 @@ function useToolbar(part: string): Controller {
 
 export type RootProps = PartComponentProps<"div", StateOf<Parts["root"]>, ToolbarProps>
 
-function Root({ orientation, loop, disabled, ...rest }: RootProps): ReactElement {
+function Root({ orientation, loop, loopFocus, disabled, ...rest }: RootProps): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
   const controller = useController<ToolbarProps, Controller>(within(createToolbar, { direction }), {
     orientation,
     loop,
+    loopFocus,
     disabled,
   })
   return (
@@ -44,28 +45,40 @@ export interface ItemOptions {
   disabled?: boolean
 }
 
-export type ButtonProps = PartComponentProps<"button", StateOf<Parts["button"]>, ItemOptions>
-export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>, ItemOptions>
+/** What a button or an input of the toolbar takes of its own. */
+export interface ControlOptions extends ItemOptions {
+  /**
+   * Keeps it focusable while disabled, as Base UI's: the arrows still reach it, and a press does
+   * nothing. Default `true`; with `false` it is disabled the element's own way.
+   */
+  focusableWhenDisabled?: boolean
+}
+
+export type ButtonProps = PartComponentProps<"button", StateOf<Parts["button"]>, ControlOptions>
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>, ControlOptions>
 export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, ItemOptions>
 /** @deprecated The item's own: `ButtonProps`, `InputProps` or `GroupProps`. */
 export type ItemProps = PartComponentProps<"div", StateOf<Parts["group"]>, ItemOptions>
 
-function useItem(name: "button" | "input" | "group", disabled: boolean | undefined): Part {
+function useItem(
+  name: "button" | "input" | "group",
+  { disabled, focusableWhenDisabled }: ControlOptions
+): Part {
   const controller = useToolbar(name)
-  const options = useOptions({ disabled })
+  const options = useOptions({ disabled, focusableWhenDisabled })
   return useMemo(() => controller[name](() => defined(options.get())), [controller, name, options])
 }
 
-function Button({ disabled, ...props }: ButtonProps): ReactElement {
-  return usePart(useItem("button", disabled), "button", props)
+function Button({ disabled, focusableWhenDisabled, ...props }: ButtonProps): ReactElement {
+  return usePart(useItem("button", { disabled, focusableWhenDisabled }), "button", props)
 }
 
-function Input({ disabled, ...props }: InputProps): ReactElement {
-  return usePart(useItem("input", disabled), "input", props)
+function Input({ disabled, focusableWhenDisabled, ...props }: InputProps): ReactElement {
+  return usePart(useItem("input", { disabled, focusableWhenDisabled }), "input", props)
 }
 
 function Group({ disabled, ...props }: GroupProps): ReactElement {
-  return usePart(useItem("group", disabled), "div", props)
+  return usePart(useItem("group", { disabled }), "div", props)
 }
 
 export type LinkProps = PartComponentProps<"a", StateOf<Parts["link"]>>

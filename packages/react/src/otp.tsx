@@ -1,3 +1,4 @@
+import { within } from "@kirana-ui/core"
 import type { StateOf } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp as Controller, OtpProps, OtpSlot } from "@kirana-ui/core/otp"
@@ -5,6 +6,7 @@ import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext } from "react"
 import type { ReactElement } from "react"
 
+import { FieldContext } from "./field-context.ts"
 import { PartElement, parts, useController, usePart, useSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
@@ -33,24 +35,33 @@ function Root({
   value,
   defaultValue,
   onValueChange,
+  onValueComplete,
   onComplete,
+  validationType,
   mode,
   pattern,
   disabled,
+  readOnly,
+  required,
   name,
   form,
   id,
   ...rest
 }: RootProps): ReactElement {
-  const controller = useController<OtpProps, Controller>(createOtp, {
+  const field = useContext(FieldContext) ?? undefined
+  const controller = useController<OtpProps, Controller>(within(createOtp, { field }), {
     length,
     value,
     defaultValue,
     onValueChange,
+    onValueComplete,
     onComplete,
+    validationType,
     mode,
     pattern,
     disabled,
+    readOnly,
+    required,
     name,
     form,
     id,

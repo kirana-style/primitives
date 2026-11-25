@@ -37,6 +37,8 @@ function useCalendar(): Controller {
 
 /** The place of the month its parts are drawn in, inside `Calendar.Months`. */
 const MonthContext = createContext<number | null>(null)
+// The day a cell holds, for the day button inside it.
+const CellContext = createContext<string | null>(null)
 /** The month a part is drawn in: the one `Calendar.Months` gave, or the first. */
 const useMonth = () => useCalendar().monthAt(useContext(MonthContext) ?? 0)
 
@@ -219,20 +221,41 @@ function HeadCell(props: HeadCellProps): JSX.Element {
   return <Part of={part} tag="th" {...rest} />
 }
 
-export type CellProps = PartComponentProps<"td", StateOf<Parts["cell"]>, { date: string }>
+export type CellProps = PartComponentProps<
+  "td",
+  StateOf<Parts["cell"]>,
+  {
+    /** The day it holds, as `Calendar.Weeks` gave it. A `Day` inside takes it too. */
+    date: string
+  }
+>
 
 function Cell(props: CellProps): JSX.Element {
   const [local, rest] = split(props, ["date"])
   // A cell is its day for as long as it is in the page.
-  const part = useCalendar().cell(local.date, useContext(MonthContext) ?? undefined)
-  return <Part of={part} tag="td" {...rest} />
+  const date = untrack(() => local.date)
+  const part = useCalendar().cell(date, useContext(MonthContext) ?? undefined)
+  return (
+    <CellContext value={date}>
+      <Part of={part} tag="td" {...rest} />
+    </CellContext>
+  )
 }
 
-export type DayProps = PartComponentProps<"button", StateOf<Parts["day"]>, { date: string }>
+export type DayProps = PartComponentProps<
+  "button",
+  StateOf<Parts["day"]>,
+  {
+    /** The day it is the button of. Left out, the `Calendar.Cell`'s it is inside. */
+    date?: string
+  }
+>
 
 function Day(props: DayProps): JSX.Element {
   const [local, rest] = split(props, ["date"])
-  const part = useCalendar().day(local.date, useContext(MonthContext) ?? undefined)
+  const date = untrack(() => local.date) ?? useContext(CellContext)
+  if (date == null) throw new Error("<Calendar.Day> needs a date or a <Calendar.Cell> around it")
+  const part = useCalendar().day(date, useContext(MonthContext) ?? undefined)
   return <Part of={part} tag="button" {...rest} />
 }
 

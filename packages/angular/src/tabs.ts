@@ -62,11 +62,22 @@ export class KpTabsList implements OnInit {
   readonly activateOnFocus = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
+  readonly loopFocus = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   private readonly root = inject(KpTabs)
   private readonly part = hostPart()
   private readonly options = () =>
-    defined({ activateOnFocus: this.activateOnFocus(), loop: this.loop() })
+    defined({
+      activateOnFocus: this.activateOnFocus(),
+      loop: this.loop(),
+      loopFocus: this.loopFocus(),
+    })
 
   constructor() {
     effect(() => {

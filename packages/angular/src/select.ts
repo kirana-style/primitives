@@ -14,9 +14,15 @@ import {
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { defined, effect as coreEffect } from "@kirana-ui/core"
-import type { ChangeDetails, ItemLabels, ListCollection, Presentation } from "@kirana-ui/core"
+import type {
+  ChangeDetails,
+  ItemLabels,
+  ListCollection,
+  Presentation,
+  ReadonlySignal,
+} from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
-import type { Select, SelectGroup, SelectShown } from "@kirana-ui/core/select"
+import type { Select, SelectGroup, SelectProps, SelectShown } from "@kirana-ui/core/select"
 
 import { KP_FIELD } from "./field-token"
 import {
@@ -34,9 +40,12 @@ import {
 } from "./runtime"
 
 @Directive({ selector: "[kpSelect]", exportAs: "kpSelect" })
-export class KpSelect<Value = unknown> implements OnInit {
-  readonly value = model<Value | null | undefined>(undefined)
-  readonly defaultValue = input<NoInfer<Value> | null>(null)
+export class KpSelect<Value = unknown, Multiple extends boolean = false> implements OnInit {
+  /** With `[multiple]="true"`, the chosen values. */
+  readonly value = model<(Multiple extends true ? readonly Value[] : Value | null) | undefined>(
+    undefined
+  )
+  readonly defaultValue = input<NoInfer<Multiple extends true ? readonly Value[] : Value | null>>()
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
@@ -48,10 +57,29 @@ export class KpSelect<Value = unknown> implements OnInit {
   readonly form = input<string>()
   /** The values' labels: a list of values with their labels, or the labels by value. */
   readonly items = input<ItemLabels<Value>>()
-  /** Several values: they are `values`, not `value`. */
-  readonly multiple = input(false, { transform: booleanAttribute })
+  /**
+   * Several values: `value` and `valueChanged` then hold a list. Bound to `true`
+   * (`[multiple]="true"`), it types them so. The bare attribute, or a bound boolean, works the
+   * same, and then `value` takes either and `valueChanged` is typed as one value: Angular's
+   * compiler gives a type parameter it cannot infer `any`, so only a literal `true` says it.
+   */
+  readonly multiple = input<Multiple | undefined, Multiple | "" | undefined>(undefined, {
+    transform: booleanAttribute as (given: Multiple | "" | undefined) => Multiple,
+  })
+  /**
+   * With `multiple`: the chosen values.
+   * @deprecated Base UI's shape is `[(value)]` holding the list, which wins when both are given.
+   */
   readonly values = model<readonly Value[] | undefined>(undefined)
+  /**
+   * With `multiple`: the values it starts with.
+   * @deprecated Base UI's shape is `[defaultValue]` holding the list, which wins.
+   */
   readonly defaultValues = input<readonly Value[]>()
+  /**
+   * With `multiple`: heard as a value is about to be added or taken away.
+   * @deprecated Base UI's shape is `(valueChanged)` told the list. Both are emitted.
+   */
   readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** Every row, when only some are in the page: each item is then given its `index`. */
   readonly virtualized = input<ListCollection>()
@@ -67,7 +95,10 @@ export class KpSelect<Value = unknown> implements OnInit {
   /** For values that are objects: the text the form is sent for one. */
   readonly itemToStringValue = input<(value: Value) => string>()
   readonly kpId = input<string>()
-  readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
+  readonly valueChanged = output<{
+    value: true extends Multiple ? (false extends Multiple ? Value | null : Value[]) : Value | null
+    details: ChangeDetails
+  }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
 
   controller!: Select<Value>
@@ -90,24 +121,29 @@ export class KpSelect<Value = unknown> implements OnInit {
     multiple: this.multiple(),
     values: this.values(),
     defaultValues: this.defaultValues(),
-    onValuesChange: (values: Value[], details: ChangeDetails) => {
-      this.valuesChanged.emit({ values, details })
-      if (!details.canceled) {
-        this.values.set(values)
-        this.props.sync()
-      }
-    },
     virtualized: this.virtualized(),
     presentation: this.presentation(),
     sheetBelow: this.sheetBelow(),
     itemToStringLabel: this.itemToStringLabel(),
     itemToStringValue: this.itemToStringValue(),
-    onValueChange: (value: Value | null, details: ChangeDetails) => {
-      this.valueChanged.emit({ value, details })
-      if (!details.canceled) {
-        this.value.set(value)
-        this.props.sync()
-      }
+    onValueChange: (value: Value | Value[] | null, details: ChangeDetails) => {
+      this.valueChanged.emit({
+        value: value as true extends Multiple
+          ? false extends Multiple
+            ? Value | null
+            : Value[]
+          : Value | null,
+        details,
+      })
+      // With `multiple` the core tells the list here, as Base UI's `onValueChange` is told it;
+      // the older output too, as an output cannot tell whether it is bound.
+      const list = this.multiple() && Array.isArray(value) ? value : undefined
+      if (list) this.valuesChanged.emit({ values: list, details })
+      if (details.canceled) return
+      // Written back to what the caller holds: the older `values` only when it holds that alone.
+      if (list && this.values() !== undefined && this.value() === undefined) this.values.set(list)
+      else this.value.set(value as Multiple extends true ? readonly Value[] : Value | null)
+      this.props.sync()
     },
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
@@ -124,7 +160,11 @@ export class KpSelect<Value = unknown> implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = createSelect(this.props(), { field: this.field?.controller })
+    // Typed by what Angular can infer of `Multiple`; the core reads either shape.
+    const props = this.props() as ReadonlySignal<unknown> as ReadonlySignal<
+      SelectProps<Value, boolean | undefined>
+    >
+    this.controller = createSelect(props, { field: this.field?.controller })
     this.mount(this.controller)
   }
 }
@@ -436,10 +476,12 @@ export class KpSelectScrollDownArrow implements OnInit {
 export class KpSelectItemIndicator implements OnInit {
   private readonly item = inject(KpSelectItem)
   private readonly present = presentWhile()
+  private readonly mount = mounted()
 
   ngOnInit(): void {
-    const { controller } = this.item.root
-    const value = this.item.value()
-    this.present(controller.selected(value), controller.itemIndicator(value))
+    // In the page while chosen, and through its exit.
+    const indicator = this.item.root.controller.itemIndicator(this.item.value())
+    this.mount(indicator)
+    this.present(indicator.mounted, indicator)
   }
 }

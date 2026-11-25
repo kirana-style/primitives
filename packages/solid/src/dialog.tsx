@@ -4,13 +4,13 @@ import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
-import type { Dialog as Controller } from "@kirana-ui/core/dialog"
+import type { Dialog as Controller, DialogButtonOptions } from "@kirana-ui/core/dialog"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, createUniqueId, useContext } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Part, Portal as BodyPortal, controller } from "./runtime.tsx"
+import { Part, Portal as BodyPortal, controller, split, toSignal } from "./runtime.tsx"
 import type { PartComponentProps } from "./runtime.tsx"
 
 type Parts = Vocabulary["dialog"]
@@ -29,9 +29,18 @@ export type RootProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   modal?: boolean
-  /** Whether a press outside closes it. Default `true`. */
+  /** Keeps it open when the pointer presses outside it. Default `false`. */
+  disablePointerDismissal?: boolean
+  /**
+   * Whether a press outside closes it. Default `true`.
+   * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins
+   * when both are given.
+   */
   closeOnOutsidePress?: boolean
-  /** @deprecated Use `closeOnOutsidePress`, which wins when both are given. */
+  /**
+   * Whether a press outside closes it.
+   * @deprecated Base UI's name is `disablePointerDismissal`, which wins over this.
+   */
   dismissible?: boolean
   id?: string
   children?: JSX.Element
@@ -45,6 +54,7 @@ function Root(props: RootProps): JSX.Element {
     open: props.open,
     defaultOpen: props.defaultOpen,
     modal: props.modal,
+    disablePointerDismissal: props.disablePointerDismissal,
     closeOnOutsidePress: props.closeOnOutsidePress,
     dismissible: props.dismissible,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
@@ -58,13 +68,17 @@ const Portal = (props: PortalProps) => (
   <BodyPortal mounted={useDialog().mounted}>{props.children}</BodyPortal>
 )
 
-export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type TriggerProps = PartComponentProps<
+  "button",
+  StateOf<Parts["trigger"]>,
+  DialogButtonOptions
+>
 export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
 export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
 export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
-export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
+export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>, DialogButtonOptions>
 
 const part =
   <Props extends Record<string, unknown>>(
@@ -73,7 +87,20 @@ const part =
   ) =>
   (props: Props): JSX.Element => <Part of={useDialog()[name]} tag={tag} {...props} />
 
-export type AlertRootProps = Omit<RootProps, "modal" | "closeOnOutsidePress" | "dismissible">
+/** A trigger or a close button, with its own `disabled`. */
+const button =
+  <Props extends DialogButtonOptions>(name: "triggerPart" | "closePart") =>
+  (props: Props): JSX.Element => {
+    const [local, rest] = split(props, ["disabled"])
+    const options = toSignal(() => ({ disabled: local.disabled }))
+    const made = useDialog()[name](() => options.get())
+    return <Part of={made} tag="button" {...rest} />
+  }
+
+export type AlertRootProps = Omit<
+  RootProps,
+  "modal" | "disablePointerDismissal" | "closeOnOutsidePress" | "dismissible"
+>
 
 function AlertRoot(props: AlertRootProps): JSX.Element {
   const generated = createUniqueId()
@@ -90,14 +117,14 @@ function AlertRoot(props: AlertRootProps): JSX.Element {
 export const Dialog = {
   Root,
   Portal,
-  Trigger: part<TriggerProps>("trigger", "button"),
+  Trigger: button<TriggerProps>("triggerPart"),
   Backdrop: part<BackdropProps>("backdrop", "div"),
   /** What a long dialog scrolls in, around its popup: it may be left out. */
   Viewport: part<ViewportProps>("viewport", "div"),
   Popup: part<PopupProps>("popup", "div"),
   Title: part<TitleProps>("title", "h2"),
   Description: part<DescriptionProps>("description", "p"),
-  Close: part<CloseProps>("close", "button"),
+  Close: button<CloseProps>("closePart"),
 }
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
@@ -119,6 +146,7 @@ function DrawerRoot(props: DrawerRootProps): JSX.Element {
     open: props.open,
     defaultOpen: props.defaultOpen,
     modal: props.modal,
+    disablePointerDismissal: props.disablePointerDismissal,
     closeOnOutsidePress: props.closeOnOutsidePress,
     dismissible: props.dismissible,
     swipeDirection: props.swipeDirection,

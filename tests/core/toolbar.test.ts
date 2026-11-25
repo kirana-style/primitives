@@ -114,6 +114,22 @@ describe("a toggle group", () => {
     expect(on(root)).toEqual([])
     expect(pressed).toEqual([])
   })
+
+  it("reads Base UI's `loopFocus` as the older `loop`, `loopFocus` winning", async () => {
+    for (const [given, wraps] of [
+      [{}, true],
+      [{ loopFocus: false }, false],
+      [{ loop: false }, false],
+      [{ loopFocus: true, loop: false }, true],
+      [{ loopFocus: false, loop: true }, false],
+    ] as const) {
+      const { root } = group(given)
+      find(root, "under").focus()
+      await press("ArrowRight")
+      expect(focused(), JSON.stringify(given)).toBe(wraps ? "bold" : "under")
+      root.remove()
+    }
+  })
 })
 
 const BAR = `
@@ -137,7 +153,8 @@ function toolbar(given: ToolbarProps = {}) {
   onTestFinished(
     bind(
       find(root, "gone"),
-      made.button(() => ({ disabled: true }))
+      // Disabled the element's own way: the arrows pass it.
+      made.button(() => ({ disabled: true, focusableWhenDisabled: false }))
     )
   )
   onTestFinished(bind(find(root, "link"), made.link()))
@@ -213,9 +230,58 @@ describe("a toolbar", () => {
     expect(find(root, "i").getAttribute("tabindex")).toBe("-1")
   })
 
+  it("keeps a disabled control focusable by default, as Base UI's, and lets it do nothing", async () => {
+    const root = mount(`
+      <div id="bar"><button id="one">One</button><button id="held">Held</button>
+      <input id="text" value="ab" /><button id="three">Three</button></div>`)
+    const made = createToolbar(signal({}))
+    onTestFinished(bind(find(root, "bar"), made.root))
+    onTestFinished(bind(find(root, "one"), made.button()))
+    onTestFinished(
+      bind(
+        find(root, "held"),
+        made.button(() => ({ disabled: true }))
+      )
+    )
+    onTestFinished(
+      bind(
+        find(root, "text"),
+        made.input(() => ({ disabled: true }))
+      )
+    )
+    onTestFinished(bind(find(root, "three"), made.button()))
+    const held = find<HTMLButtonElement>(root, "held")
+    expect(held.disabled).toBe(false)
+    expect(held.getAttribute("aria-disabled")).toBe("true")
+    expect(held.hasAttribute("data-disabled")).toBe(true)
+    // Present whenever it can keep focus, disabled or not, as Base UI writes it.
+    expect(held.hasAttribute("data-focusable")).toBe(true)
+    expect(find(root, "one").hasAttribute("data-focusable")).toBe(true)
+    expect(find(root, "one").hasAttribute("aria-disabled")).toBe(false)
+    expect(find<HTMLInputElement>(root, "text").disabled).toBe(false)
+    find(root, "one").focus()
+    await press("ArrowRight")
+    expect(focused()).toBe("held")
+    let pressed = 0
+    held.addEventListener("click", (event) => void (event.defaultPrevented || pressed++))
+    held.click()
+    await press("Enter")
+    await press(" ")
+    expect(pressed).toBe(0)
+    await press("ArrowRight")
+    expect(focused()).toBe("text")
+    // Typing does nothing in a disabled input that keeps focus.
+    await press("x")
+    expect(find<HTMLInputElement>(root, "text").value).toBe("ab")
+    // Nor are the arrows its own: they are the toolbar's.
+    await press("ArrowRight")
+    expect(focused()).toBe("three")
+  })
+
   it("disabled, so is everything in it", () => {
     const { root } = toolbar({ disabled: true })
-    expect(find<HTMLButtonElement>(root, "save").disabled).toBe(true)
+    // Its own controls keep focus, as Base UI's; a toggle is disabled its own way.
+    expect(find<HTMLButtonElement>(root, "save").getAttribute("aria-disabled")).toBe("true")
     expect(find<HTMLButtonElement>(root, "b").disabled).toBe(true)
     expect(find<HTMLButtonElement>(root, "alone").disabled).toBe(true)
   })

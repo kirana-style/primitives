@@ -1,10 +1,13 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
+  DISABLED,
   EITHER_FRAME,
   EITHER_OPEN,
   OPEN,
   PLACEMENT,
+  PRESSED,
   TRANSITION,
   state,
   valued,
@@ -16,12 +19,27 @@ const ORIENTATION = valued(
   "Whether the list is a row or a column."
 )
 const POPUP_OPEN = state("data-popup-open", "Present while the item's content is shown.")
+const MENU_OPEN = state("data-open", "Present while an item's content is shown.")
 
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const navigationMenuVocabulary = defineComponent({
-  root: { description: "The navigation.", states: { orientation: ORIENTATION } },
-  list: { inside: "root", description: "The row of items.", states: { orientation: ORIENTATION } },
+  root: {
+    description: "The navigation.",
+    states: {
+      orientation: ORIENTATION,
+      open: MENU_OPEN,
+      nested: state(
+        "data-nested",
+        "Present on a navigation menu inside another's content: a submenu of it."
+      ),
+    },
+  },
+  list: {
+    inside: "root",
+    description: "The row of items.",
+    states: { orientation: ORIENTATION, open: MENU_OPEN },
+  },
   item: {
     inside: "list",
     repeated: true,
@@ -31,7 +49,7 @@ export const navigationMenuVocabulary = defineComponent({
   trigger: {
     inside: "item",
     description: "The button that shows an item's content.",
-    states: { popupOpen: POPUP_OPEN },
+    states: { popupOpen: POPUP_OPEN, pressed: PRESSED, disabled: DISABLED },
   },
   icon: {
     inside: "trigger",
@@ -45,8 +63,8 @@ export const navigationMenuVocabulary = defineComponent({
       ...TRANSITION,
       activationDirection: valued(
         "data-activation-direction",
-        ["left", "right"],
-        "Which way it came from: the item before it, or after."
+        ["left", "right", "up", "down"],
+        "Which way it came from: the item before it, or after; `up` and `down` when the list is a column."
       ),
     },
     exclusive: EITHER_FRAME,
@@ -65,7 +83,15 @@ export const navigationMenuVocabulary = defineComponent({
   positioner: {
     inside: "portal",
     description: "Places the popup against the open item's trigger. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT },
+    states: {
+      ...OPEN,
+      ...PLACEMENT,
+      anchorHidden: ANCHOR_HIDDEN,
+      instant: state(
+        "data-instant",
+        "Present while it should move at once: as it is first drawn, and while the window is resized."
+      ),
+    },
     exclusive: EITHER_OPEN,
     variables: {
       ...ANCHORED,
@@ -76,7 +102,7 @@ export const navigationMenuVocabulary = defineComponent({
   popup: {
     inside: "positioner",
     description: "The panel every item's content is shown in.",
-    states: { ...TRANSITION, ...PLACEMENT },
+    states: { ...TRANSITION, ...PLACEMENT, anchorHidden: ANCHOR_HIDDEN },
     exclusive: EITHER_FRAME,
     variables: {
       "--popup-width": "The open content's width.",
@@ -87,7 +113,9 @@ export const navigationMenuVocabulary = defineComponent({
   arrow: {
     inside: "popup",
     description: "An element that points at the open item's trigger.",
+    exclusive: EITHER_OPEN,
     states: {
+      ...OPEN,
       ...PLACEMENT,
       uncentered: state(
         "data-uncentered",

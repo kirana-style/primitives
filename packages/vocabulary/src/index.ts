@@ -34,6 +34,11 @@ export const vocabulary = {
         "item": {
           "description": "One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own.",
           "states": {
+            "index": {
+              "attribute": "data-index",
+              "description": "The item's place among the accordion's items, from 0.",
+              "selector": "[data-index]"
+            },
             "open": {
               "attribute": "data-open",
               "description": "Present when the item is open.",
@@ -56,6 +61,11 @@ export const vocabulary = {
         "header": {
           "description": "The heading that holds the trigger.",
           "states": {
+            "index": {
+              "attribute": "data-index",
+              "description": "The item's place among the accordion's items, from 0.",
+              "selector": "[data-index]"
+            },
             "open": {
               "attribute": "data-open",
               "description": "Present when the item is open.",
@@ -78,6 +88,11 @@ export const vocabulary = {
         "trigger": {
           "description": "The button that opens and closes the item's panel.",
           "states": {
+            "index": {
+              "attribute": "data-index",
+              "description": "The item's place among the accordion's items, from 0.",
+              "selector": "[data-index]"
+            },
             "panelOpen": {
               "attribute": "data-panel-open",
               "description": "Present when the item's panel is open.",
@@ -132,6 +147,11 @@ export const vocabulary = {
                 "horizontal": "[data-orientation=\"horizontal\"]",
                 "vertical": "[data-orientation=\"vertical\"]"
               }
+            },
+            "index": {
+              "attribute": "data-index",
+              "description": "The item's place among the accordion's items, from 0.",
+              "selector": "[data-index]"
             }
           },
           "exclusive": [
@@ -174,6 +194,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the dialog is open.",
               "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
             }
           },
           "exclusive": [],
@@ -310,6 +335,11 @@ export const vocabulary = {
               "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
               "selector": "[data-ending-style]"
             },
+            "nested": {
+              "attribute": "data-nested",
+              "description": "Present when the dialog opened over another dialog.",
+              "selector": "[data-nested]"
+            },
             "nestedDialogOpen": {
               "attribute": "data-nested-dialog-open",
               "description": "Present when another dialog is open above this one.",
@@ -359,7 +389,13 @@ export const vocabulary = {
         },
         "close": {
           "description": "A button that closes the dialog.",
-          "states": {},
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -485,12 +521,46 @@ export const vocabulary = {
               "attribute": "data-parent",
               "description": "Present on the checkbox that stands for every box of its group.",
               "selector": "[data-parent]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [
             [
               "checked",
               "unchecked"
+            ],
+            [
+              "valid",
+              "invalid"
             ]
           ],
           "variables": {},
@@ -531,6 +601,36 @@ export const vocabulary = {
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
             },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            },
             "startingStyle": {
               "attribute": "data-starting-style",
               "description": "Present for the first style of its entrance: what it animates in from.",
@@ -546,6 +646,10 @@ export const vocabulary = {
             [
               "checked",
               "unchecked"
+            ],
+            [
+              "valid",
+              "invalid"
             ],
             [
               "startingStyle",
@@ -599,12 +703,26 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of the panel's entrance, as on the panel.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through the panel's exit, as on the panel.",
+              "selector": "[data-ending-style]"
             }
           },
           "exclusive": [
             [
               "open",
               "closed"
+            ],
+            [
+              "startingStyle",
+              "endingStyle"
             ]
           ],
           "variables": {},
@@ -699,6 +817,29 @@ export const vocabulary = {
               "description": "Present when the list is open.",
               "selector": "[data-popup-open]"
             },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
+            "popupSide": {
+              "attribute": "data-popup-side",
+              "description": "While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.",
+              "values": {
+                "top": "[data-popup-side=\"top\"]",
+                "right": "[data-popup-side=\"right\"]",
+                "bottom": "[data-popup-side=\"bottom\"]",
+                "left": "[data-popup-side=\"left\"]",
+                "inline-start": "[data-popup-side=\"inline-start\"]",
+                "inline-end": "[data-popup-side=\"inline-end\"]",
+                "none": "[data-popup-side=\"none\"]"
+              }
+            },
+            "listEmpty": {
+              "attribute": "data-list-empty",
+              "description": "Present when no item is shown for what was typed, once the list is in the page.",
+              "selector": "[data-list-empty]"
+            },
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
@@ -708,9 +849,49 @@ export const vocabulary = {
               "attribute": "data-readonly",
               "description": "Present when it can be read but not changed.",
               "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root",
@@ -728,6 +909,29 @@ export const vocabulary = {
               "description": "Present when the list is open.",
               "selector": "[data-popup-open]"
             },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
+            "popupSide": {
+              "attribute": "data-popup-side",
+              "description": "While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.",
+              "values": {
+                "top": "[data-popup-side=\"top\"]",
+                "right": "[data-popup-side=\"right\"]",
+                "bottom": "[data-popup-side=\"bottom\"]",
+                "left": "[data-popup-side=\"left\"]",
+                "inline-start": "[data-popup-side=\"inline-start\"]",
+                "inline-end": "[data-popup-side=\"inline-end\"]",
+                "none": "[data-popup-side=\"none\"]"
+              }
+            },
+            "listEmpty": {
+              "attribute": "data-list-empty",
+              "description": "Present when no item is shown for what was typed, once the list is in the page.",
+              "selector": "[data-list-empty]"
+            },
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
@@ -737,9 +941,49 @@ export const vocabulary = {
               "attribute": "data-readonly",
               "description": "Present when it can be read but not changed.",
               "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -873,6 +1117,16 @@ export const vocabulary = {
                 "popup": "[data-presentation=\"popup\"]",
                 "sheet": "[data-presentation=\"sheet\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
+            },
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
             }
           },
           "exclusive": [
@@ -955,6 +1209,11 @@ export const vocabulary = {
               "attribute": "data-swipe-dismiss",
               "description": "Present once a drag has closed it.",
               "selector": "[data-swipe-dismiss]"
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             },
             "empty": {
               "attribute": "data-empty",
@@ -1112,15 +1371,40 @@ export const vocabulary = {
           "repeated": false
         },
         "clear": {
-          "description": "A button that empties the input and the value.",
+          "description": "A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while there is something to clear.",
+              "selector": "[data-visible]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -1141,7 +1425,13 @@ export const vocabulary = {
         },
         "chip": {
           "description": "One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.",
-          "states": {},
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -1187,6 +1477,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the menu is open.",
               "selector": "[data-popup-open]"
+            },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
             }
           },
           "exclusive": [],
@@ -1242,6 +1537,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -1255,7 +1555,9 @@ export const vocabulary = {
             "--anchor-height": "The anchor's height.",
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
-            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
+            "--positioner-width": "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+            "--positioner-height": "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size."
           },
           "inside": [
             "portal"
@@ -1306,6 +1608,15 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "instant": {
+              "attribute": "data-instant",
+              "description": "Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another.",
+              "values": {
+                "click": "[data-instant=\"click\"]",
+                "dismiss": "[data-instant=\"dismiss\"]",
+                "group": "[data-instant=\"group\"]"
+              }
             }
           },
           "exclusive": [
@@ -1328,6 +1639,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the trigger.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -1355,7 +1676,12 @@ export const vocabulary = {
               "selector": "[data-uncentered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"
@@ -1643,6 +1969,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the dialog is open.",
               "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
             }
           },
           "exclusive": [],
@@ -1779,6 +2110,11 @@ export const vocabulary = {
               "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
               "selector": "[data-ending-style]"
             },
+            "nested": {
+              "attribute": "data-nested",
+              "description": "Present when the dialog opened over another dialog.",
+              "selector": "[data-nested]"
+            },
             "nestedDialogOpen": {
               "attribute": "data-nested-dialog-open",
               "description": "Present when another dialog is open above this one.",
@@ -1828,7 +2164,13 @@ export const vocabulary = {
         },
         "close": {
           "description": "A button that closes the dialog.",
-          "states": {},
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -2247,6 +2589,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -2260,7 +2607,9 @@ export const vocabulary = {
             "--anchor-height": "The anchor's height.",
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
-            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
+            "--positioner-width": "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+            "--positioner-height": "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size."
           },
           "inside": [
             "portal"
@@ -2342,6 +2691,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the trigger, placed along the popup's edge.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -2369,7 +2728,12 @@ export const vocabulary = {
               "selector": "[data-uncentered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"
@@ -2483,6 +2847,11 @@ export const vocabulary = {
               "description": "Present when the menu is open.",
               "selector": "[data-popup-open]"
             },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
@@ -2542,6 +2911,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -2555,7 +2929,9 @@ export const vocabulary = {
             "--anchor-height": "The anchor's height.",
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
-            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
+            "--positioner-width": "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+            "--positioner-height": "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size."
           },
           "inside": [
             "portal"
@@ -2606,6 +2982,15 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "instant": {
+              "attribute": "data-instant",
+              "description": "Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another.",
+              "values": {
+                "click": "[data-instant=\"click\"]",
+                "dismiss": "[data-instant=\"dismiss\"]",
+                "group": "[data-instant=\"group\"]"
+              }
             }
           },
           "exclusive": [
@@ -2628,6 +3013,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the trigger.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -2655,7 +3050,12 @@ export const vocabulary = {
               "selector": "[data-uncentered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"
@@ -2935,6 +3335,16 @@ export const vocabulary = {
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
             },
+            "modal": {
+              "attribute": "data-modal",
+              "description": "Present when its menus hold the page while one is open.",
+              "selector": "[data-modal]"
+            },
+            "hasSubmenuOpen": {
+              "attribute": "data-has-submenu-open",
+              "description": "Present while one of its menus is open.",
+              "selector": "[data-has-submenu-open]"
+            },
             "orientation": {
               "attribute": "data-orientation",
               "description": "Whether its menus are in a row or a column.",
@@ -3021,6 +3431,16 @@ export const vocabulary = {
                 "horizontal": "[data-orientation=\"horizontal\"]",
                 "vertical": "[data-orientation=\"vertical\"]"
               }
+            },
+            "open": {
+              "attribute": "data-open",
+              "description": "Present while an item's content is shown.",
+              "selector": "[data-open]"
+            },
+            "nested": {
+              "attribute": "data-nested",
+              "description": "Present on a navigation menu inside another's content: a submenu of it.",
+              "selector": "[data-nested]"
             }
           },
           "exclusive": [],
@@ -3039,6 +3459,11 @@ export const vocabulary = {
                 "horizontal": "[data-orientation=\"horizontal\"]",
                 "vertical": "[data-orientation=\"vertical\"]"
               }
+            },
+            "open": {
+              "attribute": "data-open",
+              "description": "Present while an item's content is shown.",
+              "selector": "[data-open]"
             }
           },
           "exclusive": [],
@@ -3067,6 +3492,16 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present while the item's content is shown.",
               "selector": "[data-popup-open]"
+            },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
             }
           },
           "exclusive": [],
@@ -3119,10 +3554,12 @@ export const vocabulary = {
             },
             "activationDirection": {
               "attribute": "data-activation-direction",
-              "description": "Which way it came from: the item before it, or after.",
+              "description": "Which way it came from: the item before it, or after; `up` and `down` when the list is a column.",
               "values": {
                 "left": "[data-activation-direction=\"left\"]",
-                "right": "[data-activation-direction=\"right\"]"
+                "right": "[data-activation-direction=\"right\"]",
+                "up": "[data-activation-direction=\"up\"]",
+                "down": "[data-activation-direction=\"down\"]"
               }
             }
           },
@@ -3206,6 +3643,16 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
+            },
+            "instant": {
+              "attribute": "data-instant",
+              "description": "Present while it should move at once: as it is first drawn, and while the window is resized.",
+              "selector": "[data-instant]"
             }
           },
           "exclusive": [
@@ -3272,6 +3719,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -3308,6 +3760,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the open item's trigger.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -3335,7 +3797,12 @@ export const vocabulary = {
               "selector": "[data-uncentered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"
@@ -3391,15 +3858,50 @@ export const vocabulary = {
         "root": {
           "description": "The code: the input and its cells.",
           "states": {
-            "disabled": {
-              "attribute": "data-disabled",
-              "description": "Present when it is disabled.",
-              "selector": "[data-disabled]"
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Present when the code has a character in it.",
+              "selector": "[data-filled]"
             },
             "focused": {
               "attribute": "data-focused",
               "description": "Present while the input has focus.",
               "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
             },
             "complete": {
               "attribute": "data-complete",
@@ -3407,7 +3909,12 @@ export const vocabulary = {
               "selector": "[data-complete]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [],
           "optional": false,
@@ -3454,18 +3961,63 @@ export const vocabulary = {
               "description": "Present on the cell the next character goes in, or that is selected.",
               "selector": "[data-active]"
             },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
             "filled": {
               "attribute": "data-filled",
               "description": "Present when the cell has its character.",
               "selector": "[data-filled]"
             },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Present while the input has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            },
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "readonly": {
+              "attribute": "data-readonly",
+              "description": "Present when it can be read but not changed.",
+              "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "complete": {
+              "attribute": "data-complete",
+              "description": "Present when every character is in.",
+              "selector": "[data-complete]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "group"
@@ -4303,6 +4855,29 @@ export const vocabulary = {
               "description": "Present when the list is open.",
               "selector": "[data-popup-open]"
             },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
+            "popupSide": {
+              "attribute": "data-popup-side",
+              "description": "While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.",
+              "values": {
+                "top": "[data-popup-side=\"top\"]",
+                "right": "[data-popup-side=\"right\"]",
+                "bottom": "[data-popup-side=\"bottom\"]",
+                "left": "[data-popup-side=\"left\"]",
+                "inline-start": "[data-popup-side=\"inline-start\"]",
+                "inline-end": "[data-popup-side=\"inline-end\"]",
+                "none": "[data-popup-side=\"none\"]"
+              }
+            },
+            "listEmpty": {
+              "attribute": "data-list-empty",
+              "description": "Present when no item is shown for what was typed, once the list is in the page.",
+              "selector": "[data-list-empty]"
+            },
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
@@ -4312,9 +4887,49 @@ export const vocabulary = {
               "attribute": "data-readonly",
               "description": "Present when it can be read but not changed.",
               "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -4330,6 +4945,29 @@ export const vocabulary = {
               "description": "Present when the list is open.",
               "selector": "[data-popup-open]"
             },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
+            "popupSide": {
+              "attribute": "data-popup-side",
+              "description": "While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.",
+              "values": {
+                "top": "[data-popup-side=\"top\"]",
+                "right": "[data-popup-side=\"right\"]",
+                "bottom": "[data-popup-side=\"bottom\"]",
+                "left": "[data-popup-side=\"left\"]",
+                "inline-start": "[data-popup-side=\"inline-start\"]",
+                "inline-end": "[data-popup-side=\"inline-end\"]",
+                "none": "[data-popup-side=\"none\"]"
+              }
+            },
+            "listEmpty": {
+              "attribute": "data-list-empty",
+              "description": "Present when no item is shown for what was typed, once the list is in the page.",
+              "selector": "[data-list-empty]"
+            },
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
@@ -4339,9 +4977,49 @@ export const vocabulary = {
               "attribute": "data-readonly",
               "description": "Present when it can be read but not changed.",
               "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -4401,6 +5079,16 @@ export const vocabulary = {
                 "popup": "[data-presentation=\"popup\"]",
                 "sheet": "[data-presentation=\"sheet\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
+            },
+            "empty": {
+              "attribute": "data-empty",
+              "description": "Present when no item is shown for what was typed.",
+              "selector": "[data-empty]"
             }
           },
           "exclusive": [
@@ -4483,6 +5171,11 @@ export const vocabulary = {
               "attribute": "data-swipe-dismiss",
               "description": "Present once a drag has closed it.",
               "selector": "[data-swipe-dismiss]"
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             },
             "empty": {
               "attribute": "data-empty",
@@ -4629,15 +5322,40 @@ export const vocabulary = {
           "repeated": false
         },
         "clear": {
-          "description": "A button that empties the input and the value.",
+          "description": "A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.",
           "states": {
             "disabled": {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "popupOpen": {
+              "attribute": "data-popup-open",
+              "description": "Present when the list is open.",
+              "selector": "[data-popup-open]"
+            },
+            "visible": {
+              "attribute": "data-visible",
+              "description": "Present while there is something to clear.",
+              "selector": "[data-visible]"
+            },
+            "startingStyle": {
+              "attribute": "data-starting-style",
+              "description": "Present for the first style of its entrance: what it animates in from.",
+              "selector": "[data-starting-style]"
+            },
+            "endingStyle": {
+              "attribute": "data-ending-style",
+              "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
+              "selector": "[data-ending-style]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "startingStyle",
+              "endingStyle"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -7060,6 +7778,11 @@ export const vocabulary = {
               "attribute": "data-centered",
               "description": "Present while the step shown has no target in the page: the popup stands in the middle of the viewport.",
               "selector": "[data-centered]"
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -7151,6 +7874,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the target, placed along the popup's edge.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -7183,7 +7916,12 @@ export const vocabulary = {
               "selector": "[data-centered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"
@@ -7365,6 +8103,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the popover is open.",
               "selector": "[data-popup-open]"
+            },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
             }
           },
           "exclusive": [],
@@ -7419,6 +8162,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -7432,7 +8180,9 @@ export const vocabulary = {
             "--anchor-height": "The anchor's height.",
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
-            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
+            "--positioner-width": "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+            "--positioner-height": "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size."
           },
           "inside": [
             "portal"
@@ -7483,6 +8233,14 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "instant": {
+              "attribute": "data-instant",
+              "description": "Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it.",
+              "values": {
+                "click": "[data-instant=\"click\"]",
+                "dismiss": "[data-instant=\"dismiss\"]"
+              }
             }
           },
           "exclusive": [
@@ -7495,7 +8253,10 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {},
+          "variables": {
+            "--popup-width": "Its width: `auto`, and while its content changes size, the old width and then the new one, for a transition between them.",
+            "--popup-height": "Its height: `auto`, and while its content changes size, the old height and then the new one, for a transition between them."
+          },
           "inside": [
             "positioner"
           ],
@@ -8006,6 +8767,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the dialog is open.",
               "selector": "[data-popup-open]"
+            },
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
             }
           },
           "exclusive": [],
@@ -8054,6 +8820,11 @@ export const vocabulary = {
               "attribute": "data-swiping",
               "description": "Present while the drawer is dragged.",
               "selector": "[data-swiping]"
+            },
+            "swipeDismiss": {
+              "attribute": "data-swipe-dismiss",
+              "description": "Present once a drag has closed the drawer.",
+              "selector": "[data-swipe-dismiss]"
             }
           },
           "exclusive": [
@@ -8070,7 +8841,9 @@ export const vocabulary = {
             "--drawer-swipe-movement-x": "How far it has been dragged across.",
             "--drawer-swipe-movement-y": "How far it has been dragged up or down.",
             "--drawer-swipe-progress": "How far it has been dragged, of its own size: 0 to 1.",
-            "--drawer-snap-point-offset": "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point."
+            "--drawer-snap-point-offset": "How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.",
+            "--drawer-swipe-strength": "Always 1: the backdrop takes the design's own time to leave, however the drawer was thrown.",
+            "--drawer-height": "While the drawer is dragged: the height of the drawer in front."
           },
           "inside": [
             "portal"
@@ -8100,6 +8873,11 @@ export const vocabulary = {
               "attribute": "data-ending-style",
               "description": "Present through its exit: what it animates out to. It leaves the page when the motion ends.",
               "selector": "[data-ending-style]"
+            },
+            "nested": {
+              "attribute": "data-nested",
+              "description": "Present when the dialog opened over another dialog.",
+              "selector": "[data-nested]"
             },
             "nestedDialogOpen": {
               "attribute": "data-nested-dialog-open",
@@ -8194,7 +8972,13 @@ export const vocabulary = {
         },
         "close": {
           "description": "A button that closes the dialog.",
-          "states": {},
+          "states": {
+            "disabled": {
+              "attribute": "data-disabled",
+              "description": "Present when it is disabled.",
+              "selector": "[data-disabled]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -8553,7 +9337,13 @@ export const vocabulary = {
         },
         "title": {
           "description": "What the toast is called: the title it was added with, when nothing else is written in it.",
-          "states": {},
+          "states": {
+            "type": {
+              "attribute": "data-type",
+              "description": "The kind the toast was added as.",
+              "selector": "[data-type]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -8564,7 +9354,13 @@ export const vocabulary = {
         },
         "description": {
           "description": "What the toast says: the description it was added with, when nothing else is written in it.",
-          "states": {},
+          "states": {
+            "type": {
+              "attribute": "data-type",
+              "description": "The kind the toast was added as.",
+              "selector": "[data-type]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -8575,7 +9371,13 @@ export const vocabulary = {
         },
         "close": {
           "description": "Closes the toast.",
-          "states": {},
+          "states": {
+            "type": {
+              "attribute": "data-type",
+              "description": "The kind the toast was added as.",
+              "selector": "[data-type]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -8586,7 +9388,13 @@ export const vocabulary = {
         },
         "action": {
           "description": "A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.",
-          "states": {},
+          "states": {
+            "type": {
+              "attribute": "data-type",
+              "description": "The kind the toast was added as.",
+              "selector": "[data-type]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -8615,6 +9423,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the popover is open.",
               "selector": "[data-popup-open]"
+            },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
             }
           },
           "exclusive": [],
@@ -8710,6 +9523,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -8723,7 +9541,9 @@ export const vocabulary = {
             "--anchor-height": "The anchor's height.",
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
-            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
+            "--positioner-width": "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+            "--positioner-height": "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size."
           },
           "inside": [
             "portal"
@@ -8774,6 +9594,14 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "instant": {
+              "attribute": "data-instant",
+              "description": "Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it.",
+              "values": {
+                "click": "[data-instant=\"click\"]",
+                "dismiss": "[data-instant=\"dismiss\"]"
+              }
             }
           },
           "exclusive": [
@@ -8786,7 +9614,10 @@ export const vocabulary = {
               "endingStyle"
             ]
           ],
-          "variables": {},
+          "variables": {
+            "--popup-width": "Its width: `auto`, and while its content changes size, the old width and then the new one, for a transition between them.",
+            "--popup-height": "Its height: `auto`, and while its content changes size, the old height and then the new one, for a transition between them."
+          },
           "inside": [
             "positioner"
           ],
@@ -8829,6 +9660,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the trigger, placed along the popup's edge.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -8856,7 +9697,12 @@ export const vocabulary = {
               "selector": "[data-uncentered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"
@@ -9052,9 +9898,44 @@ export const vocabulary = {
               "attribute": "data-required",
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [],
           "optional": false,
@@ -9087,12 +9968,46 @@ export const vocabulary = {
               "attribute": "data-required",
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [
             [
               "checked",
               "unchecked"
+            ],
+            [
+              "valid",
+              "invalid"
             ]
           ],
           "variables": {},
@@ -9130,6 +10045,36 @@ export const vocabulary = {
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
             },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            },
             "startingStyle": {
               "attribute": "data-starting-style",
               "description": "Present for the first style of its entrance: what it animates in from.",
@@ -9145,6 +10090,10 @@ export const vocabulary = {
             [
               "checked",
               "unchecked"
+            ],
+            [
+              "valid",
+              "invalid"
             ],
             [
               "startingStyle",
@@ -9254,6 +10203,26 @@ export const vocabulary = {
               "description": "Present when there is more to see up or down.",
               "selector": "[data-has-overflow-y]"
             },
+            "overflowXStart": {
+              "attribute": "data-overflow-x-start",
+              "description": "Present when there is more to scroll to towards the start of a line.",
+              "selector": "[data-overflow-x-start]"
+            },
+            "overflowXEnd": {
+              "attribute": "data-overflow-x-end",
+              "description": "Present when there is more to scroll to towards the end of a line.",
+              "selector": "[data-overflow-x-end]"
+            },
+            "overflowYStart": {
+              "attribute": "data-overflow-y-start",
+              "description": "Present when there is more to scroll to above.",
+              "selector": "[data-overflow-y-start]"
+            },
+            "overflowYEnd": {
+              "attribute": "data-overflow-y-end",
+              "description": "Present when there is more to scroll to below.",
+              "selector": "[data-overflow-y-end]"
+            },
             "scrolling": {
               "attribute": "data-scrolling",
               "description": "Present while it is being scrolled, and a moment after.",
@@ -9287,6 +10256,26 @@ export const vocabulary = {
               "description": "Present when there is more to see up or down.",
               "selector": "[data-has-overflow-y]"
             },
+            "overflowXStart": {
+              "attribute": "data-overflow-x-start",
+              "description": "Present when there is more to scroll to towards the start of a line.",
+              "selector": "[data-overflow-x-start]"
+            },
+            "overflowXEnd": {
+              "attribute": "data-overflow-x-end",
+              "description": "Present when there is more to scroll to towards the end of a line.",
+              "selector": "[data-overflow-x-end]"
+            },
+            "overflowYStart": {
+              "attribute": "data-overflow-y-start",
+              "description": "Present when there is more to scroll to above.",
+              "selector": "[data-overflow-y-start]"
+            },
+            "overflowYEnd": {
+              "attribute": "data-overflow-y-end",
+              "description": "Present when there is more to scroll to below.",
+              "selector": "[data-overflow-y-end]"
+            },
             "scrolling": {
               "attribute": "data-scrolling",
               "description": "Present while it is being scrolled, and a moment after.",
@@ -9294,7 +10283,12 @@ export const vocabulary = {
             }
           },
           "exclusive": [],
-          "variables": {},
+          "variables": {
+            "--scroll-area-overflow-x-start": "How far the view is from the start of a line, to fade that edge by: `0px` at it.",
+            "--scroll-area-overflow-x-end": "How far the view is from the end of a line: `0px` at it.",
+            "--scroll-area-overflow-y-start": "How far the view is from the top: `0px` at it.",
+            "--scroll-area-overflow-y-end": "How far the view is from the bottom: `0px` at it."
+          },
           "inside": [
             "root"
           ],
@@ -9303,7 +10297,43 @@ export const vocabulary = {
         },
         "content": {
           "description": "A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).",
-          "states": {},
+          "states": {
+            "hasOverflowX": {
+              "attribute": "data-has-overflow-x",
+              "description": "Present when there is more to see sideways.",
+              "selector": "[data-has-overflow-x]"
+            },
+            "hasOverflowY": {
+              "attribute": "data-has-overflow-y",
+              "description": "Present when there is more to see up or down.",
+              "selector": "[data-has-overflow-y]"
+            },
+            "overflowXStart": {
+              "attribute": "data-overflow-x-start",
+              "description": "Present when there is more to scroll to towards the start of a line.",
+              "selector": "[data-overflow-x-start]"
+            },
+            "overflowXEnd": {
+              "attribute": "data-overflow-x-end",
+              "description": "Present when there is more to scroll to towards the end of a line.",
+              "selector": "[data-overflow-x-end]"
+            },
+            "overflowYStart": {
+              "attribute": "data-overflow-y-start",
+              "description": "Present when there is more to scroll to above.",
+              "selector": "[data-overflow-y-start]"
+            },
+            "overflowYEnd": {
+              "attribute": "data-overflow-y-end",
+              "description": "Present when there is more to scroll to below.",
+              "selector": "[data-overflow-y-end]"
+            },
+            "scrolling": {
+              "attribute": "data-scrolling",
+              "description": "Present while it is being scrolled, and a moment after.",
+              "selector": "[data-scrolling]"
+            }
+          },
           "exclusive": [],
           "variables": {},
           "inside": [
@@ -9332,6 +10362,36 @@ export const vocabulary = {
               "attribute": "data-scrolling",
               "description": "Present while the area is scrolled its way.",
               "selector": "[data-scrolling]"
+            },
+            "hasOverflowX": {
+              "attribute": "data-has-overflow-x",
+              "description": "Present when there is more to see sideways.",
+              "selector": "[data-has-overflow-x]"
+            },
+            "hasOverflowY": {
+              "attribute": "data-has-overflow-y",
+              "description": "Present when there is more to see up or down.",
+              "selector": "[data-has-overflow-y]"
+            },
+            "overflowXStart": {
+              "attribute": "data-overflow-x-start",
+              "description": "Present when there is more to scroll to towards the start of a line.",
+              "selector": "[data-overflow-x-start]"
+            },
+            "overflowXEnd": {
+              "attribute": "data-overflow-x-end",
+              "description": "Present when there is more to scroll to towards the end of a line.",
+              "selector": "[data-overflow-x-end]"
+            },
+            "overflowYStart": {
+              "attribute": "data-overflow-y-start",
+              "description": "Present when there is more to scroll to above.",
+              "selector": "[data-overflow-y-start]"
+            },
+            "overflowYEnd": {
+              "attribute": "data-overflow-y-end",
+              "description": "Present when there is more to scroll to below.",
+              "selector": "[data-overflow-y-end]"
             }
           },
           "exclusive": [],
@@ -9356,6 +10416,11 @@ export const vocabulary = {
                 "horizontal": "[data-orientation=\"horizontal\"]",
                 "vertical": "[data-orientation=\"vertical\"]"
               }
+            },
+            "scrolling": {
+              "attribute": "data-scrolling",
+              "description": "Present while the area is scrolled its way.",
+              "selector": "[data-scrolling]"
             }
           },
           "exclusive": [],
@@ -9398,6 +10463,24 @@ export const vocabulary = {
               "description": "Present when the list is open.",
               "selector": "[data-popup-open]"
             },
+            "pressed": {
+              "attribute": "data-pressed",
+              "description": "Present while its popup is open: it stays pressed, as a button held down.",
+              "selector": "[data-pressed]"
+            },
+            "popupSide": {
+              "attribute": "data-popup-side",
+              "description": "While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.",
+              "values": {
+                "top": "[data-popup-side=\"top\"]",
+                "right": "[data-popup-side=\"right\"]",
+                "bottom": "[data-popup-side=\"bottom\"]",
+                "left": "[data-popup-side=\"left\"]",
+                "inline-start": "[data-popup-side=\"inline-start\"]",
+                "inline-end": "[data-popup-side=\"inline-end\"]",
+                "none": "[data-popup-side=\"none\"]"
+              }
+            },
             "placeholder": {
               "attribute": "data-placeholder",
               "description": "Present while nothing is chosen.",
@@ -9412,9 +10495,49 @@ export const vocabulary = {
               "attribute": "data-readonly",
               "description": "Present when it can be read but not changed.",
               "selector": "[data-readonly]"
+            },
+            "required": {
+              "attribute": "data-required",
+              "description": "Present when the form needs it.",
+              "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -9555,6 +10678,11 @@ export const vocabulary = {
                 "popup": "[data-presentation=\"popup\"]",
                 "sheet": "[data-presentation=\"sheet\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -9751,14 +10879,15 @@ export const vocabulary = {
             },
             "side": {
               "attribute": "data-side",
-              "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
+              "description": "The side of the trigger it is on, after any flip; `none` when it lies over the trigger.",
               "values": {
                 "top": "[data-side=\"top\"]",
                 "right": "[data-side=\"right\"]",
                 "bottom": "[data-side=\"bottom\"]",
                 "left": "[data-side=\"left\"]",
                 "inline-start": "[data-side=\"inline-start\"]",
-                "inline-end": "[data-side=\"inline-end\"]"
+                "inline-end": "[data-side=\"inline-end\"]",
+                "none": "[data-side=\"none\"]"
               }
             },
             "align": {
@@ -9911,9 +11040,44 @@ export const vocabulary = {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
               "selector": "[data-dragging]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [],
           "optional": false,
@@ -9944,9 +11108,44 @@ export const vocabulary = {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
               "selector": "[data-dragging]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -9979,9 +11178,44 @@ export const vocabulary = {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
               "selector": "[data-dragging]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "root"
@@ -10014,9 +11248,44 @@ export const vocabulary = {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
               "selector": "[data-dragging]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {},
           "inside": [
             "control"
@@ -10049,9 +11318,44 @@ export const vocabulary = {
               "attribute": "data-dragging",
               "description": "Present while a pointer holds a thumb.",
               "selector": "[data-dragging]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {
             "--start-position": "With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.",
             "--relative-size": "With thumbs that stay inside the control and a range: the filled part's length."
@@ -10088,13 +11392,48 @@ export const vocabulary = {
               "description": "Present while a pointer holds a thumb.",
               "selector": "[data-dragging]"
             },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
+            },
             "index": {
               "attribute": "data-index",
               "description": "Which thumb it is, from 0.",
               "selector": "[data-index]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "valid",
+              "invalid"
+            ]
+          ],
           "variables": {
             "--position": "With thumbs that stay inside the control: where the thumb's centre is."
           },
@@ -10135,12 +11474,46 @@ export const vocabulary = {
               "attribute": "data-required",
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [
             [
               "checked",
               "unchecked"
+            ],
+            [
+              "valid",
+              "invalid"
             ]
           ],
           "variables": {},
@@ -10175,12 +11548,46 @@ export const vocabulary = {
               "attribute": "data-required",
               "description": "Present when the form needs it.",
               "selector": "[data-required]"
+            },
+            "touched": {
+              "attribute": "data-touched",
+              "description": "Inside a Field: present once focus has left the control.",
+              "selector": "[data-touched]"
+            },
+            "dirty": {
+              "attribute": "data-dirty",
+              "description": "Inside a Field: present while the value is not the one it started with.",
+              "selector": "[data-dirty]"
+            },
+            "filled": {
+              "attribute": "data-filled",
+              "description": "Inside a Field: present while the control has a value.",
+              "selector": "[data-filled]"
+            },
+            "focused": {
+              "attribute": "data-focused",
+              "description": "Inside a Field: present while the control has focus.",
+              "selector": "[data-focused]"
+            },
+            "valid": {
+              "attribute": "data-valid",
+              "description": "Inside a Field: present once the value has been checked and found right.",
+              "selector": "[data-valid]"
+            },
+            "invalid": {
+              "attribute": "data-invalid",
+              "description": "Inside a Field: present while the value is wrong.",
+              "selector": "[data-invalid]"
             }
           },
           "exclusive": [
             [
               "checked",
               "unchecked"
+            ],
+            [
+              "valid",
+              "invalid"
             ]
           ],
           "variables": {},
@@ -10274,6 +11681,17 @@ export const vocabulary = {
                 "horizontal": "[data-orientation=\"horizontal\"]",
                 "vertical": "[data-orientation=\"vertical\"]"
               }
+            },
+            "activationDirection": {
+              "attribute": "data-activation-direction",
+              "description": "Where the newly active tab is from the one before, for a panel or a mark that slides.",
+              "values": {
+                "left": "[data-activation-direction=\"left\"]",
+                "right": "[data-activation-direction=\"right\"]",
+                "up": "[data-activation-direction=\"up\"]",
+                "down": "[data-activation-direction=\"down\"]",
+                "none": "[data-activation-direction=\"none\"]"
+              }
             }
           },
           "exclusive": [],
@@ -10329,6 +11747,11 @@ export const vocabulary = {
               "attribute": "data-hidden",
               "description": "Present while its tab is not the active one.",
               "selector": "[data-hidden]"
+            },
+            "index": {
+              "attribute": "data-index",
+              "description": "The panel's place among the panels in the page, from 0, once it is in the page.",
+              "selector": "[data-index]"
             },
             "orientation": {
               "attribute": "data-orientation",
@@ -10471,6 +11894,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "focusable": {
+              "attribute": "data-focusable",
+              "description": "Present when it stays focusable while disabled: the arrows still reach it.",
+              "selector": "[data-focusable]"
             }
           },
           "exclusive": [],
@@ -10521,6 +11949,11 @@ export const vocabulary = {
               "attribute": "data-disabled",
               "description": "Present when it is disabled.",
               "selector": "[data-disabled]"
+            },
+            "focusable": {
+              "attribute": "data-focusable",
+              "description": "Present when it stays focusable while disabled: the arrows still reach it.",
+              "selector": "[data-focusable]"
             }
           },
           "exclusive": [],
@@ -10596,6 +12029,11 @@ export const vocabulary = {
               "attribute": "data-popup-open",
               "description": "Present when the tooltip is open.",
               "selector": "[data-popup-open]"
+            },
+            "triggerDisabled": {
+              "attribute": "data-trigger-disabled",
+              "description": "Present when the tooltip is disabled: the pointer and focus on the trigger do not open it.",
+              "selector": "[data-trigger-disabled]"
             }
           },
           "exclusive": [],
@@ -10650,6 +12088,11 @@ export const vocabulary = {
                 "center": "[data-align=\"center\"]",
                 "end": "[data-align=\"end\"]"
               }
+            },
+            "anchorHidden": {
+              "attribute": "data-anchor-hidden",
+              "description": "Present while the anchor is out of view: scrolled away, or clipped by a box around it.",
+              "selector": "[data-anchor-hidden]"
             }
           },
           "exclusive": [
@@ -10663,7 +12106,9 @@ export const vocabulary = {
             "--anchor-height": "The anchor's height.",
             "--available-width": "The width between the anchor and the edge of the viewport.",
             "--available-height": "The height between the anchor and the edge of the viewport.",
-            "--transform-origin": "The point of the popup nearest its anchor, to scale from."
+            "--transform-origin": "The point of the popup nearest its anchor, to scale from.",
+            "--positioner-width": "The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.",
+            "--positioner-height": "The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size."
           },
           "inside": [
             "portal"
@@ -10745,6 +12190,16 @@ export const vocabulary = {
         "arrow": {
           "description": "An element that points at the trigger, placed along the popup's edge.",
           "states": {
+            "open": {
+              "attribute": "data-open",
+              "description": "Present when it is open.",
+              "selector": "[data-open]"
+            },
+            "closed": {
+              "attribute": "data-closed",
+              "description": "Present when it is closed.",
+              "selector": "[data-closed]"
+            },
             "side": {
               "attribute": "data-side",
               "description": "The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.",
@@ -10766,13 +12221,27 @@ export const vocabulary = {
                 "end": "[data-align=\"end\"]"
               }
             },
+            "instant": {
+              "attribute": "data-instant",
+              "description": "Present when it opened or closed without its usual wait, for a design that skips the motion then.",
+              "values": {
+                "delay": "[data-instant=\"delay\"]",
+                "focus": "[data-instant=\"focus\"]",
+                "dismiss": "[data-instant=\"dismiss\"]"
+              }
+            },
             "uncentered": {
               "attribute": "data-uncentered",
               "description": "Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.",
               "selector": "[data-uncentered]"
             }
           },
-          "exclusive": [],
+          "exclusive": [
+            [
+              "open",
+              "closed"
+            ]
+          ],
           "variables": {},
           "inside": [
             "popup"

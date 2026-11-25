@@ -599,7 +599,7 @@
               </div>
             </div>
           </kui-select>
-          <kui-select kui-id="sm3" multiple default-values="l,s">
+          <kui-select kui-id="sm3" multiple default-value="l,s">
             <button kui-part="trigger" data-testid="sm3-trigger">
               <span kui-part="value" class="bar" data-testid="sm3-value">
                 <template kui-each="values"><b>{label}</b></template>
@@ -974,10 +974,17 @@
             </div>
           </kui-toggle-group>
           <output data-testid="tg1-output">left</output>
-          <kui-toolbar>
+          <kui-toolbar loop-focus>
             <div kui-part="root" aria-label="Editing" class="bar" data-testid="tb1">
               <button kui-part="button" data-testid="tb1-save">Save</button>
-              <button kui-part="button" kui-disabled data-testid="tb1-gone">Gone</button>
+              <button
+                kui-part="button"
+                kui-disabled
+                kui-focusable-when-disabled="false"
+                data-testid="tb1-gone"
+              >
+                Gone
+              </button>
               <a kui-part="link" href="#tb1-help" data-testid="tb1-link">Help</a>
               <div kui-part="separator" data-testid="tb1-line"></div>
               <input kui-part="input" aria-label="Zoom" value="100" data-testid="tb1-zoom" />
@@ -1128,7 +1135,7 @@
           </form>
           <output data-testid="otp1-output">none</output>
           <div class="otp-row">
-            <kui-otp kui-id="otp2" length="2" mode="alphabetic">
+            <kui-otp kui-id="otp2" length="2" validation-type="alpha">
               <div kui-part="root" class="otp" data-testid="otp2">
                 <input
                   kui-part="input"
@@ -1205,9 +1212,7 @@
                 <div kui-part="item" kui-index="0" class="carousel-item" data-testid="cr1-0">
                   One
                 </div>
-                <div kui-part="item" kui-index="1" class="carousel-item" data-testid="cr1-1">
-                  Two
-                </div>
+                <div kui-part="item" class="carousel-item" data-testid="cr1-1">Two</div>
                 <div kui-part="item" kui-index="2" class="carousel-item" data-testid="cr1-2">
                   Three
                 </div>
@@ -1242,7 +1247,7 @@
           <button type="button" data-testid="ts1-undo">Add a toast with an action</button>
           <button type="button" data-testid="ts1-alert">Add an urgent toast</button>
           <output data-testid="ts1-output"></output>
-          <kui-toast kui-id="ts1" duration="600000">
+          <kui-toast kui-id="ts1" timeout="600000">
             <div kui-part="viewport" class="toasts" data-testid="ts1">
               <template kui-each="toasts">
                 <div kui-part="toast" class="toast" data-testid="ts1-{id}">

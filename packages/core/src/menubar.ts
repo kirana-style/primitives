@@ -9,11 +9,22 @@ import type { Orientation } from "./services/roving.ts"
 export interface MenubarProps {
   id: string
   /** Whether the arrows go round from the last menu to the first. Default: they do. */
+  loopFocus?: boolean | undefined
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   loop?: boolean | undefined
   /** No menu of the bar opens. */
   disabled?: boolean | undefined
   /** A row (the default) or a column of menus. In a column a menu opens beside its trigger. */
   orientation?: Orientation | undefined
+  /**
+   * Holds the page while one of its menus is open, as a menu's own `modal` does: its scroll is
+   * locked, and a press outside closes the menu and reaches nothing. Default: it does not.
+   * Read as a menu opens.
+   */
+  modal?: boolean | undefined
 }
 
 /** A menu of the bar, as the bar knows it. */
@@ -27,6 +38,8 @@ export interface MenubarMember {
 /** What a menu needs of the bar it is in. Not for a caller. */
 export interface MenubarLink {
   readonly disabled: ReadonlySignal<boolean>
+  /** Whether its menus hold the page while open. */
+  modal(): boolean
   readonly vertical: ReadonlySignal<boolean>
   /** For a menu's trigger: it joins the bar's row. Returns the leaving. */
   join(trigger: HTMLElement, member: MenubarMember): () => void
@@ -65,8 +78,10 @@ export function createMenubar(
   const active = signal<HTMLElement | undefined>(undefined)
   let current: MenubarMember | undefined
   const disabled = computed(() => Boolean(props.get().disabled))
-  const loop = () => props.peek().loop ?? true
+  const loop = () => props.peek().loopFocus ?? props.peek().loop ?? true
   const vertical = computed(() => props.get().orientation === "vertical")
+  // The menus of the bar that are open: one, but for the moment one hands over to the next.
+  const opened = signal<ReadonlySet<MenubarMember>>(new Set())
 
   const triggerOf = (member: MenubarMember) => [...members].find(([, each]) => each === member)?.[0]
 
@@ -78,11 +93,14 @@ export function createMenubar(
         "aria-orientation": vertical.get() ? "vertical" : "horizontal",
         "data-orientation": vertical.get() ? "vertical" : "horizontal",
         "data-disabled": flag(disabled.get()),
+        "data-modal": flag(props.get().modal),
+        "data-has-submenu-open": flag(opened.get().size > 0),
       })),
       attach: () => NOTHING,
     },
     link: {
       disabled,
+      modal: () => Boolean(props.peek().modal),
       vertical,
       join(trigger, member) {
         members.set(trigger, member)
@@ -109,10 +127,15 @@ export function createMenubar(
       opened(member) {
         const before = current
         current = member
+        opened.set(new Set([...opened.peek(), member]))
         if (before && before !== member) before.close(details("sibling-open"))
       },
       closed(member) {
         if (current === member) current = undefined
+        if (!opened.peek().has(member)) return
+        const left = new Set(opened.peek())
+        left.delete(member)
+        opened.set(left)
       },
       step(member, by, event) {
         const from = triggerOf(member)

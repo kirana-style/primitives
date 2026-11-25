@@ -4,7 +4,8 @@ import { createAvatar } from "../../packages/core/src/avatar.ts"
 import type { ImageStatus } from "../../packages/core/src/avatar.ts"
 import { bind } from "../../packages/core/src/bind.ts"
 import { effect, signal } from "../../packages/core/src/reactivity.ts"
-import { find, mount } from "./page.ts"
+import type { Signal } from "../../packages/core/src/reactivity.ts"
+import { find, mount, style } from "./page.ts"
 
 // A picture of one pixel, and an address that is not a picture.
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -108,6 +109,70 @@ describe("an avatar", () => {
     expect(picture.getAttribute("aria-hidden")).toBe("true")
   })
 
+  it("draws its image with a starting style, and keeps it through its exit, as Base UI's", async () => {
+    const made = avatar()
+    style(`#picture { transition: opacity 80ms } #picture[data-ending-style] { opacity: 0 }`)
+    const root = mount(`<span id="root"></span>`)
+    // Drawn as an adapter draws it: in the page while the avatar says so.
+    const frames: string[] = []
+    let undo: (() => void) | undefined
+    onTestFinished(
+      effect(() => {
+        if (made.imageMounted.get() && !undo) {
+          const props = made.image.props.peek()
+          frames.push(props["data-starting-style"] === "" ? "starting" : "at once")
+          const picture = document.createElement("img")
+          picture.id = "picture"
+          find(root, "root").append(picture)
+          const unbind = bind(picture, made.image)
+          undo = () => {
+            unbind()
+            picture.remove()
+          }
+        } else if (!made.imageMounted.get() && undo) {
+          undo()
+          undo = undefined
+        }
+      })
+    )
+    onTestFinished(() => undo?.())
+    made.source.set(PIXEL)
+    await expect.poll(() => made.imageMounted.peek()).toBe(true)
+    expect(frames).toEqual(["starting"])
+    await expect.poll(() => find(root, "picture").hasAttribute("data-starting-style")).toBe(false)
+    // No longer loaded: it stays for its exit, and leaves once that has run.
+    made.source.set(BROKEN)
+    await expect.poll(() => made.status.peek()).toBe("error")
+    expect(find(root, "picture").hasAttribute("data-ending-style")).toBe(true)
+    expect(made.imageMounted.peek()).toBe(true)
+    await expect.poll(() => made.imageMounted.peek()).toBe(false)
+    expect(root.querySelector("#picture")).toBe(null)
+  })
+
+  it("gives an image kept in the page a starting style once a picture it waited for arrives", async () => {
+    const made = avatar()
+    const root = mount(`<img id="picture" alt="">`)
+    const picture = find<HTMLImageElement>(root, "picture")
+    const starting: boolean[] = []
+    onTestFinished(
+      effect(() => void starting.push(made.keptImage.props.get()["data-starting-style"] === ""))
+    )
+    onTestFinished(bind(picture, made.keptImage))
+    picture.setAttribute("src", PIXEL)
+    await expect.poll(() => made.status.peek()).toBe("loaded")
+    // One it waited for: loading, then its own `load`.
+    ;(made.status as Signal<ImageStatus>).set("loading")
+    picture.dispatchEvent(new Event("load"))
+    expect(made.status.peek()).toBe("loaded")
+    expect(picture.hasAttribute("data-starting-style")).toBe(true)
+    await expect.poll(() => picture.hasAttribute("data-starting-style")).toBe(false)
+    expect(starting.includes(true)).toBe(true)
+    // It never leaves, so it has no exit.
+    picture.setAttribute("src", BROKEN)
+    await expect.poll(() => made.status.peek()).toBe("error")
+    expect(picture.hasAttribute("data-ending-style")).toBe(false)
+  })
+
   it("reads an image kept in the page that has loaded before it was followed", async () => {
     const root = mount(`<img id="picture" alt="" src="${PIXEL}">`)
     const picture = find<HTMLImageElement>(root, "picture")
@@ -115,5 +180,7 @@ describe("an avatar", () => {
     const made = avatar()
     onTestFinished(bind(picture, made.keptImage))
     expect(made.status.peek()).toBe("loaded")
+    // Painted before it was followed: no entrance to play again.
+    expect(picture.hasAttribute("data-starting-style")).toBe(false)
   })
 })

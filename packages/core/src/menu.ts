@@ -9,8 +9,12 @@ import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { createList, pointerMoved } from "./services/list.ts"
 import type { List, ListRow } from "./services/list.ts"
 import { lockPage, popupFocus } from "./services/popup-focus.ts"
-import { createPopup } from "./services/popup.ts"
+import { popupSize } from "./services/popup-size.ts"
+import { createPopup, instantOf } from "./services/popup.ts"
+import type { Instant } from "./services/popup.ts"
 import { createPlacement, pointAnchor } from "./services/position.ts"
+import { presentPart } from "./services/presence.ts"
+import type { PresentPart } from "./services/presence.ts"
 import type { PositionOptions } from "./services/position.ts"
 import { createSafeArea } from "./services/safe-area.ts"
 
@@ -25,6 +29,11 @@ export interface MenuProps {
   /** The trigger cannot be pressed; a submenu's is passed over. */
   disabled?: boolean | undefined
   /** Whether the arrows go round from the last item to the first. Default: they do. */
+  loopFocus?: boolean | undefined
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   loop?: boolean | undefined
   /**
    * Holds the page while the menu is open: its scroll is locked, and a press outside closes
@@ -81,8 +90,8 @@ export interface MenuGroup {
 export interface MenuCheckboxItem {
   readonly checked: ReadonlySignal<boolean>
   readonly part: Part
-  /** The mark the item shows while it is checked. */
-  readonly indicator: Part
+  /** The mark the item shows while it is checked: in the page then, and through its exit. */
+  readonly indicator: PresentPart
   mount(): () => void
 }
 
@@ -92,8 +101,11 @@ export interface MenuRadioGroup<Value = unknown> {
   item(value: Value, options?: () => MenuItemOptions): Part
   /** Whether `value` is the chosen one, for an item's indicator. */
   checked(value: Value): ReadonlySignal<boolean>
-  /** The mark an item shows while it is the chosen one. */
-  indicator(value: Value): Part
+  /**
+   * The mark an item shows while it is the chosen one: in the page then, and through its exit.
+   * Asked for again, a new one: an adapter keeps the one it made.
+   */
+  indicator(value: Value): PresentPart
   mount(): () => void
 }
 
@@ -165,6 +177,15 @@ const checkedState = (on: boolean) => ({
   "data-unchecked": flag(!on),
 })
 
+/** The reasons a menu of a bar opens or closes as one of the bar's, with no motion of its own. */
+const GROUP = new Set([
+  "trigger-focus",
+  "focus-out",
+  "trigger-hover",
+  "list-navigation",
+  "sibling-open",
+])
+
 /** A click the keyboard made (Enter, Space, the menu's own press of the highlighted row). */
 const byKeyboard = (event: Event) => (event as MouseEvent).detail === 0
 
@@ -213,7 +234,11 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     // The menu moves focus itself, to the row it was opened for; the popup gives it back.
     focus: popupFocus("none"),
     placement,
-    ...(parent ? {} : { swallow: () => Boolean(props.peek().modal), hold: lockPage }),
+    size: popupSize(),
+    // In a bar, the bar's `modal` says it for each of its menus.
+    ...(parent
+      ? {}
+      : { swallow: () => (bar ? bar.modal() : Boolean(props.peek().modal)), hold: lockPage }),
     ...(around.context
       ? {
           anchor: () => pointAnchor(() => point, area),
@@ -224,7 +249,10 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
         }
       : {}),
   })
-  const list = createList({ selector: ROWS, loop: () => props.peek().loop ?? true })
+  const list = createList({
+    selector: ROWS,
+    loop: () => props.peek().loopFocus ?? props.peek().loop ?? true,
+  })
   const way = createSafeArea()
 
   let trigger: HTMLElement | undefined
@@ -234,9 +262,15 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
   // Where the pointer last was on a submenu's trigger.
   let rested: [number, number] | undefined
 
+  // Why its motion should be skipped: said by the last change that went through.
+  const instant = signal<Instant | "group" | undefined>(undefined)
+
   function setOpen(next: boolean, by: ChangeDetails) {
     if (next && disabled.peek()) return
     open.set(next, by)
+    if (by.canceled) return
+    // Going from one menu of a bar to the next, neither moves: the bar's menus are one.
+    instant.set(bar && GROUP.has(by.reason) ? "group" : instantOf(next, by))
   }
 
   function openFor(where: Entry, by: ChangeDetails) {
@@ -337,6 +371,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     id: triggerId,
     "aria-haspopup": "menu",
     ...layer.expanded(popupId),
+    "data-pressed": flag(open.get()),
     disabled: flag(disabled.get()),
     "data-disabled": flag(disabled.get()),
     // In a bar it is one of the bar's items, and the bar is one stop for Tab.
@@ -479,6 +514,11 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
       onChange: (next, by) => groupProps.peek().onValueChange?.(next as Value, by),
     })
     const isChecked = keyed(value as ReadonlySignal<Value | null>)
+    // Each item's own options, for its indicator to say whether it is disabled. An item is made
+    // before the indicator inside it, so its options are known when the indicator reads them.
+    const optionsOf = new Map<Value, () => MenuItemOptions>()
+    const off = (item: Value) =>
+      Boolean(optionsOf.get(item)?.().disabled) || Boolean(groupProps.get().disabled)
     return {
       value,
       mount: () => () => isChecked.dispose(),
@@ -492,6 +532,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
       },
       item(item, options = () => ({})) {
         const on = isChecked.is(item)
+        optionsOf.set(item, options)
         return rowPart(
           "menuitemradio",
           () => ({
@@ -505,10 +546,11 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
       },
       indicator(item) {
         const on = isChecked.is(item)
-        return {
-          props: computed(() => ({ "aria-hidden": "true", ...checkedState(on.get()) })),
-          attach: () => NOTHING,
-        }
+        return presentPart(on, () => ({
+          "aria-hidden": "true",
+          ...checkedState(on.get()),
+          "data-disabled": flag(off(item)),
+        }))
       },
     }
   }
@@ -522,6 +564,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
     area: {
       props: computed(() => ({
         "data-popup-open": flag(open.get()),
+        "data-pressed": flag(open.get()),
         onContextMenu(event: MouseEvent) {
           if (disabled.peek()) return
           // The menu in place of the browser's own.
@@ -627,6 +670,7 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
         "aria-labelledby": around.context ? undefined : triggerId,
         ...layer.state(),
         ...layer.placed(),
+        "data-instant": instant.get(),
         onPointerEnter: () => way.clear(),
         onKeyDown(event: KeyboardEvent) {
           // React hands a key pressed in a submenu to the menu it was drawn inside as well.
@@ -735,10 +779,11 @@ export function createMenu(props: ReadonlySignal<MenuProps>, around: MenuAround 
           () => ({ "aria-checked": String(checked.get()), ...checkedState(checked.get()) }),
           (event) => checked.set(!checked.peek(), details("item-press", event))
         ),
-        indicator: {
-          props: computed(() => ({ "aria-hidden": "true", ...checkedState(checked.get()) })),
-          attach: () => NOTHING,
-        },
+        indicator: presentPart(checked, () => ({
+          "aria-hidden": "true",
+          ...checkedState(checked.get()),
+          "data-disabled": flag(itemProps.get().disabled),
+        })),
       }
     },
     radioGroup,

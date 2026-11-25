@@ -49,12 +49,20 @@ export interface NavigationMenuLinkOptions {
   closeOnClick?: boolean | undefined
 }
 
+/** What an item's trigger takes of its own. */
+export interface NavigationMenuTriggerOptions {
+  /** The trigger cannot be pressed, and the pointer resting on it shows nothing. */
+  disabled?: boolean | undefined
+}
+
 /** One item of the menu: a trigger, and the content it shows. */
 export interface NavigationMenuItem {
   readonly open: ReadonlySignal<boolean>
   /** Whether the content is in the page: while it is shown, and through its exit. */
   readonly mounted: ReadonlySignal<boolean>
   readonly trigger: Part
+  /** The trigger, with options of its own: `trigger` is this with none. */
+  triggerPart(options: () => NavigationMenuTriggerOptions): Part
   /** A mark on the trigger that shows whether its content is open. */
   readonly icon: Part
   readonly content: Part
@@ -102,7 +110,10 @@ const ITEM: Part = { props: computed(() => ({})), attach: () => NOTHING }
  */
 export function createNavigationMenu<Value = unknown>(
   props: ReadonlySignal<NavigationMenuProps<Value>>,
-  around: DirectionAround = {}
+  around: DirectionAround & {
+    /** The menu whose content this one is inside: it is nested, and its root says so. */
+    parent?: NavigationMenu | undefined
+  } = {}
 ): NavigationMenu<Value> {
   const id = props.peek().id
   // `undefined` means "not controlled", so "none" is `null`.
@@ -114,7 +125,10 @@ export function createNavigationMenu<Value = unknown>(
   const isOpen = computed(() => value.get() !== null)
   const orientation = computed(() => props.get().orientation ?? "horizontal")
   // Which way the content came from, for a design that slides it: the item before, or after.
-  const from = signal<"left" | "right" | undefined>(undefined)
+  const from = signal<"left" | "right" | "up" | "down" | undefined>(undefined)
+  // The positioner skips its motion as it is first drawn, and while the window is resized: it
+  // would slide from where it was, or chase the new layout.
+  const instant = signal(false)
   const viewportElement = signal<HTMLElement | undefined>(undefined)
   const roving = createRoving()
   const placement = createPlacement({ align: "start" }, around.direction)
@@ -147,7 +161,9 @@ export function createNavigationMenu<Value = unknown>(
       const a = triggers.get(before)
       const b = triggers.get(next)
       const after = a && b && a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
-      from.set(after ? "right" : "left")
+      // Down a column, the item after is below.
+      if (orientation.peek() === "vertical") from.set(after ? "down" : "up")
+      else from.set(after ? "right" : "left")
     } else from.set(undefined)
     value.set(next, by)
   }
@@ -235,6 +251,9 @@ export function createNavigationMenu<Value = unknown>(
       get trigger() {
         return get().trigger
       },
+      triggerPart(options) {
+        return get().triggerPart(options)
+      },
       get icon() {
         return get().icon
       },
@@ -261,23 +280,25 @@ export function createNavigationMenu<Value = unknown>(
     const shown = computed(() => Object.is(value.get(), key))
     const presence = createPresence(shown)
 
-    const made: NavigationMenuItem = {
-      open: shown,
-      mounted: presence.mounted,
-      mount: () => presence.start(),
-      trigger: {
-        props: computed(() => ({
+    const triggerPart = (options: () => NavigationMenuTriggerOptions): Part => ({
+      props: computed(() => {
+        const off = Boolean(options().disabled)
+        return {
           type: "button",
           "aria-expanded": String(shown.get()),
           "aria-controls": presence.mounted.get() ? contentId : undefined,
           "data-popup-open": flag(shown.get()),
+          "data-pressed": flag(shown.get()),
+          disabled: flag(off),
+          "data-disabled": flag(off),
           onClick(event: Event) {
+            if (off) return
             // The pointer opened it a moment ago: the press that follows is not a second wish.
             if (shown.peek() && performance.now() - hovered < HOVER_PRESS) return
             setValue(shown.peek() ? null : key, details("trigger-press", event))
           },
           onPointerEnter(event: PointerEvent) {
-            if (event.pointerType !== "mouse") return
+            if (event.pointerType !== "mouse" || off) return
             clear()
             if (shown.peek()) return
             opening = setTimeout(() => {
@@ -307,16 +328,24 @@ export function createNavigationMenu<Value = unknown>(
               first.focus()
             }
           },
-        })),
-        attach(element) {
-          triggers.set(key, element)
-          const leave = roving.register(element)
-          return () => {
-            leave()
-            if (triggers.get(key) === element) triggers.delete(key)
-          }
-        },
+        }
+      }),
+      attach(element) {
+        triggers.set(key, element)
+        const leave = roving.register(element)
+        return () => {
+          leave()
+          if (triggers.get(key) === element) triggers.delete(key)
+        }
       },
+    })
+
+    const made: NavigationMenuItem = {
+      open: shown,
+      mounted: presence.mounted,
+      mount: () => presence.start(),
+      trigger: triggerPart(() => ({})),
+      triggerPart,
       icon: {
         props: computed(() => ({ "aria-hidden": "true", "data-popup-open": flag(shown.get()) })),
         attach: () => NOTHING,
@@ -401,13 +430,18 @@ export function createNavigationMenu<Value = unknown>(
       }
     },
     root: {
-      props: computed(() => ({ "data-orientation": orientation.get() })),
+      props: computed(() => ({
+        "data-orientation": orientation.get(),
+        "data-open": flag(isOpen.get()),
+        "data-nested": flag(Boolean(around.parent)),
+      })),
       attach: () => NOTHING,
     },
     itemPart: ITEM,
     list: {
       props: computed(() => ({
         "data-orientation": orientation.get(),
+        "data-open": flag(isOpen.get()),
         onKeyDown(event: KeyboardEvent) {
           // Along the triggers and the links of the list itself.
           roving.move(event, {
@@ -449,12 +483,42 @@ export function createNavigationMenu<Value = unknown>(
       }
     },
     positioner: {
-      props: layer.positioner.props,
+      props: computed(() => ({
+        ...layer.positioner.props.get(),
+        "data-instant": flag(instant.get()),
+      })),
       attach(element) {
         positioner = element
         const detach = layer.positioner.attach(element)
         size()
+        const view = element.ownerDocument.defaultView
+        let first: ReturnType<typeof setTimeout> | undefined
+        let resizing: ReturnType<typeof setTimeout> | undefined
+        // Drawn open, it is placed with no motion: it would slide from where it lay unplaced.
+        // Base UI lets it move again a task later.
+        if (open.peek()) {
+          instant.set(true)
+          first = setTimeout(() => {
+            first = undefined
+            if (!resizing) instant.set(false)
+          })
+        }
+        // While the window is resized, and for a moment after, it follows the layout at once.
+        const resized = () => {
+          if (!open.peek()) return
+          instant.set(true)
+          clearTimeout(resizing)
+          resizing = setTimeout(() => {
+            resizing = undefined
+            instant.set(false)
+          }, 100)
+        }
+        view?.addEventListener("resize", resized)
         return () => {
+          view?.removeEventListener("resize", resized)
+          clearTimeout(first)
+          clearTimeout(resizing)
+          instant.set(false)
           detach()
           if (positioner === element) positioner = undefined
         }
@@ -464,6 +528,7 @@ export function createNavigationMenu<Value = unknown>(
       props: computed(() => ({
         ...layer.state(),
         ...layer.placed(),
+        ...layer.hidden(),
         ...hover,
         onKeyDown(event: KeyboardEvent) {
           if (event.key !== "Tab") return

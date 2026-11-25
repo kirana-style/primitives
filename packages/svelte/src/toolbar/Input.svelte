@@ -6,8 +6,8 @@
   import { useToolbar } from "./context.ts"
   import type { InputProps } from "./types.ts"
 
-  let { disabled, ...rest }: InputProps = $props()
-  const options = toSignal(() => ({ disabled }))
+  let { disabled, focusableWhenDisabled, ...rest }: InputProps = $props()
+  const options = toSignal(() => ({ disabled, focusableWhenDisabled }))
   const part = useToolbar().input(() => defined(options.get()))
 </script>
 

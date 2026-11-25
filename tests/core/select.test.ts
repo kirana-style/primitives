@@ -419,7 +419,10 @@ const settled = () => new Promise((resolve) => setTimeout(resolve, 10))
  * A select in a form, drawn as an adapter draws one, in plain DOM: its value part says the
  * label, or "Pick". Blueberry is disabled.
  */
-function picker(given: Partial<SelectProps<string>> = {}, around: { field?: Field } = {}) {
+function picker<Multiple extends boolean | undefined = false>(
+  given: Partial<SelectProps<string, Multiple>> = {},
+  around: { field?: Field } = {}
+) {
   const root = mount(`
     <form id="form"><div id="field">
       <button id="trigger"><span id="value"></span></button><input id="hidden" />
@@ -428,7 +431,7 @@ function picker(given: Partial<SelectProps<string>> = {}, around: { field?: Fiel
       (each) => `<div id="o-${each}"><span>${each}</span></div>`
     ).join("")}</div></div>`)
   const heard: string[][] = []
-  const props = signal<SelectProps<string>>({
+  const props = signal<SelectProps<string, Multiple>>({
     id: "s",
     onValuesChange: (next) => void heard.push(next),
     ...given,
@@ -519,6 +522,39 @@ describe("a select of several values", () => {
     expect(made.open.peek()).toBe(true)
     expect(shown.textContent).toBe("Pick")
     expect(shown.hasAttribute("data-placeholder")).toBe(true)
+  })
+
+  it("holds them in Base UI's `value`, `defaultValue` and `onValueChange`, which win over the older names", async () => {
+    const told: string[][] = []
+    const { made, heard, trigger, option } = picker<true>({
+      multiple: true,
+      defaultValue: ["Banana"],
+      defaultValues: ["Apple"],
+      onValueChange: (next) => void told.push(next),
+    })
+    expect(made.values.peek()).toEqual(["Banana"])
+    trigger.click()
+    await settled()
+    option("Cherry").click()
+    expect(told).toEqual([["Banana", "Cherry"]])
+    // Both given, the older callback is not called.
+    expect(heard).toEqual([])
+    expect(made.value.peek()).toBe(null)
+    made.setOpen(false, details("test"))
+
+    // Held by the caller: `value` before `values`.
+    const holding = picker<true>({ multiple: true, value: ["Apple"], values: ["Cherry"] })
+    expect(holding.made.values.peek()).toEqual(["Apple"])
+    holding.props.set({ ...holding.props.peek(), value: ["Cherry", "Apple"] })
+    expect(holding.made.values.peek()).toEqual(["Cherry", "Apple"])
+
+    // The older names alone still hold them, and are told.
+    const older = picker({ multiple: true, defaultValues: ["Apricot"] })
+    expect(older.made.values.peek()).toEqual(["Apricot"])
+    older.trigger.click()
+    await settled()
+    older.option("Apple").click()
+    expect(older.heard).toEqual([["Apricot", "Apple"]])
   })
 
   it("says so on the list inside its popup, when there is one", () => {
@@ -1012,5 +1048,63 @@ describe("a select's list as a sheet", () => {
     await placed()
     expect(positioner.getAttribute("data-presentation")).toBe("popup")
     expect(positioner.style.position).toBe("absolute")
+  })
+})
+
+describe("a select, in Base UI's words", () => {
+  it("says on its trigger that it is pressed and which side the list opened on, and on its popup too", async () => {
+    const { made, trigger, popup, placed } = select({ top: MID, align: false })
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+    expect(trigger.hasAttribute("data-popup-side")).toBe(false)
+    trigger.click()
+    await placed()
+    expect(trigger.hasAttribute("data-pressed")).toBe(true)
+    expect(trigger.getAttribute("data-popup-side")).toBe("bottom")
+    expect(popup.getAttribute("data-side")).toBe("bottom")
+    made.setOpen(false, details("test"))
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+  })
+
+  it("says `none` for a list that lies over its trigger, on the trigger and the popup", async () => {
+    const { trigger, popup, positioner } = select({ top: MID })
+    trigger.click()
+    await expect.poll(() => positioner.getAttribute("data-side")).toBe("none")
+    expect(popup.getAttribute("data-side")).toBe("none")
+    expect(trigger.getAttribute("data-popup-side")).toBe("none")
+  })
+
+  it("says on its trigger that it is required, and what its field says", async () => {
+    const root = mount(`<button id="t"></button>`)
+    const field = createField(signal({ id: "f" }))
+    const made = createSelect(signal<SelectProps<string>>({ id: "s", required: true }), { field })
+    const trigger = find(root, "t")
+    onTestFinished(field.mount())
+    onTestFinished(made.mount())
+    onTestFinished(bind(trigger, made.trigger))
+    expect(trigger.hasAttribute("data-required")).toBe(true)
+    expect(trigger.hasAttribute("data-touched")).toBe(false)
+    trigger.focus()
+    expect(trigger.hasAttribute("data-focused")).toBe(true)
+    trigger.blur()
+    expect(trigger.hasAttribute("data-touched")).toBe(true)
+    // Required and empty: wrong once checked.
+    await field.validate()
+    expect(trigger.hasAttribute("data-invalid")).toBe(true)
+    expect(trigger.hasAttribute("data-valid")).toBe(false)
+  })
+
+  it("draws an item's mark while it is chosen and through its exit", async () => {
+    style(`.mark { transition: opacity 100ms } .mark[data-ending-style] { opacity: 0 }`)
+    const root = mount(`<span class="mark" id="m2"></span>`)
+    const made = createSelect(signal<SelectProps<string>>({ id: "s", defaultValue: "v2" }))
+    const mark = find(root, "m2")
+    const indicator = made.itemIndicator("v2")
+    onTestFinished(indicator.mount())
+    onTestFinished(bind(mark, indicator))
+    expect(indicator.mounted.peek()).toBe(true)
+    expect(mark.getAttribute("aria-hidden")).toBe("true")
+    made.setValue("v3", details("test"))
+    expect(mark.hasAttribute("data-ending-style")).toBe(true)
+    await expect.poll(() => indicator.mounted.peek()).toBe(false)
   })
 })

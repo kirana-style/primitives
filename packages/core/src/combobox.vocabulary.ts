@@ -1,18 +1,38 @@
 import { defineComponent } from "./part.ts"
-import { PRESENTATION, SHEET_STATES, SHEET_VARIABLES } from "./select.vocabulary.ts"
+import { POPUP_SIDE, PRESENTATION, SHEET_STATES, SHEET_VARIABLES } from "./select.vocabulary.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
   CONTROL,
   DISABLED,
   EITHER_FRAME,
   EITHER_OPEN,
+  EITHER_VALID,
+  FIELD,
   OPEN,
   PLACEMENT,
+  PRESSED,
   TRANSITION,
   state,
 } from "./states.ts"
 
 const POPUP_OPEN = state("data-popup-open", "Present when the list is open.")
+const EMPTY = state("data-empty", "Present when no item is shown for what was typed.")
+
+/** What the input and the trigger both say of the combobox. */
+const OPENER = {
+  popupOpen: POPUP_OPEN,
+  pressed: PRESSED,
+  popupSide: POPUP_SIDE,
+  listEmpty: state(
+    "data-list-empty",
+    "Present when no item is shown for what was typed, once the list is in the page."
+  ),
+  disabled: DISABLED,
+  readonly: CONTROL.readonly,
+  required: CONTROL.required,
+  ...FIELD,
+}
 
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
@@ -25,13 +45,15 @@ export const comboboxVocabulary = defineComponent({
     inside: ["root", "chips", "popup"],
     description:
       "The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.",
-    states: { popupOpen: POPUP_OPEN, disabled: DISABLED, readonly: CONTROL.readonly },
+    states: OPENER,
+    exclusive: EITHER_VALID,
   },
   trigger: {
     inside: "root",
     description:
       "A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.",
-    states: { popupOpen: POPUP_OPEN, disabled: DISABLED, readonly: CONTROL.readonly },
+    states: OPENER,
+    exclusive: EITHER_VALID,
   },
   value: {
     inside: "trigger",
@@ -56,7 +78,13 @@ export const comboboxVocabulary = defineComponent({
     inside: "portal",
     description:
       "Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.",
-    states: { ...OPEN, ...PLACEMENT, presentation: PRESENTATION },
+    states: {
+      ...OPEN,
+      ...PLACEMENT,
+      presentation: PRESENTATION,
+      anchorHidden: ANCHOR_HIDDEN,
+      empty: EMPTY,
+    },
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
   },
@@ -68,7 +96,8 @@ export const comboboxVocabulary = defineComponent({
       ...TRANSITION,
       ...PLACEMENT,
       ...SHEET_STATES,
-      empty: state("data-empty", "Present when no item is shown for what was typed."),
+      anchorHidden: ANCHOR_HIDDEN,
+      empty: EMPTY,
     },
     exclusive: EITHER_FRAME,
     variables: {
@@ -82,7 +111,7 @@ export const comboboxVocabulary = defineComponent({
     optional: true,
     description:
       "The items' own box inside the popup, when the popup holds more than items (an input): it is then the listbox.",
-    states: { empty: state("data-empty", "Present when no item is shown for what was typed.") },
+    states: { empty: EMPTY },
   },
   collection: {
     inside: ["list", "popup", "group"],
@@ -127,8 +156,16 @@ export const comboboxVocabulary = defineComponent({
   },
   clear: {
     inside: "root",
-    description: "A button that empties the input and the value.",
-    states: { disabled: DISABLED },
+    description:
+      "A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.",
+    states: {
+      disabled: DISABLED,
+      popupOpen: POPUP_OPEN,
+      visible: state("data-visible", "Present while there is something to clear."),
+      startingStyle: TRANSITION.startingStyle,
+      endingStyle: TRANSITION.endingStyle,
+    },
+    exclusive: [["startingStyle", "endingStyle"]],
   },
   chips: {
     inside: "root",
@@ -140,6 +177,7 @@ export const comboboxVocabulary = defineComponent({
     repeated: true,
     description:
       "One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.",
+    states: { disabled: DISABLED },
   },
   chipRemove: {
     inside: "chip",

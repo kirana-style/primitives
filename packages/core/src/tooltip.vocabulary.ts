@@ -1,10 +1,12 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
   EITHER_FRAME,
   EITHER_OPEN,
   OPEN,
   PLACEMENT,
+  POSITIONER_SIZE,
   TRANSITION,
   state,
   valued,
@@ -23,7 +25,13 @@ export const tooltipVocabulary = defineComponent({
   trigger: {
     inside: "root",
     description: "The element the tooltip describes.",
-    states: { popupOpen: state("data-popup-open", "Present when the tooltip is open.") },
+    states: {
+      popupOpen: state("data-popup-open", "Present when the tooltip is open."),
+      triggerDisabled: state(
+        "data-trigger-disabled",
+        "Present when the tooltip is disabled: the pointer and focus on the trigger do not open it."
+      ),
+    },
   },
   portal: {
     description:
@@ -33,9 +41,9 @@ export const tooltipVocabulary = defineComponent({
   positioner: {
     inside: "portal",
     description: "Places the popup against the trigger. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT },
+    states: { ...OPEN, ...PLACEMENT, anchorHidden: ANCHOR_HIDDEN },
     exclusive: EITHER_OPEN,
-    variables: ANCHORED,
+    variables: { ...ANCHORED, ...POSITIONER_SIZE },
   },
   popup: {
     inside: "positioner",
@@ -46,8 +54,11 @@ export const tooltipVocabulary = defineComponent({
   arrow: {
     inside: "popup",
     description: "An element that points at the trigger, placed along the popup's edge.",
+    exclusive: EITHER_OPEN,
     states: {
+      ...OPEN,
       ...PLACEMENT,
+      instant: INSTANT,
       uncentered: state(
         "data-uncentered",
         "Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre."

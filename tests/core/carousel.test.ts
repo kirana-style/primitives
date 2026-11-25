@@ -51,6 +51,28 @@ const press = (key: string) => userEvent.keyboard(`{${key}}`)
 const off = (element: HTMLElement) => element.hasAttribute("disabled")
 
 describe("a carousel", () => {
+  it("counts a slide with no index by its place in the page, as the page changes", async () => {
+    const root = mount(`<div id="view"><div id="a">A</div><div id="b">B</div></div>`)
+    const made = createCarousel(signal<CarouselProps>({ id: "cc", defaultIndex: 1 }))
+    const a = made.item()
+    const b = made.item()
+    // Not in the page yet, as on a server: neither has a place, so neither is current.
+    expect(a.props.peek()["data-current"]).toBeUndefined()
+    expect(b.props.peek()["data-current"]).toBeUndefined()
+    // Bound the other way round from the page's order: the page's is what counts.
+    onTestFinished(bind(find(root, "b"), b))
+    onTestFinished(bind(find(root, "a"), a))
+    await expect.poll(() => find(root, "b").hasAttribute("data-current")).toBe(true)
+    expect(find(root, "a").hasAttribute("data-current")).toBe(false)
+    expect(made.count.peek()).toBe(2)
+    // A slide put in before them moves them on.
+    const first = document.createElement("div")
+    find(root, "view").prepend(first)
+    onTestFinished(bind(first, made.item()))
+    await expect.poll(() => find(root, "a").hasAttribute("data-current")).toBe(true)
+    expect(find(root, "b").hasAttribute("data-current")).toBe(false)
+  })
+
   it("is a region of slides that says which the view is at", async () => {
     const { root, made } = carousel()
     expect(find(root, "root").getAttribute("role")).toBe("region")

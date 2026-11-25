@@ -29,6 +29,11 @@ const Root = defineComponent({
   inheritAttrs: false,
   props: {
     orientation: String as PropType<Orientation>,
+    loopFocus: optional(Boolean),
+    /**
+     * Whether the arrows wrap from the last item to the first.
+     * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+     */
     loop: optional(Boolean),
     disabled: Boolean,
   },
@@ -37,6 +42,7 @@ const Root = defineComponent({
     const made = controller(within(createToolbar, { direction }), () => ({
       orientation: props.orientation,
       loop: props.loop,
+      loopFocus: props.loopFocus,
       disabled: props.disabled,
     }))
     provide(TOOLBAR, made)
@@ -47,9 +53,10 @@ const Root = defineComponent({
   },
 }) as unknown as PartComponent<"div", State["root"], RootProps>
 
+/** `focusable-when-disabled` keeps it focusable while disabled, as Base UI's. Default `true`. */
 export interface ButtonProps extends ToolbarItemOptions, PartComponentProps {}
 export type InputProps = ButtonProps
-export type GroupProps = ButtonProps
+export type GroupProps = Omit<ButtonProps, "focusableWhenDisabled">
 export type LinkProps = PartComponentProps
 export type SeparatorProps = PartComponentProps
 
@@ -61,9 +68,16 @@ const item = <Item extends "button" | "input" | "group", Tag extends string>(
   defineComponent({
     name: `Toolbar${label}`,
     inheritAttrs: false,
-    props: { disabled: optional(Boolean) },
+    props: {
+      disabled: optional(Boolean),
+      // Absent is `undefined`, which the core reads as Base UI's default, `true`.
+      focusableWhenDisabled: { type: Boolean, default: undefined as unknown },
+    },
     setup(props, { attrs, slots }) {
-      const options = toSignal(() => ({ disabled: props.disabled }))
+      const options = toSignal(() => ({
+        disabled: props.disabled,
+        focusableWhenDisabled: props.focusableWhenDisabled as boolean | undefined,
+      }))
       const part = useToolbar()[name](() => defined(options.get()))
       const Element = partComponent<string>(`Toolbar${label}Element`, tag, () => part)
       return () => h(Element, attrs, slots)

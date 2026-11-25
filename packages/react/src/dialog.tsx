@@ -5,13 +5,20 @@ import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerProps } from "@kirana-ui/core/drawer"
-import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
+import type { Dialog as Controller, DialogButtonOptions, DialogProps } from "@kirana-ui/core/dialog"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useMemo } from "react"
 import type { ReactElement, ReactNode } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
-import { Portal as BodyPortal, parts, useController, usePart, useSignal } from "./runtime.tsx"
+import {
+  Portal as BodyPortal,
+  parts,
+  useController,
+  useOptions,
+  usePart,
+  useSignal,
+} from "./runtime.tsx"
 import type { PartComponentProps, PortalProps } from "./runtime.tsx"
 
 export type { PortalProps }
@@ -39,15 +46,24 @@ function Portal({ children }: PortalProps): ReactElement | null {
   return mounted ? <BodyPortal>{children}</BodyPortal> : null
 }
 
-export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type TriggerProps = PartComponentProps<
+  "button",
+  StateOf<Parts["trigger"]>,
+  DialogButtonOptions
+>
 export type BackdropProps = PartComponentProps<"div", StateOf<Parts["backdrop"]>>
 export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type TitleProps = PartComponentProps<"h2", StateOf<Parts["title"]>>
 export type DescriptionProps = PartComponentProps<"p", StateOf<Parts["description"]>>
-export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>>
+export type CloseProps = PartComponentProps<"button", StateOf<Parts["close"]>, DialogButtonOptions>
 
-const Trigger = (props: TriggerProps) => usePart(useDialog("Trigger").trigger, "button", props)
+function Trigger({ disabled, ...props }: TriggerProps): ReactElement {
+  const controller = useDialog("Trigger")
+  const options = useOptions({ disabled })
+  const part = useMemo(() => controller.triggerPart(() => options.get()), [controller, options])
+  return usePart(part, "button", props)
+}
 const Backdrop = (props: BackdropProps) => usePart(useDialog("Backdrop").backdrop, "div", props)
 /** What a long dialog scrolls in, around its popup: it may be left out. */
 const Viewport = (props: ViewportProps) => usePart(useDialog("Viewport").viewport, "div", props)
@@ -55,7 +71,12 @@ const Popup = (props: PopupProps) => usePart(useDialog("Popup").popup, "div", pr
 const Title = (props: TitleProps) => usePart(useDialog("Title").title, "h2", props)
 const Description = (props: DescriptionProps) =>
   usePart(useDialog("Description").description, "p", props)
-const Close = (props: CloseProps) => usePart(useDialog("Close").close, "button", props)
+function Close({ disabled, ...props }: CloseProps): ReactElement {
+  const controller = useDialog("Close")
+  const options = useOptions({ disabled })
+  const part = useMemo(() => controller.closePart(() => options.get()), [controller, options])
+  return usePart(part, "button", props)
+}
 
 export const Dialog = /* @__PURE__ */ parts("Dialog", {
   Root,

@@ -6,11 +6,18 @@ import { createDialog } from "@kirana-ui/core/dialog"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { DrawerProps, DrawerSide, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 import type { Dialog as Controller, DialogProps } from "@kirana-ui/core/dialog"
-import { defineComponent, useId } from "vue"
+import { defineComponent, h, useId } from "vue"
 import type { PropType } from "vue"
 
 import { useDirectionAround } from "./direction-context.ts"
-import { context, controller, optional, partComponent, portalComponent } from "./runtime.ts"
+import {
+  context,
+  controller,
+  optional,
+  partComponent,
+  portalComponent,
+  toSignal,
+} from "./runtime.ts"
 import type {
   Changes,
   PartComponent,
@@ -35,6 +42,11 @@ const Root = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     modal: { type: Boolean, default: true },
+    disablePointerDismissal: optional(Boolean),
+    /**
+     * Whether a press outside closes it.
+     * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins.
+     */
     closeOnOutsidePress: optional(Boolean),
     dismissible: { type: Boolean, default: true },
     id: String,
@@ -48,6 +60,7 @@ const Root = defineComponent({
         open: props.open,
         defaultOpen: props.defaultOpen,
         modal: props.modal,
+        disablePointerDismissal: props.disablePointerDismissal,
         closeOnOutsidePress: props.closeOnOutsidePress,
         dismissible: props.dismissible,
         onOpenChange(open: boolean, details: ChangeDetails) {
@@ -85,20 +98,36 @@ const AlertRoot = defineComponent({
   },
 }) as unknown as PlainComponent<AlertRootProps, RootEmits>
 
-export type TriggerProps = PartComponentProps
+export interface TriggerProps extends PartComponentProps {
+  /** It cannot be pressed: the button is disabled, and says so (`data-disabled`). */
+  disabled?: boolean | undefined
+}
 export type BackdropProps = PartComponentProps
 export type ViewportProps = PartComponentProps
 export type PopupProps = PartComponentProps
 export type TitleProps = PartComponentProps
 export type DescriptionProps = PartComponentProps
-export type CloseProps = PartComponentProps
+export type CloseProps = TriggerProps
+
+/** A trigger or a close button, with its own `disabled`. */
+function button<Name extends "trigger" | "close">(name: string, which: Name) {
+  return defineComponent({
+    name,
+    inheritAttrs: false,
+    props: { disabled: Boolean },
+    setup(props, { attrs, slots }) {
+      const options = toSignal(() => ({ disabled: props.disabled }))
+      const made = scope.use()
+      const part = (which === "trigger" ? made.triggerPart : made.closePart)(() => options.get())
+      const Element = partComponent(`${name}Element`, "button", () => part)
+      return () => h(Element, attrs, slots)
+    },
+  }) as unknown as PartComponent<"button", State[Name], TriggerProps>
+}
+
 export const Dialog = {
   Root,
-  Trigger: partComponent<"button", State["trigger"]>(
-    "DialogTrigger",
-    "button",
-    () => scope.use().trigger
-  ),
+  Trigger: button("DialogTrigger", "trigger"),
   Portal: portalComponent("DialogPortal", () => scope.use().mounted),
   Backdrop: partComponent<"div", State["backdrop"]>(
     "DialogBackdrop",
@@ -118,7 +147,7 @@ export const Dialog = {
     "p",
     () => scope.use().description
   ),
-  Close: partComponent<"button", State["close"]>("DialogClose", "button", () => scope.use().close),
+  Close: button("DialogClose", "close"),
 }
 
 /** A dialog that asks for an answer: a press outside it does not close it. Its parts are a dialog's. */
@@ -136,6 +165,11 @@ const DrawerRoot = defineComponent({
     open: optional(Boolean),
     defaultOpen: Boolean,
     modal: { type: Boolean, default: true },
+    disablePointerDismissal: optional(Boolean),
+    /**
+     * Whether a press outside closes it.
+     * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins.
+     */
     closeOnOutsidePress: optional(Boolean),
     dismissible: { type: Boolean, default: true },
     swipeDirection: String as PropType<DrawerSide>,
@@ -153,6 +187,7 @@ const DrawerRoot = defineComponent({
         open: props.open,
         defaultOpen: props.defaultOpen,
         modal: props.modal,
+        disablePointerDismissal: props.disablePointerDismissal,
         closeOnOutsidePress: props.closeOnOutsidePress,
         dismissible: props.dismissible,
         swipeDirection: props.swipeDirection,

@@ -94,7 +94,13 @@ export class KpCarouselNext implements OnInit {
 
 @Directive({ selector: "[kpCarouselItem]" })
 export class KpCarouselItem implements OnInit {
-  readonly index = input.required<number, unknown>({ transform: numberAttribute })
+  /**
+   * Its place among the slides, from 0. Left out, its place in the page, once it is there:
+   * give it on a page a server draws, which cannot count them.
+   */
+  readonly index = input<number | undefined, unknown>(undefined, {
+    transform: (given: unknown) => (given == null ? undefined : numberAttribute(given)),
+  })
   private readonly root = inject(KpCarousel)
   private readonly put = hostPart()
 

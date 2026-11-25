@@ -1,9 +1,9 @@
 name: ci
 
 # What a pull request must keep true: the workspace checks itself (format, lint with types,
-# tests), every adapter's fixture builds, and the conformance run passes: one set of scenarios on
-# every adapter in a real browser, the DOM of each state the same across them. The push to `main`
-# keeps the caches warm: only `main` saves them.
+# tests), every adapter's fixture builds (once, for every job that plays it), and the conformance
+# run passes: one set of scenarios on every adapter in a real browser, the DOM of each state the
+# same across them. The push to `main` keeps the caches warm: only `main` saves them.
 
 on:
   push:
@@ -71,31 +71,64 @@ jobs:
       - name: Release rehearsal
         run: vp run rehearse
 
-  # Once for each engine, side by side, and the two slow engines in four shares each: Firefox and
-  # WebKit play one subject at a time, and took 24 and 34 minutes whole, which was the wait for a
-  # pull request. A share plays the subject the others are compared with and a quarter of the
-  # rest (`--shard`), so the shares together are the whole run. Chromium plays six at once and
-  # stays whole.
-  conformance:
+  # Each adapter's fixture, built once for every conformance job below: they used to build it
+  # themselves, the same six pages on fourteen machines. Angular's compiler checks its adapter
+  # here (`ngc`), and Svelte's compiles its files.
+  build:
     runs-on: ubuntu-26.04
-    name: build and conformance (${{ matrix.browser }} ${{ matrix.shard }})
-    # A share takes six to eight minutes of this, measured; the rest is room for the browsers'
-    # install to be tried again.
+    name: build the fixtures
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Build
+        run: vp run build
+
+      # The pages the run serves, each adapter's `dist` (the page, its server-rendered twin and
+      # React's strict build inside it): a few megabytes, wanted only by this run's own jobs.
+      - name: Keep the built fixtures
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fixtures
+          path: fixtures/*/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  # Once for each engine, side by side, each in shares: Firefox and WebKit play one subject at a
+  # time, and took 24 and 34 minutes whole, which was the wait for a pull request. A share plays
+  # the subject the others are compared with and its part of the rest (`--shard`), so the shares
+  # together are the whole run. Chromium plays six at once, in two shares; the other two in six.
+  conformance:
+    needs: build
+    runs-on: ubuntu-26.04
+    name: conformance (${{ matrix.browser }} ${{ matrix.shard }})
+    # A share takes a few minutes of this; the rest is room for the browsers' install to be
+    # tried again.
     timeout-minutes: 30
     strategy:
       # One engine's failure does not hide what the others would have said.
       fail-fast: false
       matrix:
         include:
-          - { browser: chromium, shard: 1/1, part: 1 }
-          - { browser: firefox, shard: 1/4, part: 1 }
-          - { browser: firefox, shard: 2/4, part: 2 }
-          - { browser: firefox, shard: 3/4, part: 3 }
-          - { browser: firefox, shard: 4/4, part: 4 }
-          - { browser: webkit, shard: 1/4, part: 1 }
-          - { browser: webkit, shard: 2/4, part: 2 }
-          - { browser: webkit, shard: 3/4, part: 3 }
-          - { browser: webkit, shard: 4/4, part: 4 }
+          - { browser: chromium, shard: 1/2, part: 1 }
+          - { browser: chromium, shard: 2/2, part: 2 }
+          - { browser: firefox, shard: 1/6, part: 1 }
+          - { browser: firefox, shard: 2/6, part: 2 }
+          - { browser: firefox, shard: 3/6, part: 3 }
+          - { browser: firefox, shard: 4/6, part: 4 }
+          - { browser: firefox, shard: 5/6, part: 5 }
+          - { browser: firefox, shard: 6/6, part: 6 }
+          - { browser: webkit, shard: 1/6, part: 1 }
+          - { browser: webkit, shard: 2/6, part: 2 }
+          - { browser: webkit, shard: 3/6, part: 3 }
+          - { browser: webkit, shard: 4/6, part: 4 }
+          - { browser: webkit, shard: 5/6, part: 5 }
+          - { browser: webkit, shard: 6/6, part: 6 }
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -106,10 +139,12 @@ jobs:
         with:
           scope: -${{ matrix.browser }}
 
-      # Each adapter's fixture. Angular's compiler checks its adapter here (`ngc`), and Svelte's
-      # compiles its files.
-      - name: Build
-        run: vp run build
+      # The pages the `build` job made, put back where the run serves them from.
+      - name: Fetch the built fixtures
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: fixtures
+          path: fixtures
 
       # The system libraries the browser needs, from the runner's package mirror. apt is never
       # stopped from outside: it runs as root, so a stopped try left its `apt-get` behind holding
@@ -154,7 +189,7 @@ jobs:
           BROWSERS: ${{ matrix.browser }}
         run: vp run browser
 
-      # This job's share of the run in its engine, on the fixtures built above. Chromium plays
+      # This job's share of the run in its engine, on the fixtures fetched above. Chromium plays
       # several pages at once; Firefox and WebKit one at a time (the run's own defaults).
       - name: Conformance
         run: bun tests/conformance/run.ts --browser ${{ matrix.browser }} --shard ${{ matrix.shard }}
@@ -170,7 +205,7 @@ jobs:
 
       # Sizes do not depend on the engine: once.
       - name: Budgets
-        if: matrix.browser == 'chromium'
+        if: matrix.browser == 'chromium' && matrix.part == 1
         run: vp run budgets
 
   # The one check branch protection requires from this workflow, so adding or renaming a job never
@@ -178,7 +213,7 @@ jobs:
   result:
     name: ci result
     if: always()
-    needs: [check, conformance]
+    needs: [check, build, conformance]
     runs-on: ubuntu-26.04
     timeout-minutes: 5
 

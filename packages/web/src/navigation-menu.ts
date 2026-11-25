@@ -6,9 +6,9 @@ import type {
   NavigationMenuProps,
 } from "@kirana-ui/core/navigation-menu"
 
-import { once, ownValue, positioner } from "./around.ts"
+import { once, ownDisabled, ownValue, positioner } from "./around.ts"
 import type { Placed } from "./around.ts"
-import { defineElement, partAround } from "./runtime.ts"
+import { controllerAround, defineElement, partAround } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
 
 const NOTHING = computed(() => ({}))
@@ -20,7 +20,7 @@ const itemOf = (controller: NavigationMenu<string>, element: HTMLElement) =>
 
 /**
  * `<kui-navigation-menu>` around a `kui-part="root"` nav with its `list`. An `item` has a
- * `trigger` (with an `icon` if it has one) and a `content`, which is drawn in the menu's one
+ * `trigger` (with an `icon` if it has one; `kui-disabled`) and a `content`, which is drawn in the menu's one
  * `viewport` while its item is open; its `kui-value` tells it from the others, and an item
  * that is given none makes its own. A `link` is a link (`kui-active`,
  * `kui-close-on-select="false"`). The viewport is in a `portal` with a `positioner` around
@@ -36,7 +36,11 @@ export const tag = defineElement<NavigationMenuProps<string>, NavigationMenu<str
     "close-delay": "number",
     orientation: "string",
   },
-  create: (props) => createNavigationMenu<string>(props),
+  // Inside another's content, it is nested.
+  create: (props, host) =>
+    createNavigationMenu<string>(props, {
+      parent: controllerAround<NavigationMenu>(host, "kui-navigation-menu"),
+    }),
   changes: { onValueChange: { event: "value-change", prop: "value" } },
   parts: {
     root: (controller) => controller.root,
@@ -46,7 +50,10 @@ export const tag = defineElement<NavigationMenuProps<string>, NavigationMenu<str
       const item = itemOf(controller, element)!
       return { part: { props: NOTHING, attach: () => () => {} }, mount: () => item.mount() }
     },
-    trigger: (controller, element) => itemOf(controller, element)?.trigger,
+    trigger(controller, element) {
+      const item = itemOf(controller, element)
+      return item && ownDisabled(element, item.triggerPart)
+    },
     icon: (controller, element) => itemOf(controller, element)?.icon,
     content(controller, element) {
       const item = itemOf(controller, element)

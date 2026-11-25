@@ -38,7 +38,8 @@ describe("the custom elements, as TypeScript knows them", () => {
         void event.detail.value
       })
       combobox.addEventListener("value-change", (event) => {
-        expectTypeOf(event.detail.value).toEqualTypeOf<string | null>()
+        // With `multiple`, the list: an element's attributes cannot say which it is.
+        expectTypeOf(event.detail.value).toEqualTypeOf<string | string[] | null>()
       })
       combobox.addEventListener("open-change", (event) => {
         expectTypeOf(event.detail.open).toEqualTypeOf<boolean>()

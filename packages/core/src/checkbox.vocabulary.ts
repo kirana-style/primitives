@@ -1,5 +1,13 @@
 import { defineComponent } from "./part.ts"
-import { CHECKED, CONTROL, EITHER_CHECKED, TRANSITION, state } from "./states.ts"
+import {
+  CHECKED,
+  CONTROL,
+  EITHER_CHECKED,
+  EITHER_VALID,
+  FIELD,
+  TRANSITION,
+  state,
+} from "./states.ts"
 
 const INDETERMINATE = state(
   "data-indeterminate",
@@ -19,8 +27,9 @@ export const checkboxVocabulary = defineComponent({
         "data-parent",
         "Present on the checkbox that stands for every box of its group."
       ),
+      ...FIELD,
     },
-    exclusive: EITHER_CHECKED,
+    exclusive: [...EITHER_CHECKED, ...EITHER_VALID],
   },
   indicator: {
     inside: "root",
@@ -30,9 +39,10 @@ export const checkboxVocabulary = defineComponent({
       ...CHECKED,
       indeterminate: INDETERMINATE,
       ...CONTROL,
+      ...FIELD,
       startingStyle: TRANSITION.startingStyle,
       endingStyle: TRANSITION.endingStyle,
     },
-    exclusive: [...EITHER_CHECKED, ["startingStyle", "endingStyle"]],
+    exclusive: [...EITHER_CHECKED, ...EITHER_VALID, ["startingStyle", "endingStyle"]],
   },
 })

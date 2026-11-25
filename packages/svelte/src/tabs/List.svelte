@@ -5,10 +5,10 @@
   import { useTabs } from "./context.ts"
   import type { ListProps } from "./types.ts"
 
-  let { activateOnFocus, loop, ...rest }: ListProps = $props()
+  let { activateOnFocus, loop, loopFocus, ...rest }: ListProps = $props()
   const controller = useTabs()
   $effect.pre(() => {
-    controller.listOptions.set(defined({ activateOnFocus, loop }))
+    controller.listOptions.set(defined({ activateOnFocus, loop, loopFocus }))
   })
 </script>
 

@@ -21,15 +21,29 @@ export interface DialogProps {
   /** Blocks the page behind it and traps focus. Default `true`. */
   modal?: boolean | undefined
   /**
-   * Whether a press outside closes it. Default `true`. Escape always closes it: a caller who
-   * must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+   * Keeps it open when the pointer presses outside it. Default `false`. Escape always closes
+   * it: a caller who must keep it open cancels the change whose `details.reason` is
+   * `"escape-key"`.
+   */
+  disablePointerDismissal?: boolean | undefined
+  /**
+   * Whether a press outside closes it. Default `true`.
+   * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins
+   * when both are given.
    */
   closeOnOutsidePress?: boolean | undefined
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Use `closeOnOutsidePress`, which says the same and wins when both are given.
+   * @deprecated Base UI's name is `disablePointerDismissal`, the other way round, which wins
+   * over this and over `closeOnOutsidePress`.
    */
   dismissible?: boolean | undefined
+}
+
+/** What a dialog's trigger, or one of its close buttons, takes of its own. */
+export interface DialogButtonOptions {
+  /** It cannot be pressed: the button is disabled, and says so (`data-disabled`). */
+  disabled?: boolean | undefined
 }
 
 export interface Dialog {
@@ -38,6 +52,10 @@ export interface Dialog {
   setOpen(open: boolean, details: ChangeDetails): void
   mount(): () => void
   readonly trigger: Part
+  /** A trigger with options of its own: `trigger` is this with none. */
+  triggerPart(options: () => DialogButtonOptions): Part
+  /** A close button with options of its own: `close` is this with none. */
+  closePart(options: () => DialogButtonOptions): Part
   readonly backdrop: Part
   /**
    * What a long dialog scrolls in: an element between the backdrop and the popup, which may be
@@ -97,7 +115,10 @@ export function createDialog(
     // An alert dialog asks for an answer.
     outsidePress(event) {
       const given = props.peek()
-      if (kind.alert || (given.closeOnOutsidePress ?? given.dismissible) === false) return false
+      // Base UI's name first, then the two older ones, which say the opposite.
+      const kept =
+        given.disablePointerDismissal ?? (given.closeOnOutsidePress ?? given.dismissible) === false
+      if (kind.alert || kept) return false
       const within = viewport.peek()
       // Its viewport's own scrollbar scrolls the dialog.
       return !(within && event.target === within && onScrollbar(event, within))
@@ -106,20 +127,45 @@ export function createDialog(
     hold: lockPage,
   })
 
+  const triggerPart = (options: () => DialogButtonOptions): Part => ({
+    props: computed(() => {
+      const off = Boolean(options().disabled)
+      return {
+        type: "button",
+        "aria-haspopup": "dialog",
+        ...popup.expanded(popupId),
+        disabled: flag(off),
+        "data-disabled": flag(off),
+        onClick(event: Event) {
+          if (!off) setOpen(!open.peek(), details("trigger-press", event))
+        },
+      }
+    }),
+    attach: (element) => popup.attachTrigger(element),
+  })
+  const closePart = (options: () => DialogButtonOptions): Part => ({
+    props: computed(() => {
+      const off = Boolean(options().disabled)
+      return {
+        type: "button",
+        disabled: flag(off),
+        "data-disabled": flag(off),
+        onClick(event: Event) {
+          if (!off) setOpen(false, details("close-press", event))
+        },
+      }
+    }),
+    attach: () => NOTHING,
+  })
+
   return {
     open,
     mounted: popup.mounted,
     setOpen,
     mount: () => popup.start(),
-    trigger: {
-      props: computed(() => ({
-        type: "button",
-        "aria-haspopup": "dialog",
-        ...popup.expanded(popupId),
-        onClick: (event: Event) => setOpen(!open.peek(), details("trigger-press", event)),
-      })),
-      attach: (element) => popup.attachTrigger(element),
-    },
+    trigger: triggerPart(() => ({})),
+    triggerPart,
+    closePart,
     backdrop: {
       props: computed(() => ({ role: "presentation", ...popup.state() })),
       attach: (element) => popup.attachBackdrop(element),
@@ -147,6 +193,7 @@ export function createDialog(
         "aria-labelledby": titled.get() ? `${id}-title` : undefined,
         "aria-describedby": described.get() ? `${id}-description` : undefined,
         ...popup.state(),
+        "data-nested": flag(over.get()),
         "data-nested-dialog-open": flag(nested.get() > 0),
       })),
       attach(element) {
@@ -197,12 +244,6 @@ export function createDialog(
         return () => described.set(false)
       },
     },
-    close: {
-      props: computed(() => ({
-        type: "button",
-        onClick: (event: Event) => setOpen(false, details("close-press", event)),
-      })),
-      attach: () => NOTHING,
-    },
+    close: closePart(() => ({})),
   }
 }

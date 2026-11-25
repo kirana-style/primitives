@@ -132,6 +132,23 @@ export function Typed(): ReactElement {
       <Select.Root multiple values={fruits} onValuesChange={setFruits} />
       <Combobox.Root value={fruit} onValueChange={setFruit} />
       <Combobox.Root multiple values={fruits} onValuesChange={setFruits} />
+      {/* Base UI's shape: with `multiple`, `value` and what `onValueChange` is told are a list. */}
+      <Select.Root multiple value={fruits} onValueChange={setFruits} />
+      <Combobox.Root multiple value={fruits} onValueChange={setFruits} />
+      <Select.Root
+        multiple
+        defaultValue={["apple"]}
+        onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<string[]>()}
+      />
+      <Combobox.Root
+        multiple
+        defaultValue={[1]}
+        onValueChange={(value) => expectTypeOf(value).toEqualTypeOf<number[]>()}
+      />
+      {/* @ts-expect-error one value where `multiple` holds a list */}
+      <Select.Root multiple value="apple" />
+      {/* @ts-expect-error a list where one value is chosen */}
+      <Combobox.Root value={fruits} onValueChange={setFruits} />
       <RadioGroup.Root value={radio} onValueChange={setRadio} />
       {/* A slider tells what it was given: a number, or a range's list. */}
       <Slider.Root value={level} onValueChange={setLevel} onValueCommitted={setLevel} />

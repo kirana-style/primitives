@@ -1,4 +1,4 @@
-<script lang="ts" generics="Value">
+<script lang="ts" generics="Value, Multiple extends boolean | undefined = false">
   import { within } from "@kirana-ui/core"
   import type { ChangeDetails } from "@kirana-ui/core"
   import { createCombobox } from "@kirana-ui/core/combobox"
@@ -41,12 +41,16 @@
     itemToStringValue,
     id,
     children,
-  }: RootProps<Value> = $props()
+  }: RootProps<Value, Multiple> = $props()
   const generated = $props.id()
 
-  function changeValue(next: Value | null, by: ChangeDetails) {
-    onValueChange?.(next, by)
-    if (!by.canceled) value = next
+  type Given = RootProps<Value, Multiple>
+
+  function changeValue(next: Value | Value[] | null, by: ChangeDetails) {
+    // With `multiple` the core tells the list here, as Base UI's `onValueChange` is told it.
+    if (multiple && Array.isArray(next)) return changeValues(next, by)
+    onValueChange?.(next as Parameters<NonNullable<Given["onValueChange"]>>[0], by)
+    if (!by.canceled) value = next as Given["value"]
   }
 
   function changeInput(next: string, by: ChangeDetails) {
@@ -55,8 +59,13 @@
   }
 
   function changeValues(next: Value[], by: ChangeDetails) {
-    onValuesChange?.(next, by)
-    if (!by.canceled) values = next
+    // Base UI's callback first, the one called when both are given; then the older one.
+    if (onValueChange) onValueChange(next as Parameters<NonNullable<Given["onValueChange"]>>[0], by)
+    else onValuesChange?.(next, by)
+    if (by.canceled) return
+    // Written back to what the caller holds: the older `values` only when it holds that alone.
+    if (values !== undefined && value === undefined) values = next
+    else value = next as Given["value"]
   }
 
   function changeOpen(next: boolean, by: ChangeDetails) {

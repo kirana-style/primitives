@@ -1,13 +1,21 @@
 import { defineComponent } from "./part.ts"
-import { DISABLED, EITHER_FRAME, EITHER_OPEN, OPEN, TRANSITION, state } from "./states.ts"
+import { DISABLED, EITHER_FRAME, OPEN, TRANSITION, state } from "./states.ts"
 
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const collapsibleVocabulary = defineComponent({
   root: {
     description: "Groups the trigger and the panel.",
-    states: { ...OPEN, disabled: DISABLED },
-    exclusive: EITHER_OPEN,
+    states: {
+      ...OPEN,
+      disabled: DISABLED,
+      startingStyle: state(
+        "data-starting-style",
+        "Present for the first style of the panel's entrance, as on the panel."
+      ),
+      endingStyle: state("data-ending-style", "Present through the panel's exit, as on the panel."),
+    },
+    exclusive: EITHER_FRAME,
   },
   trigger: {
     inside: "root",

@@ -8,11 +8,12 @@
   import { provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
 
-  let { orientation, loop, disabled, ...rest }: RootProps = $props()
+  let { orientation, loop, loopFocus, disabled, ...rest }: RootProps = $props()
   const made = provide(
     controller(within(createToolbar, { direction: useDirectionAround() }), () => ({
       orientation,
       loop,
+      loopFocus,
       disabled,
     }))
   )

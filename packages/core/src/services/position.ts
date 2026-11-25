@@ -2,6 +2,7 @@ import {
   arrow,
   autoUpdate,
   computePosition,
+  detectOverflow,
   flip,
   limitShift,
   offset,
@@ -168,6 +169,8 @@ export interface Position {
   readonly placed: ReadonlySignal<boolean>
   /** Whether the arrow could not sit at the anchor's centre: the popup was pushed along its edge. */
   readonly uncentered: ReadonlySignal<boolean>
+  /** Whether the anchor is out of view: scrolled away, clipped by a box around it, or not drawn. */
+  readonly anchorHidden: ReadonlySignal<boolean>
   /**
    * Places `positioner` against `anchor` and keeps it placed, while `following` holds (always,
    * when left out): a popup on its way out stays where it was. The anchor may be a function,
@@ -207,6 +210,26 @@ function landed(asked: Side, side: PhysicalSide, rtl: boolean): Side {
 }
 
 const NOTHING = () => {}
+
+/**
+ * Says whether the anchor is out of view: wholly past an edge of what clips it, or drawn
+ * nowhere (a box of no size at the page's corner, which is what an element that is not
+ * displayed measures). Base UI's own test, so `data-anchor-hidden` comes and goes when it does.
+ */
+const hidden: Middleware = {
+  name: "hide",
+  async fn(state) {
+    const { width, height, x, y } = state.rects.reference
+    const nowhere = width === 0 && height === 0 && x === 0 && y === 0
+    const overflow = await detectOverflow(state, { elementContext: "reference" })
+    const clipped =
+      overflow.top - height >= 0 ||
+      overflow.right - width >= 0 ||
+      overflow.bottom - height >= 0 ||
+      overflow.left - width >= 0
+    return { data: { referenceHidden: clipped || nowhere } }
+  },
+}
 
 /** Whether two anchors are followed the same way: one element, or places read from one element. */
 function same(a: Anchor | undefined, b: Anchor | undefined): boolean {
@@ -260,6 +283,7 @@ export function createPosition(
   const align = signal<Align>(options.peek().align)
   const placed = signal(false)
   const uncentered = signal(false)
+  const anchorHidden = signal(false)
   let pointer: HTMLElement | undefined
   let replace: (() => void) | undefined
 
@@ -268,6 +292,7 @@ export function createPosition(
     align,
     placed,
     uncentered,
+    anchorHidden,
     arrow(element) {
       pointer = element
       setGeometry(element, "position", "absolute")
@@ -427,6 +452,7 @@ export function createPosition(
               },
             }),
             ...(pointer ? [arrow({ element: pointer, padding: wanted.arrowPadding })] : []),
+            hidden,
           ],
         }).then((result) => {
           // No longer followed, or against another anchor by now: an answer that comes late
@@ -459,6 +485,7 @@ export function createPosition(
             side.set(landed(wanted.side, nextSide, rtl))
             align.set(nextAlign)
             uncentered.set(Boolean(point && point.centerOffset !== 0))
+            anchorHidden.set(Boolean(result.middlewareData.hide?.referenceHidden))
             placed.set(true)
           })
         })
@@ -499,6 +526,7 @@ export function createPosition(
         follow(false)
         forget()
         placed.set(false)
+        anchorHidden.set(false)
       }
     },
   }

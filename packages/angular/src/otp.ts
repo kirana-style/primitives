@@ -15,6 +15,7 @@ import type { ChangeDetails } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp, OtpProps, OtpSlot } from "@kirana-ui/core/otp"
 
+import { KP_FIELD } from "./field-token"
 import { KpIds, hostPart, inputsSignal, onServer, presentWhile } from "./runtime"
 
 @Directive({ selector: "[kpOtp]", exportAs: "kpOtp" })
@@ -22,29 +23,48 @@ export class KpOtp implements OnInit {
   readonly length = input<number | undefined, unknown>(undefined, { transform: numberAttribute })
   readonly value = model<string | undefined>(undefined)
   readonly defaultValue = input<string>()
+  readonly validationType = input<OtpProps["validationType"]>()
+  /**
+   * What a character may be.
+   * @deprecated Base UI's name is `validationType`, which wins when both are given.
+   */
   readonly mode = input<OtpProps["mode"]>()
   readonly pattern = input<string>()
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** Shown as it is, focusable, not changeable. */
+  readonly readOnly = input(false, { transform: booleanAttribute })
+  /** Needed: in a field, an empty code is then invalid. */
+  readonly required = input(false, { transform: booleanAttribute })
   readonly name = input<string>()
   /** The id of the form the input belongs to, when it is not inside it. */
   readonly form = input<string>()
   /** The id of its input, not of the root: a `<label for>` names it. */
   readonly kpId = input<string>()
   readonly valueChanged = output<{ value: string; details: ChangeDetails }>()
-  /** Every character is in: the moment to send the code. */
+  /** Every character is in: the moment to send the code, with the change's details. */
+  readonly valueCompleted = output<{ value: string; details: ChangeDetails }>()
+  /**
+   * Every character is in.
+   * @deprecated Base UI's name is `valueCompleted`, which carries the details too. Both are
+   * emitted: an output cannot tell whether it is bound.
+   */
   readonly completed = output<string>()
 
   controller!: Otp
   private readonly generated = inject(KpIds).make()
+  private readonly field = inject(KP_FIELD, { optional: true })
   private readonly put = hostPart()
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
     length: this.length(),
     value: this.value(),
     defaultValue: this.defaultValue(),
+    validationType: this.validationType(),
     mode: this.mode(),
     pattern: this.pattern(),
     disabled: this.disabled(),
+    readOnly: this.readOnly(),
+    required: this.required(),
     name: this.name(),
     form: this.form(),
     onValueChange: (value: string, details: ChangeDetails) => {
@@ -54,7 +74,10 @@ export class KpOtp implements OnInit {
         this.props.sync()
       }
     },
-    onComplete: (value: string) => this.completed.emit(value),
+    onValueComplete: (value: string, details: ChangeDetails) => {
+      this.valueCompleted.emit({ value, details })
+      this.completed.emit(value)
+    },
   }))
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -62,7 +85,7 @@ export class KpOtp implements OnInit {
   }
 
   ngOnInit(): void {
-    this.controller = createOtp(this.props())
+    this.controller = createOtp(this.props(), { field: this.field?.controller })
     this.put(this.controller.root)
   }
 }

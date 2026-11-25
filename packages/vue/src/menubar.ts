@@ -17,9 +17,16 @@ export const Menubar = defineComponent({
   name: "Menubar",
   inheritAttrs: false,
   props: {
+    loopFocus: optional(Boolean),
+    /**
+     * Whether the arrows wrap from the last item to the first.
+     * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+     */
     loop: optional(Boolean),
     disabled: Boolean,
     orientation: String as PropType<Orientation>,
+    /** Holds the page while one of its menus is open. Default `false`. */
+    modal: Boolean,
     id: String,
   },
   setup(props, { attrs, slots }) {
@@ -28,8 +35,10 @@ export const Menubar = defineComponent({
     const made = controller(within(createMenubar, { direction }), () => ({
       id: props.id ?? generated,
       loop: props.loop,
+      loopFocus: props.loopFocus,
       disabled: props.disabled,
       orientation: props.orientation,
+      modal: props.modal,
     }))
     provide(MENUBAR, made)
     const Element = partComponent("MenubarElement", "div", () => made.root)

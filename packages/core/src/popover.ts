@@ -1,12 +1,14 @@
 import { bindable } from "./bindable.ts"
-import { details } from "./part.ts"
+import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { batch, computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { clearGeometry, setGeometry } from "./services/geometry.ts"
 import { createHover } from "./services/hover.ts"
 import { lockPage, popupFocus } from "./services/popup-focus.ts"
-import { createPopup } from "./services/popup.ts"
+import { popupSize } from "./services/popup-size.ts"
+import { createPopup, instantOf } from "./services/popup.ts"
+import type { Instant } from "./services/popup.ts"
 import { createPlacement } from "./services/position.ts"
 import type { PositionOptions } from "./services/position.ts"
 
@@ -76,7 +78,18 @@ export function createPopover(props: ReadonlySignal<PopoverProps>): Popover {
   const titled = signal(false)
   const described = signal(false)
 
-  const setOpen = (next: boolean, by: ChangeDetails) => open.set(next, by)
+  // Why its motion should be skipped, and whether a press on the trigger opened it: each said
+  // by the last change that went through.
+  const instant = signal<Instant | undefined>(undefined)
+  const pressed = signal(false)
+  const setOpen = (next: boolean, by: ChangeDetails) => {
+    open.set(next, by)
+    if (by.canceled) return
+    batch(() => {
+      instant.set(instantOf(next, by))
+      pressed.set(next && by.reason === "trigger-press")
+    })
+  }
   const placement = createPlacement()
   const hovering = signal<PopoverTriggerOptions>({})
   // Open because the pointer rested on the trigger, and not pressed since: focus stays where
@@ -94,6 +107,7 @@ export function createPopover(props: ReadonlySignal<PopoverProps>): Popover {
     modal: () => props.peek().modal === true && !hovered.peek(),
     focus: (given, context) => (hovered.peek() ? NOTHING : focus(given, context)),
     hold: lockPage,
+    size: popupSize(true),
   })
   const hover = createHover({
     // Only one the pointer opened is the pointer's to close.
@@ -149,6 +163,7 @@ export function createPopover(props: ReadonlySignal<PopoverProps>): Popover {
         type: "button",
         "aria-haspopup": "dialog",
         ...popup.expanded(popupId),
+        "data-pressed": flag(open.get() && pressed.get()),
         // Always there, and deaf unless the trigger asks (`openOnHover`): what it asks is
         // read when the pointer comes, so writing it draws nothing again.
         onPointerEnter,
@@ -193,6 +208,7 @@ export function createPopover(props: ReadonlySignal<PopoverProps>): Popover {
         "aria-describedby": described.get() ? `${id}-description` : undefined,
         ...popup.state(),
         ...popup.placed(),
+        "data-instant": instant.get(),
       })),
       attach(given) {
         element = given

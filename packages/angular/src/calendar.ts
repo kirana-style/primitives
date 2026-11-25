@@ -334,6 +334,7 @@ export class KpCalendarHeadCell implements OnInit {
 
 @Directive({ selector: "[kpCalendarCell]" })
 export class KpCalendarCell implements OnInit {
+  /** The day it holds, as `*kpCalendarWeeks` gave it; a `kpCalendarDay` inside takes it too. */
   readonly date = input.required<string>()
   private readonly root = inject(KpCalendar)
   private readonly index = monthIndex()
@@ -346,13 +347,18 @@ export class KpCalendarCell implements OnInit {
 
 @Directive({ selector: "[kpCalendarDay]" })
 export class KpCalendarDay implements OnInit {
-  readonly date = input.required<string>()
+  /** The day it is the button of. Left out, its `kpCalendarCell`'s. */
+  readonly date = input<string>()
   private readonly root = inject(KpCalendar)
+  private readonly cell = inject(KpCalendarCell, { optional: true })
   private readonly index = monthIndex()
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.put(this.root.controller.day(this.date(), this.index))
+    const date = this.date() ?? this.cell?.date()
+    if (date === undefined)
+      throw new Error("kpCalendarDay needs a [date] or a kpCalendarCell around it")
+    this.put(this.root.controller.day(date, this.index))
   }
 }
 

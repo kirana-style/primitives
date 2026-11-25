@@ -1,10 +1,12 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
   EITHER_FRAME,
   EITHER_OPEN,
   OPEN,
   PLACEMENT,
+  POSITIONER_SIZE,
   TRANSITION,
   state,
   valued,
@@ -33,9 +35,9 @@ export const hoverCardVocabulary = defineComponent({
   positioner: {
     inside: "portal",
     description: "Places the popup against the trigger. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT },
+    states: { ...OPEN, ...PLACEMENT, anchorHidden: ANCHOR_HIDDEN },
     exclusive: EITHER_OPEN,
-    variables: ANCHORED,
+    variables: { ...ANCHORED, ...POSITIONER_SIZE },
   },
   popup: {
     inside: "positioner",
@@ -46,7 +48,9 @@ export const hoverCardVocabulary = defineComponent({
   arrow: {
     inside: "popup",
     description: "An element that points at the trigger, placed along the popup's edge.",
+    exclusive: EITHER_OPEN,
     states: {
+      ...OPEN,
       ...PLACEMENT,
       uncentered: state(
         "data-uncentered",

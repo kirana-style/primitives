@@ -1,5 +1,5 @@
 import { within } from "@kirana-ui/core"
-import type { ChangeDetails, Orientation } from "@kirana-ui/core"
+import type { ChangeDetails, Orientation, ReadonlySignal } from "@kirana-ui/core"
 import { createSteps } from "@kirana-ui/core/steps"
 import type { Steps as Controller, StepsProps } from "@kirana-ui/core/steps"
 import { defineComponent, h, inject, provide, useId } from "vue"
@@ -12,10 +12,10 @@ import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./run
 type State = StatesOf<"steps">
 
 const scope = context<Controller>("Steps")
-// The step an item is, for the parts inside it.
-const ITEM: InjectionKey<number> = Symbol("StepsItem")
+// The step an item is, for the parts inside it: given, or counted from the page.
+const ITEM: InjectionKey<ReadonlySignal<number>> = Symbol("StepsItem")
 
-function useIndex(part: string): number {
+function useIndex(part: string): ReadonlySignal<number> {
   const index = inject(ITEM, undefined)
   if (index === undefined) throw new Error(`<Steps.${part}> must be inside <Steps.Item>`)
   return index
@@ -36,7 +36,7 @@ const Root = defineComponent({
   props: {
     step: optional(Number),
     defaultStep: Number,
-    count: { type: Number, required: true },
+    count: Number,
     linear: Boolean,
     orientation: String as PropType<Orientation>,
     id: String,
@@ -64,20 +64,22 @@ const Root = defineComponent({
 }) as unknown as PartComponent<"div", State["root"], RootProps, RootEmits>
 
 export interface ItemProps extends PartComponentProps {
-  /** Which step it is, from 0. */
-  index: number
+  /**
+   * Which step it is, from 0. Left out, its place among the items in the page, once it is
+   * there: give it on a page a server draws, which cannot count them.
+   */
+  index?: number | undefined
 }
 
 const Item = defineComponent({
   name: "StepsItem",
   inheritAttrs: false,
-  props: { index: { type: Number, required: true } },
+  props: { index: Number },
   setup(props, { attrs, slots }) {
     // An item is its step for as long as it is in the page.
-    const index = props.index
-    const made = scope.use()
-    provide(ITEM, index)
-    const Element = partComponent("StepsItemElement", "div", () => made.item(index))
+    const item = scope.use().item(props.index)
+    provide(ITEM, item.index)
+    const Element = partComponent("StepsItemElement", "div", () => item)
     return () => h(Element, attrs, slots)
   },
 }) as unknown as PartComponent<"div", State["item"], ItemProps>

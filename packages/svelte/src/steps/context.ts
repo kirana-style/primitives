@@ -1,3 +1,4 @@
+import type { ReadonlySignal } from "@kirana-ui/core"
 import type { Steps } from "@kirana-ui/core/steps"
 import { getContext, setContext } from "svelte"
 
@@ -11,11 +12,11 @@ export function useSteps(): Steps {
   return controller
 }
 
-// The step an item is, for the parts inside it.
+// The step an item is, for the parts inside it: given, or counted from the page.
 export const ITEM = Symbol("StepsItem")
 
-export function useIndex(part: string): number {
-  const index = getContext<number | undefined>(ITEM)
+export function useIndex(part: string): ReadonlySignal<number> {
+  const index = getContext<ReadonlySignal<number> | undefined>(ITEM)
   if (index === undefined) throw new Error(`<Steps.${part}> must be inside <Steps.Item>`)
   return index
 }

@@ -68,11 +68,11 @@ const Image = defineComponent({
     const made = scope.use()
     watchEffect(() => made.source.set(props.src), { flush: "sync" })
     whileMounted(made.statusReport(() => (status) => emit("loadingStatusChange", status)))
-    const status = fromSignal(made.status)
+    const mounted = fromSignal(made.imageMounted)
     return () =>
       props.keepMounted
         ? h(KeptImageElement, { ...attrs, src: props.src })
-        : status.value === "loaded"
+        : mounted.value
           ? h(ImageElement, attrs)
           : null
   },

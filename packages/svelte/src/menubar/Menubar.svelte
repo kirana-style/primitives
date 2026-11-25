@@ -9,14 +9,16 @@
   import type { MenubarProps } from "./types.ts"
 
   // A row of menus that work as one. Each `<Menu.Root>` inside it is one of its items.
-  let { loop, disabled, orientation, id, ...rest }: MenubarProps = $props()
+  let { loop, loopFocus, disabled, orientation, modal, id, ...rest }: MenubarProps = $props()
   const generated = $props.id()
   const made = provideMenubar(
     controller(within(createMenubar, { direction: useDirectionAround() }), () => ({
       id: id ?? generated,
       loop,
+      loopFocus,
       disabled,
       orientation,
+      modal,
     }))
   )
 </script>

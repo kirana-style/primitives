@@ -147,6 +147,7 @@ The named types the props below mention, each with the entry of this package it 
     - `positioner: { width: number; height: number }`: The positioner's size, in pixels.
 - `OffsetFunction` (`@kirana-ui/vue`): `(data: OffsetData) => number`. A gap worked out from what was measured: `({ side, align, anchor, positioner }) => number`.
 - `Orientation` (`@kirana-ui/vue`): `"horizontal" | "vertical"`. The way a row of things is laid out, and so which arrow keys move along it.
+- `OtpValidation` (`@kirana-ui/vue`): `"numeric" | "alpha" | "alphanumeric" | "none" | "alphabetic" | "text"`. Which characters a one-time code takes: Base UI's four values, and `alphabetic` and `text`, the older spellings of `alpha` and `none`.
 - `PaginationEntry` (`@kirana-ui/vue`): `{ readonly type: "page"; readonly page: number; readonly key: string } | { readonly type: "ellipsis"; readonly key: "start" | "end" }`. One piece of the list of pages: a page, or the mark for pages left out.
 - `PhysicalSide` (`@kirana-ui/vue`): `"top" | "right" | "bottom" | "left"`. A side of the anchor as the page is drawn.
 - `PositionerAnchor` (`@kirana-ui/vue/popover`): `Anchor | ComponentPublicInstance | Ref<Anchor | ComponentPublicInstance | null | undefined> | (() => Anchor | null | undefined) | null | undefined`. What a positioner's `anchor` may be: an element, a place in the viewport (an object with `getBoundingClientRect`), a template ref to an element or a component (in a template that is the element or the component's instance), or a function that gives an element or a place.
@@ -192,14 +193,16 @@ The named types the props below mention, each with the entry of this package it 
     - `title?: Content`: What the toast is called: `Toast.Title` draws it when it is given nothing else. Default: none.
     - `description?: Content`: What the toast says: `Toast.Description` draws it when it is given nothing else. Default: none.
     - `type?: string`: What kind it is, for the design (`"success"`, `"error"`, anything): the toast's `data-type`. Default: none.
-    - `duration?: number`: How long it stays, in milliseconds; `Infinity` until it is closed. Default: the toaster's `duration`.
+    - `timeout?: number`: How long it stays, in milliseconds; `0` (or `Infinity`) until it is closed. Default: the toaster's `timeout`.
+    - `duration?: number`: How long it stays, in milliseconds; `Infinity` until it is closed.
     - `priority?: "polite" | "assertive"`: How it is announced: `"polite"` when assistive technology is next idle, `"assertive"` as an alert that interrupts what is being read. Default: `"polite"`.
     - `action?: ToastActionOptions<Content>`: A button of the toast's own, which `Toast.Action` draws and presses. Default: none.
     - `data?: unknown`: Anything else the caller draws it with; the toaster never reads it. Default: none.
     - `onClose?: ((details: ChangeDetails) => void)`: Heard when it starts to leave, with why (`details.reason`). Default: none.
 - `ToastRecord<Content = VNodeChild>` (`@kirana-ui/vue`): A toast as its toaster holds it: what it was added with, and where it stands.
     - `id: string`: What it is known by: the one it was added with, or one the toaster made.
-    - `duration: number`: How long it stays, in milliseconds: its own, or the toaster's when it gave none.
+    - `timeout: number`: How long it stays, in milliseconds: its own, or the toaster's when it gave none; `Infinity` until it is closed.
+    - `duration: number`: How long it stays, in milliseconds.
     - `priority: "polite" | "assertive"`: How it is announced: its own, or `"polite"` when it gave none.
     - `closing: boolean`: It has been closed and is on its way out. `false` until then.
     - `title?: Content`: What the toast is called: `Toast.Title` draws it when it is given nothing else. Default: none.
@@ -484,9 +487,9 @@ Its other types:
 - These parts draw no element, and take no attributes: every `Portal` (what is inside is drawn at the end of `<body>`), `AlertDialog.Root`, `Autocomplete.Root`, `Autocomplete.Collection`, `Calendar.Months`, `Calendar.Weekdays`, `Calendar.Weeks`, `Combobox.Root`, `Combobox.Value`, `Combobox.Collection`, `ContextMenu.Root`, `ContextMenu.SubmenuRoot`, `DateField.Segments`, `DatePicker.Root`, `DatePicker.Segments`, `DatePicker.Months`, `DatePicker.Weekdays`, `DatePicker.Weeks`, `Dialog.Root`, `Drawer.Root`, `Field.Validity`, `FileUpload.Items`, `HoverCard.Root`, `Menu.Root`, `Menu.SubmenuRoot`, `Pagination.Items`, `Popover.Root`, `Rating.Items`, `Select.Root`, `TagsInput.Items`, `TimeField.Segments`, `Toast.List`, `Tooltip.Root` and `Tour.Root`. Every other part draws the element named for it below.
 - A popup is drawn in a portal at the end of `<body>`. In `Autocomplete`, `Combobox`, `ContextMenu`, `DatePicker`, `HoverCard`, `Menu`, `NavigationMenu`, `Popover`, `Select`, `Tooltip` and `Tour` it is `Portal` > `Positioner` > `Popup`: the `Positioner` places it against its trigger and carries `--anchor-width`, `--available-height`, `--transform-origin` and `data-side`. `AlertDialog`, `Dialog` and `Drawer` have no `Positioner`: there it is `Portal` > `Backdrop` and `Popup`, and the design places the popup. A dialog and an alert dialog may put the `Popup` in a `Viewport`, the box a long one scrolls in.
 - Every `Positioner` takes the same options (`side`, `align`, `sideOffset`, `alignOffset`, `collisionPadding`, `collisionBoundary`, `collisionAvoidance`, `sticky`, `arrowPadding`, `positionMethod`, `anchor`), listed once under "Positioner options" with their defaults. An anchor may change while the popup is open, and the popup follows.
-- Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`@at-bottom-change`, `@checked-change`, `@editing-change`, `@expanded-change`, `@files-change`, `@format-change`, `@index-change`, `@input-value-change`, `@month-change`, `@open-change`, `@page-change`, `@pressed-change`, `@select`, `@selected-change`, `@sizes-change`, `@snap-point-change`, `@step-change`, `@value-change`, `@value-committed`, `@values-change`, `@visible-change` and `onFormSubmit`). A callback that reports something that happened takes only that, and cannot be refused: `@complete`, `@files-reject`, `@hover-change`, `@loading-status-change`, `@value-invalid` and `onClearErrors`.
+- Every change callback of a value the component holds is `(value, details)`: `details.reason`, `details.event`, `details.source` (mouse, touch, pen, keyboard, virtual, programmatic, agent), and `details.cancel()` to keep the value as it was (`@at-bottom-change`, `@checked-change`, `@editing-change`, `@expanded-change`, `@files-change`, `@format-change`, `@index-change`, `@input-value-change`, `@month-change`, `@open-change`, `@page-change`, `@pressed-change`, `@select`, `@selected-change`, `@sizes-change`, `@snap-point-change`, `@step-change`, `@value-change`, `@value-committed`, `@value-complete`, `@values-change`, `@visible-change` and `onFormSubmit`). A callback that reports something that happened takes only that, and cannot be refused: `@complete`, `@files-reject`, `@hover-change`, `@loading-status-change`, `@value-invalid` and `onClearErrors`.
 - A part that is in the page only while it is open, chosen or checked leaves it otherwise. `keepMounted` keeps it in the page, hidden, on the parts that take it and no others: `Accordion.Panel`, `Autocomplete.Clear`, `Avatar.Image`, `Checkbox.Indicator`, `Collapsible.Panel`, `Combobox.Clear`, `Combobox.ItemIndicator`, `ContextMenu.CheckboxItemIndicator`, `ContextMenu.RadioItemIndicator`, `Listbox.ItemIndicator`, `Menu.CheckboxItemIndicator`, `Menu.RadioItemIndicator`, `RadioGroup.Indicator`, `ScrollArea.Scrollbar`, `Select.ItemIndicator`, `Tabs.Panel` and `Tree.Group`.
-- `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `ColorPicker`, `Combobox`, `DateField`, `DatePicker`, `Editable`, `NumberField`, `RadioGroup`, `Rating`, `Select`, `Slider`, `Switch`, `TagsInput` and `TimeField` and of no other component.
+- `readOnly` (shown, focusable, not changeable) is a prop of `Autocomplete`, `Calendar`, `Checkbox`, `ColorPicker`, `Combobox`, `DateField`, `DatePicker`, `Editable`, `NumberField`, `Otp`, `RadioGroup`, `Rating`, `Select`, `Slider`, `Switch`, `TagsInput` and `TimeField` and of no other component.
 - No CSS is shipped and no styles are injected. A part is styled by its element, its `class`, and the attributes and CSS variables listed for it below.
 - A boolean state is an attribute that is present or absent (`[data-open]`), never `="false"`.
 - An entrance starts from `[data-starting-style]` and an exit ends at `[data-ending-style]`: write the hidden style under both and transition between. A part leaves the page when its own motion has ended.
@@ -527,7 +530,8 @@ Props of its root:
 - `multiple?: boolean`: Whether several items can be open at once. Default `false`: opening one closes the others.
 - `disabled?: boolean`: Disables every item: none can be opened or closed.
 - `orientation?: Orientation`: The way the arrows move between triggers. Default `vertical`.
-- `loop?: boolean`: Whether the arrows wrap from the last trigger to the first. Default `true`.
+- `loopFocus?: boolean`: Whether the arrows wrap from the last trigger to the first. Default `true`.
+- `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `@value-change: (value: Value[], details: ChangeDetails) => void`: Heard as an item is about to open or close, with the values that would be open: `details.cancel()` keeps them as they were.
 
 Each part, and its own props:
@@ -547,12 +551,15 @@ Attributes and CSS variables, by part:
     - `data-orientation="horizontal | vertical"`: The way the items are laid out, and the arrows that move between their triggers.
     - `data-disabled`: Present when it is disabled.
 - item: One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own.
+    - `data-index`: The item's place among the accordion's items, from 0.
     - `data-open`: Present when the item is open.
     - `data-disabled`: Present when it is disabled.
 - header: The heading that holds the trigger.
+    - `data-index`: The item's place among the accordion's items, from 0.
     - `data-open`: Present when the item is open.
     - `data-disabled`: Present when it is disabled.
 - trigger: The button that opens and closes the item's panel.
+    - `data-index`: The item's place among the accordion's items, from 0.
     - `data-panel-open`: Present when the item's panel is open.
     - `data-disabled`: Present when it is disabled.
 - panel: The item's content. In the page while open, and through its exit's motion.
@@ -562,6 +569,7 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-disabled`: Present when it is disabled.
     - `data-orientation="horizontal | vertical"`: The way the items are laid out, and the arrows that move between their triggers.
+    - `data-index`: The item's place among the accordion's items, from 0.
     - `--accordion-panel-height`: The panel's content height while it opens or closes, `auto` once it is open.
     - `--accordion-panel-width`: The panel's content width while it opens or closes, `auto` once it is open.
 
@@ -597,18 +605,21 @@ Each part, and its own props:
 
 - `<AlertDialog.Root>` draws no element. Holds the dialog: whether it is open. Its props are above.
 - `<AlertDialog.Trigger>` draws a `<button>`.
+    - `disabled?: boolean`: It cannot be pressed: the button is disabled, and says so (`data-disabled`).
 - `<AlertDialog.Portal>` draws no element. A portal takes nothing: where it is drawn is its `PortalProvider`'s to say.
 - `<AlertDialog.Backdrop>` draws a `<div>`.
 - `<AlertDialog.Viewport>` draws a `<div>`.
 - `<AlertDialog.Popup>` draws a `<div>`.
 - `<AlertDialog.Title>` draws a `<h2>`. The heading that names the dialog.
 - `<AlertDialog.Description>` draws a `<p>`. The text that describes the dialog.
-- `<AlertDialog.Close>` draws a `<button>`. A button that closes the dialog.
+- `<AlertDialog.Close>` draws a `<button>`.
+    - `disabled?: boolean`: It cannot be pressed: the button is disabled, and says so (`data-disabled`).
 
 Attributes and CSS variables, by part:
 
 - trigger: The button that opens the dialog.
     - `data-popup-open`: Present when the dialog is open.
+    - `data-disabled`: Present when it is disabled.
 - backdrop: The layer over the page behind the dialog.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -626,8 +637,11 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
     - `data-nested-dialog-open`: Present when another dialog is open above this one.
     - `--nested-dialogs`: How many dialogs are open above this one.
+- close: A button that closes the dialog.
+    - `data-disabled`: Present when it is disabled.
 
 ### Autocomplete
 
@@ -711,18 +725,40 @@ Attributes and CSS variables, by part:
 
 - input: The text input: its text is the value, and what is typed asks for suggestions.
     - `data-popup-open`: Present when the list is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
+    - `data-popup-side="top | right | bottom | left | inline-start | inline-end | none"`: While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.
+    - `data-list-empty`: Present when no item is shown for what was typed, once the list is in the page.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
+    - `data-popup-side="top | right | bottom | left | inline-start | inline-end | none"`: While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.
+    - `data-list-empty`: Present when no item is shown for what was typed, once the list is in the page.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - positioner: Places the list against the input: against the chips' box when the input is in one, the button when the input is inside the popup, or its own `anchor`. It carries the geometry. As a sheet it is not placed, and carries none.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
+    - `data-empty`: Present when no item is shown for what was typed.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
@@ -738,6 +774,7 @@ Attributes and CSS variables, by part:
     - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
     - `data-swiping`: Present while the sheet is dragged.
     - `data-swipe-dismiss`: Present once a drag has closed it.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `data-empty`: Present when no item is shown for what was typed.
     - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
     - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
@@ -749,8 +786,12 @@ Attributes and CSS variables, by part:
     - `data-selected`: Present on the chosen item.
     - `data-highlighted`: Present on the item the pointer or the keyboard is on.
     - `data-disabled`: Present when it is disabled.
-- clear: A button that empties the input and the value.
+- clear: A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.
     - `data-disabled`: Present when it is disabled.
+    - `data-popup-open`: Present when the list is open.
+    - `data-visible`: Present while there is something to clear.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 
 ### Autosize
 
@@ -893,7 +934,7 @@ Each part, and its own props:
 - `<Calendar.Cell>` draws a `<td>`.
     - `date: string`: Required. The day it is for, as a week of `Calendar.Weeks` gives it.
 - `<Calendar.Day>` draws a `<button>`.
-    - `date: string`: Required. The day it is for, as a week of `Calendar.Weeks` gives it.
+    - `date?: string`: The day it is the button of. Left out, the `Calendar.Cell`'s it is inside.
 - `<Calendar.Input>` draws a `<input>`. The hidden input it is submitted by, when it has a name: one more is drawn after it for each other day.
 
 Attributes and CSS variables, by part:
@@ -954,7 +995,7 @@ Each part, and its own props:
 - `<Carousel.Root>` draws a `<div>`. Its props are above.
 - `<Carousel.Viewport>` draws a `<div>`.
 - `<Carousel.Item>` draws a `<div>`.
-    - `index: number`: Required. Its place among the slides, from 0.
+    - `index?: number`: Its place among the slides, from 0. Left out, its place in the page, once it is there: give it on a page a server draws, which cannot count them.
 - `<Carousel.Previous>` draws a `<button>`.
 - `<Carousel.Next>` draws a `<button>`.
 - `<Carousel.Indicator>` draws a `<button>`.
@@ -1022,6 +1063,12 @@ Attributes and CSS variables, by part:
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
     - `data-parent`: Present on the checkbox that stands for every box of its group.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - indicator: The mark. In the page while the box is checked or indeterminate. `data-indeterminate` and `data-checked` say which mark to draw, a dash or a tick: in CSS (`[data-indeterminate]`), or from the part's state. Through its exit the box is already unchecked, and both are absent.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
@@ -1029,6 +1076,12 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 
@@ -1090,6 +1143,8 @@ Attributes and CSS variables, by part:
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-disabled`: Present when it is disabled.
+    - `data-starting-style`: Present for the first style of the panel's entrance, as on the panel.
+    - `data-ending-style`: Present through the panel's exit, as on the panel.
 - trigger: The button that opens and closes the panel.
     - `data-panel-open`: Present when the panel is open.
     - `data-disabled`: Present when it is disabled.
@@ -1294,8 +1349,8 @@ Props of its root:
 
 - `presentation?: Presentation`: How the list opens. `"sheet"`: from the bottom edge, not placed against the input, modal with a backdrop, swiped down or pressed outside to close; the input then goes in the popup, at its head. `"auto"`: decided each time it opens, a sheet when the pointer is coarse and the viewport narrower than `sheetBelow`. Default `"popup"`. Not with `inline`.
 - `sheetBelow?: number`: With `presentation: "auto"`: the viewport's width, in CSS pixels, under which a coarse pointer opens a sheet. Default 640.
-- `value?: Value | null`: `v-model:value`. The chosen value; `null` is "none".
-- `defaultValue?: Value | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `value?: (Multiple extends true ? readonly Value[] : Value | null)`: `v-model:value`. The chosen value; `null` is "none". With `multiple`, the chosen values, in the order they were chosen.
+- `defaultValue?: (Multiple extends true ? readonly Value[] : Value | null)`: The value it starts with (with `multiple`, the values), when the caller does not hold `value`. Read once.
 - `inputValue?: string`: `v-model:inputValue`. What the input says.
 - `defaultInputValue?: string`: The text the input starts with, when the caller does not hold `inputValue`. Read once.
 - `open?: boolean`: `v-model:open`. Whether the list is open, when the caller holds it.
@@ -1308,21 +1363,21 @@ Props of its root:
 - `itemToStringLabel?: (value: Value) => string`: For values that are objects: the text the input shows for one, and what an item drawn with no text of its own is filtered by. Without it, an object's own `label` names it, then the label `items` gives it, then the item's text in the markup.
 - `itemToStringValue?: (value: Value) => string`: For values that are objects: the text the form is sent for one. Without it, the `value` of an object shaped `{ value, label }` is sent, and any other object as JSON.
 - `filter?: ((label: string, query: string) => boolean) | null`: Whether an item is shown for what was typed. Default: its label holds the text, without regard to case. `null`: every item is shown, and the caller draws the ones it wants (or gives the `items` it wants, when they are loaded for what was typed).
-- `multiple?: boolean`: Several values, each shown as a chip beside the input: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
-- `values?: readonly Value[]`: `v-model:values`. With `multiple`: the chosen values, in the order they were chosen.
-- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+- `values?: readonly Value[]`: `v-model:values`. With `multiple`: the chosen values.
+- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with.
 - `required?: boolean`: In a field, "none" is then wrong.
 - `inline?: boolean`: The list is always in the page, under the input, with no popup: a command palette. An item chosen is told to the caller, and the input keeps what was typed.
 - `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view). The caller then filters: the collection is what is left, and each item is given its `index`.
 - `autoHighlight?: boolean`: The first item shown for what was typed is highlighted as one types, so Enter chooses it. Off by default: typing then highlights nothing, and Enter chooses once an arrow or the pointer has gone to an item. Either way a list opened with nothing typed is on its chosen item, if it has one.
-- `@value-change: (value: Value | null, details: ChangeDetails) => void`: Heard as a value is about to be chosen or cleared: `details.cancel()` keeps it as it was.
-- `@values-change: (value: Value[], details: ChangeDetails) => void`: With `multiple`: heard as a value is about to be added or taken away, with the values there would then be: `details.cancel()` keeps them as they were.
+- `multiple?: Multiple`: Several values: `value` and `@value-change` then hold a list. Read once.
+- `@value-change: (value: Multiple extends true ? Value[] : Value | null, details: ChangeDetails) => void`: Heard as a value is about to be chosen or cleared (with `multiple`, added or taken away, with the values there would then be): `details.cancel()` keeps it as it was.
+- `@values-change: (value: Value[], details: ChangeDetails) => void`: With `multiple`: heard as a value is about to be added or taken away.
 - `@input-value-change: (value: string, details: ChangeDetails) => void`: Heard as the input's text is about to change: `details.cancel()` keeps it as it was.
 - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
-- `<Combobox.Root>` draws no element. Generic: `<Value = unknown>`. Holds the combobox: its value, what is typed and whether the list is open. Its props are above.
+- `<Combobox.Root>` draws no element. Generic: `<Value = unknown, Multiple extends boolean | undefined = false>`. `Multiple` is read from `multiple`: with it, `value` and `@value-change` hold a list. Its props are above.
 - `<Combobox.Input>` draws a `<input>`.
 - `<Combobox.Trigger>` draws a `<button>`.
 - `<Combobox.Value>` draws no element. The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between. Its default slot is also given `value: Value | null`, `label: string`, `values: readonly Value[]`, `labels: readonly string[]`.
@@ -1330,7 +1385,7 @@ Each part, and its own props:
 - `<Combobox.Clear>` draws a `<button>`.
     - `keepMounted?: boolean`: Keeps the button in the page while there is nothing to clear.
 - `<Combobox.Chips>` draws a `<div>`. With several values: what holds the chips and the input, and what the list is placed against.
-- `<Combobox.Chip>` draws a `<span>`. One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.
+- `<Combobox.Chip>` draws a `<span>`.
     - `value: unknown`: Required. The chosen value it stands for: what its remove button takes away.
 - `<Combobox.ChipRemove>` draws a `<button>`.
 - `<Combobox.Portal>` draws no element. A portal takes nothing: where it is drawn is its `PortalProvider`'s to say.
@@ -1357,12 +1412,32 @@ Attributes and CSS variables, by part:
 
 - input: The text input. What is typed filters the list, which is placed against it, or against the chips' box when it is in one. Inside the popup, it takes focus while the popup is open.
     - `data-popup-open`: Present when the list is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
+    - `data-popup-side="top | right | bottom | left | inline-start | inline-end | none"`: While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.
+    - `data-list-empty`: Present when no item is shown for what was typed, once the list is in the page.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - trigger: A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against.
     - `data-popup-open`: Present when the list is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
+    - `data-popup-side="top | right | bottom | left | inline-start | inline-end | none"`: While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.
+    - `data-list-empty`: Present when no item is shown for what was typed, once the list is in the page.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - backdrop: The layer over the page behind the list: a press on it closes the list.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1380,6 +1455,8 @@ Attributes and CSS variables, by part:
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
+    - `data-empty`: Present when no item is shown for what was typed.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
@@ -1395,6 +1472,7 @@ Attributes and CSS variables, by part:
     - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
     - `data-swiping`: Present while the sheet is dragged.
     - `data-swipe-dismiss`: Present once a drag has closed it.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `data-empty`: Present when no item is shown for what was typed.
     - `--drawer-swipe-movement-x`: As a sheet: how far it has been dragged across, always 0px.
     - `--drawer-swipe-movement-y`: As a sheet: how far it has been dragged down.
@@ -1406,7 +1484,13 @@ Attributes and CSS variables, by part:
     - `data-selected`: Present on the chosen item.
     - `data-highlighted`: Present on the item the pointer or the keyboard is on.
     - `data-disabled`: Present when it is disabled.
-- clear: A button that empties the input and the value.
+- clear: A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.
+    - `data-disabled`: Present when it is disabled.
+    - `data-popup-open`: Present when the list is open.
+    - `data-visible`: Present while there is something to clear.
+    - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
+    - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+- chip: One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.
     - `data-disabled`: Present when it is disabled.
 - chipRemove: A chip's button that takes its value away.
     - `data-disabled`: Present when it is disabled.
@@ -1508,7 +1592,8 @@ Props of its root:
 - `open?: boolean`: `v-model:open`. Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
-- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `loopFocus?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
 - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 
@@ -1560,7 +1645,8 @@ Each part, and its own props:
     - `open?: boolean`: `v-model:open`. Whether it is open, when the caller holds it.
     - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
     - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
-    - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+    - `loopFocus?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+    - `loop?: boolean`: Whether the arrows wrap from the last item to the first.
     - `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
     - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 - `<ContextMenu.SubmenuTrigger>` draws a `<div>`.
@@ -1569,16 +1655,20 @@ Attributes and CSS variables, by part:
 
 - trigger: The area a secondary press, or a long press on a touch screen, opens the menu in.
     - `data-popup-open`: Present when the menu is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
 - positioner: Places the menu against its trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.
+    - `--positioner-height`: The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.
 - popup: The menu itself: the list of items.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1586,7 +1676,10 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="click | dismiss | group"`: Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another.
 - arrow: An element that points at the trigger.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
@@ -1763,7 +1856,7 @@ Each part, and its own props:
 - `<DatePicker.Cell>` draws a `<td>`.
     - `date: string`: Required. The day it is for, as a week of `Calendar.Weeks` gives it.
 - `<DatePicker.Day>` draws a `<button>`.
-    - `date: string`: Required. The day it is for, as a week of `Calendar.Weeks` gives it.
+    - `date?: string`: The day it is the button of. Left out, the `Calendar.Cell`'s it is inside.
 - `<DatePicker.Clear>` draws a `<button>`.
 - `<DatePicker.Preset>` draws a `<button>`.
     - `value: string | DatePickerRange`: Required. The value its press gives: a day, or with `mode="range"` a range.
@@ -1781,16 +1874,20 @@ Attributes and CSS variables, by part:
     - `data-invalid`: Present when the date is outside what it takes, or is asked for and half typed.
 - trigger: The button that opens the popover, and what it is placed against.
     - `data-popup-open`: Present when the popover is open.
+    - `data-pressed`: Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down.
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.
+    - `--positioner-height`: The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.
 - popup: The popover itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1798,6 +1895,9 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="click | dismiss"`: Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it.
+    - `--popup-width`: Its width: `auto`, and while its content changes size, the old width and then the new one, for a transition between them.
+    - `--popup-height`: Its height: `auto`, and while its content changes size, the old height and then the new one, for a transition between them.
 - calendar: The calendar.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when its value cannot be changed.
@@ -1854,7 +1954,8 @@ Props of its root:
 - `open?: boolean`: `v-model:open`. Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
-- `closeOnOutsidePress?: boolean`: Whether a press outside closes it. Default `true`. Escape always closes it: a caller who must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+- `disablePointerDismissal?: boolean`: Keeps it open when the pointer presses outside it. Default `false`. Escape always closes it: a caller who must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+- `closeOnOutsidePress?: boolean`: Whether a press outside closes it. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
 - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 
@@ -1862,18 +1963,21 @@ Each part, and its own props:
 
 - `<Dialog.Root>` draws no element. Holds the dialog: whether it is open. Its props are above.
 - `<Dialog.Trigger>` draws a `<button>`.
+    - `disabled?: boolean`: It cannot be pressed: the button is disabled, and says so (`data-disabled`).
 - `<Dialog.Portal>` draws no element. A portal takes nothing: where it is drawn is its `PortalProvider`'s to say.
 - `<Dialog.Backdrop>` draws a `<div>`.
 - `<Dialog.Viewport>` draws a `<div>`.
 - `<Dialog.Popup>` draws a `<div>`.
 - `<Dialog.Title>` draws a `<h2>`. The heading that names the dialog.
 - `<Dialog.Description>` draws a `<p>`. The text that describes the dialog.
-- `<Dialog.Close>` draws a `<button>`. A button that closes the dialog.
+- `<Dialog.Close>` draws a `<button>`.
+    - `disabled?: boolean`: It cannot be pressed: the button is disabled, and says so (`data-disabled`).
 
 Attributes and CSS variables, by part:
 
 - trigger: The button that opens the dialog.
     - `data-popup-open`: Present when the dialog is open.
+    - `data-disabled`: Present when it is disabled.
 - backdrop: The layer over the page behind the dialog.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -1891,8 +1995,11 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
     - `data-nested-dialog-open`: Present when another dialog is open above this one.
     - `--nested-dialogs`: How many dialogs are open above this one.
+- close: A button that closes the dialog.
+    - `data-disabled`: Present when it is disabled.
 
 ### Drawer
 
@@ -1920,7 +2027,8 @@ Props of its root:
 - `open?: boolean`: `v-model:open`. Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `modal?: boolean`: Blocks the page behind it and traps focus. Default `true`.
-- `closeOnOutsidePress?: boolean`: Whether a press outside closes it. Default `true`. Escape always closes it: a caller who must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+- `disablePointerDismissal?: boolean`: Keeps it open when the pointer presses outside it. Default `false`. Escape always closes it: a caller who must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+- `closeOnOutsidePress?: boolean`: Whether a press outside closes it. Default `true`.
 - `dismissible?: boolean`: Whether a press outside closes it. Default `true`.
 - `swipeDirection?: DrawerSide`: The way it is dragged to close it: the edge it came from. Default: `"down"`.
 - `snapPoints?: readonly DrawerSnapPoint[]`: Places it rests at, each how much of itself shows: a share (`0.4`, or `"40%"`) or a length (`"148px"`, `"20rem"`). `[0.4, 1]` is a drawer that opens two fifths shown and is dragged up to the whole. Without any, it is whole.
@@ -1933,32 +2041,39 @@ Each part, and its own props:
 
 - `<Drawer.Root>` draws no element. Holds the dialog: whether it is open. Its props are above.
 - `<Drawer.Trigger>` draws a `<button>`.
+    - `disabled?: boolean`: It cannot be pressed: the button is disabled, and says so (`data-disabled`).
 - `<Drawer.Portal>` draws no element. A portal takes nothing: where it is drawn is its `PortalProvider`'s to say.
 - `<Drawer.Backdrop>` draws a `<div>`.
 - `<Drawer.Popup>` draws a `<div>`.
 - `<Drawer.Title>` draws a `<h2>`. The heading that names the dialog.
 - `<Drawer.Description>` draws a `<p>`. The text that describes the dialog.
-- `<Drawer.Close>` draws a `<button>`. A button that closes the dialog.
+- `<Drawer.Close>` draws a `<button>`.
+    - `disabled?: boolean`: It cannot be pressed: the button is disabled, and says so (`data-disabled`).
 
 Attributes and CSS variables, by part:
 
 - trigger: The button that opens the dialog.
     - `data-popup-open`: Present when the dialog is open.
+    - `data-disabled`: Present when it is disabled.
 - backdrop: The layer over the page behind the dialog.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-swiping`: Present while the drawer is dragged.
+    - `data-swipe-dismiss`: Present once a drag has closed the drawer.
     - `--drawer-swipe-movement-x`: How far it has been dragged across.
     - `--drawer-swipe-movement-y`: How far it has been dragged up or down.
     - `--drawer-swipe-progress`: How far it has been dragged, of its own size: 0 to 1.
     - `--drawer-snap-point-offset`: How far from whole it rests, towards the edge it closes at: 0px at its largest snap point.
+    - `--drawer-swipe-strength`: Always 1: the backdrop takes the design's own time to leave, however the drawer was thrown.
+    - `--drawer-height`: While the drawer is dragged: the height of the drawer in front.
 - popup: The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
+    - `data-nested`: Present when the dialog opened over another dialog.
     - `data-nested-dialog-open`: Present when another dialog is open above this one.
     - `data-swiping`: Present while the drawer is dragged.
     - `data-swipe-direction="up | down | left | right"`: The way it is dragged to close it.
@@ -1976,6 +2091,8 @@ Attributes and CSS variables, by part:
     - `--drawer-frontmost-height`: The height of the drawer in front of every other, while this one is open.
     - `--drawer-swipe-strength`: Once let go: 0.1 to 1, the share of the design's own time it should take to come to rest. A drawer thrown hard arrives sooner.
     - `--drawer-width`: Its width.
+- close: A button that closes the dialog.
+    - `data-disabled`: Present when it is disabled.
 
 ### Editable
 
@@ -2365,11 +2482,14 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.
+    - `--positioner-height`: The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.
 - popup: The card itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2379,6 +2499,8 @@ Attributes and CSS variables, by part:
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
 - arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
@@ -2518,7 +2640,8 @@ Props of its root:
 - `open?: boolean`: `v-model:open`. Whether it is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
-- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `loopFocus?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
 - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 
@@ -2570,7 +2693,8 @@ Each part, and its own props:
     - `open?: boolean`: `v-model:open`. Whether it is open, when the caller holds it.
     - `defaultOpen?: boolean`: Whether it starts open, when the caller does not hold `open`. Read once.
     - `disabled?: boolean`: The trigger cannot be pressed; a submenu's is passed over.
-    - `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+    - `loopFocus?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+    - `loop?: boolean`: Whether the arrows wrap from the last item to the first.
     - `modal?: boolean`: Holds the page while the menu is open: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Not for a submenu.
     - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as it is about to open or close: `details.cancel()` keeps it as it was.
 - `<Menu.SubmenuTrigger>` draws a `<div>`.
@@ -2579,17 +2703,21 @@ Attributes and CSS variables, by part:
 
 - trigger: The button that opens the menu, and what it is placed against.
     - `data-popup-open`: Present when the menu is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
     - `data-disabled`: Present when it is disabled.
 - positioner: Places the menu against its trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.
+    - `--positioner-height`: The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.
 - popup: The menu itself: the list of items.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -2597,7 +2725,10 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="click | dismiss | group"`: Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another.
 - arrow: An element that points at the trigger.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
@@ -2638,9 +2769,11 @@ import { Menubar } from "@kirana-ui/vue/menubar"
 
 Props:
 
-- `loop?: boolean`: Whether the arrows go round from the last menu to the first. Default: they do.
+- `loopFocus?: boolean`: Whether the arrows go round from the last menu to the first. Default: they do.
+- `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `disabled?: boolean`: No menu of the bar opens.
 - `orientation?: Orientation`: A row (the default) or a column of menus. In a column a menu opens beside its trigger.
+- `modal?: boolean`: Holds the page while one of its menus is open, as a menu's own `modal` does: its scroll is locked, and a press outside closes the menu and reaches nothing. Default: it does not. Read as a menu opens.
 
 `<Menubar>` draws a `<div>`.
 
@@ -2648,6 +2781,8 @@ Attributes and CSS variables, by part:
 
 - root: The row of menus. A menu inside it is one of its items.
     - `data-disabled`: Present when it is disabled.
+    - `data-modal`: Present when its menus hold the page while one is open.
+    - `data-has-submenu-open`: Present while one of its menus is open.
     - `data-orientation="horizontal | vertical"`: Whether its menus are in a row or a column.
 
 ### MessageScroller
@@ -2768,6 +2903,7 @@ Each part, and its own props:
 - `<NavigationMenu.Item>` draws a `<li>`. One item of the list: a link, or a trigger with its content. Its `value` tells it from the others; an item that is given none makes its own.
     - `value?: unknown`: What tells this item from the others: the menu's `value` while its content is shown. An item that is given none makes its own.
 - `<NavigationMenu.Trigger>` draws a `<button>`.
+    - `disabled?: boolean`: The trigger cannot be pressed, and the pointer resting on it shows nothing.
 - `<NavigationMenu.Icon>` draws a `<span>`.
 - `<NavigationMenu.Content>` draws a `<div>`.
 - `<NavigationMenu.Link>` draws a `<a>`.
@@ -2785,10 +2921,15 @@ Attributes and CSS variables, by part:
 
 - root: The navigation.
     - `data-orientation="horizontal | vertical"`: Whether the list is a row or a column.
+    - `data-open`: Present while an item's content is shown.
+    - `data-nested`: Present on a navigation menu inside another's content: a submenu of it.
 - list: The row of items.
     - `data-orientation="horizontal | vertical"`: Whether the list is a row or a column.
+    - `data-open`: Present while an item's content is shown.
 - trigger: The button that shows an item's content.
     - `data-popup-open`: Present while the item's content is shown.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
+    - `data-disabled`: Present when it is disabled.
 - icon: A mark on a trigger that shows whether its content is open.
     - `data-popup-open`: Present while the item's content is shown.
 - content: What an item shows. It is drawn in the viewport every item shares.
@@ -2796,7 +2937,7 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-activation-direction="left | right"`: Which way it came from: the item before it, or after.
+    - `data-activation-direction="left | right | up | down"`: Which way it came from: the item before it, or after; `up` and `down` when the list is a column.
 - link: A link, in the list or in an item's content.
     - `data-active`: Present on the link of the page the reader is on.
 - positioner: Places the popup against the open item's trigger. It carries the geometry.
@@ -2804,6 +2945,8 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
+    - `data-instant`: Present while it should move at once: as it is first drawn, and while the window is resized.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
@@ -2818,9 +2961,12 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--popup-width`: The open content's width.
     - `--popup-height`: The open content's height.
 - arrow: An element that points at the open item's trigger.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the arrow cannot sit at the trigger's centre.
@@ -2989,14 +3135,18 @@ Props of its root:
 - `length?: number`: How many characters the code has. Default: 6.
 - `value?: string`: `v-model:value`. The characters typed so far, when the caller holds them.
 - `defaultValue?: string`: The characters it starts with, when the caller does not hold `value`. Read once. Default `""`.
-- `mode?: "numeric" | "alphabetic" | "alphanumeric" | "text"`: What a character may be: a digit (`numeric`), a letter (`alphabetic`, `a` to `z` either case), either (`alphanumeric`), or anything but white space (`text`). It also says which keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`, on purpose: a one-time code is digits, and its keyboard is then the one to type them on.
-- `pattern?: string`: What else a character may be: a regular expression, as text, that one character must match whole (`"[A-F0-9]"`), in place of `mode`'s rule. Text, as an attribute can only be, so it is given the same way on every framework and on a custom element. With a pattern, `mode` only says the keyboard, and defaults to `text`.
+- `validationType?: OtpValidation`: What a character may be: a digit (`numeric`), a letter (`alpha`, `a` to `z` either case), either (`alphanumeric`), or anything but white space (`none`: no rule beyond that). It also says which keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`, on purpose: a one-time code is digits, and its keyboard is then the one to type them on. `alphabetic` and `text` are older spellings of `alpha` and `none`, still read.
+- `mode?: OtpValidation`: What a character may be.
+- `pattern?: string`: What else a character may be: a regular expression, as text, that one character must match whole (`"[A-F0-9]"`), in place of `validationType`'s rule. Text, as an attribute can only be, so it is given the same way on every framework and on a custom element. With a pattern, `validationType` only says the keyboard, and defaults to `none`.
 - `disabled?: boolean`: Disabled: it cannot be changed.
+- `readOnly?: boolean`: Shown as it is, focusable, not changeable.
+- `required?: boolean`: Needed: in a `Field`, an empty code is then invalid.
 - `name?: string`: With a name, the code is submitted with the form around it.
 - `form?: string`: The id of the form the input belongs to, when it is not inside it.
 - `id?: string`: The id of its input, not of the root: a `<label for>` names it.
 - `@value-change: (value: string, details: ChangeDetails) => void`: Heard as the characters are about to change: `details.cancel()` keeps them as they were.
-- `@complete: (value: string) => void`: The finished code, once every cell is filled.
+- `@value-complete: (value: string, details: ChangeDetails) => void`: The finished code, once every cell is filled, with the details of the change that did it.
+- `@complete: (value: string) => void`: The finished code.
 
 Each part, and its own props:
 
@@ -3011,16 +3161,31 @@ Each part, and its own props:
 Attributes and CSS variables, by part:
 
 - root: The code: the input and its cells.
-    - `data-disabled`: Present when it is disabled.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Present when the code has a character in it.
     - `data-focused`: Present while the input has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
+    - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
     - `data-complete`: Present when every character is in.
 - input: The one input the code is typed in. A design lays it over the cells, unseen.
     - `data-disabled`: Present when it is disabled.
 - slot: One cell of the code.
     - `data-index`: The cell's place, from 0.
     - `data-active`: Present on the cell the next character goes in, or that is selected.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
     - `data-filled`: Present when the cell has its character.
+    - `data-focused`: Present while the input has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
     - `data-disabled`: Present when it is disabled.
+    - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-complete`: Present when every character is in.
 
 ### Pagination
 
@@ -3177,6 +3342,7 @@ Attributes and CSS variables, by part:
 
 - trigger: The button that opens the popover, and what it is placed against.
     - `data-popup-open`: Present when the popover is open.
+    - `data-pressed`: Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down.
 - backdrop: A layer over the page behind the popover.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -3187,11 +3353,14 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.
+    - `--positioner-height`: The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.
 - popup: The popover itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -3199,7 +3368,12 @@ Attributes and CSS variables, by part:
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="click | dismiss"`: Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it.
+    - `--popup-width`: Its width: `auto`, and while its content changes size, the old width and then the new one, for a transition between them.
+    - `--popup-height`: Its height: `auto`, and while its content changes size, the old height and then the new one, for a transition between them.
 - arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
@@ -3337,18 +3511,36 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - item: One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kpId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - indicator: The mark. In the page while its item is the chosen one.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
 
@@ -3474,7 +3666,7 @@ Each part, and its own props:
 
 - `<ScrollArea.Root>` draws a `<div>`.
 - `<ScrollArea.Viewport>` draws a `<div>`.
-- `<ScrollArea.Content>` draws a `<div>`. A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
+- `<ScrollArea.Content>` draws a `<div>`.
 - `<ScrollArea.Scrollbar>` draws a `<div>`.
     - `orientation?: Orientation`: Which way it scrolls; `vertical` when left out.
     - `keepMounted?: boolean`: Keeps the bar in the page while there is nothing to scroll that way.
@@ -3486,6 +3678,10 @@ Attributes and CSS variables, by part:
 - root: The area. It holds the viewport and the scrollbars, which the library places against it: a design gives a scrollbar its thickness and draws it, and places nothing.
     - `data-has-overflow-x`: Present when there is more to see sideways.
     - `data-has-overflow-y`: Present when there is more to see up or down.
+    - `data-overflow-x-start`: Present when there is more to scroll to towards the start of a line.
+    - `data-overflow-x-end`: Present when there is more to scroll to towards the end of a line.
+    - `data-overflow-y-start`: Present when there is more to scroll to above.
+    - `data-overflow-y-end`: Present when there is more to scroll to below.
     - `data-scrolling`: Present while it is being scrolled, and a moment after.
     - `data-hovering`: Present while the pointer is over the area.
     - `--scroll-area-corner-width`: The width of the corner: the vertical scrollbar's, while both scrollbars and the corner are in the page.
@@ -3493,15 +3689,38 @@ Attributes and CSS variables, by part:
 - viewport: The element that scrolls.
     - `data-has-overflow-x`: Present when there is more to see sideways.
     - `data-has-overflow-y`: Present when there is more to see up or down.
+    - `data-overflow-x-start`: Present when there is more to scroll to towards the start of a line.
+    - `data-overflow-x-end`: Present when there is more to scroll to towards the end of a line.
+    - `data-overflow-y-start`: Present when there is more to scroll to above.
+    - `data-overflow-y-end`: Present when there is more to scroll to below.
+    - `data-scrolling`: Present while it is being scrolled, and a moment after.
+    - `--scroll-area-overflow-x-start`: How far the view is from the start of a line, to fade that edge by: `0px` at it.
+    - `--scroll-area-overflow-x-end`: How far the view is from the end of a line: `0px` at it.
+    - `--scroll-area-overflow-y-start`: How far the view is from the top: `0px` at it.
+    - `--scroll-area-overflow-y-end`: How far the view is from the bottom: `0px` at it.
+- content: A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
+    - `data-has-overflow-x`: Present when there is more to see sideways.
+    - `data-has-overflow-y`: Present when there is more to see up or down.
+    - `data-overflow-x-start`: Present when there is more to scroll to towards the start of a line.
+    - `data-overflow-x-end`: Present when there is more to scroll to towards the end of a line.
+    - `data-overflow-y-start`: Present when there is more to scroll to above.
+    - `data-overflow-y-end`: Present when there is more to scroll to below.
     - `data-scrolling`: Present while it is being scrolled, and a moment after.
 - scrollbar: A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way.
     - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
     - `data-hovering`: Present while the pointer is over the area.
     - `data-scrolling`: Present while the area is scrolled its way.
+    - `data-has-overflow-x`: Present when there is more to see sideways.
+    - `data-has-overflow-y`: Present when there is more to see up or down.
+    - `data-overflow-x-start`: Present when there is more to scroll to towards the start of a line.
+    - `data-overflow-x-end`: Present when there is more to scroll to towards the end of a line.
+    - `data-overflow-y-start`: Present when there is more to scroll to above.
+    - `data-overflow-y-end`: Present when there is more to scroll to below.
     - `--scroll-area-thumb-height`: A vertical thumb's height.
     - `--scroll-area-thumb-width`: A horizontal thumb's width.
 - thumb: The part of a scrollbar that shows where the view is, and can be dragged. As long as its scrollbar's variable says.
     - `data-orientation="horizontal | vertical"`: Which way the scrollbar scrolls.
+    - `data-scrolling`: Present while the area is scrolled its way.
 
 ### Select
 
@@ -3536,8 +3755,8 @@ Props of its root:
 
 - `presentation?: Presentation`: How the list opens. `"sheet"`: from the bottom edge, not placed against the trigger, modal with a backdrop, swiped down or pressed outside to close. `"auto"`: decided each time it opens, a sheet when the pointer is coarse and the viewport narrower than `sheetBelow`. Default `"popup"`.
 - `sheetBelow?: number`: With `presentation: "auto"`: the viewport's width, in CSS pixels, under which a coarse pointer opens a sheet. Default 640.
-- `value?: Value | null`: `v-model:value`. The chosen value; `null` is "none".
-- `defaultValue?: Value | null`: The value it starts with, when the caller does not hold `value`. Read once.
+- `value?: (Multiple extends true ? readonly Value[] : Value | null)`: `v-model:value`. The chosen value; `null` is "none". With `multiple`, the chosen values, in the order they were chosen.
+- `defaultValue?: (Multiple extends true ? readonly Value[] : Value | null)`: The value it starts with (with `multiple`, the values), when the caller does not hold `value`. Read once.
 - `open?: boolean`: `v-model:open`. Whether the list is open, when the caller holds it.
 - `defaultOpen?: boolean`: Whether the list starts open, when the caller does not hold `open`. Read once.
 - `disabled?: boolean`: Disabled: it cannot be changed.
@@ -3548,17 +3767,17 @@ Props of its root:
 - `items?: readonly { value: Value; label: string }[] | Readonly<Record<string, string>>`: The labels of the values, for the trigger to show before the list has ever been opened: a list of values with their labels, or, for values that are text, the labels by value (`{ apple: "Apple" }`). Not needed for the list itself: its items are read from the markup.
 - `itemToStringLabel?: (value: Value) => string`: For values that are objects: the text the trigger shows for one, and what typing matches an item by when it gives no `label`. Without it, an object's own `label` names it, then the label `items` gives it, then the item's text in the markup.
 - `itemToStringValue?: (value: Value) => string`: For values that are objects: the text the form is sent for one. Without it, the `value` of an object shaped `{ value, label }` is sent, and any other object as JSON.
-- `multiple?: boolean`: Several values: an item chosen is added, chosen again taken away, and the list stays open. The values are `values`, not `value`.
-- `values?: readonly Value[]`: `v-model:values`. With `multiple`: the chosen values, in the order they were chosen.
-- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+- `values?: readonly Value[]`: `v-model:values`. With `multiple`: the chosen values.
+- `defaultValues?: readonly Value[]`: With `multiple`: the values it starts with.
 - `virtualized?: ListCollection`: Every row, when only some are in the page (a virtualizer draws the ones in view). Each item is then given its `index`.
-- `@value-change: (value: Value | null, details: ChangeDetails) => void`: Heard as a value is about to be chosen: `details.cancel()` keeps it as it was.
-- `@values-change: (value: Value[], details: ChangeDetails) => void`: With `multiple`: heard as a value is about to be added or taken away, with the values there would then be: `details.cancel()` keeps them as they were.
+- `multiple?: Multiple`: Several values: `value` and `@value-change` then hold a list. Read once.
+- `@value-change: (value: Multiple extends true ? Value[] : Value | null, details: ChangeDetails) => void`: Heard as a value is about to be chosen (with `multiple`, added or taken away, with the values there would then be): `details.cancel()` keeps it as it was.
+- `@values-change: (value: Value[], details: ChangeDetails) => void`: With `multiple`: heard as a value is about to be added or taken away.
 - `@open-change: (value: boolean, details: ChangeDetails) => void`: Heard as the list is about to open or close: `details.cancel()` keeps it as it was.
 
 Each part, and its own props:
 
-- `<Select.Root>` draws no element. Generic: `<Value = unknown>`. Holds the select: its value and whether the list is open. Its props are above.
+- `<Select.Root>` draws no element. Generic: `<Value = unknown, Multiple extends boolean | undefined = false>`. `Multiple` is read from `multiple`: with it, `value` and `@value-change` hold a list. Its props are above.
 - `<Select.Trigger>` draws a `<button>`.
 - `<Select.Value>` draws a `<span>`. Its default slot is also given `value: Value | null`, `label: string`, `values: readonly Value[]`, `labels: readonly string[]`.
     - `placeholder?: string`: What it shows while nothing is chosen.
@@ -3586,9 +3805,18 @@ Attributes and CSS variables, by part:
 
 - trigger: The button that shows the value and opens the list.
     - `data-popup-open`: Present when the list is open.
+    - `data-pressed`: Present while its popup is open: it stays pressed, as a button held down.
+    - `data-popup-side="top | right | bottom | left | inline-start | inline-end | none"`: While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet.
     - `data-placeholder`: Present while nothing is chosen.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
+    - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - value: The chosen value's label, or the placeholder. With several values, their labels with commas between.
     - `data-placeholder`: Present while nothing is chosen.
 - backdrop: The layer over the page behind the list: a press on it closes the list.
@@ -3608,6 +3836,7 @@ Attributes and CSS variables, by part:
     - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger it is on, after any flip; `none` when it lies over the trigger.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
@@ -3630,7 +3859,7 @@ Attributes and CSS variables, by part:
     - `data-closed`: Present when it is closed.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
     - `data-ending-style`: Present through its exit: what it animates out to. It leaves the page when the motion ends.
-    - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
+    - `data-side="top | right | bottom | left | inline-start | inline-end | none"`: The side of the trigger it is on, after any flip; `none` when it lies over the trigger.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-presentation="popup | sheet"`: How the list opened: placed against its trigger, or as a sheet from the bottom edge.
     - `data-swiping`: Present while the sheet is dragged.
@@ -3718,26 +3947,56 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - value: The value, written.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - control: What a pointer presses and drags on. It holds the track and the thumbs.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - track: The whole range.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - indicator: The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it.
     - `data-orientation="horizontal | vertical"`: The way the track runs.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
     - `--start-position`: With thumbs that stay inside the control: where the filled part starts, or with one thumb where it ends.
     - `--relative-size`: With thumbs that stay inside the control and a range: the filled part's length.
 - thumb: What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written.
@@ -3745,6 +4004,12 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-dragging`: Present while a pointer holds a thumb.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
     - `data-index`: Which thumb it is, from 0.
     - `--position`: With thumbs that stay inside the control: where the thumb's centre is.
 
@@ -3775,7 +4040,7 @@ Props of its root:
 
 - `step?: number`: `v-model:step`. The step shown, from 0. Equal to `count`, every step is done.
 - `defaultStep?: number`: The step it starts at, when the caller does not hold `step`. Read once. Default `0`.
-- `count: number`: Required. How many steps there are.
+- `count?: number`: How many steps there are. Left out, the items in the page, counted once they are there: until then (and on a server) no step is the last, so none is all done. Give it where only some of the steps are drawn.
 - `linear?: boolean`: In order only: a step that is not done yet cannot be gone to by its trigger.
 - `orientation?: Orientation`: Whether the steps are laid out across (the default) or down: the arrows follow.
 - `@step-change: (value: number, details: ChangeDetails) => void`: Heard as another step is about to be shown: `details.cancel()` keeps it as it was.
@@ -3785,7 +4050,7 @@ Each part, and its own props:
 - `<Steps.Root>` draws a `<div>`. Its props are above.
 - `<Steps.List>` draws a `<div>`.
 - `<Steps.Item>` draws a `<div>`.
-    - `index: number`: Required. Which step it is, from 0.
+    - `index?: number`: Which step it is, from 0. Left out, its place among the items in the page, once it is there: give it on a page a server draws, which cannot count them.
 - `<Steps.Trigger>` draws a `<button>`.
 - `<Steps.Indicator>` draws a `<span>`.
 - `<Steps.Separator>` draws a `<div>`.
@@ -3876,12 +4141,24 @@ Attributes and CSS variables, by part:
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 - thumb: The knob that moves along the track.
     - `data-checked`: Present when it is checked.
     - `data-unchecked`: Present when it is not checked.
     - `data-disabled`: Present when it is disabled.
     - `data-readonly`: Present when it can be read but not changed.
     - `data-required`: Present when the form needs it.
+    - `data-touched`: Inside a Field: present once focus has left the control.
+    - `data-dirty`: Inside a Field: present while the value is not the one it started with.
+    - `data-filled`: Inside a Field: present while the control has a value.
+    - `data-focused`: Inside a Field: present while the control has focus.
+    - `data-valid`: Inside a Field: present once the value has been checked and found right.
+    - `data-invalid`: Inside a Field: present while the value is wrong.
 
 ### Tabs
 
@@ -3913,7 +4190,8 @@ Each part, and its own props:
 - `<Tabs.Root>` draws a `<div>`. Generic: `<Value = unknown>`. Its props are above.
 - `<Tabs.List>` draws a `<div>`.
     - `activateOnFocus?: boolean`: Whether moving focus onto a tab with the arrows activates it. Default `false`.
-    - `loop?: boolean`: Whether the arrows wrap from the last tab to the first. Default `true`.
+    - `loopFocus?: boolean`: Whether the arrows wrap from the last tab to the first. Default `true`.
+    - `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `<Tabs.Tab>` draws a `<button>`.
     - `disabled?: boolean`: Disables this tab: it cannot be chosen.
     - `value: unknown`: Required. What the tabs' value is while this tab is the active one.
@@ -3934,6 +4212,7 @@ Attributes and CSS variables, by part:
     - `data-active`: Present on the tab whose panel is shown.
     - `data-disabled`: Present when it is disabled.
     - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
+    - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
 - indicator: A mark for the active tab: it carries that tab's position and size.
     - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
     - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
@@ -3945,6 +4224,7 @@ Attributes and CSS variables, by part:
     - `--active-tab-height`: The active tab's height.
 - panel: A tab's content. In the page while its tab is active, and through its exit.
     - `data-hidden`: Present while its tab is not the active one.
+    - `data-index`: The panel's place among the panels in the page, from 0, once it is in the page.
     - `data-orientation="horizontal | vertical"`: The way the tabs are laid out.
     - `data-activation-direction="left | right | up | down | none"`: Where the newly active tab is from the one before, for a panel or a mark that slides.
     - `data-starting-style`: Present for the first style of its entrance: what it animates in from.
@@ -4141,10 +4421,10 @@ Each part, and its own props:
 - `<Toast.List>` draws no element. The toasts in the page: each is given to draw its root. Its default slot is also given `toast: ToastRecord`.
 - `<Toast.Root>` draws a `<div>`. Its props are above.
 - `<Toast.Content>` draws a `<div>`.
-- `<Toast.Title>` draws a `<div>`. What the toast is called: the title it was added with, when nothing else is written in it.
-- `<Toast.Description>` draws a `<div>`. What the toast says: the description it was added with, when nothing else is written in it.
-- `<Toast.Close>` draws a `<button>`. Closes the toast.
-- `<Toast.Action>` draws a `<button>`. A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.
+- `<Toast.Title>` draws a `<div>`.
+- `<Toast.Description>` draws a `<div>`.
+- `<Toast.Close>` draws a `<button>`.
+- `<Toast.Action>` draws a `<button>`.
 
 A page's toasts are a toaster's, made once in a module: `import { createToaster } from "@kirana-ui/vue"`, then `export const toaster = createToaster(options)` (`ToasterOptions`, under "Types"). The viewport is given it, and anything on the page adds to it: `toaster.add({ title, description, action, priority })`, `toaster.update(id, options)`, `toaster.dismiss(id)`, `toaster.promise(promise, { loading, success, error })`. What each takes and gives back is `Toaster`, `ToastOptions`, `ToastActionOptions` and `ToastRecord` under "Types".
 
@@ -4169,6 +4449,14 @@ Attributes and CSS variables, by part:
 - content: What holds a toast's contents, when the design sizes the toast itself.
     - `data-behind`: Present on a toast that is behind the newest.
     - `data-expanded`: Present while the pointer or focus is on the stack: the toasts are spread out, and wait.
+- title: What the toast is called: the title it was added with, when nothing else is written in it.
+    - `data-type`: The kind the toast was added as.
+- description: What the toast says: the description it was added with, when nothing else is written in it.
+    - `data-type`: The kind the toast was added as.
+- close: Closes the toast.
+    - `data-type`: The kind the toast was added as.
+- action: A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.
+    - `data-type`: The kind the toast was added as.
 
 ### Toggle
 
@@ -4205,7 +4493,8 @@ Props:
 - `multiple?: boolean`: Whether more than one can be pressed at a time.
 - `disabled?: boolean`: Disables every toggle of the group.
 - `orientation?: Orientation`: Whether the toggles are laid out across (the default) or down: the arrows that move between them follow.
-- `loop?: boolean`: Whether the arrows go round from the last toggle to the first. Default: they do.
+- `loopFocus?: boolean`: Whether the arrows go round from the last toggle to the first. Default: they do.
+- `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `@value-change: (value: Value[], details: ChangeDetails) => void`: Heard as a toggle is about to be pressed or released, with the values that would then be pressed: `details.cancel()` keeps them as they were.
 
 `<ToggleGroup>` draws a `<div>`. Generic: `<Value = unknown>`.
@@ -4239,17 +4528,20 @@ Anatomy:
 Props of its root:
 
 - `orientation?: Orientation`: Whether the controls are laid out across (the default) or down: the arrows that move between them follow.
-- `loop?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `loopFocus?: boolean`: Whether the arrows go round from the last item to the first. Default: they do.
+- `loop?: boolean`: Whether the arrows wrap from the last item to the first.
 - `disabled?: boolean`: Disables every control of the toolbar.
 
 Each part, and its own props:
 
 - `<Toolbar.Root>` draws a `<div>`. Its props are above.
-- `<Toolbar.Button>` draws a `<button>`.
+- `<Toolbar.Button>` draws a `<button>`. `focusable-when-disabled` keeps it focusable while disabled, as Base UI's. Default `true`.
     - `disabled?: boolean`: Disables this control.
+    - `focusableWhenDisabled?: boolean`: Keeps this control focusable while disabled, as Base UI's: the arrows still reach it and it still says what it is, but a press, a click and the keys (Tab apart) do nothing. Default `true`. With `false`, a disabled control is the element's own `disabled`, and the arrows pass it.
 - `<Toolbar.Link>` draws a `<a>`.
-- `<Toolbar.Input>` draws a `<input>`.
+- `<Toolbar.Input>` draws a `<input>`. `focusable-when-disabled` keeps it focusable while disabled, as Base UI's. Default `true`.
     - `disabled?: boolean`: Disables this control.
+    - `focusableWhenDisabled?: boolean`: Keeps this control focusable while disabled, as Base UI's: the arrows still reach it and it still says what it is, but a press, a click and the keys (Tab apart) do nothing. Default `true`. With `false`, a disabled control is the element's own `disabled`, and the arrows pass it.
 - `<Toolbar.Group>` draws a `<div>`.
     - `disabled?: boolean`: Disables this control.
 - `<Toolbar.Separator>` draws a `<div>`.
@@ -4262,12 +4554,14 @@ Attributes and CSS variables, by part:
 - button: A button of the toolbar.
     - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
     - `data-disabled`: Present when it is disabled.
+    - `data-focusable`: Present when it stays focusable while disabled: the arrows still reach it.
 - link: A link of the toolbar.
     - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
     - `data-disabled`: Present when it is disabled.
 - input: A text input of the toolbar. The arrows are its own until the caret is at an end.
     - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
     - `data-disabled`: Present when it is disabled.
+    - `data-focusable`: Present when it stays focusable while disabled: the arrows still reach it.
 - group: Items that belong together.
     - `data-orientation="horizontal | vertical"`: Whether the toolbar is a row or a column.
     - `data-disabled`: Present when it is disabled.
@@ -4317,16 +4611,20 @@ Attributes and CSS variables, by part:
 
 - trigger: The element the tooltip describes.
     - `data-popup-open`: Present when the tooltip is open.
+    - `data-trigger-disabled`: Present when the tooltip is disabled: the pointer and focus on the trigger do not open it.
 - positioner: Places the popup against the trigger. It carries the geometry.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
     - `--available-height`: The height between the anchor and the edge of the viewport.
     - `--transform-origin`: The point of the popup nearest its anchor, to scale from.
+    - `--positioner-width`: The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size.
+    - `--positioner-height`: The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size.
 - popup: The tooltip itself.
     - `data-open`: Present when it is open.
     - `data-closed`: Present when it is closed.
@@ -4336,8 +4634,11 @@ Attributes and CSS variables, by part:
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
 - arrow: An element that points at the trigger, placed along the popup's edge.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
+    - `data-instant="delay | focus | dismiss"`: Present when it opened or closed without its usual wait, for a design that skips the motion then.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre.
 
 ### Tour
@@ -4411,6 +4712,7 @@ Attributes and CSS variables, by part:
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-centered`: Present while the step shown has no target in the page: the popup stands in the middle of the viewport.
+    - `data-anchor-hidden`: Present while the anchor is out of view: scrolled away, or clipped by a box around it.
     - `--anchor-width`: The anchor's width.
     - `--anchor-height`: The anchor's height.
     - `--available-width`: The width between the anchor and the edge of the viewport.
@@ -4425,6 +4727,8 @@ Attributes and CSS variables, by part:
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-centered`: Present while the step shown has no target in the page: the popup stands in the middle of the viewport.
 - arrow: An element that points at the target, placed along the popup's edge.
+    - `data-open`: Present when it is open.
+    - `data-closed`: Present when it is closed.
     - `data-side="top | right | bottom | left | inline-start | inline-end"`: The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor.
     - `data-align="start | center | end"`: How it is aligned with the anchor.
     - `data-uncentered`: Present when the popup was pushed along its edge, so the arrow is not at the target's centre.

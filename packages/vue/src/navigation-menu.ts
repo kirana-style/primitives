@@ -46,6 +46,8 @@ type State = StatesOf<"navigationMenu">
 
 const scope = context<Controller>("NavigationMenu")
 const ITEM: InjectionKey<NavigationMenuItem> = Symbol("NavigationMenuItem")
+// The menu a root is inside, if any: a menu in another's content is nested.
+const OUTER: InjectionKey<Controller> = Symbol("NavigationMenuOuter")
 const ANY = null as unknown as PropType<unknown>
 
 function useItem(): NavigationMenuItem {
@@ -82,8 +84,9 @@ const Root = defineComponent({
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
     const direction = useDirectionAround()
-    scope.provide(
-      controller(within(createNavigationMenu, { direction }), () => ({
+    const parent = inject(OUTER, undefined)
+    const made = scope.provide(
+      controller(within(createNavigationMenu, { direction, parent }), () => ({
         id: props.id ?? generated,
         value: props.value,
         defaultValue: props.defaultValue,
@@ -96,6 +99,7 @@ const Root = defineComponent({
         },
       }))
     )
+    provide(OUTER, made)
     return () => h(RootElement, attrs, slots)
   },
 }) as unknown as new <Value = unknown, As extends string = "nav">(
@@ -167,8 +171,23 @@ const Link = defineComponent({
 }) as unknown as PartComponent<"a", State["link"], LinkProps>
 
 export type ListProps = PartComponentProps
-export type TriggerProps = PartComponentProps
+export interface TriggerProps extends PartComponentProps {
+  /** The trigger cannot be pressed, and the pointer resting on it shows nothing. */
+  disabled?: boolean | undefined
+}
 export type IconProps = PartComponentProps
+
+const Trigger = defineComponent({
+  name: "NavigationMenuTrigger",
+  inheritAttrs: false,
+  props: { disabled: Boolean },
+  setup(props, { attrs, slots }) {
+    const options = toSignal(() => ({ disabled: props.disabled }))
+    const part = useItem().triggerPart(() => options.get())
+    const Element = partComponent("NavigationMenuTriggerElement", "button", () => part)
+    return () => h(Element, attrs, slots)
+  },
+}) as unknown as PartComponent<"button", State["trigger"], TriggerProps>
 export type PopupProps = PartComponentProps
 export type ViewportProps = PartComponentProps
 export type ArrowProps = PartComponentProps
@@ -177,11 +196,7 @@ export const NavigationMenu = {
   Root,
   List: partComponent<"ul", State["list"]>("NavigationMenuList", "ul", () => scope.use().list),
   Item,
-  Trigger: partComponent<"button", State["trigger"]>(
-    "NavigationMenuTrigger",
-    "button",
-    () => useItem().trigger
-  ),
+  Trigger,
   Icon: partComponent<"span", State["icon"]>("NavigationMenuIcon", "span", () => useItem().icon),
   Content,
   Link,

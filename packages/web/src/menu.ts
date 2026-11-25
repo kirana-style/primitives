@@ -101,7 +101,9 @@ const PARTS: Parts = {
   },
   "checkbox-item-indicator"(controller, element) {
     const box = boxOf(controller, partAround(element, "checkbox-item"))
-    return box && { part: box.controller.indicator, mounted: box.controller.checked }
+    // In the page while checked, and through its exit.
+    const mark = box?.controller.indicator
+    return mark && { part: mark, mounted: mark.mounted, mount: mark.mount }
   },
   "radio-group"(controller, element) {
     const group = radioOf(controller, element)!
@@ -114,7 +116,9 @@ const PARTS: Parts = {
   "radio-item-indicator"(controller, element) {
     const group = radioOf(controller, partAround(element, "radio-group"))?.controller
     const value = valueOf(partAround(element, "radio-item"))
-    return group && { part: group.indicator(value), mounted: group.checked(value) }
+    // In the page while chosen, and through its exit.
+    const mark = group?.indicator(value)
+    return mark && { part: mark, mounted: mark.mounted, mount: mark.mount }
   },
 }
 
@@ -122,6 +126,7 @@ const PROPS = {
   open: "boolean",
   "default-open": "boolean",
   disabled: "boolean",
+  "loop-focus": "boolean",
   loop: "boolean",
   modal: "boolean",
 } as const
@@ -147,7 +152,7 @@ const menu = (
  * `checkbox-item-indicator`, and a `radio-group` (`kui-value`, `kui-default-value`; it tells
  * `value-change`) of `radio-item`s (`kui-value`) with a `radio-item-indicator`. A `<kui-menu>`
  * inside a menu is its submenu, its trigger an item of the menu; inside a `<kui-menubar>`, one
- * of the bar's. `open`, `default-open`, `disabled`, `loop`, `modal`; it tells `open-change`.
+ * of the bar's. `open`, `default-open`, `disabled`, `loop-focus` (`loop` is its older name), `modal`; it tells `open-change`.
  */
 export const tag = menu(
   "kui-menu",

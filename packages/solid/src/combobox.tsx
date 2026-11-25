@@ -10,7 +10,7 @@ import type {
   ComboboxProps,
 } from "@kirana-ui/core/combobox"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { For, Show, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import { For, Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
 import type { Accessor } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
@@ -36,18 +36,25 @@ function useCombobox(): Controller {
 
 /**
  * `Value` is what an item's `value` is: the root's `value` and `onValueChange` hold one or
- * `null` for none, and with `multiple` its `values` and `onValuesChange` hold several.
+ * `null` for none, and with `multiple` (`Multiple`, read from it) they hold a list.
  */
-export type RootProps<Value = unknown> = Omit<ComboboxProps<Value>, "id"> & {
+export type RootProps<Value = unknown, Multiple extends boolean | undefined = false> = Omit<
+  ComboboxProps<Value, Multiple>,
+  "id" | "multiple"
+> & {
+  /** Several values: `value`, `defaultValue` and `onValueChange` then hold a list. Read once. */
+  multiple?: Multiple | undefined
   id?: string
   children?: JSX.Element
 }
 
-function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
+function Root<Value = unknown, Multiple extends boolean | undefined = false>(
+  props: RootProps<Value, Multiple>
+): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext) ?? undefined
   const direction = useContext(DirectionContext) ?? undefined
-  const made = controller(within(createCombobox<Value>, { field, direction }), () => ({
+  const made = controller(within(createCombobox<Value, Multiple>, { field, direction }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
@@ -61,8 +68,11 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     multiple: props.multiple,
     values: props.values,
     defaultValues: props.defaultValues,
-    onValuesChange: (values: Value[], details: ChangeDetails) =>
-      props.onValuesChange?.(values, details),
+    // Each only when given: with `multiple`, Base UI's `onValueChange` is told the list and is
+    // the one called when both are.
+    onValuesChange: props.onValuesChange
+      ? (values: Value[], details: ChangeDetails) => props.onValuesChange?.(values, details)
+      : undefined,
     inline: props.inline,
     virtualized: props.virtualized,
     presentation: props.presentation,
@@ -74,8 +84,10 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     filter: props.filter,
     itemToStringLabel: props.itemToStringLabel,
     itemToStringValue: props.itemToStringValue,
-    onValueChange: (value: Value | null, details: ChangeDetails) =>
-      props.onValueChange?.(value, details),
+    onValueChange: props.onValueChange
+      ? (value: Parameters<NonNullable<typeof props.onValueChange>>[0], details: ChangeDetails) =>
+          props.onValueChange?.(value, details)
+      : undefined,
     onInputValueChange: (value: string, details: ChangeDetails) =>
       props.onInputValueChange?.(value, details),
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
@@ -148,10 +160,13 @@ function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
   const [local, rest] = split(props, ["keepMounted"])
   const made = useCombobox()
   const value = useContext(ItemContext) ?? undefined
-  const selected = fromSignal(made.selected(value))
+  // In the page while chosen, and through its exit.
+  const indicator = made.itemIndicator(value)
+  onSettled(() => indicator.mount())
+  const mounted = fromSignal(indicator.mounted)
   return (
-    <Show when={selected() || local.keepMounted}>
-      <Part of={made.itemIndicator(value)} tag="span" {...rest} />
+    <Show when={mounted() || local.keepMounted}>
+      <Part of={indicator} tag="span" {...rest} />
     </Show>
   )
 }

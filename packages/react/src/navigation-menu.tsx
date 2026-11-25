@@ -6,6 +6,7 @@ import type {
   NavigationMenuItem,
   NavigationMenuLinkOptions,
   NavigationMenuProps,
+  NavigationMenuTriggerOptions,
 } from "@kirana-ui/core/navigation-menu"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { createContext, useContext, useId, useMemo } from "react"
@@ -63,8 +64,10 @@ function Root<Value = unknown>({
   ...rest
 }: RootProps<Value>): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
+  // Inside another's content, it is nested.
+  const parent = useContext(Context) ?? undefined
   const controller: Controller = useController<NavigationMenuProps<Value>, Controller<Value>>(
-    within(createNavigationMenu<Value>, { direction }),
+    within(createNavigationMenu<Value>, { direction, parent }),
     { value, defaultValue, onValueChange, delay, closeDelay, orientation, id }
   )
   return (
@@ -105,10 +108,19 @@ function Mounted({ item, children }: { item: NavigationMenuItem; children?: Reac
   return <ItemContext.Provider value={item}>{children}</ItemContext.Provider>
 }
 
-export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type TriggerProps = PartComponentProps<
+  "button",
+  StateOf<Parts["trigger"]>,
+  NavigationMenuTriggerOptions
+>
 export type IconProps = PartComponentProps<"span", StateOf<Parts["icon"]>>
 
-const Trigger = (props: TriggerProps) => usePart(useItem("Trigger").trigger, "button", props)
+function Trigger({ disabled, ...props }: TriggerProps): ReactElement {
+  const item = useItem("Trigger")
+  const options = useOptions({ disabled })
+  const part = useMemo(() => item.triggerPart(() => options.get()), [item, options])
+  return usePart(part, "button", props)
+}
 const Icon = (props: IconProps) => usePart(useItem("Icon").icon, "span", props)
 
 export type ContentProps = PartComponentProps<"div", StateOf<Parts["content"]>>

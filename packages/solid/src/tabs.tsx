@@ -54,11 +54,19 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
 export type ListProps = PartComponentProps<
   "div",
   StateOf<Parts["list"]>,
-  { activateOnFocus?: boolean; loop?: boolean }
+  {
+    activateOnFocus?: boolean
+    loopFocus?: boolean
+    /**
+     * Whether the arrows wrap from the last item to the first.
+     * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+     */
+    loop?: boolean
+  }
 >
 
 function List(props: ListProps): JSX.Element {
-  const [local, rest] = split(props, ["activateOnFocus", "loop"])
+  const [local, rest] = split(props, ["activateOnFocus", "loop", "loopFocus"])
   const made = useTabs()
   follow(
     () => defined({ ...local }),

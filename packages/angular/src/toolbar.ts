@@ -37,6 +37,13 @@ export const KP_TOGGLE_GROUP = new InjectionToken<{ controller: ToggleGroup } | 
 })
 export class KpToolbar implements OnInit {
   readonly orientation = input<Orientation>()
+  readonly loopFocus = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
 
@@ -46,6 +53,7 @@ export class KpToolbar implements OnInit {
   private readonly props = inputsSignal(this, () => ({
     orientation: this.orientation(),
     loop: this.loop(),
+    loopFocus: this.loopFocus(),
     disabled: this.disabled(),
   }))
 
@@ -68,9 +76,14 @@ function useToolbar(): { controller: Toolbar } {
 @Directive({ selector: "[kpToolbarButton]" })
 export class KpToolbarButton implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** Keeps it focusable while disabled, as Base UI's: the arrows still reach it. Default `true`. */
+  readonly focusableWhenDisabled = input(true, { transform: booleanAttribute })
   private readonly root = useToolbar()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({
+    disabled: this.disabled(),
+    focusableWhenDisabled: this.focusableWhenDisabled(),
+  }))
 
   ngOnChanges(changes: SimpleChanges): void {
     this.options.bound(changes)
@@ -86,9 +99,14 @@ export class KpToolbarButton implements OnInit {
 @Directive({ selector: "[kpToolbarInput]" })
 export class KpToolbarInput implements OnInit {
   readonly disabled = input(false, { transform: booleanAttribute })
+  /** Keeps it focusable while disabled, as Base UI's: the arrows still reach it. Default `true`. */
+  readonly focusableWhenDisabled = input(true, { transform: booleanAttribute })
   private readonly root = useToolbar()
   private readonly put = hostPart()
-  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+  private readonly options = inputsSignal(this, () => ({
+    disabled: this.disabled(),
+    focusableWhenDisabled: this.focusableWhenDisabled(),
+  }))
 
   ngOnChanges(changes: SimpleChanges): void {
     this.options.bound(changes)
@@ -149,6 +167,13 @@ export class KpToggleGroup<Value = unknown> implements OnInit {
   readonly multiple = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
+  readonly loopFocus = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly valueChanged = output<{ value: Value[]; details: ChangeDetails }>()
 
@@ -163,6 +188,7 @@ export class KpToggleGroup<Value = unknown> implements OnInit {
     disabled: this.disabled(),
     orientation: this.orientation(),
     loop: this.loop(),
+    loopFocus: this.loopFocus(),
     onValueChange: (value: Value[], details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {

@@ -53,8 +53,11 @@ export type ItemProps = PartComponentProps<
   "div",
   StateOf<Parts["item"]>,
   {
-    /** Its place among the slides, from 0. */
-    index: number
+    /**
+     * Its place among the slides, from 0. Left out, its place in the page, once it is there:
+     * give it on a page a server draws, which cannot count them.
+     */
+    index?: number
   }
 >
 

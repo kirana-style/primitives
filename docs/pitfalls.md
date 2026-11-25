@@ -105,6 +105,20 @@ note. Three places hold them:
   so a radio item's `id` goes on its hidden radio, as a checkbox's and a switch's do. Held by
   the `controls` scenario, which presses a label `for` a radio item.
 
+- **A popup's size is measured once it is placed.** `--positioner-width` was first measured as
+  the popup attached. React and Vue attach a child before its parent, so the positioner was
+  still a block in the flow and the popup was measured as wide as the page; measured a moment
+  later on the other adapters, after the place had written `--anchor-width`, a popup whose
+  `min-width` reads it was a few pixels wider there. The size now waits for the first
+  placement (`popupSize`, given to `createPopup` as `size`), whichever part attached first.
+  Held by the `popover`, `popover-more` and `hover` scenarios, which compare it across the
+  adapters, and `tests/core/popover.test.ts` ("writes its size on the positioner").
+- **Base UI's `data-pressed` is not a press.** On a menu's, a select's, a combobox's, a
+  navigation menu's and a context menu's trigger it is written with `data-popup-open`, for as
+  long as the popup is open; on a popover's, while the popover a press on that trigger opened
+  is open. A flag that followed the pointer would differ from Base UI's at every snapshot of
+  an open popup. Held by each component's "in Base UI's words" tests.
+
 ## Lists and menus
 
 - **A highlight the list keeps by itself is derived, not set.** A command highlights its first
@@ -277,6 +291,14 @@ note. Three places hold them:
 - **A toggle group in a toolbar is the toolbar's.** It has no stop and no arrows of its own:
   two rovings, one inside the other, each answer the same key.
 - **A text input in a toolbar keeps its arrows** until the caret is at that end of its text.
+- **A disabled control that keeps focus is still in the arrows' way, and takes no keys.** A
+  toolbar's button and input stay focusable while disabled by default, as Base UI's
+  (`focusableWhenDisabled`): `aria-disabled`, no `disabled`. The roving set left out every
+  `aria-disabled` element, so the arrows passed them; and a disabled input whose keys were
+  stopped still kept the arrows as its text's, so focus could not leave it by them. The roving
+  set keeps an element marked `data-focusable`, and a disabled input's arrows are the
+  toolbar's. Held by `tests/core/toolbar.test.ts` ("keeps a disabled control focusable by
+  default, as Base UI's, and lets it do nothing").
 - **An element first watched while a resize observer is reporting is an error.** Content that
   grows is reported; measuring it shows there is something to scroll; the framework draws a
   scrollbar, at once or a microtask later but still inside that report; the scrollbar is
@@ -439,6 +461,20 @@ note. Three places hold them:
   compiler does not follow a constant (`NG1010`), and only the fixture's build says so.
 - **Solid and Svelte** attach children around their parent in an order of their own: a list
   reads its rows in the page's order at use time, never the order they registered in.
+- **Angular's template checker gives a directive's type parameter it cannot infer `any`**, not
+  its default. A select's value typed `[Multiple] extends [true] ? Value[] : Value | null` took
+  `any` for a select with no `[multiple]` and typed every one-value select's change as a list;
+  inferring `Value` through that type also took the whole list for `Value`. The value is typed
+  `Multiple extends true ? readonly Value[] : Value | null` (inferred from the binding, either
+  shape when `Multiple` is `any`) and the change `true extends Multiple ? (false extends
+  Multiple ? one : list) : one`, which is one value for `any`. Held by
+  `fixtures/angular/src/typed.ts`, which the fixture's build type-checks with `ngc`.
+- **A part counted from the page has no place on a server.** A carousel's slide or a step with
+  no `index` is placed by where its element is, read once it is in the page: a server draws it
+  as no place (no `data-current`, a step's trigger with no id), and the page then marks it. A
+  page a server draws gives `index`. The core never counts the order parts were made in, which
+  React's StrictMode doubles and a list that changes reorders (`tests/core/carousel.test.ts`,
+  `tests/core/steps.test.ts`, "count an item with no index").
 - **Svelte warns on a void element given a content block**, children or not:
   `<svelte:element this="input">{@render children?.()}</svelte:element>` warned on every
   render of every hidden input. `Part.svelte` draws a void tag without one. Held by

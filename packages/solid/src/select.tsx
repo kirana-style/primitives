@@ -36,17 +36,24 @@ function useSelect(): Controller {
 
 /**
  * `Value` is what an item's `value` is: the root's `value` and `onValueChange` hold one or
- * `null` for none, and with `multiple` its `values` and `onValuesChange` hold several.
+ * `null` for none, and with `multiple` (`Multiple`, read from it) they hold a list.
  */
-export type RootProps<Value = unknown> = Omit<SelectProps<Value>, "id"> & {
+export type RootProps<Value = unknown, Multiple extends boolean | undefined = false> = Omit<
+  SelectProps<Value, Multiple>,
+  "id" | "multiple"
+> & {
+  /** Several values: `value`, `defaultValue` and `onValueChange` then hold a list. Read once. */
+  multiple?: Multiple | undefined
   id?: string
   children?: JSX.Element
 }
 
-function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
+function Root<Value = unknown, Multiple extends boolean | undefined = false>(
+  props: RootProps<Value, Multiple>
+): JSX.Element {
   const generated = createUniqueId()
   const field = useContext(FieldContext) ?? undefined
-  const made = controller(within(createSelect<Value>, { field }), () => ({
+  const made = controller(within(createSelect<Value, Multiple>, { field }), () => ({
     id: props.id ?? generated,
     value: props.value,
     defaultValue: props.defaultValue,
@@ -66,10 +73,15 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     sheetBelow: props.sheetBelow,
     itemToStringLabel: props.itemToStringLabel,
     itemToStringValue: props.itemToStringValue,
-    onValueChange: (value: Value | null, details: ChangeDetails) =>
-      props.onValueChange?.(value, details),
-    onValuesChange: (values: Value[], details: ChangeDetails) =>
-      props.onValuesChange?.(values, details),
+    onValueChange: props.onValueChange
+      ? (value: Parameters<NonNullable<typeof props.onValueChange>>[0], details: ChangeDetails) =>
+          props.onValueChange?.(value, details)
+      : undefined,
+    // Each only when given: with `multiple`, Base UI's `onValueChange` is told the list and is
+    // the one called when both are.
+    onValuesChange: props.onValuesChange
+      ? (values: Value[], details: ChangeDetails) => props.onValuesChange?.(values, details)
+      : undefined,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
   const named = fromSignal(made.named)
@@ -205,10 +217,13 @@ function ItemIndicator(props: ItemIndicatorProps): JSX.Element {
   const [local, rest] = split(props, ["keepMounted"])
   const made = useSelect()
   const value = useContext(ItemContext) ?? undefined
-  const selected = fromSignal(made.selected(value))
+  // In the page while chosen, and through its exit.
+  const indicator = made.itemIndicator(value)
+  onSettled(() => indicator.mount())
+  const mounted = fromSignal(indicator.mounted)
   return (
-    <Show when={selected() || local.keepMounted}>
-      <Part of={made.itemIndicator(value)} tag="span" {...rest} />
+    <Show when={mounted() || local.keepMounted}>
+      <Part of={indicator} tag="span" {...rest} />
     </Show>
   )
 }

@@ -1,4 +1,5 @@
 import { bindable } from "./bindable.ts"
+import type { Field, FieldMembership } from "./field.ts"
 import { details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
@@ -15,24 +16,44 @@ export interface OtpProps {
   defaultValue?: string | undefined
   /** Heard as the characters are about to change: `details.cancel()` keeps them as they were. */
   onValueChange?: ((value: string, details: ChangeDetails) => void) | undefined
-  /** Every character is in: the moment to send the code. */
+  /**
+   * Every character is in: the moment to send the code. `details` are those of the change that
+   * filled it (`reason`, `event`, `source`).
+   */
+  onValueComplete?: ((value: string, details: ChangeDetails) => void) | undefined
+  /**
+   * Every character is in.
+   * @deprecated Base UI's name is `onValueComplete`, which is told the change's details too
+   * and is the one called when both are given.
+   */
   onComplete?: ((value: string) => void) | undefined
   /**
-   * What a character may be: a digit (`numeric`), a letter (`alphabetic`, `a` to `z` either
-   * case), either (`alphanumeric`), or anything but white space (`text`). It also says which
-   * keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default: `numeric`,
-   * on purpose: a one-time code is digits, and its keyboard is then the one to type them on.
+   * What a character may be: a digit (`numeric`), a letter (`alpha`, `a` to `z` either case),
+   * either (`alphanumeric`), or anything but white space (`none`: no rule beyond that). It also
+   * says which keyboard a phone shows: the digits' for `numeric`, letters' otherwise. Default:
+   * `numeric`, on purpose: a one-time code is digits, and its keyboard is then the one to type
+   * them on. `alphabetic` and `text` are older spellings of `alpha` and `none`, still read.
    */
-  mode?: "numeric" | "alphabetic" | "alphanumeric" | "text" | undefined
+  validationType?: OtpValidation | undefined
+  /**
+   * What a character may be.
+   * @deprecated Base UI's name is `validationType`, which wins when both are given. Both take
+   * either spelling of the values.
+   */
+  mode?: OtpValidation | undefined
   /**
    * What else a character may be: a regular expression, as text, that one character must match
-   * whole (`"[A-F0-9]"`), in place of `mode`'s rule. Text, as an attribute can only be, so it
-   * is given the same way on every framework and on a custom element. With a pattern, `mode`
-   * only says the keyboard, and defaults to `text`.
+   * whole (`"[A-F0-9]"`), in place of `validationType`'s rule. Text, as an attribute can only
+   * be, so it is given the same way on every framework and on a custom element. With a
+   * pattern, `validationType` only says the keyboard, and defaults to `none`.
    */
   pattern?: string | undefined
   /** Disabled: it cannot be changed. */
   disabled?: boolean | undefined
+  /** Shown as it is, focusable, not changeable. */
+  readOnly?: boolean | undefined
+  /** Needed: in a `Field`, an empty code is then invalid. */
+  required?: boolean | undefined
   /** With a name, the code is submitted with the form around it. */
   name?: string | undefined
   /** The id of the form the input belongs to, when it is not inside it. */
@@ -65,11 +86,19 @@ export interface Otp {
   readonly caretPart: Part
 }
 
+/**
+ * Which characters a one-time code takes: Base UI's four values, and `alphabetic` and `text`,
+ * the older spellings of `alpha` and `none`.
+ */
+export type OtpValidation = "numeric" | "alpha" | "alphanumeric" | "none" | "alphabetic" | "text"
+
 const NOTHING = () => {}
-const ALLOWED = {
+const ALLOWED: Record<OtpValidation, string> = {
   numeric: "[0-9]",
+  alpha: "[a-zA-Z]",
   alphabetic: "[a-zA-Z]",
   alphanumeric: "[0-9a-zA-Z]",
+  none: "\\S",
   text: "\\S",
 }
 const rules = new Map<string, RegExp>()
@@ -87,10 +116,19 @@ function keep(text: string, rule: string): string {
  * code pasted, autofilled from a message or typed by a screen reader's user goes in as into any
  * input, and the browser's own selection, undo and deletion are the component's.
  */
-export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
+export function createOtp(
+  props: ReadonlySignal<OtpProps>,
+  /** The field the code is in, if it is in one: its label, its state, its check. */
+  around: { field?: Field | undefined } = {}
+): Otp {
+  const { field } = around
+  let member: FieldMembership | undefined
   const length = () => Math.max(1, props.peek().length ?? 6)
-  // The pattern given, or the mode's: read each time, as a caller may change either.
-  const rule = () => props.peek().pattern ?? ALLOWED[props.peek().mode ?? "numeric"]
+  // Base UI's name first, then the older one; with neither, digits, or anything with a pattern.
+  const validation = (given: OtpProps): OtpValidation =>
+    given.validationType ?? given.mode ?? (given.pattern ? "none" : "numeric")
+  // The pattern given, or the validation's: read each time, as a caller may change either.
+  const rule = () => props.peek().pattern ?? ALLOWED[validation(props.peek())]
   const clean = (text: string) => keep(text, rule()).slice(0, length())
   const value = bindable<string>({
     value: () => props.get().value,
@@ -101,9 +139,14 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
   const inForm = createFormControl((event) => {
     // The browser puts the input back to its default next: the default is what it should say.
     if (input) input.defaultValue = initial
-    value.set(initial, details("form-reset", event))
+    const by = details("form-reset", event)
+    value.set(initial, by)
+    if (!by.canceled) member?.reset(initial)
   })
-  const disabled = computed(() => Boolean(props.get().disabled) || inForm.disabled.get())
+  const disabled = computed(
+    () => Boolean(props.get().disabled) || Boolean(field?.disabled.get()) || inForm.disabled.get()
+  )
+  const readOnly = computed(() => Boolean(props.get().readOnly))
   const focused = signal(false)
   // The input's own selection: where the next character goes, or what is selected.
   const selection = signal<readonly [number, number]>(
@@ -117,9 +160,12 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
     const text = clean(next)
     const before = value.peek()
     value.set(text, by)
+    if (!by.canceled) member?.changed(text)
     // What was asked for, not what is read back.
     if (!by.canceled && text !== before && text.length === length()) {
-      props.peek().onComplete?.(text)
+      const given = props.peek()
+      if (given.onValueComplete) given.onValueComplete(text, by)
+      else given.onComplete?.(text)
     }
   }
 
@@ -137,6 +183,19 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
     input.setSelectionRange(at, Math.min(at + 1, value.peek().length))
     read()
   }
+
+  /**
+   * What the root and every cell carry: the field's state when the code is in one, then the
+   * code's own, which a focus anywhere on it or a character in it says whatever the field does.
+   */
+  const state = () => ({
+    ...field?.state(),
+    "data-disabled": flag(disabled.get()),
+    "data-readonly": flag(readOnly.get()),
+    "data-required": flag(props.get().required),
+    "data-focused": flag(focused.get()),
+    "data-complete": flag(value.get().length === length()),
+  })
 
   function slot(index: number): OtpSlot {
     const found = slots.get(index)
@@ -156,10 +215,11 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
       caret,
       part: {
         props: computed(() => ({
+          // The code's state, as Base UI's each character carries it, and the cell's own.
+          ...state(),
           "data-index": String(index),
           "data-active": flag(active.get()),
           "data-filled": flag(char.get() !== ""),
-          "data-disabled": flag(disabled.get()),
           // A press on a cell goes to the input, with the caret there.
           onPointerDown(event: PointerEvent) {
             event.preventDefault()
@@ -180,9 +240,8 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
     mount: () => NOTHING,
     root: {
       props: computed(() => ({
-        "data-disabled": flag(disabled.get()),
-        "data-focused": flag(focused.get()),
-        "data-complete": flag(value.get().length === length()),
+        ...state(),
+        "data-filled": flag(value.get() !== ""),
       })),
       attach: () => NOTHING,
     },
@@ -191,7 +250,7 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
     caretPart: { props: computed(() => ({ "aria-hidden": "true" })), attach: () => NOTHING },
     input: {
       props: computed(() => {
-        const mode = props.get().mode ?? (props.get().pattern ? "text" : "numeric")
+        const mode = validation(props.get())
         return {
           id: props.get().id,
           type: "text",
@@ -203,9 +262,14 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
           autocomplete: "one-time-code",
           maxlength: String(length()),
           pattern: mode === "numeric" && !props.get().pattern ? "[0-9]*" : undefined,
-          name: props.get().name,
+          // In a field the name is the field's when the code has none.
+          name: props.get().name ?? field?.name.get(),
           form: props.get().form,
           disabled: flag(disabled.get()),
+          readonly: flag(readOnly.get()),
+          // Never `required`: in a field the field checks it, and words the message.
+          "aria-required": props.get().required ? "true" : undefined,
+          ...field?.aria(),
           "data-disabled": flag(disabled.get()),
           // What may not be in a code never goes in: refused before the input changes, so the
           // browser's undo holds only what was really typed.
@@ -234,8 +298,12 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
               target.setSelectionRange(end, end)
             }
             read()
+            member?.focused(true)
           },
-          onBlur: () => focused.set(false),
+          onBlur() {
+            focused.set(false)
+            member?.focused(false)
+          },
           onKeyUp: read,
           onSelect: read,
         }
@@ -248,7 +316,19 @@ export function createOtp(props: ReadonlySignal<OtpProps>): Otp {
         }
         // The arrows and a drag move the selection with no event on the input itself.
         document.addEventListener("selectionchange", changed)
+        // In a field, the code is its control: the label is for the input, and the field checks it.
+        member = field?.join({
+          element,
+          focus: () => element.focus(),
+          kind: "text",
+          required: () => Boolean(props.peek().required),
+          value: value.peek(),
+        })
         const stops = [
+          () => {
+            member?.leave()
+            member = undefined
+          },
           () => document.removeEventListener("selectionchange", changed),
           inForm.attach(element),
           // The input's text is the core's to write: a framework that held it would write it

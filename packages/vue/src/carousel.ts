@@ -73,14 +73,17 @@ const Next = partComponent<"button", State["next"]>(
 )
 
 export interface ItemProps extends PartComponentProps {
-  /** Its place among the slides, from 0. */
-  index: number
+  /**
+   * Its place among the slides, from 0. Left out, its place in the page, once it is there:
+   * give it on a page a server draws, which cannot count them.
+   */
+  index?: number | undefined
 }
 
 const Item = defineComponent({
   name: "CarouselItem",
   inheritAttrs: false,
-  props: { index: { type: Number, required: true } },
+  props: { index: Number },
   setup(props, { attrs, slots }) {
     const part = scope.use().item(props.index)
     const Element = partComponent("CarouselItemElement", "div", () => part)

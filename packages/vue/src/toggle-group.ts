@@ -25,6 +25,11 @@ export const ToggleGroup = defineComponent({
     multiple: Boolean,
     disabled: Boolean,
     orientation: String as PropType<Orientation>,
+    loopFocus: optional(Boolean),
+    /**
+     * Whether the arrows wrap from the last item to the first.
+     * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+     */
     loop: optional(Boolean),
   },
   emits: ["update:value", "valueChange"],
@@ -38,6 +43,7 @@ export const ToggleGroup = defineComponent({
       disabled: props.disabled,
       orientation: props.orientation,
       loop: props.loop,
+      loopFocus: props.loopFocus,
       onValueChange(value: unknown[], details: ChangeDetails) {
         emit("valueChange", value, details)
         if (!details.canceled) emit("update:value", value)

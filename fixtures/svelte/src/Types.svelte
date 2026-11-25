@@ -188,6 +188,16 @@
   }}
 />
 <Select.Root multiple bind:values={basket} onValuesChange={(values) => void values.join()} />
+<!-- Base UI's shape: with `multiple`, `value` and what `onValueChange` is told are a list. -->
+<Select.Root
+  multiple
+  bind:value={basket}
+  onValueChange={(value) => {
+    const chosen: string[] = value
+    void chosen
+  }}
+/>
+<Combobox.Root multiple defaultValue={["apple"]} onValueChange={(value) => void value.join()} />
 <Combobox.Root bind:value={fruit} bind:values={basket} bind:open />
 <Listbox.Root bind:value={basket} onValueChange={(value) => void value.join()} />
 <Accordion.Root bind:value={panels} onValueChange={(value) => void value.join()} />

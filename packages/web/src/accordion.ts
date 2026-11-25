@@ -32,7 +32,7 @@ type Props = Omit<AccordionProps<string>, "value" | "defaultValue"> & {
  * `trigger` button and a `panel` that is in the page while its item is open. An item's
  * `kui-value` tells it from the others; an item that is given none makes its own.
  * `value` and `default-value` (the open items, with commas between), `multiple`, `disabled`,
- * `orientation`, `loop`; it tells `value-change`.
+ * `orientation`, `loop-focus` (`loop` is its older name); it tells `value-change`.
  */
 export const tag = defineElement<Props & { id: string }, Accordion<string>>({
   tag: "kui-accordion",
@@ -42,6 +42,7 @@ export const tag = defineElement<Props & { id: string }, Accordion<string>>({
     multiple: "boolean",
     disabled: "boolean",
     orientation: "string",
+    "loop-focus": "boolean",
     loop: "boolean",
   },
   create: (props) =>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from "svelte"
+  import { getContext, untrack } from "svelte"
 
   import Part from "../Part.svelte"
   import { fromSignal } from "../runtime.svelte.ts"
@@ -9,10 +9,12 @@
   let { keepMounted = false, ...rest }: RadioItemIndicatorProps = $props()
   const group = useRadioGroup()
   const value = getContext(RADIO_ITEM)
-  const checked = fromSignal(group.checked(value))
   const part = group.indicator(value)
+  // In the page while chosen, and through its exit.
+  $effect(() => untrack(() => part.mount()))
+  const mounted = fromSignal(part.mounted)
 </script>
 
-{#if checked.current || keepMounted}
+{#if mounted.current || keepMounted}
   <Part of={part} tag="span" {...rest} />
 {/if}

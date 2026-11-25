@@ -2,6 +2,7 @@ import { computed } from "@kirana-ui/core"
 import { createDrawer } from "@kirana-ui/core/drawer"
 import type { Drawer, DrawerProps, DrawerSnapPoint } from "@kirana-ui/core/drawer"
 
+import { ownDisabled } from "./around.ts"
 import { defineElement } from "./runtime.ts"
 import type { ElementOf } from "./runtime.ts"
 
@@ -17,8 +18,8 @@ type Props = Omit<DrawerProps, "snapPoints" | "snapPoint" | "defaultSnapPoint"> 
 
 /**
  * `<kui-drawer>`: a dialog that comes from an edge and is dragged back to it, with the
- * dialog's parts. `open`, `default-open`, `modal`, `close-on-outside-press` (`dismissible`, its
- * old name, still read), `swipe-direction`,
+ * dialog's parts. `open`, `default-open`, `modal`, `disable-pointer-dismissal`
+ * (`close-on-outside-press` and `dismissible`, the other way round, its old names, still read), `swipe-direction`,
  * `snap-points` (with commas between: `0.4,1` or `200px,1`), `snap-point`,
  * `default-snap-point`; it tells `open-change` and `snap-point-change`.
  */
@@ -28,6 +29,7 @@ export const tag = defineElement<Props, Drawer>({
     open: "boolean",
     "default-open": "boolean",
     modal: "boolean",
+    "disable-pointer-dismissal": "boolean",
     "close-on-outside-press": "boolean",
     dismissible: "boolean",
     "swipe-direction": "string",
@@ -54,12 +56,12 @@ export const tag = defineElement<Props, Drawer>({
     onSnapPointChange: { event: "snap-point-change", prop: "snapPoint" },
   },
   parts: {
-    trigger: (controller) => controller.trigger,
+    trigger: (controller, element) => ownDisabled(element, controller.triggerPart),
     backdrop: (controller) => ({ mounted: controller.mounted, part: controller.backdrop }),
     popup: (controller) => ({ mounted: controller.mounted, part: controller.popup }),
     title: (controller) => controller.title,
     description: (controller) => controller.description,
-    close: (controller) => controller.close,
+    close: (controller, element) => ownDisabled(element, controller.closePart),
   },
 })
 

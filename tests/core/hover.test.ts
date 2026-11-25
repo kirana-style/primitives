@@ -260,3 +260,44 @@ describe("a popup that opens on focus", () => {
     expect(reasons).toEqual(["open: trigger-focus", "close: trigger-focus"])
   })
 })
+
+describe("a tooltip, in Base UI's words", () => {
+  it("says on its trigger when it is disabled, and fades and skips its arrow's motion with it", async () => {
+    const root = mount(`
+      <button id="t" style="position: fixed; left: 10px; top: 10px; width: 100px; height: 30px">T</button>
+      <div id="pos"><div id="pop" style="width: 60px; height: 20px"><div id="arrow"></div></div></div>`)
+    const props = signal<HoverPopupProps>({ id: "tip", disabled: true })
+    const made = createTooltip(props)
+    const trigger = find(root, "t")
+    const positioner = find(root, "pos")
+    const arrow = find(root, "arrow")
+    // Found before it is bound: the popup takes an id of its own.
+    const shown = find(root, "pop")
+    const stops = [
+      bind(trigger, made.trigger),
+      bind(positioner, made.positioner),
+      bind(shown, made.popup),
+      bind(arrow, made.arrow),
+      made.mount(),
+    ]
+    onTestFinished(() => {
+      made.setOpen(false, details("test"))
+      for (const stop of stops.reverse()) stop()
+    })
+    expect(trigger.hasAttribute("data-trigger-disabled")).toBe(true)
+    props.set({ id: "tip" })
+    expect(trigger.hasAttribute("data-trigger-disabled")).toBe(false)
+    expect(arrow.hasAttribute("data-closed")).toBe(true)
+    // Opened by focus: at once, and the arrow says so as its popup does.
+    trigger.dispatchEvent(new FocusEvent("focus"))
+    trigger.focus()
+    await expect.poll(() => made.open.peek()).toBe(true)
+    expect(arrow.hasAttribute("data-open")).toBe(true)
+    expect(arrow.getAttribute("data-instant")).toBe(shown.getAttribute("data-instant"))
+    expect(arrow.getAttribute("data-instant")).toBe("focus")
+    // Its size on its positioner, and whether its trigger is in view.
+    await expect.poll(() => positioner.style.getPropertyValue("--positioner-width")).toBe("60px")
+    expect(positioner.style.getPropertyValue("--positioner-height")).toBe("20px")
+    expect(positioner.hasAttribute("data-anchor-hidden")).toBe(false)
+  })
+})

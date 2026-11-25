@@ -54,11 +54,17 @@ export function createCollapsible(props: ReadonlySignal<CollapsibleProps>): Coll
     setOpen,
     mount: () => presence.start(),
     root: {
-      props: computed(() => ({
-        "data-open": flag(open.get()),
-        "data-closed": flag(!open.get()),
-        "data-disabled": flag(disabled.get()),
-      })),
+      props: computed(() => {
+        // The panel's motion, which the root says too, at the same moments.
+        const status = presence.status.get()
+        return {
+          "data-open": flag(open.get()),
+          "data-closed": flag(!open.get()),
+          "data-disabled": flag(disabled.get()),
+          "data-starting-style": flag(status === "starting"),
+          "data-ending-style": flag(status === "ending"),
+        }
+      }),
       attach: () => NOTHING,
     },
     trigger: {

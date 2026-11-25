@@ -56,6 +56,21 @@ interface Bar {
 }
 
 /**
+ * A distance scrolled from the start, held to the range, as at an edge when it is within a
+ * pixel of it: a fractional size is rounded both ways.
+ */
+function atEdge(value: number, max: number): number {
+  if (max <= 0) return 0
+  const at = Math.min(max, Math.max(0, value))
+  const nearStart = at <= 1
+  const nearEnd = max - at <= 1
+  if (nearStart && nearEnd) return at <= max - at ? 0 : max
+  if (nearStart) return 0
+  if (nearEnd) return max
+  return at
+}
+
+/**
  * The room an element keeps along a scrollbar's way: the scrollbar's padding, which its thumb
  * stays inside, or the thumb's own margin.
  */
@@ -92,6 +107,12 @@ export function createScrollArea(
   const hovering = signal(false)
   const scrollingX = signal(false)
   const scrollingY = signal(false)
+  // Whether there is more to scroll to past each edge of the view: start and end along each way.
+  const edges = signal(
+    { xStart: false, xEnd: false, yStart: false, yEnd: false },
+    (a, b) =>
+      a.xStart === b.xStart && a.xEnd === b.xEnd && a.yStart === b.yStart && a.yEnd === b.yEnd
+  )
   // What is measured and written in a part's `style`, where a server writes its nothing.
   const measured = signal(false)
   const cornerWidth = signal(0)
@@ -137,6 +158,26 @@ export function createScrollArea(
     })
     // Not laid out (inside something hidden): there is nothing to size by.
     if (view.scrollWidth === 0 || view.scrollHeight === 0) return
+    // How far the view is from each edge, as Base UI reads it: from the start of a line, so a
+    // right-to-left row's negative `scrollLeft` reads the same, and a pixel from an edge is at it.
+    const maxX = Math.max(0, view.scrollWidth - view.clientWidth)
+    const maxY = Math.max(0, view.scrollHeight - view.clientHeight)
+    const fromStartX = overflowX.peek()
+      ? atEdge(rtl() ? -view.scrollLeft : view.scrollLeft, maxX)
+      : 0
+    const fromStartY = overflowY.peek() ? atEdge(view.scrollTop, maxY) : 0
+    const fromEndX = overflowX.peek() ? maxX - fromStartX : 0
+    const fromEndY = overflowY.peek() ? maxY - fromStartY : 0
+    setGeometry(view, "--scroll-area-overflow-x-start", `${fromStartX}px`)
+    setGeometry(view, "--scroll-area-overflow-x-end", `${fromEndX}px`)
+    setGeometry(view, "--scroll-area-overflow-y-start", `${fromStartY}px`)
+    setGeometry(view, "--scroll-area-overflow-y-end", `${fromEndY}px`)
+    edges.set({
+      xStart: fromStartX > 0,
+      xEnd: fromEndX > 0,
+      yStart: fromStartY > 0,
+      yEnd: fromEndY > 0,
+    })
     // The corner is as wide as the scrollbar down the side and as tall as the one along the
     // bottom, while both are in the page.
     const both = overflowX.peek() && overflowY.peek()
@@ -210,9 +251,19 @@ export function createScrollArea(
     }
   }
 
+  const overflow = () => {
+    const now = edges.get()
+    return {
+      "data-has-overflow-x": flag(overflowX.get()),
+      "data-has-overflow-y": flag(overflowY.get()),
+      "data-overflow-x-start": flag(now.xStart),
+      "data-overflow-x-end": flag(now.xEnd),
+      "data-overflow-y-start": flag(now.yStart),
+      "data-overflow-y-end": flag(now.yEnd),
+    }
+  }
   const states = () => ({
-    "data-has-overflow-x": flag(overflowX.get()),
-    "data-has-overflow-y": flag(overflowY.get()),
+    ...overflow(),
     "data-scrolling": flag(scrollingX.get() || scrollingY.get()),
   })
 
@@ -234,6 +285,7 @@ export function createScrollArea(
       shown: bar.vertical ? overflowY : overflowX,
       part: {
         props: computed(() => ({
+          ...overflow(),
           "data-orientation": orientation,
           "data-hovering": flag(hovering.get()),
           "data-scrolling": flag(scrolling.get()),
@@ -285,6 +337,7 @@ export function createScrollArea(
       thumb: {
         props: computed(() => ({
           "data-orientation": orientation,
+          "data-scrolling": flag(scrolling.get()),
           // As long as its scrollbar says, and out of sight until that has been measured.
           style: {
             ...(measured.get() ? {} : { visibility: "hidden" }),
@@ -415,7 +468,7 @@ export function createScrollArea(
     content: {
       // As wide as what it holds, so what is wider than the viewport is measured, and seen
       // when it changes.
-      props: computed(() => ({ style: { "min-width": "fit-content" } })),
+      props: computed(() => ({ ...states(), style: { "min-width": "fit-content" } })),
       // Its size is what there is to scroll: content that arrives or lays out late is seen.
       attach: (element) => watch(element),
     },

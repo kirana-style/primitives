@@ -2,6 +2,8 @@ import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
+import { createField } from "../../packages/core/src/field.ts"
+import type { Field } from "../../packages/core/src/field.ts"
 import { createOtp } from "../../packages/core/src/otp.ts"
 import type { OtpProps } from "../../packages/core/src/otp.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
@@ -13,7 +15,7 @@ const PAGE = `
     <span id="s0"></span><span id="s1"></span><span id="s2"></span><span id="s3"></span>
   </div><button id="reset" type="reset">Reset</button></form>`
 
-function otp(given: Partial<OtpProps> = {}) {
+function otp(given: Partial<OtpProps> = {}, field?: Field) {
   const root = mount(PAGE)
   const done: string[] = []
   const made = createOtp(
@@ -23,7 +25,8 @@ function otp(given: Partial<OtpProps> = {}) {
       name: "code",
       onComplete: (v) => void done.push(v),
       ...given,
-    })
+    }),
+    { field }
   )
   onTestFinished(bind(find(root, "root"), made.root))
   onTestFinished(bind(find(root, "code"), made.input))
@@ -73,6 +76,38 @@ describe("a one-time code", () => {
     await userEvent.keyboard("5")
     expect(input.value).toBe("1234")
     expect(done).toEqual(["1234"])
+  })
+
+  it("tells Base UI's `onValueComplete` with the change's details, in place of `onComplete`", async () => {
+    const told: [string, string, boolean][] = []
+    const { input, done } = otp({
+      onValueComplete: (value, by) => void told.push([value, by.reason, by.event !== undefined]),
+    })
+    input.focus()
+    await userEvent.keyboard("1234")
+    await settled()
+    expect(told).toHaveLength(1)
+    expect(told[0]![0]).toBe("1234")
+    expect(told[0]![2]).toBe(true)
+    // Both given, the older one is not called.
+    expect(done).toEqual([])
+  })
+
+  it("reads Base UI's `validationType` and its values as the older `mode`, `validationType` winning", () => {
+    for (const [given, kept, keyboard] of [
+      [{ validationType: "alpha" }, "ab", "text"],
+      [{ validationType: "alphabetic" }, "ab", "text"],
+      [{ mode: "alpha" }, "ab", "text"],
+      [{ validationType: "none" }, "a1b", "text"],
+      [{ mode: "text" }, "a1b", "text"],
+      [{ validationType: "numeric", mode: "alpha" }, "1", "numeric"],
+      [{ validationType: "alphanumeric", mode: "numeric" }, "a1b", "text"],
+    ] as const) {
+      const { made, input, root } = otp({ ...given, defaultValue: "a1 b" })
+      expect(made.value.peek(), JSON.stringify(given)).toBe(kept)
+      expect(input.getAttribute("inputmode"), JSON.stringify(given)).toBe(keyboard)
+      root.remove()
+    }
   })
 
   it("lets nothing in that a code cannot hold, and keeps what a paste has of one", async () => {
@@ -174,5 +209,65 @@ describe("a one-time code", () => {
     )
     await settled()
     expect(active()).toEqual([])
+  })
+
+  it("says it is read-only and needed on its root and each cell, as Base UI's", async () => {
+    const { root, input } = otp({ readOnly: true, required: true, defaultValue: "12" })
+    for (const id of ["root", "s0", "s3"]) {
+      expect(find(root, id).hasAttribute("data-readonly")).toBe(true)
+      expect(find(root, id).hasAttribute("data-required")).toBe(true)
+    }
+    expect(input.readOnly).toBe(true)
+    // Needed is the field's to check: the input itself never stops a form.
+    expect(input.required).toBe(false)
+    expect(input.getAttribute("aria-required")).toBe("true")
+    // Filled on the root while it has a character; on a cell while the cell has its own.
+    expect(find(root, "root").hasAttribute("data-filled")).toBe(true)
+    expect(find(root, "s1").hasAttribute("data-filled")).toBe(true)
+    expect(find(root, "s2").hasAttribute("data-filled")).toBe(false)
+    input.focus()
+    await press("3")
+    expect(input.value).toBe("12")
+    // Focused anywhere on it: the root and every cell say so.
+    expect(find(root, "s3").hasAttribute("data-focused")).toBe(true)
+    expect(find(root, "s3").hasAttribute("data-complete")).toBe(false)
+  })
+
+  it("says it is complete on every cell once every character is in", async () => {
+    const { root, input } = otp()
+    input.focus()
+    await userEvent.keyboard("1234")
+    for (const id of ["root", "s0", "s1", "s2", "s3"])
+      expect(find(root, id).hasAttribute("data-complete")).toBe(true)
+  })
+
+  it("in a field, is its control, and its root and cells carry what the field says", async () => {
+    const field = createField(signal({ id: "f" }))
+    const holder = document.createElement("div")
+    document.body.append(holder)
+    onTestFinished(() => holder.remove())
+    onTestFinished(bind(holder, field.root))
+    const { root, input } = otp({ required: true, name: undefined }, field)
+    const STATES = ["touched", "dirty", "valid", "invalid"]
+    const said = (element: HTMLElement) =>
+      STATES.filter((name) => element.hasAttribute(`data-${name}`)).join(" ")
+    const agree = (expected: string) => {
+      expect(said(holder)).toBe(expected)
+      for (const id of ["root", "s0", "s3"]) expect(said(find(root, id))).toBe(expected)
+    }
+    agree("")
+    expect(field.validate()).toBe(false)
+    agree("invalid")
+    expect(input.getAttribute("aria-invalid")).toBe("true")
+    input.focus()
+    expect(holder.hasAttribute("data-focused")).toBe(true)
+    await userEvent.keyboard("12")
+    await settled()
+    agree("dirty valid")
+    expect(holder.hasAttribute("data-filled")).toBe(true)
+    find(root, "before").focus()
+    await settled()
+    agree("touched dirty valid")
+    expect(find(root, "s0").hasAttribute("data-focused")).toBe(false)
   })
 })

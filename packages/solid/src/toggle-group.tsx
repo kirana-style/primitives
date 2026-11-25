@@ -28,6 +28,7 @@ export function ToggleGroup<Value = unknown>(props: ToggleGroupProps<Value>): JS
     "disabled",
     "orientation",
     "loop",
+    "loopFocus",
   ])
   const direction = useContext(DirectionContext) ?? undefined
   const toolbar = useContext(ToolbarContext) ?? undefined
@@ -38,6 +39,7 @@ export function ToggleGroup<Value = unknown>(props: ToggleGroupProps<Value>): JS
     disabled: local.disabled,
     orientation: local.orientation,
     loop: local.loop,
+    loopFocus: local.loopFocus,
     onValueChange: (value: Value[], details: ChangeDetails) =>
       local.onValueChange?.(value, details),
   }))

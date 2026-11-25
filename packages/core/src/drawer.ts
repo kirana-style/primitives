@@ -146,9 +146,23 @@ export function createDrawer(
       props: computed(() => ({
         ...dialog.backdrop.props.get(),
         "data-swiping": flag(swiping.get()),
+        "data-swipe-dismiss": flag(dismissed.get()),
       })),
       attach(element) {
-        const stops = [swipe.also(element), dialog.backdrop.attach(element)]
+        // Base UI's backdrop always says 1: a design times the backdrop's exit by it, as the
+        // drawer's, and the drawer alone is thrown.
+        setGeometry(element, "--drawer-swipe-strength", "1")
+        const stops = [
+          swipe.also(element),
+          dialog.backdrop.attach(element),
+          // While the drawer is dragged, how tall the frontmost drawer is: a design fades the
+          // backdrop by how much of that the drag has uncovered.
+          effect(() => {
+            const front = swiping.get() ? (stack.get().at(-1) ?? own.get()) : undefined
+            if (front) setGeometry(element, "--drawer-height", `${front.offsetHeight}px`)
+            else clearGeometry(element, "--drawer-height")
+          }),
+        ]
         rest()
         return () => {
           for (const stop of stops.reverse()) stop()

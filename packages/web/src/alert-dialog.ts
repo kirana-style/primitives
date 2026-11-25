@@ -1,6 +1,7 @@
 import { createAlertDialog } from "@kirana-ui/core/alert-dialog"
 import type { AlertDialogProps } from "@kirana-ui/core/alert-dialog"
 
+import { ownDisabled } from "./around.ts"
 import { defineElement } from "./runtime.ts"
 import type { As, ElementOf } from "./runtime.ts"
 
@@ -14,13 +15,13 @@ export const tag = defineElement({
   create: (props) => createAlertDialog(props),
   changes: { onOpenChange: { event: "open-change", prop: "open" } },
   parts: {
-    trigger: (controller) => controller.trigger,
+    trigger: (controller, element) => ownDisabled(element, controller.triggerPart),
     backdrop: (controller) => ({ mounted: controller.mounted, part: controller.backdrop }),
     viewport: (controller) => ({ mounted: controller.mounted, part: controller.viewport }),
     popup: (controller) => ({ mounted: controller.mounted, part: controller.popup }),
     title: (controller) => controller.title,
     description: (controller) => controller.description,
-    close: (controller) => controller.close,
+    close: (controller, element) => ownDisabled(element, controller.closePart),
   },
 })
 

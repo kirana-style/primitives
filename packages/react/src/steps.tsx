@@ -1,9 +1,9 @@
 import { within } from "@kirana-ui/core"
-import type { StateOf } from "@kirana-ui/core"
+import type { StateOf, ReadonlySignal } from "@kirana-ui/core"
 import { createSteps } from "@kirana-ui/core/steps"
 import type { Steps as Controller, StepsProps } from "@kirana-ui/core/steps"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useMemo } from "react"
 import type { ReactElement } from "react"
 
 import { DirectionContext } from "./direction-context.ts"
@@ -13,8 +13,8 @@ import type { PartComponentProps } from "./runtime.tsx"
 type Parts = Vocabulary["steps"]
 
 const Context = createContext<Controller | null>(null)
-// The step an item is, for the parts inside it.
-const ItemContext = createContext<number | null>(null)
+// The step an item is, for the parts inside it: given, or counted from the page.
+const ItemContext = createContext<ReadonlySignal<number> | null>(null)
 
 function useSteps(part: string): Controller {
   const controller = useContext(Context)
@@ -22,7 +22,7 @@ function useSteps(part: string): Controller {
   return controller
 }
 
-function useIndex(part: string): number {
+function useIndex(part: string): ReadonlySignal<number> {
   const index = useContext(ItemContext)
   if (index === null) throw new Error(`<Steps.${part}> must be inside <Steps.Item>`)
   return index
@@ -68,16 +68,19 @@ export type ItemProps = PartComponentProps<
   "div",
   StateOf<Parts["item"]>,
   {
-    /** Which step it is, from 0. */
-    index: number
+    /**
+     * Which step it is, from 0. Left out, its place among the items in the page, once it is
+     * there: give it on a page a server draws, which cannot count them.
+     */
+    index?: number
   }
 >
 
 function Item({ index, ...props }: ItemProps): ReactElement {
+  const controller = useSteps("Item")
+  const item = useMemo(() => controller.item(index), [controller, index])
   return (
-    <ItemContext.Provider value={index}>
-      {usePart(useSteps("Item").item(index), "div", props)}
-    </ItemContext.Provider>
+    <ItemContext.Provider value={item.index}>{usePart(item, "div", props)}</ItemContext.Provider>
   )
 }
 

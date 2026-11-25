@@ -1,4 +1,4 @@
-import { computed, effect } from "@kirana-ui/core"
+import { effect } from "@kirana-ui/core"
 import { createAvatar } from "@kirana-ui/core/avatar"
 import type { Avatar, AvatarFallbackPresence, AvatarImageProps } from "@kirana-ui/core/avatar"
 
@@ -53,7 +53,7 @@ export const tag = defineElement<
     image: (controller, element) =>
       element.hasAttribute("kui-keep-mounted")
         ? controller.keptImage
-        : { part: controller.image, mounted: computed(() => controller.status.get() === "loaded") },
+        : { part: controller.image, mounted: controller.imageMounted },
     fallback(controller, element) {
       let presence = fallbacks.get(element)
       if (!presence) {

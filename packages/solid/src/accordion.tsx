@@ -47,6 +47,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     "disabled",
     "orientation",
     "loop",
+    "loopFocus",
     "id",
   ])
   const generated = createUniqueId()
@@ -59,6 +60,7 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
     disabled: local.disabled,
     orientation: local.orientation,
     loop: local.loop,
+    loopFocus: local.loopFocus,
     onValueChange: (value: Value[], details: ChangeDetails) =>
       local.onValueChange?.(value, details),
   }))

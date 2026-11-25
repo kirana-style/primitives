@@ -23,6 +23,13 @@ export class KpAccordion<Value = unknown> implements OnInit {
   readonly multiple = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
+  readonly loopFocus = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly kpId = input<string>()
   /** The change with why it happened; `details.cancel()` keeps the value. */
@@ -39,6 +46,7 @@ export class KpAccordion<Value = unknown> implements OnInit {
     disabled: this.disabled(),
     orientation: this.orientation(),
     loop: this.loop(),
+    loopFocus: this.loopFocus(),
     onValueChange: (value: Value[], details: ChangeDetails) => {
       this.valueChanged.emit({ value, details })
       if (!details.canceled) {

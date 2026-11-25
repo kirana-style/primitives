@@ -1300,7 +1300,7 @@ const TOUR: PageStep[] = [
           [kpId]="'sm3'"
           [items]="sizes"
           [multiple]="true"
-          [defaultValues]="['l', 's']"
+          [defaultValue]="['l', 's']"
         >
           <button kpSelectTrigger data-testid="sm3-trigger">
             <span *kpSelectValue="let shown" class="bar" data-testid="sm3-value">
@@ -1654,9 +1654,16 @@ const TOUR: PageStep[] = [
           <button kpToggle [value]="'right'" data-testid="tg1-right">Right</button>
         </div>
         <output data-testid="tg1-output">{{ align().join(",") }}</output>
-        <div kpToolbar aria-label="Editing" class="bar" data-testid="tb1">
+        <div kpToolbar aria-label="Editing" [loopFocus]="true" class="bar" data-testid="tb1">
           <button kpToolbarButton data-testid="tb1-save">Save</button>
-          <button kpToolbarButton [disabled]="true" data-testid="tb1-gone">Gone</button>
+          <button
+            kpToolbarButton
+            [disabled]="true"
+            [focusableWhenDisabled]="false"
+            data-testid="tb1-gone"
+          >
+            Gone
+          </button>
           <a kpToolbarLink href="#tb1-help" data-testid="tb1-link">Help</a>
           <div kpToolbarSeparator data-testid="tb1-line"></div>
           <input kpToolbarInput aria-label="Zoom" value="100" data-testid="tb1-zoom" />
@@ -1863,7 +1870,7 @@ const TOUR: PageStep[] = [
             [name]="'tags'"
             [multiple]="true"
             [autoHighlight]="true"
-            [(values)]="tags"
+            [(value)]="tags"
           >
             <div kpComboboxChips class="bar" data-testid="cbm-chips">
               @for (each of tags(); track each) {
@@ -1915,7 +1922,7 @@ const TOUR: PageStep[] = [
             [name]="'code'"
             class="otp"
             data-testid="otp1"
-            (completed)="code.set($event)"
+            (valueCompleted)="code.set($event.value)"
           >
             <input kpOtpInput aria-label="Code" class="otp-input" data-testid="otp1-input" />
             <div kpOtpGroup class="otp-group">
@@ -1943,7 +1950,7 @@ const TOUR: PageStep[] = [
             kpOtp
             [kpId]="'otp2'"
             [length]="2"
-            [mode]="'alphabetic'"
+            [validationType]="'alpha'"
             class="otp"
             data-testid="otp2"
           >
@@ -2013,7 +2020,7 @@ const TOUR: PageStep[] = [
         >
           <div kpCarouselViewport class="carousel-view" data-testid="cr1-view">
             <div kpCarouselItem [index]="0" class="carousel-item" data-testid="cr1-0">One</div>
-            <div kpCarouselItem [index]="1" class="carousel-item" data-testid="cr1-1">Two</div>
+            <div kpCarouselItem class="carousel-item" data-testid="cr1-1">Two</div>
             <div kpCarouselItem [index]="2" class="carousel-item" data-testid="cr1-2">Three</div>
           </div>
           <button kpCarouselPrevious data-testid="cr1-previous">Previous</button>
@@ -2173,7 +2180,7 @@ const TOUR: PageStep[] = [
               <tr *kpCalendarWeeks="let week">
                 @for (day of week; track day.date) {
                   <td kpCalendarCell [date]="day.date">
-                    <button kpCalendarDay [date]="day.date" [attr.data-testid]="'cal1-' + day.date">
+                    <button kpCalendarDay [attr.data-testid]="'cal1-' + day.date">
                       {{ day.label }}
                     </button>
                   </td>
@@ -3391,7 +3398,6 @@ const TOUR: PageStep[] = [
           <div
             kpSteps
             [kpId]="'st1'"
-            [count]="3"
             [linear]="true"
             class="steps"
             data-testid="st1"
@@ -3839,7 +3845,7 @@ export class App {
   protected readonly said = signal(8)
   protected readonly lines = computed(() => Array.from({ length: this.said() }, (_, at) => at + 1))
   // A page's toasts are made once: a long time, so a test reads them.
-  protected readonly toaster = createToaster({ duration: 600_000 })
+  protected readonly toaster = createToaster({ timeout: 600_000 })
 
   protected addToastWithAction(): void {
     this.toaster.add({

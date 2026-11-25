@@ -9,7 +9,7 @@
   import type { SubmenuRootProps } from "./types.ts"
 
   // A menu that one of this menu's items opens. Its trigger is `<Menu.SubmenuTrigger>`.
-  let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, modal, id, children }: SubmenuRootProps = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, loopFocus, modal, id, children }: SubmenuRootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -24,6 +24,7 @@
       defaultOpen,
       disabled,
       loop,
+      loopFocus,
       modal,
       onOpenChange: change,
     }))

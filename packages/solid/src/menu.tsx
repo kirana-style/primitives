@@ -9,7 +9,7 @@ import type {
   MenuRadioGroupProps,
 } from "@kirana-ui/core/menu"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
-import { Show, createContext, createUniqueId, untrack, useContext } from "solid-js"
+import { Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
 import type { JSX } from "@solidjs/web"
 
 import { DirectionContext } from "./direction-context.ts"
@@ -45,6 +45,12 @@ export type RootProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean, details: ChangeDetails) => void
   disabled?: boolean
+  /** Whether the arrows go round from the last item to the first. Default: they do. */
+  loopFocus?: boolean
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   loop?: boolean
   modal?: boolean
   id?: string
@@ -63,6 +69,7 @@ function make(props: RootProps, kind: "menu" | "submenu" | "context"): JSX.Eleme
     defaultOpen: props.defaultOpen,
     disabled: props.disabled,
     loop: props.loop,
+    loopFocus: props.loopFocus,
     modal: props.modal,
     onOpenChange: (open: boolean, details: ChangeDetails) => props.onOpenChange?.(open, details),
   }))
@@ -192,9 +199,11 @@ export type CheckboxItemIndicatorProps = PartComponentProps<
 function CheckboxItemIndicator(props: CheckboxItemIndicatorProps): JSX.Element {
   const [local, rest] = split(props, ["keepMounted"])
   const item = inside(useContext(CheckboxContext) ?? undefined, "CheckboxItem")
-  const checked = fromSignal(item.checked)
+  // In the page while checked, and through its exit.
+  onSettled(() => item.indicator.mount())
+  const mounted = fromSignal(item.indicator.mounted)
   return (
-    <Show when={checked() || local.keepMounted}>
+    <Show when={mounted() || local.keepMounted}>
       <Part of={item.indicator} tag="span" {...rest} />
     </Show>
   )
@@ -258,10 +267,13 @@ function RadioItemIndicator(props: RadioItemIndicatorProps): JSX.Element {
   const [local, rest] = split(props, ["keepMounted"])
   const group = inside(useContext(RadioGroupContext) ?? undefined, "RadioGroup")
   const value = useContext(RadioItemContext) ?? undefined
-  const checked = fromSignal(group.checked(value))
+  // In the page while chosen, and through its exit.
+  const indicator = group.indicator(value)
+  onSettled(() => indicator.mount())
+  const mounted = fromSignal(indicator.mounted)
   return (
-    <Show when={checked() || local.keepMounted}>
-      <Part of={group.indicator(value)} tag="span" {...rest} />
+    <Show when={mounted() || local.keepMounted}>
+      <Part of={indicator} tag="span" {...rest} />
     </Show>
   )
 }

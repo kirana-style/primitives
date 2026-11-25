@@ -5,6 +5,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, keyed, signal } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
 import { setGeometry } from "./services/geometry.ts"
+import { createPlaces } from "./services/places.ts"
 import { createPresence } from "./services/presence.ts"
 import { createRoving } from "./services/roving.ts"
 import type { Orientation } from "./services/roving.ts"
@@ -28,6 +29,11 @@ export interface TabsListOptions {
   /** Whether moving focus onto a tab with the arrows activates it. Default `false`. */
   activateOnFocus?: boolean
   /** Whether the arrows wrap from the last tab to the first. Default `true`. */
+  loopFocus?: boolean
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   loop?: boolean
 }
 
@@ -86,6 +92,8 @@ export function createTabs<Value = unknown>(
   const focused = signal<Value | typeof NONE>(NONE)
 
   const roving = createRoving()
+  // Each panel's place among the panels in the page, as Base UI counts it: known only there.
+  const panels = createPlaces<Value>({ guess: false })
   const values = new WeakMap<Element, Value>()
   const elements = new Map<Value, HTMLElement>()
   let list: HTMLElement | undefined
@@ -134,7 +142,7 @@ export function createTabs<Value = unknown>(
           const options = listOptions.peek()
           const next = roving.move(event, {
             orientation: orientation.peek(),
-            loop: options.loop ?? true,
+            loop: options.loopFocus ?? options.loop ?? true,
             direction: around.direction,
           })
           if (next && options.activateOnFocus) {
@@ -210,6 +218,7 @@ export function createTabs<Value = unknown>(
             "data-active": flag(active.get()),
             "data-disabled": flag(off),
             "data-orientation": orientation.get(),
+            "data-activation-direction": direction.get(),
             onClick(event: Event) {
               if (off) return
               setValue(item, details("press", event))
@@ -237,6 +246,7 @@ export function createTabs<Value = unknown>(
         part: {
           props: computed(() => {
             const status = presence.status.get()
+            const at = panels.place(item)
             return {
               role: "tabpanel",
               id: `${id}-panel-${slug(item)}`,
@@ -245,12 +255,20 @@ export function createTabs<Value = unknown>(
               // Only seen on a panel its caller keeps in the page.
               hidden: flag(!presence.mounted.get()),
               "data-hidden": flag(!active.get()),
+              "data-index": at === undefined ? undefined : String(at),
               ...shared(),
               "data-starting-style": flag(status === "starting"),
               "data-ending-style": flag(status === "ending"),
             }
           }),
-          attach: (element) => presence.attach(element),
+          attach(element) {
+            const leave = panels.join(item, element)
+            const detach = presence.attach(element)
+            return () => {
+              detach()
+              leave()
+            }
+          },
         },
       }
     },

@@ -153,14 +153,19 @@ describe("a dialog's viewport", () => {
     expect(made.open.peek()).toBe(true)
   })
 
-  it("reads `closeOnOutsidePress` as `dismissible`, the new name winning, and Escape still closes", async () => {
+  it("reads Base UI's `disablePointerDismissal`, then `closeOnOutsidePress`, then `dismissible`, and Escape still closes", async () => {
     for (const [given, stays] of [
+      [{ disablePointerDismissal: true }, true],
+      [{ disablePointerDismissal: false }, false],
       [{ closeOnOutsidePress: false }, true],
       [{ dismissible: false }, true],
       [{ closeOnOutsidePress: true, dismissible: false }, false],
       [{ closeOnOutsidePress: false, dismissible: true }, true],
+      [{ disablePointerDismissal: false, closeOnOutsidePress: false }, false],
+      [{ disablePointerDismissal: false, dismissible: false }, false],
+      [{ disablePointerDismissal: true, closeOnOutsidePress: true, dismissible: true }, true],
     ] as const) {
-      const name = `v9-${String(given.closeOnOutsidePress)}-${String(given.dismissible)}`
+      const name = `v9-${Object.entries(given).join("-").replaceAll(",", "_")}`
       const { open, parts, made, why } = dialog(name, given)
       open()
       await settled()
@@ -199,6 +204,9 @@ describe("a dialog's viewport", () => {
     const { viewport } = over.parts()
     expect(viewport.hasAttribute("data-nested")).toBe(true)
     expect(viewport.hasAttribute("data-nested-dialog-open")).toBe(false)
+    // The popup says so too, as Base UI's does.
+    expect(over.parts().popup.hasAttribute("data-nested")).toBe(true)
+    expect(under.parts().popup.hasAttribute("data-nested")).toBe(false)
     over.made.setOpen(false, because("test"))
     await settled(10)
     expect(viewport.isConnected).toBe(true)
@@ -247,5 +255,43 @@ describe("a dialog's reading direction", () => {
     expect(popup.getAttribute("dir")).toBe("rtl")
     for (const stop of stops.reverse()) stop()
     popup.remove()
+  })
+})
+
+describe("a dialog's trigger and close buttons, in Base UI's words", () => {
+  it("say they are disabled, and open or close nothing", () => {
+    const root = mount(`<button id="t">Open</button><button id="x">Close</button>`)
+    for (const make of [createDialog, createAlertDialog]) {
+      const made = make(signal<DialogProps>({ id: "d" }))
+      const trigger = root.querySelector<HTMLButtonElement>("#t")!
+      const close = root.querySelector<HTMLButtonElement>("#x")!
+      const stops = [
+        bind(
+          trigger,
+          made.triggerPart(() => ({ disabled: true }))
+        ),
+        bind(
+          close,
+          made.closePart(() => ({ disabled: true }))
+        ),
+        made.mount(),
+      ]
+      expect(trigger.hasAttribute("data-disabled")).toBe(true)
+      expect(trigger.disabled).toBe(true)
+      expect(close.hasAttribute("data-disabled")).toBe(true)
+      trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+      expect(made.open.peek()).toBe(false)
+      made.setOpen(true, because("test"))
+      close.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+      expect(made.open.peek()).toBe(true)
+      made.setOpen(false, because("test"))
+      for (const stop of stops.reverse()) stop()
+      // With none asked for, neither is.
+      const [other, closer] = [document.createElement("button"), document.createElement("button")]
+      const plain = [bind(other, made.trigger), bind(closer, made.close)]
+      expect(other.hasAttribute("data-disabled")).toBe(false)
+      expect(closer.hasAttribute("data-disabled")).toBe(false)
+      for (const stop of plain) stop()
+    }
   })
 })

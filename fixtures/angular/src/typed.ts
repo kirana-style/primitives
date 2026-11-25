@@ -134,6 +134,9 @@ interface Told<Value> {
     <div kpListbox [(value)]="sizes" [defaultValue]="[1, 2]" (valueChanged)="counts($event)"></div>
     <ng-container kpSelect multiple [(values)]="sizes" (valuesChanged)="known($event.values)" />
     <ng-container kpCombobox multiple [(values)]="open" (valuesChanged)="known($event.values)" />
+    <!-- Base UI's shape: a bound multiple types the value and its change as a list. -->
+    <ng-container kpSelect [multiple]="true" [(value)]="sizes" (valueChanged)="counts($event)" />
+    <ng-container kpCombobox [multiple]="true" [(value)]="open" (valueChanged)="texts($event)" />
 
     <!-- A calendar's value is its mode's: a day, a range, or a list of days. -->
     <div kpCalendar [mode]="'multiple'" (valueChanged)="days($event)"></div>

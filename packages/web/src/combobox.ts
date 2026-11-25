@@ -1,4 +1,5 @@
 import { computed } from "@kirana-ui/core"
+import type { ChangeDetails } from "@kirana-ui/core"
 import type {
   Combobox,
   ComboboxEntry,
@@ -7,12 +8,18 @@ import type {
 } from "@kirana-ui/core/combobox"
 import { createCombobox } from "@kirana-ui/core/combobox"
 
-import { fieldAround, itemOptions, list, MARK, once, positioner, valueOf } from "./around.ts"
+import { fieldAround, itemOptions, list, once, positioner, valueOf } from "./around.ts"
 import type { Placed } from "./around.ts"
 import { defineElement, entryAround, partAround } from "./runtime.ts"
 import type { Drawn, Each, ElementOf } from "./runtime.ts"
 
-type Props = Omit<ComboboxProps<string>, "values" | "defaultValues"> & {
+type Props = Omit<
+  ComboboxProps<string, boolean>,
+  "value" | "defaultValue" | "values" | "defaultValues"
+> & {
+  /** With `multiple`, the chosen values, with commas between. */
+  value?: string | readonly string[] | null
+  defaultValue?: string | readonly string[] | null
   values?: string | readonly string[]
   defaultValues?: string | readonly string[]
 }
@@ -74,10 +81,11 @@ export const PARTS: Parts = {
     const value = entryAround<{ value: string }>(element)?.value
     return value === undefined ? undefined : controller.chipRemove(value)
   },
-  "item-indicator": (controller, element) => ({
-    part: MARK,
-    mounted: controller.selected(valueOf(partAround(element, "item"))),
-  }),
+  "item-indicator"(controller, element) {
+    // In the page while chosen, and through its exit.
+    const mark = controller.itemIndicator(valueOf(partAround(element, "item")))
+    return { part: mark, mounted: mark.mounted, mount: mark.mount }
+  },
 }
 
 /** A part that draws no element of its own in a framework: here, the page's element as it is. */
@@ -121,8 +129,9 @@ export const LISTS = {
  * own for its items: the element filters, and draws what is left.
  * With a name it draws the hidden input a form reads. `value`,
  * `default-value`, `input-value`, `default-input-value`, `open`, `default-open`, `disabled`,
- * `read-only`, `required`, `inline`, `auto-highlight`, `multiple`, `values` and `default-values` (with
- * commas between),
+ * `read-only`, `required`, `inline`, `auto-highlight`, `multiple` (with it, `value`
+ * and `default-value` hold the chosen values with commas between; `values` and
+ * `default-values`, the older names, are still read),
  * `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge, modal, over a
  * `backdrop` part in the portal; `auto` on a narrow touch screen) and `sheet-below`; `items`,
  * `filter`, `itemToStringLabel` and `itemToStringValue` as
@@ -153,10 +162,23 @@ export const tag = defineElement<Props, Combobox<string>>({
   },
   properties: ["items", "filter", "itemToStringLabel", "itemToStringValue"],
   create: (props, host) =>
-    createCombobox<string>(
+    createCombobox<string, boolean>(
       computed(() => {
         const own = props.get()
-        return { ...own, values: list(own.values), defaultValues: list(own.defaultValues) }
+        // With `multiple`, Base UI's `value` holding the list; the older `values` still read.
+        const many = <Given>(given: Given) => (own.multiple ? list(given) : given)
+        return {
+          ...own,
+          value: many(own.value) as string | readonly string[] | null | undefined,
+          defaultValue: many(own.defaultValue) as string | readonly string[] | null | undefined,
+          values: list(own.values),
+          defaultValues: list(own.defaultValues),
+          onValueChange(value: string | string[] | null, details: ChangeDetails) {
+            own.onValueChange?.(value, details)
+            // The older event too: a listener cannot be told from none.
+            if (own.multiple && Array.isArray(value)) own.onValuesChange?.(value, details)
+          },
+        }
       }),
       { field: fieldAround(host) }
     ),

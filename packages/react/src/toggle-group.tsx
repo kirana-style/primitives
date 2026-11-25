@@ -24,12 +24,12 @@ export type ToggleGroupProps<Value = unknown> = PartComponentProps<
 /** Toggles that are one control. Each `<Toggle value>` inside it is one of its toggles. */
 export const ToggleGroup = /* @__PURE__ */ component("ToggleGroup", function ToggleGroup<
   Value = unknown,
->({ value, defaultValue, onValueChange, multiple, disabled, orientation, loop, ...rest }: ToggleGroupProps<Value>): ReactElement {
+>({ value, defaultValue, onValueChange, multiple, disabled, orientation, loop, loopFocus, ...rest }: ToggleGroupProps<Value>): ReactElement {
   const direction = useContext(DirectionContext) ?? undefined
   const toolbar = useContext(ToolbarContext) ?? undefined
   const controller: Controller = useController<CoreProps<Value>, Controller<Value>>(
     within(createToggleGroup<Value>, { direction, toolbar }),
-    { value, defaultValue, onValueChange, multiple, disabled, orientation, loop }
+    { value, defaultValue, onValueChange, multiple, disabled, orientation, loop, loopFocus }
   )
   return (
     <ToggleGroupContext.Provider value={controller}>

@@ -219,6 +219,55 @@ describe("a scroll area", () => {
     expect(find(root, "area").hasAttribute("data-scrolling")).toBe(false)
   })
 
+  it("says on its content and each thumb that it is scrolling", async () => {
+    const { root, view, content } = area(100, 400)
+    await drawn()
+    view.scrollTop = 40
+    await drawn()
+    expect(content.hasAttribute("data-scrolling")).toBe(true)
+    expect(find(root, "vertical-thumb").hasAttribute("data-scrolling")).toBe(true)
+  })
+
+  it("says past which edges there is more to scroll to, and how far, as Base UI does", async () => {
+    const { root, view, content } = area(400, 400)
+    await drawn()
+    const edges = (element: HTMLElement) =>
+      ["x-start", "x-end", "y-start", "y-end"]
+        .filter((each) => element.hasAttribute(`data-overflow-${each}`))
+        .join(" ")
+    const far = (name: string) => view.style.getPropertyValue(`--scroll-area-overflow-${name}`)
+    for (const each of [find(root, "area"), view, content, find(root, "vertical")])
+      expect(edges(each)).toBe("x-end y-end")
+    expect(find(root, "vertical").hasAttribute("data-has-overflow-y")).toBe(true)
+    expect([far("x-start"), far("x-end"), far("y-start"), far("y-end")]).toEqual([
+      "0px",
+      "300px",
+      "0px",
+      "300px",
+    ])
+    view.scrollTop = 100
+    view.scrollLeft = 300
+    await expect.poll(() => edges(view)).toBe("x-start y-start y-end")
+    expect(edges(content)).toBe("x-start y-start y-end")
+    expect([far("x-start"), far("x-end"), far("y-start"), far("y-end")]).toEqual([
+      "300px",
+      "0px",
+      "100px",
+      "200px",
+    ])
+  })
+
+  it("reads its edges from the start of a line where lines run right to left", async () => {
+    const { view } = area(400, 100, { dir: "rtl" })
+    await drawn()
+    expect(view.hasAttribute("data-overflow-x-end")).toBe(true)
+    expect(view.hasAttribute("data-overflow-x-start")).toBe(false)
+    view.scrollLeft = -300
+    await expect.poll(() => view.hasAttribute("data-overflow-x-start")).toBe(true)
+    expect(view.hasAttribute("data-overflow-x-end")).toBe(false)
+    expect(view.style.getPropertyValue("--scroll-area-overflow-x-start")).toBe("300px")
+  })
+
   it("sideways, the thumb follows the reading direction", async () => {
     const { root, view } = area(400, 100, { dir: "rtl" })
     await drawn()

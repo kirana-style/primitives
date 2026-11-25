@@ -11,8 +11,11 @@ export type ItemProps = PartAttributes<
   "div",
   StateFor<"steps", "item">,
   {
-    /** Which step it is, from 0. */
-    index: number
+    /**
+     * Which step it is, from 0. Left out, its place among the items in the page, once it is
+     * there: give it on a page a server draws, which cannot count them.
+     */
+    index?: number | undefined
   }
 >
 

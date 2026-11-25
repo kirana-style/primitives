@@ -201,6 +201,14 @@ describe("a popover its trigger opens on hover", () => {
     expect(made.open.peek()).toBe(false)
   })
 
+  it("says its trigger is pressed only when a press opened it, as Base UI does", () => {
+    const { made, trigger, enter } = hovered()
+    enter()
+    vi.advanceTimersByTime(300)
+    expect(made.open.peek()).toBe(true)
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+  })
+
   it("takes no focus and holds no page while the pointer opened it", () => {
     const { root, made, backdrop, enter } = hovered({ modal: true })
     find(root, "before").focus()
@@ -275,5 +283,75 @@ describe("a popover its trigger opens on hover", () => {
     // A press opened it: the next press closes it, however soon.
     trigger.click()
     expect(made.open.peek()).toBe(false)
+  })
+})
+
+// A press of the pointer: a click that counts one press. `click()` alone is the keyboard's.
+const press = (element: HTMLElement) =>
+  element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }))
+
+describe("a popover, in Base UI's words", () => {
+  it("says its trigger is pressed while the popover a press opened is open", async () => {
+    const { made, trigger } = popover()
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+    press(trigger)
+    expect(trigger.hasAttribute("data-pressed")).toBe(true)
+    press(trigger)
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+    // Opened some other way, its trigger was never pressed.
+    made.setOpen(true, details("imperative-action"))
+    expect(made.open.peek()).toBe(true)
+    expect(trigger.hasAttribute("data-pressed")).toBe(false)
+  })
+
+  it("says why its motion should be skipped: a press from the keyboard, or Escape", async () => {
+    const { popup, trigger } = popover()
+    // A pointer's press: the usual motion.
+    press(trigger)
+    expect(popup.hasAttribute("data-instant")).toBe(false)
+    popup.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+    expect(popup.getAttribute("data-instant")).toBe("dismiss")
+    // A click with no pointer behind it is the keyboard's.
+    trigger.click()
+    expect(popup.getAttribute("data-instant")).toBe("click")
+  })
+
+  it("fades its arrow with it, and says on its positioner whether the trigger is in view", async () => {
+    const { root, arrow, trigger } = popover()
+    const positioner = find(root, "positioner")
+    expect(arrow.hasAttribute("data-closed")).toBe(true)
+    expect(arrow.hasAttribute("data-open")).toBe(false)
+    press(trigger)
+    expect(arrow.hasAttribute("data-open")).toBe(true)
+    expect(arrow.hasAttribute("data-closed")).toBe(false)
+    await expect.poll(() => arrow.style.left).not.toBe("")
+    expect(positioner.hasAttribute("data-anchor-hidden")).toBe(false)
+    trigger.style.top = "-200px"
+    await expect.poll(() => positioner.hasAttribute("data-anchor-hidden")).toBe(true)
+  })
+
+  it("writes its size on the positioner and on itself, and the old size then the new as it changes", async () => {
+    const { root, popup, trigger } = popover()
+    const positioner = find(root, "positioner")
+    press(trigger)
+    // Measured once it is placed.
+    await expect.poll(() => positioner.style.getPropertyValue("--positioner-width")).toBe("120px")
+    expect(positioner.style.getPropertyValue("--positioner-height")).toBe("60px")
+    expect(popup.style.getPropertyValue("--popup-width")).toBe("auto")
+    // Its size is its content's from here on, through the variable, with a transition on it.
+    popup.style.width = "var(--popup-width)"
+    popup.style.height = "auto"
+    popup.style.transition = "width 10s linear"
+    const wide = document.createElement("div")
+    wide.style.width = "400px"
+    popup.append(wide)
+    await expect.poll(() => positioner.style.getPropertyValue("--positioner-width")).toBe("400px")
+    // The old width was computed first: the popup is on its way from it to the new one.
+    expect(popup.style.getPropertyValue("--popup-width")).toBe("400px")
+    expect(popup.getAnimations()).toHaveLength(1)
+    expect(Number.parseFloat(getComputedStyle(popup).width)).toBeLessThan(200)
+    // And `auto` again once that motion has ended.
+    for (const each of popup.getAnimations()) each.finish()
+    await expect.poll(() => popup.style.getPropertyValue("--popup-width")).toBe("auto")
   })
 })

@@ -1,9 +1,11 @@
+import { within } from "@kirana-ui/core"
 import type { ChangeDetails } from "@kirana-ui/core"
 import { createOtp } from "@kirana-ui/core/otp"
 import type { Otp as Controller, OtpProps, OtpSlot } from "@kirana-ui/core/otp"
 import { defineComponent, h, inject, provide, useId } from "vue"
 import type { InjectionKey, PropType } from "vue"
 
+import { useFieldAround } from "./field-context.ts"
 import { context, controller, fromSignal, optional, partComponent } from "./runtime.ts"
 import type { Changes, PartComponent, PartComponentProps, StatesOf } from "./runtime.ts"
 
@@ -14,16 +16,25 @@ const SLOT: InjectionKey<OtpSlot> = Symbol("OtpSlot")
 
 const RootElement = partComponent("OtpRootElement", "div", () => scope.use().root)
 
-export type RootProps = Omit<OtpProps, "id" | "onValueChange" | "onComplete"> & {
+export type RootProps = Omit<
+  OtpProps,
+  "id" | "onValueChange" | "onValueComplete" | "onComplete"
+> & {
   id?: string | undefined
 } & PartComponentProps
 
 export type RootEmits = Changes<"value", string> & {
-  /** The finished code, once every cell is filled. */
+  /** The finished code, once every cell is filled, with the details of the change that did it. */
+  valueComplete: (value: string, details: ChangeDetails) => void
+  /**
+   * The finished code.
+   * @deprecated Base UI's name is `valueComplete`, which is told the details too. Both are
+   * emitted: a listener cannot be told from none.
+   */
   complete: (value: string) => void
 }
 
-/** `v-model:value`; `@value-change` carries the details, `@complete` the finished code. */
+/** `v-model:value`; `@value-change` carries the details, `@value-complete` the finished code. */
 const Root = defineComponent({
   name: "OtpRoot",
   inheritAttrs: false,
@@ -31,32 +42,46 @@ const Root = defineComponent({
     length: Number,
     value: optional(String),
     defaultValue: String,
+    validationType: String as PropType<OtpProps["validationType"]>,
+    /**
+     * What a character may be.
+     * @deprecated Base UI's name is `validationType`, which wins when both are given.
+     */
     mode: String as PropType<OtpProps["mode"]>,
     pattern: String,
     disabled: Boolean,
+    readOnly: Boolean,
+    required: Boolean,
     name: String,
     form: String,
     id: String,
   },
-  emits: ["update:value", "valueChange", "complete"],
+  emits: ["update:value", "valueChange", "valueComplete", "complete"],
   setup(props, { attrs, slots, emit }) {
     const generated = useId()
+    const field = useFieldAround()
     scope.provide(
-      controller(createOtp, () => ({
+      controller(within(createOtp, { field }), () => ({
         id: props.id ?? generated,
         length: props.length,
         value: props.value,
         defaultValue: props.defaultValue,
+        validationType: props.validationType,
         mode: props.mode,
         pattern: props.pattern,
         disabled: props.disabled,
+        readOnly: props.readOnly,
+        required: props.required,
         name: props.name,
         form: props.form,
         onValueChange(value: string, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
         },
-        onComplete: (value: string) => emit("complete", value),
+        onValueComplete(value: string, details: ChangeDetails) {
+          emit("valueComplete", value, details)
+          emit("complete", value)
+        },
       }))
     )
     return () => h(RootElement, attrs, slots)

@@ -31,15 +31,25 @@ export class KpDialog implements OnInit {
   /** Blocks the page behind it and traps focus. Default `true`. */
   readonly modal = input(true, { transform: booleanAttribute })
   /**
-   * Whether a press outside closes it. Default `true`. Escape always closes it: a caller who
-   * must keep it open cancels the change whose `details.reason` is `"escape-key"`.
+   * Keeps it open when the pointer presses outside it. Default `false`. Escape always closes
+   * it: a caller who must keep it open cancels the change whose `details.reason` is
+   * `"escape-key"`.
+   */
+  readonly disablePointerDismissal = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether a press outside closes it. Default `true`.
+   * @deprecated Base UI's name is `[disablePointerDismissal]`, the other way round, which wins
+   * when both are given.
    */
   readonly closeOnOutsidePress = input<boolean | undefined, unknown>(undefined, {
     transform: booleanAttribute,
   })
   /**
    * Whether a press outside closes it. Default `true`.
-   * @deprecated Use `[closeOnOutsidePress]`, which wins when both are given.
+   * @deprecated Base UI's name is `[disablePointerDismissal]`, the other way round, which wins
+   * over this and over `[closeOnOutsidePress]`.
    */
   readonly dismissible = input(true, { transform: booleanAttribute })
   /** With `kpDrawer`: the way it is dragged to close it. Default: `"down"`. */
@@ -67,6 +77,7 @@ export class KpDialog implements OnInit {
     open: this.open(),
     defaultOpen: this.defaultOpen(),
     modal: this.modal(),
+    disablePointerDismissal: this.disablePointerDismissal(),
     closeOnOutsidePress: this.closeOnOutsidePress(),
     dismissible: this.dismissible(),
     swipeDirection: this.swipeDirection(),
@@ -107,7 +118,7 @@ export class KpDialog implements OnInit {
 /**
  * `kpAlertDialog`, on any element or on `<ng-container>`: a dialog that asks for an answer.
  * It is always modal and a press outside it never closes it, so it takes neither `[modal]`
- * nor `[closeOnOutsidePress]`. Its parts are a dialog's (`kpDialogTrigger`, `kpDialogPopup` …), which
+ * nor `[disablePointerDismissal]`. Its parts are a dialog's (`kpDialogTrigger`, `kpDialogPopup` …), which
  * find it as their root.
  */
 @Directive({
@@ -159,21 +170,34 @@ export class KpDialogPortal implements OnInit {
   }
 }
 
-function part(
-  name: "trigger" | "backdrop" | "viewport" | "popup" | "title" | "description" | "close"
-) {
+function part(name: "backdrop" | "viewport" | "popup" | "title" | "description") {
   const root = inject(KpDialog)
   const put = hostPart()
   return () => put(root.controller[name])
 }
 
-@Directive({ selector: "[kpDialogTrigger]" })
-export class KpDialogTrigger implements OnInit {
-  private readonly init = part("trigger")
+/** A trigger or a close button, with its own `[disabled]`. */
+@Directive()
+abstract class DialogButton implements OnInit {
+  readonly disabled = input(false, { transform: booleanAttribute })
+  protected abstract readonly which: "triggerPart" | "closePart"
+  private readonly root = inject(KpDialog)
+  private readonly put = hostPart()
+  private readonly options = inputsSignal(this, () => ({ disabled: this.disabled() }))
+
+  ngOnChanges(changes: SimpleChanges): void {
+    this.options.bound(changes)
+  }
 
   ngOnInit(): void {
-    this.init()
+    const options = this.options()
+    this.put(this.root.controller[this.which](() => options.get()))
   }
+}
+
+@Directive({ selector: "[kpDialogTrigger]" })
+export class KpDialogTrigger extends DialogButton {
+  protected readonly which = "triggerPart"
 }
 
 @Directive({ selector: "[kpDialogBackdrop]" })
@@ -226,10 +250,6 @@ export class KpDialogDescription implements OnInit {
 }
 
 @Directive({ selector: "[kpDialogClose]" })
-export class KpDialogClose implements OnInit {
-  private readonly init = part("close")
-
-  ngOnInit(): void {
-    this.init()
-  }
+export class KpDialogClose extends DialogButton {
+  protected readonly which = "closePart"
 }

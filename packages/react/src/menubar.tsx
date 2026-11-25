@@ -20,12 +20,22 @@ export type MenubarProps = PartComponentProps<
 /** A row of menus that work as one. Each `<Menu.Root>` inside it is one of its items. */
 export const Menubar = /* @__PURE__ */ component(
   "Menubar",
-  function Menubar({ loop, disabled, orientation, id, ...rest }: MenubarProps): ReactElement {
+  function Menubar({
+    loop,
+    loopFocus,
+    disabled,
+    orientation,
+    modal,
+    id,
+    ...rest
+  }: MenubarProps): ReactElement {
     const direction = useContext(DirectionContext) ?? undefined
     const controller = useController<CoreProps, Controller>(within(createMenubar, { direction }), {
       loop,
+      loopFocus,
       orientation,
       disabled,
+      modal,
       id,
     })
     return (

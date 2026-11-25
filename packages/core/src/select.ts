@@ -13,7 +13,8 @@ import { lockPage, popupFocus } from "./services/popup-focus.ts"
 import { createPopup } from "./services/popup.ts"
 import { createSheet } from "./services/sheet.ts"
 import type { Presentation } from "./services/sheet.ts"
-import { createPresence } from "./services/presence.ts"
+import { createPresence, presentPart } from "./services/presence.ts"
+import type { PresentPart } from "./services/presence.ts"
 import { createPlacement } from "./services/position.ts"
 import { lockScroll } from "./services/scroll-lock.ts"
 import type { PositionOptions } from "./services/position.ts"
@@ -22,7 +23,13 @@ import { createList, pointerMoved } from "./services/list.ts"
 import type { ListCollection, ListRow } from "./services/list.ts"
 import { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 
-export interface SelectProps<Value = unknown> {
+/**
+ * `Multiple` is what `multiple` is given, as Base UI types it: with `true`, `value`,
+ * `defaultValue` and `onValueChange` hold the list of chosen values. Each adapter's root
+ * infers it from `multiple`; written out, it is `false` when left out, as Base UI's is, and
+ * `multiple` alone does not change it.
+ */
+export interface SelectProps<Value = unknown, Multiple extends boolean | undefined = false> {
   id: string
   /**
    * How the list opens. `"sheet"`: from the bottom edge, not placed against the trigger, modal
@@ -36,12 +43,23 @@ export interface SelectProps<Value = unknown> {
    * pointer opens a sheet. Default 640.
    */
   sheetBelow?: number | undefined
-  /** The chosen value; `null` is "none". */
-  value?: Value | null | undefined
-  /** The value it starts with, when the caller does not hold `value`. Read once. */
-  defaultValue?: Value | null | undefined
-  /** Heard as a value is about to be chosen: `details.cancel()` keeps it as it was. */
-  onValueChange?: ((value: Value | null, details: ChangeDetails) => void) | undefined
+  /**
+   * The chosen value; `null` is "none". With `multiple`, the chosen values, in the order they
+   * were chosen.
+   */
+  value?: (Multiple extends true ? readonly Value[] : Value | null) | undefined
+  /**
+   * The value it starts with (with `multiple`, the values), when the caller does not hold
+   * `value`. Read once.
+   */
+  defaultValue?: (Multiple extends true ? readonly Value[] : Value | null) | undefined
+  /**
+   * Heard as a value is about to be chosen (with `multiple`, added or taken away, with the
+   * values there would then be): `details.cancel()` keeps it as it was.
+   */
+  onValueChange?:
+    | ((value: Multiple extends true ? Value[] : Value | null, details: ChangeDetails) => void)
+    | undefined
   /** Whether the list is open, when the caller holds it. */
   open?: boolean | undefined
   /** Whether the list starts open, when the caller does not hold `open`. Read once. */
@@ -80,18 +98,24 @@ export interface SelectProps<Value = unknown> {
   itemToStringValue?: ((value: Value) => string) | undefined
   /**
    * Several values: an item chosen is added, chosen again taken away, and the list stays open.
-   * The values are `values`, not `value`.
+   * `value`, `defaultValue` and `onValueChange` then hold a list. Read once.
    */
   multiple?: boolean | undefined
-  /** With `multiple`: the chosen values, in the order they were chosen. */
+  /**
+   * With `multiple`: the chosen values.
+   * @deprecated Base UI's shape is `value` holding the list, which wins when both are given.
+   */
   values?: readonly Value[] | undefined
   /**
-   * With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+   * With `multiple`: the values it starts with.
+   * @deprecated Base UI's shape is `defaultValue` holding the list, which wins when both are
+   * given.
    */
   defaultValues?: readonly Value[] | undefined
   /**
-   * With `multiple`: heard as a value is about to be added or taken away, with the values there
-   * would then be: `details.cancel()` keeps them as they were.
+   * With `multiple`: heard as a value is about to be added or taken away.
+   * @deprecated Base UI's shape is `onValueChange` told the list, the one called when both are
+   * given.
    */
   onValuesChange?: ((values: Value[], details: ChangeDetails) => void) | undefined
   /**
@@ -185,8 +209,11 @@ export interface Select<Value = unknown> {
   item(value: Value, options?: () => SelectItemOptions): Part
   /** The part of an item that is its name: what the trigger shows once it is chosen. */
   itemText(value: Value): Part
-  /** The mark an item shows while it is chosen. */
-  itemIndicator(value: Value): Part
+  /**
+   * The mark an item shows while it is chosen: in the page then, and through its exit. Asked for
+   * again, a new one: an adapter keeps the one it made.
+   */
+  itemIndicator(value: Value): PresentPart
   /** Whether `value` is chosen (with `multiple`, one of the chosen), for an item's indicator. */
   selected(value: Value): ReadonlySignal<boolean>
 }
@@ -217,17 +244,18 @@ const alike = (a: readonly unknown[], b: readonly unknown[]) =>
 // How near an end of its scroll a list is taken to be at it, in pixels.
 const NEAR = 1
 const NO_PROPS = computed(() => ({}))
-const INDICATOR_PROPS = computed(() => ({ "aria-hidden": "true" }))
 const LABEL: Part = { props: computed(() => ({ role: "presentation" })), attach: () => NOTHING }
 const SEPARATOR: Part = {
   props: computed(() => ({ role: "separator", "aria-orientation": "horizontal" })),
   attach: () => NOTHING,
 }
 
-export function createSelect<Value = unknown>(
-  props: ReadonlySignal<SelectProps<Value>>,
+export function createSelect<Value = unknown, Multiple extends boolean | undefined = false>(
+  shaped: ReadonlySignal<SelectProps<Value, Multiple>>,
   around: { field?: Field | undefined } = {}
 ): Select<Value> {
+  // Read in either shape: whether it holds a list is known once it is made.
+  const props = shaped as unknown as ReadonlySignal<SelectProps<Value, boolean | undefined>>
   const { field } = around
   let member: FieldMembership | undefined
   const id = props.peek().id
@@ -237,17 +265,24 @@ export function createSelect<Value = unknown>(
     defaultValue: props.peek().defaultOpen ?? false,
     onChange: (next, by) => props.peek().onOpenChange?.(next, by),
   })
+  const multiple = Boolean(props.peek().multiple)
   // `undefined` means "not controlled", so "none" is `null` on the way in and out.
   const value = bindable<Value | null>({
-    value: () => props.get().value,
-    defaultValue: props.peek().defaultValue ?? null,
+    value: () => (multiple ? undefined : (props.get().value as Value | null | undefined)),
+    defaultValue: multiple ? null : ((props.peek().defaultValue as Value | null) ?? null),
     onChange: (next, by) => props.peek().onValueChange?.(next, by),
   })
-  const multiple = Boolean(props.peek().multiple)
+  // With `multiple`, Base UI's `value` holding the list first, then the older `values`.
+  const asList = (held: unknown) =>
+    multiple && Array.isArray(held) ? (held as readonly Value[]) : undefined
   const values = bindable<readonly Value[]>({
-    value: () => props.get().values,
-    defaultValue: props.peek().defaultValues ?? NONE,
-    onChange: (next, by) => props.peek().onValuesChange?.([...next], by),
+    value: () => asList(props.get().value) ?? props.get().values,
+    defaultValue: asList(props.peek().defaultValue) ?? props.peek().defaultValues ?? NONE,
+    onChange(next, by) {
+      const { onValueChange, onValuesChange } = props.peek()
+      if (onValueChange) onValueChange([...next], by)
+      else onValuesChange?.([...next], by)
+    },
     equals: alike,
   })
   /** What the form is sent for a value. */
@@ -279,6 +314,11 @@ export function createSelect<Value = unknown>(
   const alignItemWithTrigger = signal(false)
   // Whether the list lies over its trigger now, and whether a finger opened it.
   const aligned = signal(false)
+  // Whether the positioner is in the page: the trigger says the list's side only then.
+  const positioned = signal(false)
+  /** The side of the trigger the list is on; `none` over it, and none at all as a sheet. */
+  const side = () =>
+    sheet.on.get() ? undefined : aligned.get() ? "none" : placement.position.side.get()
   let touched = false
   const fingered = signal(false)
   const alignment = createItemAlignment()
@@ -521,9 +561,12 @@ export function createSelect<Value = unknown>(
         ...field?.aria(),
         ...field?.state(),
         "data-popup-open": flag(open.get()),
+        "data-pressed": flag(open.get()),
+        "data-popup-side": layer.mounted.get() && positioned.get() ? side() : undefined,
         "data-placeholder": flag(none.get()),
         "data-disabled": flag(disabled.get()),
         "data-readonly": flag(readOnly.get()),
+        "data-required": flag(props.get().required),
         onFocus: () => member?.focused(true),
         onBlur(event: FocusEvent) {
           // Into its own list, focus has not left the select.
@@ -592,6 +635,7 @@ export function createSelect<Value = unknown>(
       }),
       attach(element) {
         const detach = sheet.positioner(element, (each) => layer.positioner.attach(each))
+        positioned.set(true)
         const view = element.ownerDocument.defaultView
         // The window changed: what was measured no longer holds.
         const resized = (event: Event) => {
@@ -659,6 +703,7 @@ export function createSelect<Value = unknown>(
           for (const stop of stops.reverse()) stop()
           alignment.clear()
           aligned.set(false)
+          positioned.set(false)
         }
       },
     },
@@ -672,7 +717,7 @@ export function createSelect<Value = unknown>(
           "aria-readonly": readOnly.get() && !listed.get() ? "true" : undefined,
           tabindex: "-1",
           ...layer.state(),
-          ...(sheet.on.get() ? {} : layer.placed()),
+          ...(sheet.on.get() ? {} : { ...layer.placed(), "data-side": side() }),
           ...sheet.state(),
           // As a sheet, it is dragged down to close it.
           onPointerDown: sheet.on.get() ? sheet.swipe.press : undefined,
@@ -886,7 +931,7 @@ export function createSelect<Value = unknown>(
         }))
       },
     },
-    itemIndicator: () => ({ props: INDICATOR_PROPS, attach: () => NOTHING }),
+    itemIndicator: (item) => presentPart(chosen(item), () => ({ "aria-hidden": "true" })),
     itemText(item) {
       return {
         props: NO_PROPS,

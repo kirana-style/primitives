@@ -15,7 +15,7 @@ import {
 } from "@angular/core"
 import type { EmbeddedViewRef, OnInit, SimpleChanges } from "@angular/core"
 import { computed, effect as coreEffect } from "@kirana-ui/core"
-import type { ChangeDetails, ListCollection, Presentation } from "@kirana-ui/core"
+import type { ChangeDetails, ListCollection, Presentation, ReadonlySignal } from "@kirana-ui/core"
 import { createAutocomplete } from "@kirana-ui/core/autocomplete"
 import type { AutocompleteProps } from "@kirana-ui/core/autocomplete"
 import { createCombobox } from "@kirana-ui/core/combobox"
@@ -46,9 +46,12 @@ import {
  * list only suggests. Its parts are the combobox's directives.
  */
 @Directive({ selector: "[kpCombobox],[kpAutocomplete]", exportAs: "kpCombobox" })
-export class KpCombobox<Value = unknown> implements OnInit {
-  readonly value = model<Value | null | undefined>(undefined)
-  readonly defaultValue = input<NoInfer<Value> | null>(null)
+export class KpCombobox<Value = unknown, Multiple extends boolean = false> implements OnInit {
+  /** With `[multiple]="true"`, the chosen values. */
+  readonly value = model<(Multiple extends true ? readonly Value[] : Value | null) | undefined>(
+    undefined
+  )
+  readonly defaultValue = input<NoInfer<Multiple extends true ? readonly Value[] : Value | null>>()
   /** What the input says, `[(inputValue)]`. With `kpAutocomplete` the text is `[(value)]`. */
   readonly inputValue = model<string | undefined>(undefined)
   /** The text the input starts with, when the caller does not hold `inputValue`. Read once. */
@@ -75,17 +78,29 @@ export class KpCombobox<Value = unknown> implements OnInit {
   readonly filter = input<((label: string, query: string) => boolean) | null>()
   /** In a field, "none" is then wrong. */
   readonly required = input(false, { transform: booleanAttribute })
-  /** Several values, each shown as a chip: they are `values`, not `value`. */
-  readonly multiple = input(false, { transform: booleanAttribute })
-  /** With `multiple`: the chosen values, in the order they were chosen, `[(values)]`. */
+  /**
+   * Several values, each shown as a chip: `value` and `valueChanged` then hold a list. Bound
+   * to `true` (`[multiple]="true"`), it types them so. The bare attribute, or a bound boolean,
+   * works the same, and then `value` takes either and `valueChanged` is typed as one value:
+   * Angular's compiler gives a type parameter it cannot infer `any`, so only a literal `true`
+   * says it.
+   */
+  readonly multiple = input<Multiple | undefined, Multiple | "" | undefined>(undefined, {
+    transform: booleanAttribute as (given: Multiple | "" | undefined) => Multiple,
+  })
+  /**
+   * With `multiple`: the chosen values.
+   * @deprecated Base UI's shape is `[(value)]` holding the list, which wins when both are given.
+   */
   readonly values = model<readonly Value[] | undefined>(undefined)
   /**
-   * With `multiple`: the values it starts with, when the caller does not hold `values`. Read once.
+   * With `multiple`: the values it starts with.
+   * @deprecated Base UI's shape is `[defaultValue]` holding the list, which wins.
    */
   readonly defaultValues = input<readonly Value[]>()
   /**
-   * With `multiple`: heard as a value is about to be added or taken away; `details.cancel()` keeps
-   * the values as they were.
+   * With `multiple`: heard as a value is about to be added or taken away.
+   * @deprecated Base UI's shape is `(valueChanged)` told the list. Both are emitted.
    */
   readonly valuesChanged = output<{ values: Value[]; details: ChangeDetails }>()
   /** The list is always in the page, with no popup: a command palette. */
@@ -116,7 +131,10 @@ export class KpCombobox<Value = unknown> implements OnInit {
   /** With `kpAutocomplete`: a press on the input opens the list. */
   readonly openOnInputClick = input(false, { transform: booleanAttribute })
   readonly kpId = input<string>()
-  readonly valueChanged = output<{ value: Value | null; details: ChangeDetails }>()
+  readonly valueChanged = output<{
+    value: true extends Multiple ? (false extends Multiple ? Value | null : Value[]) : Value | null
+    details: ChangeDetails
+  }>()
   /** Heard as the input's text is about to change; `details.cancel()` keeps it as it was. */
   readonly inputValueChanged = output<{ value: string; details: ChangeDetails }>()
   readonly openChanged = output<{ open: boolean; details: ChangeDetails }>()
@@ -145,13 +163,6 @@ export class KpCombobox<Value = unknown> implements OnInit {
     multiple: this.multiple(),
     values: this.values(),
     defaultValues: this.defaultValues(),
-    onValuesChange: (values: Value[], details: ChangeDetails) => {
-      this.valuesChanged.emit({ values, details })
-      if (!details.canceled) {
-        this.values.set(values)
-        this.props.sync()
-      }
-    },
     inline: this.inline(),
     mode: this.mode(),
     openOnInputClick: this.openOnInputClick(),
@@ -161,12 +172,24 @@ export class KpCombobox<Value = unknown> implements OnInit {
     autoHighlight: this.autoHighlight(),
     itemToStringLabel: this.itemToStringLabel(),
     itemToStringValue: this.itemToStringValue(),
-    onValueChange: (value: Value | null, details: ChangeDetails) => {
-      this.valueChanged.emit({ value, details })
-      if (!details.canceled) {
-        this.value.set(value)
-        this.props.sync()
-      }
+    onValueChange: (value: Value | Value[] | null, details: ChangeDetails) => {
+      this.valueChanged.emit({
+        value: value as true extends Multiple
+          ? false extends Multiple
+            ? Value | null
+            : Value[]
+          : Value | null,
+        details,
+      })
+      // With `multiple` the core tells the list here, as Base UI's `onValueChange` is told it;
+      // the older output too, as an output cannot tell whether it is bound.
+      const list = this.multiple() && Array.isArray(value) ? value : undefined
+      if (list) this.valuesChanged.emit({ values: list, details })
+      if (details.canceled) return
+      // Written back to what the caller holds: the older `values` only when it holds that alone.
+      if (list && this.values() !== undefined && this.value() === undefined) this.values.set(list)
+      else this.value.set(value as Multiple extends true ? readonly Value[] : Value | null)
+      this.props.sync()
     },
     onInputValueChange: (value: string, details: ChangeDetails) => {
       this.inputValueChanged.emit({ value, details })
@@ -220,7 +243,13 @@ export class KpCombobox<Value = unknown> implements OnInit {
           }),
           around
         ) as Combobox<Value>)
-      : createCombobox(props, around)
+      : // Typed by what Angular can infer of `Multiple`; the core reads either shape.
+        createCombobox(
+          props as ReadonlySignal<unknown> as ReadonlySignal<
+            ComboboxProps<Value, boolean | undefined>
+          >,
+          around
+        )
     this.mount(this.controller)
   }
 }
@@ -386,11 +415,13 @@ export class KpComboboxItem implements OnInit {
 export class KpComboboxItemIndicator implements OnInit {
   private readonly item = inject(KpComboboxItem)
   private readonly present = presentWhile()
+  private readonly mount = mounted()
 
   ngOnInit(): void {
-    const { controller } = this.item.root
-    const value = this.item.value()
-    this.present(controller.selected(value), controller.itemIndicator(value))
+    // In the page while chosen, and through its exit.
+    const indicator = this.item.root.controller.itemIndicator(this.item.value())
+    this.mount(indicator)
+    this.present(indicator.mounted, indicator)
   }
 }
 

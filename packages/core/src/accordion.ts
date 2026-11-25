@@ -5,6 +5,7 @@ import type { ChangeDetails, Part } from "./part.ts"
 import { computed } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 import { createPanelPresence } from "./services/panel.ts"
+import { createPlaces } from "./services/places.ts"
 import { createRoving } from "./services/roving.ts"
 import type { Orientation } from "./services/roving.ts"
 
@@ -26,6 +27,11 @@ export interface AccordionProps<Value = unknown> {
   /** The way the arrows move between triggers. Default `vertical`. */
   orientation?: Orientation | undefined
   /** Whether the arrows wrap from the last trigger to the first. Default `true`. */
+  loopFocus?: boolean | undefined
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   loop?: boolean | undefined
 }
 
@@ -76,6 +82,9 @@ export function createAccordion<Value = unknown>(
   const disabled = computed(() => Boolean(props.get().disabled))
   const orientation = computed<Orientation>(() => props.get().orientation ?? "vertical")
   const roving = createRoving()
+  // Each item's place, which its parts say: guessed for a server from the order the items are
+  // made in, read from the page once each is in it.
+  const places = createPlaces<Value>({ guess: true })
 
   function toggle(item: Value, by: ChangeDetails) {
     const current = value.peek()
@@ -98,7 +107,7 @@ export function createAccordion<Value = unknown>(
         onKeyDown(event: KeyboardEvent) {
           roving.move(event, {
             orientation: orientation.peek(),
-            loop: props.peek().loop ?? true,
+            loop: props.peek().loopFocus ?? props.peek().loop ?? true,
             direction: around.direction,
           })
         },
@@ -111,7 +120,13 @@ export function createAccordion<Value = unknown>(
       const presence = createPanelPresence(open, "--accordion-panel")
       const triggerId = `${id}-trigger-${slug(item)}`
       const panelId = `${id}-panel-${slug(item)}`
+      places.ask(item)
+      const index = () => {
+        const at = places.place(item)
+        return at === undefined ? undefined : String(at)
+      }
       const state = () => ({
+        "data-index": index(),
         "data-open": flag(open.get()),
         "data-disabled": flag(off.get()),
       })
@@ -119,7 +134,7 @@ export function createAccordion<Value = unknown>(
         open,
         mounted: presence.mounted,
         mount: () => presence.start(),
-        root: { props: computed(state), attach: () => NOTHING },
+        root: { props: computed(state), attach: (element) => places.join(item, element) },
         header: { props: computed(state), attach: () => NOTHING },
         trigger: {
           props: computed(() => ({
@@ -128,6 +143,7 @@ export function createAccordion<Value = unknown>(
             "aria-expanded": String(open.get()),
             "aria-controls": presence.mounted.get() ? panelId : undefined,
             disabled: flag(off.get()),
+            "data-index": index(),
             "data-panel-open": flag(open.get()),
             "data-disabled": flag(off.get()),
             onClick(event: Event) {
@@ -150,6 +166,7 @@ export function createAccordion<Value = unknown>(
               "data-closed": flag(!open.get()),
               "data-disabled": flag(off.get()),
               "data-orientation": orientation.get(),
+              "data-index": index(),
               "data-starting-style": flag(status === "starting"),
               "data-ending-style": flag(status === "ending"),
             }

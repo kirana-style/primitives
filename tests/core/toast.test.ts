@@ -9,7 +9,7 @@ import { find, focused, mount, style } from "./page.ts"
 
 /** Draws a toaster's toasts with no framework: an element per toast, the newest first. */
 function toasts(
-  options: { duration?: number; limit?: number } = {},
+  options: { timeout?: number; duration?: number; limit?: number } = {},
   given: Partial<ToastProps> = {}
 ) {
   style(`
@@ -147,6 +147,30 @@ describe("a toaster", () => {
     await slow
     await Promise.resolve()
     expect(toaster.toasts.peek()[0]).toMatchObject({ title: "Slow", closing: true })
+  })
+
+  it("reads Base UI's `timeout` as the older `duration`, `timeout` winning and its 0 no end", () => {
+    const toaster = createToaster({ timeout: 2000, duration: 9000 })
+    const plain = toaster.add({ title: "Plain" })
+    const old = toaster.add({ title: "Old", duration: 300 })
+    const both = toaster.add({ title: "Both", timeout: 400, duration: 300 })
+    const never = toaster.add({ title: "Never", timeout: 0 })
+    const times = () =>
+      Object.fromEntries(toaster.toasts.peek().map((each) => [each.id, each.timeout]))
+    expect(times()).toEqual({ [plain]: 2000, [old]: 300, [both]: 400, [never]: Infinity })
+    // The older name says the same, on the record too.
+    expect(toaster.toasts.peek().map((each) => each.duration)).toEqual(
+      toaster.toasts.peek().map((each) => each.timeout)
+    )
+    toaster.update(old, { timeout: 0 })
+    toaster.update(both, { duration: 100 })
+    expect(times()).toMatchObject({ [old]: Infinity, [both]: 100 })
+    const older = createToaster({ duration: 700 })
+    older.add({ title: "Older" })
+    expect(older.toasts.peek()[0]!.timeout).toBe(700)
+    const endless = createToaster({ timeout: 0 })
+    endless.add({ title: "Endless" })
+    expect(endless.toasts.peek()[0]!.timeout).toBe(Infinity)
   })
 
   it("holds its toasts apart from what draws them, the newest first", () => {
@@ -288,6 +312,21 @@ describe("toasts in the page", () => {
     await expect.poll(ids).toEqual([])
   })
 
+  it("say their kind on every part, as Base UI's, and follow it as it changes", () => {
+    const { toaster, of } = toasts()
+    const id = toaster.add({ title: "Saving", type: "loading" })
+    const kinds = () =>
+      [".title", ".description", ".close", ".action"].map((each) =>
+        of(id).querySelector(each)!.getAttribute("data-type")
+      )
+    expect(kinds()).toEqual(["loading", "loading", "loading", "loading"])
+    toaster.update(id, { type: "success" })
+    expect(kinds()).toEqual(["success", "success", "success", "success"])
+    // A toast added with no kind says none.
+    const plain = toaster.add({ title: "Plain" })
+    expect(of(plain).querySelector(".title")!.hasAttribute("data-type")).toBe(false)
+  })
+
   it("are read when the reader is idle, or at once when they say so", async () => {
     const { region, toaster, of } = toasts()
     const calm = toaster.add({ title: "Saved" })
@@ -369,6 +408,13 @@ describe("toasts in the page", () => {
     toaster.add({ title: "One", duration: Infinity })
     await wait(200)
     expect(ids().length).toBe(1)
+  })
+
+  it("leave after the toaster's `timeout`, and stay with a `timeout` of 0", async () => {
+    const { toaster, ids } = toasts({ timeout: 50 })
+    const stays = toaster.add({ title: "Stays", timeout: 0 })
+    toaster.add({ title: "Goes" })
+    await expect.poll(ids, { timeout: 1000 }).toEqual([`region-${stays}`])
   })
 
   it("show only so many at once", async () => {

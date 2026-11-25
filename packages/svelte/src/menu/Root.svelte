@@ -8,7 +8,7 @@
   import { provide, useMenubar } from "./context.ts"
   import type { RootProps } from "./types.ts"
 
-  let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, modal, id, children }: RootProps = $props()
+  let { open = $bindable(), defaultOpen, onOpenChange, disabled, loop, loopFocus, modal, id, children }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -23,6 +23,7 @@
       defaultOpen,
       disabled,
       loop,
+      loopFocus,
       modal,
       onOpenChange: change,
     }))

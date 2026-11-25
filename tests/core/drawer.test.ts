@@ -154,6 +154,24 @@ describe("a drawer", () => {
     expect(sheet.style.getPropertyValue("--drawer-swipe-strength")).toBe("1")
   })
 
+  it("says on its backdrop what Base UI's says: the drag that closed it, its height while dragged, a strength of 1", async () => {
+    const { sheet, backdrop, made } = drawer()
+    expect(backdrop.style.getPropertyValue("--drawer-swipe-strength")).toBe("1")
+    expect(backdrop.hasAttribute("data-swipe-dismiss")).toBe(false)
+    expect(backdrop.style.getPropertyValue("--drawer-height")).toBe("")
+    pointer(sheet, "pointerdown", 100, 500)
+    pointer(document.body, "pointermove", 100, 500 + 200 * DRAWER_CLOSE + DRAWER_SLOP + 20)
+    // While it is dragged, the height of the drawer in front.
+    expect(backdrop.style.getPropertyValue("--drawer-height")).toBe("200px")
+    await new Promise((resolve) => setTimeout(resolve, DRAWER_REST + 20))
+    pointer(document.body, "pointerup", 100, 500 + 200 * DRAWER_CLOSE + DRAWER_SLOP + 20)
+    expect(made.open.peek()).toBe(false)
+    expect(backdrop.hasAttribute("data-swipe-dismiss")).toBe(true)
+    expect(backdrop.style.getPropertyValue("--drawer-height")).toBe("")
+    // However the drawer was thrown, the backdrop takes the design's own time.
+    expect(backdrop.style.getPropertyValue("--drawer-swipe-strength")).toBe("1")
+  })
+
   it("says how many drawers are over it, and how tall the frontmost is", async () => {
     const under = drawer()
     const root = mount(

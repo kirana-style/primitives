@@ -10,7 +10,7 @@ import {
 import type { OnInit, SimpleChanges } from "@angular/core"
 import type { ChangeDetails, Orientation } from "@kirana-ui/core"
 import { createSteps } from "@kirana-ui/core/steps"
-import type { Steps } from "@kirana-ui/core/steps"
+import type { Steps, StepsItem } from "@kirana-ui/core/steps"
 
 import { KP_DIRECTION } from "./direction-token"
 import { KpIds, hostPart, inputsSignal, mounted } from "./runtime"
@@ -22,8 +22,11 @@ const optionalNumber = (value: unknown) => (value == null ? undefined : numberAt
 export class KpSteps implements OnInit {
   readonly step = model<number | undefined>(undefined)
   readonly defaultStep = input(undefined, { transform: optionalNumber })
-  /** How many steps there are. */
-  readonly count = input.required({ transform: numberAttribute })
+  /**
+   * How many steps there are. Left out, the items in the page, once they are there; until then
+   * (and on a server) none is the last.
+   */
+  readonly count = input(undefined, { transform: optionalNumber })
   /** In order only: a step that is not done yet cannot be gone to by its trigger. */
   readonly linear = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
@@ -82,13 +85,18 @@ export class KpStepsList implements OnInit {
 /** One step of the row, around its trigger and its separator. */
 @Directive({ selector: "[kpStepsItem]" })
 export class KpStepsItem implements OnInit {
-  /** Which step it is, from 0. */
-  readonly index = input.required({ transform: numberAttribute })
+  /**
+   * Which step it is, from 0. Left out, its place among the items in the page, once it is
+   * there: give it on a page a server draws, which cannot count them.
+   */
+  readonly index = input(undefined, { transform: optionalNumber })
   readonly root = inject(KpSteps)
+  item!: StepsItem
   private readonly put = hostPart()
 
   ngOnInit(): void {
-    this.put(this.root.controller.item(this.index()))
+    this.item = this.root.controller.item(this.index())
+    this.put(this.item)
   }
 }
 
@@ -96,7 +104,7 @@ export class KpStepsItem implements OnInit {
 function inItem(name: "trigger" | "indicator" | "separator") {
   const item = inject(KpStepsItem)
   const put = hostPart()
-  return () => put(item.root.controller[name](item.index()))
+  return () => put(item.root.controller[name](item.item.index))
 }
 
 /** What names a step and goes to it. */

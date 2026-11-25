@@ -22,6 +22,7 @@ import {
   PartElement,
   parts,
   useController,
+  useMount,
   useOptions,
   usePart,
   usePositioning,
@@ -225,8 +226,10 @@ function CheckboxItemIndicator({
   ...props
 }: CheckboxItemIndicatorProps): ReactElement | null {
   const item = inside(CheckboxContext, "CheckboxItemIndicator", "CheckboxItem")
-  const checked = useSignal(item.checked)
-  return checked || keepMounted ? <PartElement of={item.indicator} tag="span" {...props} /> : null
+  // In the page while checked, and through its exit.
+  useMount(item.indicator)
+  const mounted = useSignal(item.indicator.mounted)
+  return mounted || keepMounted ? <PartElement of={item.indicator} tag="span" {...props} /> : null
 }
 
 /** `Value` is what tells a radio item from the others: the type of `value`. */
@@ -291,9 +294,11 @@ function RadioItemIndicator({
 }: RadioItemIndicatorProps): ReactElement | null {
   const group = inside(RadioGroupContext, "RadioItemIndicator", "RadioGroup")
   const value = useContext(RadioItemContext)
-  const checked = useSignal(group.checked(value))
   const part = useMemo(() => group.indicator(value), [group, value])
-  return checked || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
+  // In the page while chosen, and through its exit.
+  useMount(part)
+  const mounted = useSignal(part.mounted)
+  return mounted || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
 }
 
 export const Menu = /* @__PURE__ */ parts("Menu", {

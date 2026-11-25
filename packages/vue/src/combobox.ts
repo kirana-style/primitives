@@ -74,18 +74,29 @@ const GroupLabel = partComponent<"div", State["groupLabel"]>(
 
 const HiddenInput = partComponent("ComboboxHiddenInput", "input", () => scope.use().hidden)
 
-export type RootProps<Value = unknown> = Omit<
-  ComboboxProps<Value>,
-  "id" | "onValueChange" | "onValuesChange" | "onInputValueChange" | "onOpenChange"
-> & { id?: string | undefined }
+/** `Multiple` is read from `multiple`: with it, `value` and `@value-change` hold a list. */
+export type RootProps<Value = unknown, Multiple extends boolean | undefined = false> = Omit<
+  ComboboxProps<Value, Multiple>,
+  "id" | "multiple" | "onValueChange" | "onValuesChange" | "onInputValueChange" | "onOpenChange"
+> & {
+  id?: string | undefined
+  /** Several values: `value` and `@value-change` then hold a list. Read once. */
+  multiple?: Multiple | undefined
+}
 
 /** The value is `null` when the combobox is cleared. */
-export type RootEmits<Value = unknown> = Changes<"value", Value | null> &
+export type RootEmits<Value = unknown, Multiple extends boolean | undefined = false> = Changes<
+  "value",
+  Multiple extends true ? Value[] : Value | null
+> &
   Changes<"values", Value[]> &
   Changes<"inputValue", string> &
   Changes<"open", boolean>
 
-/** `v-model:value`, `v-model:inputValue`, `v-model:open`; the `-change` events carry the details. */
+/**
+ * `v-model:value`, `v-model:inputValue`, `v-model:open`; the `-change` events carry the details.
+ * With `multiple`, the value is a list (`v-model:values`, the older shape, is still emitted).
+ */
 const Root = defineComponent({
   name: "ComboboxRoot",
   props: {
@@ -151,10 +162,6 @@ const Root = defineComponent({
         multiple: props.multiple,
         values: props.values,
         defaultValues: props.defaultValues,
-        onValuesChange(values: unknown[], details: ChangeDetails) {
-          emit("valuesChange", values, details)
-          if (!details.canceled) emit("update:values", values)
-        },
         inline: props.inline,
         virtualized: props.virtualized,
         presentation: props.presentation,
@@ -169,6 +176,11 @@ const Root = defineComponent({
         onValueChange(value: unknown, details: ChangeDetails) {
           emit("valueChange", value, details)
           if (!details.canceled) emit("update:value", value)
+          // With `multiple` the core tells the list here, as Base UI's `onValueChange` is told
+          // it; the older events too, as a listener cannot be told from none.
+          if (!props.multiple || !Array.isArray(value)) return
+          emit("valuesChange", value, details)
+          if (!details.canceled) emit("update:values", value)
         },
         onInputValueChange(value: string, details: ChangeDetails) {
           emit("inputValueChange", value, details)
@@ -183,9 +195,9 @@ const Root = defineComponent({
     const named = fromSignal(made.named)
     return () => [slots.default?.(), named.value ? h(HiddenInput) : null]
   },
-}) as unknown as new <Value = unknown>(
-  props: RootProps<Value> & Listeners<RootEmits<Value>> & PublicProps
-) => PlainInstance<RootProps<Value>, RootEmits<Value>, {}>
+}) as unknown as new <Value = unknown, Multiple extends boolean | undefined = false>(
+  props: RootProps<Value, Multiple> & Listeners<RootEmits<Value, Multiple>> & PublicProps
+) => PlainInstance<RootProps<Value, Multiple>, RootEmits<Value, Multiple>, {}>
 
 export interface ItemProps extends Omit<ComboboxItemOptions, "id">, PartComponentProps {
   /** What the combobox's value is while this item is the chosen one. */
@@ -233,11 +245,14 @@ const ItemIndicator = defineComponent({
   setup(props, { attrs, slots }) {
     const value = inject(ITEM)
     const made = scope.use()
-    const selected = fromSignal(made.selected(value))
-    const Element = partComponent("ComboboxItemIndicatorElement", "span", () =>
-      made.itemIndicator(value)
+    // In the page while chosen, and through its exit.
+    const indicator = controller(
+      () => made.itemIndicator(value),
+      () => ({})
     )
-    return () => (selected.value || props.keepMounted ? h(Element, attrs, slots) : null)
+    const mounted = fromSignal(indicator.mounted)
+    const Element = partComponent("ComboboxItemIndicatorElement", "span", () => indicator)
+    return () => (mounted.value || props.keepMounted ? h(Element, attrs, slots) : null)
   },
 }) as unknown as PartComponent<"span", State["itemIndicator"], ItemIndicatorProps>
 

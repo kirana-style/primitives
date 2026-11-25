@@ -36,6 +36,7 @@ One section: a header with its trigger, and a panel. Its `value` tells it from t
 
 | Attribute | When |
 | --- | --- |
+| `data-index` | The item's place among the accordion's items, from 0. |
 | `data-open` | Present when the item is open. |
 | `data-disabled` | Present when it is disabled. |
 
@@ -45,6 +46,7 @@ The heading that holds the trigger.
 
 | Attribute | When |
 | --- | --- |
+| `data-index` | The item's place among the accordion's items, from 0. |
 | `data-open` | Present when the item is open. |
 | `data-disabled` | Present when it is disabled. |
 
@@ -54,6 +56,7 @@ The button that opens and closes the item's panel.
 
 | Attribute | When |
 | --- | --- |
+| `data-index` | The item's place among the accordion's items, from 0. |
 | `data-panel-open` | Present when the item's panel is open. |
 | `data-disabled` | Present when it is disabled. |
 
@@ -69,6 +72,7 @@ The item's content. In the page while open, and through its exit's motion.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-disabled` | Present when it is disabled. |
 | `data-orientation` (horizontal, vertical) | The way the items are laid out, and the arrows that move between their triggers. |
+| `data-index` | The item's place among the accordion's items, from 0. |
 
 | Variable | Holds |
 | --- | --- |
@@ -100,6 +104,7 @@ The button that opens the dialog.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the dialog is open. |
+| `data-disabled` | Present when it is disabled. |
 
 ### AlertDialog.Portal
 
@@ -139,6 +144,7 @@ The dialog itself.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested` | Present when the dialog opened over another dialog. |
 | `data-nested-dialog-open` | Present when another dialog is open above this one. |
 
 | Variable | Holds |
@@ -156,6 +162,10 @@ The text that describes the dialog.
 ### AlertDialog.Close
 
 A button that closes the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
 
 ## Avatar
 
@@ -216,6 +226,12 @@ The box. It holds a hidden native checkbox, which a form and a label reach.
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
 | `data-parent` | Present on the checkbox that stands for every box of its group. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Checkbox.Indicator
 
@@ -229,6 +245,12 @@ The mark. In the page while the box is checked or indeterminate. `data-indetermi
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
@@ -259,6 +281,8 @@ Groups the trigger and the panel.
 | `data-open` | Present when it is open. |
 | `data-closed` | Present when it is closed. |
 | `data-disabled` | Present when it is disabled. |
+| `data-starting-style` | Present for the first style of the panel's entrance, as on the panel. |
+| `data-ending-style` | Present through the panel's exit, as on the panel. |
 
 ### Collapsible.Trigger
 
@@ -330,8 +354,18 @@ The text input. What is typed filters the list, which is placed against it, or a
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
+| `data-popup-side` (top, right, bottom, left, inline-start, inline-end, none) | While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. |
+| `data-list-empty` | Present when no item is shown for what was typed, once the list is in the page. |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Combobox.Trigger
 
@@ -340,8 +374,18 @@ A button that opens and closes the list. With the input inside the popup it is t
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
+| `data-popup-side` (top, right, bottom, left, inline-start, inline-end, none) | While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. |
+| `data-list-empty` | Present when no item is shown for what was typed, once the list is in the page. |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Combobox.Value
 
@@ -382,6 +426,8 @@ Places the list against the input: against the chips' box when the input is in o
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
+| `data-empty` | Present when no item is shown for what was typed. |
 
 | Variable | Holds |
 | --- | --- |
@@ -406,6 +452,7 @@ The list of items. With a `list` inside, what holds it: a dialog around an input
 | `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
 | `data-swiping` | Present while the sheet is dragged. |
 | `data-swipe-dismiss` | Present once a drag has closed it. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 | `data-empty` | Present when no item is shown for what was typed. |
 
 | Variable | Holds |
@@ -463,11 +510,15 @@ Says how the list stands ("3 results", "Loading") to software that reads the pag
 
 ### Combobox.Clear
 
-A button that empties the input and the value.
+A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.
 
 | Attribute | When |
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
+| `data-popup-open` | Present when the list is open. |
+| `data-visible` | Present while there is something to clear. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ### Combobox.Chips
 
@@ -476,6 +527,10 @@ With several values: what holds the chips and the input, and what the list is pl
 ### Combobox.Chip
 
 One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
 
 ### Combobox.ChipRemove
 
@@ -520,6 +575,7 @@ The area a secondary press, or a long press on a touch screen, opens the menu in
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the menu is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
 
 ### ContextMenu.Portal
 
@@ -535,6 +591,7 @@ Places the menu against its trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -543,6 +600,8 @@ Places the menu against its trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size. |
+| `--positioner-height` | The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size. |
 
 ### ContextMenu.Popup
 
@@ -556,6 +615,7 @@ The menu itself: the list of items.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (click, dismiss, group) | Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another. |
 
 ### ContextMenu.Arrow
 
@@ -563,6 +623,8 @@ An element that points at the trigger.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
@@ -684,6 +746,7 @@ The button that opens the dialog.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the dialog is open. |
+| `data-disabled` | Present when it is disabled. |
 
 ### Dialog.Portal
 
@@ -723,6 +786,7 @@ The dialog itself.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested` | Present when the dialog opened over another dialog. |
 | `data-nested-dialog-open` | Present when another dialog is open above this one. |
 
 | Variable | Holds |
@@ -740,6 +804,10 @@ The text that describes the dialog.
 ### Dialog.Close
 
 A button that closes the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
 
 ## Field
 
@@ -894,6 +962,7 @@ Places the popup against the trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -902,6 +971,8 @@ Places the popup against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size. |
+| `--positioner-height` | The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size. |
 
 ### HoverCard.Popup
 
@@ -923,6 +994,8 @@ An element that points at the trigger, placed along the popup's edge.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
@@ -1006,6 +1079,7 @@ The button that opens the menu, and what it is placed against.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the menu is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
 | `data-disabled` | Present when it is disabled. |
 
 ### Menu.Portal
@@ -1022,6 +1096,7 @@ Places the menu against its trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -1030,6 +1105,8 @@ Places the menu against its trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size. |
+| `--positioner-height` | The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size. |
 
 ### Menu.Popup
 
@@ -1043,6 +1120,7 @@ The menu itself: the list of items.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (click, dismiss, group) | Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another. |
 
 ### Menu.Arrow
 
@@ -1050,6 +1128,8 @@ An element that points at the trigger.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
@@ -1155,6 +1235,8 @@ The row of menus. A menu inside it is one of its items.
 | Attribute | When |
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
+| `data-modal` | Present when its menus hold the page while one is open. |
+| `data-has-submenu-open` | Present while one of its menus is open. |
 | `data-orientation` (horizontal, vertical) | Whether its menus are in a row or a column. |
 
 ## Meter
@@ -1214,6 +1296,8 @@ The navigation.
 | Attribute | When |
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | Whether the list is a row or a column. |
+| `data-open` | Present while an item's content is shown. |
+| `data-nested` | Present on a navigation menu inside another's content: a submenu of it. |
 
 ### NavigationMenu.List
 
@@ -1222,6 +1306,7 @@ The row of items.
 | Attribute | When |
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | Whether the list is a row or a column. |
+| `data-open` | Present while an item's content is shown. |
 
 ### NavigationMenu.Item
 
@@ -1234,6 +1319,8 @@ The button that shows an item's content.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present while the item's content is shown. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
+| `data-disabled` | Present when it is disabled. |
 
 ### NavigationMenu.Icon
 
@@ -1253,7 +1340,7 @@ What an item shows. It is drawn in the viewport every item shares.
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-activation-direction` (left, right) | Which way it came from: the item before it, or after. |
+| `data-activation-direction` (left, right, up, down) | Which way it came from: the item before it, or after; `up` and `down` when the list is a column. |
 
 ### NavigationMenu.Link
 
@@ -1277,6 +1364,8 @@ Places the popup against the open item's trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
+| `data-instant` | Present while it should move at once: as it is first drawn, and while the window is resized. |
 
 | Variable | Holds |
 | --- | --- |
@@ -1300,6 +1389,7 @@ The panel every item's content is shown in.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -1316,6 +1406,8 @@ An element that points at the open item's trigger.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the arrow cannot sit at the trigger's centre. |
@@ -1348,8 +1440,15 @@ The code: the input and its cells.
 
 | Attribute | When |
 | --- | --- |
-| `data-disabled` | Present when it is disabled. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Present when the code has a character in it. |
 | `data-focused` | Present while the input has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
+| `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
 | `data-complete` | Present when every character is in. |
 
 ### Otp.Input
@@ -1372,8 +1471,16 @@ One cell of the code.
 | --- | --- |
 | `data-index` | The cell's place, from 0. |
 | `data-active` | Present on the cell the next character goes in, or that is selected. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
 | `data-filled` | Present when the cell has its character. |
+| `data-focused` | Present while the input has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 | `data-disabled` | Present when it is disabled. |
+| `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-complete` | Present when every character is in. |
 
 ### Otp.Separator
 
@@ -1683,8 +1790,18 @@ The text input: its text is the value, and what is typed asks for suggestions.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
+| `data-popup-side` (top, right, bottom, left, inline-start, inline-end, none) | While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. |
+| `data-list-empty` | Present when no item is shown for what was typed, once the list is in the page. |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Autocomplete.Trigger
 
@@ -1693,8 +1810,18 @@ A button that opens and closes the list. With the input inside the popup it is t
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
+| `data-popup-side` (top, right, bottom, left, inline-start, inline-end, none) | While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. |
+| `data-list-empty` | Present when no item is shown for what was typed, once the list is in the page. |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Autocomplete.Portal
 
@@ -1711,6 +1838,8 @@ Places the list against the input: against the chips' box when the input is in o
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
+| `data-empty` | Present when no item is shown for what was typed. |
 
 | Variable | Holds |
 | --- | --- |
@@ -1735,6 +1864,7 @@ The list of items. With a `list` inside, what holds it: a dialog around an input
 | `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
 | `data-swiping` | Present while the sheet is dragged. |
 | `data-swipe-dismiss` | Present once a drag has closed it. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 | `data-empty` | Present when no item is shown for what was typed. |
 
 | Variable | Holds |
@@ -1788,11 +1918,15 @@ Says how the list stands ("3 results", "Loading") to software that reads the pag
 
 ### Autocomplete.Clear
 
-A button that empties the input and the value.
+A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there.
 
 | Attribute | When |
 | --- | --- |
 | `data-disabled` | Present when it is disabled. |
+| `data-popup-open` | Present when the list is open. |
+| `data-visible` | Present while there is something to clear. |
+| `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
+| `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
 ## Pagination
 
@@ -2736,6 +2870,7 @@ Places the popup against the step's target, or in the middle of the viewport for
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-centered` | Present while the step shown has no target in the page: the popup stands in the middle of the viewport. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -2765,6 +2900,8 @@ An element that points at the target, placed along the popup's edge.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the target's centre. |
@@ -2865,6 +3002,7 @@ The button that opens the popover, and what it is placed against.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the popover is open. |
+| `data-pressed` | Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down. |
 
 ### DatePicker.Portal
 
@@ -2880,6 +3018,7 @@ Places the popup against the trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -2888,6 +3027,8 @@ Places the popup against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size. |
+| `--positioner-height` | The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size. |
 
 ### DatePicker.Popup
 
@@ -2901,6 +3042,12 @@ The popover itself.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (click, dismiss) | Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it. |
+
+| Variable | Holds |
+| --- | --- |
+| `--popup-width` | Its width: `auto`, and while its content changes size, the old width and then the new one, for a transition between them. |
+| `--popup-height` | Its height: `auto`, and while its content changes size, the old height and then the new one, for a transition between them. |
 
 ### DatePicker.Calendar
 
@@ -3118,6 +3265,7 @@ The button that opens the dialog.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the dialog is open. |
+| `data-disabled` | Present when it is disabled. |
 
 ### Drawer.Portal
 
@@ -3134,6 +3282,7 @@ The layer over the page behind the dialog.
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-swiping` | Present while the drawer is dragged. |
+| `data-swipe-dismiss` | Present once a drag has closed the drawer. |
 
 | Variable | Holds |
 | --- | --- |
@@ -3141,6 +3290,8 @@ The layer over the page behind the dialog.
 | `--drawer-swipe-movement-y` | How far it has been dragged up or down. |
 | `--drawer-swipe-progress` | How far it has been dragged, of its own size: 0 to 1. |
 | `--drawer-snap-point-offset` | How far from whole it rests, towards the edge it closes at: 0px at its largest snap point. |
+| `--drawer-swipe-strength` | Always 1: the backdrop takes the design's own time to leave, however the drawer was thrown. |
+| `--drawer-height` | While the drawer is dragged: the height of the drawer in front. |
 
 ### Drawer.Popup
 
@@ -3152,6 +3303,7 @@ The drawer. A design moves it by what it says of the drag, and gives it `touch-a
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
+| `data-nested` | Present when the dialog opened over another dialog. |
 | `data-nested-dialog-open` | Present when another dialog is open above this one. |
 | `data-swiping` | Present while the drawer is dragged. |
 | `data-swipe-direction` (up, down, left, right) | The way it is dragged to close it. |
@@ -3184,6 +3336,10 @@ The text that describes the dialog.
 ### Drawer.Close
 
 A button that closes the dialog.
+
+| Attribute | When |
+| --- | --- |
+| `data-disabled` | Present when it is disabled. |
 
 ## MessageScroller
 
@@ -3376,17 +3532,33 @@ What holds a toast's contents, when the design sizes the toast itself.
 
 What the toast is called: the title it was added with, when nothing else is written in it.
 
+| Attribute | When |
+| --- | --- |
+| `data-type` | The kind the toast was added as. |
+
 ### Toast.Description
 
 What the toast says: the description it was added with, when nothing else is written in it.
+
+| Attribute | When |
+| --- | --- |
+| `data-type` | The kind the toast was added as. |
 
 ### Toast.Close
 
 Closes the toast.
 
+| Attribute | When |
+| --- | --- |
+| `data-type` | The kind the toast was added as. |
+
 ### Toast.Action
 
 A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses.
+
+| Attribute | When |
+| --- | --- |
+| `data-type` | The kind the toast was added as. |
 
 ## Popover
 
@@ -3414,6 +3586,7 @@ The button that opens the popover, and what it is placed against.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the popover is open. |
+| `data-pressed` | Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down. |
 
 ### Popover.Portal
 
@@ -3440,6 +3613,7 @@ Places the popup against the trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -3448,6 +3622,8 @@ Places the popup against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size. |
+| `--positioner-height` | The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size. |
 
 ### Popover.Popup
 
@@ -3461,6 +3637,12 @@ The popover itself.
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (click, dismiss) | Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it. |
+
+| Variable | Holds |
+| --- | --- |
+| `--popup-width` | Its width: `auto`, and while its content changes size, the old width and then the new one, for a transition between them. |
+| `--popup-height` | Its height: `auto`, and while its content changes size, the old height and then the new one, for a transition between them. |
 
 ### Popover.Title
 
@@ -3480,6 +3662,8 @@ An element that points at the trigger, placed along the popup's edge.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |
@@ -3561,6 +3745,12 @@ Groups the items: one of them is chosen at most.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### RadioGroup.Item
 
@@ -3573,6 +3763,12 @@ One choice. It holds a hidden native radio, which a form and a label reach: the 
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### RadioGroup.Indicator
 
@@ -3585,6 +3781,12 @@ The mark. In the page while its item is the chosen one.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
 
@@ -3647,6 +3849,10 @@ The area. It holds the viewport and the scrollbars, which the library places aga
 | --- | --- |
 | `data-has-overflow-x` | Present when there is more to see sideways. |
 | `data-has-overflow-y` | Present when there is more to see up or down. |
+| `data-overflow-x-start` | Present when there is more to scroll to towards the start of a line. |
+| `data-overflow-x-end` | Present when there is more to scroll to towards the end of a line. |
+| `data-overflow-y-start` | Present when there is more to scroll to above. |
+| `data-overflow-y-end` | Present when there is more to scroll to below. |
 | `data-scrolling` | Present while it is being scrolled, and a moment after. |
 | `data-hovering` | Present while the pointer is over the area. |
 
@@ -3663,11 +3869,32 @@ The element that scrolls.
 | --- | --- |
 | `data-has-overflow-x` | Present when there is more to see sideways. |
 | `data-has-overflow-y` | Present when there is more to see up or down. |
+| `data-overflow-x-start` | Present when there is more to scroll to towards the start of a line. |
+| `data-overflow-x-end` | Present when there is more to scroll to towards the end of a line. |
+| `data-overflow-y-start` | Present when there is more to scroll to above. |
+| `data-overflow-y-end` | Present when there is more to scroll to below. |
 | `data-scrolling` | Present while it is being scrolled, and a moment after. |
+
+| Variable | Holds |
+| --- | --- |
+| `--scroll-area-overflow-x-start` | How far the view is from the start of a line, to fade that edge by: `0px` at it. |
+| `--scroll-area-overflow-x-end` | How far the view is from the end of a line: `0px` at it. |
+| `--scroll-area-overflow-y-start` | How far the view is from the top: `0px` at it. |
+| `--scroll-area-overflow-y-end` | How far the view is from the bottom: `0px` at it. |
 
 ### ScrollArea.Content
 
 A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text).
+
+| Attribute | When |
+| --- | --- |
+| `data-has-overflow-x` | Present when there is more to see sideways. |
+| `data-has-overflow-y` | Present when there is more to see up or down. |
+| `data-overflow-x-start` | Present when there is more to scroll to towards the start of a line. |
+| `data-overflow-x-end` | Present when there is more to scroll to towards the end of a line. |
+| `data-overflow-y-start` | Present when there is more to scroll to above. |
+| `data-overflow-y-end` | Present when there is more to scroll to below. |
+| `data-scrolling` | Present while it is being scrolled, and a moment after. |
 
 ### ScrollArea.Scrollbar
 
@@ -3678,6 +3905,12 @@ A scrollbar's track, placed along its edge of the area. In the page while there 
 | `data-orientation` (horizontal, vertical) | Which way the scrollbar scrolls. |
 | `data-hovering` | Present while the pointer is over the area. |
 | `data-scrolling` | Present while the area is scrolled its way. |
+| `data-has-overflow-x` | Present when there is more to see sideways. |
+| `data-has-overflow-y` | Present when there is more to see up or down. |
+| `data-overflow-x-start` | Present when there is more to scroll to towards the start of a line. |
+| `data-overflow-x-end` | Present when there is more to scroll to towards the end of a line. |
+| `data-overflow-y-start` | Present when there is more to scroll to above. |
+| `data-overflow-y-end` | Present when there is more to scroll to below. |
 
 | Variable | Holds |
 | --- | --- |
@@ -3691,6 +3924,7 @@ The part of a scrollbar that shows where the view is, and can be dragged. As lon
 | Attribute | When |
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | Which way the scrollbar scrolls. |
+| `data-scrolling` | Present while the area is scrolled its way. |
 
 ### ScrollArea.Corner
 
@@ -3728,9 +3962,18 @@ The button that shows the value and opens the list.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the list is open. |
+| `data-pressed` | Present while its popup is open: it stays pressed, as a button held down. |
+| `data-popup-side` (top, right, bottom, left, inline-start, inline-end, none) | While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. |
 | `data-placeholder` | Present while nothing is chosen. |
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
+| `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Select.Value
 
@@ -3775,6 +4018,7 @@ Places the list against the trigger. It carries the geometry. As a sheet it is n
 | `data-side` (top, right, bottom, left, inline-start, inline-end, none) | The side of the trigger it is on, after any flip; `none` when it lies over the trigger. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -3834,7 +4078,7 @@ The list of items. As a sheet, a design moves it by what it says of the drag, an
 | `data-closed` | Present when it is closed. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
 | `data-ending-style` | Present through its exit: what it animates out to. It leaves the page when the motion ends. |
-| `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
+| `data-side` (top, right, bottom, left, inline-start, inline-end, none) | The side of the trigger it is on, after any flip; `none` when it lies over the trigger. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
 | `data-presentation` (popup, sheet) | How the list opened: placed against its trigger, or as a sheet from the bottom edge. |
 | `data-swiping` | Present while the sheet is dragged. |
@@ -3896,6 +4140,12 @@ Groups the slider's parts.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Slider.Value
 
@@ -3907,6 +4157,12 @@ The value, written.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Slider.Control
 
@@ -3918,6 +4174,12 @@ What a pointer presses and drags on. It holds the track and the thumbs.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Slider.Track
 
@@ -3929,6 +4191,12 @@ The whole range.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Slider.Indicator
 
@@ -3940,6 +4208,12 @@ The filled part: up to the thumb, or from the first thumb to the last. Its place
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 | Variable | Holds |
 | --- | --- |
@@ -3956,6 +4230,12 @@ What is dragged, and what the keyboard moves: a slider to assistive technology. 
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-dragging` | Present while a pointer holds a thumb. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 | `data-index` | Which thumb it is, from 0. |
 
 | Variable | Holds |
@@ -3980,6 +4260,12 @@ The track. It holds a hidden native checkbox, which a form and a label reach.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ### Switch.Thumb
 
@@ -3992,6 +4278,12 @@ The knob that moves along the track.
 | `data-disabled` | Present when it is disabled. |
 | `data-readonly` | Present when it can be read but not changed. |
 | `data-required` | Present when the form needs it. |
+| `data-touched` | Inside a Field: present once focus has left the control. |
+| `data-dirty` | Inside a Field: present while the value is not the one it started with. |
+| `data-filled` | Inside a Field: present while the control has a value. |
+| `data-focused` | Inside a Field: present while the control has focus. |
+| `data-valid` | Inside a Field: present once the value has been checked and found right. |
+| `data-invalid` | Inside a Field: present while the value is wrong. |
 
 ## Tabs
 
@@ -4030,6 +4322,7 @@ A button that shows its panel.
 | `data-active` | Present on the tab whose panel is shown. |
 | `data-disabled` | Present when it is disabled. |
 | `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
+| `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
 
 ### Tabs.Indicator
 
@@ -4056,6 +4349,7 @@ A tab's content. In the page while its tab is active, and through its exit.
 | Attribute | When |
 | --- | --- |
 | `data-hidden` | Present while its tab is not the active one. |
+| `data-index` | The panel's place among the panels in the page, from 0, once it is in the page. |
 | `data-orientation` (horizontal, vertical) | The way the tabs are laid out. |
 | `data-activation-direction` (left, right, up, down, none) | Where the newly active tab is from the one before, for a panel or a mark that slides. |
 | `data-starting-style` | Present for the first style of its entrance: what it animates in from. |
@@ -4112,6 +4406,7 @@ A button of the toolbar.
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
 | `data-disabled` | Present when it is disabled. |
+| `data-focusable` | Present when it stays focusable while disabled: the arrows still reach it. |
 
 ### Toolbar.Link
 
@@ -4130,6 +4425,7 @@ A text input of the toolbar. The arrows are its own until the caret is at an end
 | --- | --- |
 | `data-orientation` (horizontal, vertical) | Whether the toolbar is a row or a column. |
 | `data-disabled` | Present when it is disabled. |
+| `data-focusable` | Present when it stays focusable while disabled: the arrows still reach it. |
 
 ### Toolbar.Group
 
@@ -4170,6 +4466,7 @@ The element the tooltip describes.
 | Attribute | When |
 | --- | --- |
 | `data-popup-open` | Present when the tooltip is open. |
+| `data-trigger-disabled` | Present when the tooltip is disabled: the pointer and focus on the trigger do not open it. |
 
 ### Tooltip.Portal
 
@@ -4185,6 +4482,7 @@ Places the popup against the trigger. It carries the geometry.
 | `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-anchor-hidden` | Present while the anchor is out of view: scrolled away, or clipped by a box around it. |
 
 | Variable | Holds |
 | --- | --- |
@@ -4193,6 +4491,8 @@ Places the popup against the trigger. It carries the geometry.
 | `--available-width` | The width between the anchor and the edge of the viewport. |
 | `--available-height` | The height between the anchor and the edge of the viewport. |
 | `--transform-origin` | The point of the popup nearest its anchor, to scale from. |
+| `--positioner-width` | The popup's width, as its content lays it out: a design gives the positioner `width: var(--positioner-width)` to animate a change of size. |
+| `--positioner-height` | The popup's height, as its content lays it out: a design gives the positioner `height: var(--positioner-height)` to animate a change of size. |
 
 ### Tooltip.Popup
 
@@ -4214,6 +4514,9 @@ An element that points at the trigger, placed along the popup's edge.
 
 | Attribute | When |
 | --- | --- |
+| `data-open` | Present when it is open. |
+| `data-closed` | Present when it is closed. |
 | `data-side` (top, right, bottom, left, inline-start, inline-end) | The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. |
 | `data-align` (start, center, end) | How it is aligned with the anchor. |
+| `data-instant` (delay, focus, dismiss) | Present when it opened or closed without its usual wait, for a design that skips the motion then. |
 | `data-uncentered` | Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. |

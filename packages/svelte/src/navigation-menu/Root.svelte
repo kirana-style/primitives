@@ -6,7 +6,7 @@
   import Part from "../Part.svelte"
   import { useDirectionAround } from "../direction/context.ts"
   import { controller } from "../runtime.svelte.ts"
-  import { provide } from "./context.ts"
+  import { outer, provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
 
   let {
@@ -26,8 +26,10 @@
     if (!by.canceled) value = next
   }
 
+  // Read before this root provides its own: inside another's content, it is nested.
+  const parent = outer()
   const made = provide(
-    controller(within(createNavigationMenu, { direction: useDirectionAround() }), () => ({
+    controller(within(createNavigationMenu, { direction: useDirectionAround(), parent }), () => ({
       id: id ?? generated,
       value,
       defaultValue,

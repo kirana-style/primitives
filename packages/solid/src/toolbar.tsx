@@ -22,15 +22,25 @@ function useToolbar(): Controller {
 export type RootProps = PartComponentProps<
   "div",
   StateOf<Parts["root"]>,
-  { orientation?: Orientation; loop?: boolean; disabled?: boolean }
+  {
+    orientation?: Orientation
+    loopFocus?: boolean
+    /**
+     * Whether the arrows wrap from the last item to the first.
+     * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+     */
+    loop?: boolean
+    disabled?: boolean
+  }
 >
 
 function Root(props: RootProps): JSX.Element {
-  const [local, rest] = split(props, ["orientation", "loop", "disabled"])
+  const [local, rest] = split(props, ["orientation", "loop", "loopFocus", "disabled"])
   const direction = useContext(DirectionContext) ?? undefined
   const made = controller(within(createToolbar, { direction }), () => ({
     orientation: local.orientation,
     loop: local.loop,
+    loopFocus: local.loopFocus,
     disabled: local.disabled,
   }))
   return (
@@ -44,9 +54,14 @@ function Root(props: RootProps): JSX.Element {
 }
 
 type ItemOptions = { disabled?: boolean }
+/**
+ * `focusableWhenDisabled` keeps a button or an input focusable while disabled, as Base UI's:
+ * the arrows still reach it, and a press does nothing. Default `true`.
+ */
+type ControlOptions = ItemOptions & { focusableWhenDisabled?: boolean }
 
-export type ButtonProps = PartComponentProps<"button", StateOf<Parts["button"]>, ItemOptions>
-export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>, ItemOptions>
+export type ButtonProps = PartComponentProps<"button", StateOf<Parts["button"]>, ControlOptions>
+export type InputProps = PartComponentProps<"input", StateOf<Parts["input"]>, ControlOptions>
 export type GroupProps = PartComponentProps<"div", StateOf<Parts["group"]>, ItemOptions>
 export type LinkProps = PartComponentProps<"a", StateOf<Parts["link"]>>
 export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"]>>
@@ -54,8 +69,11 @@ export type SeparatorProps = PartComponentProps<"div", StateOf<Parts["separator"
 const item =
   <Props extends ItemOptions>(name: "button" | "input" | "group", tag: string) =>
   (props: Props): JSX.Element => {
-    const [local, rest] = split(props as ItemOptions, ["disabled"])
-    const options = toSignal(() => ({ disabled: local.disabled }))
+    const [local, rest] = split(props as ControlOptions, ["disabled", "focusableWhenDisabled"])
+    const options = toSignal(() => ({
+      disabled: local.disabled,
+      focusableWhenDisabled: local.focusableWhenDisabled,
+    }))
     const part = useToolbar()[name](() => defined(options.get()))
     return <Part of={part} tag={tag} {...rest} />
   }

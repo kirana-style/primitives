@@ -20,3 +20,8 @@ export const monthIndex = (): number | undefined => getContext<number | undefine
 
 /** The month a part is drawn in: the one `Calendar.Months` gave, or the first. */
 export const useMonth = (): CalendarMonthParts => useCalendar().monthAt(monthIndex() ?? 0)
+
+// The day a cell holds, for the day button inside it.
+const CELL = Symbol("CalendarCell")
+export const provideCell = (date: string): string => setContext(CELL, date)
+export const cellDate = (): string | undefined => getContext<string | undefined>(CELL)

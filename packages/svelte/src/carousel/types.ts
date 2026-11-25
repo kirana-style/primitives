@@ -14,8 +14,11 @@ export type ItemProps = PartAttributes<
   "div",
   StateFor<"carousel", "item">,
   {
-    /** Its place among the items, from 0. */
-    index: number
+    /**
+     * Its place among the items, from 0. Left out, its place in the page, once it is there:
+     * give it on a page a server draws, which cannot count them.
+     */
+    index?: number | undefined
   }
 >
 

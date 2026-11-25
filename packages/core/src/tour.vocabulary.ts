@@ -1,6 +1,7 @@
 import { defineComponent } from "./part.ts"
 import {
   ANCHORED,
+  ANCHOR_HIDDEN,
   DISABLED,
   EITHER_FRAME,
   EITHER_OPEN,
@@ -49,7 +50,7 @@ export const tourVocabulary = defineComponent({
     inside: "portal",
     description:
       "Places the popup against the step's target, or in the middle of the viewport for a step with none. It carries the geometry.",
-    states: { ...OPEN, ...PLACEMENT, ...CENTERED },
+    states: { ...OPEN, ...PLACEMENT, ...CENTERED, anchorHidden: ANCHOR_HIDDEN },
     exclusive: EITHER_OPEN,
     variables: ANCHORED,
   },
@@ -63,7 +64,9 @@ export const tourVocabulary = defineComponent({
   arrow: {
     inside: "popup",
     description: "An element that points at the target, placed along the popup's edge.",
+    exclusive: EITHER_OPEN,
     states: {
+      ...OPEN,
       ...PLACEMENT,
       uncentered: state(
         "data-uncentered",

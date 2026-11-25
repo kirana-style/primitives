@@ -1,6 +1,7 @@
 import type {
   NavigationMenuLinkOptions,
   NavigationMenuProps,
+  NavigationMenuTriggerOptions,
 } from "@kirana-ui/core/navigation-menu"
 import type { Snippet } from "svelte"
 
@@ -24,7 +25,11 @@ export type ItemProps = PartAttributes<
   }
 >
 
-export type TriggerProps = PartAttributes<"button", StateFor<"navigationMenu", "trigger">>
+export type TriggerProps = PartAttributes<
+  "button",
+  StateFor<"navigationMenu", "trigger">,
+  NavigationMenuTriggerOptions
+>
 
 export type IconProps = PartAttributes<"span", StateFor<"navigationMenu", "icon">>
 

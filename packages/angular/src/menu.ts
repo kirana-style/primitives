@@ -32,6 +32,13 @@ abstract class MenuRoot implements OnInit {
   readonly open = model<boolean | undefined>(undefined)
   readonly defaultOpen = input(false, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
+  readonly loopFocus = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   /** Holds the page while the menu is open. Not for a submenu. */
   readonly modal = input(false, { transform: booleanAttribute })
@@ -50,6 +57,7 @@ abstract class MenuRoot implements OnInit {
     defaultOpen: this.defaultOpen(),
     disabled: this.disabled(),
     loop: this.loop(),
+    loopFocus: this.loopFocus(),
     modal: this.modal(),
     onOpenChange: (open: boolean, details: ChangeDetails) => {
       this.openChanged.emit({ open, details })
@@ -105,9 +113,18 @@ export class KpMenu extends MenuRoot {
   providers: [{ provide: KP_MENUBAR, useExisting: forwardRef(() => KpMenubar) }],
 })
 export class KpMenubar implements OnInit {
+  readonly loopFocus = input<boolean | undefined, unknown>(undefined, {
+    transform: booleanAttribute,
+  })
+  /**
+   * Whether the arrows wrap from the last item to the first.
+   * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+   */
   readonly loop = input<boolean | undefined, unknown>(undefined, { transform: booleanAttribute })
   readonly disabled = input(false, { transform: booleanAttribute })
   readonly orientation = input<Orientation>()
+  /** Holds the page while one of its menus is open. Default `false`. */
+  readonly modal = input(false, { transform: booleanAttribute })
   readonly kpId = input<string>()
 
   controller!: Menubar
@@ -117,8 +134,10 @@ export class KpMenubar implements OnInit {
   private readonly props = inputsSignal(this, () => ({
     id: this.kpId() ?? this.generated,
     loop: this.loop(),
+    loopFocus: this.loopFocus(),
     disabled: this.disabled(),
     orientation: this.orientation(),
+    modal: this.modal(),
   }))
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -364,9 +383,13 @@ export class KpMenuCheckboxItem implements OnInit {
 export class KpMenuCheckboxItemIndicator implements OnInit {
   private readonly owner = inject(KpMenuCheckboxItem)
   private readonly present = presentWhile()
+  private readonly mount = mounted()
 
   ngOnInit(): void {
-    this.present(this.owner.item.checked, this.owner.item.indicator)
+    // In the page while checked, and through its exit.
+    const { indicator } = this.owner.item
+    this.mount(indicator)
+    this.present(indicator.mounted, indicator)
   }
 }
 
@@ -442,10 +465,13 @@ export class KpMenuRadioItem implements OnInit {
 export class KpMenuRadioItemIndicator implements OnInit {
   private readonly item = inject(KpMenuRadioItem)
   private readonly present = presentWhile()
+  private readonly mount = mounted()
 
   ngOnInit(): void {
     const { group } = this.item.owner
-    const value = this.item.value()
-    this.present(group.checked(value), group.indicator(value))
+    // In the page while chosen, and through its exit.
+    const indicator = group.indicator(this.item.value())
+    this.mount(indicator)
+    this.present(indicator.mounted, indicator)
   }
 }

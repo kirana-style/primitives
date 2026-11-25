@@ -149,6 +149,7 @@ export type {
   FileUploadEntry,
 } from "@kirana-ui/core/file-upload"
 export type { QrCorrection } from "@kirana-ui/core/qr-code"
+export type { OtpValidation } from "@kirana-ui/core/otp"
 export type { TreeSelectionMode } from "@kirana-ui/core/tree"
 export type {
   ColorFormat,

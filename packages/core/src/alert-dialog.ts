@@ -3,7 +3,10 @@ import type { DirectionAround } from "./direction.ts"
 import type { Dialog, DialogProps } from "./dialog.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
 
-export type AlertDialogProps = Omit<DialogProps, "closeOnOutsidePress" | "dismissible" | "modal">
+export type AlertDialogProps = Omit<
+  DialogProps,
+  "disablePointerDismissal" | "closeOnOutsidePress" | "dismissible" | "modal"
+>
 export type AlertDialog = Dialog
 
 /**

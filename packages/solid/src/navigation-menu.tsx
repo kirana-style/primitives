@@ -5,6 +5,7 @@ import type {
   NavigationMenu as Controller,
   NavigationMenuItem,
   NavigationMenuProps,
+  NavigationMenuTriggerOptions,
 } from "@kirana-ui/core/navigation-menu"
 import type { Vocabulary } from "@kirana-ui/core/vocabulary"
 import { Show, createContext, createUniqueId, onSettled, untrack, useContext } from "solid-js"
@@ -62,7 +63,9 @@ function Root<Value = unknown>(props: RootProps<Value>): JSX.Element {
   ])
   const generated = createUniqueId()
   const direction = useContext(DirectionContext) ?? undefined
-  const made = controller(within(createNavigationMenu<Value>, { direction }), () => ({
+  // Inside another's content, it is nested.
+  const parent = useContext(Context) ?? undefined
+  const made = controller(within(createNavigationMenu<Value>, { direction, parent }), () => ({
     id: local.id ?? generated,
     value: local.value,
     defaultValue: local.defaultValue,
@@ -149,7 +152,11 @@ function Positioner(props: PositionerProps): JSX.Element {
 }
 
 export type ListProps = PartComponentProps<"ul", StateOf<Parts["list"]>>
-export type TriggerProps = PartComponentProps<"button", StateOf<Parts["trigger"]>>
+export type TriggerProps = PartComponentProps<
+  "button",
+  StateOf<Parts["trigger"]>,
+  NavigationMenuTriggerOptions
+>
 export type IconProps = PartComponentProps<"span", StateOf<Parts["icon"]>>
 export type PopupProps = PartComponentProps<"div", StateOf<Parts["popup"]>>
 export type ViewportProps = PartComponentProps<"div", StateOf<Parts["viewport"]>>
@@ -163,14 +170,21 @@ const part =
   ) =>
   (props: Props): JSX.Element => <Part of={useNavigation()[name]} tag={tag} {...props} />
 const itemPart =
-  <Props extends Record<string, unknown>>(name: "trigger" | "icon", tag: string) =>
+  <Props extends Record<string, unknown>>(name: "icon", tag: string) =>
   (props: Props): JSX.Element => <Part of={useItem()[name]} tag={tag} {...props} />
+
+function Trigger(props: TriggerProps): JSX.Element {
+  const [local, rest] = split(props, ["disabled"])
+  const options = toSignal(() => ({ disabled: local.disabled }))
+  const made = useItem().triggerPart(() => options.get())
+  return <Part of={made} tag="button" {...rest} />
+}
 
 export const NavigationMenu = {
   Root,
   List: part<ListProps>("list", "ul"),
   Item,
-  Trigger: itemPart<TriggerProps>("trigger", "button"),
+  Trigger,
   Icon: itemPart<IconProps>("icon", "span"),
   Content,
   Link,

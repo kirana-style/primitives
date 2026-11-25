@@ -1,5 +1,5 @@
 import { defineComponent } from "./part.ts"
-import { DISABLED, valued } from "./states.ts"
+import { DISABLED, state, valued } from "./states.ts"
 
 const ITEM = {
   orientation: valued(
@@ -10,6 +10,15 @@ const ITEM = {
   disabled: DISABLED,
 }
 
+// A control that can keep focus while disabled.
+const CONTROL = {
+  ...ITEM,
+  focusable: state(
+    "data-focusable",
+    "Present when it stays focusable while disabled: the arrows still reach it."
+  ),
+}
+
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
 export const toolbarVocabulary = defineComponent({
@@ -18,7 +27,7 @@ export const toolbarVocabulary = defineComponent({
     inside: "group",
     repeated: true,
     description: "A button of the toolbar.",
-    states: ITEM,
+    states: CONTROL,
   },
   link: { inside: "group", repeated: true, description: "A link of the toolbar.", states: ITEM },
   input: {
@@ -26,7 +35,7 @@ export const toolbarVocabulary = defineComponent({
     repeated: true,
     description:
       "A text input of the toolbar. The arrows are its own until the caret is at an end.",
-    states: ITEM,
+    states: CONTROL,
   },
   group: {
     inside: "root",

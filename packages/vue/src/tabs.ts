@@ -73,7 +73,15 @@ export interface ListProps extends TabsListOptions, PartComponentProps {}
 const List = defineComponent({
   name: "TabsList",
   inheritAttrs: false,
-  props: { activateOnFocus: optional(Boolean), loop: optional(Boolean) },
+  props: {
+    activateOnFocus: optional(Boolean),
+    loopFocus: optional(Boolean),
+    /**
+     * Whether the arrows wrap from the last item to the first.
+     * @deprecated Base UI's name is `loopFocus`, which wins when both are given.
+     */
+    loop: optional(Boolean),
+  },
   setup(props, { attrs, slots }) {
     const { listOptions } = scope.use()
     watchEffect(() => listOptions.set(defined({ ...props })), { flush: "sync" })

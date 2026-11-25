@@ -2,6 +2,7 @@ import { flag } from "./part.ts"
 import type { Part } from "./part.ts"
 import { batch, computed, effect, signal, untracked } from "./reactivity.ts"
 import type { ReadonlySignal, Signal } from "./reactivity.ts"
+import { createPresence } from "./services/presence.ts"
 
 /**
  * Where an avatar's picture is in its loading: `idle` while it has no address, `loading`,
@@ -50,12 +51,17 @@ export interface AvatarFallbackPresence {
 export interface Avatar {
   /** Where the image is in its loading: the image is drawn once it is `loaded`. */
   readonly status: ReadonlySignal<ImageStatus>
+  /**
+   * Whether the image is in the page: from when it has loaded, and through its exit once it is
+   * no longer loaded (its address changed, or it failed).
+   */
+  readonly imageMounted: ReadonlySignal<boolean>
   /** The image's address; its part's adapter writes its own `src` here. */
   readonly source: Signal<string | undefined>
   mount(): () => void
   /** The frame. It says where the picture is in its loading (`data-image-loading-status`). */
   readonly root: Part
-  /** The image, drawn by the library once it has loaded. */
+  /** The image, drawn by the library while `imageMounted`. */
   readonly image: Part
   /**
    * The image on an element kept in the page, as Base UI's `keepMounted` image: the element
@@ -89,37 +95,62 @@ export function createAvatar(_props: ReadonlySignal<AvatarProps>): Avatar {
   const source = signal<string | undefined>(undefined)
   // An image element kept in the page, which loads the picture itself.
   const kept = signal<HTMLImageElement | undefined>(undefined)
+  // The image drawn once it has loaded comes and goes with Base UI's two frames.
+  const presence = createPresence(computed(() => status.get() === "loaded"))
+  // An image kept in the page has a starting style when its picture arrives, as Base UI's: only
+  // after a load it waited for, not for a picture that was there when it was drawn. It never
+  // leaves, so it has no exit.
+  const arriving = signal(false)
+  const loads = () =>
+    effect(() => {
+      const address = source.get()
+      if (!address) return status.set("idle")
+      const element = kept.get()
+      if (element) {
+        // Its own events say how it went from here; one the browser holds is complete now.
+        if (!element.complete) return status.set("loading")
+        return status.set(element.naturalWidth > 0 ? "loaded" : "error")
+      }
+      status.set("loading")
+      const image = new Image()
+      image.onload = () => status.set("loaded")
+      image.onerror = () => status.set("error")
+      image.src = address
+      // A picture the browser already holds can be complete before anything listened: as
+      // Base UI reads it.
+      if (image.complete) status.set(image.naturalWidth > 0 ? "loaded" : "error")
+      return () => {
+        image.onload = image.onerror = null
+      }
+    })
   return {
     status,
+    imageMounted: presence.mounted,
     source,
-    mount: () =>
-      effect(() => {
-        const address = source.get()
-        if (!address) return status.set("idle")
-        const element = kept.get()
-        if (element) {
-          // Its own events say how it went from here; one the browser holds is complete now.
-          if (!element.complete) return status.set("loading")
-          return status.set(element.naturalWidth > 0 ? "loaded" : "error")
-        }
-        status.set("loading")
-        const image = new Image()
-        image.onload = () => status.set("loaded")
-        image.onerror = () => status.set("error")
-        image.src = address
-        // A picture the browser already holds can be complete before anything listened: as
-        // Base UI reads it.
-        if (image.complete) status.set(image.naturalWidth > 0 ? "loaded" : "error")
-        return () => {
-          image.onload = image.onerror = null
-        }
-      }),
+    mount() {
+      // The presence first: a picture already there is loaded as the load begins, and the image
+      // is drawn for it.
+      const stops = [presence.start(), loads()]
+      return () => {
+        for (const stop of stops.reverse()) stop()
+      }
+    },
     root: {
       props: computed(() => ({ "data-image-loading-status": status.get() })),
       attach: () => NOTHING,
     },
     // The address the controller loaded: the element shows what was loaded, not something newer.
-    image: { props: computed(() => ({ src: source.get() })), attach: () => NOTHING },
+    image: {
+      props: computed(() => {
+        const now = presence.status.get()
+        return {
+          src: source.get(),
+          "data-starting-style": flag(now === "starting"),
+          "data-ending-style": flag(now === "ending"),
+        }
+      }),
+      attach: (element) => presence.attach(element),
+    },
     keptImage: {
       props: computed(() => {
         const now = status.get()
@@ -127,6 +158,7 @@ export function createAvatar(_props: ReadonlySignal<AvatarProps>): Avatar {
           "aria-hidden": now === "loaded" ? undefined : "true",
           "data-loading": flag(now === "loading"),
           "data-error": flag(now === "error"),
+          "data-starting-style": flag(arriving.get()),
         }
       }),
       attach(element) {
@@ -143,7 +175,21 @@ export function createAvatar(_props: ReadonlySignal<AvatarProps>): Avatar {
           source.set(address())
           kept.set(image)
         })
+        let was = status.peek()
+        const arrival = effect(() => {
+          const now = status.get()
+          if (was === "loading" && now === "loaded") {
+            arriving.set(true)
+            // Once the starting style is written, it is computed, and the motion runs from it.
+            queueMicrotask(() => {
+              void image.ownerDocument.defaultView?.getComputedStyle(image).opacity
+              arriving.set(false)
+            })
+          }
+          was = now
+        })
         return () => {
+          arrival()
           followed.disconnect()
           image.removeEventListener("load", loaded)
           image.removeEventListener("error", failed)

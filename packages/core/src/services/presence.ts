@@ -1,4 +1,6 @@
-import { batch, effect, signal, untracked } from "../reactivity.ts"
+import { flag } from "../part.ts"
+import type { Part, PartProps } from "../part.ts"
+import { batch, computed, effect, signal, untracked } from "../reactivity.ts"
 import type { ReadonlySignal } from "../reactivity.ts"
 
 export type TransitionStatus = "starting" | "ending" | undefined
@@ -161,4 +163,37 @@ export function whenSettled(target: HTMLElement, then: () => void): void {
     )
   if (animations.length === 0) return then()
   void Promise.allSettled(animations.map((each) => each.finished)).then(then)
+}
+
+/**
+ * A part that is in the page while a state holds and through its exit (a check mark, a clear
+ * button): an adapter draws it while `mounted` says so, and starts it with `mount()`.
+ */
+export interface PresentPart extends Part {
+  readonly mounted: ReadonlySignal<boolean>
+  mount(): () => void
+}
+
+/**
+ * A part in the page while `shown` holds and through its exit, with Base UI's two frames on it
+ * (`data-starting-style`, `data-ending-style`) beside what `own` says.
+ */
+export function presentPart(
+  shown: ReadonlySignal<boolean>,
+  own: () => PartProps = () => ({})
+): PresentPart {
+  const presence = createPresence(shown)
+  return {
+    mounted: presence.mounted,
+    mount: () => presence.start(),
+    props: computed(() => {
+      const status = presence.status.get()
+      return {
+        ...own(),
+        "data-starting-style": flag(status === "starting"),
+        "data-ending-style": flag(status === "ending"),
+      }
+    }),
+    attach: (element) => presence.attach(element),
+  }
 }

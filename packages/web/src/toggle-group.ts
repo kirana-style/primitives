@@ -15,7 +15,7 @@ type Props = Omit<ToggleGroupProps<string>, "value" | "defaultValue"> & {
 /**
  * `<kui-toggle-group>` around `kui-part="root"` and its `<kui-toggle>`s, each with a `value`.
  * `value` and `default-value` (the pressed ones, with commas between), `multiple`, `disabled`,
- * `orientation`, `loop`; it tells `value-change`.
+ * `orientation`, `loop-focus` (`loop` is its older name); it tells `value-change`.
  */
 export const tag = defineElement<Props, ToggleGroup<string>>({
   tag: "kui-toggle-group",
@@ -25,6 +25,7 @@ export const tag = defineElement<Props, ToggleGroup<string>>({
     multiple: "boolean",
     disabled: "boolean",
     orientation: "string",
+    "loop-focus": "boolean",
     loop: "boolean",
   },
   create: (props, host) =>

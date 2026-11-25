@@ -8,7 +8,7 @@
   import { provide } from "./context.ts"
   import type { RootProps } from "./types.ts"
 
-  let { open = $bindable(), defaultOpen, modal, closeOnOutsidePress, dismissible, onOpenChange, id, children }: RootProps = $props()
+  let { open = $bindable(), defaultOpen, modal, disablePointerDismissal, closeOnOutsidePress, dismissible, onOpenChange, id, children }: RootProps = $props()
   const generated = $props.id()
 
   function change(next: boolean, by: ChangeDetails) {
@@ -16,7 +16,7 @@
     if (!by.canceled) open = next
   }
 
-  provide(controller(within(createDialog, { direction: useDirectionAround() }), () => ({ id: id ?? generated, open, defaultOpen, modal, closeOnOutsidePress, dismissible, onOpenChange: change })))
+  provide(controller(within(createDialog, { direction: useDirectionAround() }), () => ({ id: id ?? generated, open, defaultOpen, modal, disablePointerDismissal, closeOnOutsidePress, dismissible, onOpenChange: change })))
 </script>
 
 {@render children?.()}

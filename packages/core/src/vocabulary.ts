@@ -20,7 +20,7 @@ import { formVocabulary } from "./form.vocabulary.ts"
 import { hoverCardVocabulary } from "./hover-card.vocabulary.ts"
 import { menuVocabulary } from "./menu.vocabulary.ts"
 import { menubarVocabulary } from "./menubar.vocabulary.ts"
-import { state } from "./states.ts"
+import { PRESSED, state } from "./states.ts"
 import { navigationMenuVocabulary } from "./navigation-menu.vocabulary.ts"
 import { otpVocabulary } from "./otp.vocabulary.ts"
 import { dateFieldVocabulary } from "./date-field.vocabulary.ts"
@@ -79,7 +79,10 @@ export const vocabulary = {
       description:
         "The area a secondary press, or a long press on a touch screen, opens the menu in.",
       inside: "root",
-      states: { popupOpen: state("data-popup-open", "Present when the menu is open.") },
+      states: {
+        popupOpen: state("data-popup-open", "Present when the menu is open."),
+        pressed: PRESSED,
+      },
     },
   },
   dialog: dialogVocabulary,

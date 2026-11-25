@@ -3,6 +3,7 @@ import { userEvent } from "vite-plus/test/browser"
 
 import { bind } from "../../packages/core/src/bind.ts"
 import { createCombobox } from "../../packages/core/src/combobox.ts"
+import { details } from "../../packages/core/src/part.ts"
 import type { ComboboxProps } from "../../packages/core/src/combobox.ts"
 import { effect, signal, untracked } from "../../packages/core/src/reactivity.ts"
 import { find, focused, mount } from "./page.ts"
@@ -357,6 +358,8 @@ describe("a combobox of several values", () => {
     const made = combobox({
       multiple: true,
       name: "fruit",
+      // The older callback alone: given beside it, Base UI's `onValueChange` is the one told.
+      onValueChange: undefined,
       onValuesChange: (next) => void heard.push(next),
       ...given,
     })
@@ -366,6 +369,38 @@ describe("a combobox of several values", () => {
     const sent = () => new FormData(find<HTMLFormElement>(made.root, "form")).getAll("fruit")
     return { ...made, heard, sent }
   }
+
+  it("holds them in Base UI's `value`, `defaultValue` and `onValueChange`, which win over the older names", () => {
+    const root = mount(`<button id="x"></button>`)
+    const told: string[][] = []
+    const heard: string[][] = []
+    const made = createCombobox(
+      signal<ComboboxProps<string, true>>({
+        id: "cm",
+        multiple: true,
+        defaultValue: ["Apple", "Cherry"],
+        defaultValues: ["Banana"],
+        onValueChange: (next) => void told.push(next),
+        onValuesChange: (next) => void heard.push(next),
+      })
+    )
+    expect(made.values.peek()).toEqual(["Apple", "Cherry"])
+    expect(made.value.peek()).toBe(null)
+    onTestFinished(bind(find(root, "x"), made.chipRemove("Apple")))
+    find(root, "x").click()
+    expect(told).toEqual([["Cherry"]])
+    expect(heard).toEqual([])
+    // Held by the caller: `value` before `values`.
+    const held = createCombobox(
+      signal<ComboboxProps<string, true>>({
+        id: "cn",
+        multiple: true,
+        value: ["Apple"],
+        values: ["Cherry"],
+      })
+    )
+    expect(held.values.peek()).toEqual(["Apple"])
+  })
 
   it("adds what is chosen, keeps the list open, and empties what was typed", async () => {
     const { input, made, heard, sent, root } = several()
@@ -550,7 +585,8 @@ describe("a combobox of several values", () => {
     clear.click()
     expect(made.values.peek()).toEqual([])
     expect(sent()).toEqual([])
-    expect(made.clearable.peek()).toBe(false)
+    // Nothing to clear: the button leaves, once its exit has been written.
+    await expect.poll(() => made.clearable.peek()).toBe(false)
     input.focus()
     await userEvent.keyboard("ban")
     await settled()
@@ -1036,5 +1072,66 @@ describe("a combobox whose values are objects", () => {
     const { input, sent } = cities({ defaultValue: tea as unknown as City })
     expect(input.value).toBe("Green tea")
     expect(sent()).toEqual(["tea"])
+  })
+})
+
+describe("a combobox, in Base UI's words", () => {
+  it("says on its input and its trigger that it is pressed, the list's side, and an empty list", async () => {
+    const { root, input, made } = combobox({ required: true })
+    const toggle = find(root, "toggle")
+    for (const each of [input, toggle]) {
+      expect(each.hasAttribute("data-pressed")).toBe(false)
+      expect(each.hasAttribute("data-popup-side")).toBe(false)
+      expect(each.hasAttribute("data-required")).toBe(true)
+    }
+    input.focus()
+    await userEvent.keyboard("zz")
+    await settled()
+    expect(made.open.peek()).toBe(true)
+    await expect.poll(() => input.getAttribute("data-popup-side")).toBe("bottom")
+    for (const each of [input, toggle]) {
+      expect(each.hasAttribute("data-pressed")).toBe(true)
+      expect(each.getAttribute("data-popup-side")).toBe("bottom")
+      expect(each.hasAttribute("data-list-empty")).toBe(true)
+    }
+    const positioner = root.querySelector<HTMLElement>('[role="presentation"]')!
+    expect(positioner.hasAttribute("data-empty")).toBe(true)
+    expect(positioner.hasAttribute("data-anchor-hidden")).toBe(false)
+    await userEvent.clear(input)
+    await userEvent.keyboard("a")
+    await expect.poll(() => input.hasAttribute("data-list-empty")).toBe(false)
+    expect(positioner.hasAttribute("data-empty")).toBe(false)
+  })
+
+  it("draws its clear button while there is something to clear, and through its exit", async () => {
+    const { root, made } = combobox({ defaultValue: "Apple" })
+    const clear = document.createElement("button")
+    root.append(clear)
+    onTestFinished(bind(clear, made.clear))
+    expect(made.clearable.peek()).toBe(true)
+    expect(clear.hasAttribute("data-visible")).toBe(true)
+    expect(clear.hasAttribute("data-popup-open")).toBe(false)
+    made.setOpen(true, details("test"))
+    expect(clear.hasAttribute("data-popup-open")).toBe(true)
+    made.setValue(null, details("test"))
+    expect(clear.hasAttribute("data-visible")).toBe(false)
+    // No motion to wait for: it leaves at once.
+    await expect.poll(() => made.clearable.peek()).toBe(false)
+    // Text typed, with nothing chosen, is not what a combobox's clear button clears.
+    find<HTMLInputElement>(root, "input").focus()
+    await userEvent.keyboard("ap")
+    expect(made.clearable.peek()).toBe(false)
+  })
+
+  it("draws an item's mark while it is chosen and through its exit", async () => {
+    const { root, made } = combobox({ defaultValue: "Apple" })
+    const mark = document.createElement("span")
+    root.append(mark)
+    const indicator = made.itemIndicator("Apple")
+    onTestFinished(indicator.mount())
+    onTestFinished(bind(mark, indicator))
+    expect(indicator.mounted.peek()).toBe(true)
+    made.setValue("Cherry", details("test"))
+    await expect.poll(() => indicator.mounted.peek()).toBe(false)
   })
 })

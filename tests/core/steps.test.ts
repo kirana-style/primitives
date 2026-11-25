@@ -109,4 +109,47 @@ describe("steps", () => {
     expect(steps({ step: 9 }).made.step.peek()).toBe(3)
     expect(steps({ step: -2 }).made.step.peek()).toBe(0)
   })
+
+  it("count an item with no index, and no count, from the page, as the page changes", async () => {
+    const root = mount(
+      `<div class="list"><div id="a"><button id="a-t"></button></div><div id="b"><button id="b-t"></button></div></div><div id="done">Done</div>`
+    )
+    const made = createSteps(signal<StepsProps>({ id: "sc", defaultStep: 1 }))
+    const a = made.item()
+    const b = made.item()
+    // Not in the page yet, as on a server: no item is a step, and none is the last.
+    expect(a.index.peek()).toBe(-1)
+    expect(made.count.peek()).toBe(0)
+    expect(made.step.peek()).toBe(1)
+    expect(made.completed.props.peek().hidden).toBe("")
+    expect(made.trigger(a.index).props.peek().id).toBeUndefined()
+    // Bound the other way round from the page's order: the page's is what counts. Found
+    // before they are bound: a trigger writes its own id.
+    const [itemA, itemB, triggerA, triggerB, done] = ["a", "b", "a-t", "b-t", "done"].map((id) =>
+      root.querySelector<HTMLElement>(`#${id}`)!
+    ) as [HTMLElement, HTMLElement, HTMLElement, HTMLElement, HTMLElement]
+    const byId = (id: string) =>
+      ({ a: itemA, b: itemB, "a-t": triggerA, "b-t": triggerB, done })[id]!
+    onTestFinished(bind(itemB, b))
+    onTestFinished(bind(itemA, a))
+    onTestFinished(bind(triggerA, made.trigger(a.index)))
+    onTestFinished(bind(triggerB, made.trigger(b.index)))
+    onTestFinished(bind(done, made.completed))
+    await expect.poll(() => [a.index.peek(), b.index.peek(), made.count.peek()]).toEqual([0, 1, 2])
+    expect(byId("b").hasAttribute("data-current")).toBe(true)
+    expect(byId("a").hasAttribute("data-complete")).toBe(true)
+    expect(byId("b-t").id).toBe("sc-trigger-1")
+    expect(byId("done").hidden).toBe(true)
+    // An item put in before them moves them on, and is counted.
+    const first = document.createElement("div")
+    byId("a").before(first)
+    onTestFinished(bind(first, made.item()))
+    await expect.poll(() => [a.index.peek(), b.index.peek(), made.count.peek()]).toEqual([1, 2, 3])
+    expect(byId("a").hasAttribute("data-current")).toBe(true)
+    expect(byId("a-t").id).toBe("sc-trigger-1")
+    // An index given is taken, and a count given is the count.
+    expect(made.item(5).index.peek()).toBe(5)
+    const counted = createSteps(signal<StepsProps>({ id: "sd", count: 7 }))
+    expect(counted.count.peek()).toBe(7)
+  })
 })

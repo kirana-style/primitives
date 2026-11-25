@@ -5,9 +5,15 @@ import type { HeldText, PartAttributes, Placement, Renderless, StateFor } from "
 
 /**
  * It draws nothing. `Value` is what an item's `value` is: read from `value`, `defaultValue`,
- * `values`, `items` or a change callback.
+ * `values`, `items` or a change callback. `Multiple` is read from `multiple`: with it, `value`,
+ * `defaultValue` and `onValueChange` hold a list.
  */
-export type RootProps<Value = unknown> = Renderless<SelectProps<Value>>
+export type RootProps<Value = unknown, Multiple extends boolean | undefined = false> = Renderless<
+  Omit<SelectProps<Value, Multiple>, "multiple"> & {
+    /** Several values: `value`, `defaultValue` and `onValueChange` then hold a list. Read once. */
+    multiple?: Multiple | undefined
+  }
+>
 
 export type TriggerProps = PartAttributes<"button", StateFor<"select", "trigger">>
 

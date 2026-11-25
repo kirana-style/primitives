@@ -33,15 +33,29 @@ function useSelect(part: string): Controller {
   return controller
 }
 
-/** `Value` is what tells an item from the others: the type of `value`, and of `values`' entries. */
-export type RootProps<Value = unknown> = Omit<SelectProps<Value>, "id"> & {
+/**
+ * `Value` is what tells an item from the others. `Multiple` is inferred from `multiple`: with
+ * `multiple`, `value`, `defaultValue` and `onValueChange` hold a list of them.
+ */
+export type RootProps<Value = unknown, Multiple extends boolean | undefined = false> = Omit<
+  SelectProps<Value, Multiple>,
+  "id" | "multiple"
+> & {
+  /** Several values: `value`, `defaultValue` and `onValueChange` then hold a list. Read once. */
+  multiple?: Multiple | undefined
   id?: string
   children?: ReactNode
 }
 
-function Root<Value = unknown>({ children, ...props }: RootProps<Value>): ReactElement {
+function Root<Value = unknown, Multiple extends boolean | undefined = false>({
+  children,
+  ...props
+}: RootProps<Value, Multiple>): ReactElement {
   const field = useContext(FieldContext) ?? undefined
-  const controller: Controller = useController(within(createSelect<Value>, { field }), props)
+  const controller: Controller = useController(
+    within(createSelect<Value, Multiple>, { field }),
+    props
+  )
   const named = useSignal(controller.named)
   return (
     <Context.Provider value={controller}>
@@ -225,9 +239,11 @@ export type ItemIndicatorProps = PartComponentProps<
 function ItemIndicator({ keepMounted, ...props }: ItemIndicatorProps): ReactElement | null {
   const controller = useSelect("ItemIndicator")
   const value = useContext(ItemContext)
-  const selected = useSignal(controller.selected(value))
   const part = useMemo(() => controller.itemIndicator(value), [controller, value])
-  return selected || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
+  // In the page while chosen, and through its exit.
+  useMount(part)
+  const mounted = useSignal(part.mounted)
+  return mounted || keepMounted ? <PartElement of={part} tag="span" {...props} /> : null
 }
 
 export const Select = /* @__PURE__ */ parts("Select", {

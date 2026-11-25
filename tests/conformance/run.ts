@@ -263,6 +263,9 @@ const withoutStyles = (dom: string) =>
     .replace(/^\s*<input[^\n]* name="colors"[^\n]*\n/gm, "")
     // Whether a field has a value is its control's to say, once the control is in the page.
     .replace(/ data-filled/g, "")
+    // A tab panel's place is among the panels in the page, as Base UI counts it: a server,
+    // which has no page, writes none.
+    .replace(/^\s*<[^\n]*role="tabpanel"[^\n]*$/gm, (line) => line.replace(/ data-index="\d+"/, ""))
     // Whether a combobox's button stands alone (its input is in the popup) is known once the
     // page shows no input beside it: a server draws the button as the one beside an input.
     .replace(/^(\s*<button#(?:pl3|cd1)-trigger)[^\n]*$/gm, "$1>")

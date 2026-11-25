@@ -364,6 +364,10 @@ const PROPS: Record<string, PropIdiom> = {
         "a text input's own `select` event bubbles to the root: the output is `itemSelected`",
       ],
       "Otp.Root.onCompleted": ["onComplete", "an output is named for what happened: `completed`"],
+      "Otp.Root.onValueCompleted": [
+        "onValueComplete",
+        "an output is named for what happened: `valueCompleted`",
+      ],
       "Tree.Group.kpTreeGroup": [
         "keepMounted",
         'the directive\'s own value is its options: `*kpTreeGroup="{ keepMounted: true }"`',

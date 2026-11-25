@@ -92,7 +92,7 @@ function Mark(props: PrimitiveProps<"button", { active: boolean }>) {
 
 // A picture of one pixel, and an address that is not a picture.
 // A page's toasts are made once, apart from any component: a long time, so a test reads them.
-const toaster = createToaster({ duration: 600_000 })
+const toaster = createToaster({ timeout: 600_000 })
 // A date field typed in a calendar of eras: the one calendar this page carries.
 const JAPANESE = new JapaneseCalendar()
 const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -976,7 +976,7 @@ export function App() {
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>
-        <Select.Root id="sm3" items={SIZES} multiple defaultValues={["l", "s"]}>
+        <Select.Root id="sm3" items={SIZES} multiple defaultValue={["l", "s"]}>
           <Select.Trigger data-testid="sm3-trigger">
             <Select.Value class="bar" data-testid="sm3-value">
               {(_values: Accessor<readonly string[]>, labels) => (
@@ -1363,9 +1363,9 @@ export function App() {
           </Toggle>
         </ToggleGroup>
         <output data-testid="tg1-output">{align().join(",")}</output>
-        <Toolbar.Root aria-label="Editing" class="bar" data-testid="tb1">
+        <Toolbar.Root aria-label="Editing" loopFocus class="bar" data-testid="tb1">
           <Toolbar.Button data-testid="tb1-save">Save</Toolbar.Button>
-          <Toolbar.Button disabled data-testid="tb1-gone">
+          <Toolbar.Button disabled focusableWhenDisabled={false} data-testid="tb1-gone">
             Gone
           </Toolbar.Button>
           <Toolbar.Link href="#tb1-help" data-testid="tb1-link">
@@ -1568,8 +1568,8 @@ export function App() {
             autoHighlight
             name="tags"
             multiple
-            values={tags()}
-            onValuesChange={(next) => setTags(next as string[])}
+            value={tags()}
+            onValueChange={(next) => setTags(next as string[])}
           >
             <Combobox.Chips class="bar" data-testid="cbm-chips">
               <For each={tags()}>
@@ -1616,7 +1616,7 @@ export function App() {
             name="code"
             class="otp"
             data-testid="otp1"
-            onComplete={(next: string) => setCode(next)}
+            onValueComplete={(next: string) => setCode(next)}
           >
             <Otp.Input aria-label="Code" class="otp-input" data-testid="otp1-input" />
             <Otp.Group class="otp-group">
@@ -1640,7 +1640,7 @@ export function App() {
         </form>
         <output data-testid="otp1-output">{code()}</output>
         <div class="otp-row">
-          <Otp.Root id="otp2" length={2} mode="alphabetic" class="otp" data-testid="otp2">
+          <Otp.Root id="otp2" length={2} validationType="alpha" class="otp" data-testid="otp2">
             <Otp.Input aria-label="Letters" class="otp-input" data-testid="otp2-input" />
             <Otp.Group class="otp-group">
               <Otp.Slot index={0} class="otp-slot" data-testid="otp2-0" />
@@ -1690,7 +1690,7 @@ export function App() {
             <Carousel.Item index={0} class="carousel-item" data-testid="cr1-0">
               One
             </Carousel.Item>
-            <Carousel.Item index={1} class="carousel-item" data-testid="cr1-1">
+            <Carousel.Item class="carousel-item" data-testid="cr1-1">
               Two
             </Carousel.Item>
             <Carousel.Item index={2} class="carousel-item" data-testid="cr1-2">
@@ -1847,9 +1847,7 @@ export function App() {
                     <For each={week}>
                       {(day) => (
                         <Calendar.Cell date={day.date}>
-                          <Calendar.Day date={day.date} data-testid={`cal1-${day.date}`}>
-                            {day.label}
-                          </Calendar.Day>
+                          <Calendar.Day data-testid={`cal1-${day.date}`}>{day.label}</Calendar.Day>
                         </Calendar.Cell>
                       )}
                     </For>
@@ -3097,7 +3095,6 @@ export function App() {
           </div>
           <Steps.Root
             id="st1"
-            count={3}
             linear
             class="steps"
             data-testid="st1"

@@ -1,13 +1,20 @@
 import { computed } from "@kirana-ui/core"
+import type { ChangeDetails } from "@kirana-ui/core"
 import { createSelect } from "@kirana-ui/core/select"
 import type { Select, SelectGroup, SelectProps, SelectScrollArrow } from "@kirana-ui/core/select"
 
-import { fieldAround, itemOptions, list, MARK, once, positioner, valueOf } from "./around.ts"
+import { fieldAround, itemOptions, list, once, positioner, valueOf } from "./around.ts"
 import type { Placed } from "./around.ts"
 import { defineElement, partAround } from "./runtime.ts"
 import type { Drawn, Each, ElementOf } from "./runtime.ts"
 
-type Props = Omit<SelectProps<string>, "values" | "defaultValues"> & {
+type Props = Omit<
+  SelectProps<string, boolean>,
+  "value" | "defaultValue" | "values" | "defaultValues"
+> & {
+  /** With `multiple`, the chosen values, with commas between. */
+  value?: string | readonly string[] | null
+  defaultValue?: string | readonly string[] | null
   values?: string | readonly string[]
   defaultValues?: string | readonly string[]
 }
@@ -32,8 +39,9 @@ const arrow = (drawn: SelectScrollArrow): Drawn => ({
  * it draws the hidden input a form reads. A `value` part that holds something says what the
  * page wrote there: a `<template kui-each="values">` in it is drawn for each chosen value
  * (`{value}`, `{label}`), in the items' order. `value`, `default-value`, `open`,
- * `default-open`, `disabled`, `read-only`, `required`, `multiple`, `values` and `default-values` (with
- * commas between), `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge,
+ * `default-open`, `disabled`, `read-only`, `required`, `multiple` (with it, `value`
+ * and `default-value` hold the chosen values with commas between; `values` and
+ * `default-values`, the older names, are still read), `name`, `form`, `presentation` (`sheet` opens the list from the bottom edge,
  * modal, over a `backdrop` part in the portal; `auto` on a narrow touch screen) and
  * `sheet-below`; `items`, `itemToStringLabel` and `itemToStringValue` as
  * properties; it tells `value-change`,
@@ -59,10 +67,23 @@ export const tag = defineElement<Props, Select<string>>({
   },
   properties: ["items", "itemToStringLabel", "itemToStringValue"],
   create: (props, host) =>
-    createSelect<string>(
+    createSelect<string, boolean>(
       computed(() => {
         const own = props.get()
-        return { ...own, values: list(own.values), defaultValues: list(own.defaultValues) }
+        // With `multiple`, Base UI's `value` holding the list; the older `values` still read.
+        const many = <Given>(given: Given) => (own.multiple ? list(given) : given)
+        return {
+          ...own,
+          value: many(own.value) as string | readonly string[] | null | undefined,
+          defaultValue: many(own.defaultValue) as string | readonly string[] | null | undefined,
+          values: list(own.values),
+          defaultValues: list(own.defaultValues),
+          onValueChange(value: string | string[] | null, details: ChangeDetails) {
+            own.onValueChange?.(value, details)
+            // The older event too: a listener cannot be told from none.
+            if (own.multiple && Array.isArray(value)) own.onValuesChange?.(value, details)
+          },
+        }
       }),
       { field: fieldAround(host) }
     ),
@@ -108,10 +129,11 @@ export const tag = defineElement<Props, Select<string>>({
     separator: (controller) => controller.separator,
     item: (controller, element) => controller.item(valueOf(element), itemOptions(element)),
     "item-text": (controller, element) => controller.itemText(valueOf(partAround(element, "item"))),
-    "item-indicator": (controller, element) => ({
-      part: MARK,
-      mounted: controller.selected(valueOf(partAround(element, "item"))),
-    }),
+    "item-indicator"(controller, element) {
+      // In the page while chosen, and through its exit.
+      const mark = controller.itemIndicator(valueOf(partAround(element, "item")))
+      return { part: mark, mounted: mark.mounted, mount: mark.mount }
+    },
   },
 })
 

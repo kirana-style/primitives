@@ -314,6 +314,20 @@ describe("positioning", () => {
     await expect.poll(() => box(beside.positioner).left).toBe(5)
   })
 
+  it("says its anchor is hidden while it is out of view, as Base UI does", async () => {
+    const { position, anchor, placed } = page("left: 100px; top: 100px")
+    await placed()
+    expect(position.anchorHidden.peek()).toBe(false)
+    // Wholly past the top of the viewport.
+    anchor.style.top = "-100px"
+    await expect.poll(() => position.anchorHidden.peek()).toBe(true)
+    anchor.style.top = "100px"
+    await expect.poll(() => position.anchorHidden.peek()).toBe(false)
+    // Not drawn at all: a box of no size at the corner.
+    anchor.style.display = "none"
+    await expect.poll(() => position.anchorHidden.peek()).toBe(true)
+  })
+
   it("is held inside the boundary it is given: an element, or a rectangle", async () => {
     const { options, positioner, placed, root } = page("left: 200px; top: 100px")
     await placed()

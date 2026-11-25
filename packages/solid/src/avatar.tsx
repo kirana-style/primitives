@@ -52,13 +52,13 @@ function Image(props: ImageProps): JSX.Element {
   )
   const report = made.statusReport(() => local.onLoadingStatusChange)
   onSettled(() => report.mount())
-  const status = fromSignal(made.status)
+  const mounted = fromSignal(made.imageMounted)
   return (
     <Show
       when={!local.keepMounted}
       fallback={<Part of={made.keptImage} tag="img" src={local.src} {...rest} />}
     >
-      <Show when={status() === "loaded"}>
+      <Show when={mounted()}>
         <Part of={made.image} tag="img" {...rest} />
       </Show>
     </Show>

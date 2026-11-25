@@ -109,6 +109,17 @@ describe("a part's type", () => {
       >()
       // @ts-expect-error a day where the mode chooses several
       new Calendar.Root({ mode: "multiple", value: "2026-03-02" })
+      // Base UI's shape: with `multiple`, the value and what its change tells are a list.
+      const basket = new Select.Root({ multiple: true, value: ["apple"] })
+      expectTypeOf(basket.$props["onUpdate:value"]).toEqualTypeOf<
+        ((value: string[]) => void) | undefined
+      >()
+      const one = new Select.Root({ value: "apple" })
+      expectTypeOf(one.$props["onUpdate:value"]).toEqualTypeOf<
+        ((value: string | null) => void) | undefined
+      >()
+      // @ts-expect-error one value where `multiple` holds a list
+      new Select.Root({ multiple: true, value: "apple" })
     }
     expectTypeOf(check).toBeFunction()
   })

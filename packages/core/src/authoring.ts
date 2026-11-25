@@ -77,6 +77,8 @@ export { createList, pointerMoved } from "./services/list.ts"
 export type { List, ListCollection, ListRow, ListRowOptions } from "./services/list.ts"
 // For a list of which only some rows are in the page.
 export { byPlace } from "./services/list-places.ts"
+export { createPlaces } from "./services/places.ts"
+export type { Places } from "./services/places.ts"
 export { createTypeahead, printable, textOf } from "./services/typeahead.ts"
 export type { Typeahead } from "./services/typeahead.ts"
 

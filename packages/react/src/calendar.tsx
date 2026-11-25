@@ -30,6 +30,8 @@ export { Context as CalendarContext }
 
 /** The place of the month its parts are drawn in, inside `Calendar.Months`. */
 const MonthContext = createContext<number | undefined>(undefined)
+// The day a cell holds, for the day button inside it.
+const CellContext = createContext<string | undefined>(undefined)
 
 function useCalendar(part: string): Controller {
   const controller = useContext(Context)
@@ -205,27 +207,35 @@ export type CellProps = PartComponentProps<
   "td",
   StateOf<Parts["cell"]>,
   {
-    /** The day it holds, as `Calendar.Weeks` gave it: `day.date`. */
+    /** The day it holds, as `Calendar.Weeks` gave it: `day.date`. A `Day` inside takes it too. */
     date: string
   }
 >
 
 function Cell({ date, ...props }: CellProps): ReactElement {
   const index = useContext(MonthContext)
-  return usePart(useCalendar("Cell").cell(date, index), "td", props)
+  return (
+    <CellContext.Provider value={date}>
+      {usePart(useCalendar("Cell").cell(date, index), "td", props)}
+    </CellContext.Provider>
+  )
 }
 
 export type DayProps = PartComponentProps<
   "button",
   StateOf<Parts["day"]>,
   {
-    /** The day it is the button of, as `Calendar.Weeks` gave it: `day.date`. */
-    date: string
+    /** The day it is the button of. Left out, the `Calendar.Cell`'s it is inside. */
+    date?: string
   }
 >
 
-function Day({ date, ...props }: DayProps): ReactElement {
+function Day({ date: given, ...props }: DayProps): ReactElement {
   const index = useContext(MonthContext)
+  const cell = useContext(CellContext)
+  const date = given ?? cell
+  if (date === undefined)
+    throw new Error("<Calendar.Day> needs a date or a <Calendar.Cell> around it")
   return usePart(useCalendar("Day").day(date, index), "button", props)
 }
 

@@ -1,5 +1,7 @@
 import { defineComponent } from "./part.ts"
-import { EITHER_FRAME, TRANSITION, state } from "./states.ts"
+import { DISABLED, EITHER_FRAME, TRANSITION, state } from "./states.ts"
+
+const NESTED = state("data-nested", "Present when the dialog opened over another dialog.")
 
 // The component's parts as data, apart from its controller: a page that uses the component does
 // not carry these descriptions.
@@ -8,7 +10,10 @@ export const dialogVocabulary = defineComponent({
   trigger: {
     inside: "root",
     description: "The button that opens the dialog.",
-    states: { popupOpen: state("data-popup-open", "Present when the dialog is open.") },
+    states: {
+      popupOpen: state("data-popup-open", "Present when the dialog is open."),
+      disabled: DISABLED,
+    },
   },
   portal: {
     description:
@@ -28,7 +33,7 @@ export const dialogVocabulary = defineComponent({
       "What a long dialog scrolls in: it lies over the page, between the backdrop and the popup. A press on it beside the popup is a press outside the dialog; a press on its scrollbar is not.",
     states: {
       ...TRANSITION,
-      nested: state("data-nested", "Present when the dialog opened over another dialog."),
+      nested: NESTED,
       nestedDialogOpen: state(
         "data-nested-dialog-open",
         "Present when another dialog is open above this one."
@@ -41,6 +46,7 @@ export const dialogVocabulary = defineComponent({
     description: "The dialog itself.",
     states: {
       ...TRANSITION,
+      nested: NESTED,
       nestedDialogOpen: state(
         "data-nested-dialog-open",
         "Present when another dialog is open above this one."
@@ -51,5 +57,9 @@ export const dialogVocabulary = defineComponent({
   },
   title: { inside: "popup", description: "The heading that names the dialog." },
   description: { inside: "popup", description: "The text that describes the dialog." },
-  close: { inside: "popup", description: "A button that closes the dialog." },
+  close: {
+    inside: "popup",
+    description: "A button that closes the dialog.",
+    states: { disabled: DISABLED },
+  },
 })

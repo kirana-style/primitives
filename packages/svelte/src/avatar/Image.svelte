@@ -14,11 +14,11 @@
   })
   const report = controller.statusReport(() => onLoadingStatusChange)
   $effect(() => untrack(() => report.mount()))
-  const status = fromSignal(controller.status)
+  const mounted = fromSignal(controller.imageMounted)
 </script>
 
 {#if keepMounted}
   <Part of={controller.keptImage} tag="img" {src} {...rest} />
-{:else if status.current === "loaded"}
+{:else if mounted.current}
   <Part of={controller.image} tag="img" {...rest} />
 {/if}

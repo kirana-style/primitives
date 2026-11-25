@@ -10,17 +10,20 @@ export const exclusive: string[][] = [
   ["[data-starting-style]","[data-ending-style]"],
   ["[data-image-loading-status=\"idle\"]","[data-image-loading-status=\"loading\"]","[data-image-loading-status=\"loaded\"]","[data-image-loading-status=\"error\"]"],
   ["[data-checked]","[data-unchecked]"],
+  ["[data-valid]","[data-invalid]"],
+  ["[data-popup-side=\"top\"]","[data-popup-side=\"right\"]","[data-popup-side=\"bottom\"]","[data-popup-side=\"left\"]","[data-popup-side=\"inline-start\"]","[data-popup-side=\"inline-end\"]","[data-popup-side=\"none\"]"],
   ["[data-presentation=\"popup\"]","[data-presentation=\"sheet\"]"],
   ["[data-side=\"top\"]","[data-side=\"right\"]","[data-side=\"bottom\"]","[data-side=\"left\"]","[data-side=\"inline-start\"]","[data-side=\"inline-end\"]"],
   ["[data-align=\"start\"]","[data-align=\"center\"]","[data-align=\"end\"]"],
-  ["[data-valid]","[data-invalid]"],
+  ["[data-instant=\"click\"]","[data-instant=\"dismiss\"]","[data-instant=\"group\"]"],
   ["[data-instant=\"delay\"]","[data-instant=\"focus\"]","[data-instant=\"dismiss\"]"],
-  ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]"],
+  ["[data-activation-direction=\"left\"]","[data-activation-direction=\"right\"]","[data-activation-direction=\"up\"]","[data-activation-direction=\"down\"]"],
   ["[data-segment=\"era\"]","[data-segment=\"day\"]","[data-segment=\"month\"]","[data-segment=\"year\"]","[data-segment=\"literal\"]"],
   ["[data-segment=\"hour\"]","[data-segment=\"minute\"]","[data-segment=\"second\"]","[data-segment=\"dayPeriod\"]","[data-segment=\"literal\"]"],
   ["[data-format=\"hex\"]","[data-format=\"rgb\"]","[data-format=\"hsl\"]"],
   ["[data-channel=\"hue\"]","[data-channel=\"alpha\"]"],
   ["[data-channel=\"hex\"]","[data-channel=\"red\"]","[data-channel=\"green\"]","[data-channel=\"blue\"]","[data-channel=\"hue\"]","[data-channel=\"saturation\"]","[data-channel=\"lightness\"]","[data-channel=\"alpha\"]"],
+  ["[data-instant=\"click\"]","[data-instant=\"dismiss\"]"],
   ["[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]","[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]"],
   ["[data-swipe-direction=\"left\"]","[data-swipe-direction=\"right\"]","[data-swipe-direction=\"up\"]","[data-swipe-direction=\"down\"]"],
   ["[data-progressing]","[data-complete]","[data-indeterminate]"],
@@ -42,6 +45,8 @@ export const Accordion = {
   },
   /** One section: a header with its trigger, and a panel. Its `value` tells it from the others; an item that is given none makes its own. */
   Item: {
+    /** The item's place among the accordion's items, from 0. */
+    index: "[data-index]",
     /** Present when the item is open. */
     open: "[data-open]",
     /** Present when it is disabled. */
@@ -49,6 +54,8 @@ export const Accordion = {
   },
   /** The heading that holds the trigger. */
   Header: {
+    /** The item's place among the accordion's items, from 0. */
+    index: "[data-index]",
     /** Present when the item is open. */
     open: "[data-open]",
     /** Present when it is disabled. */
@@ -56,6 +63,8 @@ export const Accordion = {
   },
   /** The button that opens and closes the item's panel. */
   Trigger: {
+    /** The item's place among the accordion's items, from 0. */
+    index: "[data-index]",
     /** Present when the item's panel is open. */
     panelOpen: "[data-panel-open]",
     /** Present when it is disabled. */
@@ -78,6 +87,8 @@ export const Accordion = {
       horizontal: "[data-orientation=\"horizontal\"]",
       vertical: "[data-orientation=\"vertical\"]",
     },
+    /** The item's place among the accordion's items, from 0. */
+    index: "[data-index]",
   },
 } as const
 
@@ -89,6 +100,8 @@ export const AlertDialog = {
   Trigger: {
     /** Present when the dialog is open. */
     popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -129,6 +142,8 @@ export const AlertDialog = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+    /** Present when the dialog opened over another dialog. */
+    nested: "[data-nested]",
     /** Present when another dialog is open above this one. */
     nestedDialogOpen: "[data-nested-dialog-open]",
   },
@@ -140,6 +155,8 @@ export const AlertDialog = {
   },
   /** A button that closes the dialog. */
   Close: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -191,6 +208,18 @@ export const Checkbox = {
     required: "[data-required]",
     /** Present on the checkbox that stands for every box of its group. */
     parent: "[data-parent]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The mark. In the page while the box is checked or indeterminate. `data-indeterminate` and `data-checked` say which mark to draw, a dash or a tick: in CSS (`[data-indeterminate]`), or from the part's state. Through its exit the box is already unchecked, and both are absent. */
   Indicator: {
@@ -206,6 +235,18 @@ export const Checkbox = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
     /** Present for the first style of its entrance: what it animates in from. */
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
@@ -230,6 +271,10 @@ export const Collapsible = {
     closed: "[data-closed]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present for the first style of the panel's entrance, as on the panel. */
+    startingStyle: "[data-starting-style]",
+    /** Present through the panel's exit, as on the panel. */
+    endingStyle: "[data-ending-style]",
   },
   /** The button that opens and closes the panel. */
   Trigger: {
@@ -259,19 +304,75 @@ export const Combobox = {
   Input: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
+    /** While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. */
+    popupSide: {
+      top: "[data-popup-side=\"top\"]",
+      right: "[data-popup-side=\"right\"]",
+      bottom: "[data-popup-side=\"bottom\"]",
+      left: "[data-popup-side=\"left\"]",
+      "inline-start": "[data-popup-side=\"inline-start\"]",
+      "inline-end": "[data-popup-side=\"inline-end\"]",
+      none: "[data-popup-side=\"none\"]",
+    },
+    /** Present when no item is shown for what was typed, once the list is in the page. */
+    listEmpty: "[data-list-empty]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
     /** Present when it can be read but not changed. */
     readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against. */
   Trigger: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
+    /** While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. */
+    popupSide: {
+      top: "[data-popup-side=\"top\"]",
+      right: "[data-popup-side=\"right\"]",
+      bottom: "[data-popup-side=\"bottom\"]",
+      left: "[data-popup-side=\"left\"]",
+      "inline-start": "[data-popup-side=\"inline-start\"]",
+      "inline-end": "[data-popup-side=\"inline-end\"]",
+      none: "[data-popup-side=\"none\"]",
+    },
+    /** Present when no item is shown for what was typed, once the list is in the page. */
+    listEmpty: "[data-list-empty]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
     /** Present when it can be read but not changed. */
     readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The chosen value's label, or a placeholder while nothing is chosen, for a button that is the combobox (its input inside the popup). With several values, their labels with commas between. It draws no element. */
   Value: {
@@ -325,6 +426,10 @@ export const Combobox = {
       popup: "[data-presentation=\"popup\"]",
       sheet: "[data-presentation=\"sheet\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
   },
   /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
   Popup: {
@@ -360,6 +465,8 @@ export const Combobox = {
     swiping: "[data-swiping]",
     /** Present once a drag has closed it. */
     swipeDismiss: "[data-swipe-dismiss]",
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
@@ -398,16 +505,26 @@ export const Combobox = {
   /** Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input. */
   Status: {
   },
-  /** A button that empties the input and the value. */
+  /** A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there. */
   Clear: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when the list is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present while there is something to clear. */
+    visible: "[data-visible]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
   },
   /** With several values: what holds the chips and the input, and what the list is placed against. */
   Chips: {
   },
   /** One chosen value. The arrows reach it from the start of the input, and Backspace or Delete on it takes it away. */
   Chip: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
   /** A chip's button that takes its value away. */
   ChipRemove: {
@@ -424,6 +541,8 @@ export const ContextMenu = {
   Trigger: {
     /** Present when the menu is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -449,6 +568,8 @@ export const ContextMenu = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The menu itself: the list of items. */
   Popup: {
@@ -475,9 +596,19 @@ export const ContextMenu = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another. */
+    instant: {
+      click: "[data-instant=\"click\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
+      group: "[data-instant=\"group\"]",
+    },
   },
   /** An element that points at the trigger. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -582,6 +713,8 @@ export const Dialog = {
   Trigger: {
     /** Present when the dialog is open. */
     popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -622,6 +755,8 @@ export const Dialog = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+    /** Present when the dialog opened over another dialog. */
+    nested: "[data-nested]",
     /** Present when another dialog is open above this one. */
     nestedDialogOpen: "[data-nested-dialog-open]",
   },
@@ -633,6 +768,8 @@ export const Dialog = {
   },
   /** A button that closes the dialog. */
   Close: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -783,6 +920,8 @@ export const HoverCard = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The card itself. */
   Popup: {
@@ -818,6 +957,10 @@ export const HoverCard = {
   },
   /** An element that points at the trigger, placed along the popup's edge. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -874,6 +1017,8 @@ export const Menu = {
   Trigger: {
     /** Present when the menu is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
   },
@@ -901,6 +1046,8 @@ export const Menu = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The menu itself: the list of items. */
   Popup: {
@@ -927,9 +1074,19 @@ export const Menu = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed its trigger or an item, `dismiss` when Escape closed it, `group` when focus or the pointer went from one menu of a bar to another. */
+    instant: {
+      click: "[data-instant=\"click\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
+      group: "[data-instant=\"group\"]",
+    },
   },
   /** An element that points at the trigger. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -1031,6 +1188,10 @@ export const Menubar = {
   Root: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when its menus hold the page while one is open. */
+    modal: "[data-modal]",
+    /** Present while one of its menus is open. */
+    hasSubmenuOpen: "[data-has-submenu-open]",
     /** Whether its menus are in a row or a column. */
     orientation: {
       horizontal: "[data-orientation=\"horizontal\"]",
@@ -1065,6 +1226,10 @@ export const NavigationMenu = {
       horizontal: "[data-orientation=\"horizontal\"]",
       vertical: "[data-orientation=\"vertical\"]",
     },
+    /** Present while an item's content is shown. */
+    open: "[data-open]",
+    /** Present on a navigation menu inside another's content: a submenu of it. */
+    nested: "[data-nested]",
   },
   /** The row of items. */
   List: {
@@ -1073,6 +1238,8 @@ export const NavigationMenu = {
       horizontal: "[data-orientation=\"horizontal\"]",
       vertical: "[data-orientation=\"vertical\"]",
     },
+    /** Present while an item's content is shown. */
+    open: "[data-open]",
   },
   /** One item of the list: a link, or a trigger with its content. Its `value` tells it from the others; an item that is given none makes its own. */
   Item: {
@@ -1081,6 +1248,10 @@ export const NavigationMenu = {
   Trigger: {
     /** Present while the item's content is shown. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
   /** A mark on a trigger that shows whether its content is open. */
   Icon: {
@@ -1097,10 +1268,12 @@ export const NavigationMenu = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** Which way it came from: the item before it, or after. */
+    /** Which way it came from: the item before it, or after; `up` and `down` when the list is a column. */
     activationDirection: {
       left: "[data-activation-direction=\"left\"]",
       right: "[data-activation-direction=\"right\"]",
+      up: "[data-activation-direction=\"up\"]",
+      down: "[data-activation-direction=\"down\"]",
     },
   },
   /** A link, in the list or in an item's content. */
@@ -1132,6 +1305,10 @@ export const NavigationMenu = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
+    /** Present while it should move at once: as it is first drawn, and while the window is resized. */
+    instant: "[data-instant]",
   },
   /** The panel every item's content is shown in. */
   Popup: {
@@ -1158,12 +1335,18 @@ export const NavigationMenu = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** Where the contents are drawn, inside the popup. */
   Viewport: {
   },
   /** An element that points at the open item's trigger. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -1198,10 +1381,24 @@ export const NavigationMenu = {
 export const Otp = {
   /** The code: the input and its cells. */
   Root: {
-    /** Present when it is disabled. */
-    disabled: "[data-disabled]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Present when the code has a character in it. */
+    filled: "[data-filled]",
     /** Present while the input has focus. */
     focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
     /** Present when every character is in. */
     complete: "[data-complete]",
   },
@@ -1219,10 +1416,26 @@ export const Otp = {
     index: "[data-index]",
     /** Present on the cell the next character goes in, or that is selected. */
     active: "[data-active]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
     /** Present when the cell has its character. */
     filled: "[data-filled]",
+    /** Present while the input has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it can be read but not changed. */
+    readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Present when every character is in. */
+    complete: "[data-complete]",
   },
   /** A mark between groups of cells. */
   Separator: {
@@ -1516,19 +1729,75 @@ export const Autocomplete = {
   Input: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
+    /** While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. */
+    popupSide: {
+      top: "[data-popup-side=\"top\"]",
+      right: "[data-popup-side=\"right\"]",
+      bottom: "[data-popup-side=\"bottom\"]",
+      left: "[data-popup-side=\"left\"]",
+      "inline-start": "[data-popup-side=\"inline-start\"]",
+      "inline-end": "[data-popup-side=\"inline-end\"]",
+      none: "[data-popup-side=\"none\"]",
+    },
+    /** Present when no item is shown for what was typed, once the list is in the page. */
+    listEmpty: "[data-list-empty]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
     /** Present when it can be read but not changed. */
     readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** A button that opens and closes the list. With the input inside the popup it is the combobox: a stop for Tab, and what the popup is placed against. */
   Trigger: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
+    /** While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. */
+    popupSide: {
+      top: "[data-popup-side=\"top\"]",
+      right: "[data-popup-side=\"right\"]",
+      bottom: "[data-popup-side=\"bottom\"]",
+      left: "[data-popup-side=\"left\"]",
+      "inline-start": "[data-popup-side=\"inline-start\"]",
+      "inline-end": "[data-popup-side=\"inline-end\"]",
+      none: "[data-popup-side=\"none\"]",
+    },
+    /** Present when no item is shown for what was typed, once the list is in the page. */
+    listEmpty: "[data-list-empty]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
     /** Present when it can be read but not changed. */
     readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -1559,6 +1828,10 @@ export const Autocomplete = {
       popup: "[data-presentation=\"popup\"]",
       sheet: "[data-presentation=\"sheet\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
+    /** Present when no item is shown for what was typed. */
+    empty: "[data-empty]",
   },
   /** The list of items. With a `list` inside, what holds it: a dialog around an input and the list. As a sheet, a design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
   Popup: {
@@ -1594,6 +1867,8 @@ export const Autocomplete = {
     swiping: "[data-swiping]",
     /** Present once a drag has closed it. */
     swipeDismiss: "[data-swipe-dismiss]",
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
     /** Present when no item is shown for what was typed. */
     empty: "[data-empty]",
   },
@@ -1629,10 +1904,18 @@ export const Autocomplete = {
   /** Says how the list stands ("3 results", "Loading") to software that reads the page, as its text changes. It stays in the page while its text changes: inside the popup, or beside the input. */
   Status: {
   },
-  /** A button that empties the input and the value. */
+  /** A button that empties the input and the value. It is in the page while there is something to clear (the text, for an autocomplete; else what is chosen), and through its exit; `keepMounted` keeps it there. */
   Clear: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when the list is open. */
+    popupOpen: "[data-popup-open]",
+    /** Present while there is something to clear. */
+    visible: "[data-visible]",
+    /** Present for the first style of its entrance: what it animates in from. */
+    startingStyle: "[data-starting-style]",
+    /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
+    endingStyle: "[data-ending-style]",
   },
 } as const
 
@@ -2520,6 +2803,8 @@ export const Tour = {
     },
     /** Present while the step shown has no target in the page: the popup stands in the middle of the viewport. */
     centered: "[data-centered]",
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The step itself: a dialog that stays in the page from the first step to the last, and moves. */
   Popup: {
@@ -2551,6 +2836,10 @@ export const Tour = {
   },
   /** An element that points at the target, placed along the popup's edge. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -2632,6 +2921,8 @@ export const DatePicker = {
   Trigger: {
     /** Present when the popover is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -2657,6 +2948,8 @@ export const DatePicker = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The popover itself. */
   Popup: {
@@ -2682,6 +2975,11 @@ export const DatePicker = {
       start: "[data-align=\"start\"]",
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
+    },
+    /** Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it. */
+    instant: {
+      click: "[data-instant=\"click\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
     },
   },
   /** The calendar. */
@@ -2850,6 +3148,8 @@ export const Drawer = {
   Trigger: {
     /** Present when the dialog is open. */
     popupOpen: "[data-popup-open]",
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -2866,6 +3166,8 @@ export const Drawer = {
     endingStyle: "[data-ending-style]",
     /** Present while the drawer is dragged. */
     swiping: "[data-swiping]",
+    /** Present once a drag has closed the drawer. */
+    swipeDismiss: "[data-swipe-dismiss]",
   },
   /** The drawer. A design moves it by what it says of the drag, and gives it `touch-action: none` where a finger drags it. */
   Popup: {
@@ -2877,6 +3179,8 @@ export const Drawer = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
+    /** Present when the dialog opened over another dialog. */
+    nested: "[data-nested]",
     /** Present when another dialog is open above this one. */
     nestedDialogOpen: "[data-nested-dialog-open]",
     /** Present while the drawer is dragged. */
@@ -2905,6 +3209,8 @@ export const Drawer = {
   },
   /** A button that closes the dialog. */
   Close: {
+    /** Present when it is disabled. */
+    disabled: "[data-disabled]",
   },
 } as const
 
@@ -3033,15 +3339,23 @@ export const Toast = {
   },
   /** What the toast is called: the title it was added with, when nothing else is written in it. */
   Title: {
+    /** The kind the toast was added as. */
+    type: "[data-type]",
   },
   /** What the toast says: the description it was added with, when nothing else is written in it. */
   Description: {
+    /** The kind the toast was added as. */
+    type: "[data-type]",
   },
   /** Closes the toast. */
   Close: {
+    /** The kind the toast was added as. */
+    type: "[data-type]",
   },
   /** A button of the toast's own: the action it was added with, when nothing else is written in it. Pressing it closes the toast too, unless the action refuses. */
   Action: {
+    /** The kind the toast was added as. */
+    type: "[data-type]",
   },
 } as const
 
@@ -3053,6 +3367,8 @@ export const Popover = {
   Trigger: {
     /** Present when the popover is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while the popover a press on this trigger opened is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -3089,6 +3405,8 @@ export const Popover = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The popover itself. */
   Popup: {
@@ -3115,6 +3433,11 @@ export const Popover = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present when it opened or closed in a way that should skip the motion: `click` when the keyboard pressed the trigger, `dismiss` when Escape closed it. */
+    instant: {
+      click: "[data-instant=\"click\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
+    },
   },
   /** The heading that names the popover. */
   Title: {
@@ -3127,6 +3450,10 @@ export const Popover = {
   },
   /** An element that points at the trigger, placed along the popup's edge. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -3204,6 +3531,18 @@ export const RadioGroup = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** One choice. It holds a hidden native radio, which a form and a label reach: the item's `id` (`kpId` on Angular, `kui-id` on a custom element) is the radio's, which a `<label for>` names. */
   Item: {
@@ -3217,6 +3556,18 @@ export const RadioGroup = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The mark. In the page while its item is the chosen one. */
   Indicator: {
@@ -3230,6 +3581,18 @@ export const RadioGroup = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
     /** Present for the first style of its entrance: what it animates in from. */
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
@@ -3277,6 +3640,14 @@ export const ScrollArea = {
     hasOverflowX: "[data-has-overflow-x]",
     /** Present when there is more to see up or down. */
     hasOverflowY: "[data-has-overflow-y]",
+    /** Present when there is more to scroll to towards the start of a line. */
+    overflowXStart: "[data-overflow-x-start]",
+    /** Present when there is more to scroll to towards the end of a line. */
+    overflowXEnd: "[data-overflow-x-end]",
+    /** Present when there is more to scroll to above. */
+    overflowYStart: "[data-overflow-y-start]",
+    /** Present when there is more to scroll to below. */
+    overflowYEnd: "[data-overflow-y-end]",
     /** Present while it is being scrolled, and a moment after. */
     scrolling: "[data-scrolling]",
     /** Present while the pointer is over the area. */
@@ -3288,11 +3659,33 @@ export const ScrollArea = {
     hasOverflowX: "[data-has-overflow-x]",
     /** Present when there is more to see up or down. */
     hasOverflowY: "[data-has-overflow-y]",
+    /** Present when there is more to scroll to towards the start of a line. */
+    overflowXStart: "[data-overflow-x-start]",
+    /** Present when there is more to scroll to towards the end of a line. */
+    overflowXEnd: "[data-overflow-x-end]",
+    /** Present when there is more to scroll to above. */
+    overflowYStart: "[data-overflow-y-start]",
+    /** Present when there is more to scroll to below. */
+    overflowYEnd: "[data-overflow-y-end]",
     /** Present while it is being scrolled, and a moment after. */
     scrolling: "[data-scrolling]",
   },
   /** A box around what is scrolled, as wide as what it holds. Not needed to measure: the viewport's children are watched as they are. For content whose own box does not grow with what is in it (a block holding a wider table, or bare text). */
   Content: {
+    /** Present when there is more to see sideways. */
+    hasOverflowX: "[data-has-overflow-x]",
+    /** Present when there is more to see up or down. */
+    hasOverflowY: "[data-has-overflow-y]",
+    /** Present when there is more to scroll to towards the start of a line. */
+    overflowXStart: "[data-overflow-x-start]",
+    /** Present when there is more to scroll to towards the end of a line. */
+    overflowXEnd: "[data-overflow-x-end]",
+    /** Present when there is more to scroll to above. */
+    overflowYStart: "[data-overflow-y-start]",
+    /** Present when there is more to scroll to below. */
+    overflowYEnd: "[data-overflow-y-end]",
+    /** Present while it is being scrolled, and a moment after. */
+    scrolling: "[data-scrolling]",
   },
   /** A scrollbar's track, placed along its edge of the area. In the page while there is something to scroll its way. */
   Scrollbar: {
@@ -3305,6 +3698,18 @@ export const ScrollArea = {
     hovering: "[data-hovering]",
     /** Present while the area is scrolled its way. */
     scrolling: "[data-scrolling]",
+    /** Present when there is more to see sideways. */
+    hasOverflowX: "[data-has-overflow-x]",
+    /** Present when there is more to see up or down. */
+    hasOverflowY: "[data-has-overflow-y]",
+    /** Present when there is more to scroll to towards the start of a line. */
+    overflowXStart: "[data-overflow-x-start]",
+    /** Present when there is more to scroll to towards the end of a line. */
+    overflowXEnd: "[data-overflow-x-end]",
+    /** Present when there is more to scroll to above. */
+    overflowYStart: "[data-overflow-y-start]",
+    /** Present when there is more to scroll to below. */
+    overflowYEnd: "[data-overflow-y-end]",
   },
   /** The part of a scrollbar that shows where the view is, and can be dragged. As long as its scrollbar's variable says. */
   Thumb: {
@@ -3313,6 +3718,8 @@ export const ScrollArea = {
       horizontal: "[data-orientation=\"horizontal\"]",
       vertical: "[data-orientation=\"vertical\"]",
     },
+    /** Present while the area is scrolled its way. */
+    scrolling: "[data-scrolling]",
   },
   /** The square where the two scrollbars meet, placed there. */
   Corner: {
@@ -3327,12 +3734,38 @@ export const Select = {
   Trigger: {
     /** Present when the list is open. */
     popupOpen: "[data-popup-open]",
+    /** Present while its popup is open: it stays pressed, as a button held down. */
+    pressed: "[data-pressed]",
+    /** While the list is in the page: the side of the trigger it is on, after any flip; `none` when it lies over the trigger. Not said while it opens as a sheet. */
+    popupSide: {
+      top: "[data-popup-side=\"top\"]",
+      right: "[data-popup-side=\"right\"]",
+      bottom: "[data-popup-side=\"bottom\"]",
+      left: "[data-popup-side=\"left\"]",
+      "inline-start": "[data-popup-side=\"inline-start\"]",
+      "inline-end": "[data-popup-side=\"inline-end\"]",
+      none: "[data-popup-side=\"none\"]",
+    },
     /** Present while nothing is chosen. */
     placeholder: "[data-placeholder]",
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
     /** Present when it can be read but not changed. */
     readonly: "[data-readonly]",
+    /** Present when the form needs it. */
+    required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The chosen value's label, or the placeholder. With several values, their labels with commas between. */
   Value: {
@@ -3389,6 +3822,8 @@ export const Select = {
       popup: "[data-presentation=\"popup\"]",
       sheet: "[data-presentation=\"sheet\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** In the page while there is more of the list above: it scrolls the list while the pointer moves over it. */
   ScrollUpArrow: {
@@ -3460,7 +3895,7 @@ export const Select = {
     startingStyle: "[data-starting-style]",
     /** Present through its exit: what it animates out to. It leaves the page when the motion ends. */
     endingStyle: "[data-ending-style]",
-    /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
+    /** The side of the trigger it is on, after any flip; `none` when it lies over the trigger. */
     side: {
       top: "[data-side=\"top\"]",
       right: "[data-side=\"right\"]",
@@ -3468,6 +3903,7 @@ export const Select = {
       left: "[data-side=\"left\"]",
       "inline-start": "[data-side=\"inline-start\"]",
       "inline-end": "[data-side=\"inline-end\"]",
+      none: "[data-side=\"none\"]",
     },
     /** How it is aligned with the anchor. */
     align: {
@@ -3527,6 +3963,18 @@ export const Slider = {
     readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The value, written. */
   Value: {
@@ -3541,6 +3989,18 @@ export const Slider = {
     readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** What a pointer presses and drags on. It holds the track and the thumbs. */
   Control: {
@@ -3555,6 +4015,18 @@ export const Slider = {
     readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The whole range. */
   Track: {
@@ -3569,6 +4041,18 @@ export const Slider = {
     readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The filled part: up to the thumb, or from the first thumb to the last. Its place and length are written on it. */
   Indicator: {
@@ -3583,6 +4067,18 @@ export const Slider = {
     readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** What is dragged, and what the keyboard moves: a slider to assistive technology. Its place on the track is written on it. It holds a hidden input, which a form reads. A thumb that is given no `index` is the value at its place among the slider's thumbs, in the order they are written. */
   Thumb: {
@@ -3597,6 +4093,18 @@ export const Slider = {
     readonly: "[data-readonly]",
     /** Present while a pointer holds a thumb. */
     dragging: "[data-dragging]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
     /** Which thumb it is, from 0. */
     index: "[data-index]",
   },
@@ -3615,6 +4123,18 @@ export const Switch = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
   /** The knob that moves along the track. */
   Thumb: {
@@ -3628,6 +4148,18 @@ export const Switch = {
     readonly: "[data-readonly]",
     /** Present when the form needs it. */
     required: "[data-required]",
+    /** Inside a Field: present once focus has left the control. */
+    touched: "[data-touched]",
+    /** Inside a Field: present while the value is not the one it started with. */
+    dirty: "[data-dirty]",
+    /** Inside a Field: present while the control has a value. */
+    filled: "[data-filled]",
+    /** Inside a Field: present while the control has focus. */
+    focused: "[data-focused]",
+    /** Inside a Field: present once the value has been checked and found right. */
+    valid: "[data-valid]",
+    /** Inside a Field: present while the value is wrong. */
+    invalid: "[data-invalid]",
   },
 } as const
 
@@ -3675,6 +4207,14 @@ export const Tabs = {
       horizontal: "[data-orientation=\"horizontal\"]",
       vertical: "[data-orientation=\"vertical\"]",
     },
+    /** Where the newly active tab is from the one before, for a panel or a mark that slides. */
+    activationDirection: {
+      left: "[data-activation-direction=\"left\"]",
+      right: "[data-activation-direction=\"right\"]",
+      up: "[data-activation-direction=\"up\"]",
+      down: "[data-activation-direction=\"down\"]",
+      none: "[data-activation-direction=\"none\"]",
+    },
   },
   /** A mark for the active tab: it carries that tab's position and size. */
   Indicator: {
@@ -3696,6 +4236,8 @@ export const Tabs = {
   Panel: {
     /** Present while its tab is not the active one. */
     hidden: "[data-hidden]",
+    /** The panel's place among the panels in the page, from 0, once it is in the page. */
+    index: "[data-index]",
     /** The way the tabs are laid out. */
     orientation: {
       horizontal: "[data-orientation=\"horizontal\"]",
@@ -3761,6 +4303,8 @@ export const Toolbar = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it stays focusable while disabled: the arrows still reach it. */
+    focusable: "[data-focusable]",
   },
   /** A link of the toolbar. */
   Link: {
@@ -3781,6 +4325,8 @@ export const Toolbar = {
     },
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
+    /** Present when it stays focusable while disabled: the arrows still reach it. */
+    focusable: "[data-focusable]",
   },
   /** Items that belong together. */
   Group: {
@@ -3810,6 +4356,8 @@ export const Tooltip = {
   Trigger: {
     /** Present when the tooltip is open. */
     popupOpen: "[data-popup-open]",
+    /** Present when the tooltip is disabled: the pointer and focus on the trigger do not open it. */
+    triggerDisabled: "[data-trigger-disabled]",
   },
   /** Draws what it holds at the end of `<body>`, or in the container a `PortalProvider` names. It draws no element. */
   Portal: {
@@ -3835,6 +4383,8 @@ export const Tooltip = {
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
     },
+    /** Present while the anchor is out of view: scrolled away, or clipped by a box around it. */
+    anchorHidden: "[data-anchor-hidden]",
   },
   /** The tooltip itself. */
   Popup: {
@@ -3870,6 +4420,10 @@ export const Tooltip = {
   },
   /** An element that points at the trigger, placed along the popup's edge. */
   Arrow: {
+    /** Present when it is open. */
+    open: "[data-open]",
+    /** Present when it is closed. */
+    closed: "[data-closed]",
     /** The side of the anchor it is on, after any flip. Asked for as `inline-start` or `inline-end`, it says one of those two when it is beside its anchor. */
     side: {
       top: "[data-side=\"top\"]",
@@ -3884,6 +4438,12 @@ export const Tooltip = {
       start: "[data-align=\"start\"]",
       center: "[data-align=\"center\"]",
       end: "[data-align=\"end\"]",
+    },
+    /** Present when it opened or closed without its usual wait, for a design that skips the motion then. */
+    instant: {
+      delay: "[data-instant=\"delay\"]",
+      focus: "[data-instant=\"focus\"]",
+      dismiss: "[data-instant=\"dismiss\"]",
     },
     /** Present when the popup was pushed along its edge, so the arrow is not at the trigger's centre. */
     uncentered: "[data-uncentered]",

@@ -52,8 +52,10 @@ from one core. The package for a framework is all a project installs.
 4. A value is controlled when given (`value` + `onValueChange`) and the component's own
    otherwise (`defaultValue`). A callback beside a value the component holds is
    `(value, details)`, and `details.cancel()` keeps the value as it was. A callback that
-   reports something that happened (`onComplete`, `onClearErrors`, `onMonthChange`) takes only
-   that.
+   reports something that happened (`onClearErrors`, `onMonthChange`) takes only that. The
+   names are Base UI's: `loopFocus`, `disablePointerDismissal`, a multiple Select's or
+   Combobox's list in `value`, One-Time Code's `validationType` and `onValueComplete`, a
+   toast's `timeout`; the older names still work and are marked deprecated.
 5. A control with a `name` is submitted with its form and follows the form's reset. Wrap it
    in `Field` for a label, a description and validation. `readOnly` and `keepMounted` are
    props of the parts `llms.txt` lists them for, and of no others.

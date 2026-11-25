@@ -217,7 +217,7 @@ const said = ref(8)
 // Bound, not written in the template: the type checker trips on `//` in a plain attribute.
 const LINK = "https://kirana.style"
 // A page's toasts are made once: a long time, so a test reads them.
-const toaster = createToaster({ duration: 600_000 })
+const toaster = createToaster({ timeout: 600_000 })
 const first = ref(0)
 const ran = ref<unknown>("none")
 const tags = ref<string[]>(["New"])
@@ -820,7 +820,7 @@ function press(event: PartEvent<MouseEvent>) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
-      <Select.Root id="sm3" :items="SIZES" multiple :default-values="['l', 's']">
+      <Select.Root id="sm3" :items="SIZES" multiple :default-value="['l', 's']">
         <Select.Trigger data-testid="sm3-trigger">
           <Select.Value v-slot="{ values, labels }" class="bar" data-testid="sm3-value">
             <b v-for="(label, at) in labels" :key="String(values[at])">{{ label }}</b>
@@ -1126,9 +1126,11 @@ function press(event: PartEvent<MouseEvent>) {
         <Toggle value="right" data-testid="tg1-right"> Right </Toggle>
       </ToggleGroup>
       <output data-testid="tg1-output">{{ align.join(",") }}</output>
-      <Toolbar.Root aria-label="Editing" class="bar" data-testid="tb1">
+      <Toolbar.Root aria-label="Editing" loop-focus class="bar" data-testid="tb1">
         <Toolbar.Button data-testid="tb1-save">Save</Toolbar.Button>
-        <Toolbar.Button disabled data-testid="tb1-gone"> Gone </Toolbar.Button>
+        <Toolbar.Button disabled :focusable-when-disabled="false" data-testid="tb1-gone">
+          Gone
+        </Toolbar.Button>
         <Toolbar.Link href="#tb1-help" data-testid="tb1-link"> Help </Toolbar.Link>
         <Toolbar.Separator data-testid="tb1-line" />
         <Toolbar.Input aria-label="Zoom" value="100" data-testid="tb1-zoom" />
@@ -1297,7 +1299,7 @@ function press(event: PartEvent<MouseEvent>) {
         </Combobox.Root>
       </Field.Root>
       <form data-testid="cbm-form">
-        <Combobox.Root id="cbm" v-model:values="tags" name="tags" multiple auto-highlight>
+        <Combobox.Root id="cbm" v-model:value="tags" name="tags" multiple auto-highlight>
           <Combobox.Chips class="bar" data-testid="cbm-chips">
             <Combobox.Chip
               v-for="each in tags"
@@ -1343,7 +1345,7 @@ function press(event: PartEvent<MouseEvent>) {
           name="code"
           class="otp"
           data-testid="otp1"
-          @complete="(next: string) => (code = next)"
+          @value-complete="(next: string) => (code = next)"
         >
           <Otp.Input aria-label="Code" class="otp-input" data-testid="otp1-input" />
           <Otp.Group class="otp-group">
@@ -1367,7 +1369,7 @@ function press(event: PartEvent<MouseEvent>) {
       </form>
       <output data-testid="otp1-output">{{ code }}</output>
       <div class="otp-row">
-        <Otp.Root id="otp2" :length="2" mode="alphabetic" class="otp" data-testid="otp2">
+        <Otp.Root id="otp2" :length="2" validation-type="alpha" class="otp" data-testid="otp2">
           <Otp.Input aria-label="Letters" class="otp-input" data-testid="otp2-input" />
           <Otp.Group class="otp-group">
             <Otp.Slot :index="0" class="otp-slot" data-testid="otp2-0" />
@@ -1415,7 +1417,7 @@ function press(event: PartEvent<MouseEvent>) {
       >
         <Carousel.Viewport class="carousel-view" data-testid="cr1-view">
           <Carousel.Item :index="0" class="carousel-item" data-testid="cr1-0">One</Carousel.Item>
-          <Carousel.Item :index="1" class="carousel-item" data-testid="cr1-1">Two</Carousel.Item>
+          <Carousel.Item class="carousel-item" data-testid="cr1-1">Two</Carousel.Item>
           <Carousel.Item :index="2" class="carousel-item" data-testid="cr1-2">Three</Carousel.Item>
         </Carousel.Viewport>
         <Carousel.Previous data-testid="cr1-previous">Previous</Carousel.Previous>
@@ -1548,7 +1550,7 @@ function press(event: PartEvent<MouseEvent>) {
             <Calendar.Weeks v-slot="{ week }">
               <tr>
                 <Calendar.Cell v-for="day in week" :key="day.date" :date="day.date">
-                  <Calendar.Day :date="day.date" :data-testid="`cal1-${day.date}`">
+                  <Calendar.Day :data-testid="`cal1-${day.date}`">
                     {{ day.label }}
                   </Calendar.Day>
                 </Calendar.Cell>
@@ -2648,7 +2650,6 @@ function press(event: PartEvent<MouseEvent>) {
         </div>
         <Steps.Root
           id="st1"
-          :count="3"
           linear
           class="steps"
           data-testid="st1"

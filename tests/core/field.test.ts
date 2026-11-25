@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vite-plus/test"
 
 import { bind, write } from "../../packages/core/src/bind.ts"
+import { createCheckbox } from "../../packages/core/src/checkbox.ts"
 import { createField } from "../../packages/core/src/field.ts"
+import type { Field } from "../../packages/core/src/field.ts"
 import { createNumberField } from "../../packages/core/src/number-field.ts"
 import type { NumberFieldProps } from "../../packages/core/src/number-field.ts"
 import { createRadioGroup } from "../../packages/core/src/radio-group.ts"
 import type { RadioGroupProps } from "../../packages/core/src/radio-group.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
+import { createSlider } from "../../packages/core/src/slider.ts"
+import type { SliderProps } from "../../packages/core/src/slider.ts"
+import { createSwitch } from "../../packages/core/src/switch.ts"
 import { mount } from "./page.ts"
 
 /** An element by its `data-part`: ids are what these tests are about. */
@@ -116,6 +121,129 @@ describe("a control's own id inside a field", () => {
     bind(part(root, "up"), number.increment)
     expect(part(root, "input").id).toBe("count")
     expect(part(root, "up").getAttribute("aria-controls")).toBe("count")
+    stop()
+  })
+})
+
+describe("a control's parts inside a field", () => {
+  const STATES = ["touched", "dirty", "filled", "focused", "valid", "invalid"]
+  /** The field states an element carries, by name. */
+  const said = (element: HTMLElement) =>
+    STATES.filter((name) => element.hasAttribute(`data-${name}`)).join(" ")
+
+  /** Each part says what the field's root says, at each step, and the root says `expected`. */
+  async function follows(field: Field, parts: HTMLElement[], steps: [() => void, string][]) {
+    const root = document.createElement("div")
+    document.body.append(root)
+    const unbind = bind(root, field.root)
+    try {
+      for (const [act, expected] of steps) {
+        act()
+        await settled()
+        expect(said(root)).toBe(expected)
+        for (const each of parts) expect(said(each)).toBe(expected)
+      }
+    } finally {
+      unbind()
+      root.remove()
+    }
+  }
+
+  const outside = () => (document.activeElement as HTMLElement | null)?.blur()
+
+  it("carry a checkbox's, its indicator's and a switch's thumb's, as the field changes", async () => {
+    const root = mount(`
+      <div data-part="box"><input data-part="input" /></div><span data-part="mark"></span>
+      <div data-part="switch"><input data-part="switch-input" /></div><span data-part="thumb"></span>`)
+    const field = createField(signal({ id: "f" }))
+    const box = createCheckbox(signal({ id: "c", required: true }), { field })
+    const stop = box.mount()
+    bind(part(root, "box"), box.root)
+    bind(part(root, "input"), box.input)
+    bind(part(root, "mark"), box.indicator)
+    await follows(
+      field,
+      [part(root, "box"), part(root, "mark")],
+      [
+        [() => {}, ""],
+        [() => part(root, "box").focus(), "focused"],
+        [() => part(root, "box").click(), "dirty filled focused"],
+        [outside, "touched dirty filled"],
+        [() => part(root, "box").click(), "touched"],
+        [() => void field.validate(), "touched invalid"],
+        [() => part(root, "box").click(), "touched dirty filled valid"],
+      ]
+    )
+    stop()
+
+    const other = createField(signal({ id: "g" }))
+    const toggle = createSwitch(signal({ id: "s" }), { field: other })
+    bind(part(root, "switch"), toggle.root)
+    bind(part(root, "switch-input"), toggle.input)
+    bind(part(root, "thumb"), toggle.thumb)
+    await follows(
+      other,
+      [part(root, "switch"), part(root, "thumb")],
+      [
+        [() => part(root, "switch").focus(), "focused"],
+        [() => part(root, "switch").click(), "dirty filled focused"],
+        [outside, "touched dirty filled"],
+      ]
+    )
+  })
+
+  it("carry a radio group's, its items' and their indicators'", async () => {
+    const root = mount(`
+      <div data-part="group">
+        <div data-part="a"><input data-part="a-input" /></div><span data-part="a-mark"></span>
+      </div>`)
+    const field = createField(signal({ id: "f" }))
+    const group = createRadioGroup(signal<RadioGroupProps>({ id: "r", required: true }), { field })
+    const indicator = group.indicator("a")
+    const stops = [group.mount(), indicator.mount()]
+    bind(part(root, "group"), group.root)
+    bind(part(root, "a"), group.item("a"))
+    bind(part(root, "a-input"), group.itemInput("a"))
+    bind(part(root, "a-mark"), indicator.part)
+    await follows(
+      field,
+      [part(root, "group"), part(root, "a"), part(root, "a-mark")],
+      [
+        [() => {}, ""],
+        [() => void field.validate(), "invalid"],
+        [() => part(root, "a").focus(), "focused invalid"],
+        [() => part(root, "a").click(), "dirty filled focused valid"],
+        [outside, "touched dirty filled valid"],
+      ]
+    )
+    for (const stop of stops) stop()
+  })
+
+  it("carry every part of a slider's", async () => {
+    const root = mount(`
+      <div data-part="root"><div data-part="control"><div data-part="track">
+        <div data-part="indicator"></div><div data-part="thumb"><input data-part="input" /></div>
+      </div></div></div>`)
+    const field = createField(signal({ id: "f" }))
+    const slider = createSlider(signal<SliderProps>({ id: "s", defaultValue: 40 }), { field })
+    const stop = slider.mount()
+    bind(part(root, "root"), slider.root)
+    bind(part(root, "control"), slider.control)
+    bind(part(root, "track"), slider.track)
+    bind(part(root, "indicator"), slider.indicator)
+    bind(part(root, "thumb"), slider.thumb(0))
+    bind(part(root, "input"), slider.thumbInput(0))
+    const parts = ["root", "control", "track", "indicator", "thumb"].map((name) => part(root, name))
+    const key = (name: string) =>
+      part(root, "thumb").dispatchEvent(new KeyboardEvent("keydown", { key: name, bubbles: true }))
+    // A slider always has a value: its field is filled from the start, as a field says.
+    await follows(field, parts, [
+      [() => {}, "filled"],
+      [() => part(root, "thumb").focus(), "filled focused"],
+      [() => key("ArrowRight"), "dirty filled focused"],
+      [() => key("ArrowLeft"), "filled focused"],
+      [outside, "touched filled"],
+    ])
     stop()
   })
 })

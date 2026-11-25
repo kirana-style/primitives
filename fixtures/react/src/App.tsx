@@ -2799,7 +2799,9 @@ export function App() {
                 )}
               </Rating.Items>
             </Rating.Root>
-            <output data-testid="rt1-output">{stars}</output>
+            <output form="" data-testid="rt1-output">
+              {stars}
+            </output>
           </div>
           <Steps.Root
             id="st1"
@@ -2836,7 +2838,9 @@ export function App() {
             <div className="item">
               <Steps.Previous data-testid="st1-previous">Back</Steps.Previous>
               <Steps.Next data-testid="st1-next">Next</Steps.Next>
-              <output data-testid="st1-output">{stepped}</output>
+              <output form="" data-testid="st1-output">
+                {stepped}
+              </output>
             </div>
           </Steps.Root>
           <Editable.Root
@@ -2853,7 +2857,9 @@ export function App() {
             <Editable.EditTrigger data-testid="ed1-edit">Edit</Editable.EditTrigger>
             <Editable.SubmitTrigger data-testid="ed1-submit">Save</Editable.SubmitTrigger>
             <Editable.CancelTrigger data-testid="ed1-cancel">Cancel</Editable.CancelTrigger>
-            <output data-testid="ed1-output">{titled}</output>
+            <output form="" data-testid="ed1-output">
+              {titled}
+            </output>
           </Editable.Root>
           <PasswordInput.Root
             className="item"
@@ -2870,7 +2876,9 @@ export function App() {
             <PasswordInput.Toggle data-testid="pw1-toggle">
               <PasswordInput.Indicator className="eye" data-testid="pw1-indicator" />
             </PasswordInput.Toggle>
-            <output data-testid="pw1-output">{revealed}</output>
+            <output form="" data-testid="pw1-output">
+              {revealed}
+            </output>
           </PasswordInput.Root>
           <button type="reset" data-testid="ef1-reset">
             Reset
@@ -2909,8 +2917,12 @@ export function App() {
             </TagsInput.List>
             <TagsInput.Input aria-label="Add a color" data-testid="ti1-input" />
             <TagsInput.Clear data-testid="ti1-clear">Clear</TagsInput.Clear>
-            <output data-testid="ti1-output">{tagged}</output>
-            <output data-testid="ti1-refused">{refused}</output>
+            <output form="" data-testid="ti1-output">
+              {tagged}
+            </output>
+            <output form="" data-testid="ti1-refused">
+              {refused}
+            </output>
           </TagsInput.Root>
           <FileUpload.Root
             id="fu1"
@@ -2952,8 +2964,12 @@ export function App() {
               </FileUpload.Items>
             </FileUpload.List>
             <FileUpload.Clear data-testid="fu1-clear">Clear</FileUpload.Clear>
-            <output data-testid="fu1-output">{uploaded}</output>
-            <output data-testid="fu1-rejected">{turnedAway}</output>
+            <output form="" data-testid="fu1-output">
+              {uploaded}
+            </output>
+            <output form="" data-testid="fu1-rejected">
+              {turnedAway}
+            </output>
           </FileUpload.Root>
           <div className="item">
             <TimeField.Root
@@ -2976,7 +2992,9 @@ export function App() {
               </TimeField.Segments>
               <TimeField.Input />
             </TimeField.Root>
-            <output data-testid="tm1-output">{timed}</output>
+            <output form="" data-testid="tm1-output">
+              {timed}
+            </output>
           </div>
           <button type="reset" data-testid="tf1-reset">
             Reset
@@ -3057,8 +3075,12 @@ export function App() {
               </Tree.ItemRow>
             </Tree.Item>
           </Tree.Root>
-          <output data-testid="tr1-expanded">{opened}</output>
-          <output data-testid="tr1-selected">{picks}</output>
+          <output form="" data-testid="tr1-expanded">
+            {opened}
+          </output>
+          <output form="" data-testid="tr1-selected">
+            {picks}
+          </output>
         </div>
         <form className="editing" data-testid="pk1-form">
           <ColorPicker.Root
@@ -3122,9 +3144,15 @@ export function App() {
             </div>
           </ColorPicker.Root>
           <div className="item">
-            <output data-testid="pk1-output">{hue}</output>
-            <output data-testid="pk1-committed">{kept}</output>
-            <output data-testid="pk1-written">{written}</output>
+            <output form="" data-testid="pk1-output">
+              {hue}
+            </output>
+            <output form="" data-testid="pk1-committed">
+              {kept}
+            </output>
+            <output form="" data-testid="pk1-written">
+              {written}
+            </output>
           </div>
           <button type="reset" data-testid="pk1-reset">
             Reset
@@ -3134,8 +3162,12 @@ export function App() {
           <button type="button" data-testid="tu1-open" onClick={() => setTouring(true)}>
             Tour
           </button>
-          <output data-testid="tu1-output">{String(touring)}</output>
-          <output data-testid="tu1-step">{toured}</output>
+          <output form="" data-testid="tu1-output">
+            {String(touring)}
+          </output>
+          <output form="" data-testid="tu1-step">
+            {toured}
+          </output>
         </div>
         <Tour.Root
           id="tu1"

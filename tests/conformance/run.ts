@@ -4884,13 +4884,15 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     )
     expect((await attribute("pk1-hue-thumb", "aria-valuemax")) === "360", "the hue in degrees")
     await snapshot("a colour picker at rest")
+    // Each point is a whole pixel: an engine that lays a box out on part of one takes a
+    // pointer at part of one down or up as it likes, and a colour a step away would be chosen.
     const area = (await id("pk1-area").boundingBox())!
-    await page.mouse.move(area.x + 50, area.y + 25)
+    await page.mouse.move(Math.round(area.x + 50), Math.round(area.y + 25))
     await page.mouse.down()
     await settled(page)
     expect((await text("pk1-output")) === "#bf8f8fff", "a press in the area sets the colour there")
     expect((await attribute("pk1-area", "data-dragging")) === "", "and holds its thumb")
-    await page.mouse.move(area.x + 150, area.y + 50, { steps: 4 })
+    await page.mouse.move(Math.round(area.x + 150), Math.round(area.y + 50), { steps: 4 })
     await settled(page)
     expect((await text("pk1-output")) === "#802020ff", "a drag follows the pointer")
     expect((await text("pk1-committed")) === "", "and nothing is committed while it is held")
@@ -4915,9 +4917,13 @@ const scenarios: Record<string, (run: Run) => Promise<void>> = {
     expect((await focused()) === "pk1-hue-thumb", "and gives its thumb focus")
     const alpha = (await id("pk1-alpha-track").boundingBox())!
     const grip = (await id("pk1-alpha-thumb").boundingBox())!
-    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+    await page.mouse.move(Math.round(grip.x + grip.width / 2), Math.round(grip.y + grip.height / 2))
     await page.mouse.down()
-    await page.mouse.move(alpha.x + alpha.width / 2, grip.y + grip.height / 2, { steps: 4 })
+    await page.mouse.move(
+      Math.round(alpha.x + alpha.width / 2),
+      Math.round(grip.y + grip.height / 2),
+      { steps: 4 }
+    )
     await page.mouse.up()
     await settled(page)
     expect((await attribute("pk1-alpha-thumb", "aria-valuenow")) === "50", "its thumb dragged")

@@ -3112,7 +3112,7 @@ const TOUR: PageStep[] = [
                 >★</span
               >
             </div>
-            <output data-testid="rt1-output">{{ stars() }}</output>
+            <output form="" data-testid="rt1-output">{{ stars() }}</output>
           </div>
           <div
             kpSteps
@@ -3156,7 +3156,7 @@ const TOUR: PageStep[] = [
             <div class="item">
               <button kpStepsPrevious data-testid="st1-previous">Back</button>
               <button kpStepsNext data-testid="st1-next">Next</button>
-              <output data-testid="st1-output">{{ stepped() }}</output>
+              <output form="" data-testid="st1-output">{{ stepped() }}</output>
             </div>
           </div>
           <div
@@ -3174,7 +3174,7 @@ const TOUR: PageStep[] = [
             <button kpEditableEditTrigger data-testid="ed1-edit">Edit</button>
             <button kpEditableSubmitTrigger data-testid="ed1-submit">Save</button>
             <button kpEditableCancelTrigger data-testid="ed1-cancel">Cancel</button>
-            <output data-testid="ed1-output">{{ titled() }}</output>
+            <output form="" data-testid="ed1-output">{{ titled() }}</output>
           </div>
           <div
             kpPasswordInput
@@ -3193,7 +3193,7 @@ const TOUR: PageStep[] = [
             <button kpPasswordInputToggle data-testid="pw1-toggle">
               <span kpPasswordInputIndicator class="eye" data-testid="pw1-indicator"></span>
             </button>
-            <output data-testid="pw1-output">{{ revealed() }}</output>
+            <output form="" data-testid="pw1-output">{{ revealed() }}</output>
           </div>
           <button type="reset" data-testid="ef1-reset">Reset</button>
         </form>
@@ -3228,8 +3228,8 @@ const TOUR: PageStep[] = [
             </div>
             <input kpTagsInputInput aria-label="Add a color" data-testid="ti1-input" />
             <button kpTagsInputClear data-testid="ti1-clear">Clear</button>
-            <output data-testid="ti1-output">{{ tagged() }}</output>
-            <output data-testid="ti1-refused">{{ refused() }}</output>
+            <output form="" data-testid="ti1-output">{{ tagged() }}</output>
+            <output form="" data-testid="ti1-refused">{{ refused() }}</output>
           </div>
           <div
             kpFileUpload
@@ -3274,8 +3274,8 @@ const TOUR: PageStep[] = [
               </li>
             </ul>
             <button kpFileUploadClear data-testid="fu1-clear">Clear</button>
-            <output data-testid="fu1-output">{{ uploaded() }}</output>
-            <output data-testid="fu1-rejected">{{ turnedAway() }}</output>
+            <output form="" data-testid="fu1-output">{{ uploaded() }}</output>
+            <output form="" data-testid="fu1-rejected">{{ turnedAway() }}</output>
           </div>
           <div class="item">
             <div
@@ -3297,7 +3297,7 @@ const TOUR: PageStep[] = [
               ></span>
               <input kpTimeFieldInput />
             </div>
-            <output data-testid="tm1-output">{{ timed() }}</output>
+            <output form="" data-testid="tm1-output">{{ timed() }}</output>
           </div>
           <button type="reset" data-testid="tf1-reset">Reset</button>
         </form>
@@ -3370,8 +3370,8 @@ const TOUR: PageStep[] = [
               </div>
             </div>
           </div>
-          <output data-testid="tr1-expanded">{{ opened() }}</output>
-          <output data-testid="tr1-selected">{{ picks() }}</output>
+          <output form="" data-testid="tr1-expanded">{{ opened() }}</output>
+          <output form="" data-testid="tr1-selected">{{ picks() }}</output>
         </div>
         <form class="editing" data-testid="pk1-form">
           <div
@@ -3452,16 +3452,16 @@ const TOUR: PageStep[] = [
             </div>
           </div>
           <div class="item">
-            <output data-testid="pk1-output">{{ hue() }}</output>
-            <output data-testid="pk1-committed">{{ kept() }}</output>
-            <output data-testid="pk1-written">{{ written() }}</output>
+            <output form="" data-testid="pk1-output">{{ hue() }}</output>
+            <output form="" data-testid="pk1-committed">{{ kept() }}</output>
+            <output form="" data-testid="pk1-written">{{ written() }}</output>
           </div>
           <button type="reset" data-testid="pk1-reset">Reset</button>
         </form>
         <div class="item">
           <button type="button" data-testid="tu1-open" (click)="touring.set(true)">Tour</button>
-          <output data-testid="tu1-output">{{ touring() }}</output>
-          <output data-testid="tu1-step">{{ toured() }}</output>
+          <output form="" data-testid="tu1-output">{{ touring() }}</output>
+          <output form="" data-testid="tu1-step">{{ toured() }}</output>
         </div>
         <ng-container
           kpTour

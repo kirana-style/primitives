@@ -2311,7 +2311,7 @@
                   </template>
                 </div>
               </kui-rating>
-              <output data-testid="rt1-output">2</output>
+              <output form="" data-testid="rt1-output">2</output>
             </div>
             <kui-steps kui-id="st1" count="3" linear>
               <div kui-part="root" class="steps" data-testid="st1">
@@ -2354,7 +2354,7 @@
                 <div class="item">
                   <button kui-part="previous" data-testid="st1-previous">Back</button>
                   <button kui-part="next" data-testid="st1-next">Next</button>
-                  <output data-testid="st1-output">0</output>
+                  <output form="" data-testid="st1-output">0</output>
                 </div>
               </div>
             </kui-steps>
@@ -2365,7 +2365,7 @@
                 <button kui-part="edit-trigger" data-testid="ed1-edit">Edit</button>
                 <button kui-part="submit-trigger" data-testid="ed1-submit">Save</button>
                 <button kui-part="cancel-trigger" data-testid="ed1-cancel">Cancel</button>
-                <output data-testid="ed1-output">Apollo</output>
+                <output form="" data-testid="ed1-output">Apollo</output>
               </div>
             </kui-editable>
             <kui-password-input>
@@ -2381,7 +2381,7 @@
                 <button kui-part="toggle" data-testid="pw1-toggle">
                   <span kui-part="indicator" class="eye" data-testid="pw1-indicator"></span>
                 </button>
-                <output data-testid="pw1-output">false</output>
+                <output form="" data-testid="pw1-output">false</output>
               </div>
             </kui-password-input>
             <button type="reset" data-testid="ef1-reset">Reset</button>
@@ -2406,8 +2406,8 @@
                 </div>
                 <input kui-part="input" aria-label="Add a color" data-testid="ti1-input" />
                 <button kui-part="clear" data-testid="ti1-clear">Clear</button>
-                <output data-testid="ti1-output">red,green</output>
-                <output data-testid="ti1-refused"></output>
+                <output form="" data-testid="ti1-output">red,green</output>
+                <output form="" data-testid="ti1-refused"></output>
               </div>
             </kui-tags-input>
             <kui-file-upload kui-id="fu1" name="docs" multiple accept=".txt" max-files="2">
@@ -2434,8 +2434,8 @@
                   >
                 </ul>
                 <button kui-part="clear" data-testid="fu1-clear">Clear</button>
-                <output data-testid="fu1-output"></output>
-                <output data-testid="fu1-rejected"></output>
+                <output form="" data-testid="fu1-output"></output>
+                <output form="" data-testid="fu1-rejected"></output>
               </div>
             </kui-file-upload>
             <div class="item">
@@ -2447,7 +2447,7 @@
                   <input kui-part="input" />
                 </div>
               </kui-time-field>
-              <output data-testid="tm1-output">09:30</output>
+              <output form="" data-testid="tm1-output">09:30</output>
             </div>
             <button type="reset" data-testid="tf1-reset">Reset</button>
           </form>
@@ -2518,8 +2518,8 @@
                 </div>
               </div>
             </kui-tree>
-            <output data-testid="tr1-expanded">docs</output>
-            <output data-testid="tr1-selected">letter</output>
+            <output form="" data-testid="tr1-expanded">docs</output>
+            <output form="" data-testid="tr1-selected">letter</output>
           </div>
           <form class="editing" data-testid="pk1-form">
             <kui-color-picker kui-id="pk1" name="color" default-value="#ff0000" alpha>
@@ -2600,16 +2600,16 @@
               </div>
             </kui-color-picker>
             <div class="item">
-              <output data-testid="pk1-output">#ff0000ff</output>
-              <output data-testid="pk1-committed"></output>
-              <output data-testid="pk1-written">hex</output>
+              <output form="" data-testid="pk1-output">#ff0000ff</output>
+              <output form="" data-testid="pk1-committed"></output>
+              <output form="" data-testid="pk1-written">hex</output>
             </div>
             <button type="reset" data-testid="pk1-reset">Reset</button>
           </form>
           <div class="item">
             <button type="button" data-testid="tu1-open">Tour</button>
-            <output data-testid="tu1-output">false</output>
-            <output data-testid="tu1-step">0</output>
+            <output form="" data-testid="tu1-output">false</output>
+            <output form="" data-testid="tu1-step">0</output>
           </div>
           <kui-tour kui-id="tu1">
             <div kui-part="portal">

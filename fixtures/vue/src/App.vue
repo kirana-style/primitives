@@ -2391,7 +2391,7 @@ function press(event: PartEvent<MouseEvent>) {
               <Rating.Item :place="star" class="star" :data-testid="`rt1-${star}`">★</Rating.Item>
             </Rating.Items>
           </Rating.Root>
-          <output data-testid="rt1-output">{{ stars }}</output>
+          <output form="" data-testid="rt1-output">{{ stars }}</output>
         </div>
         <Steps.Root
           id="st1"
@@ -2429,7 +2429,7 @@ function press(event: PartEvent<MouseEvent>) {
           <div class="item">
             <Steps.Previous data-testid="st1-previous">Back</Steps.Previous>
             <Steps.Next data-testid="st1-next">Next</Steps.Next>
-            <output data-testid="st1-output">{{ stepped }}</output>
+            <output form="" data-testid="st1-output">{{ stepped }}</output>
           </div>
         </Steps.Root>
         <Editable.Root
@@ -2446,7 +2446,7 @@ function press(event: PartEvent<MouseEvent>) {
           <Editable.EditTrigger data-testid="ed1-edit">Edit</Editable.EditTrigger>
           <Editable.SubmitTrigger data-testid="ed1-submit">Save</Editable.SubmitTrigger>
           <Editable.CancelTrigger data-testid="ed1-cancel">Cancel</Editable.CancelTrigger>
-          <output data-testid="ed1-output">{{ titled }}</output>
+          <output form="" data-testid="ed1-output">{{ titled }}</output>
         </Editable.Root>
         <PasswordInput.Root
           class="item"
@@ -2463,7 +2463,7 @@ function press(event: PartEvent<MouseEvent>) {
           <PasswordInput.Toggle data-testid="pw1-toggle">
             <PasswordInput.Indicator class="eye" data-testid="pw1-indicator" />
           </PasswordInput.Toggle>
-          <output data-testid="pw1-output">{{ revealed }}</output>
+          <output form="" data-testid="pw1-output">{{ revealed }}</output>
         </PasswordInput.Root>
         <button type="reset" data-testid="ef1-reset">Reset</button>
       </form>
@@ -2493,8 +2493,8 @@ function press(event: PartEvent<MouseEvent>) {
           </TagsInput.List>
           <TagsInput.Input aria-label="Add a color" data-testid="ti1-input" />
           <TagsInput.Clear data-testid="ti1-clear">Clear</TagsInput.Clear>
-          <output data-testid="ti1-output">{{ tagged }}</output>
-          <output data-testid="ti1-refused">{{ refused }}</output>
+          <output form="" data-testid="ti1-output">{{ tagged }}</output>
+          <output form="" data-testid="ti1-refused">{{ refused }}</output>
         </TagsInput.Root>
         <FileUpload.Root
           id="fu1"
@@ -2531,8 +2531,8 @@ function press(event: PartEvent<MouseEvent>) {
             </FileUpload.Items>
           </FileUpload.List>
           <FileUpload.Clear data-testid="fu1-clear">Clear</FileUpload.Clear>
-          <output data-testid="fu1-output">{{ uploaded }}</output>
-          <output data-testid="fu1-rejected">{{ turnedAway }}</output>
+          <output form="" data-testid="fu1-output">{{ uploaded }}</output>
+          <output form="" data-testid="fu1-rejected">{{ turnedAway }}</output>
         </FileUpload.Root>
         <div class="item">
           <TimeField.Root
@@ -2553,7 +2553,7 @@ function press(event: PartEvent<MouseEvent>) {
             </TimeField.Segments>
             <TimeField.Input />
           </TimeField.Root>
-          <output data-testid="tm1-output">{{ timed }}</output>
+          <output form="" data-testid="tm1-output">{{ timed }}</output>
         </div>
         <button type="reset" data-testid="tf1-reset">Reset</button>
       </form>
@@ -2631,8 +2631,8 @@ function press(event: PartEvent<MouseEvent>) {
             </Tree.ItemRow>
           </Tree.Item>
         </Tree.Root>
-        <output data-testid="tr1-expanded">{{ opened }}</output>
-        <output data-testid="tr1-selected">{{ picks }}</output>
+        <output form="" data-testid="tr1-expanded">{{ opened }}</output>
+        <output form="" data-testid="tr1-selected">{{ picks }}</output>
       </div>
       <form class="editing" data-testid="pk1-form">
         <ColorPicker.Root
@@ -2693,16 +2693,16 @@ function press(event: PartEvent<MouseEvent>) {
           </div>
         </ColorPicker.Root>
         <div class="item">
-          <output data-testid="pk1-output">{{ hue }}</output>
-          <output data-testid="pk1-committed">{{ kept }}</output>
-          <output data-testid="pk1-written">{{ written }}</output>
+          <output form="" data-testid="pk1-output">{{ hue }}</output>
+          <output form="" data-testid="pk1-committed">{{ kept }}</output>
+          <output form="" data-testid="pk1-written">{{ written }}</output>
         </div>
         <button type="reset" data-testid="pk1-reset">Reset</button>
       </form>
       <div class="item">
         <button type="button" data-testid="tu1-open" @click="touring = true">Tour</button>
-        <output data-testid="tu1-output">{{ String(touring) }}</output>
-        <output data-testid="tu1-step">{{ toured }}</output>
+        <output form="" data-testid="tu1-output">{{ String(touring) }}</output>
+        <output form="" data-testid="tu1-step">{{ toured }}</output>
       </div>
       <Tour.Root
         id="tu1"

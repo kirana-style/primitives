@@ -204,7 +204,12 @@ describe("a time that is typed", () => {
     const { part } = field({ locale: "ko-KR" })
     part("dayPeriod").focus()
     await type("{ArrowUp}")
-    expect(part("dayPeriod").textContent).toBe("오전")
+    // What this engine's own `Intl` calls the morning there: an engine built with fewer
+    // languages says it in English, and the field says what the engine says.
+    const morning = new Intl.DateTimeFormat("ko-KR", { hour: "numeric", hour12: true })
+      .formatToParts(new Date(2020, 0, 1, 9))
+      .find((each) => each.type === "dayPeriod")!.value
+    expect(part("dayPeriod").textContent).toBe(morning)
   })
 
   it("moves between its parts the way the text reads, and is left by Tab", async () => {

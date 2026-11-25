@@ -1109,6 +1109,7 @@
               <div kui-part="root" class="otp" data-testid="otp1">
                 <input
                   kui-part="input"
+                  id="otp1-entry"
                   aria-label="Code"
                   class="otp-input"
                   data-testid="otp1-input"
@@ -1671,7 +1672,12 @@
               </span>
               <div kui-part="group" class="number-group" data-testid="nf1-group">
                 <button kui-part="decrement" data-testid="nf1-down">-</button>
-                <input kui-part="input" aria-label="Quantity" data-testid="nf1-input" />
+                <input
+                  kui-part="input"
+                  id="nf1-entry"
+                  aria-label="Quantity"
+                  data-testid="nf1-input"
+                />
                 <button kui-part="increment" data-testid="nf1-up">+</button>
               </div>
             </div>
@@ -2624,7 +2630,7 @@
             <kui-editable kui-id="ed1" name="title" default-value="Apollo" placeholder="Untitled">
               <div kui-part="root" class="item" data-testid="ed1">
                 <span kui-part="preview" class="editable-preview" data-testid="ed1-preview"></span>
-                <input kui-part="input" aria-label="Title" data-testid="ed1-input" />
+                <input kui-part="input" id="ed1-entry" aria-label="Title" data-testid="ed1-input" />
                 <button kui-part="edit-trigger" data-testid="ed1-edit">Edit</button>
                 <button kui-part="submit-trigger" data-testid="ed1-submit">Save</button>
                 <button kui-part="cancel-trigger" data-testid="ed1-cancel">Cancel</button>

@@ -1,6 +1,6 @@
 import { bindable } from "./bindable.ts"
 import type { Field, FieldMembership } from "./field.ts"
-import { details, flag } from "./part.ts"
+import { defaultId, details, flag } from "./part.ts"
 import type { ChangeDetails, Part } from "./part.ts"
 import { computed, effect, signal } from "./reactivity.ts"
 import type { ReadonlySignal } from "./reactivity.ts"
@@ -252,7 +252,9 @@ export function createOtp(
       props: computed(() => {
         const mode = validation(props.get())
         return {
-          id: props.get().id,
+          // The root's id, a default only: an id the caller gives the input wins, and a
+          // `<label for>` names it so.
+          ...defaultId(props.get().id),
           type: "text",
           // The code it holds, so a server draws it. In a page the core writes it too: a
           // framework writes in its own time, after what was typed since.

@@ -18,6 +18,10 @@ export const progressVocabulary = defineComponent({
     description: "The progress bar: it says the value to assistive technology.",
     states: STATES,
     exclusive: ONE_OF,
+    variables: {
+      "--progress-value":
+        "The value's share of the range, a number from 0 (at `min`) to 1 (at `max`), which every part inherits: what a ring or a gauge is drawn from. Absent while the value is not known.",
+    },
   },
   track: { inside: "root", description: "The whole range.", states: STATES, exclusive: ONE_OF },
   indicator: {

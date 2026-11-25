@@ -27,7 +27,8 @@ export const numberFieldVocabulary = defineComponent({
   },
   input: {
     inside: "group",
-    description: "The text input: it takes what its locale writes a number with.",
+    description:
+      "The text input: it takes what its locale writes a number with. It is named `<root id>-input`, or in a `Field` by the field's id; an `id` given to it is kept, so a `<label for>` and the buttons' `aria-controls` name it.",
     states: STATES,
     exclusive: ONE_OF,
   },

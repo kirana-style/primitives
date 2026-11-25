@@ -1613,7 +1613,12 @@ export function App() {
             data-testid="otp1"
             onValueComplete={(next: string) => setCode(next)}
           >
-            <Otp.Input aria-label="Code" className="otp-input" data-testid="otp1-input" />
+            <Otp.Input
+              id="otp1-entry"
+              aria-label="Code"
+              className="otp-input"
+              data-testid="otp1-input"
+            />
             <Otp.Group className="otp-group">
               <Otp.Slot index={0} className="otp-slot" data-testid="otp1-0">
                 <Otp.Caret className="otp-caret" />
@@ -2191,7 +2196,7 @@ export function App() {
           </NumberField.ScrubArea>
           <NumberField.Group className="number-group" data-testid="nf1-group">
             <NumberField.Decrement data-testid="nf1-down">-</NumberField.Decrement>
-            <NumberField.Input aria-label="Quantity" data-testid="nf1-input" />
+            <NumberField.Input id="nf1-entry" aria-label="Quantity" data-testid="nf1-input" />
             <NumberField.Increment data-testid="nf1-up">+</NumberField.Increment>
           </NumberField.Group>
         </NumberField.Root>
@@ -3127,7 +3132,7 @@ export function App() {
             onValueChange={(next: string) => setTitled(next)}
           >
             <Editable.Preview className="editable-preview" data-testid="ed1-preview" />
-            <Editable.Input aria-label="Title" data-testid="ed1-input" />
+            <Editable.Input id="ed1-entry" aria-label="Title" data-testid="ed1-input" />
             <Editable.EditTrigger data-testid="ed1-edit">Edit</Editable.EditTrigger>
             <Editable.SubmitTrigger data-testid="ed1-submit">Save</Editable.SubmitTrigger>
             <Editable.CancelTrigger data-testid="ed1-cancel">Cancel</Editable.CancelTrigger>

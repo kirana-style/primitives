@@ -3,6 +3,7 @@ import { describe, expect, it, onTestFinished } from "vite-plus/test"
 import { bind } from "../../packages/core/src/bind.ts"
 import { createEditable } from "../../packages/core/src/editable.ts"
 import { createField } from "../../packages/core/src/field.ts"
+import { forElement } from "../../packages/core/src/part.ts"
 import type { EditableProps } from "../../packages/core/src/editable.ts"
 import { signal } from "../../packages/core/src/reactivity.ts"
 import { recorder } from "../../packages/core/src/testing.ts"
@@ -188,6 +189,25 @@ describe("an editable text", () => {
     key("Enter")
     root.querySelector<HTMLButtonElement>("[type=reset]")!.click()
     expect(made.value.peek()).toBe("Apollo")
+  })
+
+  it("keeps the id its caller gives the input outside a field, so a label for it names it", () => {
+    const root = mount(`
+      <label for="title">Title</label>
+      <div class="root"><input class="input" id="title" /></div>
+      <div class="other"><input class="input" /></div>`)
+    const named = createEditable(signal<EditableProps>({ id: "ed" }))
+    const input = root.querySelector<HTMLInputElement>(".root .input")!
+    onTestFinished(bind(input, named.input))
+    expect(input.id).toBe("title")
+    expect(root.querySelector("label")!.control).toBe(input)
+    // A framework lays the part's props over its caller's the same way.
+    expect(forElement(named.input.props.peek(), { id: "title" }, "input").id).toBeUndefined()
+    // With none of the caller's, the input is still named by its root's id.
+    const unnamed = createEditable(signal<EditableProps>({ id: "ed2" }))
+    const other = root.querySelector<HTMLInputElement>(".other .input")!
+    onTestFinished(bind(other, unnamed.input))
+    expect(other.id).toBe("ed2")
   })
 })
 

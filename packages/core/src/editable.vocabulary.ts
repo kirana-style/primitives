@@ -30,7 +30,8 @@ export const editableVocabulary = defineComponent({
   },
   input: {
     inside: "root",
-    description: "Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing.",
+    description:
+      "Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. It is named by the root's `id`, or in a `Field` by the field's; an `id` given to it is kept, so a `<label for>` names it.",
     states: STATES,
   },
   editTrigger: {

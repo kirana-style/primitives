@@ -25,7 +25,7 @@ export type RootProps = PartComponentProps<
   "div",
   StateOf<Parts["root"]>,
   Omit<OtpProps, "id"> & {
-    /** The id of its input, not of the root: a `<label for>` names it. */
+    /** The id of its input, not of the root, unless the input is given its own: a `<label for>` names it. */
     id?: string
   }
 >

@@ -7,6 +7,7 @@ import { createCollapsible } from "../../packages/core/src/collapsible.ts"
 import { createDateField } from "../../packages/core/src/date-field.ts"
 import type { DateField } from "../../packages/core/src/date-field.ts"
 import { createInput } from "../../packages/core/src/input.ts"
+import { createPasswordInput } from "../../packages/core/src/password-input.ts"
 import { createRadioGroup } from "../../packages/core/src/radio-group.ts"
 import { effect, signal } from "../../packages/core/src/reactivity.ts"
 import { createSelect } from "../../packages/core/src/select.ts"
@@ -1416,6 +1417,24 @@ describe("the agent bridge, on more kinds", () => {
     await agent.act({ steps: [{ ref: "Files", action: "setValue", args: [["Documents"]] }] })
     expect(made.selectedValue.peek()).toEqual(["docs"])
     expect((await agent.undo()).steps[0]!.now?.values).toEqual(["Letter", "Notes"])
+  })
+
+  it("reads a password's toggle as a button its name tells the state of", async () => {
+    const root = mount(
+      `<div class="root"><input class="input" value="hunter2" /><button class="toggle"></button></div>`
+    )
+    const made = createPasswordInput(signal({}))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".root")!, made.root))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".input")!, made.input))
+    onTestFinished(bind(root.querySelector<HTMLElement>(".toggle")!, made.toggle))
+    const agent = createAgent({ root })
+    const toggle = () => agent.snapshot().find((each) => each.component === "button")
+    expect(toggle()).toMatchObject({ label: "Show password", actions: ["press"] })
+    expect(toggle()!.checked).toBeUndefined()
+    const done = await agent.act({ steps: [{ ref: "Show password", action: "press" }] })
+    expect(done.ok).toBe(true)
+    expect(made.visible.peek()).toBe(true)
+    expect(toggle()).toMatchObject({ label: "Hide password", actions: ["press"] })
   })
 
   it("hides what a secret mark holds of the new kinds", () => {

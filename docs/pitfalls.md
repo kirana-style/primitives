@@ -56,11 +56,15 @@ note. Three places hold them:
   form before `forElement`, and the default's mark was lost on the way: a mark that is not an
   attribute goes through every adapter's conversion. Held by `tests/core/field.test.ts` ("a
   control's own id inside a field") and the `field` scenario ("a control keeps its own id").
-- **Outside a field too, an id the caller gives is the element's.** A tags input named its input
-  after its root wherever no field was around, over the caller's own `id`, so a `<label for>`
-  that named it pointed at nothing. The root's id is a default there as well. Held by
-  `tests/core/tags-input.test.ts` ("keeps the id its caller gives the input") and the
-  `tagging` scenario ("its input keeps the page's id").
+- **Outside a field too, an id the caller gives is the element's.** A tags input, an editable,
+  a number field and a one-time code named their input after the root wherever no field was
+  around, over the caller's own `id`, so a `<label for>` that named it pointed at nothing. The
+  root's id is a default there as well. A number field's buttons are `aria-controls` the input
+  by what it is called once it is in the page; a server, which writes them before the input,
+  names it by the id it makes. Held by `tests/core/tags-input.test.ts`,
+  `tests/core/editable.test.ts`, `tests/core/number-field.test.ts` and
+  `tests/core/otp.test.ts` ("keeps the id its caller gives the input"), and the `tagging`, `editing`,
+  `widgets` and `entry` scenarios ("its input keeps the page's id").
 - **A name the library writes in English is a default.** A password input's toggle wrote
   "Show password" over the caller's `aria-label`, so a page in another language could not name
   it. Such a label goes through `defaultLabel`, which the caller's own `aria-label` wins over
@@ -69,6 +73,13 @@ note. Three places hold them:
   that one a server wrote, and the part goes on changing it. Held by
   `tests/core/password-input.test.ts` ("is named in the page's words", "follows the state with
   the label a server wrote for it").
+- **A state is told once.** A password input's toggle changed its name with the state ("Show
+  password", "Hide password") and wrote `aria-pressed` too, so a screen reader said the state
+  twice ("Hide password, pressed"). A name that says what a press does is the state: the toggle
+  is a plain button, and the agent bridge reads it as one. Held by
+  `tests/core/password-input.test.ts` ("tells its state by its name alone"),
+  `tests/core/agent.test.ts` ("reads a password's toggle as a button") and the `editing`
+  scenario.
 - **A control is never drawn inside a control.** A file upload's dropzone was a button, and the
   trigger drawn in it a second one: read as one control, reached twice. The dropzone is a
   group (a pointer's press on it still opens the picker), the trigger is the control, and the

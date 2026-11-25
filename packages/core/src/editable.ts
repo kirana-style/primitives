@@ -213,8 +213,9 @@ export function createEditable(
     },
     input: {
       props: computed(() => ({
-        // In a field, the id its label is `for` unless the caller gives one.
-        ...(field ? defaultId(field.controlId) : { id }),
+        // In a field, the id its label is `for`, and the root's id outside one: a default only,
+        // so an id the caller gives the input wins, and a `<label for>` names it so.
+        ...defaultId(field ? field.controlId : id),
         hidden: flag(!editing.get()),
         name: props.get().name ?? field?.name.get(),
         form: props.get().form,

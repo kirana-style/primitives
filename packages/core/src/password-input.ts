@@ -110,7 +110,8 @@ export function createPasswordInput(
     toggle: {
       props: computed(() => ({
         type: "button",
-        "aria-pressed": String(visible.get()),
+        // Its name says what a press does, and so the state: no `aria-pressed` beside it, which
+        // a screen reader would read as the state a second time.
         // A default only: the caller's own `aria-label` on the toggle wins.
         ...defaultLabel(
           visible.get()

@@ -1402,7 +1402,7 @@ export const Otp = {
     /** Present when every character is in. */
     complete: "[data-complete]",
   },
-  /** The one input the code is typed in. A design lays it over the cells, unseen. */
+  /** The one input the code is typed in. A design lays it over the cells, unseen. It is named by the root's `id`; an `id` given to it is kept, so a `<label for>` names it. */
   Input: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
@@ -1604,7 +1604,7 @@ export const NumberField = {
     /** In a field: present while the number is wrong. */
     invalid: "[data-invalid]",
   },
-  /** The text input: it takes what its locale writes a number with. */
+  /** The text input: it takes what its locale writes a number with. It is named `<root id>-input`, or in a `Field` by the field's id; an `id` given to it is kept, so a `<label for>` and the buttons' `aria-controls` name it. */
   Input: {
     /** Present when it is disabled. */
     disabled: "[data-disabled]",
@@ -2140,7 +2140,7 @@ export const Editable = {
     /** In a field: present while the text is wrong. */
     invalid: "[data-invalid]",
   },
-  /** Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. */
+  /** Where the text is typed, an `<input>` or a `<textarea>`: hidden unless editing. It is named by the root's `id`, or in a `Field` by the field's; an `id` given to it is kept, so a `<label for>` names it. */
   Input: {
     /** Present while it is being edited. */
     editing: "[data-editing]",
@@ -2261,7 +2261,7 @@ export const PasswordInput = {
     /** In a field: present while the value is wrong. */
     invalid: "[data-invalid]",
   },
-  /** Shows the password, and hides it again. Focus and the caret stay in the input. It is named "Show password" while the password is hidden and "Hide password" while it is shown: the root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both. */
+  /** Shows the password, and hides it again. Focus and the caret stay in the input. It is named "Show password" while the password is hidden and "Hide password" while it is shown, and that name is how its state is told: it is a plain button, with no `aria-pressed`. The root's `toggleLabels` (`{ show, hide }`) words them in the page's language, and an `aria-label` given to the toggle wins over both. */
   Toggle: {
     /** Present while the password can be read. */
     visible: "[data-visible]",
